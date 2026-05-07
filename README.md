@@ -1,36 +1,123 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Wimifarma BR
 
-## Getting Started
+Framework inicial da plataforma comercial Wimifarma BR, uma farmacia em Ivate-PR.
 
-First, run the development server:
+O projeto nasce como uma base profissional para site publico, landing page vendedora, admin reservado, ofertas, produtos, clientes, cupons, roleta promocional, WhatsApp, auditoria e cashback futuro.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Stack
+
+- Next.js 15 App Router
+- TypeScript
+- Tailwind CSS 4
+- Shadcn/ui style components
+- Prisma 7
+- PostgreSQL 17
+- Auth.js/NextAuth v5
+- Zod
+- React Hook Form
+- Docker e Docker Compose
+
+Tambem estao instalados: Framer Motion, GSAP, Lenis, TanStack Table, Recharts, date-fns, bcryptjs, lucide-react, sonner, sharp e qrcode.
+
+## Rodar localmente no Windows
+
+```powershell
+cd C:\Projetos\wimifarma-br
+npm.cmd install
+copy .env.example .env
+npm.cmd run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Se quiser usar Docker local na porta separada da Candy English:
 
-## Learn More
+```powershell
+docker compose up -d postgres
+docker compose --profile tools run --rm migrate
+docker compose --profile tools run --rm seed
+docker compose up -d app
+```
 
-To learn more about Next.js, take a look at the following resources:
+Health local via Docker:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```powershell
+curl.exe http://127.0.0.1:3001/api/health
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Validacoes
 
-## Deploy on Vercel
+```powershell
+npm.cmd run lint
+npm.cmd run typecheck
+npm.cmd run build
+npm.cmd run prisma:validate
+npm.cmd audit --audit-level=moderate
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Produção no Ubuntu
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Projeto recomendado no servidor:
+
+```text
+/home/ubuntu/projetos/wimifarma-br
+```
+
+Comandos:
+
+```bash
+cd /home/ubuntu/projetos/wimifarma-br
+cp .env.example .env
+nano .env
+docker compose build
+docker compose up -d postgres
+docker compose --profile tools run --rm migrate
+docker compose --profile tools run --rm seed
+docker compose up -d app
+curl http://127.0.0.1:3001/api/health
+```
+
+## Containers
+
+- App: `wimifarma-br-app`
+- Postgres: `wimifarma-br-postgres`
+- Database: `wimifarma_br`
+- User: `wimifarma_user`
+- Volume: `wimifarma-br-postgres-data`
+- Porta local: `127.0.0.1:3001:3000`
+
+O Postgres nao e exposto publicamente.
+
+## Nginx Proxy Manager
+
+No Proxy Host:
+
+```text
+Domain Names: wimifarma.com.br, www.wimifarma.com.br
+Scheme: http
+Forward Hostname/IP: wimifarma-br-app
+Forward Port: 3000
+Websockets Support: ligado
+Block Common Exploits: ligado
+SSL: Request a new SSL Certificate
+Force SSL: ligado
+HTTP/2: ligado
+```
+
+Se o Nginx Proxy Manager nao encontrar `wimifarma-br-app`, conecte o container dele na rede do projeto:
+
+```bash
+docker network connect wimifarma-br-network nginx-proxy-manager-app-1
+```
+
+## Git
+
+```powershell
+git add .
+git commit -m "Initialize Wimifarma platform framework"
+git push -u origin main
+```
