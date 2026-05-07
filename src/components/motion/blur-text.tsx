@@ -11,7 +11,7 @@ type BlurTextProps = {
 
 export function BlurText({ className, text }: BlurTextProps) {
   const ref = useRef<HTMLParagraphElement>(null);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
   const words = text.split(" ");
 
   useEffect(() => {
@@ -21,9 +21,12 @@ export function BlurText({ className, text }: BlurTextProps) {
       return;
     }
 
+    const fallback = window.setTimeout(() => setVisible(true), 200);
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) {
+          window.clearTimeout(fallback);
           setVisible(true);
           observer.disconnect();
         }
@@ -33,7 +36,10 @@ export function BlurText({ className, text }: BlurTextProps) {
 
     observer.observe(element);
 
-    return () => observer.disconnect();
+    return () => {
+      window.clearTimeout(fallback);
+      observer.disconnect();
+    };
   }, []);
 
   return (
@@ -53,7 +59,7 @@ export function BlurText({ className, text }: BlurTextProps) {
               : undefined
           }
           className="inline-block"
-          initial={{ filter: "blur(10px)", opacity: 0, y: 50 }}
+          initial={{ filter: "blur(10px)", opacity: 0.2, y: 50 }}
           key={`${word}-${index}`}
           style={{ marginRight: "0.28em" }}
           transition={{
