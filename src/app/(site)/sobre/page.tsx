@@ -26,7 +26,7 @@ export default function Page() {
             Estrutura sem misturar projetos
           </h2>
           <p className="mt-4 text-base leading-8 text-muted">
-            Wimifarma BR fica separada do Candy English, com banco, containers,
+            A Wimifarma fica separada do Candy English, com banco, containers,
             rotas, admin, features e documentacao proprios.
           </p>
         </div>

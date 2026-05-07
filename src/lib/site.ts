@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 export const siteConfig = {
-  name: "Wimifarma BR",
+  name: "Wimifarma",
   city: "Ivate-PR",
   phone: "5544999999999",
   displayPhone: "(44) 99999-9999",
@@ -24,7 +24,6 @@ export const publicNavItems = [
   { href: "/ofertas", label: "Ofertas" },
   { href: "/farmacia-popular", label: "Farmacia Popular" },
   { href: "/delivery", label: "Delivery" },
-  { href: "/roleta", label: "Roleta" },
   { href: "/sobre", label: "Sobre" },
   { href: "/contato", label: "Contato" },
 ];
@@ -56,9 +55,9 @@ export const benefitItems = [
   },
   {
     icon: Gift,
-    title: "Roleta promocional",
+    title: "Relacionamento e cupons",
     description:
-      "Modulo preparado para campanhas, premios, cupons e tentativas auditaveis.",
+      "Base preparada para campanhas, cupons, leads e recompensas futuras.",
   },
 ];
 

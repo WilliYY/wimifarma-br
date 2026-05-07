@@ -10,17 +10,17 @@ export function SiteFooter() {
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:px-8">
         <div>
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white p-1.5">
+            <span className="flex h-12 w-32 items-center justify-center overflow-hidden rounded-full bg-white p-2">
               <Image
                 alt="Wimifarma"
-                className="h-full w-full object-contain"
-                height={28}
+                className="h-full w-full scale-[1.65] object-contain"
+                height={40}
                 src="/brand/logo-wimifarma.svg"
-                width={28}
+                width={40}
               />
             </span>
             <div>
-              <p className="font-black">Wimifarma BR</p>
+              <p className="font-black">Wimifarma</p>
               <p className="text-sm text-white/60">
                 Plataforma comercial em construcao
               </p>
@@ -28,7 +28,7 @@ export function SiteFooter() {
           </div>
           <p className="mt-5 max-w-md text-sm leading-6 text-white/68">
             Base preparada para site publico, admin, ofertas, produtos, cupons,
-            roleta, clientes, WhatsApp, auditoria e cashback futuro.
+            clientes, WhatsApp, auditoria e cashback futuro.
           </p>
           <Button asChild className="mt-6" variant="default">
             <a href={siteConfig.whatsappUrl} rel="noreferrer" target="_blank">
@@ -68,8 +68,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-white/10 py-4">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 text-xs text-white/48 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <p>(c) 2026 Wimifarma BR. Todos os direitos reservados.</p>
-          <p>Sem WordPress, sem HostGator, pronto para Docker.</p>
+          <p>(c) 2026 Wimifarma. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>

@@ -5,16 +5,16 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL("https://wimifarma.com.br"),
   title: {
-    default: "Wimifarma BR | Farmacia em Ivate-PR",
-    template: "%s | Wimifarma BR",
+    default: "Wimifarma | Farmacia em Ivate-PR",
+    template: "%s | Wimifarma",
   },
   description:
-    "Plataforma comercial da Wimifarma em Ivate-PR: ofertas, delivery, Farmacia Popular, roleta promocional e atendimento pelo WhatsApp.",
+    "Plataforma comercial da Wimifarma em Ivate-PR: ofertas, delivery, Farmacia Popular e atendimento pelo WhatsApp.",
   openGraph: {
-    title: "Wimifarma BR",
+    title: "Wimifarma",
     description:
       "Ofertas, delivery em Ivate e atendimento farmaceutico com a Wimifarma.",
-    siteName: "Wimifarma BR",
+    siteName: "Wimifarma",
     locale: "pt_BR",
     type: "website",
   },
