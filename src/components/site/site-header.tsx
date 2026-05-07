@@ -1,54 +1,56 @@
 import Link from "next/link";
-import { Menu, MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { ArrowUpRight, Menu } from "lucide-react";
 import { publicNavItems, siteConfig } from "@/lib/site";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-white/92 backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link className="flex items-center gap-3" href="/">
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand text-lg font-black text-white">
-            W
-          </span>
-          <span className="leading-tight">
-            <span className="block text-base font-black text-ink">
-              Wimifarma
-            </span>
-            <span className="block text-xs font-semibold text-muted">
-              Ivate-PR
-            </span>
-          </span>
+    <header className="fixed inset-x-0 top-4 z-50 px-4 sm:px-8 lg:px-16">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
+        <Link
+          aria-label="Wimifarma BR"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-white p-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),0_8px_24px_rgba(0,0,0,0.18)]"
+          href="/"
+        >
+          <Image
+            alt="Wimifarma"
+            className="h-full w-full object-contain"
+            height={32}
+            priority
+            src="/brand/logo-wimifarma.svg"
+            width={32}
+          />
         </Link>
 
-        <nav className="hidden items-center gap-6 lg:flex">
-          {publicNavItems.map((item) => (
+        <nav className="liquid-glass hidden items-center gap-1 rounded-full px-1.5 py-1.5 lg:flex">
+          {[{ href: "/", label: "Home" }, ...publicNavItems.slice(0, 4)].map((item) => (
             <Link
-              className="text-sm font-semibold text-muted transition hover:text-brand"
+              className="rounded-full px-3 py-2 font-body text-sm font-medium text-white/90 transition hover:bg-white/10 hover:text-white"
               href={item.href}
               key={item.href}
             >
               {item.label}
             </Link>
           ))}
+          <a
+            className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-white px-4 py-2 font-body text-sm font-semibold text-black"
+            href={siteConfig.whatsappUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
+            Chamar no WhatsApp
+            <ArrowUpRight className="h-4 w-4" />
+          </a>
         </nav>
 
-        <div className="flex items-center gap-2">
-          <Button asChild className="hidden sm:inline-flex" size="sm">
-            <a href={siteConfig.whatsappUrl} rel="noreferrer" target="_blank">
-              <MessageCircle className="h-4 w-4" />
-              WhatsApp
-            </a>
-          </Button>
-          <Button
+        <div className="flex h-12 w-12 items-center justify-center">
+          <button
             aria-label="Abrir menu"
-            className="lg:hidden"
-            size="icon"
+            className="liquid-glass flex h-12 w-12 items-center justify-center rounded-full text-white lg:hidden"
             type="button"
-            variant="secondary"
           >
             <Menu className="h-5 w-5" />
-          </Button>
+          </button>
         </div>
       </div>
     </header>

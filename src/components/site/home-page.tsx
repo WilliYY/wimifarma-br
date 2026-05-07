@@ -1,268 +1,292 @@
+"use client";
+
 import Link from "next/link";
+import { motion } from "framer-motion";
 import {
-  ArrowRight,
+  ArrowUpRight,
+  BadgePercent,
   Bike,
-  CheckCircle2,
-  ClipboardCheck,
-  Gift,
+  Clock3,
+  HeartPulse,
   MessageCircle,
+  Play,
   ShieldCheck,
+  Sparkles,
+  type LucideIcon,
 } from "lucide-react";
-import { HeroVisual } from "@/components/motion/hero-visual";
-import { Reveal } from "@/components/motion/reveal";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  benefitItems,
-  featuredOffers,
-  heroHighlights,
-  siteConfig,
-  trustItems,
-} from "@/lib/site";
-import { formatCurrency } from "@/lib/utils";
+import { BlurText } from "@/components/motion/blur-text";
+import { FadingVideo } from "@/components/motion/fading-video";
+import { siteConfig } from "@/lib/site";
+
+const heroVideo =
+  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_080021_d598092b-c4c2-4e53-8e46-94cf9064cd50.mp4";
+
+const capabilitiesVideo =
+  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_094631_d30ab262-45ee-4b7d-99f3-5d5848c8ef13.mp4";
+
+const easeOut = [0.16, 1, 0.3, 1] as const;
+
+const entrance = {
+  hidden: { filter: "blur(10px)", opacity: 0, y: 20 },
+  show: {
+    filter: "blur(0px)",
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease: easeOut },
+  },
+};
+
+const stats = [
+  {
+    icon: Clock3,
+    label: "Atendimento como conversao inicial",
+    value: "WhatsApp",
+  },
+  {
+    icon: ShieldCheck,
+    label: "Base pronta para crescer com seguranca",
+    value: "Admin",
+  },
+];
+
+const partners = ["Ofertas", "Delivery", "Popular", "Roleta", "WhatsApp"];
+
+const capabilityCards: {
+  body: string;
+  icon: LucideIcon;
+  tags: string[];
+  title: string;
+}[] = [
+  {
+    body: "Campanhas com destaque visual, chamada direta para atendimento e estrutura pronta para cupons, vitrines e promocoes locais.",
+    icon: BadgePercent,
+    tags: ["Campanhas", "Cupons", "Vitrine", "Conversao"],
+    title: "Ofertas Inteligentes",
+  },
+  {
+    body: "Fluxo pensado para Ivate: pedido rapido, conversa humana, confirmacao pelo WhatsApp e operacao simples para a equipe.",
+    icon: Bike,
+    tags: ["Pedido rapido", "Local", "WhatsApp", "Entrega"],
+    title: "Delivery em Ivate",
+  },
+  {
+    body: "Pagina dedicada para orientar documentos, disponibilidade e atendimento com clareza antes da visita ou retirada na farmacia.",
+    icon: HeartPulse,
+    tags: ["Orientacao", "Confianca", "Popular", "Cuidado"],
+    title: "Farmacia Popular",
+  },
+];
+
+function MotionBlock({
+  children,
+  className,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) {
+  return (
+    <motion.div
+      className={className}
+      initial="hidden"
+      variants={entrance}
+      viewport={{ once: true, amount: 0.25 }}
+      whileInView="show"
+      transition={{ delay }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 export function HomePage() {
   return (
     <>
-      <section className="relative overflow-hidden bg-white">
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-surface-subtle to-transparent" />
-        <div className="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_0.92fr] lg:px-8">
-          <Reveal>
-            <div className="max-w-2xl">
-              <h1 className="text-5xl font-black leading-[1.02] text-ink sm:text-6xl lg:text-7xl">
-                Wimifarma BR
-              </h1>
-              <p className="mt-6 max-w-xl text-xl leading-8 text-muted">
-                Plataforma comercial para vender melhor em Ivate: ofertas,
-                delivery, Farmacia Popular, roleta promocional e atendimento
-                direto pelo WhatsApp.
-              </p>
+      <section className="relative flex min-h-screen overflow-hidden bg-black">
+        <FadingVideo
+          className="absolute left-1/2 top-0 z-0 -translate-x-1/2 object-cover object-top"
+          src={heroVideo}
+          style={{ height: "120%", width: "120%" }}
+        />
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Button asChild size="lg">
-                  <a
-                    href={siteConfig.whatsappUrl}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    <MessageCircle className="h-5 w-5" />
-                    Comprar pelo WhatsApp
-                  </a>
-                </Button>
-                <Button asChild size="lg" variant="secondary">
-                  <Link href="/ofertas">
-                    Ver ofertas
-                    <ArrowRight className="h-5 w-5" />
-                  </Link>
-                </Button>
-              </div>
-
-              <div className="mt-8 grid gap-3 text-sm font-semibold text-ink sm:grid-cols-3">
-                {heroHighlights.map((item) => (
-                  <div className="flex items-center gap-2" key={item}>
-                    <CheckCircle2 className="h-4 w-4 text-pharma-green" />
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Reveal>
-
-          <Reveal delay={0.12}>
-            <HeroVisual />
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="bg-surface-subtle py-20">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-            <Reveal>
-              <h2 className="text-3xl font-black leading-tight text-ink sm:text-4xl">
-                Uma base pensada para comercio, nao apenas presenca online.
-              </h2>
-              <p className="mt-5 text-lg leading-8 text-muted">
-                A estrutura ja separa site publico, admin, banco, features e
-                APIs internas, permitindo crescer sem bagunca.
-              </p>
-            </Reveal>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {benefitItems.map((item, index) => {
-                const Icon = item.icon;
-
-                return (
-                  <Reveal delay={index * 0.06} key={item.title}>
-                    <Card className="h-full">
-                      <CardContent className="p-5">
-                        <Icon className="h-6 w-6 text-brand" />
-                        <h3 className="mt-5 text-lg font-bold text-ink">
-                          {item.title}
-                        </h3>
-                        <p className="mt-3 text-sm leading-6 text-muted">
-                          {item.description}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </Reveal>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white py-20">
-        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1fr] lg:px-8">
-          <Reveal>
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-7">
-              <Badge variant="green">Farmacia Popular</Badge>
-              <h2 className="mt-5 text-3xl font-black text-ink">
-                Um bloco proprio para orientar e converter com seguranca.
-              </h2>
-              <p className="mt-4 text-base leading-7 text-muted">
-                A rota dedicada permite explicar documentos, disponibilidade,
-                atendimento e chamar o cliente para confirmar tudo com a equipe.
-              </p>
-              <Button asChild className="mt-6" variant="success">
-                <Link href="/farmacia-popular">
-                  Conhecer programa
-                  <ClipboardCheck className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </Reveal>
-
-          <Reveal delay={0.08}>
-            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-7">
-              <Badge variant="yellow">Delivery em Ivate</Badge>
-              <h2 className="mt-5 text-3xl font-black text-ink">
-                Pedido rapido, conversa humana e confirmacao pelo WhatsApp.
-              </h2>
-              <p className="mt-4 text-base leading-7 text-muted">
-                O delivery nasce sem checkout complexo. A prioridade e diminuir
-                atrito, organizar demanda e vender com atendimento local.
-              </p>
-              <Button asChild className="mt-6" variant="dark">
-                <Link href="/delivery">
-                  Ver como funciona
-                  <Bike className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="bg-surface-subtle py-20">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-3xl font-black text-ink">
-                Ofertas em destaque
-              </h2>
-              <p className="mt-3 max-w-2xl text-base leading-7 text-muted">
-                Dados de exemplo para validar layout. Depois o admin controla
-                produtos, campanhas e disponibilidade.
-              </p>
-            </div>
-            <Button asChild variant="secondary">
-              <Link href="/ofertas">Ver vitrine completa</Link>
-            </Button>
-          </div>
-
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {featuredOffers.map((offer, index) => (
-              <Reveal delay={index * 0.06} key={offer.title}>
-                <Card className="h-full overflow-hidden">
-                  <div className="h-2 bg-gradient-to-r from-brand via-pharma-yellow to-pharma-green" />
-                  <CardContent className="p-5">
-                    <Badge variant="muted">Oferta modelo</Badge>
-                    <h3 className="mt-5 text-xl font-bold text-ink">
-                      {offer.title}
-                    </h3>
-                    <p className="mt-3 text-sm leading-6 text-muted">
-                      {offer.description}
-                    </p>
-                    <p className="mt-6 text-3xl font-black text-brand">
-                      {formatCurrency(offer.price)}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-ink py-20 text-white">
-        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_0.8fr] lg:px-8">
-          <Reveal>
-            <h2 className="text-4xl font-black leading-tight">
-              Roleta promocional para transformar visita em lead.
-            </h2>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-white/68">
-              O modulo ja nasce pensado para campanhas, premios, tentativas,
-              cupons e auditoria. A versao inicial evita dados reais e deixa a
-              regra de negocio documentada.
-            </p>
-            <Button asChild className="mt-8">
-              <Link href="/roleta">
-                Abrir roleta
-                <Gift className="h-5 w-5" />
-              </Link>
-            </Button>
-          </Reveal>
-          <Reveal delay={0.08}>
-            <div className="grid gap-3">
-              {trustItems.map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <div
-                    className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-4"
-                    key={item.label}
-                  >
-                    <Icon className="h-5 w-5 text-pharma-yellow" />
-                    <span className="text-sm font-semibold text-white/82">
-                      {item.label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="bg-white py-20">
-        <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
-          <Reveal>
-            <h2 className="text-3xl font-black text-ink">
-              Confianca, atendimento e evolucao modular.
-            </h2>
-            <p className="mt-4 text-base leading-7 text-muted">
-              A plataforma fica pronta para receber conteudo real, equipe,
-              ofertas, regras de cupom, logs e melhorias comerciais.
-            </p>
-          </Reveal>
-          <Reveal delay={0.08}>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {[
-                "Separacao clara entre site publico e admin",
-                "Banco preparado para clientes, produtos e campanhas",
-                "APIs internas com contratos de validacao",
-                "Docker pronto para Nginx Proxy Manager",
-              ].map((item) => (
-                <div className="flex gap-3 rounded-lg bg-surface-subtle p-4" key={item}>
-                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-brand" />
-                  <p className="text-sm font-semibold leading-6 text-ink">
-                    {item}
-                  </p>
+        <div className="relative z-10 flex min-h-screen w-full flex-col px-4 pt-24 sm:px-8 lg:px-16">
+          <div className="flex flex-1 items-center justify-center">
+            <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
+              <MotionBlock delay={0.4}>
+                <div className="liquid-glass inline-flex max-w-full items-center gap-2 rounded-full p-1">
+                  <span className="rounded-full bg-white px-3 py-1 font-body text-xs font-semibold text-black">
+                    Novo
+                  </span>
+                  <span className="truncate pr-3 font-body text-sm font-medium text-white/90">
+                    Ofertas, delivery e atendimento pelo WhatsApp
+                  </span>
                 </div>
+              </MotionBlock>
+
+              <BlurText
+                className="mt-6 w-full min-w-0 max-w-4xl font-heading text-[3.7rem] italic leading-[0.82] tracking-[-1px] text-white sm:text-6xl md:text-7xl md:tracking-[-3px] lg:text-[5.6rem]"
+                text="Wimifarma Cuida de Voce em Ivate"
+              />
+
+              <MotionBlock
+                className="mt-5 max-w-2xl font-body text-sm font-light leading-tight text-white md:text-base"
+                delay={0.8}
+              >
+                Uma plataforma moderna para encontrar ofertas, Farmacia
+                Popular, delivery local e campanhas promocionais com
+                atendimento humano.
+              </MotionBlock>
+
+              <MotionBlock
+                className="mt-7 flex flex-col items-center gap-4 sm:flex-row sm:gap-6"
+                delay={1.1}
+              >
+                <a
+                  className="liquid-glass-strong inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-body text-sm font-medium text-white"
+                  href={siteConfig.whatsappUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Comprar pelo WhatsApp
+                  <MessageCircle className="h-5 w-5" />
+                </a>
+                <Link
+                  className="inline-flex items-center gap-2 font-body text-sm font-medium text-white"
+                  href="/ofertas"
+                >
+                  Ver ofertas
+                  <Play className="h-4 w-4 fill-current" />
+                </Link>
+              </MotionBlock>
+
+              <MotionBlock
+                className="mt-8 flex w-full flex-col items-center justify-center gap-4 sm:flex-row sm:items-stretch"
+                delay={1.3}
+              >
+                {stats.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <div
+                      className="liquid-glass flex min-h-[146px] w-full max-w-[220px] flex-col justify-between rounded-[1.25rem] p-5 text-left"
+                      key={item.value}
+                    >
+                      <Icon className="h-7 w-7 text-white" />
+                      <div>
+                        <p className="font-heading text-4xl italic leading-none tracking-[-1px] text-white">
+                          {item.value}
+                        </p>
+                        <p className="mt-2 font-body text-xs font-light leading-snug text-white">
+                          {item.label}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </MotionBlock>
+            </div>
+          </div>
+
+          <MotionBlock
+            className="flex flex-col items-center gap-4 pb-8 text-center"
+            delay={1.4}
+          >
+            <div className="liquid-glass rounded-full px-3.5 py-1 font-body text-xs font-medium text-white">
+              Plataforma comercial local, pronta para crescer em modulos
+            </div>
+            <div className="flex max-w-4xl flex-wrap items-center justify-center gap-x-9 gap-y-2 md:gap-x-14">
+              {partners.map((item) => (
+                <span
+                  className="font-heading text-2xl italic tracking-tight text-white md:text-3xl"
+                  key={item}
+                >
+                  {item}
+                </span>
               ))}
             </div>
-          </Reveal>
+          </MotionBlock>
+        </div>
+      </section>
+
+      <section className="relative min-h-screen overflow-hidden bg-black">
+        <FadingVideo
+          className="absolute inset-0 z-0 h-full w-full object-cover"
+          src={capabilitiesVideo}
+        />
+
+        <div className="relative z-10 flex min-h-screen flex-col px-8 pb-10 pt-24 md:px-16 lg:px-20">
+          <MotionBlock className="mb-auto">
+            <p className="mb-6 font-body text-sm text-white/80">
+              {"// Capabilidades"}
+            </p>
+            <h2 className="font-heading text-6xl italic leading-[0.9] tracking-[-3px] text-white md:text-7xl lg:text-[6rem]">
+              Atendimento
+              <br />
+              evoluido
+            </h2>
+          </MotionBlock>
+
+          <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-3">
+            {capabilityCards.map((card, index) => {
+              const Icon = card.icon;
+
+              return (
+                <MotionBlock delay={index * 0.12} key={card.title}>
+                  <article className="liquid-glass flex min-h-[360px] flex-col rounded-[1.25rem] p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="liquid-glass flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.75rem] text-white">
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <div className="flex max-w-[70%] flex-wrap justify-end gap-1.5">
+                        {card.tags.map((tag) => (
+                          <span
+                            className="liquid-glass rounded-full px-3 py-1 font-body text-[11px] text-white/90"
+                            key={tag}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex-1" />
+
+                    <div className="mt-6">
+                      <h3 className="font-heading text-3xl italic leading-none tracking-[-1px] text-white md:text-4xl">
+                        {card.title}
+                      </h3>
+                      <p className="mt-3 max-w-[32ch] font-body text-sm font-light leading-snug text-white/90">
+                        {card.body}
+                      </p>
+                    </div>
+                  </article>
+                </MotionBlock>
+              );
+            })}
+          </div>
+
+          <MotionBlock
+            className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center"
+            delay={0.4}
+          >
+            <Link
+              className="liquid-glass-strong inline-flex w-fit items-center gap-2 rounded-full px-5 py-2.5 font-body text-sm font-medium text-white"
+              href="/roleta"
+            >
+              Conhecer roleta promocional
+              <Sparkles className="h-5 w-5" />
+            </Link>
+            <a
+              className="inline-flex w-fit items-center gap-2 font-body text-sm font-medium text-white"
+              href={siteConfig.whatsappUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Falar com a equipe
+              <ArrowUpRight className="h-4 w-4" />
+            </a>
+          </MotionBlock>
         </div>
       </section>
     </>

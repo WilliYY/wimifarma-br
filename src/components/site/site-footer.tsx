@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { publicNavItems, siteConfig } from "@/lib/site";
@@ -9,8 +10,14 @@ export function SiteFooter() {
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:px-8">
         <div>
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand text-lg font-black text-white">
-              W
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white p-1.5">
+              <Image
+                alt="Wimifarma"
+                className="h-full w-full object-contain"
+                height={28}
+                src="/brand/logo-wimifarma.svg"
+                width={28}
+              />
             </span>
             <div>
               <p className="font-black">Wimifarma BR</p>
@@ -61,7 +68,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-white/10 py-4">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 text-xs text-white/48 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <p>© 2026 Wimifarma BR. Todos os direitos reservados.</p>
+          <p>(c) 2026 Wimifarma BR. Todos os direitos reservados.</p>
           <p>Sem WordPress, sem HostGator, pronto para Docker.</p>
         </div>
       </div>
