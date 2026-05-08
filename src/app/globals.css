@@ -67,6 +67,69 @@ textarea {
   color: var(--brand-strong);
 }
 
+@keyframes pharma-cloud-drift {
+  0% {
+    opacity: 0.58;
+    transform: translate3d(-3%, -2%, 0) scale(1);
+  }
+  50% {
+    opacity: 0.78;
+    transform: translate3d(2%, 1%, 0) scale(1.04);
+  }
+  100% {
+    opacity: 0.62;
+    transform: translate3d(4%, -1%, 0) scale(1.02);
+  }
+}
+
+@keyframes soft-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes soft-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.015);
+  }
+}
+
+.pharma-clouds {
+  isolation: isolate;
+  position: relative;
+}
+
+.pharma-clouds::before {
+  animation: pharma-cloud-drift 24s ease-in-out infinite alternate;
+  background:
+    radial-gradient(circle at 12% 26%, rgba(255, 241, 243, 0.9), transparent 26%),
+    radial-gradient(circle at 74% 18%, rgba(255, 226, 231, 0.82), transparent 28%),
+    radial-gradient(circle at 35% 74%, rgba(235, 246, 255, 0.88), transparent 30%),
+    radial-gradient(circle at 88% 70%, rgba(255, 249, 224, 0.62), transparent 26%);
+  content: "";
+  filter: blur(18px);
+  inset: -12%;
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+}
+
+.soft-float {
+  animation: soft-float 5.8s ease-in-out infinite;
+}
+
+.soft-breathe {
+  animation: soft-breathe 4.4s ease-in-out infinite;
+}
+
 .liquid-glass {
   background: rgba(255, 255, 255, 0.01);
   background-blend-mode: luminosity;

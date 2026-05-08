@@ -15,7 +15,6 @@ import {
   ShieldCheck,
   ShoppingBasket,
   Sparkles,
-  Truck,
   type LucideIcon,
 } from "lucide-react";
 import { siteConfig } from "@/lib/site";
@@ -91,11 +90,11 @@ const productCards = [
     title: "Genericos e similares",
   },
   {
-    badge: "Entrega",
+    badge: "Local",
     category: "Ivate",
     icon: Bike,
     price: "Pedido rapido",
-    title: "Delivery local",
+    title: "Pedido local",
   },
 ];
 
@@ -152,7 +151,7 @@ const serviceCards = [
   {
     description: "Atendimento pensado para a rotina local da cidade.",
     icon: MapPin,
-    title: "Entrega em Ivate",
+    title: "Atendimento em Ivate",
   },
   {
     description: "Admin, clientes, cupons e cashback preparados para evoluir.",
@@ -164,8 +163,8 @@ const serviceCards = [
 export function HomePage() {
   return (
     <>
-      <section className="bg-white pt-36 text-ink lg:pt-44">
-        <div className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
+      <section className="pharma-clouds bg-white pt-36 text-ink lg:pt-44">
+        <div className="mx-auto max-w-7xl px-4 pb-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-4 gap-5 sm:grid-cols-4 lg:grid-cols-8">
             {categoryItems.map((item, index) => {
               const Icon = item.icon;
@@ -176,7 +175,10 @@ export function HomePage() {
                     className="group flex flex-col items-center gap-3 text-center"
                     href={item.href}
                   >
-                    <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[#f3f3f5] text-[#064b8e] transition group-hover:bg-brand group-hover:text-white sm:h-24 sm:w-24">
+                    <span
+                      className="soft-float flex h-20 w-20 items-center justify-center rounded-full bg-[#f3f3f5] text-[#064b8e] shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_12px_28px_rgba(17,24,39,0.04)] transition duration-300 group-hover:-translate-y-1 group-hover:bg-brand group-hover:text-white sm:h-24 sm:w-24"
+                      style={{ animationDelay: `${index * 0.16}s` }}
+                    >
                       <Icon className="h-9 w-9 stroke-[2.2]" />
                     </span>
                     <span className="whitespace-pre-line text-sm font-bold leading-tight text-[#4b4b4b] group-hover:text-brand">
@@ -190,12 +192,12 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="bg-surface-subtle px-4 pb-10 sm:px-6 lg:px-8">
+      <section className="pharma-clouds bg-surface-subtle px-4 pb-10 pt-2 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <MotionBlock className="relative min-h-[430px] overflow-hidden rounded-[1.75rem] bg-[#fff5f6] shadow-[0_18px_60px_rgba(17,24,39,0.08)]">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_26%,rgba(200,16,46,0.2),transparent_30%),radial-gradient(circle_at_76%_88%,rgba(6,75,142,0.12),transparent_28%),linear-gradient(100deg,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.95)_55%,rgba(255,226,231,0.9)_100%)]" />
             <div className="pointer-events-none absolute bottom-0 right-0 hidden h-full w-[48%] lg:block">
-              <div className="absolute right-16 top-12 rounded-[1.5rem] bg-white/92 p-5 shadow-[0_18px_50px_rgba(17,24,39,0.12)] backdrop-blur">
+              <div className="soft-float absolute right-16 top-12 rounded-[1.5rem] bg-white/92 p-5 shadow-[0_18px_50px_rgba(17,24,39,0.12)] backdrop-blur">
                 <div className="flex items-center gap-3">
                   <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-brand">
                     <BadgePercent className="h-6 w-6" />
@@ -210,7 +212,7 @@ export function HomePage() {
                   </div>
                 </div>
               </div>
-              <div className="absolute bottom-12 right-12 flex h-56 w-44 rotate-6 flex-col justify-between rounded-[1.75rem] bg-brand p-5 text-white shadow-[0_24px_60px_rgba(200,16,46,0.28)]">
+              <div className="soft-float absolute bottom-12 right-12 flex h-56 w-44 rotate-6 flex-col justify-between rounded-[1.75rem] bg-brand p-5 text-white shadow-[0_24px_60px_rgba(200,16,46,0.28)] [animation-delay:0.55s]">
                 <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/18">
                   <Pill className="h-8 w-8" />
                 </span>
@@ -223,7 +225,7 @@ export function HomePage() {
                   </p>
                 </div>
               </div>
-              <div className="absolute bottom-28 right-64 flex h-28 w-28 -rotate-12 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_18px_45px_rgba(37,211,102,0.28)]">
+              <div className="soft-float absolute bottom-28 right-64 flex h-28 w-28 -rotate-12 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_18px_45px_rgba(37,211,102,0.28)] [animation-delay:1s]">
                 <MessageCircle className="h-12 w-12" />
               </div>
               <div className="absolute right-4 top-28 h-28 w-28 rounded-full bg-white/70" />
@@ -240,13 +242,13 @@ export function HomePage() {
               </h1>
 
               <p className="mt-5 max-w-xl text-base leading-7 text-muted sm:text-lg">
-                Consulte ofertas, medicamentos, Farmacia Popular e delivery com
+                Consulte ofertas, medicamentos e Farmacia Popular com
                 atendimento direto pelo WhatsApp.
               </p>
 
               <form
                 action="/ofertas"
-                className="mt-8 flex max-w-2xl flex-col gap-3 rounded-2xl bg-white p-2 shadow-[0_12px_40px_rgba(17,24,39,0.1)] sm:flex-row sm:items-center"
+                className="mt-8 flex max-w-2xl flex-col gap-3 rounded-[1.25rem] border border-line bg-white/95 p-2 shadow-[0_14px_42px_rgba(17,24,39,0.1)] backdrop-blur sm:flex-row sm:items-center"
               >
                 <div className="flex min-w-0 flex-1 items-center gap-3 px-3">
                   <Search className="h-5 w-5 shrink-0 text-brand" />
@@ -259,7 +261,7 @@ export function HomePage() {
                   />
                 </div>
                 <button
-                  className="h-12 rounded-xl bg-brand px-6 text-sm font-bold text-white transition hover:bg-brand-strong"
+                  className="soft-breathe h-12 rounded-xl bg-brand px-6 text-sm font-bold text-white shadow-[0_10px_24px_rgba(200,16,46,0.2)] transition duration-300 hover:-translate-y-0.5 hover:bg-brand-strong"
                   type="submit"
                 >
                   Buscar
@@ -268,7 +270,7 @@ export function HomePage() {
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <a
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#25d366] px-6 text-sm font-bold text-white shadow-lg shadow-[#25d366]/20 transition hover:bg-[#1ebe57]"
+                  className="soft-breathe inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#25d366] px-6 text-sm font-bold text-white shadow-lg shadow-[#25d366]/20 transition duration-300 hover:-translate-y-1 hover:bg-[#1ebe57]"
                   href={siteConfig.whatsappUrl}
                   rel="noreferrer"
                   target="_blank"
@@ -277,11 +279,11 @@ export function HomePage() {
                   <MessageCircle className="h-5 w-5" />
                 </a>
                 <Link
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-line bg-white px-6 text-sm font-bold text-ink transition hover:border-brand hover:text-brand"
-                  href="/delivery"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-brand/15 bg-white px-6 text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand hover:text-brand"
+                  href="/ofertas"
                 >
-                  Delivery em Ivate
-                  <Truck className="h-4 w-4" />
+                  Ver ofertas
+                  <ArrowUpRight className="h-4 w-4" />
                 </Link>
               </div>
             </div>
@@ -290,7 +292,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-16 sm:px-6 lg:px-8">
+      <section className="pharma-clouds bg-white px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <MotionBlock className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -307,7 +309,7 @@ export function HomePage() {
             </div>
 
             <a
-              className="inline-flex w-fit items-center gap-2 rounded-xl bg-[#25d366] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#1ebe57]"
+              className="soft-breathe inline-flex w-fit items-center gap-2 rounded-xl bg-[#25d366] px-5 py-3 text-sm font-bold text-white shadow-sm transition duration-300 hover:-translate-y-1 hover:bg-[#1ebe57]"
               href={siteConfig.whatsappUrl}
               rel="noreferrer"
               target="_blank"
@@ -347,7 +349,7 @@ export function HomePage() {
                       </p>
                     </div>
                     <a
-                      className="inline-flex h-11 items-center justify-center rounded-xl bg-ink px-5 text-sm font-bold text-white transition group-hover:bg-brand"
+                      className="inline-flex h-11 items-center justify-center rounded-xl bg-ink px-5 text-sm font-bold text-white transition duration-300 hover:-translate-y-0.5 group-hover:bg-brand"
                       href={siteConfig.whatsappUrl}
                       rel="noreferrer"
                       target="_blank"
@@ -362,7 +364,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="bg-surface-subtle px-4 py-16 sm:px-6 lg:px-8">
+      <section className="pharma-clouds bg-surface-subtle px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <MotionBlock className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -374,7 +376,7 @@ export function HomePage() {
               </h2>
             </div>
             <Link
-              className="inline-flex w-fit items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-bold text-white"
+              className="soft-breathe inline-flex w-fit items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-bold text-white transition duration-300 hover:-translate-y-1 hover:bg-brand-strong"
               href="/ofertas"
             >
               Ver todas as ofertas
@@ -411,7 +413,7 @@ export function HomePage() {
                       {product.price}
                     </p>
                     <a
-                      className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-ink px-4 text-sm font-bold text-white transition group-hover:bg-brand"
+                      className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-ink px-4 text-sm font-bold text-white transition duration-300 hover:-translate-y-0.5 group-hover:bg-brand"
                       href={siteConfig.whatsappUrl}
                       rel="noreferrer"
                       target="_blank"
@@ -427,7 +429,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-16 sm:px-6 lg:px-8">
+      <section className="pharma-clouds bg-white px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <MotionBlock>
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand">

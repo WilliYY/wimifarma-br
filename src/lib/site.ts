@@ -23,7 +23,6 @@ export const siteConfig = {
 export const publicNavItems = [
   { href: "/ofertas", label: "Ofertas" },
   { href: "/farmacia-popular", label: "Farmacia Popular" },
-  { href: "/delivery", label: "Delivery" },
   { href: "/sobre", label: "Sobre" },
   { href: "/contato", label: "Contato" },
 ];

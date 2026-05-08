@@ -1,6 +1,7 @@
 import { compare } from "bcryptjs";
 import NextAuth, { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import { getPrisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations/auth";
 
@@ -42,6 +43,14 @@ export const authConfig = {
     strategy: "jwt",
   },
   providers: [
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          Google({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
