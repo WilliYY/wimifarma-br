@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -9,10 +10,14 @@ import {
   Bike,
   HeartPulse,
   MessageCircle,
+  Pause,
   Pill,
+  Play,
   Search,
   ShoppingBasket,
   Sparkles,
+  Volume2,
+  VolumeX,
   type LucideIcon,
 } from "lucide-react";
 import { siteConfig } from "@/lib/site";
@@ -390,6 +395,107 @@ function MedicineCard({
   );
 }
 
+function HeroVideo() {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true);
+
+  const togglePlay = () => {
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    if (video.paused) {
+      void video.play().then(() => setIsPlaying(true));
+      return;
+    }
+
+    video.pause();
+    setIsPlaying(false);
+  };
+
+  const toggleMute = () => {
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    const nextMuted = !video.muted;
+    video.muted = nextMuted;
+    setIsMuted(nextMuted);
+
+    if (!nextMuted && video.paused) {
+      void video.play().then(() => setIsPlaying(true));
+    }
+  };
+
+  return (
+    <div className="relative">
+      <div className="overflow-hidden rounded-[1.55rem] bg-ink p-2 shadow-[0_22px_70px_rgba(17,24,39,0.16)]">
+        <div className="aspect-[16/10] min-h-[300px] overflow-hidden rounded-[1.25rem] bg-ink lg:min-h-[500px]">
+          <video
+            aria-label="Video da Wimifarma"
+            autoPlay
+            className="h-full w-full object-cover object-center"
+            loop
+            muted
+            onPause={() => setIsPlaying(false)}
+            onPlay={() => setIsPlaying(true)}
+            onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
+            playsInline
+            preload="auto"
+            ref={videoRef}
+          >
+            <source src="/videos/thiago-cansado.mp4" type="video/mp4" />
+          </video>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-col gap-3 rounded-[1.25rem] border border-line bg-white px-3 py-3 shadow-[0_12px_34px_rgba(17,24,39,0.08)] sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-black text-ink">Video Wimifarma</p>
+          <p className="text-xs font-medium text-muted">
+            Inicia automaticamente sem som.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            aria-label={isPlaying ? "Pausar video" : "Reproduzir video"}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-ink px-4 text-sm font-bold text-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-brand"
+            onClick={togglePlay}
+            type="button"
+          >
+            {isPlaying ? (
+              <Pause className="h-4 w-4" />
+            ) : (
+              <Play className="h-4 w-4 fill-current" />
+            )}
+            {isPlaying ? "Pausar" : "Reproduzir"}
+          </button>
+
+          <button
+            aria-label={isMuted ? "Ativar som do video" : "Silenciar video"}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-line bg-white px-4 text-sm font-bold text-ink shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand"
+            onClick={toggleMute}
+            type="button"
+          >
+            {isMuted ? (
+              <VolumeX className="h-4 w-4" />
+            ) : (
+              <Volume2 className="h-4 w-4" />
+            )}
+            {isMuted ? "Ativar som" : "Som ligado"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function HomePage() {
   return (
     <>
@@ -424,90 +530,65 @@ export function HomePage() {
 
       <section className="pharma-clouds bg-surface-subtle px-4 pb-10 pt-2 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <MotionBlock className="relative min-h-[460px] overflow-hidden rounded-[1.75rem] bg-ink shadow-[0_18px_60px_rgba(17,24,39,0.12)]">
-            <video
-              aria-hidden="true"
-              autoPlay
-              className="absolute inset-0 h-full w-full object-cover object-center"
-              loop
-              muted
-              playsInline
-              preload="auto"
-            >
-              <source src="/videos/thiago-cansado.mp4" type="video/mp4" />
-            </video>
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.93)_42%,rgba(255,255,255,0.46)_67%,rgba(17,24,39,0.22)_100%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_26%,rgba(200,16,46,0.20),transparent_34%),radial-gradient(circle_at_18%_86%,rgba(6,75,142,0.10),transparent_32%)]" />
-            <div className="pointer-events-none absolute bottom-6 right-6 hidden rounded-[1.25rem] bg-white/90 px-5 py-4 shadow-[0_18px_50px_rgba(17,24,39,0.16)] backdrop-blur lg:block">
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-soft text-brand">
-                  <BadgePercent className="h-5 w-5" />
+          <MotionBlock className="overflow-hidden rounded-[2rem] border border-white bg-white p-3 shadow-[0_18px_60px_rgba(17,24,39,0.12)] sm:p-4">
+            <div className="grid gap-5 lg:grid-cols-[1.12fr_0.88fr] lg:items-stretch">
+              <HeroVideo />
+
+              <div className="pharma-clouds flex min-h-[430px] flex-col justify-center rounded-[1.55rem] border border-line bg-surface-subtle px-6 py-9 sm:px-8 lg:px-10">
+                <span className="inline-flex w-fit items-center gap-2 rounded-full bg-brand-soft px-4 py-2 text-sm font-bold text-brand">
+                  <BadgePercent className="h-4 w-4" />
+                  Ofertas da semana
                 </span>
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
-                    Semana de ofertas
-                  </p>
-                  <p className="text-2xl font-black leading-none text-ink">
-                    ate 35%
-                  </p>
+
+                <h1 className="mt-6 max-w-xl font-body text-4xl font-black leading-[0.98] tracking-[-1px] text-ink sm:text-5xl xl:text-6xl">
+                  Farmacia Wimifarma em Ivate.
+                </h1>
+
+                <p className="mt-5 max-w-lg text-base leading-7 text-muted sm:text-lg">
+                  Consulte ofertas, medicamentos e Farmacia Popular com
+                  atendimento direto pelo WhatsApp.
+                </p>
+
+                <form
+                  action="/ofertas"
+                  className="mt-8 flex max-w-xl flex-col gap-3 rounded-[1.25rem] border border-line bg-white p-1.5 shadow-[0_14px_42px_rgba(17,24,39,0.08)] sm:flex-row sm:items-center"
+                >
+                  <div className="flex min-w-0 flex-1 items-center gap-3 px-3">
+                    <Search className="h-5 w-5 shrink-0 text-brand" />
+                    <input
+                      aria-label="Buscar na Wimifarma"
+                      className="h-12 min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted"
+                      name="q"
+                      placeholder="Buscar produto, oferta ou categoria"
+                      type="search"
+                    />
+                  </div>
+                  <button
+                    className="soft-breathe h-12 rounded-[1rem] bg-brand px-7 text-sm font-bold text-white shadow-[0_10px_24px_rgba(200,16,46,0.2)] transition duration-300 hover:-translate-y-0.5 hover:bg-brand-strong"
+                    type="submit"
+                  >
+                    Buscar
+                  </button>
+                </form>
+
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  <a
+                    className="soft-breathe inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#25d366] px-6 text-sm font-bold text-white shadow-lg shadow-[#25d366]/20 transition duration-300 hover:-translate-y-1 hover:bg-[#1ebe57]"
+                    href={siteConfig.whatsappUrl}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    Pedir pelo WhatsApp
+                    <MessageCircle className="h-5 w-5" />
+                  </a>
+                  <Link
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-brand/15 bg-white px-6 text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand hover:text-brand"
+                    href="/ofertas"
+                  >
+                    Ver ofertas
+                    <ArrowUpRight className="h-4 w-4" />
+                  </Link>
                 </div>
-              </div>
-            </div>
-
-            <div className="relative z-10 flex min-h-[430px] flex-col justify-center px-6 py-10 sm:px-10 lg:max-w-[60%] lg:px-12">
-              <span className="inline-flex w-fit items-center gap-2 rounded-full bg-brand-soft px-4 py-2 text-sm font-bold text-brand">
-                <BadgePercent className="h-4 w-4" />
-                Ofertas da semana
-              </span>
-
-              <h1 className="mt-6 max-w-2xl font-body text-5xl font-black leading-[0.98] tracking-[-1px] text-ink sm:text-6xl lg:text-7xl">
-                Farmacia Wimifarma em Ivate.
-              </h1>
-
-              <p className="mt-5 max-w-xl text-base leading-7 text-muted sm:text-lg">
-                Consulte ofertas, medicamentos e Farmacia Popular com
-                atendimento direto pelo WhatsApp.
-              </p>
-
-              <form
-                action="/ofertas"
-                className="mt-8 flex max-w-2xl flex-col gap-3 rounded-[1.25rem] border border-line bg-white/95 p-1.5 shadow-[0_14px_42px_rgba(17,24,39,0.1)] backdrop-blur sm:flex-row sm:items-center"
-              >
-                <div className="flex min-w-0 flex-1 items-center gap-3 px-3">
-                  <Search className="h-5 w-5 shrink-0 text-brand" />
-                  <input
-                    aria-label="Buscar na Wimifarma"
-                    className="h-12 min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted"
-                    name="q"
-                    placeholder="Buscar produto, oferta ou categoria"
-                    type="search"
-                  />
-                </div>
-                <button
-                  className="soft-breathe h-12 rounded-[1rem] bg-brand px-7 text-sm font-bold text-white shadow-[0_10px_24px_rgba(200,16,46,0.2)] transition duration-300 hover:-translate-y-0.5 hover:bg-brand-strong"
-                  type="submit"
-                >
-                  Buscar
-                </button>
-              </form>
-
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <a
-                  className="soft-breathe inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#25d366] px-6 text-sm font-bold text-white shadow-lg shadow-[#25d366]/20 transition duration-300 hover:-translate-y-1 hover:bg-[#1ebe57]"
-                  href={siteConfig.whatsappUrl}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  Pedir pelo WhatsApp
-                  <MessageCircle className="h-5 w-5" />
-                </a>
-                <Link
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-brand/15 bg-white px-6 text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand hover:text-brand"
-                  href="/ofertas"
-                >
-                  Ver ofertas
-                  <ArrowUpRight className="h-4 w-4" />
-                </Link>
               </div>
             </div>
           </MotionBlock>
