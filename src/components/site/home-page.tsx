@@ -432,12 +432,12 @@ function HeroVideo() {
   };
 
   return (
-    <div className="overflow-hidden rounded-[1.75rem] bg-ink p-2 shadow-[0_24px_80px_rgba(17,24,39,0.18)]">
-      <div className="relative aspect-video min-h-[310px] overflow-hidden rounded-[1.45rem] bg-ink sm:min-h-[440px] lg:min-h-[620px]">
+    <div className="overflow-hidden rounded-[1.75rem] border-[3px] border-brand bg-brand p-1.5 shadow-[0_24px_80px_rgba(200,16,46,0.16)]">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-[1.4rem] bg-black sm:aspect-video lg:aspect-[16/6] xl:aspect-[16/5.6]">
         <video
           aria-label="Video da Wimifarma"
           autoPlay
-          className="h-full w-full object-cover object-center"
+          className="h-full w-full bg-black object-contain object-center"
           loop
           muted
           onPause={() => setIsPlaying(false)}
