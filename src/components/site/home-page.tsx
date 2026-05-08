@@ -424,41 +424,34 @@ export function HomePage() {
 
       <section className="pharma-clouds bg-surface-subtle px-4 pb-10 pt-2 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <MotionBlock className="relative min-h-[430px] overflow-hidden rounded-[1.75rem] bg-[#fff5f6] shadow-[0_18px_60px_rgba(17,24,39,0.08)]">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_26%,rgba(200,16,46,0.2),transparent_30%),radial-gradient(circle_at_76%_88%,rgba(6,75,142,0.12),transparent_28%),linear-gradient(100deg,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.95)_55%,rgba(255,226,231,0.9)_100%)]" />
-            <div className="pointer-events-none absolute bottom-0 right-0 hidden h-full w-[48%] lg:block">
-              <div className="soft-float absolute right-16 top-12 rounded-[1.5rem] bg-white/92 p-5 shadow-[0_18px_50px_rgba(17,24,39,0.12)] backdrop-blur">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-brand">
-                    <BadgePercent className="h-6 w-6" />
-                  </span>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
-                      Semana de ofertas
-                    </p>
-                    <p className="text-2xl font-black leading-none text-ink">
-                      ate 35%
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="soft-float absolute bottom-12 right-12 flex h-56 w-44 rotate-6 flex-col justify-between rounded-[1.75rem] bg-brand p-5 text-white shadow-[0_24px_60px_rgba(200,16,46,0.28)] [animation-delay:0.55s]">
-                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/18">
-                  <Pill className="h-8 w-8" />
+          <MotionBlock className="relative min-h-[460px] overflow-hidden rounded-[1.75rem] bg-ink shadow-[0_18px_60px_rgba(17,24,39,0.12)]">
+            <video
+              aria-hidden="true"
+              autoPlay
+              className="absolute inset-0 h-full w-full object-cover object-center"
+              loop
+              muted
+              playsInline
+              preload="auto"
+            >
+              <source src="/videos/thiago-cansado.mp4" type="video/mp4" />
+            </video>
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.93)_42%,rgba(255,255,255,0.46)_67%,rgba(17,24,39,0.22)_100%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_26%,rgba(200,16,46,0.20),transparent_34%),radial-gradient(circle_at_18%_86%,rgba(6,75,142,0.10),transparent_32%)]" />
+            <div className="pointer-events-none absolute bottom-6 right-6 hidden rounded-[1.25rem] bg-white/90 px-5 py-4 shadow-[0_18px_50px_rgba(17,24,39,0.16)] backdrop-blur lg:block">
+              <div className="flex items-center gap-3">
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-soft text-brand">
+                  <BadgePercent className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/72">
-                    Medicamentos
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
+                    Semana de ofertas
                   </p>
-                  <p className="mt-2 text-3xl font-black leading-none">
-                    consulta rapida
+                  <p className="text-2xl font-black leading-none text-ink">
+                    ate 35%
                   </p>
                 </div>
               </div>
-              <div className="soft-float absolute bottom-28 right-64 flex h-28 w-28 -rotate-12 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_18px_45px_rgba(37,211,102,0.28)] [animation-delay:1s]">
-                <MessageCircle className="h-12 w-12" />
-              </div>
-              <div className="absolute right-4 top-28 h-28 w-28 rounded-full bg-white/70" />
             </div>
 
             <div className="relative z-10 flex min-h-[430px] flex-col justify-center px-6 py-10 sm:px-10 lg:max-w-[60%] lg:px-12">

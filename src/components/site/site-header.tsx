@@ -13,12 +13,12 @@ export function SiteHeader() {
       <div className="mx-auto grid w-full max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <Link
           aria-label="Wimifarma"
-          className="flex h-14 w-44 items-center justify-start overflow-hidden sm:h-16 sm:w-52"
+          className="flex h-14 w-48 items-center justify-start overflow-visible sm:h-16 sm:w-56"
           href="/"
         >
           <Image
             alt="Wimifarma"
-            className="h-full w-full scale-[2.15] object-contain object-left"
+            className="h-full w-full scale-[1.9] object-contain object-left"
             height={48}
             priority
             src="/brand/logo-wimifarma.svg"
