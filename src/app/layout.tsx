@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   },
   description:
     "Plataforma comercial da Wimifarma em Ivate-PR: ofertas, delivery, Farmacia Popular e atendimento pelo WhatsApp.",
+  icons: {
+    apple: "/favicon.svg",
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    shortcut: "/favicon.svg",
+  },
   openGraph: {
     title: "Wimifarma",
     description:

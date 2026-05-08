@@ -10,10 +10,10 @@ export function SiteFooter() {
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:px-8">
         <div>
           <div className="flex items-center gap-3">
-            <span className="flex h-12 w-32 items-center justify-center overflow-hidden rounded-full bg-white p-2">
+            <span className="flex h-14 w-40 items-center justify-start overflow-hidden">
               <Image
                 alt="Wimifarma"
-                className="h-full w-full scale-[1.65] object-contain"
+                className="h-full w-full scale-[2.05] object-contain object-left brightness-0 invert"
                 height={40}
                 src="/brand/logo-wimifarma.svg"
                 width={40}
@@ -62,7 +62,7 @@ export function SiteFooter() {
           <div className="mt-4 space-y-3 text-sm text-white/72">
             <p>{siteConfig.address}</p>
             <p>{siteConfig.displayPhone}</p>
-            <p>Ofertas e delivery sob confirmacao da equipe.</p>
+            <p>Ofertas e pedidos sob confirmacao da equipe.</p>
           </div>
         </div>
       </div>

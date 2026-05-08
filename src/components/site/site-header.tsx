@@ -13,12 +13,12 @@ export function SiteHeader() {
       <div className="mx-auto grid w-full max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <Link
           aria-label="Wimifarma"
-          className="flex h-12 w-36 items-center justify-center overflow-hidden rounded-full bg-white p-2 shadow-[inset_0_0_0_1px_rgba(17,24,39,0.08),0_8px_24px_rgba(0,0,0,0.08)] sm:h-14 sm:w-44"
+          className="flex h-14 w-44 items-center justify-start overflow-hidden sm:h-16 sm:w-52"
           href="/"
         >
           <Image
             alt="Wimifarma"
-            className="h-full w-full scale-[2.25] object-contain"
+            className="h-full w-full scale-[2.15] object-contain object-left"
             height={48}
             priority
             src="/brand/logo-wimifarma.svg"
@@ -28,7 +28,7 @@ export function SiteHeader() {
 
         <form
           action="/ofertas"
-          className="mx-auto hidden h-14 w-full max-w-3xl items-center gap-3 rounded-full border border-line bg-white px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_28px_rgba(17,24,39,0.06)] md:flex"
+          className="mx-auto hidden h-14 w-full max-w-3xl items-center gap-3 rounded-full border border-line bg-white py-1.5 pl-4 pr-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_28px_rgba(17,24,39,0.06)] md:flex"
         >
           <Search className="h-5 w-5 shrink-0 text-[#5f6f88]" />
           <input
@@ -39,7 +39,7 @@ export function SiteHeader() {
             type="search"
           />
           <button
-            className="soft-breathe rounded-full bg-brand px-6 py-2.5 font-body text-sm font-bold text-white shadow-[0_10px_24px_rgba(200,16,46,0.2)] transition duration-300 hover:-translate-y-0.5 hover:bg-brand-strong"
+            className="soft-breathe flex h-11 items-center rounded-full bg-brand px-7 font-body text-sm font-bold text-white shadow-[0_10px_24px_rgba(200,16,46,0.2)] transition duration-300 hover:-translate-y-0.5 hover:bg-brand-strong"
             type="submit"
           >
             Buscar
