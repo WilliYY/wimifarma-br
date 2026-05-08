@@ -13,7 +13,6 @@ import {
   Pause,
   Pill,
   Play,
-  Search,
   ShoppingBasket,
   Sparkles,
   Volume2,
@@ -433,40 +432,30 @@ function HeroVideo() {
   };
 
   return (
-    <div className="relative">
-      <div className="overflow-hidden rounded-[1.55rem] bg-ink p-2 shadow-[0_22px_70px_rgba(17,24,39,0.16)]">
-        <div className="aspect-[16/10] min-h-[300px] overflow-hidden rounded-[1.25rem] bg-ink lg:min-h-[500px]">
-          <video
-            aria-label="Video da Wimifarma"
-            autoPlay
-            className="h-full w-full object-cover object-center"
-            loop
-            muted
-            onPause={() => setIsPlaying(false)}
-            onPlay={() => setIsPlaying(true)}
-            onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
-            playsInline
-            preload="auto"
-            ref={videoRef}
-          >
-            <source src="/videos/thiago-cansado.mp4" type="video/mp4" />
-          </video>
-        </div>
-      </div>
+    <div className="overflow-hidden rounded-[1.75rem] bg-ink p-2 shadow-[0_24px_80px_rgba(17,24,39,0.18)]">
+      <div className="relative aspect-video min-h-[310px] overflow-hidden rounded-[1.45rem] bg-ink sm:min-h-[440px] lg:min-h-[620px]">
+        <video
+          aria-label="Video da Wimifarma"
+          autoPlay
+          className="h-full w-full object-cover object-center"
+          loop
+          muted
+          onPause={() => setIsPlaying(false)}
+          onPlay={() => setIsPlaying(true)}
+          onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
+          playsInline
+          preload="auto"
+          ref={videoRef}
+        >
+          <source src="/videos/thiago-cansado.mp4" type="video/mp4" />
+        </video>
 
-      <div className="mt-3 flex flex-col gap-3 rounded-[1.25rem] border border-line bg-white px-3 py-3 shadow-[0_12px_34px_rgba(17,24,39,0.08)] sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-black text-ink">Video Wimifarma</p>
-          <p className="text-xs font-medium text-muted">
-            Inicia automaticamente sem som.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
+        <div className="absolute bottom-4 right-4 z-10 flex items-center gap-2 rounded-full border border-white/20 bg-ink/60 p-1.5 shadow-[0_12px_34px_rgba(0,0,0,0.22)] backdrop-blur-md">
           <button
             aria-label={isPlaying ? "Pausar video" : "Reproduzir video"}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-ink px-4 text-sm font-bold text-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-brand"
+            className="soft-breathe inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-brand hover:text-white"
             onClick={togglePlay}
+            title={isPlaying ? "Pausar video" : "Reproduzir video"}
             type="button"
           >
             {isPlaying ? (
@@ -474,13 +463,13 @@ function HeroVideo() {
             ) : (
               <Play className="h-4 w-4 fill-current" />
             )}
-            {isPlaying ? "Pausar" : "Reproduzir"}
           </button>
 
           <button
             aria-label={isMuted ? "Ativar som do video" : "Silenciar video"}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-line bg-white px-4 text-sm font-bold text-ink shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand"
+            className="soft-breathe inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-brand hover:text-white"
             onClick={toggleMute}
+            title={isMuted ? "Ativar som do video" : "Silenciar video"}
             type="button"
           >
             {isMuted ? (
@@ -488,7 +477,6 @@ function HeroVideo() {
             ) : (
               <Volume2 className="h-4 w-4" />
             )}
-            {isMuted ? "Ativar som" : "Som ligado"}
           </button>
         </div>
       </div>
@@ -531,66 +519,7 @@ export function HomePage() {
       <section className="pharma-clouds bg-surface-subtle px-4 pb-10 pt-2 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <MotionBlock className="overflow-hidden rounded-[2rem] border border-white bg-white p-3 shadow-[0_18px_60px_rgba(17,24,39,0.12)] sm:p-4">
-            <div className="grid gap-5 lg:grid-cols-[1.12fr_0.88fr] lg:items-stretch">
-              <HeroVideo />
-
-              <div className="pharma-clouds flex min-h-[430px] flex-col justify-center rounded-[1.55rem] border border-line bg-surface-subtle px-6 py-9 sm:px-8 lg:px-10">
-                <span className="inline-flex w-fit items-center gap-2 rounded-full bg-brand-soft px-4 py-2 text-sm font-bold text-brand">
-                  <BadgePercent className="h-4 w-4" />
-                  Ofertas da semana
-                </span>
-
-                <h1 className="mt-6 max-w-xl font-body text-4xl font-black leading-[0.98] tracking-[-1px] text-ink sm:text-5xl xl:text-6xl">
-                  Farmacia Wimifarma em Ivate.
-                </h1>
-
-                <p className="mt-5 max-w-lg text-base leading-7 text-muted sm:text-lg">
-                  Consulte ofertas, medicamentos e Farmacia Popular com
-                  atendimento direto pelo WhatsApp.
-                </p>
-
-                <form
-                  action="/ofertas"
-                  className="mt-8 flex max-w-xl flex-col gap-3 rounded-[1.25rem] border border-line bg-white p-1.5 shadow-[0_14px_42px_rgba(17,24,39,0.08)] sm:flex-row sm:items-center"
-                >
-                  <div className="flex min-w-0 flex-1 items-center gap-3 px-3">
-                    <Search className="h-5 w-5 shrink-0 text-brand" />
-                    <input
-                      aria-label="Buscar na Wimifarma"
-                      className="h-12 min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted"
-                      name="q"
-                      placeholder="Buscar produto, oferta ou categoria"
-                      type="search"
-                    />
-                  </div>
-                  <button
-                    className="soft-breathe h-12 rounded-[1rem] bg-brand px-7 text-sm font-bold text-white shadow-[0_10px_24px_rgba(200,16,46,0.2)] transition duration-300 hover:-translate-y-0.5 hover:bg-brand-strong"
-                    type="submit"
-                  >
-                    Buscar
-                  </button>
-                </form>
-
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                  <a
-                    className="soft-breathe inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#25d366] px-6 text-sm font-bold text-white shadow-lg shadow-[#25d366]/20 transition duration-300 hover:-translate-y-1 hover:bg-[#1ebe57]"
-                    href={siteConfig.whatsappUrl}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    Pedir pelo WhatsApp
-                    <MessageCircle className="h-5 w-5" />
-                  </a>
-                  <Link
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-brand/15 bg-white px-6 text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand hover:text-brand"
-                    href="/ofertas"
-                  >
-                    Ver ofertas
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
-            </div>
+            <HeroVideo />
           </MotionBlock>
         </div>
       </section>
