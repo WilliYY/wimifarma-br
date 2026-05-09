@@ -43,13 +43,13 @@ export function AdminLoginForm({ callbackUrl }: { callbackUrl: string }) {
     <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
       <div className="grid gap-2">
         <label className="text-sm font-semibold text-ink" htmlFor="email">
-          Email
+          Email ou usuario
         </label>
         <Input
-          autoComplete="email"
+          autoComplete="username"
           id="email"
-          placeholder="admin@wimifarma.local"
-          type="email"
+          placeholder="adm"
+          type="text"
           {...form.register("email")}
         />
         {form.formState.errors.email ? (

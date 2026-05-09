@@ -433,11 +433,24 @@ function HeroVideo() {
 
   return (
     <div className="overflow-hidden rounded-[1.75rem] border-[3px] border-brand bg-brand p-1.5 shadow-[0_24px_80px_rgba(200,16,46,0.16)]">
-      <div className="relative aspect-[4/3] overflow-hidden rounded-[1.4rem] bg-black sm:aspect-video lg:aspect-[16/6] xl:aspect-[16/5.6]">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-[1.4rem] bg-[radial-gradient(circle_at_25%_50%,rgba(200,16,46,0.34),transparent_24%),radial-gradient(circle_at_78%_45%,rgba(6,75,142,0.28),transparent_24%),#12070b] sm:aspect-video lg:aspect-[16/6] xl:aspect-[16/5.6]">
+        <video
+          aria-hidden="true"
+          autoPlay
+          className="absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-35 blur-2xl"
+          loop
+          muted
+          playsInline
+          preload="auto"
+          tabIndex={-1}
+        >
+          <source src="/videos/thiago-cansado.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(200,16,46,0.20),rgba(255,255,255,0.04)_24%,rgba(255,255,255,0.04)_76%,rgba(6,75,142,0.20))]" />
         <video
           aria-label="Video da Wimifarma"
           autoPlay
-          className="h-full w-full bg-black object-contain object-center"
+          className="relative z-[1] h-full w-full object-contain object-center drop-shadow-[0_18px_36px_rgba(0,0,0,0.28)]"
           loop
           muted
           onPause={() => setIsPlaying(false)}

@@ -5,9 +5,9 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import { Card, CardContent } from "@/components/ui/card";
 
 const metrics = [
-  { icon: Package, label: "Produtos", value: "0 reais" },
-  { icon: Gift, label: "Campanhas", value: "1 modelo" },
-  { icon: Users, label: "Clientes", value: "0 reais" },
+  { icon: Package, label: "Catalogos", value: "produtos" },
+  { icon: Gift, label: "Ofertas", value: "campanhas" },
+  { icon: Users, label: "Usuarios", value: "ADM/colaborador" },
   { icon: Activity, label: "Health", value: "ativo" },
 ];
 

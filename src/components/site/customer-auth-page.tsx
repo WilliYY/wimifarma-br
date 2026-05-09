@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { motion } from "framer-motion";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   ArrowRight,
   LockKeyhole,
   Mail,
-  ShieldCheck,
   Sparkles,
   UserRound,
 } from "lucide-react";
@@ -36,12 +37,14 @@ function Field({
   autoComplete,
   icon,
   label,
+  name,
   placeholder,
   type = "text",
 }: {
   autoComplete?: string;
   icon: React.ReactNode;
   label: string;
+  name?: string;
   placeholder: string;
   type?: string;
 }) {
@@ -55,6 +58,7 @@ function Field({
         <Input
           autoComplete={autoComplete}
           className="h-12 rounded-xl pl-10"
+          name={name}
           placeholder={placeholder}
           required
           type={type}
@@ -65,6 +69,39 @@ function Field({
 }
 
 export function CustomerAuthPage() {
+  const router = useRouter();
+  const [isEntering, setIsEntering] = useState(false);
+
+  async function handleLoginSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const login = String(formData.get("login") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+
+    if (!login || !password) {
+      toast.error("Informe usuario/email e senha.");
+      return;
+    }
+
+    setIsEntering(true);
+    const result = await signIn("credentials", {
+      email: login,
+      password,
+      redirect: false,
+    });
+    setIsEntering(false);
+
+    if (!result?.error) {
+      toast.success("Acesso administrativo liberado.");
+      router.push("/admin/dashboard");
+      router.refresh();
+      return;
+    }
+
+    toast.info("Login de cliente sera conectado ao modulo de clientes.");
+  }
+
   function handleAuthSubmit(
     event: React.FormEvent<HTMLFormElement>,
     message: string,
@@ -100,12 +137,7 @@ export function CustomerAuthPage() {
             animate={{ opacity: 1, y: 0 }}
             className="rounded-[1.5rem] border border-line bg-white/90 p-6 shadow-[0_18px_50px_rgba(17,24,39,0.08)] backdrop-blur sm:p-8"
             initial={{ opacity: 0, y: 24 }}
-            onSubmit={(event) =>
-              handleAuthSubmit(
-                event,
-                "Login de cliente sera conectado ao modulo de clientes.",
-              )
-            }
+            onSubmit={handleLoginSubmit}
             transition={{ delay: 0.08, duration: 0.55, ease: easeOut }}
           >
             <div className="flex items-start justify-between gap-4">
@@ -132,16 +164,18 @@ export function CustomerAuthPage() {
 
             <div className="grid gap-4">
               <Field
-                autoComplete="email"
+                autoComplete="username"
                 icon={<Mail className="h-4 w-4" />}
-                label="Email"
-                placeholder="seuemail@exemplo.com"
-                type="email"
+                label="Email ou usuario"
+                name="login"
+                placeholder="seuemail@exemplo.com ou adm"
+                type="text"
               />
               <Field
                 autoComplete="current-password"
                 icon={<LockKeyhole className="h-4 w-4" />}
                 label="Senha"
+                name="password"
                 placeholder="Sua senha"
                 type="password"
               />
@@ -149,9 +183,10 @@ export function CustomerAuthPage() {
 
             <button
               className="soft-breathe mt-7 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand px-6 text-sm font-bold text-white shadow-[0_12px_30px_rgba(200,16,46,0.22)] transition duration-300 hover:-translate-y-1 hover:bg-brand-strong"
+              disabled={isEntering}
               type="submit"
             >
-              Entrar
+              {isEntering ? "Entrando..." : "Entrar"}
               <ArrowRight className="h-4 w-4" />
             </button>
           </motion.form>
@@ -195,12 +230,14 @@ export function CustomerAuthPage() {
                 autoComplete="name"
                 icon={<UserRound className="h-4 w-4" />}
                 label="Nome"
+                name="name"
                 placeholder="Seu nome"
               />
               <Field
                 autoComplete="email"
                 icon={<Mail className="h-4 w-4" />}
                 label="Email"
+                name="email"
                 placeholder="seuemail@exemplo.com"
                 type="email"
               />
@@ -209,6 +246,7 @@ export function CustomerAuthPage() {
                   autoComplete="new-password"
                   icon={<LockKeyhole className="h-4 w-4" />}
                   label="Senha"
+                  name="new-password"
                   placeholder="Crie uma senha"
                   type="password"
                 />
@@ -216,6 +254,7 @@ export function CustomerAuthPage() {
                   autoComplete="new-password"
                   icon={<LockKeyhole className="h-4 w-4" />}
                   label="Confirmar senha"
+                  name="confirm-password"
                   placeholder="Repita a senha"
                   type="password"
                 />
@@ -232,26 +271,6 @@ export function CustomerAuthPage() {
           </motion.form>
         </div>
 
-        <motion.div
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-8 rounded-[1.25rem] border border-line bg-white/80 p-5 text-sm text-muted shadow-sm backdrop-blur"
-          initial={{ opacity: 0, y: 16 }}
-          transition={{ delay: 0.24, duration: 0.5, ease: easeOut }}
-        >
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <span className="inline-flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-brand" />
-              Acesso de administrador e colaboradores fica separado.
-            </span>
-            <Link
-              className="inline-flex w-fit items-center gap-2 rounded-full bg-brand-soft px-4 py-2 font-bold text-brand transition hover:bg-brand hover:text-white"
-              href="/admin/login"
-            >
-              Entrar no admin
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </motion.div>
       </div>
     </section>
   );

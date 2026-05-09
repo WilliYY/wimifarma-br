@@ -2,29 +2,69 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   BadgePercent,
+  Boxes,
   ChartNoAxesCombined,
-  Gift,
-  LayoutDashboard,
+  Crown,
   LogOut,
   MessageCircle,
-  Package,
-  Settings,
+  Palette,
+  ShieldPlus,
   TicketPercent,
-  Users,
+  UserPlus,
   WalletCards,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { auth, signOut } from "@/features/auth/auth";
 
 const adminNav = [
-  { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/admin/ofertas", icon: BadgePercent, label: "Ofertas" },
-  { href: "/admin/produtos", icon: Package, label: "Produtos" },
-  { href: "/admin/clientes", icon: Users, label: "Clientes" },
-  { href: "/admin/cupons", icon: TicketPercent, label: "Cupons" },
-  { href: "/admin/roleta", icon: Gift, label: "Roleta" },
-  { href: "/admin/cashback", icon: WalletCards, label: "Cashback" },
-  { href: "/admin/configuracoes", icon: Settings, label: "Configuracoes" },
+  {
+    href: "/admin/criar-adm",
+    icon: ShieldPlus,
+    label: "Criar ADM",
+    roles: ["ADMIN"],
+  },
+  {
+    href: "/admin/criar-colaborador",
+    icon: UserPlus,
+    label: "Criar colaborador",
+    roles: ["ADMIN"],
+  },
+  {
+    href: "/admin/catalogos",
+    icon: Boxes,
+    label: "Catalogos",
+    roles: ["ADMIN", "MANAGER", "STAFF"],
+  },
+  {
+    href: "/admin/ofertas",
+    icon: BadgePercent,
+    label: "Ofertas",
+    roles: ["ADMIN", "MANAGER", "STAFF"],
+  },
+  {
+    href: "/admin/temas",
+    icon: Palette,
+    label: "Temas",
+    roles: ["ADMIN"],
+  },
+  {
+    href: "/admin/cupons",
+    icon: TicketPercent,
+    label: "Cupons",
+    roles: ["ADMIN", "MANAGER"],
+  },
+  {
+    href: "/admin/cashback",
+    icon: WalletCards,
+    label: "Cash Back",
+    roles: ["ADMIN"],
+  },
+  {
+    href: "/admin/club-wimifarma",
+    icon: Crown,
+    label: "Club Wimifarma",
+    roles: ["ADMIN"],
+  },
 ];
 
 export async function AdminShell({
@@ -34,8 +74,11 @@ export async function AdminShell({
   const session = await auth();
 
   if (!session?.user) {
-    redirect("/admin/login");
+    redirect("/login");
   }
+
+  const role = session.user.role;
+  const visibleNav = adminNav.filter((item) => item.roles.includes(role));
 
   return (
     <div className="min-h-screen bg-surface-subtle">
@@ -47,13 +90,13 @@ export async function AdminShell({
           <span>
             <span className="block font-black text-ink">Wimifarma</span>
             <span className="block text-xs font-semibold text-muted">
-              Admin comercial
+              {role === "ADMIN" ? "Administrador total" : "Colaborador"}
             </span>
           </span>
         </Link>
 
         <nav className="mt-6 grid gap-1">
-          {adminNav.map((item) => {
+          {visibleNav.map((item) => {
             const Icon = item.icon;
 
             return (
@@ -71,9 +114,9 @@ export async function AdminShell({
 
         <div className="absolute inset-x-4 bottom-4 rounded-lg border border-line bg-surface-subtle p-4">
           <ChartNoAxesCombined className="h-5 w-5 text-brand" />
-          <p className="mt-3 text-sm font-bold text-ink">Base modular</p>
+          <p className="mt-3 text-sm font-bold text-ink">Permissoes por perfil</p>
           <p className="mt-1 text-xs leading-5 text-muted">
-            Dados reais entram somente depois das regras finais.
+            ADM controla tudo. Colaborador opera catalogos, ofertas e pedidos.
           </p>
         </div>
       </aside>
@@ -83,7 +126,7 @@ export async function AdminShell({
           <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-muted">
-                Painel reservado
+                Painel reservado · {role}
               </p>
               <h1 className="text-lg font-black text-ink">{title}</h1>
             </div>
@@ -106,7 +149,7 @@ export async function AdminShell({
               <form
                 action={async () => {
                   "use server";
-                  await signOut({ redirectTo: "/admin/login" });
+                  await signOut({ redirectTo: "/login" });
                 }}
               >
                 <Button aria-label="Sair" size="icon" type="submit" variant="ghost">
