@@ -58,7 +58,7 @@ export const authConfig = {
       : []),
     Credentials({
       credentials: {
-        email: { label: "Email", type: "email" },
+        email: { label: "Email ou usuario", type: "text" },
         password: { label: "Senha", type: "password" },
       },
       authorize: async (credentials) => {
@@ -70,7 +70,13 @@ export const authConfig = {
 
         const { email, password } = parsed.data;
 
-        if (email === "adm" && password === "adm") {
+        const isDemoAdmin =
+          password === "adm" &&
+          ["adm", "adm@wimifarma.local", "admin@wimifarma.local"].includes(
+            email,
+          );
+
+        if (isDemoAdmin) {
           return {
             email: "adm@wimifarma.local",
             id: "demo-admin",

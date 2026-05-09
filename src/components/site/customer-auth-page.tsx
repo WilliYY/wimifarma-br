@@ -137,6 +137,7 @@ export function CustomerAuthPage() {
             animate={{ opacity: 1, y: 0 }}
             className="rounded-[1.5rem] border border-line bg-white/90 p-6 shadow-[0_18px_50px_rgba(17,24,39,0.08)] backdrop-blur sm:p-8"
             initial={{ opacity: 0, y: 24 }}
+            noValidate
             onSubmit={handleLoginSubmit}
             transition={{ delay: 0.08, duration: 0.55, ease: easeOut }}
           >
@@ -195,6 +196,7 @@ export function CustomerAuthPage() {
             animate={{ opacity: 1, y: 0 }}
             className="rounded-[1.5rem] border border-line bg-white/90 p-6 shadow-[0_18px_50px_rgba(17,24,39,0.08)] backdrop-blur sm:p-8"
             initial={{ opacity: 0, y: 24 }}
+            noValidate
             onSubmit={(event) =>
               handleAuthSubmit(
                 event,
