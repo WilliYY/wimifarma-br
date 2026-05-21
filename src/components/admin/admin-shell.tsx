@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { auth, signOut } from "@/features/auth/auth";
+import { siteConfig } from "@/lib/site";
 
 const adminNav = [
   {
@@ -138,7 +139,7 @@ export async function AdminShell({
               </Button>
               <Button asChild size="sm" variant="success">
                 <a
-                  href="https://wa.me/5544999999999"
+                  href={siteConfig.whatsappUrl}
                   rel="noreferrer"
                   target="_blank"
                 >

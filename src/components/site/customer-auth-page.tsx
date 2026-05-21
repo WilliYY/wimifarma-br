@@ -8,7 +8,6 @@ import {
   ArrowRight,
   LockKeyhole,
   Mail,
-  Sparkles,
   UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -119,11 +118,7 @@ export function CustomerAuthPage() {
           initial={{ opacity: 0, y: 18 }}
           transition={{ duration: 0.55, ease: easeOut }}
         >
-          <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-4 py-2 text-sm font-bold text-brand">
-            <Sparkles className="h-4 w-4" />
-            Conta Wimifarma
-          </span>
-          <h1 className="mt-5 text-5xl font-black leading-[0.95] tracking-[-1px] text-ink sm:text-6xl">
+          <h1 className="text-5xl font-black leading-[0.95] tracking-[-1px] text-ink sm:text-6xl">
             Login / Cadastrar
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted">
@@ -169,7 +164,7 @@ export function CustomerAuthPage() {
                 icon={<Mail className="h-4 w-4" />}
                 label="Email ou usuario"
                 name="login"
-                placeholder="seuemail@exemplo.com ou adm"
+                placeholder="seuemail@exemplo.com"
                 type="text"
               />
               <Field

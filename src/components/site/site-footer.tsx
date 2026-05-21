@@ -13,10 +13,10 @@ export function SiteFooter() {
             <span className="flex h-14 w-44 items-center justify-start overflow-visible">
               <Image
                 alt="Wimifarma"
-                className="h-full w-full scale-[1.85] object-contain object-left brightness-0 invert"
-                height={40}
+                className="h-full w-full object-contain object-left brightness-0 invert"
+                height={48}
                 src="/brand/logo-wimifarma.svg"
-                width={40}
+                width={176}
               />
             </span>
             <div>

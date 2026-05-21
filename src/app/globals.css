@@ -107,6 +107,16 @@ textarea {
   }
 }
 
+@keyframes delivery-pull-copy {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(2px);
+  }
+}
+
 .pharma-clouds {
   isolation: isolate;
   position: relative;
@@ -133,6 +143,10 @@ textarea {
 
 .soft-breathe {
   animation: soft-breathe 4.4s ease-in-out infinite;
+}
+
+.delivery-pull-copy {
+  animation: delivery-pull-copy 1.1s ease-in-out infinite;
 }
 
 .liquid-glass {

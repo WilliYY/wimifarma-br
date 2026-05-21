@@ -9,15 +9,20 @@ import {
   Sparkles,
 } from "lucide-react";
 
+const whatsappPhone = "5544999999999";
+const whatsappMessage = "Olá, gostaria de mais informações";
+
 export const siteConfig = {
   name: "Wimifarma",
   city: "Ivate-PR",
-  phone: "5544999999999",
+  phone: whatsappPhone,
   displayPhone: "(44) 99999-9999",
   address: "Ivate, Parana",
   instagramUrl: "https://instagram.com/",
-  whatsappUrl:
-    "https://wa.me/5544999999999?text=Ola%2C%20vim%20pelo%20site%20da%20Wimifarma%20e%20quero%20atendimento.",
+  whatsappMessage,
+  whatsappUrl: `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(
+    whatsappMessage,
+  )}`,
 };
 
 export const publicNavItems = [

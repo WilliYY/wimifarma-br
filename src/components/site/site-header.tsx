@@ -6,8 +6,23 @@ import { publicNavItems, siteConfig } from "@/lib/site";
 export function SiteHeader() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white/96 shadow-[0_10px_30px_rgba(17,24,39,0.08)] backdrop-blur-md">
-      <div className="bg-brand px-4 py-2 text-center font-body text-xs font-semibold text-white">
-        Atendimento local em Ivate: ofertas, cuidado e pedidos pelo WhatsApp
+      <div className="bg-brand px-4 py-1.5 font-body text-xs font-semibold text-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 overflow-hidden">
+          <Image
+            alt=""
+            className="h-7 w-9 shrink-0 object-contain"
+            height={28}
+            src="/brand/delivery-truck.gif"
+            unoptimized
+            width={34}
+          />
+          <span className="delivery-pull-copy inline-block whitespace-nowrap sm:hidden">
+            Pedidos pelo WhatsApp em Ivate
+          </span>
+          <span className="delivery-pull-copy hidden whitespace-nowrap sm:inline-block">
+            Atendimento local em Ivate: ofertas, cuidado e pedidos pelo WhatsApp
+          </span>
+        </div>
       </div>
 
       <div className="mx-auto grid w-full max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
@@ -18,11 +33,11 @@ export function SiteHeader() {
         >
           <Image
             alt="Wimifarma"
-            className="h-full w-full scale-[1.9] object-contain object-left"
-            height={48}
+            className="h-full w-full object-contain object-left"
+            height={56}
             priority
             src="/brand/logo-wimifarma.svg"
-            width={48}
+            width={224}
           />
         </Link>
 
