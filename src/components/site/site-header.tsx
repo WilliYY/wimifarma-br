@@ -25,19 +25,19 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <div className="mx-auto grid w-full max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
+      <div className="grid w-full grid-cols-[minmax(10rem,12rem)_minmax(0,1fr)_auto] items-center gap-3 px-4 py-2 sm:grid-cols-[minmax(11rem,13rem)_minmax(0,1fr)_auto] sm:px-6 lg:gap-4 lg:px-8">
         <Link
           aria-label="Wimifarma"
-          className="flex h-14 w-48 items-center justify-start overflow-visible sm:h-16 sm:w-56"
+          className="flex h-11 w-40 items-center justify-start overflow-hidden sm:h-12 sm:w-48 lg:w-52"
           href="/"
         >
           <Image
             alt="Wimifarma"
             className="h-full w-full object-contain object-left"
-            height={56}
+            height={48}
             priority
             src="/brand/logo-wimifarma.svg"
-            width={224}
+            width={208}
           />
         </Link>
 

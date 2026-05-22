@@ -22,7 +22,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 ## Estado Atual
 
-- Header fixo com faixa vermelha, caminhaozinho animado, logo, busca, WhatsApp, login/cadastrar e nav.
+- Header fixo com faixa vermelha, caminhaozinho animado, logo ancorada no canto esquerdo, busca, WhatsApp, login/cadastrar e nav.
 - Home com categorias em icones circulares.
 - Banner principal atual e video da Wimifarma com controles integrados de pausar e som.
 - Secoes de medicamentos e destaques usam cards demonstrativos.
@@ -39,6 +39,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Verde deve apoiar WhatsApp e Farmacia Popular.
 - Evitar excesso de informacao sobre o video.
 - Logo nao deve ficar cortada nem presa em bolha desnecessaria.
+- Logo do header deve ficar alinhada ao canto esquerdo da janela e nao deve invadir a busca.
 - Layout deve ser responsivo e nao gerar barra lateral horizontal.
 - Animacoes devem ser leves e nao prejudicar performance.
 - O caminhaozinho da faixa superior deve manter fundo transparente e movimento discreto, sem aumentar demais a altura do header.
