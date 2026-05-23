@@ -23,9 +23,10 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 ## Estado Atual
 
 - Header fixo com faixa vermelha, caminhaozinho com deslocamento animado, logo ancorada no canto esquerdo, busca, WhatsApp, login/cadastrar e nav.
-- Home com categorias em icones circulares.
 - Banner principal atual e video da Wimifarma com controles integrados de pausar e som.
-- Secoes de medicamentos e destaques usam cards demonstrativos.
+- Home esta temporariamente focada em anuncio: abaixo do video existe uma tela grande vazia reservada para banner.
+- Categorias em bolinhas, cards de medicamentos e vitrines de destaque nao aparecem na home nesta fase.
+- O link `Ofertas` nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.
 - Botao flutuante de WhatsApp fica no canto inferior direito.
 - Login/cadastro usa dois blocos: entrar e cadastrar.
@@ -43,6 +44,8 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Layout deve ser responsivo e nao gerar barra lateral horizontal.
 - Animacoes devem ser leves e nao prejudicar performance.
 - O caminhaozinho da faixa superior deve manter fundo transparente, andar em uma pista curta e nao aumentar demais a altura do header.
+- Para o anuncio principal da home, dimensao recomendada em desktop: 1920x840 px, proporcao 16:7. Se houver arte mobile separada, usar 1080x1350 px, proporcao 4:5.
+- Manter informacoes importantes do anuncio no centro da arte para evitar cortes em telas menores.
 
 ## Decisoes Tecnicas
 
@@ -62,6 +65,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 ## Pendencias
 
 - Ajustar dados reais de telefone, horarios e endereco.
+- Definir arte real do anuncio principal da home.
 - Definir imagens/fotos reais de produtos quando houver catalogo.
 - Testar visual em mobile real.
 - Criar fluxo visual final para paginas secundarias.

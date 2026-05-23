@@ -7,9 +7,10 @@ Este documento descreve os fluxos reais existentes hoje e os fluxos planejados q
 ## Fluxo Publico Atual
 
 1. Usuario acessa `/`.
-2. Ve categorias, video institucional/comercial e cards de medicamentos/ofertas.
+2. Ve o video institucional/comercial e um espaco grande reservado para anuncio principal.
 3. Pode clicar em WhatsApp para iniciar atendimento.
 4. Pode acessar paginas publicas basicas como `/ofertas`, `/farmacia-popular`, `/sobre` e `/contato`.
+5. A rota `/ofertas` continua existindo, mas nao aparece no menu principal enquanto a home estiver focada em anuncio.
 
 Arquivos principais:
 

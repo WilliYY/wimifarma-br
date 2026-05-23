@@ -4,7 +4,7 @@
 
 Wimifarma BR e a base de uma plataforma comercial para uma farmacia em Ivate-PR. O sistema combina site publico, chamadas para WhatsApp, catalogo/ofertas, login, painel administrativo, APIs internas, PostgreSQL e modulos preparados para evolucao.
 
-O foco atual e ajudar clientes a consultar produtos, ofertas e atendimento local. A venda final ainda acontece por WhatsApp e atendimento humano.
+O foco atual e usar a home como vitrine de anuncio e facilitar atendimento local. A venda final ainda acontece por WhatsApp e atendimento humano.
 
 ## Arquivos e Rotas Envolvidos
 

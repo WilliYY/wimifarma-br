@@ -26,8 +26,9 @@ Nesta fase o sistema prioriza conversao por WhatsApp. Nao existe checkout nem pa
 
 ## Status Atual
 
-- Site publico com home comercial, categorias, banner em video, cards de medicamentos, ofertas e chamada para WhatsApp.
+- Site publico com home temporariamente focada em anuncio: video principal, espaco grande reservado para banner e chamada para WhatsApp.
 - Rotas publicas basicas criadas: `/`, `/ofertas`, `/farmacia-popular`, `/delivery`, `/sobre`, `/contato`, `/roleta`, `/login`.
+- A rota `/ofertas` continua existindo, mas nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - `/roleta` publica redireciona para `/ofertas`; a roleta real fica pendente para fase futura.
 - Login/cadastro visual existe em `/login`.
 - Login administrativo usa Auth.js Credentials e direciona para `/admin/dashboard`.

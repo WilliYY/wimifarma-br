@@ -57,3 +57,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: futuras conversas do Codex precisam continuar o projeto sem depender do historico antigo do chat.
 - Impacto: `README.md`, `AGENTS.md`, `docs/00-*` ate `docs/10-*`.
 - Riscos/cuidados: manter docs atualizados sempre que arquitetura, banco, APIs, auth, permissoes, deploy, layout ou fluxos mudarem.
+
+## 2026-05-23 - Home temporariamente focada em anuncio
+
+- Decisao: remover da home publica as categorias em bolinhas e vitrines estaticas de medicamentos/destaques, mantendo o video e uma tela grande vazia para anuncio principal.
+- Motivo: a prioridade comercial imediata e usar a primeira pagina como vitrine de campanha/anuncio, sem distrair com catalogo demonstrativo.
+- Impacto: `src/components/site/home-page.tsx`, `src/components/site/site-header.tsx`, `src/lib/site.ts`, docs de fluxo e layout.
+- Riscos/cuidados: a arte do anuncio deve respeitar dimensoes responsivas; catalogo/ofertas continuam pendentes para retorno futuro com dados reais.

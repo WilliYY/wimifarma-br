@@ -26,7 +26,6 @@ export const siteConfig = {
 };
 
 export const publicNavItems = [
-  { href: "/ofertas", label: "Ofertas" },
   { href: "/farmacia-popular", label: "Farmacia Popular" },
   { href: "/sobre", label: "Sobre" },
   { href: "/contato", label: "Contato" },
@@ -34,14 +33,14 @@ export const publicNavItems = [
 
 export const heroHighlights = [
   "Atendimento rapido no WhatsApp",
-  "Ofertas organizadas por campanha",
+  "Campanhas organizadas para a home",
   "Delivery local em Ivate",
 ];
 
 export const benefitItems = [
   {
     icon: BadgePercent,
-    title: "Ofertas com giro comercial",
+    title: "Campanhas com giro comercial",
     description:
       "Estrutura pronta para destacar campanhas, precos promocionais e chamadas para WhatsApp.",
   },

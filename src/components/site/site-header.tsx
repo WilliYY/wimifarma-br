@@ -22,7 +22,7 @@ export function SiteHeader() {
             Pedidos pelo WhatsApp em Ivate
           </span>
           <span className="delivery-pull-copy hidden whitespace-nowrap sm:inline-block">
-            Atendimento local em Ivate: ofertas, cuidado e pedidos pelo WhatsApp
+            Atendimento local em Ivate: cuidado e pedidos pelo WhatsApp
           </span>
         </div>
       </div>
@@ -49,10 +49,10 @@ export function SiteHeader() {
         >
           <Search className="h-5 w-5 shrink-0 text-[#5f6f88]" />
           <input
-            aria-label="Buscar produtos e ofertas"
+            aria-label="Buscar produtos e servicos"
             className="h-full min-w-0 flex-1 bg-transparent font-body text-base text-ink outline-none placeholder:text-[#70809a]"
             name="q"
-            placeholder="Buscar ofertas, produtos e servicos"
+            placeholder="Buscar produtos e servicos"
             type="search"
           />
           <button
