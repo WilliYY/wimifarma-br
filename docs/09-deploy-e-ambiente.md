@@ -87,6 +87,7 @@ Usar `.env.example` como contrato, mas nunca como senha final.
 Obrigatorias em producao:
 
 - `AUTH_SECRET`
+- `SECRET_VAULT_KEY`
 - `NEXTAUTH_URL`
 - `AUTH_URL`
 - `POSTGRES_DB`
@@ -97,11 +98,14 @@ Obrigatorias em producao:
 - `ADMIN_EMAIL`
 - `ADMIN_PASSWORD`
 
+`SECRET_VAULT_KEY` deve ser definida antes do primeiro uso do modulo `API e Senhas`. Se ela mudar depois de salvar segredos, os registros antigos precisarao ser recriptografados com planejamento.
+
 ## Regras de Negocio a Preservar
 
 - `.env` real nunca entra no Git.
 - Senhas de exemplo devem ser trocadas no servidor.
 - `AUTH_URL` e `NEXTAUTH_URL` devem apontar para dominio real com HTTPS.
+- Secrets de OAuth, APIs e senhas administrativas devem ficar no `.env` do servidor ou no cofre admin cifrado.
 - Banco nao deve ser publico.
 
 ## Riscos
@@ -118,6 +122,7 @@ Obrigatorias em producao:
 - Documentar restore.
 - Documentar monitoramento e logs.
 - Definir checklist de troca de secrets quando sair de desenvolvimento.
+- Definir rotina de rotacao e recuperacao para `SECRET_VAULT_KEY`.
 
 ## Evolucao
 

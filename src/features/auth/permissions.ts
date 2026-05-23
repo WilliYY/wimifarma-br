@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/features/auth/auth";
 
-export async function requireAdminApi() {
+type AdminApiRole = "ADMIN" | "MANAGER" | "STAFF";
+
+export async function requireApiRole(roles: AdminApiRole[]) {
   const session = await auth();
   const role = session?.user?.role;
 
-  if (role !== "ADMIN" && role !== "MANAGER") {
+  if (!role || !roles.includes(role as AdminApiRole)) {
     return {
       response: NextResponse.json(
         { error: "Nao autorizado." },
@@ -19,4 +21,12 @@ export async function requireAdminApi() {
     response: null,
     session,
   };
+}
+
+export async function requireAdminOnlyApi() {
+  return requireApiRole(["ADMIN"]);
+}
+
+export async function requireAdminApi() {
+  return requireApiRole(["ADMIN", "MANAGER"]);
 }

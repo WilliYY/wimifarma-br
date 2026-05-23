@@ -13,6 +13,7 @@ O foco atual e usar a home como vitrine de anuncio e facilitar atendimento local
 - Header e footer: `src/components/site/site-header.tsx`, `src/components/site/site-footer.tsx`
 - Login/cadastro visual: `src/components/site/customer-auth-page.tsx`
 - Admin: `src/app/admin`, `src/components/admin`
+- Cofre admin de API e senhas: `src/app/admin/api-senhas`, `src/app/api/admin/api-senhas`
 - APIs: `src/app/api`
 - Banco: `prisma/schema.prisma`, `prisma/seed.ts`
 - Configuracoes: `.env.example`, `docker-compose.yml`, `Dockerfile`
@@ -24,6 +25,7 @@ O foco atual e usar a home como vitrine de anuncio e facilitar atendimento local
 - Nao usar dados reais de clientes em exemplos, seed ou testes.
 - Farmacia Popular deve orientar e chamar para confirmacao, sem prometer disponibilidade automatica.
 - Roleta e cashback existem como estrutura futura, sem ativacao comercial real.
+- Credenciais de APIs e senhas administrativas devem ficar apenas no cofre admin ou no `.env` do servidor, nunca em Git ou docs.
 - O projeto nao deve ser misturado com Candy English nem com o projeto antigo `wimifarma-com`.
 
 ## Decisoes Tecnicas Ja Tomadas
@@ -34,12 +36,14 @@ O foco atual e usar a home como vitrine de anuncio e facilitar atendimento local
 - Docker Compose com app e Postgres.
 - Nginx Proxy Manager deve acessar `wimifarma-br-app:3000`.
 - PostgreSQL nao deve ficar exposto publicamente.
+- Segredos administrativos do modulo `API e Senhas` ficam cifrados no banco e exigem perfil `ADMIN` para criar, revelar ou excluir.
 
 ## Riscos ao Alterar
 
 - Confundir `wimifarma-br` com `wimifarma-com` local.
 - Quebrar o Docker ao alterar nomes de container, volume ou network.
 - Tornar dados administrativos acessiveis a usuarios comuns.
+- Expor segredos do cofre por log, resposta de listagem ou print de tela.
 - Deixar credenciais temporarias em producao.
 - Prometer compra/pagamento sem o modulo existir.
 

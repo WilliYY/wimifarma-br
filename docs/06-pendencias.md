@@ -27,10 +27,17 @@
 
 ### Permissoes granulares nas APIs
 
-- Status: aberto.
-- Impacto: `requireAdminApi` permite `ADMIN` e `MANAGER` de forma geral.
+- Status: parcialmente iniciado.
+- Impacto: `requireApiRole` e `requireAdminOnlyApi` existem, mas varios endpoints ainda usam `requireAdminApi` com `ADMIN` e `MANAGER` de forma geral.
 - Arquivo: `src/features/auth/permissions.ts`.
-- Caminho sugerido: criar `requireApiRole(["ADMIN"])`, `requireApiRole(["ADMIN", "MANAGER", "STAFF"])` conforme endpoint.
+- Caminho sugerido: revisar endpoint por endpoint e aplicar `requireApiRole(["ADMIN"])`, `requireApiRole(["ADMIN", "MANAGER", "STAFF"])` conforme regra real.
+
+### Rotacionar segredo OAuth exposto
+
+- Status: aberto.
+- Impacto: o client secret do Google OAuth apareceu em captura de tela durante a configuracao.
+- Arquivos: Google Cloud e `.env` do servidor.
+- Caminho sugerido: gerar novo client secret no Google Cloud depois de concluir a configuracao, atualizar o `.env` do servidor e nunca salvar esse valor no Git.
 
 ### Cadastro real de clientes
 
@@ -64,6 +71,12 @@
 - Status: aberto.
 - Impacto: `AuditLog` existe, mas mutacoes reais ainda nao registram tudo.
 - Arquivos: `prisma/schema.prisma`, `src/app/api/*`.
+
+### Politica do cofre `API e Senhas`
+
+- Status: aberto.
+- Impacto: o cofre salva segredos cifrados, mas ainda falta politica formal de rotacao, backup, exportacao segura e troca de `SECRET_VAULT_KEY`.
+- Arquivos: `src/lib/secret-vault.ts`, `src/app/api/admin/api-senhas/*`, `docs/09-deploy-e-ambiente.md`.
 
 ### Roleta real
 

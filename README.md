@@ -33,7 +33,9 @@ Nesta fase o sistema prioriza conversao por WhatsApp. Nao existe checkout nem pa
 - Login/cadastro visual existe em `/login`; Google OAuth e destinado apenas a clientes.
 - Login administrativo usa Auth.js Credentials e direciona para `/admin/dashboard`.
 - Painel admin existe como estrutura inicial com placeholders de modulos.
+- Admin possui o modulo `API e Senhas` para guardar credenciais sensiveis cifradas no banco, restrito a `ADMIN`.
 - APIs reservadas existem e exigem sessao `ADMIN` ou `MANAGER`.
+- APIs do cofre administrativo exigem sessao `ADMIN`.
 - Prisma schema, migration inicial e seed existem.
 - Docker Compose oficial usa `wimifarma-br-app` e `wimifarma-br-postgres`.
 - Pendencia critica: o login temporario `adm / adm` existe para desenvolvimento e deve ser removido ou protegido antes de producao.
@@ -137,6 +139,7 @@ Base em `.env.example`. Valores reais devem ficar apenas no `.env` local ou no s
 | `NEXTAUTH_URL` | URL publica usada pelo Auth.js. |
 | `AUTH_URL` | URL base usada pelo Auth.js. |
 | `AUTH_SECRET` | Segredo forte do Auth.js. Obrigatorio em producao. |
+| `SECRET_VAULT_KEY` | Chave forte para cifrar o cofre `API e Senhas`. Definir antes de salvar segredos reais. |
 | `NODE_OPTIONS` | Limite/ajuste de memoria do Node. |
 | `POSTGRES_DB` | Nome do banco. |
 | `POSTGRES_USER` | Usuario do banco. |
@@ -153,6 +156,8 @@ Para Google OAuth de clientes em producao:
 
 - Origem JavaScript autorizada: `https://wimifarma.com.br`
 - URI de redirecionamento autorizada: `https://wimifarma.com.br/api/auth/callback/google`
+
+Se um client secret aparecer em print ou conversa, gere um novo no Google Cloud e atualize o `.env` do servidor.
 
 ## Docker Oficial
 

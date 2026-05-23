@@ -53,7 +53,8 @@ Arquivos:
 1. Usuario autenticado acessa `/admin/dashboard`.
 2. `AdminShell` monta sidebar e header.
 3. Links aparecem conforme role (`ADMIN`, `MANAGER`, `STAFF`).
-4. Muitas telas sao placeholders com descricao de futuro modulo.
+4. `ADMIN` ve tambem o modulo `API e Senhas`.
+5. Muitas telas sao placeholders com descricao de futuro modulo.
 
 Arquivos:
 
@@ -61,10 +62,26 @@ Arquivos:
 - `src/components/admin/module-placeholder.tsx`
 - `src/app/admin/*/page.tsx`
 
+## Fluxo API e Senhas
+
+1. Administrador acessa `/admin/api-senhas`.
+2. Preenche nome, servico, identificador, segredo e notas opcionais.
+3. A API `/api/admin/api-senhas` valida com Zod e cifra segredo/notas antes de gravar.
+4. A listagem retorna apenas metadados; o segredo fica mascarado na UI.
+5. Ao clicar em revelar, `/api/admin/api-senhas/[id]/reveal` descriptografa e registra auditoria.
+6. Exclusao usa `/api/admin/api-senhas/[id]` e tambem registra auditoria.
+
+Arquivos:
+
+- `src/app/admin/api-senhas/page.tsx`
+- `src/components/admin/secret-vault-panel.tsx`
+- `src/app/api/admin/api-senhas/route.ts`
+- `src/lib/secret-vault.ts`
+
 ## Fluxo de APIs
 
 1. Cliente chama endpoint em `src/app/api`.
-2. APIs de negocio executam `requireAdminApi`.
+2. APIs de negocio executam `requireAdminApi`; APIs mais sensiveis podem executar `requireAdminOnlyApi`.
 3. Sem sessao valida, retornam `401`.
 4. Com sessao `ADMIN` ou `MANAGER`, executam consulta ou criacao com validacao Zod.
 
@@ -78,6 +95,7 @@ Arquivos:
 - `src/app/api/roleta/route.ts`
 - `src/app/api/cashback/route.ts`
 - `src/app/api/whatsapp/route.ts`
+- `src/app/api/admin/api-senhas/route.ts`
 
 ## Fluxo Docker/Deploy
 
@@ -101,13 +119,14 @@ Arquivos:
 
 - Usuario cliente ser redirecionado para area admin por regra incompleta.
 - Colaborador acessar rota de administrador se souber a URL.
+- Segredo administrativo ser exposto em print, log ou resposta de listagem.
 - Fluxo de cadastro parecer funcional antes de persistir no banco.
 
 ## Pendencias
 
 - Implementar cadastro real de cliente.
 - Implementar login Google real.
-- Implementar regras de role por rota admin.
+- Implementar regras de role por rota admin nos placeholders restantes.
 - Implementar CRUD real nos modulos admin.
 - Integrar site publico com dados reais do banco.
 

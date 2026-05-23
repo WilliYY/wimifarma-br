@@ -311,6 +311,27 @@ model AuditLog {
   @@index([createdAt])
 }
 
+model SecretCredential {
+  id               String    @id @default(cuid())
+  title            String
+  service          String?
+  identifier       String?
+  secretCiphertext String
+  secretIv         String
+  secretTag        String
+  notesCiphertext  String?
+  notesIv          String?
+  notesTag         String?
+  createdById      String?
+  updatedById      String?
+  lastViewedAt     DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([service])
+  @@index([createdAt])
+}
+
 model LoginAttempt {
   id        String   @id @default(cuid())
   email     String

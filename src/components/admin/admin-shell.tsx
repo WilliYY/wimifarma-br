@@ -5,6 +5,7 @@ import {
   Boxes,
   ChartNoAxesCombined,
   Crown,
+  KeyRound,
   LogOut,
   MessageCircle,
   Palette,
@@ -28,6 +29,12 @@ const adminNav = [
     href: "/admin/criar-colaborador",
     icon: UserPlus,
     label: "Criar colaborador",
+    roles: ["ADMIN"],
+  },
+  {
+    href: "/admin/api-senhas",
+    icon: KeyRound,
+    label: "API e Senhas",
     roles: ["ADMIN"],
   },
   {

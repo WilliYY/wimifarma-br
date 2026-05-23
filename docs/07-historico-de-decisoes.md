@@ -71,3 +71,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: evitar que cliente autenticado por Google receba perfil de colaborador ou acesso ao painel reservado.
 - Impacto: `src/features/auth/auth.ts`, `src/types/next-auth.d.ts`, `src/components/site/customer-auth-page.tsx`, `src/components/admin/admin-shell.tsx`.
 - Riscos/cuidados: cliente Google ainda nao e persistido no banco; antes de liberar recursos de cliente, implementar cadastro real e regras de consentimento.
+
+## 2026-05-23 - Cofre admin para API e senhas
+
+- Decisao: criar o modulo administrativo `API e Senhas` para guardar credenciais sensiveis cifradas no PostgreSQL.
+- Motivo: centralizar client IDs, tokens e senhas administrativas sem versionar segredos no Git nem deixar valores soltos em conversas.
+- Impacto: `prisma/schema.prisma`, `src/app/admin/api-senhas`, `src/app/api/admin/api-senhas`, `src/components/admin/secret-vault-panel.tsx`, `.env.example`.
+- Riscos/cuidados: apenas `ADMIN` pode criar, revelar ou excluir; `SECRET_VAULT_KEY` precisa ser mantida estavel e segura, e secrets expostos em prints devem ser rotacionados.

@@ -40,6 +40,7 @@ Observacao: `/roleta` publica redireciona para `/ofertas` nesta fase.
 - `/admin`
 - `/admin/login`
 - `/admin/dashboard`
+- `/admin/api-senhas`
 - `/admin/ofertas`
 - `/admin/produtos`
 - `/admin/clientes`
@@ -66,8 +67,11 @@ Muitas rotas admin ainda sao placeholders.
 - `/api/roleta`
 - `/api/cashback`
 - `/api/whatsapp`
+- `/api/admin/api-senhas`
+- `/api/admin/api-senhas/[id]`
+- `/api/admin/api-senhas/[id]/reveal`
 
-As APIs de negocio usam `requireAdminApi`.
+As APIs de negocio usam `requireAdminApi`. O cofre `API e Senhas` usa `requireAdminOnlyApi` e deve responder segredos apenas no endpoint de revelacao.
 
 ## Infraestrutura
 
@@ -80,6 +84,7 @@ As APIs de negocio usam `requireAdminApi`.
 
 - Separacao por feature para facilitar crescimento.
 - APIs reservadas ficam em `src/app/api`.
+- Rotas administrativas sensiveis podem usar subpastas em `src/app/api/admin`.
 - Banco fica atras do app e nao exposto publicamente.
 - App Docker usa `output: standalone` do Next.
 
@@ -93,7 +98,7 @@ As APIs de negocio usam `requireAdminApi`.
 ## Pendencias
 
 - Criar guard por permissao nas paginas admin, nao apenas no menu.
-- Diferenciar permissoes por endpoint.
+- Diferenciar permissoes por endpoint nos modulos restantes.
 - Implementar CRUDs reais nos placeholders admin.
 
 ## Evolucao
