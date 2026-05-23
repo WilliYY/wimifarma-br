@@ -1,9 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
-import { LogIn, MessageCircle, Search } from "lucide-react";
+import { LogIn, LogOut, MessageCircle, Search, UserRound } from "lucide-react";
+import { auth, signOut } from "@/features/auth/auth";
 import { publicNavItems, siteConfig } from "@/lib/site";
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const session = await auth();
+  const displayName =
+    session?.user?.name || session?.user?.email?.split("@")[0] || "Cliente";
+
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white/96 shadow-[0_10px_30px_rgba(17,24,39,0.08)] backdrop-blur-md">
       <div className="bg-brand px-4 py-1.5 font-body text-xs font-semibold text-white">
@@ -63,7 +68,7 @@ export function SiteHeader() {
           </button>
         </form>
 
-        <div className="flex justify-self-end">
+        <div className="flex min-w-0 justify-self-end">
           <a
             className="soft-breathe hidden items-center gap-2 rounded-full bg-[#25d366] px-5 py-3 font-body text-sm font-bold text-white shadow-[0_10px_24px_rgba(37,211,102,0.22)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#1ebe57] lg:inline-flex"
             href={siteConfig.whatsappUrl}
@@ -73,13 +78,40 @@ export function SiteHeader() {
             WhatsApp
             <MessageCircle className="h-4 w-4" />
           </a>
-          <Link
-            className="ml-2 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-line bg-white px-4 py-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:px-5"
-            href="/login"
-          >
-            Login / Cadastrar
-            <LogIn className="h-4 w-4" />
-          </Link>
+          {session?.user ? (
+            <div className="ml-2 flex min-w-0 items-center gap-2">
+              <span
+                className="hidden min-w-0 max-w-[11rem] items-center gap-2 rounded-full border border-line bg-white px-4 py-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] sm:inline-flex lg:max-w-[13rem]"
+                title={displayName}
+              >
+                <UserRound className="h-4 w-4 shrink-0 text-brand" />
+                <span className="truncate">{displayName}</span>
+              </span>
+              <form
+                action={async () => {
+                  "use server";
+                  await signOut({ redirectTo: "/" });
+                }}
+              >
+                <button
+                  aria-label="Sair"
+                  className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-line bg-white px-4 py-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:px-5"
+                  type="submit"
+                >
+                  <span className="hidden sm:inline">Sair</span>
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </form>
+            </div>
+          ) : (
+            <Link
+              className="ml-2 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-line bg-white px-4 py-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:px-5"
+              href="/login"
+            >
+              Login / Cadastrar
+              <LogIn className="h-4 w-4" />
+            </Link>
+          )}
         </div>
       </div>
 

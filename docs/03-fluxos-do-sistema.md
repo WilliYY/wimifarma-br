@@ -37,9 +37,11 @@ Arquivos:
 1. Usuario acessa `/login`.
 2. A tela exibe blocos de entrar e cadastrar.
 3. Login Google, quando configurado, e destinado apenas a clientes e retorna para `/login`.
-4. Login administrativo usa Credentials via NextAuth.
-5. Login/cadastro de cliente ainda nao persiste cliente no banco.
-6. Se o login administrativo passa, redireciona para `/admin/dashboard`.
+4. Apos login de cliente, o header publico mostra o nome vindo da conta Google e um botao `Sair`.
+5. Logout publico encerra a sessao e redireciona para `/`.
+6. Login administrativo usa Credentials via NextAuth.
+7. Login/cadastro de cliente ainda nao persiste cliente no banco.
+8. Se o login administrativo passa, redireciona para `/admin/dashboard`.
 
 Arquivos:
 

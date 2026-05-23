@@ -10,6 +10,7 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - `src/features/auth/permissions.ts`
 - `src/features/auth/components/admin-login-form.tsx`
 - `src/components/site/customer-auth-page.tsx`
+- `src/components/site/site-header.tsx`
 - `src/types/next-auth.d.ts`
 - `src/app/api/auth/[...nextauth]/route.ts`
 - `src/components/admin/admin-shell.tsx`
@@ -23,6 +24,7 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - Provider Credentials autentica usuarios do modelo `User`.
 - Google Provider so entra se `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` existirem.
 - Google OAuth e reservado para clientes: sessoes Google recebem role `CUSTOMER` e nao acessam `/admin`.
+- No site publico, sessoes de cliente exibem o nome da conta Google no header e botao `Sair`.
 - `LoginAttempt` registra falhas/sucessos para limitar tentativas.
 - `/login` serve como tela de login/cadastro visual.
 - Login administrativo bem-sucedido redireciona para `/admin/dashboard`.

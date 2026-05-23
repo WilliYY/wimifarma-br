@@ -32,6 +32,7 @@ Nesta fase o sistema prioriza conversao por WhatsApp. Nao existe checkout nem pa
 - A rota `/ofertas` continua existindo, mas nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - `/roleta` publica redireciona para `/ofertas`; a roleta real fica pendente para fase futura.
 - Login/cadastro visual existe em `/login`; Google OAuth e destinado apenas a clientes.
+- Quando o cliente esta logado pelo Google, o header publico mostra o nome da conta e o botao `Sair`.
 - Login administrativo usa Auth.js Credentials e direciona para `/admin/dashboard`.
 - Painel admin existe como estrutura inicial com placeholders de modulos.
 - Admin possui o modulo `API e Senhas` para guardar credenciais sensiveis cifradas no banco, restrito a `ADMIN`.
@@ -150,8 +151,8 @@ Base em `.env.example`. Valores reais devem ficar apenas no `.env` local ou no s
 | `ADMIN_EMAIL` | Email do admin criado pelo seed. |
 | `ADMIN_PASSWORD` | Senha inicial do admin. Trocar sempre. |
 | `ADMIN_RESET_PASSWORD` | Permite resetar senha via seed quando `true`. |
-| `GOOGLE_CLIENT_ID` | OAuth Google futuro. |
-| `GOOGLE_CLIENT_SECRET` | OAuth Google futuro. |
+| `GOOGLE_CLIENT_ID` | OAuth Google para clientes. |
+| `GOOGLE_CLIENT_SECRET` | OAuth Google para clientes. |
 
 Para Google OAuth de clientes em producao:
 
