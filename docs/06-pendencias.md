@@ -20,10 +20,10 @@
 
 ### Atualizar dependencias com alertas do `npm audit`
 
-- Status: aberto.
-- Impacto: `npm audit --audit-level=moderate` em 2026-05-21 apontou alerta alto no Next.js e alerta moderado em dependencia transitiva de lint.
+- Status: resolvido em 2026-05-23.
+- Impacto anterior: `npm audit --audit-level=moderate` apontava alerta alto no Next.js e alerta moderado em dependencia transitiva de lint.
 - Arquivos: `package.json`, `package-lock.json`.
-- Caminho sugerido: rodar `npm audit fix` em tarefa dedicada, revisar o diff de dependencias e repetir lint, typecheck e build.
+- Resolucao: `next` e `eslint-config-next` foram atualizados para `15.5.18`; `brace-expansion` transitivo foi atualizado para `5.0.6`; `npm audit --audit-level=moderate` passou sem vulnerabilidades.
 
 ### Permissoes granulares nas APIs
 
