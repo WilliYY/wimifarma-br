@@ -47,10 +47,10 @@
 
 ### Google OAuth real
 
-- Status: provider configurado no servidor em 2026-05-23; fluxo completo com usuario de teste ainda pendente.
+- Status: fluxo de login/logout validado em producao em 2026-05-23; persistencia real de cliente ainda pendente.
 - Impacto: botao consulta os providers do Auth.js e inicia Google quando `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` existem no servidor; login Google cria sessao de cliente, sem acesso ao admin.
 - Arquivos: `src/features/auth/auth.ts`, `.env.example`, `src/components/site/customer-auth-page.tsx`.
-- Caminho sugerido: testar com uma conta Google autorizada no Google Cloud e depois implementar persistencia real do cliente no banco.
+- Caminho sugerido: implementar persistencia real do cliente no banco e depois rotacionar o segredo OAuth exposto durante a configuracao.
 
 ### CRUD real no admin
 
