@@ -12,6 +12,11 @@ const authSecret =
   (process.env.NODE_ENV === "production"
     ? undefined
     : "wimifarma-local-dev-secret");
+const appRoles = ["ADMIN", "MANAGER", "STAFF", "CUSTOMER"] as const;
+
+function isAppRole(role: unknown): role is (typeof appRoles)[number] {
+  return typeof role === "string" && appRoles.includes(role as never);
+}
 
 async function recordLoginAttempt(email: string, success: boolean) {
   const prisma = getPrisma();
@@ -130,7 +135,7 @@ export const authConfig = {
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
+        token.role = isAppRole(user.role) ? user.role : "CUSTOMER";
       }
 
       return token;
@@ -138,10 +143,7 @@ export const authConfig = {
     session({ session, token }) {
       if (session.user) {
         session.user.id = typeof token.id === "string" ? token.id : "";
-        session.user.role =
-          token.role === "ADMIN" || token.role === "MANAGER"
-            ? token.role
-            : "STAFF";
+        session.user.role = isAppRole(token.role) ? token.role : "CUSTOMER";
       }
 
       return session;

@@ -79,6 +79,11 @@ export async function AdminShell({
   }
 
   const role = session.user.role;
+
+  if (role === "CUSTOMER") {
+    redirect("/login");
+  }
+
   const visibleNav = adminNav.filter((item) => item.roles.includes(role));
 
   return (

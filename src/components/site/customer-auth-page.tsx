@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { signIn } from "next-auth/react";
+import { getProviders, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -15,19 +15,26 @@ import { Input } from "@/components/ui/input";
 
 const easeOut = [0.16, 1, 0.3, 1] as const;
 
-function GoogleButton({ label }: { label: string }) {
+function GoogleButton({
+  isLoading,
+  label,
+  onClick,
+}: {
+  isLoading: boolean;
+  label: string;
+  onClick: () => void;
+}) {
   return (
     <button
       className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-line bg-white px-4 text-sm font-bold text-ink shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand"
-      onClick={() =>
-        toast.info("Google sera ativado quando as chaves OAuth forem configuradas.")
-      }
+      disabled={isLoading}
+      onClick={onClick}
       type="button"
     >
       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-subtle text-sm font-black text-brand">
         G
       </span>
-      {label}
+      {isLoading ? "Abrindo Google..." : label}
     </button>
   );
 }
@@ -70,6 +77,20 @@ function Field({
 export function CustomerAuthPage() {
   const router = useRouter();
   const [isEntering, setIsEntering] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  async function handleGoogleSignIn() {
+    setIsGoogleLoading(true);
+    const providers = await getProviders();
+
+    if (!providers?.google) {
+      setIsGoogleLoading(false);
+      toast.info("Google sera ativado quando as chaves OAuth forem configuradas.");
+      return;
+    }
+
+    await signIn("google", { callbackUrl: "/login" });
+  }
 
   async function handleLoginSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -149,7 +170,11 @@ export function CustomerAuthPage() {
             </div>
 
             <div className="mt-7">
-              <GoogleButton label="Entrar com Google" />
+              <GoogleButton
+                isLoading={isGoogleLoading}
+                label="Entrar com Google"
+                onClick={handleGoogleSignIn}
+              />
             </div>
 
             <div className="my-6 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.16em] text-muted">
@@ -213,7 +238,11 @@ export function CustomerAuthPage() {
             </div>
 
             <div className="mt-7">
-              <GoogleButton label="Cadastrar com Google" />
+              <GoogleButton
+                isLoading={isGoogleLoading}
+                label="Cadastrar com Google"
+                onClick={handleGoogleSignIn}
+              />
             </div>
 
             <div className="my-6 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.16em] text-muted">

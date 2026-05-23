@@ -40,9 +40,10 @@
 
 ### Google OAuth real
 
-- Status: aberto.
-- Impacto: botao existe como placeholder.
+- Status: parcialmente preparado.
+- Impacto: botao consulta os providers do Auth.js e so inicia Google quando `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` estiverem configurados; login Google cria sessao de cliente, sem acesso ao admin.
 - Arquivos: `src/features/auth/auth.ts`, `.env.example`, `src/components/site/customer-auth-page.tsx`.
+- Caminho sugerido: configurar OAuth no Google Cloud e depois implementar persistencia real do cliente no banco.
 
 ### CRUD real no admin
 

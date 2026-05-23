@@ -64,3 +64,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: a prioridade comercial imediata e usar a primeira pagina como vitrine de campanha/anuncio, sem distrair com catalogo demonstrativo.
 - Impacto: `src/components/site/home-page.tsx`, `src/components/site/site-header.tsx`, `src/lib/site.ts`, docs de fluxo e layout.
 - Riscos/cuidados: a arte do anuncio deve respeitar dimensoes responsivas; catalogo/ofertas continuam pendentes para retorno futuro com dados reais.
+
+## 2026-05-23 - Google OAuth apenas para clientes
+
+- Decisao: tratar login Google como sessao `CUSTOMER`, sem permissao administrativa, mantendo admin por Credentials.
+- Motivo: evitar que cliente autenticado por Google receba perfil de colaborador ou acesso ao painel reservado.
+- Impacto: `src/features/auth/auth.ts`, `src/types/next-auth.d.ts`, `src/components/site/customer-auth-page.tsx`, `src/components/admin/admin-shell.tsx`.
+- Riscos/cuidados: cliente Google ainda nao e persistido no banco; antes de liberar recursos de cliente, implementar cadastro real e regras de consentimento.

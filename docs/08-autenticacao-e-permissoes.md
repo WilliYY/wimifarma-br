@@ -20,6 +20,7 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - Auth.js/NextAuth v5 esta configurado com JWT session.
 - Provider Credentials autentica usuarios do modelo `User`.
 - Google Provider so entra se `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` existirem.
+- Google OAuth e reservado para clientes: sessoes Google recebem role `CUSTOMER` e nao acessam `/admin`.
 - `LoginAttempt` registra falhas/sucessos para limitar tentativas.
 - `/login` serve como tela de login/cadastro visual.
 - Login administrativo bem-sucedido redireciona para `/admin/dashboard`.
@@ -29,27 +30,42 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - `ADMIN`: administrador total.
 - `MANAGER`: gerente/intermediario.
 - `STAFF`: colaborador.
+- `CUSTOMER`: cliente autenticado por Google, sem acesso administrativo.
 
 ## Regras de Negocio
 
 - Admin pode controlar tudo.
 - Colaborador deve ter acesso limitado.
 - Cliente nao deve acessar painel admin.
+- Login Google nao deve conceder role administrativa.
 - Criacao de ADM, temas, cashback e clube devem ser restritos a `ADMIN`.
 
 ## Decisoes Tecnicas
 
 - Usar JWT strategy do NextAuth.
 - Armazenar `id` e `role` no token/sessao.
+- Sem role administrativa explicita, a sessao recebe `CUSTOMER`.
 - API guard inicial: `requireAdminApi`.
 - Menu admin filtra links com base em roles.
+
+## Configuracao Google OAuth
+
+No Google Cloud, criar credencial OAuth do tipo Aplicativo da Web:
+
+- Origem JavaScript autorizada: `https://wimifarma.com.br`
+- URI de redirecionamento autorizada: `https://wimifarma.com.br/api/auth/callback/google`
+
+Depois salvar no `.env` do servidor:
+
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
 
 ## Riscos
 
 - Login temporario `adm / adm` existe em `src/features/auth/auth.ts` e precisa ser removido/protegido antes de producao.
 - Menu filtrado nao substitui permissao server-side por pagina.
 - APIs ainda usam permissao generica para `ADMIN` e `MANAGER`.
-- Cadastro de cliente ainda nao persiste no banco.
+- Cadastro/login de cliente ainda nao persiste cliente no banco.
 
 ## Pendencias
 
