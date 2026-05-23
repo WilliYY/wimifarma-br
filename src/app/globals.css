@@ -112,8 +112,41 @@ textarea {
   100% {
     transform: translateX(0);
   }
-  45% {
-    transform: translateX(2px);
+  40% {
+    transform: translateX(4px);
+  }
+  65% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes delivery-truck-drive {
+  0% {
+    opacity: 0;
+    transform: translate3d(-8px, 0, 0) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  34% {
+    transform: translate3d(18px, -1px, 0) rotate(-1deg);
+  }
+  62% {
+    opacity: 1;
+    transform: translate3d(38px, 0, 0) rotate(1deg);
+  }
+  76% {
+    opacity: 1;
+    transform: translate3d(46px, -1px, 0) rotate(0deg);
+  }
+  78% {
+    opacity: 0;
+    transform: translate3d(48px, -1px, 0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-8px, 0, 0) rotate(0deg);
   }
 }
 
@@ -146,7 +179,35 @@ textarea {
 }
 
 .delivery-pull-copy {
-  animation: delivery-pull-copy 1.1s ease-in-out infinite;
+  animation: delivery-pull-copy 1.8s ease-in-out infinite;
+}
+
+.delivery-truck-lane {
+  display: inline-block;
+  height: 1.75rem;
+  overflow: hidden;
+  position: relative;
+  width: 5.25rem;
+}
+
+.delivery-truck-lane::after {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  bottom: 0.18rem;
+  content: "";
+  height: 0.08rem;
+  left: 0.2rem;
+  position: absolute;
+  right: 0.2rem;
+}
+
+.delivery-truck-run {
+  animation: delivery-truck-drive 1.8s cubic-bezier(0.42, 0, 0.2, 1) infinite;
+  bottom: 0.08rem;
+  left: 0;
+  position: absolute;
+  transform-origin: 50% 100%;
+  z-index: 1;
 }
 
 .liquid-glass {

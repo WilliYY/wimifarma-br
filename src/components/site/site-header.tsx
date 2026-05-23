@@ -8,14 +8,16 @@ export function SiteHeader() {
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white/96 shadow-[0_10px_30px_rgba(17,24,39,0.08)] backdrop-blur-md">
       <div className="bg-brand px-4 py-1.5 font-body text-xs font-semibold text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 overflow-hidden">
-          <Image
-            alt=""
-            className="h-7 w-9 shrink-0 object-contain"
-            height={28}
-            src="/brand/delivery-truck.gif"
-            unoptimized
-            width={34}
-          />
+          <span aria-hidden="true" className="delivery-truck-lane">
+            <Image
+              alt=""
+              className="delivery-truck-run h-7 w-9 object-contain"
+              height={28}
+              src="/brand/delivery-truck.gif"
+              unoptimized
+              width={34}
+            />
+          </span>
           <span className="delivery-pull-copy inline-block whitespace-nowrap sm:hidden">
             Pedidos pelo WhatsApp em Ivate
           </span>
