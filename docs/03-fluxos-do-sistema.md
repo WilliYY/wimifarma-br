@@ -23,7 +23,7 @@ Arquivos principais:
 
 O WhatsApp e o canal principal de conversao. O site deve facilitar o pedido, mas a confirmacao de preco, disponibilidade, receita e entrega continua humana.
 
-O link centralizado em `src/lib/site.ts` usa uma mensagem padrao curta de pedido de informacoes e deve ser reaproveitado pelos botoes publicos e administrativos.
+O link centralizado em `src/lib/site.ts` usa o numero `+55 44 98413-4971` e a mensagem padrao "Olá, tudo bem? Gostaria de falar sobre medicamentos ou da Farmácia Popular". Esse link deve ser reaproveitado pelos botoes publicos e administrativos.
 
 Arquivos:
 

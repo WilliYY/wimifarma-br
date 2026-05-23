@@ -27,6 +27,7 @@ Nesta fase o sistema prioriza conversao por WhatsApp. Nao existe checkout nem pa
 ## Status Atual
 
 - Site publico com home temporariamente focada em anuncio: video principal, espaco grande reservado para banner e chamada para WhatsApp.
+- WhatsApp principal: `+55 44 98413-4971`, com mensagem padrao para medicamentos e Farmacia Popular.
 - Rotas publicas basicas criadas: `/`, `/ofertas`, `/farmacia-popular`, `/delivery`, `/sobre`, `/contato`, `/roleta`, `/login`.
 - A rota `/ofertas` continua existindo, mas nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - `/roleta` publica redireciona para `/ofertas`; a roleta real fica pendente para fase futura.

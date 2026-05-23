@@ -9,14 +9,15 @@ import {
   Sparkles,
 } from "lucide-react";
 
-const whatsappPhone = "5544999999999";
-const whatsappMessage = "Olá, gostaria de mais informações";
+const whatsappPhone = "5544984134971";
+const whatsappMessage =
+  "Olá, tudo bem? Gostaria de falar sobre medicamentos ou da Farmácia Popular";
 
 export const siteConfig = {
   name: "Wimifarma",
   city: "Ivate-PR",
   phone: whatsappPhone,
-  displayPhone: "(44) 99999-9999",
+  displayPhone: "(44) 98413-4971",
   address: "Ivate, Parana",
   instagramUrl: "https://instagram.com/",
   whatsappMessage,

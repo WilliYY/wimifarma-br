@@ -80,7 +80,7 @@ Se o client secret for exposto em print ou conversa, rotacionar a credencial no 
 - Criar guard server-side por rota admin.
 - Criar permissoes granulares por API nos endpoints restantes.
 - Implementar cadastro real de cliente.
-- Implementar OAuth Google real.
+- Confirmar em producao o fluxo completo de OAuth Google com um usuario de teste e depois implementar persistencia real de cliente.
 - Registrar auditoria em acoes administrativas reais.
 
 ## Evolucao
