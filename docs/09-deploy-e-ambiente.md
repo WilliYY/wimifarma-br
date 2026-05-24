@@ -107,6 +107,7 @@ Obrigatorias em producao:
 - `AUTH_URL` e `NEXTAUTH_URL` devem apontar para dominio real com HTTPS.
 - Secrets de OAuth, APIs e senhas administrativas devem ficar no `.env` do servidor ou no cofre admin cifrado.
 - Banco nao deve ser publico.
+- Em atualizacoes com novas migrations, reconstruir tambem o servico `migrate` antes de rodar `docker compose --profile tools run --rm migrate`.
 
 ## Riscos
 

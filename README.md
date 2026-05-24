@@ -204,6 +204,7 @@ Atualizacao:
 cd /home/ubuntu/projetos/wimifarma-br
 git pull
 docker compose build app
+docker compose --profile tools build migrate
 docker compose --profile tools run --rm migrate
 docker compose up -d app
 docker compose ps
