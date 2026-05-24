@@ -77,7 +77,14 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Decisao: criar ou atualizar `Customer` durante o callback JWT do login Google, usando e-mail, nome, foto e identificador Google.
 - Motivo: permitir que clientes autenticados por Google tenham identidade persistente antes dos modulos de pedidos, clube, cashback e atendimento personalizado.
 - Impacto: `prisma/schema.prisma`, `prisma/migrations/20260523224500_persist_google_customers/migration.sql`, `src/features/auth/auth.ts`, docs de banco e autenticacao.
-- Riscos/cuidados: o cadastro por formulario continua pendente; telefone fica opcional no banco para clientes Google, mas atendimento comercial ainda deve coletar telefone/WhatsApp quando necessario.
+- Riscos/cuidados: naquele momento o cadastro por formulario ainda estava pendente; telefone fica opcional no banco para clientes Google, mas atendimento comercial ainda deve coletar telefone/WhatsApp quando necessario.
+
+## 2026-05-24 - Area do cliente Minha Conta
+
+- Decisao: criar `/minha-conta` como painel de cliente com abas para usuario, entrega, senha e cashback.
+- Motivo: dar ao cliente um lugar claro para completar telefone, endereco, criar senha e consultar informacoes de beneficios sem misturar com o admin.
+- Impacto: `src/app/(site)/minha-conta/page.tsx`, `src/components/site/customer-account-panel.tsx`, `src/app/api/minha-conta/*`, `src/features/auth/auth.ts`, `prisma/schema.prisma`.
+- Riscos/cuidados: redefinicao por email ainda depende de provedor de email e tokens; cashback segue informativo ate haver regra comercial aprovada.
 
 ## 2026-05-23 - Cofre admin para API e senhas
 

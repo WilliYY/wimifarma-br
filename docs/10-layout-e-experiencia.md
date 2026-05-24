@@ -24,6 +24,8 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 - Header fixo com faixa vermelha, caminhaozinho com deslocamento animado, logo ancorada no canto esquerdo, busca, WhatsApp, login/cadastrar e nav.
 - Quando ha sessao de cliente, o header troca `Login / Cadastrar` pelo nome da conta Google e um botao `Sair`.
+- O nome do cliente no header abre `/minha-conta`.
+- `/minha-conta` usa abas para usuario, entrega, senha e cashback, com layout de painel publico.
 - Banner principal atual e video da Wimifarma com controles integrados de pausar e som.
 - Home esta temporariamente focada em anuncio: abaixo do video existe uma tela grande vazia reservada para banner.
 - Categorias em bolinhas, cards de medicamentos e vitrines de destaque nao aparecem na home nesta fase.
@@ -31,6 +33,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.
 - Botao flutuante de WhatsApp fica no canto inferior direito.
 - Login/cadastro usa dois blocos: entrar e cadastrar.
+- Cadastro comum inclui telefone e cria conta de cliente.
 - O selo superior da tela de login foi removido para deixar o titulo direto.
 - A logo atual usa o SVG novo da Wimifarma, com recorte para header/footer; o favicon voltou para a versao anterior usada antes da troca visual.
 

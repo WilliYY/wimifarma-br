@@ -41,9 +41,16 @@
 
 ### Cadastro real de clientes
 
-- Status: parcialmente resolvido.
-- Impacto: login Google agora cria/atualiza `Customer`; tela de cadastro por formulario ainda nao grava cliente/usuario.
-- Arquivos: `src/components/site/customer-auth-page.tsx`, `src/features/customers`, `src/app/api/clientes`.
+- Status: parcialmente resolvido em 2026-05-24.
+- Impacto: login Google e cadastro por email/telefone/senha criam/atualizam `Customer`; ainda falta verificacao de email e redefinicao real por email.
+- Arquivos: `src/components/site/customer-auth-page.tsx`, `src/components/site/customer-account-panel.tsx`, `src/features/customers`, `src/app/api/minha-conta/*`.
+
+### Redefinicao de senha por email
+
+- Status: aberto.
+- Impacto: a area do cliente mostra a acao, mas o envio automatico depende de configurar um provedor de email e fluxo de token seguro.
+- Arquivos: futura API de reset, `.env.example`, docs de autenticacao.
+- Caminho sugerido: definir provedor de email, criar token de reset com expiracao e auditar solicitacoes.
 
 ### Google OAuth real
 
@@ -88,8 +95,8 @@
 ### Cashback real
 
 - Status: aberto.
-- Impacto: modelos/API inicial existem, mas sem regra comercial aprovada.
-- Arquivos: `src/app/api/cashback/route.ts`, `src/features/cashback/schema.ts`.
+- Impacto: modelos/API inicial e resumo na area do cliente existem, mas sem regra comercial aprovada.
+- Arquivos: `src/app/api/cashback/route.ts`, `src/features/cashback/schema.ts`, `src/components/site/customer-account-panel.tsx`.
 
 ### Testes automatizados
 

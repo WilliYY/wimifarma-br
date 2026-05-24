@@ -172,29 +172,65 @@ export const authConfig = {
           where: { email },
         });
 
-        if (!user || !user.isActive) {
+        if (user) {
+          if (!user.isActive) {
+            await recordLoginAttempt(email, false);
+            return null;
+          }
+
+          const passwordMatches = await compare(password, user.passwordHash);
+
+          if (!passwordMatches) {
+            await recordLoginAttempt(email, false);
+            return null;
+          }
+
+          await prisma.user.update({
+            data: { lastLoginAt: new Date() },
+            where: { id: user.id },
+          });
+          await recordLoginAttempt(email, true);
+
+          return {
+            email: user.email,
+            id: user.id,
+            name: user.name,
+            role: user.role,
+          };
+        }
+
+        const customer = await prisma.customer.findUnique({
+          where: { email },
+        });
+
+        if (
+          !customer ||
+          customer.status !== "ACTIVE" ||
+          !customer.passwordHash
+        ) {
           await recordLoginAttempt(email, false);
           return null;
         }
 
-        const passwordMatches = await compare(password, user.passwordHash);
+        const passwordMatches = await compare(password, customer.passwordHash);
 
         if (!passwordMatches) {
           await recordLoginAttempt(email, false);
           return null;
         }
 
-        await prisma.user.update({
+        await prisma.customer.update({
           data: { lastLoginAt: new Date() },
-          where: { id: user.id },
+          where: { id: customer.id },
         });
         await recordLoginAttempt(email, true);
 
         return {
-          email: user.email,
-          id: user.id,
-          name: user.name,
-          role: user.role,
+          email: customer.email,
+          id: customer.id,
+          image: customer.imageUrl,
+          name: customer.name,
+          role: "CUSTOMER",
         };
       },
     }),
@@ -238,10 +274,28 @@ export const authConfig = {
 
       return token;
     },
-    session({ session, token }) {
+    async session({ session, token }) {
       if (session.user) {
         session.user.id = typeof token.id === "string" ? token.id : "";
         session.user.role = isAppRole(token.role) ? token.role : "CUSTOMER";
+
+        if (session.user.role === "CUSTOMER" && session.user.id) {
+          const prisma = getPrisma();
+          const customer = await prisma.customer.findUnique({
+            select: {
+              email: true,
+              imageUrl: true,
+              name: true,
+            },
+            where: { id: session.user.id },
+          });
+
+          if (customer) {
+            if (customer.email) session.user.email = customer.email;
+            if (customer.imageUrl) session.user.image = customer.imageUrl;
+            session.user.name = customer.name;
+          }
+        }
       }
 
       return session;

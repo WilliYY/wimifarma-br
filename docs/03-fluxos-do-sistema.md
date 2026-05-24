@@ -39,17 +39,37 @@ Arquivos:
 3. Login Google, quando configurado, e destinado apenas a clientes e retorna para `/login`.
 4. No primeiro login Google, o sistema cria ou atualiza um `Customer` pelo e-mail/identificador Google.
 5. Apos login de cliente, o header publico mostra o nome vindo da conta Google e um botao `Sair`.
-6. Logout publico encerra a sessao e redireciona para `/`.
-7. Login administrativo usa Credentials via NextAuth.
-8. Cadastro por formulario ainda e visual e nao cria cliente.
-9. Se o login administrativo passa, redireciona para `/admin/dashboard`.
+6. Cliente logado pode clicar no nome no header e acessar `/minha-conta`.
+7. Cadastro por formulario cria `Customer` com email, telefone e senha.
+8. Cliente por email/senha entra em `/minha-conta`; admin por Credentials entra em `/admin/dashboard`.
+9. Logout publico encerra a sessao e redireciona para `/`.
 
 Arquivos:
 
 - `src/components/site/customer-auth-page.tsx`
+- `src/components/site/customer-account-panel.tsx`
 - `src/features/auth/auth.ts`
 - `src/lib/validations/auth.ts`
 - `src/app/api/auth/[...nextauth]/route.ts`
+- `src/app/api/minha-conta/*`
+
+## Fluxo Minha Conta
+
+1. Cliente autenticado acessa `/minha-conta`.
+2. A pagina carrega o `Customer` da sessao e bloqueia usuarios administrativos.
+3. A aba `Usuario` salva nome e telefone.
+4. A aba `Entrega` salva endereco, bairro, cidade e observacoes.
+5. A aba `Senha` permite criar senha para conta Google ou trocar senha existente.
+6. A opcao de redefinicao por email aparece como ponto preparado, mas depende de provedor de envio de email.
+7. A aba `Cashback` mostra saldo e ultimas movimentacoes se houver `CashbackAccount`.
+
+Arquivos:
+
+- `src/app/(site)/minha-conta/page.tsx`
+- `src/components/site/customer-account-panel.tsx`
+- `src/app/api/minha-conta/route.ts`
+- `src/app/api/minha-conta/password/route.ts`
+- `src/app/api/minha-conta/register/route.ts`
 
 ## Fluxo Admin Atual
 
@@ -123,11 +143,11 @@ Arquivos:
 - Usuario cliente ser redirecionado para area admin por regra incompleta.
 - Colaborador acessar rota de administrador se souber a URL.
 - Segredo administrativo ser exposto em print, log ou resposta de listagem.
-- Fluxo de cadastro por formulario parecer funcional antes de persistir no banco.
+- Redefinicao de senha por email parecer ativa antes de haver provedor de email configurado.
 
 ## Pendencias
 
-- Implementar cadastro real de cliente por formulario.
+- Implementar envio real de email para redefinicao de senha.
 - Implementar regras de role por rota admin nos placeholders restantes.
 - Implementar CRUD real nos modulos admin.
 - Integrar site publico com dados reais do banco.

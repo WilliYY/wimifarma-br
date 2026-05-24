@@ -80,13 +80,15 @@ export async function SiteHeader() {
           </a>
           {session?.user ? (
             <div className="ml-2 flex min-w-0 items-center gap-2">
-              <span
-                className="hidden min-w-0 max-w-[11rem] items-center gap-2 rounded-full border border-line bg-white px-4 py-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] sm:inline-flex lg:max-w-[13rem]"
+              <Link
+                aria-label="Abrir minha conta"
+                className="inline-flex min-w-0 max-w-[9rem] items-center gap-2 rounded-full border border-line bg-white px-4 py-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:max-w-[11rem] lg:max-w-[13rem]"
+                href="/minha-conta"
                 title={displayName}
               >
                 <UserRound className="h-4 w-4 shrink-0 text-brand" />
                 <span className="truncate">{displayName}</span>
-              </span>
+              </Link>
               <form
                 action={async () => {
                   "use server";

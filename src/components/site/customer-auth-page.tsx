@@ -1,13 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { getProviders, signIn } from "next-auth/react";
+import { getProviders, getSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   ArrowRight,
   LockKeyhole,
   Mail,
+  Phone,
   UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -78,6 +79,7 @@ export function CustomerAuthPage() {
   const router = useRouter();
   const [isEntering, setIsEntering] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   async function handleGoogleSignIn() {
     setIsGoogleLoading(true);
@@ -89,7 +91,7 @@ export function CustomerAuthPage() {
       return;
     }
 
-    await signIn("google", { callbackUrl: "/login" });
+    await signIn("google", { callbackUrl: "/minha-conta" });
   }
 
   async function handleLoginSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -113,21 +115,64 @@ export function CustomerAuthPage() {
     setIsEntering(false);
 
     if (!result?.error) {
-      toast.success("Acesso administrativo liberado.");
-      router.push("/admin/dashboard");
+      const session = await getSession();
+      const isAdmin = ["ADMIN", "MANAGER", "STAFF"].includes(
+        session?.user?.role ?? "",
+      );
+
+      toast.success(isAdmin ? "Acesso administrativo liberado." : "Bem-vindo.");
+      router.push(isAdmin ? "/admin/dashboard" : "/minha-conta");
       router.refresh();
       return;
     }
 
-    toast.info("Login de cliente sera conectado ao modulo de clientes.");
+    toast.error("Nao foi possivel entrar com estes dados.");
   }
 
-  function handleAuthSubmit(
-    event: React.FormEvent<HTMLFormElement>,
-    message: string,
-  ) {
+  async function handleRegisterSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    toast.info(message);
+
+    const formData = new FormData(event.currentTarget);
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const phone = String(formData.get("phone") ?? "").trim();
+    const password = String(formData.get("new-password") ?? "");
+    const confirmPassword = String(formData.get("confirm-password") ?? "");
+
+    setIsRegistering(true);
+    const response = await fetch("/api/minha-conta/register", {
+      body: JSON.stringify({
+        confirmPassword,
+        email,
+        name,
+        password,
+        phone,
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    });
+    const payload = await response.json().catch(() => ({}));
+    setIsRegistering(false);
+
+    if (!response.ok) {
+      toast.error(payload.message ?? "Nao foi possivel criar sua conta.");
+      return;
+    }
+
+    toast.success("Conta criada.");
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (!result?.error) {
+      router.push("/minha-conta");
+      router.refresh();
+      return;
+    }
+
+    toast.info("Conta criada. Entre com seu email e senha.");
   }
 
   return (
@@ -217,12 +262,7 @@ export function CustomerAuthPage() {
             className="rounded-[1.5rem] border border-line bg-white/90 p-6 shadow-[0_18px_50px_rgba(17,24,39,0.08)] backdrop-blur sm:p-8"
             initial={{ opacity: 0, y: 24 }}
             noValidate
-            onSubmit={(event) =>
-              handleAuthSubmit(
-                event,
-                "Cadastro de cliente sera conectado ao modulo de clientes.",
-              )
-            }
+            onSubmit={handleRegisterSubmit}
             transition={{ delay: 0.16, duration: 0.55, ease: easeOut }}
           >
             <div className="flex items-start justify-between gap-4">
@@ -267,6 +307,14 @@ export function CustomerAuthPage() {
                 placeholder="seuemail@exemplo.com"
                 type="email"
               />
+              <Field
+                autoComplete="tel"
+                icon={<Phone className="h-4 w-4" />}
+                label="Telefone"
+                name="phone"
+                placeholder="+55 44 99999-9999"
+                type="tel"
+              />
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
                   autoComplete="new-password"
@@ -289,9 +337,10 @@ export function CustomerAuthPage() {
 
             <button
               className="soft-breathe mt-7 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-ink px-6 text-sm font-bold text-white shadow-[0_12px_30px_rgba(17,24,39,0.18)] transition duration-300 hover:-translate-y-1 hover:bg-brand"
+              disabled={isRegistering}
               type="submit"
             >
-              Criar conta
+              {isRegistering ? "Criando..." : "Criar conta"}
               <ArrowRight className="h-4 w-4" />
             </button>
           </motion.form>

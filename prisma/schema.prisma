@@ -178,6 +178,8 @@ model Customer {
   notes             String?
   imageUrl          String?
   googleSubject     String?             @unique
+  passwordHash      String?
+  passwordSetAt     DateTime?
   lastLoginAt       DateTime?
   status            CustomerStatus      @default(ACTIVE)
   spinWheelAttempts SpinWheelAttempt[]

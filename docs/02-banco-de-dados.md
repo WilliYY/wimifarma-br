@@ -10,6 +10,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - Migration inicial: `prisma/migrations/20260507030000_init/migration.sql`
 - Migration do cofre admin: `prisma/migrations/20260523180000_add_secret_credentials/migration.sql`
 - Migration de clientes Google: `prisma/migrations/20260523224500_persist_google_customers/migration.sql`
+- Migration de senha de cliente: `prisma/migrations/20260524013000_add_customer_password/migration.sql`
 - Seed: `prisma/seed.ts`
 - Cliente Prisma: `src/lib/prisma.ts`
 - Prisma config: `prisma.config.ts`
@@ -52,6 +53,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - `SecretCredential` usa AES-256-GCM via `src/lib/secret-vault.ts`; `SECRET_VAULT_KEY` deve ser definida antes de salvar segredos reais.
 - `Customer.phone` e opcional no banco para permitir cliente Google sem telefone; o cadastro manual ainda pode exigir telefone na validacao da API.
 - `Customer.email` e `Customer.googleSubject` sao unicos para ligar novas sessoes Google ao mesmo cliente.
+- `Customer.passwordHash` e `passwordSetAt` permitem conta de cliente por email/senha sem misturar com `User` administrativo.
 
 ## Riscos ao Alterar
 

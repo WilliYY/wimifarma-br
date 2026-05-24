@@ -32,6 +32,7 @@ public                Assets publicos
 - `/contato`
 - `/roleta`
 - `/login`
+- `/minha-conta`
 
 Observacao: `/roleta` publica redireciona para `/ofertas` nesta fase.
 
@@ -60,6 +61,9 @@ Muitas rotas admin ainda sao placeholders.
 
 - `/api/health`
 - `/api/auth/[...nextauth]`
+- `/api/minha-conta`
+- `/api/minha-conta/register`
+- `/api/minha-conta/password`
 - `/api/ofertas`
 - `/api/produtos`
 - `/api/clientes`

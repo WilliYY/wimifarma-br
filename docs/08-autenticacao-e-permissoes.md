@@ -25,6 +25,8 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - Google Provider so entra se `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` existirem.
 - Google OAuth e reservado para clientes: sessoes Google recebem role `CUSTOMER` e nao acessam `/admin`.
 - Login Google cria ou atualiza `Customer` no banco com e-mail, nome, foto, `googleSubject` e `lastLoginAt`.
+- Cadastro por email/telefone/senha cria `Customer` com `passwordHash`; login de cliente por Credentials recebe role `CUSTOMER`.
+- `/minha-conta` e area autenticada de cliente e nao aceita roles administrativas.
 - No site publico, sessoes de cliente exibem o nome da conta Google no header e botao `Sair`.
 - `LoginAttempt` registra falhas/sucessos para limitar tentativas.
 - `/login` serve como tela de login/cadastro visual.
@@ -52,6 +54,7 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - Usar JWT strategy do NextAuth.
 - Armazenar `id` e `role` no token/sessao.
 - Para Google OAuth, `id` no token/sessao e o `Customer.id`, nao um `User.id` administrativo.
+- Para cliente por email/senha, `id` no token/sessao tambem e o `Customer.id`.
 - Sem role administrativa explicita, a sessao recebe `CUSTOMER`.
 - API guards: `requireApiRole`, `requireAdminApi` e `requireAdminOnlyApi`.
 - Menu admin filtra links com base em roles.
@@ -76,7 +79,7 @@ Se o client secret for exposto em print ou conversa, rotacionar a credencial no 
 - Menu filtrado nao substitui permissao server-side por pagina.
 - Muitas APIs ainda usam permissao generica para `ADMIN` e `MANAGER`.
 - `SECRET_VAULT_KEY` deve permanecer estavel; trocar a chave sem recriptografar registros impede abrir segredos antigos.
-- Cadastro por formulario ainda nao persiste cliente no banco.
+- Redefinicao de senha por email ainda nao envia email real.
 - Cliente Google pode existir sem telefone; fluxos que precisam de WhatsApp devem solicitar/completar telefone antes de uso comercial.
 
 ## Pendencias
@@ -84,7 +87,7 @@ Se o client secret for exposto em print ou conversa, rotacionar a credencial no 
 - Remover/proteger login temporario.
 - Criar guard server-side por rota admin.
 - Criar permissoes granulares por API nos endpoints restantes.
-- Implementar cadastro real de cliente por formulario.
+- Implementar token e envio real de email para redefinicao de senha.
 - Registrar auditoria em acoes administrativas reais.
 
 ## Evolucao
