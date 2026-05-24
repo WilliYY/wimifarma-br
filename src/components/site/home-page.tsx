@@ -176,27 +176,7 @@ export function HomePage() {
     <>
       <section className="pharma-clouds bg-white px-4 pb-8 pt-32 sm:px-6 sm:pt-36 lg:px-8 lg:pt-44">
         <div className="mx-auto max-w-7xl">
-          <MotionBlock className="grid gap-5 pb-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.28em] text-brand">
-                Atendimento local
-              </p>
-              <h2 className="mt-3 max-w-[22rem] text-[2.35rem] font-black leading-[0.98] text-ink sm:max-w-3xl sm:text-5xl">
-                Wimifarma, mais perto do seu pedido.
-              </h2>
-            </div>
-            <a
-              className="inline-flex w-fit items-center gap-2 rounded-full border border-line bg-white px-5 py-3 text-sm font-black text-ink shadow-[0_14px_35px_rgba(17,24,39,0.07)] transition duration-300 hover:-translate-y-0.5 hover:border-[#25d366] hover:text-[#128c3a]"
-              href={siteConfig.whatsappUrl}
-              rel="noreferrer"
-              target="_blank"
-            >
-              WhatsApp
-              <MessageCircle className="h-4 w-4" />
-            </a>
-          </MotionBlock>
-
-          <MotionBlock delay={0.08}>
+          <MotionBlock>
             <HeroVideo />
           </MotionBlock>
         </div>

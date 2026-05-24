@@ -28,7 +28,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - O nome do cliente no header abre `/minha-conta`.
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
 - Banner principal atual e video da Wimifarma em uma vitrine responsiva com acabamento claro, chamada para WhatsApp, poster de carregamento e controles integrados de pausar e som.
-- Home esta temporariamente focada em anuncio: abaixo da vitrine existe uma tela grande vazia reservada para banner.
+- Home esta temporariamente focada em anuncio: o primeiro bloco de conteudo ja e a vitrine com video; abaixo dela existe uma tela grande vazia reservada para banner.
 - Categorias em bolinhas, cards de medicamentos e vitrines de destaque nao aparecem na home nesta fase.
 - O link `Ofertas` nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.
