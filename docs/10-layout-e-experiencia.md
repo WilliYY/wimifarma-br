@@ -46,7 +46,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Verde deve apoiar WhatsApp e Farmacia Popular.
 - Evitar excesso de informacao sobre o video; a vitrine deve ter um unico CTA principal para WhatsApp.
 - Logo nao deve ficar cortada nem presa em bolha desnecessaria.
-- Logo animada do header deve ficar alinhada ao canto esquerdo da janela, em fundo escuro integrado ao GIF, e nao deve invadir a busca.
+- Logo animada do header deve ficar alinhada ao canto esquerdo da janela, em fundo escuro integrado ao GIF, com escala suficiente para mostrar toda a animacao sem cortar topo ou base, e nao deve invadir a busca.
 - Layout deve ser responsivo e nao gerar barra lateral horizontal.
 - Animacoes devem ser leves e nao prejudicar performance.
 - O caminhaozinho da faixa superior deve manter fundo transparente, andar em uma pista curta e nao aumentar demais a altura do header.

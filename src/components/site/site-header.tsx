@@ -35,14 +35,14 @@ export async function SiteHeader() {
       <div className="relative flex items-center gap-2 bg-[#121820] px-4 py-1.5 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         <Link
           aria-label="Wimifarma"
-          className="flex h-16 w-56 shrink-0 items-center justify-start overflow-hidden sm:h-20 sm:w-80 lg:w-[24rem]"
+          className="flex h-20 w-56 shrink-0 items-center justify-start overflow-hidden sm:h-24 sm:w-80 lg:w-[24rem]"
           href="/"
         >
           <Image
             alt=""
             aria-hidden="true"
-            className="h-full w-full origin-left scale-[1.55] object-contain object-left"
-            height={80}
+            className="h-full w-full origin-left scale-[1.2] object-contain object-left"
+            height={96}
             priority
             src="/brand/logo-animada.gif"
             unoptimized
