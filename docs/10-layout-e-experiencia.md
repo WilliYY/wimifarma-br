@@ -19,6 +19,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `public/favicon.svg`
 - `src/app/icon.svg`
 - `public/videos/thiago-cansado.mp4`
+- `public/videos/thiago-poster.svg`
 
 ## Estado Atual
 
@@ -26,8 +27,8 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Quando ha sessao de cliente, o header troca `Login / Cadastrar` pelo nome da conta Google e um botao `Sair`.
 - O nome do cliente no header abre `/minha-conta`.
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
-- Banner principal atual e video da Wimifarma com controles integrados de pausar e som.
-- Home esta temporariamente focada em anuncio: abaixo do video existe uma tela grande vazia reservada para banner.
+- Banner principal atual e video da Wimifarma em uma vitrine responsiva com acabamento claro, chamada para WhatsApp, poster de carregamento e controles integrados de pausar e som.
+- Home esta temporariamente focada em anuncio: abaixo da vitrine existe uma tela grande vazia reservada para banner.
 - Categorias em bolinhas, cards de medicamentos e vitrines de destaque nao aparecem na home nesta fase.
 - O link `Ofertas` nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.
@@ -42,7 +43,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Vermelho e cor principal.
 - Branco e base visual.
 - Verde deve apoiar WhatsApp e Farmacia Popular.
-- Evitar excesso de informacao sobre o video.
+- Evitar excesso de informacao sobre o video; a vitrine deve ter um unico CTA principal para WhatsApp.
 - Logo nao deve ficar cortada nem presa em bolha desnecessaria.
 - Logo do header deve ficar alinhada ao canto esquerdo da janela e nao deve invadir a busca.
 - Layout deve ser responsivo e nao gerar barra lateral horizontal.
@@ -56,7 +57,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Framer Motion usado para entradas suaves.
 - `lucide-react` usado para icones.
 - Produtos demonstrativos usam visuais CSS, nao fotos reais.
-- Video fica em `public/videos/thiago-cansado.mp4`.
+- Video fica em `public/videos/thiago-cansado.mp4` e usa `public/videos/thiago-poster.svg` para evitar tela escura antes do carregamento.
 
 ## Riscos ao Alterar
 

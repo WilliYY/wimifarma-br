@@ -2,7 +2,8 @@
 
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { MessageCircle, Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { siteConfig } from "@/lib/site";
 
 const easeOut = [0.16, 1, 0.3, 1] as const;
 
@@ -75,12 +76,12 @@ function HeroVideo() {
   };
 
   return (
-    <div className="overflow-hidden rounded-[1.75rem] border-[3px] border-brand bg-brand p-1.5 shadow-[0_24px_80px_rgba(200,16,46,0.16)]">
-      <div className="relative aspect-[4/3] overflow-hidden rounded-[1.4rem] bg-[radial-gradient(circle_at_25%_50%,rgba(200,16,46,0.34),transparent_24%),radial-gradient(circle_at_78%_45%,rgba(6,75,142,0.28),transparent_24%),#12070b] sm:aspect-video lg:aspect-[16/6] xl:aspect-[16/5.6]">
+    <div className="relative overflow-hidden rounded-lg border border-white bg-white p-2 shadow-[0_26px_90px_rgba(17,24,39,0.12)]">
+      <div className="relative overflow-hidden rounded-md bg-[linear-gradient(135deg,#fff_0%,#fff4f6_34%,#eff8f3_68%,#f8fafc_100%)] lg:aspect-[16/7] xl:aspect-[16/6.4]">
         <video
           aria-hidden="true"
           autoPlay
-          className="absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-35 blur-2xl"
+          className="absolute inset-0 h-full w-full scale-125 object-cover object-center opacity-20 blur-2xl saturate-[0.8]"
           loop
           muted
           playsInline
@@ -89,24 +90,54 @@ function HeroVideo() {
         >
           <source src="/videos/thiago-cansado.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(200,16,46,0.20),rgba(255,255,255,0.04)_24%,rgba(255,255,255,0.04)_76%,rgba(6,75,142,0.20))]" />
-        <video
-          aria-label="Video da Wimifarma"
-          autoPlay
-          className="relative z-[1] h-full w-full object-contain object-center drop-shadow-[0_18px_36px_rgba(0,0,0,0.28)]"
-          loop
-          muted
-          onPause={() => setIsPlaying(false)}
-          onPlay={() => setIsPlaying(true)}
-          onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
-          playsInline
-          preload="auto"
-          ref={videoRef}
-        >
-          <source src="/videos/thiago-cansado.mp4" type="video/mp4" />
-        </video>
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.92),rgba(255,255,255,0.42)_32%,rgba(255,255,255,0.42)_68%,rgba(255,255,255,0.92))]" />
+        <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#c8102e,#138a45,#064b8e)]" />
 
-        <div className="absolute bottom-4 right-4 z-10 flex items-center gap-2 rounded-full border border-white/20 bg-ink/60 p-1.5 shadow-[0_12px_34px_rgba(0,0,0,0.22)] backdrop-blur-md">
+        <div className="relative z-[1] grid min-h-[360px] items-center gap-5 p-4 sm:min-h-[430px] sm:p-5 lg:h-full lg:min-h-0 lg:grid-cols-[minmax(13rem,0.48fr)_minmax(16rem,0.52fr)] lg:gap-6 lg:p-7">
+          <div className="hidden max-w-sm lg:block">
+            <p className="text-xs font-black uppercase tracking-[0.26em] text-brand">
+              Wimifarma em Ivate
+            </p>
+            <h1 className="mt-4 text-5xl font-black leading-[0.92] text-ink xl:text-6xl">
+              Cuidado local, direto pelo WhatsApp.
+            </h1>
+            <p className="mt-5 max-w-xs text-base leading-7 text-muted">
+              Medicamentos, Farmacia Popular e entrega com atendimento humano.
+            </p>
+            <a
+              className="soft-breathe mt-7 inline-flex items-center gap-2 rounded-full bg-[#25d366] px-5 py-3 text-sm font-black text-white shadow-[0_16px_36px_rgba(37,211,102,0.25)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#1ebe57]"
+              href={siteConfig.whatsappUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Chamar no WhatsApp
+              <MessageCircle className="h-4 w-4" />
+            </a>
+          </div>
+
+          <div className="flex min-h-0 items-center justify-center py-3 sm:py-5 lg:h-full lg:min-h-[420px] lg:py-0">
+            <div className="relative aspect-[9/16] w-[min(68vw,250px)] overflow-hidden rounded-md bg-[#111827] shadow-[0_28px_60px_rgba(17,24,39,0.24)] ring-1 ring-black/10 sm:w-[min(44vw,280px)] lg:h-full lg:max-h-[620px] lg:min-h-[420px] lg:w-auto">
+              <video
+                aria-label="Video da Wimifarma"
+                autoPlay
+                className="h-full w-full object-cover object-center"
+                loop
+                muted
+                onPause={() => setIsPlaying(false)}
+                onPlay={() => setIsPlaying(true)}
+                onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
+                playsInline
+                poster="/videos/thiago-poster.svg"
+                preload="auto"
+                ref={videoRef}
+              >
+                <source src="/videos/thiago-cansado.mp4" type="video/mp4" />
+              </video>
+            </div>
+          </div>
+        </div>
+
+        <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-ink/60 p-1.5 shadow-[0_12px_34px_rgba(0,0,0,0.22)] backdrop-blur-md lg:left-auto lg:right-4 lg:translate-x-0">
           <button
             aria-label={isPlaying ? "Pausar video" : "Reproduzir video"}
             className="soft-breathe inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-brand hover:text-white"
@@ -143,9 +174,29 @@ function HeroVideo() {
 export function HomePage() {
   return (
     <>
-      <section className="pharma-clouds bg-surface-subtle px-4 pb-8 pt-32 sm:px-6 sm:pt-36 lg:px-8 lg:pt-44">
+      <section className="pharma-clouds bg-white px-4 pb-8 pt-32 sm:px-6 sm:pt-36 lg:px-8 lg:pt-44">
         <div className="mx-auto max-w-7xl">
-          <MotionBlock className="overflow-hidden rounded-[2rem] border border-white bg-white p-3 shadow-[0_18px_60px_rgba(17,24,39,0.12)] sm:p-4">
+          <MotionBlock className="grid gap-5 pb-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.28em] text-brand">
+                Atendimento local
+              </p>
+              <h2 className="mt-3 max-w-[22rem] text-[2.35rem] font-black leading-[0.98] text-ink sm:max-w-3xl sm:text-5xl">
+                Wimifarma, mais perto do seu pedido.
+              </h2>
+            </div>
+            <a
+              className="inline-flex w-fit items-center gap-2 rounded-full border border-line bg-white px-5 py-3 text-sm font-black text-ink shadow-[0_14px_35px_rgba(17,24,39,0.07)] transition duration-300 hover:-translate-y-0.5 hover:border-[#25d366] hover:text-[#128c3a]"
+              href={siteConfig.whatsappUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              WhatsApp
+              <MessageCircle className="h-4 w-4" />
+            </a>
+          </MotionBlock>
+
+          <MotionBlock delay={0.08}>
             <HeroVideo />
           </MotionBlock>
         </div>
@@ -156,8 +207,11 @@ export function HomePage() {
           <MotionBlock>
             <div
               aria-label="Espaco reservado para anuncio principal"
-              className="min-h-[420px] overflow-hidden rounded-[2rem] border border-line bg-white shadow-[0_18px_70px_rgba(17,24,39,0.08)] sm:aspect-[16/7] sm:min-h-0"
-            />
+              className="relative min-h-[360px] overflow-hidden rounded-lg border border-dashed border-line bg-[linear-gradient(135deg,#fff_0%,#fff8f9_48%,#f2fbf6_100%)] shadow-[0_18px_70px_rgba(17,24,39,0.06)] sm:aspect-[16/7] sm:min-h-0"
+            >
+              <div className="absolute inset-x-6 top-6 h-px bg-line/70" />
+              <div className="absolute inset-x-6 bottom-6 h-px bg-line/70" />
+            </div>
           </MotionBlock>
         </div>
       </section>

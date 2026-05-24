@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1600" role="img" aria-label="Wimifarma">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.45" stop-color="#fff4f6"/>
+      <stop offset="1" stop-color="#eff8f3"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#c8102e"/>
+      <stop offset="0.52" stop-color="#138a45"/>
+      <stop offset="1" stop-color="#064b8e"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="22" stdDeviation="34" flood-color="#111827" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+  <rect width="900" height="1600" fill="url(#bg)"/>
+  <rect x="90" y="142" width="720" height="12" rx="6" fill="url(#bar)"/>
+  <g filter="url(#shadow)">
+    <rect x="110" y="360" width="680" height="880" rx="44" fill="#ffffff" opacity="0.92"/>
+  </g>
+  <rect x="170" y="440" width="560" height="172" rx="86" fill="#ffffff" stroke="#050505" stroke-width="18"/>
+  <text x="214" y="548" fill="#050505" font-family="Arial, Helvetica, sans-serif" font-size="68" font-weight="800">+|WimiFarma</text>
+  <circle cx="696" cy="470" r="14" fill="#ffffff" stroke="#050505" stroke-width="7"/>
+  <text x="689" y="477" fill="#050505" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700">TM</text>
+  <text x="450" y="760" fill="#101828" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="800" text-anchor="middle">Wimifarma</text>
+  <text x="450" y="840" fill="#667085" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="600" text-anchor="middle">Atendimento local em Ivate</text>
+  <circle cx="450" cy="1030" r="76" fill="#25d366"/>
+  <path d="M486 1069c-22 12-50 9-69-9-24-23-25-61-2-85 23-25 61-26 86-4 22 21 26 55 9 80l10 47-34-29Z" fill="none" stroke="#ffffff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

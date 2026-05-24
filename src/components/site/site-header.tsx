@@ -32,10 +32,10 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <div className="grid w-full grid-cols-[minmax(10rem,12rem)_minmax(0,1fr)_auto] items-center gap-3 px-4 py-2 sm:grid-cols-[minmax(11rem,13rem)_minmax(0,1fr)_auto] sm:px-6 lg:gap-4 lg:px-8">
+      <div className="relative flex items-center gap-2 px-4 py-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         <Link
           aria-label="Wimifarma"
-          className="flex h-11 w-40 items-center justify-start overflow-hidden sm:h-12 sm:w-48 lg:w-52"
+          className="flex h-10 w-32 shrink-0 items-center justify-start overflow-hidden sm:h-12 sm:w-48 lg:w-52"
           href="/"
         >
           <Image
@@ -48,9 +48,46 @@ export async function SiteHeader() {
           />
         </Link>
 
+        <div className="ml-3 flex items-center gap-2 md:hidden">
+          {session?.user ? (
+            <>
+              <Link
+                aria-label="Abrir minha conta"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand"
+                href="/minha-conta"
+                title={displayName}
+              >
+                <UserRound className="h-4 w-4 text-brand" />
+              </Link>
+              <form
+                action={async () => {
+                  "use server";
+                  await signOut({ redirectTo: "/" });
+                }}
+              >
+                <button
+                  aria-label="Sair"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand"
+                  type="submit"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </form>
+            </>
+          ) : (
+            <Link
+              aria-label="Login ou cadastro"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand"
+              href="/login"
+            >
+              <LogIn className="h-4 w-4" />
+            </Link>
+          )}
+        </div>
+
         <form
           action="/ofertas"
-          className="mx-auto hidden h-14 w-full max-w-3xl items-center gap-3 rounded-full border border-line bg-white py-1.5 pl-4 pr-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_28px_rgba(17,24,39,0.06)] md:flex"
+          className="mx-auto hidden h-14 w-full max-w-3xl flex-1 items-center gap-3 rounded-full border border-line bg-white py-1.5 pl-4 pr-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_28px_rgba(17,24,39,0.06)] md:flex"
         >
           <Search className="h-5 w-5 shrink-0 text-[#5f6f88]" />
           <input
@@ -68,7 +105,7 @@ export async function SiteHeader() {
           </button>
         </form>
 
-        <div className="flex min-w-0 justify-self-end">
+        <div className="ml-auto hidden min-w-0 shrink-0 justify-end md:flex">
           <a
             className="soft-breathe hidden items-center gap-2 rounded-full bg-[#25d366] px-5 py-3 font-body text-sm font-bold text-white shadow-[0_10px_24px_rgba(37,211,102,0.22)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#1ebe57] lg:inline-flex"
             href={siteConfig.whatsappUrl}
@@ -82,12 +119,12 @@ export async function SiteHeader() {
             <div className="ml-2 flex min-w-0 items-center gap-2">
               <Link
                 aria-label="Abrir minha conta"
-                className="inline-flex min-w-0 max-w-[9rem] items-center gap-2 rounded-full border border-line bg-white px-4 py-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:max-w-[11rem] lg:max-w-[13rem]"
+                className="inline-flex h-11 w-11 min-w-0 items-center justify-center rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:h-auto sm:w-auto sm:max-w-[11rem] sm:justify-start sm:gap-2 sm:px-4 sm:py-3 lg:max-w-[13rem]"
                 href="/minha-conta"
                 title={displayName}
               >
                 <UserRound className="h-4 w-4 shrink-0 text-brand" />
-                <span className="truncate">{displayName}</span>
+                <span className="hidden truncate sm:inline">{displayName}</span>
               </Link>
               <form
                 action={async () => {
@@ -97,7 +134,7 @@ export async function SiteHeader() {
               >
                 <button
                   aria-label="Sair"
-                  className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-line bg-white px-4 py-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:px-5"
+                  className="inline-flex h-11 w-11 items-center justify-center whitespace-nowrap rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:h-auto sm:w-auto sm:gap-2 sm:px-5 sm:py-3"
                   type="submit"
                 >
                   <span className="hidden sm:inline">Sair</span>
@@ -107,10 +144,11 @@ export async function SiteHeader() {
             </div>
           ) : (
             <Link
-              className="ml-2 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-line bg-white px-4 py-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:px-5"
+              aria-label="Login ou cadastro"
+              className="ml-2 inline-flex h-11 w-11 items-center justify-center whitespace-nowrap rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:h-auto sm:w-auto sm:gap-2 sm:px-5 sm:py-3"
               href="/login"
             >
-              Login / Cadastrar
+              <span className="hidden sm:inline">Login / Cadastrar</span>
               <LogIn className="h-4 w-4" />
             </Link>
           )}
