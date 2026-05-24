@@ -37,11 +37,12 @@ Arquivos:
 1. Usuario acessa `/login`.
 2. A tela exibe blocos de entrar e cadastrar.
 3. Login Google, quando configurado, e destinado apenas a clientes e retorna para `/login`.
-4. Apos login de cliente, o header publico mostra o nome vindo da conta Google e um botao `Sair`.
-5. Logout publico encerra a sessao e redireciona para `/`.
-6. Login administrativo usa Credentials via NextAuth.
-7. Login/cadastro de cliente ainda nao persiste cliente no banco.
-8. Se o login administrativo passa, redireciona para `/admin/dashboard`.
+4. No primeiro login Google, o sistema cria ou atualiza um `Customer` pelo e-mail/identificador Google.
+5. Apos login de cliente, o header publico mostra o nome vindo da conta Google e um botao `Sair`.
+6. Logout publico encerra a sessao e redireciona para `/`.
+7. Login administrativo usa Credentials via NextAuth.
+8. Cadastro por formulario ainda e visual e nao cria cliente.
+9. Se o login administrativo passa, redireciona para `/admin/dashboard`.
 
 Arquivos:
 
@@ -122,12 +123,11 @@ Arquivos:
 - Usuario cliente ser redirecionado para area admin por regra incompleta.
 - Colaborador acessar rota de administrador se souber a URL.
 - Segredo administrativo ser exposto em print, log ou resposta de listagem.
-- Fluxo de cadastro parecer funcional antes de persistir no banco.
+- Fluxo de cadastro por formulario parecer funcional antes de persistir no banco.
 
 ## Pendencias
 
-- Implementar cadastro real de cliente.
-- Implementar login Google real.
+- Implementar cadastro real de cliente por formulario.
 - Implementar regras de role por rota admin nos placeholders restantes.
 - Implementar CRUD real nos modulos admin.
 - Integrar site publico com dados reais do banco.

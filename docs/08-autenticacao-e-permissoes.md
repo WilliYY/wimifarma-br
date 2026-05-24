@@ -24,6 +24,7 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - Provider Credentials autentica usuarios do modelo `User`.
 - Google Provider so entra se `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` existirem.
 - Google OAuth e reservado para clientes: sessoes Google recebem role `CUSTOMER` e nao acessam `/admin`.
+- Login Google cria ou atualiza `Customer` no banco com e-mail, nome, foto, `googleSubject` e `lastLoginAt`.
 - No site publico, sessoes de cliente exibem o nome da conta Google no header e botao `Sair`.
 - `LoginAttempt` registra falhas/sucessos para limitar tentativas.
 - `/login` serve como tela de login/cadastro visual.
@@ -50,6 +51,7 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 
 - Usar JWT strategy do NextAuth.
 - Armazenar `id` e `role` no token/sessao.
+- Para Google OAuth, `id` no token/sessao e o `Customer.id`, nao um `User.id` administrativo.
 - Sem role administrativa explicita, a sessao recebe `CUSTOMER`.
 - API guards: `requireApiRole`, `requireAdminApi` e `requireAdminOnlyApi`.
 - Menu admin filtra links com base em roles.
@@ -74,15 +76,15 @@ Se o client secret for exposto em print ou conversa, rotacionar a credencial no 
 - Menu filtrado nao substitui permissao server-side por pagina.
 - Muitas APIs ainda usam permissao generica para `ADMIN` e `MANAGER`.
 - `SECRET_VAULT_KEY` deve permanecer estavel; trocar a chave sem recriptografar registros impede abrir segredos antigos.
-- Cadastro/login de cliente ainda nao persiste cliente no banco.
+- Cadastro por formulario ainda nao persiste cliente no banco.
+- Cliente Google pode existir sem telefone; fluxos que precisam de WhatsApp devem solicitar/completar telefone antes de uso comercial.
 
 ## Pendencias
 
 - Remover/proteger login temporario.
 - Criar guard server-side por rota admin.
 - Criar permissoes granulares por API nos endpoints restantes.
-- Implementar cadastro real de cliente.
-- Implementar persistencia real de cliente para sessoes Google.
+- Implementar cadastro real de cliente por formulario.
 - Registrar auditoria em acoes administrativas reais.
 
 ## Evolucao

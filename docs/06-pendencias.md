@@ -41,16 +41,16 @@
 
 ### Cadastro real de clientes
 
-- Status: aberto.
-- Impacto: tela de cadastro existe, mas nao grava cliente/usuario.
+- Status: parcialmente resolvido.
+- Impacto: login Google agora cria/atualiza `Customer`; tela de cadastro por formulario ainda nao grava cliente/usuario.
 - Arquivos: `src/components/site/customer-auth-page.tsx`, `src/features/customers`, `src/app/api/clientes`.
 
 ### Google OAuth real
 
-- Status: fluxo de login/logout validado em producao em 2026-05-23; persistencia real de cliente ainda pendente.
-- Impacto: botao consulta os providers do Auth.js e inicia Google quando `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` existem no servidor; login Google cria sessao de cliente, sem acesso ao admin.
-- Arquivos: `src/features/auth/auth.ts`, `.env.example`, `src/components/site/customer-auth-page.tsx`.
-- Caminho sugerido: implementar persistencia real do cliente no banco e depois rotacionar o segredo OAuth exposto durante a configuracao.
+- Status: fluxo de login/logout validado em producao em 2026-05-23; persistencia real de cliente implementada em 2026-05-23.
+- Impacto: botao consulta os providers do Auth.js e inicia Google quando `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` existem no servidor; login Google cria sessao `CUSTOMER`, grava/atualiza `Customer` e nao acessa admin.
+- Arquivos: `src/features/auth/auth.ts`, `prisma/schema.prisma`, `.env.example`, `src/components/site/customer-auth-page.tsx`.
+- Caminho sugerido: rotacionar o segredo OAuth exposto durante a configuracao e testar bloqueio/consentimento quando houver area real de cliente.
 
 ### CRUD real no admin
 

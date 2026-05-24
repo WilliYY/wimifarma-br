@@ -14,8 +14,76 @@ const authSecret =
     : "wimifarma-local-dev-secret");
 const appRoles = ["ADMIN", "MANAGER", "STAFF", "CUSTOMER"] as const;
 
+type GoogleCustomerProfile = {
+  email?: unknown;
+  name?: unknown;
+  picture?: unknown;
+  sub?: unknown;
+};
+
 function isAppRole(role: unknown): role is (typeof appRoles)[number] {
   return typeof role === "string" && appRoles.includes(role as never);
+}
+
+function stringOrUndefined(value: unknown) {
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : undefined;
+}
+
+function normalizeEmail(email: string | null | undefined) {
+  return email?.trim().toLowerCase() || undefined;
+}
+
+function fallbackNameFromEmail(email: string | undefined) {
+  return email?.split("@")[0] || "Cliente Wimifarma";
+}
+
+async function persistGoogleCustomer(input: {
+  email?: string;
+  googleSubject?: string;
+  imageUrl?: string;
+  name?: string;
+}) {
+  const prisma = getPrisma();
+  const email = normalizeEmail(input.email);
+
+  if (!email && !input.googleSubject) {
+    return null;
+  }
+
+  const existingBySubject = input.googleSubject
+    ? await prisma.customer.findUnique({
+        where: { googleSubject: input.googleSubject },
+      })
+    : null;
+
+  const existing =
+    existingBySubject ??
+    (email
+      ? await prisma.customer.findUnique({
+          where: { email },
+        })
+      : null);
+
+  const customerData = {
+    email,
+    googleSubject: input.googleSubject,
+    imageUrl: input.imageUrl,
+    lastLoginAt: new Date(),
+    name: input.name ?? existing?.name ?? fallbackNameFromEmail(email),
+  };
+
+  if (existing) {
+    return prisma.customer.update({
+      data: customerData,
+      where: { id: existing.id },
+    });
+  }
+
+  return prisma.customer.create({
+    data: customerData,
+  });
 }
 
 async function recordLoginAttempt(email: string, success: boolean) {
@@ -132,7 +200,37 @@ export const authConfig = {
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user, account, profile }) {
+      if (account?.provider === "google") {
+        const googleProfile = profile as GoogleCustomerProfile | undefined;
+        const customer = await persistGoogleCustomer({
+          email:
+            normalizeEmail(stringOrUndefined(user?.email)) ??
+            normalizeEmail(stringOrUndefined(token.email)) ??
+            normalizeEmail(stringOrUndefined(googleProfile?.email)),
+          googleSubject:
+            stringOrUndefined(account.providerAccountId) ??
+            stringOrUndefined(googleProfile?.sub),
+          imageUrl:
+            stringOrUndefined(user?.image) ??
+            stringOrUndefined(token.picture) ??
+            stringOrUndefined(googleProfile?.picture),
+          name:
+            stringOrUndefined(user?.name) ??
+            stringOrUndefined(token.name) ??
+            stringOrUndefined(googleProfile?.name),
+        });
+
+        if (customer) {
+          token.email = customer.email;
+          token.id = customer.id;
+          token.name = customer.name;
+          token.picture = customer.imageUrl;
+          token.role = "CUSTOMER";
+          return token;
+        }
+      }
+
       if (user) {
         token.id = user.id;
         token.role = isAppRole(user.role) ? user.role : "CUSTOMER";

@@ -168,14 +168,17 @@ model Lead {
 model Customer {
   id                String              @id @default(cuid())
   name              String
-  phone             String              @unique
-  email             String?
+  phone             String?             @unique
+  email             String?             @unique
   document          String?             @unique
   birthDate         DateTime?
   address           String?
   city              String              @default("Ivate")
   neighborhood      String?
   notes             String?
+  imageUrl          String?
+  googleSubject     String?             @unique
+  lastLoginAt       DateTime?
   status            CustomerStatus      @default(ACTIVE)
   spinWheelAttempts SpinWheelAttempt[]
   cashbackAccount   CashbackAccount?
@@ -185,6 +188,7 @@ model Customer {
 
   @@index([status])
   @@index([city])
+  @@index([lastLoginAt])
 }
 
 model SpinWheelCampaign {

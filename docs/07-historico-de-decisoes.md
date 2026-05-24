@@ -70,7 +70,14 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Decisao: tratar login Google como sessao `CUSTOMER`, sem permissao administrativa, mantendo admin por Credentials.
 - Motivo: evitar que cliente autenticado por Google receba perfil de colaborador ou acesso ao painel reservado.
 - Impacto: `src/features/auth/auth.ts`, `src/types/next-auth.d.ts`, `src/components/site/customer-auth-page.tsx`, `src/components/admin/admin-shell.tsx`.
-- Riscos/cuidados: cliente Google ainda nao e persistido no banco; antes de liberar recursos de cliente, implementar cadastro real e regras de consentimento.
+- Riscos/cuidados: cliente Google nao deve ganhar permissoes administrativas; antes de liberar recursos sensiveis de cliente, revisar consentimento e dados obrigatorios.
+
+## 2026-05-23 - Persistencia de cliente Google
+
+- Decisao: criar ou atualizar `Customer` durante o callback JWT do login Google, usando e-mail, nome, foto e identificador Google.
+- Motivo: permitir que clientes autenticados por Google tenham identidade persistente antes dos modulos de pedidos, clube, cashback e atendimento personalizado.
+- Impacto: `prisma/schema.prisma`, `prisma/migrations/20260523224500_persist_google_customers/migration.sql`, `src/features/auth/auth.ts`, docs de banco e autenticacao.
+- Riscos/cuidados: o cadastro por formulario continua pendente; telefone fica opcional no banco para clientes Google, mas atendimento comercial ainda deve coletar telefone/WhatsApp quando necessario.
 
 ## 2026-05-23 - Cofre admin para API e senhas
 

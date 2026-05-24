@@ -9,6 +9,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - Schema: `prisma/schema.prisma`
 - Migration inicial: `prisma/migrations/20260507030000_init/migration.sql`
 - Migration do cofre admin: `prisma/migrations/20260523180000_add_secret_credentials/migration.sql`
+- Migration de clientes Google: `prisma/migrations/20260523224500_persist_google_customers/migration.sql`
 - Seed: `prisma/seed.ts`
 - Cliente Prisma: `src/lib/prisma.ts`
 - Prisma config: `prisma.config.ts`
@@ -21,7 +22,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - `Offer`: ofertas comerciais.
 - `Coupon`: cupons.
 - `Lead`: contatos comerciais ainda nao consolidados.
-- `Customer`: clientes consolidados.
+- `Customer`: clientes consolidados, incluindo clientes autenticados por Google OAuth.
 - `SpinWheelCampaign`: campanhas de roleta.
 - `SpinWheelPrize`: premios da roleta.
 - `SpinWheelAttempt`: tentativas da roleta.
@@ -49,6 +50,8 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - Campos de dinheiro usam `Decimal`.
 - Seed cria admin inicial, produto demonstrativo, oferta demonstrativa, cupom demonstrativo e campanha de roleta inativa.
 - `SecretCredential` usa AES-256-GCM via `src/lib/secret-vault.ts`; `SECRET_VAULT_KEY` deve ser definida antes de salvar segredos reais.
+- `Customer.phone` e opcional no banco para permitir cliente Google sem telefone; o cadastro manual ainda pode exigir telefone na validacao da API.
+- `Customer.email` e `Customer.googleSubject` sao unicos para ligar novas sessoes Google ao mesmo cliente.
 
 ## Riscos ao Alterar
 

@@ -33,6 +33,7 @@ Nesta fase o sistema prioriza conversao por WhatsApp. Nao existe checkout nem pa
 - `/roleta` publica redireciona para `/ofertas`; a roleta real fica pendente para fase futura.
 - Login/cadastro visual existe em `/login`; Google OAuth e destinado apenas a clientes.
 - Quando o cliente esta logado pelo Google, o header publico mostra o nome da conta e o botao `Sair`.
+- Login Google cria ou atualiza um registro em `Customer` usando e-mail, nome, foto e identificador Google.
 - Login administrativo usa Auth.js Credentials e direciona para `/admin/dashboard`.
 - Painel admin existe como estrutura inicial com placeholders de modulos.
 - Admin possui o modulo `API e Senhas` para guardar credenciais sensiveis cifradas no banco, restrito a `ADMIN`.
