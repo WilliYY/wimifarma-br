@@ -32,20 +32,23 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <div className="relative flex items-center gap-2 px-4 py-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
+      <div className="relative flex items-center gap-2 bg-black px-4 py-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         <Link
           aria-label="Wimifarma"
-          className="flex h-10 w-32 shrink-0 items-center justify-start overflow-hidden sm:h-12 sm:w-48 lg:w-52"
+          className="flex h-12 w-40 shrink-0 items-center justify-start overflow-hidden sm:h-14 sm:w-56 lg:w-60"
           href="/"
         >
-          <Image
-            alt="Wimifarma"
+          <video
+            aria-hidden="true"
+            autoPlay
             className="h-full w-full object-contain object-left"
-            height={48}
-            priority
-            src="/brand/logo-wimifarma.svg"
-            width={208}
-          />
+            loop
+            muted
+            playsInline
+            preload="auto"
+          >
+            <source src="/brand/logo-animada.mp4" type="video/mp4" />
+          </video>
         </Link>
 
         <div className="ml-3 flex items-center gap-2 md:hidden">
