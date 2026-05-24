@@ -93,13 +93,13 @@ function HeroVideo() {
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.92),rgba(255,255,255,0.42)_32%,rgba(255,255,255,0.42)_68%,rgba(255,255,255,0.92))]" />
         <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#c8102e,#138a45,#064b8e)]" />
 
-        <div className="relative z-[1] grid min-h-[360px] items-center gap-5 p-4 sm:min-h-[430px] sm:p-5 lg:h-full lg:min-h-0 lg:grid-cols-[minmax(13rem,0.48fr)_minmax(16rem,0.52fr)] lg:gap-6 lg:p-7">
-          <div className="hidden max-w-sm lg:block">
+        <div className="relative z-[1] grid min-h-[360px] items-center gap-5 p-4 sm:min-h-[430px] sm:p-5 lg:h-full lg:min-h-0 lg:grid-cols-[minmax(16rem,0.52fr)_minmax(16rem,0.48fr)] lg:gap-6 lg:p-7">
+          <div className="hidden max-w-lg lg:block">
             <p className="text-xs font-black uppercase tracking-[0.26em] text-brand">
               Wimifarma em Ivate
             </p>
-            <h1 className="mt-4 text-5xl font-black leading-[0.92] text-ink xl:text-6xl">
-              Cuidado local, direto pelo WhatsApp.
+            <h1 className="mt-4 text-4xl font-black leading-[0.98] text-ink xl:text-5xl">
+              Melhores preços em medicamentos e temos Farmácia Popular.
             </h1>
             <p className="mt-5 max-w-xs text-base leading-7 text-muted">
               Medicamentos, Farmacia Popular e entrega com atendimento humano.

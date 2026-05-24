@@ -27,7 +27,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Quando ha sessao de cliente, o header troca `Login / Cadastrar` pelo nome da conta Google e um botao `Sair`.
 - O nome do cliente no header abre `/minha-conta`.
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
-- Banner principal atual e video da Wimifarma em uma vitrine responsiva com acabamento claro, chamada para WhatsApp, poster de carregamento e controles integrados de pausar e som.
+- Banner principal atual e video da Wimifarma em uma vitrine responsiva com acabamento claro, chamada para WhatsApp, texto comercial sobre medicamentos e Farmacia Popular, poster de carregamento e controles integrados de pausar e som.
 - Home esta temporariamente focada em anuncio: o primeiro bloco de conteudo ja e a vitrine com video; abaixo dela existe uma tela grande vazia reservada para banner.
 - Categorias em bolinhas, cards de medicamentos e vitrines de destaque nao aparecem na home nesta fase.
 - O link `Ofertas` nao aparece no menu principal enquanto a home estiver focada em anuncio.
@@ -57,7 +57,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Framer Motion usado para entradas suaves.
 - `lucide-react` usado para icones.
 - Produtos demonstrativos usam visuais CSS, nao fotos reais.
-- Video fica em `public/videos/thiago-cansado.mp4` e usa `public/videos/thiago-poster.svg` para evitar tela escura antes do carregamento.
+- Video fica em `public/videos/thiago-cansado.mp4`, roda em loop e usa `public/videos/thiago-poster.svg` para evitar tela escura antes do carregamento.
 
 ## Riscos ao Alterar
 
