@@ -15,6 +15,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `src/app/globals.css`
 - `public/brand/logo-wimifarma.svg`
 - `public/brand/logo-animada.gif`
+- `public/brand/farmacia-popular.webp`
 - `public/brand/delivery-truck.gif`
 - `public/brand/delivery-truck.png`
 - `public/favicon.svg`
@@ -24,7 +25,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 ## Estado Atual
 
-- Header fixo com faixa vermelha, caminhaozinho com deslocamento animado, faixa escura integrada a logo animada sem fundo ancorada no canto esquerdo, busca, WhatsApp, login/cadastrar e nav.
+- Header fixo com faixa vermelha, caminhaozinho com deslocamento animado, faixa escura integrada a logo animada sem fundo ancorada no canto esquerdo, selo Farmacia Popular ao lado da logo em telas largas, busca, WhatsApp, login/cadastrar e nav.
 - Quando ha sessao de cliente, o header troca `Login / Cadastrar` pelo nome da conta Google e um botao `Sair`.
 - O nome do cliente no header abre `/minha-conta`.
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
@@ -47,6 +48,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Evitar excesso de informacao sobre o video; a vitrine deve ter um unico CTA principal para WhatsApp.
 - Logo nao deve ficar cortada nem presa em bolha desnecessaria.
 - Logo animada do header deve ficar alinhada ao canto esquerdo da janela, em fundo escuro integrado ao GIF, com escala suficiente para mostrar toda a animacao sem cortar topo ou base, e nao deve invadir a busca.
+- Selo Farmacia Popular do header deve ficar ao lado da logo animada apenas quando houver espaco suficiente, sem cobrir a animacao nem apertar a busca.
 - Layout deve ser responsivo e nao gerar barra lateral horizontal.
 - Animacoes devem ser leves e nao prejudicar performance.
 - O caminhaozinho da faixa superior deve manter fundo transparente, andar em uma pista curta e nao aumentar demais a altura do header.

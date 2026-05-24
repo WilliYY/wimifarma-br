@@ -35,7 +35,7 @@ export async function SiteHeader() {
       <div className="relative flex items-center gap-2 bg-[#121820] px-4 py-1.5 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         <Link
           aria-label="Wimifarma"
-          className="flex h-20 w-56 shrink-0 items-center justify-start overflow-hidden sm:h-24 sm:w-80 lg:w-[24rem]"
+          className="flex h-20 w-56 shrink-0 items-center justify-start overflow-hidden sm:h-24 sm:w-80 lg:w-[18rem] xl:w-80"
           href="/"
         >
           <Image
@@ -47,6 +47,21 @@ export async function SiteHeader() {
             src="/brand/logo-animada.gif"
             unoptimized
             width={384}
+          />
+        </Link>
+
+        <Link
+          aria-label="Farmacia Popular"
+          className="hidden h-20 w-20 shrink-0 items-center justify-center overflow-hidden lg:flex xl:h-[5.5rem] xl:w-[5.5rem]"
+          href="/farmacia-popular"
+        >
+          <Image
+            alt="Aqui tem Farmacia Popular"
+            className="h-full w-full object-contain"
+            height={320}
+            priority
+            src="/brand/farmacia-popular.webp"
+            width={320}
           />
         </Link>
 
