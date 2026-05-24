@@ -14,7 +14,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `src/components/site/customer-auth-page.tsx`
 - `src/app/globals.css`
 - `public/brand/logo-wimifarma.svg`
-- `public/brand/logo-animada.mp4`
+- `public/brand/logo-animada.gif`
 - `public/brand/delivery-truck.gif`
 - `public/brand/delivery-truck.png`
 - `public/favicon.svg`
@@ -24,7 +24,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 ## Estado Atual
 
-- Header fixo com faixa vermelha, caminhaozinho com deslocamento animado, faixa preta para a logo animada ancorada no canto esquerdo, busca, WhatsApp, login/cadastrar e nav.
+- Header fixo com faixa vermelha, caminhaozinho com deslocamento animado, faixa escura integrada a logo animada sem fundo ancorada no canto esquerdo, busca, WhatsApp, login/cadastrar e nav.
 - Quando ha sessao de cliente, o header troca `Login / Cadastrar` pelo nome da conta Google e um botao `Sair`.
 - O nome do cliente no header abre `/minha-conta`.
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
@@ -37,7 +37,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Login/cadastro usa dois blocos: entrar e cadastrar.
 - Cadastro comum inclui telefone e cria conta de cliente.
 - O selo superior da tela de login foi removido para deixar o titulo direto.
-- A logo do header usa o video animado em `public/brand/logo-animada.mp4` sobre faixa preta; o SVG da Wimifarma permanece disponivel para outros pontos e o favicon voltou para a versao anterior usada antes da troca visual.
+- A logo do header usa o GIF animado sem fundo em `public/brand/logo-animada.gif` sobre faixa escura; o SVG da Wimifarma permanece disponivel para outros pontos e o favicon voltou para a versao anterior usada antes da troca visual.
 
 ## Regras de Design
 
@@ -46,7 +46,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Verde deve apoiar WhatsApp e Farmacia Popular.
 - Evitar excesso de informacao sobre o video; a vitrine deve ter um unico CTA principal para WhatsApp.
 - Logo nao deve ficar cortada nem presa em bolha desnecessaria.
-- Logo animada do header deve ficar alinhada ao canto esquerdo da janela, em fundo preto, e nao deve invadir a busca.
+- Logo animada do header deve ficar alinhada ao canto esquerdo da janela, em fundo escuro integrado ao GIF, e nao deve invadir a busca.
 - Layout deve ser responsivo e nao gerar barra lateral horizontal.
 - Animacoes devem ser leves e nao prejudicar performance.
 - O caminhaozinho da faixa superior deve manter fundo transparente, andar em uma pista curta e nao aumentar demais a altura do header.
