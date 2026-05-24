@@ -26,10 +26,6 @@ export function SiteFooter() {
               </p>
             </div>
           </div>
-          <p className="mt-5 max-w-md text-sm leading-6 text-white/68">
-            Base preparada para site publico, admin, campanhas, produtos,
-            cupons, clientes, WhatsApp, auditoria e cashback futuro.
-          </p>
           <Button asChild className="mt-6" variant="default">
             <a href={siteConfig.whatsappUrl} rel="noreferrer" target="_blank">
               <MessageCircle className="h-4 w-4" />
