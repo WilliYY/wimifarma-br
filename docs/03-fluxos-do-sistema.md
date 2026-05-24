@@ -57,11 +57,10 @@ Arquivos:
 
 1. Cliente autenticado acessa `/minha-conta`.
 2. A pagina carrega o `Customer` da sessao e bloqueia usuarios administrativos.
-3. A aba `Usuario` salva nome e telefone.
-4. A aba `Entrega` salva endereco, bairro, cidade e observacoes.
-5. A aba `Senha` permite criar senha para conta Google ou trocar senha existente.
-6. A opcao de redefinicao por email aparece como ponto preparado, mas depende de provedor de envio de email.
-7. A aba `Cashback` mostra saldo e ultimas movimentacoes se houver `CashbackAccount`.
+3. A aba `Usuario` salva nome, telefone, endereco, bairro, cidade e observacoes em um unico botao `Salvar`.
+4. A aba `Senha` permite criar senha para conta Google ou trocar senha existente.
+5. A opcao de redefinicao por email aparece como ponto preparado, mas depende de provedor de envio de email.
+6. A aba `Cashback` mostra saldo e ultimas movimentacoes se houver `CashbackAccount`.
 
 Arquivos:
 

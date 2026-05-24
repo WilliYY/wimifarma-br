@@ -53,7 +53,6 @@ type CashbackSummary = {
 
 const tabs = [
   { icon: UserRound, id: "perfil", label: "Usuario" },
-  { icon: MapPin, id: "entrega", label: "Entrega" },
   { icon: ShieldCheck, id: "seguranca", label: "Senha" },
   { icon: Coins, id: "beneficios", label: "Cashback" },
 ] as const;
@@ -330,22 +329,6 @@ export function CustomerAccountPanel({
                   }
                 />
               </Field>
-              <div className="flex items-end">
-                <Button
-                  className="w-full sm:w-auto"
-                  disabled={isSavingProfile}
-                  onClick={saveProfile}
-                  type="button"
-                >
-                  <Save className="h-4 w-4" />
-                  {isSavingProfile ? "Salvando..." : "Salvar usuario"}
-                </Button>
-              </div>
-            </div>
-          ) : null}
-
-          {activeTab === "entrega" ? (
-            <div className="grid gap-5 lg:grid-cols-2">
               <Field icon={<Home className="h-4 w-4" />} label="Endereco">
                 <Input
                   placeholder="Rua, numero e complemento"
@@ -371,7 +354,7 @@ export function CustomerAccountPanel({
                   }
                 />
               </Field>
-              <Field icon={<Mail className="h-4 w-4" />} label="Observacoes">
+              <Field icon={<Home className="h-4 w-4" />} label="Observacoes">
                 <Textarea
                   className="min-h-24"
                   placeholder="Referencia de entrega, horario ou detalhe importante"
@@ -383,12 +366,13 @@ export function CustomerAccountPanel({
               </Field>
               <div className="lg:col-span-2">
                 <Button
+                  className="w-full sm:w-auto"
                   disabled={isSavingProfile}
                   onClick={saveProfile}
                   type="button"
                 >
                   <Save className="h-4 w-4" />
-                  {isSavingProfile ? "Salvando..." : "Salvar entrega"}
+                  {isSavingProfile ? "Salvando..." : "Salvar"}
                 </Button>
               </div>
             </div>
