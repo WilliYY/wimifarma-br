@@ -96,7 +96,7 @@ function HeroVideo() {
         <div className="relative z-[1] grid min-h-[360px] items-center gap-5 p-4 sm:min-h-[430px] sm:p-5 lg:h-full lg:min-h-0 lg:grid-cols-[minmax(16rem,0.52fr)_minmax(16rem,0.48fr)] lg:gap-6 lg:p-7">
           <div className="hidden max-w-lg lg:block">
             <p className="text-xs font-black uppercase tracking-[0.26em] text-brand">
-              Wimifarma em Ivate
+              Wimifarma
             </p>
             <h1 className="mt-4 text-4xl font-black leading-[0.98] text-ink xl:text-5xl">
               Melhores preços em medicamentos e temos Farmácia Popular.
