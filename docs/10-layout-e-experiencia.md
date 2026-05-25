@@ -28,7 +28,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 - Header fixo com faixa vermelha de frete gratis, caminhaozinho com deslocamento animado, faixa escura integrada a logo animada sem fundo ancorada no canto esquerdo, selo Farmacia Popular ao lado da logo em telas largas, busca, WhatsApp, login/cadastrar e nav.
 - Menu principal destaca a rota ativa em telas largas para deixar claro em qual aba o usuario esta.
-- Quando ha sessao de cliente, o header troca `Login / Cadastrar` pelo nome da conta Google e um botao `Sair`.
+- Quando ha sessao de cliente, o header troca `Login / Cadastrar` por foto/nome da conta Google e um botao `Sair`.
 - O nome do cliente no header abre `/minha-conta`.
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
 - Banner principal atual e video da Wimifarma em uma vitrine responsiva com acabamento claro, chamada para WhatsApp, texto comercial sobre medicamentos e Farmacia Popular, poster de carregamento e controles integrados de pausar e som.
@@ -38,6 +38,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.
 - Botao flutuante de WhatsApp fica no canto inferior direito.
 - Login/cadastro usa dois blocos: entrar e cadastrar.
+- Botoes Google de login/cadastro redirecionam sem trocar o texto para estado de carregamento.
 - Cadastro comum inclui telefone e cria conta de cliente.
 - O selo superior da tela de login foi removido para deixar o titulo direto.
 - A logo do header usa o GIF animado sem fundo em `public/brand/logo-animada.gif` sobre faixa escura; o SVG da Wimifarma permanece disponivel para outros pontos e o favicon voltou para a versao anterior usada antes da troca visual.

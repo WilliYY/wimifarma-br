@@ -17,25 +17,22 @@ import { Input } from "@/components/ui/input";
 const easeOut = [0.16, 1, 0.3, 1] as const;
 
 function GoogleButton({
-  isLoading,
   label,
   onClick,
 }: {
-  isLoading: boolean;
   label: string;
   onClick: () => void;
 }) {
   return (
     <button
       className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-line bg-white px-4 text-sm font-bold text-ink shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand"
-      disabled={isLoading}
       onClick={onClick}
       type="button"
     >
       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-subtle text-sm font-black text-brand">
         G
       </span>
-      {isLoading ? "Abrindo Google..." : label}
+      {label}
     </button>
   );
 }
@@ -78,15 +75,12 @@ function Field({
 export function CustomerAuthPage() {
   const router = useRouter();
   const [isEntering, setIsEntering] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
 
   async function handleGoogleSignIn() {
-    setIsGoogleLoading(true);
     const providers = await getProviders();
 
     if (!providers?.google) {
-      setIsGoogleLoading(false);
       toast.info("Google sera ativado quando as chaves OAuth forem configuradas.");
       return;
     }
@@ -216,7 +210,6 @@ export function CustomerAuthPage() {
 
             <div className="mt-7">
               <GoogleButton
-                isLoading={isGoogleLoading}
                 label="Entrar com Google"
                 onClick={handleGoogleSignIn}
               />
@@ -279,7 +272,6 @@ export function CustomerAuthPage() {
 
             <div className="mt-7">
               <GoogleButton
-                isLoading={isGoogleLoading}
                 label="Cadastrar com Google"
                 onClick={handleGoogleSignIn}
               />

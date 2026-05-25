@@ -9,6 +9,7 @@ export async function SiteHeader() {
   const session = await auth();
   const displayName =
     session?.user?.name || session?.user?.email?.split("@")[0] || "Cliente";
+  const userImage = session?.user?.image;
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white/96 shadow-[0_10px_30px_rgba(17,24,39,0.08)] backdrop-blur-md">
@@ -71,11 +72,23 @@ export async function SiteHeader() {
             <>
               <Link
                 aria-label="Abrir minha conta"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand"
+                className="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand"
                 href="/minha-conta"
                 title={displayName}
               >
-                <UserRound className="h-4 w-4 text-brand" />
+                {userImage ? (
+                  <Image
+                    alt=""
+                    className="h-8 w-8 rounded-full object-cover"
+                    height={32}
+                    referrerPolicy="no-referrer"
+                    src={userImage}
+                    unoptimized
+                    width={32}
+                  />
+                ) : (
+                  <UserRound className="h-4 w-4 text-brand" />
+                )}
               </Link>
               <form
                 action={async () => {
@@ -137,11 +150,25 @@ export async function SiteHeader() {
             <div className="ml-2 flex min-w-0 items-center gap-2">
               <Link
                 aria-label="Abrir minha conta"
-                className="inline-flex h-11 w-11 min-w-0 items-center justify-center rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:h-auto sm:w-auto sm:max-w-[11rem] sm:justify-start sm:gap-2 sm:px-4 sm:py-3 lg:max-w-[13rem]"
+                className="inline-flex h-11 w-11 min-w-0 items-center justify-center rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:h-auto sm:w-auto sm:max-w-[11rem] sm:justify-start sm:gap-2 sm:py-2 sm:pl-2 sm:pr-4 lg:max-w-[13rem]"
                 href="/minha-conta"
                 title={displayName}
               >
-                <UserRound className="h-4 w-4 shrink-0 text-brand" />
+                {userImage ? (
+                  <Image
+                    alt=""
+                    className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-brand/12"
+                    height={32}
+                    referrerPolicy="no-referrer"
+                    src={userImage}
+                    unoptimized
+                    width={32}
+                  />
+                ) : (
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft">
+                    <UserRound className="h-4 w-4 text-brand" />
+                  </span>
+                )}
                 <span className="hidden truncate sm:inline">{displayName}</span>
               </Link>
               <form

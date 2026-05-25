@@ -27,7 +27,7 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - Login Google cria ou atualiza `Customer` no banco com e-mail, nome, foto, `googleSubject` e `lastLoginAt`.
 - Cadastro por email/telefone/senha cria `Customer` com `passwordHash`; login de cliente por Credentials recebe role `CUSTOMER`.
 - `/minha-conta` e area autenticada de cliente e nao aceita roles administrativas.
-- No site publico, sessoes de cliente exibem o nome da conta Google no header e botao `Sair`.
+- No site publico, sessoes de cliente exibem foto/nome da conta Google no header e botao `Sair`.
 - `LoginAttempt` registra falhas/sucessos para limitar tentativas.
 - `/login` serve como tela de login/cadastro visual.
 - Login administrativo bem-sucedido redireciona para `/admin/dashboard`.
@@ -56,6 +56,7 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - Para Google OAuth, `id` no token/sessao e o `Customer.id`, nao um `User.id` administrativo.
 - Para cliente por email/senha, `id` no token/sessao tambem e o `Customer.id`.
 - Sem role administrativa explicita, a sessao recebe `CUSTOMER`.
+- Fotos de perfil Google sao renderizadas no header publico a partir de `lh3.googleusercontent.com`.
 - API guards: `requireApiRole`, `requireAdminApi` e `requireAdminOnlyApi`.
 - Menu admin filtra links com base em roles.
 
