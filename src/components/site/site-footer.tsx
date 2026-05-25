@@ -11,11 +11,7 @@ export function SiteFooter() {
 
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.25fr_0.75fr_1fr] lg:px-8">
         <div className="max-w-sm">
-          <Link
-            aria-label="Wimifarma"
-            className="inline-flex items-center gap-4"
-            href="/"
-          >
+          <Link aria-label="Wimifarma" className="inline-flex" href="/">
             <span className="flex h-14 w-44 items-center justify-start overflow-visible">
               <Image
                 alt="Wimifarma"
@@ -24,9 +20,6 @@ export function SiteFooter() {
                 src="/brand/logo-wimifarma.svg"
                 width={176}
               />
-            </span>
-            <span className="text-xl font-black leading-none text-white">
-              Wimifarma
             </span>
           </Link>
 
