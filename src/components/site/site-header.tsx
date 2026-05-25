@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { LogIn, LogOut, MessageCircle, Search, UserRound } from "lucide-react";
 import { auth, signOut } from "@/features/auth/auth";
+import { SiteNav } from "@/components/site/site-nav";
 import { publicNavItems, siteConfig } from "@/lib/site";
 
 export async function SiteHeader() {
@@ -20,7 +21,7 @@ export async function SiteHeader() {
               height={28}
               src="/brand/delivery-truck.gif"
               unoptimized
-              width={34}
+              width={36}
             />
           </span>
           <span className="delivery-pull-copy inline-block whitespace-nowrap sm:hidden">
@@ -35,18 +36,18 @@ export async function SiteHeader() {
       <div className="relative flex items-center gap-2 bg-[#121820] px-4 py-1.5 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         <Link
           aria-label="Wimifarma"
-          className="flex h-20 w-56 shrink-0 items-center justify-start overflow-hidden sm:h-24 sm:w-80 lg:w-[18rem] xl:w-80"
+          className="relative flex h-20 w-56 shrink-0 items-center justify-start overflow-hidden sm:h-24 sm:w-80 lg:w-[18rem] xl:w-80"
           href="/"
         >
           <Image
             alt=""
             aria-hidden="true"
-            className="h-full w-full origin-left scale-[1.2] object-contain object-left"
-            height={96}
+            className="origin-left scale-[1.2] object-contain object-left"
+            fill
             priority
+            sizes="(min-width: 1280px) 320px, (min-width: 1024px) 288px, (min-width: 640px) 320px, 224px"
             src="/brand/logo-animada.gif"
             unoptimized
-            width={384}
           />
         </Link>
 
@@ -172,19 +173,7 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <nav className="hidden border-t border-line bg-white lg:block">
-        <div className="mx-auto flex max-w-7xl items-center justify-center gap-4 px-8 py-2.5">
-          {[{ href: "/", label: "Home" }, ...publicNavItems].map((item) => (
-            <Link
-              className="rounded-full px-4 py-2 font-body text-sm font-bold text-ink transition duration-300 hover:-translate-y-0.5 hover:bg-brand-soft hover:text-brand"
-              href={item.href}
-              key={item.href}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </nav>
+      <SiteNav items={[{ href: "/", label: "Home" }, ...publicNavItems]} />
     </header>
   );
 }

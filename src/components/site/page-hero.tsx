@@ -10,8 +10,8 @@ type PageHeroProps = {
 
 export function PageHero({ children, description, title }: PageHeroProps) {
   return (
-    <section className="border-b border-line bg-surface-subtle">
-      <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_0.7fr] lg:px-8 lg:py-20">
+    <section className="pharma-clouds border-b border-line bg-white">
+      <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 pb-16 pt-36 sm:px-6 sm:pt-40 lg:grid-cols-[1fr_0.74fr] lg:px-8 lg:pb-20 lg:pt-60">
         <div>
           <h1 className="max-w-3xl text-4xl font-black leading-tight text-ink sm:text-5xl">
             {title}
@@ -30,7 +30,7 @@ export function PageHero({ children, description, title }: PageHeroProps) {
             </Button>
           </div>
         </div>
-        <div className="rounded-lg border border-line bg-white p-5 shadow-sm">
+        <div className="rounded-lg border border-line bg-white/92 p-5 shadow-[0_24px_70px_rgba(17,24,39,0.08)]">
           {children ?? (
             <div className="grid gap-3 text-sm text-muted">
               <p>Modulo estruturado para evoluir com dados reais.</p>

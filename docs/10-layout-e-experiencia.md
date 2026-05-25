@@ -8,6 +8,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 - `src/components/site/home-page.tsx`
 - `src/components/site/site-header.tsx`
+- `src/components/site/site-nav.tsx`
 - `src/components/site/site-footer.tsx`
 - `src/components/site/floating-whatsapp.tsx`
 - `src/components/site/page-hero.tsx`
@@ -26,6 +27,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 ## Estado Atual
 
 - Header fixo com faixa vermelha, caminhaozinho com deslocamento animado, faixa escura integrada a logo animada sem fundo ancorada no canto esquerdo, selo Farmacia Popular ao lado da logo em telas largas, busca, WhatsApp, login/cadastrar e nav.
+- Menu principal destaca a rota ativa em telas largas para deixar claro em qual aba o usuario esta.
 - Quando ha sessao de cliente, o header troca `Login / Cadastrar` pelo nome da conta Google e um botao `Sair`.
 - O nome do cliente no header abre `/minha-conta`.
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
@@ -39,6 +41,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Cadastro comum inclui telefone e cria conta de cliente.
 - O selo superior da tela de login foi removido para deixar o titulo direto.
 - A logo do header usa o GIF animado sem fundo em `public/brand/logo-animada.gif` sobre faixa escura; o SVG da Wimifarma permanece disponivel para outros pontos e o favicon voltou para a versao anterior usada antes da troca visual.
+- Paginas `Farmacia Popular`, `Sobre` e `Contato` usam hero com respiro abaixo do header fixo, cards informativos e CTAs para WhatsApp sem prometer disponibilidade automatica.
 
 ## Regras de Design
 
@@ -50,6 +53,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Logo animada do header deve ficar alinhada ao canto esquerdo da janela, em fundo escuro integrado ao GIF, com escala suficiente para mostrar toda a animacao sem cortar topo ou base, e nao deve invadir a busca.
 - Selo Farmacia Popular do header deve ficar ao lado da logo animada apenas quando houver espaco suficiente, sem cobrir a animacao nem apertar a busca.
 - Layout deve ser responsivo e nao gerar barra lateral horizontal.
+- Paginas internas precisam iniciar abaixo do header fixo para evitar conteudo cortado no primeiro viewport.
 - Animacoes devem ser leves e nao prejudicar performance.
 - O caminhaozinho da faixa superior deve manter fundo transparente, andar em uma pista curta e nao aumentar demais a altura do header.
 - Para o anuncio principal da home, dimensao recomendada em desktop: 1920x840 px, proporcao 16:7. Se houver arte mobile separada, usar 1080x1350 px, proporcao 4:5.
