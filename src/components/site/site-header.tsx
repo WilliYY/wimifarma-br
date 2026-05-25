@@ -25,10 +25,10 @@ export async function SiteHeader() {
             />
           </span>
           <span className="delivery-pull-copy inline-block whitespace-nowrap sm:hidden">
-            Pedidos pelo WhatsApp em Ivate
+            Frete grátis em Ivaté-PR
           </span>
           <span className="delivery-pull-copy hidden whitespace-nowrap sm:inline-block">
-            Atendimento local em Ivate: cuidado e pedidos pelo WhatsApp
+            Frete grátis em Ivaté-PR / Frete grátis acima de 99,90 em todo Brasil
           </span>
         </div>
       </div>
