@@ -19,12 +19,6 @@ export function SiteFooter() {
                 width={176}
               />
             </span>
-            <div>
-              <p className="font-black">Wimifarma</p>
-              <p className="text-sm text-white/60">
-                Plataforma comercial em construcao
-              </p>
-            </div>
           </div>
           <Button asChild className="mt-6" variant="default">
             <a href={siteConfig.whatsappUrl} rel="noreferrer" target="_blank">
