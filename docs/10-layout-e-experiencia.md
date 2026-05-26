@@ -19,7 +19,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `public/brand/farmacia-popular.webp`
 - `public/brand/delivery-truck.gif`
 - `public/brand/delivery-truck.png`
-- `public/brand/banner-dias-especiais.svg`
+- `public/banners/faixa-home.webp`
 - `public/favicon.svg`
 - `src/app/icon.svg`
 - `public/videos/thiago-cansado.mp4`
@@ -33,7 +33,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - O nome do cliente no header abre `/minha-conta`.
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
 - Banner principal atual e video da Wimifarma em uma vitrine responsiva com acabamento claro, chamada para WhatsApp, texto comercial sobre medicamentos e Farmacia Popular, poster de carregamento e controles integrados de pausar e som.
-- Home esta temporariamente focada em anuncio: o primeiro bloco de conteudo ja e a vitrine com video; abaixo dela existe um banner de dias especiais com chamada visual para generico barato, idoso e bebe.
+- Home esta temporariamente focada em anuncio: o primeiro bloco de conteudo ja e a vitrine com video; abaixo dela aparece a faixa de campanhas em `public/banners/faixa-home.webp`.
 - Categorias em bolinhas, cards de medicamentos e vitrines de destaque nao aparecem na home nesta fase.
 - O link `Ofertas` nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.
@@ -45,7 +45,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - A logo do header usa o GIF animado sem fundo em `public/brand/logo-animada.gif` sobre faixa escura; o SVG da Wimifarma permanece disponivel para outros pontos e o favicon voltou para a versao anterior usada antes da troca visual.
 - Paginas `Farmacia Popular`, `Sobre` e `Contato` usam hero com respiro abaixo do header fixo, cards informativos e CTAs para WhatsApp sem prometer disponibilidade automatica.
 - Rodape usa a logo, navegacao, dados de atendimento e WhatsApp, sem texto de plataforma em construcao nem nome repetido ao lado da logo.
-- Banner de dias especiais da home usa `public/brand/banner-dias-especiais.svg` e o clique abre o WhatsApp principal.
+- Faixa de campanhas da home usa `public/banners/faixa-home.webp` e o clique abre o WhatsApp principal.
 
 ## Regras de Design
 

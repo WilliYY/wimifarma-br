@@ -1,9 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { MessageCircle, Pause, Play, Volume2, VolumeX } from "lucide-react";
-import Image from "next/image";
 import { siteConfig } from "@/lib/site";
 
 const easeOut = [0.16, 1, 0.3, 1] as const;
@@ -187,18 +187,18 @@ export function HomePage() {
         <div className="mx-auto max-w-7xl">
           <MotionBlock>
             <a
-              aria-label="Chamar a Wimifarma no WhatsApp pelo banner de dias especiais"
+              aria-label="Chamar a Wimifarma no WhatsApp pela faixa de campanhas"
               className="soft-breathe block overflow-hidden rounded-lg bg-white shadow-[0_18px_70px_rgba(17,24,39,0.08)] ring-1 ring-line/70 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_80px_rgba(17,24,39,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
               href={siteConfig.whatsappUrl}
               rel="noreferrer"
               target="_blank"
             >
               <Image
-                alt="Banner Wimifarma com Dia do Generico Barato, Dia do Idoso e Dia do Bebe"
+                alt="Faixas de campanha Wimifarma: generico barato, dia do idoso e dia do bebe"
                 className="h-auto w-full"
-                height={1004}
+                height={1024}
                 sizes="(min-width: 1280px) 1280px, 100vw"
-                src="/brand/banner-dias-especiais.svg"
+                src="/banners/faixa-home.webp"
                 width={1536}
               />
             </a>
