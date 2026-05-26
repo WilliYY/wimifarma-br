@@ -169,7 +169,8 @@ npm.cmd audit --audit-level=moderate
 4. Fazer mudancas pequenas.
 5. Atualizar docs quando necessario.
 6. Rodar validacoes adequadas ao risco da mudanca.
-7. Informar claramente o que mudou e o que ainda falta.
+7. Salvo pedido contrario, fazer commit local, push para o GitHub e `git pull` no servidor em `/home/ubuntu/projetos/wimifarma-br` ao finalizar alteracoes.
+8. Informar claramente o que mudou e o que ainda falta.
 
 ## Areas Sensiveis
 

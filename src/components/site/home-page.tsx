@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { MessageCircle, Pause, Play, Volume2, VolumeX } from "lucide-react";
+import Image from "next/image";
 import { siteConfig } from "@/lib/site";
 
 const easeOut = [0.16, 1, 0.3, 1] as const;
@@ -185,13 +186,22 @@ export function HomePage() {
       <section className="pharma-clouds bg-white px-4 pb-20 pt-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <MotionBlock>
-            <div
-              aria-label="Espaco reservado para anuncio principal"
-              className="relative min-h-[360px] overflow-hidden rounded-lg border border-dashed border-line bg-[linear-gradient(135deg,#fff_0%,#fff8f9_48%,#f2fbf6_100%)] shadow-[0_18px_70px_rgba(17,24,39,0.06)] sm:aspect-[16/7] sm:min-h-0"
+            <a
+              aria-label="Chamar a Wimifarma no WhatsApp pelo banner de dias especiais"
+              className="soft-breathe block overflow-hidden rounded-lg bg-white shadow-[0_18px_70px_rgba(17,24,39,0.08)] ring-1 ring-line/70 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_80px_rgba(17,24,39,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+              href={siteConfig.whatsappUrl}
+              rel="noreferrer"
+              target="_blank"
             >
-              <div className="absolute inset-x-6 top-6 h-px bg-line/70" />
-              <div className="absolute inset-x-6 bottom-6 h-px bg-line/70" />
-            </div>
+              <Image
+                alt="Banner Wimifarma com Dia do Generico Barato, Dia do Idoso e Dia do Bebe"
+                className="h-auto w-full"
+                height={1004}
+                sizes="(min-width: 1280px) 1280px, 100vw"
+                src="/brand/banner-dias-especiais.svg"
+                width={1536}
+              />
+            </a>
           </MotionBlock>
         </div>
       </section>

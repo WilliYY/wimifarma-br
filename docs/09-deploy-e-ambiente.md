@@ -56,6 +56,8 @@ Pasta recomendada:
 /home/ubuntu/projetos/wimifarma-br
 ```
 
+Rotina operacional solicitada para agentes: salvo pedido contrario, apos finalizar alteracoes no projeto, fazer commit local, push para o GitHub e atualizar o servidor com `git pull` nessa pasta.
+
 ## Docker Oficial
 
 - Container app: `wimifarma-br-app`
