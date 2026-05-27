@@ -171,13 +171,15 @@ export async function SiteHeader() {
             </span>
           </a>
           <a
-            className="soft-breathe hidden items-center gap-2 rounded-full bg-[#25d366] px-5 py-3 font-body text-sm font-bold text-white shadow-[0_10px_24px_rgba(37,211,102,0.22)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#1ebe57] lg:inline-flex"
+            className="soft-breathe hidden min-h-14 items-center gap-3 rounded-full bg-[linear-gradient(135deg,#22d365_0%,#14b85a_52%,#0f9f4f_100%)] px-5 py-2.5 font-body text-sm font-black text-white shadow-[0_16px_36px_rgba(34,211,101,0.28),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-white/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(34,211,101,0.34),inset_0_1px_0_rgba(255,255,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9ff0be] focus-visible:ring-offset-2 focus-visible:ring-offset-[#121820] lg:inline-flex"
             href={siteConfig.whatsappUrl}
             rel="noreferrer"
             target="_blank"
           >
-            WhatsApp
-            <MessageCircle className="h-4 w-4" />
+            <span>WhatsApp</span>
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/18 ring-1 ring-white/30">
+              <MessageCircle className="h-4 w-4 stroke-[2.6]" />
+            </span>
           </a>
           {session?.user ? (
             <div className="ml-2 flex min-w-0 items-center gap-2">
