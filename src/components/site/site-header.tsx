@@ -3,7 +3,6 @@ import Image from "next/image";
 import {
   LogIn,
   LogOut,
-  MapPin,
   MessageCircle,
   Search,
   UserRound,
@@ -146,18 +145,29 @@ export async function SiteHeader() {
         <div className="ml-auto hidden min-w-0 shrink-0 justify-end md:flex">
           <a
             aria-label="Abrir localizacao da Wimifarma no Google Maps"
-            className="soft-breathe mr-2 hidden max-w-[14rem] items-center gap-2 rounded-full border border-white/15 bg-white/8 px-4 py-2.5 font-body text-xs font-bold text-white shadow-[0_10px_24px_rgba(0,0,0,0.12)] transition duration-300 hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/14 2xl:inline-flex"
+            className="soft-breathe mr-2 hidden min-h-14 max-w-[15.75rem] items-center gap-3 rounded-full border border-white/80 bg-white px-3.5 py-2 font-body text-xs font-black text-ink shadow-[0_14px_34px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.9)] transition duration-300 hover:-translate-y-0.5 hover:border-brand/30 hover:bg-[#fff7f8] hover:text-brand 2xl:inline-flex"
             href={siteConfig.mapsUrl}
             rel="noreferrer"
             target="_blank"
             title={siteConfig.address}
           >
-            <MapPin className="h-4 w-4 shrink-0 text-brand" />
-            <span className="flex min-w-0 flex-col leading-tight">
-              <span className="text-[0.68rem] uppercase tracking-[0.12em] text-white/60">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_6px_18px_rgba(17,24,39,0.12)] ring-1 ring-line">
+              <Image
+                alt=""
+                aria-hidden="true"
+                className="h-8 w-8 object-contain"
+                height={32}
+                src="/brand/maps-pin-icon.svg"
+                width={32}
+              />
+            </span>
+            <span className="flex min-w-0 flex-col leading-tight text-left">
+              <span className="text-[0.68rem] uppercase tracking-[0.12em] text-brand">
                 Como chegar
               </span>
-              <span className="truncate">Av. Minas Gerais, 2263</span>
+              <span className="truncate text-[0.8rem] text-ink">
+                Av. Minas Gerais, 2263
+              </span>
             </span>
           </a>
           <a

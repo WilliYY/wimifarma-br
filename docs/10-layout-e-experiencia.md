@@ -19,6 +19,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `public/brand/farmacia-popular.webp`
 - `public/brand/delivery-truck.gif`
 - `public/brand/delivery-truck.png`
+- `public/brand/maps-pin-icon.svg`
 - `public/banners/faixa-home.webp`
 - `public/favicon.svg`
 - `src/app/icon.svg`
@@ -45,7 +46,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - A logo do header usa o GIF animado sem fundo em `public/brand/logo-animada.gif` sobre faixa escura; o SVG da Wimifarma permanece disponivel para outros pontos e o favicon voltou para a versao anterior usada antes da troca visual.
 - Paginas `Farmacia Popular`, `Sobre` e `Contato` usam hero com respiro abaixo do header fixo, cards informativos e CTAs para WhatsApp sem prometer disponibilidade automatica.
 - Rodape usa a logo, navegacao, dados de atendimento e WhatsApp, sem texto de plataforma em construcao nem nome repetido ao lado da logo.
-- Endereco exibido no site vem de `src/lib/site.ts`: Avenida Minas Gerais, 2263 - Ivate, Parana. O link de Maps usa URL curta do Google Maps e abre em nova aba, sem mapa embutido.
+- Endereco exibido no site vem de `src/lib/site.ts`: Avenida Minas Gerais, 2263 - Ivate, Parana. O link de Maps usa URL curta do Google Maps, abre em nova aba sem mapa embutido e usa o icone transparente `public/brand/maps-pin-icon.svg`.
 - Faixa de campanhas da home usa `public/banners/faixa-home.webp` e o clique abre o WhatsApp principal.
 
 ## Regras de Design
