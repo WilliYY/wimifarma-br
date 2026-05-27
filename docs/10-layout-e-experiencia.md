@@ -27,7 +27,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 ## Estado Atual
 
-- Header fixo com faixa vermelha de frete gratis, caminhaozinho com deslocamento animado, faixa escura integrada a logo animada sem fundo ancorada no canto esquerdo, selo Farmacia Popular ao lado da logo em telas largas, busca, WhatsApp, login/cadastrar e nav.
+- Header fixo com faixa vermelha de frete gratis, caminhaozinho com deslocamento animado, faixa escura integrada a logo animada sem fundo ancorada no canto esquerdo, selo Farmacia Popular ao lado da logo em telas largas, busca, link de localizacao no Google Maps, WhatsApp, login/cadastrar e nav.
 - Menu principal destaca a rota ativa em telas largas para deixar claro em qual aba o usuario esta.
 - Quando ha sessao de cliente, o header troca `Login / Cadastrar` por foto/nome da conta Google e um botao `Sair`.
 - O nome do cliente no header abre `/minha-conta`.
@@ -45,6 +45,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - A logo do header usa o GIF animado sem fundo em `public/brand/logo-animada.gif` sobre faixa escura; o SVG da Wimifarma permanece disponivel para outros pontos e o favicon voltou para a versao anterior usada antes da troca visual.
 - Paginas `Farmacia Popular`, `Sobre` e `Contato` usam hero com respiro abaixo do header fixo, cards informativos e CTAs para WhatsApp sem prometer disponibilidade automatica.
 - Rodape usa a logo, navegacao, dados de atendimento e WhatsApp, sem texto de plataforma em construcao nem nome repetido ao lado da logo.
+- Endereco exibido no site vem de `src/lib/site.ts`: Avenida Minas Gerais, 2263 - Ivate, Parana. O link de Maps usa URL curta do Google Maps e abre em nova aba, sem mapa embutido.
 - Faixa de campanhas da home usa `public/banners/faixa-home.webp` e o clique abre o WhatsApp principal.
 
 ## Regras de Design
@@ -80,7 +81,8 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 ## Pendencias
 
-- Ajustar dados reais de telefone, horarios e endereco.
+- Ajustar dados reais de telefone e horarios.
+- Trocar o nome antigo do estabelecimento no Google Maps quando o perfil for atualizado.
 - Definir arte real do anuncio principal da home.
 - Definir imagens/fotos reais de produtos quando houver catalogo.
 - Testar visual em mobile real.

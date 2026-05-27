@@ -1,6 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
-import { LogIn, LogOut, MessageCircle, Search, UserRound } from "lucide-react";
+import {
+  LogIn,
+  LogOut,
+  MapPin,
+  MessageCircle,
+  Search,
+  UserRound,
+} from "lucide-react";
 import { auth, signOut } from "@/features/auth/auth";
 import { SiteNav } from "@/components/site/site-nav";
 import { publicNavItems, siteConfig } from "@/lib/site";
@@ -137,6 +144,22 @@ export async function SiteHeader() {
         </form>
 
         <div className="ml-auto hidden min-w-0 shrink-0 justify-end md:flex">
+          <a
+            aria-label="Abrir localizacao da Wimifarma no Google Maps"
+            className="soft-breathe mr-2 hidden max-w-[14rem] items-center gap-2 rounded-full border border-white/15 bg-white/8 px-4 py-2.5 font-body text-xs font-bold text-white shadow-[0_10px_24px_rgba(0,0,0,0.12)] transition duration-300 hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/14 2xl:inline-flex"
+            href={siteConfig.mapsUrl}
+            rel="noreferrer"
+            target="_blank"
+            title={siteConfig.address}
+          >
+            <MapPin className="h-4 w-4 shrink-0 text-brand" />
+            <span className="flex min-w-0 flex-col leading-tight">
+              <span className="text-[0.68rem] uppercase tracking-[0.12em] text-white/60">
+                Como chegar
+              </span>
+              <span className="truncate">Av. Minas Gerais, 2263</span>
+            </span>
+          </a>
           <a
             className="soft-breathe hidden items-center gap-2 rounded-full bg-[#25d366] px-5 py-3 font-body text-sm font-bold text-white shadow-[0_10px_24px_rgba(37,211,102,0.22)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#1ebe57] lg:inline-flex"
             href={siteConfig.whatsappUrl}

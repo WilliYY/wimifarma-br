@@ -18,8 +18,9 @@ export const siteConfig = {
   city: "Ivate-PR",
   phone: whatsappPhone,
   displayPhone: "(44) 98413-4971",
-  address: "Ivate, Parana",
+  address: "Avenida Minas Gerais, 2263 - Ivate, Parana",
   instagramUrl: "https://instagram.com/",
+  mapsUrl: "https://maps.app.goo.gl/DFZLnV3ps3Br84PXA",
   whatsappMessage,
   whatsappUrl: `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(
     whatsappMessage,
