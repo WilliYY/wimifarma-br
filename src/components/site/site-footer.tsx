@@ -1,15 +1,38 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import { MapPin, MessageCircle, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { publicNavItems, siteConfig } from "@/lib/site";
 
+type BubbleStyle = CSSProperties & Record<`--${string}`, string>;
+
+const footerBubbles = Array.from({ length: 128 }, (_, index) => {
+  const size = 2 + ((index * 37) % 40) / 10;
+  const distance = 6 + ((index * 53) % 40) / 10;
+  const position = -5 + ((index * 29) % 110);
+  const time = 2 + ((index * 17) % 20) / 10;
+  const delay = -1 * (2 + ((index * 31) % 20) / 10);
+
+  return {
+    "--delay": `${delay.toFixed(1)}s`,
+    "--distance": `${distance.toFixed(1)}rem`,
+    "--position": `${position}%`,
+    "--size": `${size.toFixed(1)}rem`,
+    "--time": `${time.toFixed(1)}s`,
+  } as BubbleStyle;
+});
+
 export function SiteFooter() {
   return (
-    <footer className="border-t border-white/10 bg-[#101722] text-white">
-      <div className="h-1 bg-[linear-gradient(90deg,#c8102e,#138a45,#064b8e)]" />
+    <footer className="site-gooey-footer text-white">
+      <div aria-hidden="true" className="site-gooey-footer__bubbles">
+        {footerBubbles.map((style, index) => (
+          <div className="site-gooey-footer__bubble" key={index} style={style} />
+        ))}
+      </div>
 
-      <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.25fr_0.75fr_1fr] lg:px-8">
+      <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.25fr_0.75fr_1fr] lg:px-8">
         <div className="max-w-sm">
           <Link aria-label="Wimifarma" className="inline-flex" href="/">
             <span className="flex h-14 w-44 items-center justify-start overflow-visible">
@@ -30,7 +53,7 @@ export function SiteFooter() {
 
           <Button
             asChild
-            className="mt-6 rounded-full bg-brand px-5 py-3 text-white shadow-[0_16px_36px_rgba(200,16,46,0.22)] transition duration-300 hover:-translate-y-0.5 hover:bg-brand-strong"
+            className="mt-6 rounded-full bg-white px-5 py-3 text-brand shadow-[0_16px_36px_rgba(88,6,20,0.22)] transition duration-300 hover:-translate-y-0.5 hover:bg-white/92"
             variant="default"
           >
             <a href={siteConfig.whatsappUrl} rel="noreferrer" target="_blank">
@@ -63,11 +86,11 @@ export function SiteFooter() {
           </p>
           <div className="mt-5 grid gap-4 text-sm text-white/72">
             <p className="flex items-center gap-3">
-              <MapPin className="h-4 w-4 shrink-0 text-brand" />
+              <MapPin className="h-4 w-4 shrink-0 text-pharma-yellow" />
               {siteConfig.address}
             </p>
             <p className="flex items-center gap-3">
-              <Phone className="h-4 w-4 shrink-0 text-brand" />
+              <Phone className="h-4 w-4 shrink-0 text-pharma-yellow" />
               {siteConfig.displayPhone}
             </p>
             <p className="border-t border-white/10 pt-4 leading-6">
@@ -76,11 +99,28 @@ export function SiteFooter() {
           </div>
         </div>
       </div>
-      <div className="border-t border-white/10 py-4">
+      <div className="relative z-10 border-t border-white/10 py-4">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 text-xs text-white/48 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>(c) 2026 Wimifarma. Todos os direitos reservados.</p>
         </div>
       </div>
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none fixed left-0 top-0 h-0 w-0 overflow-hidden"
+        focusable="false"
+      >
+        <defs>
+          <filter id="wimifarma-footer-blob">
+            <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="10" />
+            <feColorMatrix
+              in="blur"
+              mode="matrix"
+              result="blob"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9"
+            />
+          </filter>
+        </defs>
+      </svg>
     </footer>
   );
 }
