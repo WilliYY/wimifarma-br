@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   ArrowRight,
+  Eye,
+  EyeOff,
   LockKeyhole,
   Mail,
   Phone,
@@ -34,6 +36,78 @@ function GoogleButton({
       </span>
       {label}
     </button>
+  );
+}
+
+function PuppyLoginMascot({
+  isPasswordFocused,
+  isPeeking,
+  rotation,
+}: {
+  isPasswordFocused: boolean;
+  isPeeking: boolean;
+  rotation: number;
+}) {
+  return (
+    <div
+      className="puppy-login-mascot"
+      data-password-focused={isPasswordFocused}
+      data-peeking={isPeeking}
+      style={{ "--puppy-head-rotate": `${rotation}deg` } as React.CSSProperties}
+    >
+      <div className="puppy-login-mascot__ear puppy-login-mascot__ear--left" />
+      <div className="puppy-login-mascot__ear puppy-login-mascot__ear--right" />
+
+      <div className="puppy-login-mascot__face">
+        <div className="puppy-login-mascot__eyes">
+          <span className="puppy-login-mascot__eye">
+            <span />
+          </span>
+          <span className="puppy-login-mascot__eye">
+            <span />
+          </span>
+        </div>
+        <div className="puppy-login-mascot__nose">
+          <svg aria-hidden="true" height="22" viewBox="0 0 39 23" width="38">
+            <path
+              d="M2.017 10.987Q-.563 7.513.157 4.754C.877 1.994 2.976.135 6.164.093 16.4-.04 22.293-.022 32.048.093c3.501.042 5.48 2.081 6.02 4.661q.54 2.579-2.051 6.233-8.612 10.979-16.664 11.043-8.053.063-17.336-11.043z"
+              fill="currentColor"
+            />
+          </svg>
+          <span />
+        </div>
+        <div className="puppy-login-mascot__mouth">
+          <svg aria-hidden="true" height="23" viewBox="-2 -2 84 23" width="84">
+            <path
+              d="M0 0c3.76 9.279 9.69 18.98 26.712 19.238 17.022.258 10.72.258 28 0S75.959 9.182 79.987.161"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="square"
+              strokeMiterlimit="3"
+              strokeWidth="3"
+            />
+          </svg>
+          <span className="puppy-login-mascot__mouth-hole" />
+          <span className="puppy-login-mascot__tongue">
+            <span />
+            <span />
+          </span>
+        </div>
+      </div>
+
+      <div className="puppy-login-mascot__hands">
+        {["left", "right"].map((side) => (
+          <div className={`puppy-login-mascot__hand puppy-login-mascot__hand--${side}`} key={side}>
+            {[0, 1, 2].map((finger) => (
+              <span className="puppy-login-mascot__finger" key={finger}>
+                <span />
+                <span />
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -76,6 +150,14 @@ export function CustomerAuthPage() {
   const router = useRouter();
   const [isEntering, setIsEntering] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [loginValue, setLoginValue] = useState("");
+  const [isLoginFocused, setIsLoginFocused] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [isLoginPasswordVisible, setIsLoginPasswordVisible] = useState(false);
+
+  const puppyRotation = isLoginFocused
+    ? Math.max(-16, Math.min(14, 10 - loginValue.length * 0.9))
+    : 0;
 
   async function handleGoogleSignIn() {
     const providers = await getProviders();
@@ -222,22 +304,68 @@ export function CustomerAuthPage() {
             </div>
 
             <div className="grid gap-4">
-              <Field
-                autoComplete="username"
-                icon={<Mail className="h-4 w-4" />}
-                label="Email ou usuario"
-                name="login"
-                placeholder="seuemail@exemplo.com"
-                type="text"
+              <PuppyLoginMascot
+                isPasswordFocused={isPasswordFocused}
+                isPeeking={isPasswordFocused && isLoginPasswordVisible}
+                rotation={puppyRotation}
               />
-              <Field
-                autoComplete="current-password"
-                icon={<LockKeyhole className="h-4 w-4" />}
-                label="Senha"
-                name="password"
-                placeholder="Sua senha"
-                type="password"
-              />
+
+              <label className="grid gap-2">
+                <span className="text-sm font-bold text-ink">
+                  Email ou usuario
+                </span>
+                <span className="relative block">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">
+                    <Mail className="h-4 w-4" />
+                  </span>
+                  <Input
+                    autoComplete="username"
+                    className="h-12 rounded-xl pl-10"
+                    name="login"
+                    onBlur={() => setIsLoginFocused(false)}
+                    onChange={(event) => setLoginValue(event.target.value)}
+                    onFocus={() => setIsLoginFocused(true)}
+                    placeholder="seuemail@exemplo.com"
+                    required
+                    type="text"
+                    value={loginValue}
+                  />
+                </span>
+              </label>
+
+              <label className="grid gap-2">
+                <span className="text-sm font-bold text-ink">Senha</span>
+                <span className="relative block">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">
+                    <LockKeyhole className="h-4 w-4" />
+                  </span>
+                  <Input
+                    autoComplete="current-password"
+                    className="h-12 rounded-xl pl-10 pr-28"
+                    name="password"
+                    onBlur={() => setIsPasswordFocused(false)}
+                    onFocus={() => setIsPasswordFocused(true)}
+                    placeholder="Sua senha"
+                    required
+                    type={isLoginPasswordVisible ? "text" : "password"}
+                  />
+                  <button
+                    className="absolute right-2 top-1/2 inline-flex h-8 -translate-y-1/2 items-center gap-1 rounded-lg bg-ink px-3 text-xs font-bold text-white transition duration-300 hover:bg-brand"
+                    onClick={() =>
+                      setIsLoginPasswordVisible((isVisible) => !isVisible)
+                    }
+                    onMouseDown={(event) => event.preventDefault()}
+                    type="button"
+                  >
+                    {isLoginPasswordVisible ? (
+                      <EyeOff className="h-3.5 w-3.5" />
+                    ) : (
+                      <Eye className="h-3.5 w-3.5" />
+                    )}
+                    {isLoginPasswordVisible ? "Ocultar" : "Mostrar"}
+                  </button>
+                </span>
+              </label>
             </div>
 
             <button
