@@ -25,7 +25,7 @@ const footerBubbles = Array.from({ length: 128 }, (_, index) => {
 
 export function SiteFooter() {
   return (
-    <footer className="site-gooey-footer text-white">
+    <footer className="site-gooey-footer text-ink">
       <div aria-hidden="true" className="site-gooey-footer__bubbles">
         {footerBubbles.map((style, index) => (
           <div className="site-gooey-footer__bubble" key={index} style={style} />
@@ -46,14 +46,14 @@ export function SiteFooter() {
             </span>
           </Link>
 
-          <p className="mt-5 max-w-xs text-sm leading-6 text-white/62">
+          <p className="mt-5 max-w-xs text-sm font-medium leading-6 text-ink/80">
             Atendimento local pelo WhatsApp para medicamentos, Farmacia Popular
             e entrega.
           </p>
 
           <Button
             asChild
-            className="mt-6 rounded-full bg-white px-5 py-3 text-brand shadow-[0_16px_36px_rgba(88,6,20,0.22)] transition duration-300 hover:-translate-y-0.5 hover:bg-white/92"
+            className="mt-6 rounded-full bg-white px-5 py-3 text-ink shadow-[0_16px_36px_rgba(88,6,20,0.22)] transition duration-300 hover:-translate-y-0.5 hover:bg-white/92"
             variant="default"
           >
             <a href={siteConfig.whatsappUrl} rel="noreferrer" target="_blank">
@@ -64,13 +64,13 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-white/46">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-ink/66">
             Navegacao
           </p>
           <div className="mt-5 grid gap-3">
             {publicNavItems.map((item) => (
               <Link
-                className="w-fit text-sm font-semibold text-white/72 transition duration-300 hover:translate-x-1 hover:text-white"
+                className="w-fit text-sm font-bold text-ink/82 transition duration-300 hover:translate-x-1 hover:text-ink"
                 href={item.href}
                 key={item.href}
               >
@@ -81,10 +81,10 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-white/46">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-ink/66">
             Atendimento
           </p>
-          <div className="mt-5 grid gap-4 text-sm text-white/72">
+          <div className="mt-5 grid gap-4 text-sm font-medium text-ink/82">
             <p className="flex items-center gap-3">
               <MapPin className="h-4 w-4 shrink-0 text-pharma-yellow" />
               {siteConfig.address}
@@ -93,14 +93,14 @@ export function SiteFooter() {
               <Phone className="h-4 w-4 shrink-0 text-pharma-yellow" />
               {siteConfig.displayPhone}
             </p>
-            <p className="border-t border-white/10 pt-4 leading-6">
+            <p className="border-t border-ink/10 pt-4 leading-6">
               Pedidos e disponibilidade sempre sob confirmacao da equipe.
             </p>
           </div>
         </div>
       </div>
-      <div className="relative z-10 border-t border-white/10 py-4">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 text-xs text-white/48 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <div className="relative z-10 border-t border-ink/10 py-4">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 text-xs font-medium text-ink/62 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>(c) 2026 Wimifarma. Todos os direitos reservados.</p>
         </div>
       </div>
