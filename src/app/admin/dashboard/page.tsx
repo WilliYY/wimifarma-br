@@ -2,9 +2,12 @@ import Link from "next/link";
 import {
   Activity,
   BadgePercent,
+  Boxes,
+  ExternalLink,
   Gift,
   MessageCircle,
   Package,
+  Plus,
   TicketPercent,
   Users,
   type LucideIcon,
@@ -12,9 +15,11 @@ import {
 import { AdminChart } from "@/components/admin/admin-chart";
 import { AdminDataTable } from "@/components/admin/admin-data-table";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { auth } from "@/features/auth/auth";
 import { getPrisma } from "@/lib/prisma";
+import { siteConfig } from "@/lib/site";
 
 type DashboardRole = "ADMIN" | "MANAGER" | "STAFF";
 
@@ -27,7 +32,61 @@ type DashboardMetric = {
   value: string;
 };
 
+type DashboardAction = {
+  description: string;
+  external?: boolean;
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  roles: DashboardRole[];
+  variant?: "default" | "secondary" | "success";
+};
+
 const numberFormatter = new Intl.NumberFormat("pt-BR");
+
+const quickActions: DashboardAction[] = [
+  {
+    description: "Criar ou revisar campanha comercial",
+    href: "/admin/ofertas",
+    icon: Gift,
+    label: "Nova oferta",
+    roles: ["ADMIN", "MANAGER", "STAFF"],
+    variant: "default",
+  },
+  {
+    description: "Cadastrar item, preco e estoque",
+    href: "/admin/catalogos",
+    icon: Boxes,
+    label: "Novo produto",
+    roles: ["ADMIN", "MANAGER", "STAFF"],
+    variant: "secondary",
+  },
+  {
+    description: "Preparar desconto para campanhas",
+    href: "/admin/cupons",
+    icon: TicketPercent,
+    label: "Criar cupom",
+    roles: ["ADMIN", "MANAGER"],
+    variant: "secondary",
+  },
+  {
+    description: "Consultar base e leads",
+    href: "/admin/clientes",
+    icon: Users,
+    label: "Ver clientes",
+    roles: ["ADMIN", "MANAGER", "STAFF"],
+    variant: "secondary",
+  },
+  {
+    description: "Abrir atendimento em nova aba",
+    external: true,
+    href: siteConfig.whatsappUrl,
+    icon: MessageCircle,
+    label: "Abrir WhatsApp",
+    roles: ["ADMIN", "MANAGER", "STAFF"],
+    variant: "success",
+  },
+];
 
 async function getDashboardMetrics(): Promise<DashboardMetric[]> {
   const prisma = getPrisma();
@@ -167,12 +226,73 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
   );
 }
 
+function QuickActions({ actions }: { actions: DashboardAction[] }) {
+  return (
+    <Card className="mt-5 border-brand/15 bg-white">
+      <CardContent className="p-5">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-brand">
+              Acoes rapidas
+            </p>
+            <h2 className="mt-1 text-xl font-black text-ink">
+              Operacao comercial do dia
+            </h2>
+            <p className="mt-1 text-sm text-muted">
+              Atalhos para cadastrar, revisar e atender sem procurar no menu.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:flex xl:flex-wrap xl:justify-end">
+            {actions.map((action) => {
+              const Icon = action.icon;
+
+              return (
+                <Button
+                  asChild
+                  className="h-auto justify-start px-4 py-3 xl:min-w-44"
+                  key={action.label}
+                  variant={action.variant ?? "secondary"}
+                >
+                  <Link
+                    href={action.href}
+                    rel={action.external ? "noreferrer" : undefined}
+                    target={action.external ? "_blank" : undefined}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="min-w-0 text-left">
+                      <span className="block font-black leading-5">
+                        {action.label}
+                      </span>
+                      <span className="block whitespace-normal text-xs font-medium opacity-80">
+                        {action.description}
+                      </span>
+                    </span>
+                    {action.external ? (
+                      <ExternalLink className="ml-auto h-3.5 w-3.5 shrink-0" />
+                    ) : (
+                      <Plus className="ml-auto h-3.5 w-3.5 shrink-0" />
+                    )}
+                  </Link>
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default async function Page() {
   const session = await auth();
   const role = session?.user.role as DashboardRole | undefined;
   const metrics = await getDashboardMetrics();
   const visibleMetrics = metrics.filter(
     (metric) => role && metric.roles.includes(role),
+  );
+  const visibleActions = quickActions.filter(
+    (action) => role && action.roles.includes(role),
   );
 
   return (
@@ -182,6 +302,8 @@ export default async function Page() {
           <MetricCard key={metric.label} metric={metric} />
         ))}
       </div>
+
+      <QuickActions actions={visibleActions} />
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <Card>
