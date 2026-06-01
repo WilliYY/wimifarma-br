@@ -71,6 +71,7 @@ Muitas rotas admin ainda sao placeholders.
 - `/api/roleta`
 - `/api/cashback`
 - `/api/whatsapp`
+- `/api/visitas`
 - `/api/admin/api-senhas`
 - `/api/admin/api-senhas/[id]`
 - `/api/admin/api-senhas/[id]/reveal`

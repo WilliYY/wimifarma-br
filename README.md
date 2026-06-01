@@ -145,6 +145,7 @@ Base em `.env.example`. Valores reais devem ficar apenas no `.env` local ou no s
 | `AUTH_URL` | URL base usada pelo Auth.js. |
 | `AUTH_SECRET` | Segredo forte do Auth.js. Obrigatorio em producao. |
 | `SECRET_VAULT_KEY` | Chave forte para cifrar o cofre `API e Senhas`. Definir antes de salvar segredos reais. |
+| `VISIT_HASH_SALT` | Sal opcional para hash de IP no contador anonimo de visitas. |
 | `NODE_OPTIONS` | Limite/ajuste de memoria do Node. |
 | `POSTGRES_DB` | Nome do banco. |
 | `POSTGRES_USER` | Usuario do banco. |

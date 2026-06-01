@@ -11,6 +11,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - Migration do cofre admin: `prisma/migrations/20260523180000_add_secret_credentials/migration.sql`
 - Migration de clientes Google: `prisma/migrations/20260523224500_persist_google_customers/migration.sql`
 - Migration de senha de cliente: `prisma/migrations/20260524013000_add_customer_password/migration.sql`
+- Migration de visitas do site: `prisma/migrations/20260601172000_add_site_visits/migration.sql`
 - Seed: `prisma/seed.ts`
 - Cliente Prisma: `src/lib/prisma.ts`
 - Prisma config: `prisma.config.ts`
@@ -30,6 +31,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - `CashbackAccount`: conta de cashback por cliente.
 - `CashbackTransaction`: movimentacoes de cashback.
 - `WhatsAppContact`: contatos ou mensagens recebidas pelo WhatsApp.
+- `SiteVisit`: visitantes anonimos do site publico, com identificador local, pagina inicial, ultima pagina, contagem de visualizacoes e hash opcional de IP.
 - `AuditLog`: historico de acoes.
 - `SecretCredential`: credenciais administrativas cifradas para APIs, tokens e senhas.
 - `LoginAttempt`: tentativas de login para rate limit simples.
@@ -54,6 +56,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - `Customer.phone` e opcional no banco para permitir cliente Google sem telefone; o cadastro manual ainda pode exigir telefone na validacao da API.
 - `Customer.email` e `Customer.googleSubject` sao unicos para ligar novas sessoes Google ao mesmo cliente.
 - `Customer.passwordHash` e `passwordSetAt` permitem conta de cliente por email/senha sem misturar com `User` administrativo.
+- `SiteVisit.sessionId` e unico para contar visitantes sem criar dados pessoais diretos; IP, quando disponivel, e salvo apenas como hash usando `VISIT_HASH_SALT` ou `AUTH_SECRET`.
 
 ## Riscos ao Alterar
 

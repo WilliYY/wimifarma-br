@@ -300,6 +300,22 @@ model WhatsAppContact {
   @@index([source])
 }
 
+model SiteVisit {
+  id          String   @id @default(cuid())
+  sessionId   String   @unique
+  firstPath   String?
+  lastPath    String?
+  referrer    String?
+  userAgent   String?
+  ipHash      String?
+  views       Int      @default(1)
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+
+  @@index([firstSeenAt])
+  @@index([lastSeenAt])
+}
+
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String?

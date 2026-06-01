@@ -5,6 +5,7 @@ import {
   Boxes,
   ExternalLink,
   Gift,
+  Eye,
   MessageCircle,
   Package,
   Plus,
@@ -91,6 +92,7 @@ const quickActions: DashboardAction[] = [
 async function getDashboardMetrics(): Promise<DashboardMetric[]> {
   const prisma = getPrisma();
   const now = new Date();
+  const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
   try {
     const [
@@ -102,6 +104,8 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
       activeCoupons,
       couponUsage,
       whatsappContacts,
+      siteVisitors,
+      recentSiteVisitors,
     ] = await Promise.all([
       prisma.product.count(),
       prisma.product.count({ where: { status: "ACTIVE" } }),
@@ -127,6 +131,8 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
       }),
       prisma.coupon.aggregate({ _sum: { usesCount: true } }),
       prisma.whatsAppContact.count(),
+      prisma.siteVisit.count(),
+      prisma.siteVisit.count({ where: { lastSeenAt: { gte: last24Hours } } }),
     ]);
 
     return [
@@ -169,6 +175,13 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
         label: "Pedidos via WhatsApp",
         roles: ["ADMIN", "MANAGER", "STAFF"],
         value: numberFormatter.format(whatsappContacts),
+      },
+      {
+        description: `${numberFormatter.format(recentSiteVisitors)} nas ultimas 24h`,
+        icon: Eye,
+        label: "Visitantes do site",
+        roles: ["ADMIN", "MANAGER", "STAFF"],
+        value: numberFormatter.format(siteVisitors),
       },
       {
         description: "banco e app respondendo",

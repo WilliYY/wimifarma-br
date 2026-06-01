@@ -92,3 +92,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: centralizar client IDs, tokens e senhas administrativas sem versionar segredos no Git nem deixar valores soltos em conversas.
 - Impacto: `prisma/schema.prisma`, `src/app/admin/api-senhas`, `src/app/api/admin/api-senhas`, `src/components/admin/secret-vault-panel.tsx`, `.env.example`.
 - Riscos/cuidados: apenas `ADMIN` pode criar, revelar ou excluir; `SECRET_VAULT_KEY` precisa ser mantida estavel e segura, e secrets expostos em prints devem ser rotacionados.
+
+## 2026-06-01 - Contador anonimo de visitantes
+
+- Decisao: registrar visitas do site publico por identificador anonimo salvo no navegador e exibir o total no dashboard admin.
+- Motivo: dar ao administrador uma metrica simples de entrada no site sem depender ainda de analytics externo.
+- Impacto: `prisma/schema.prisma`, `src/app/api/visitas`, `src/components/site/site-visit-tracker.tsx`, `src/app/admin/dashboard/page.tsx`.
+- Riscos/cuidados: nao usar dados pessoais diretos; IP fica apenas em hash opcional e a contagem representa navegadores/dispositivos, nao pessoas verificadas.
