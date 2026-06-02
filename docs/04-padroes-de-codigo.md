@@ -64,6 +64,7 @@ npm.cmd run lint
 npm.cmd run typecheck
 npm.cmd run build
 npm.cmd run prisma:validate
+npm.cmd run audit:browser
 ```
 
 Para mudancas de dependencia:

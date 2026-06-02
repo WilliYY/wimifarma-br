@@ -87,6 +87,11 @@ docker network connect wimifarma-br-network nginx-proxy-manager-app-1
 O App Router gera `robots.txt` e `sitemap.xml` em `src/app/robots.ts` e `src/app/sitemap.ts`.
 As rotas administrativas, APIs e `/minha-conta` ficam bloqueadas para robos; as rotas publicas basicas entram no sitemap.
 
+## Auditoria Visual e Console
+
+`npm.cmd run audit:browser` executa `scripts/browser-audit.mjs` com Playwright.
+Use `AUDIT_BASE_URL` para apontar para local, Docker ou servidor. As capturas ficam em `artifacts/browser-audit`, pasta ignorada pelo Git.
+
 ## Variaveis de Ambiente
 
 Usar `.env.example` como contrato, mas nunca como senha final.

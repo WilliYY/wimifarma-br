@@ -26,8 +26,18 @@ npm.cmd run lint
 npm.cmd run typecheck
 npm.cmd run build
 npm.cmd run prisma:validate
+npm.cmd run audit:browser
 npm.cmd audit --audit-level=moderate
 ```
+
+## Auditoria de Browser
+
+```powershell
+$env:AUDIT_BASE_URL='http://127.0.0.1:3001'
+npm.cmd run audit:browser
+```
+
+O script usa Playwright para abrir rotas publicas em desktop, tablet e mobile, capturar console/pageerror/requestfailed e salvar screenshots em `artifacts/browser-audit`.
 
 Se o audit falhar por certificado:
 

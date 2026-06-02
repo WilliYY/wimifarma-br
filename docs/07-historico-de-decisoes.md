@@ -106,3 +106,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: evitar 404 em arquivos basicos de indexacao e apresentar a Wimifarma melhor em buscadores e compartilhamentos.
 - Impacto: `src/app/robots.ts`, `src/app/sitemap.ts`, `src/app/layout.tsx`.
 - Riscos/cuidados: manter admin, APIs e area do cliente fora de indexacao publica.
+
+## 2026-06-02 - Auditoria de browser com Playwright
+
+- Decisao: adicionar script `audit:browser` para abrir rotas reais em desktop, tablet e mobile, capturando console, erros de pagina, falhas de request e screenshots.
+- Motivo: auditorias futuras nao devem depender apenas de build e inspecao estatica quando houver suspeita de hidratacao, console ou responsividade.
+- Impacto: `scripts/browser-audit.mjs`, `package.json`, `.gitignore`.
+- Riscos/cuidados: screenshots ficam em `artifacts/browser-audit` e nao devem ser versionados.
