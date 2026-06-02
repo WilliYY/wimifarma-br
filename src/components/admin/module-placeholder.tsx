@@ -2,20 +2,23 @@ import { ReactNode } from "react";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import type { AdminRole } from "@/features/auth/permissions";
 
 type ModulePlaceholderProps = {
-  title: string;
-  description: string;
+  allowedRoles: readonly AdminRole[];
   children?: ReactNode;
+  description: string;
+  title: string;
 };
 
 export function ModulePlaceholder({
+  allowedRoles,
   children,
   description,
   title,
 }: ModulePlaceholderProps) {
   return (
-    <AdminShell title={title}>
+    <AdminShell allowedRoles={allowedRoles} title={title}>
       <Card>
         <CardContent className="p-6">
           <Badge>Modulo reservado</Badge>

@@ -15,6 +15,7 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - `src/app/api/auth/[...nextauth]/route.ts`
 - `src/components/admin/admin-shell.tsx`
 - `src/app/admin/api-senhas/page.tsx`
+- `src/app/admin/*/page.tsx`
 - `src/app/api/admin/api-senhas/*`
 - `prisma/schema.prisma` (`User`, `LoginAttempt`)
 
@@ -32,6 +33,7 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - `/login` serve como tela de login/cadastro visual.
 - Login administrativo bem-sucedido redireciona para `/admin/dashboard`.
 - `API e Senhas` exige `ADMIN` na pagina e nas APIs.
+- Paginas admin usam guard server-side por modulo, alinhado ao mesmo mapa de roles usado pelo menu.
 
 ## Roles
 
@@ -47,6 +49,9 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - Cliente nao deve acessar painel admin.
 - Login Google nao deve conceder role administrativa.
 - Criacao de ADM, temas, cashback e clube devem ser restritos a `ADMIN`.
+- Configuracoes comerciais e cofre `API e Senhas` ficam restritos a `ADMIN`.
+- Cupons e roleta ficam restritos a `ADMIN` e `MANAGER`.
+- Catalogos, produtos, ofertas, clientes e dashboard aceitam `ADMIN`, `MANAGER` e `STAFF`.
 - Criacao, revelacao e exclusao de segredos no cofre devem ser restritas a `ADMIN`.
 
 ## Decisoes Tecnicas
@@ -58,7 +63,8 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - Sem role administrativa explicita, a sessao recebe `CUSTOMER`.
 - Fotos de perfil Google sao renderizadas no header publico a partir de `lh3.googleusercontent.com`.
 - API guards: `requireApiRole`, `requireAdminApi` e `requireAdminOnlyApi`.
-- Menu admin filtra links com base em roles.
+- Page guards: `requireAdminPageRoute` e `requireAdminPageRole` redirecionam sem sessao para `/login` e roles sem permissao para `/admin/dashboard`.
+- Menu admin filtra links com base no mesmo `adminRoutePermissions` usado pelos guards server-side.
 
 ## Configuracao Google OAuth
 
@@ -77,7 +83,6 @@ Se o client secret for exposto em print ou conversa, rotacionar a credencial no 
 ## Riscos
 
 - Login temporario `adm / adm` existe em `src/features/auth/auth.ts` e precisa ser removido/protegido antes de producao.
-- Menu filtrado nao substitui permissao server-side por pagina.
 - Muitas APIs ainda usam permissao generica para `ADMIN` e `MANAGER`.
 - `SECRET_VAULT_KEY` deve permanecer estavel; trocar a chave sem recriptografar registros impede abrir segredos antigos.
 - Redefinicao de senha por email ainda nao envia email real.
@@ -86,7 +91,6 @@ Se o client secret for exposto em print ou conversa, rotacionar a credencial no 
 ## Pendencias
 
 - Remover/proteger login temporario.
-- Criar guard server-side por rota admin.
 - Criar permissoes granulares por API nos endpoints restantes.
 - Implementar token e envio real de email para redefinicao de senha.
 - Registrar auditoria em acoes administrativas reais.

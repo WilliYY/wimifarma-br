@@ -18,18 +18,20 @@ import { AdminDataTable } from "@/components/admin/admin-data-table";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { auth } from "@/features/auth/auth";
+import {
+  adminRoutePermissions,
+  requireAdminPageRoute,
+  type AdminRole,
+} from "@/features/auth/permissions";
 import { getPrisma } from "@/lib/prisma";
 import { siteConfig } from "@/lib/site";
-
-type DashboardRole = "ADMIN" | "MANAGER" | "STAFF";
 
 type DashboardMetric = {
   description: string;
   href?: string;
   icon: LucideIcon;
   label: string;
-  roles: DashboardRole[];
+  roles: AdminRole[];
   value: string;
 };
 
@@ -39,7 +41,7 @@ type DashboardAction = {
   href: string;
   icon: LucideIcon;
   label: string;
-  roles: DashboardRole[];
+  roles: AdminRole[];
   variant?: "default" | "secondary" | "success";
 };
 
@@ -298,18 +300,20 @@ function QuickActions({ actions }: { actions: DashboardAction[] }) {
 }
 
 export default async function Page() {
-  const session = await auth();
-  const role = session?.user.role as DashboardRole | undefined;
+  const { role } = await requireAdminPageRoute("/admin/dashboard");
   const metrics = await getDashboardMetrics();
   const visibleMetrics = metrics.filter(
-    (metric) => role && metric.roles.includes(role),
+    (metric) => metric.roles.includes(role),
   );
   const visibleActions = quickActions.filter(
-    (action) => role && action.roles.includes(role),
+    (action) => action.roles.includes(role),
   );
 
   return (
-    <AdminShell title="Dashboard">
+    <AdminShell
+      allowedRoles={adminRoutePermissions["/admin/dashboard"]}
+      title="Dashboard"
+    >
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         {visibleMetrics.map((metric) => (
           <MetricCard key={metric.label} metric={metric} />

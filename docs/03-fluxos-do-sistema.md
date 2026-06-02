@@ -73,15 +73,17 @@ Arquivos:
 ## Fluxo Admin Atual
 
 1. Usuario autenticado acessa `/admin/dashboard`.
-2. `AdminShell` monta sidebar e header.
-3. Links aparecem conforme role (`ADMIN`, `MANAGER`, `STAFF`).
-4. `ADMIN` ve tambem o modulo `API e Senhas`.
-5. Muitas telas sao placeholders com descricao de futuro modulo.
+2. A pagina valida permissao server-side pela rota antes de renderizar o modulo.
+3. `AdminShell` monta sidebar e header.
+4. Links aparecem conforme role (`ADMIN`, `MANAGER`, `STAFF`) usando o mesmo mapa de permissao das paginas.
+5. `ADMIN` ve tambem modulos sensiveis como `API e Senhas`, temas, configuracoes, cashback e clube.
+6. Muitas telas sao placeholders com descricao de futuro modulo.
 
 Arquivos:
 
 - `src/components/admin/admin-shell.tsx`
 - `src/components/admin/module-placeholder.tsx`
+- `src/features/auth/permissions.ts`
 - `src/app/admin/*/page.tsx`
 
 ## Fluxo API e Senhas
@@ -140,14 +142,13 @@ Arquivos:
 ## Riscos
 
 - Usuario cliente ser redirecionado para area admin por regra incompleta.
-- Colaborador acessar rota de administrador se souber a URL.
+- Colaborador acessar rota de administrador se novo modulo for criado sem registrar permissao server-side.
 - Segredo administrativo ser exposto em print, log ou resposta de listagem.
 - Redefinicao de senha por email parecer ativa antes de haver provedor de email configurado.
 
 ## Pendencias
 
 - Implementar envio real de email para redefinicao de senha.
-- Implementar regras de role por rota admin nos placeholders restantes.
 - Implementar CRUD real nos modulos admin.
 - Integrar site publico com dados reais do banco.
 

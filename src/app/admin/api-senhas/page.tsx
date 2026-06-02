@@ -1,21 +1,18 @@
-import { redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { SecretVaultPanel } from "@/components/admin/secret-vault-panel";
-import { auth } from "@/features/auth/auth";
+import {
+  adminRoutePermissions,
+  requireAdminPageRoute,
+} from "@/features/auth/permissions";
 
 export default async function Page() {
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect("/login");
-  }
-
-  if (session.user.role !== "ADMIN") {
-    redirect("/admin/dashboard");
-  }
+  await requireAdminPageRoute("/admin/api-senhas");
 
   return (
-    <AdminShell title="API e Senhas">
+    <AdminShell
+      allowedRoles={adminRoutePermissions["/admin/api-senhas"]}
+      title="API e Senhas"
+    >
       <SecretVaultPanel />
     </AdminShell>
   );

@@ -120,3 +120,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: reduzir peso inicial de assets visiveis sem alterar identidade visual nem qualidade percebida do anuncio.
 - Impacto: `public/favicon.svg`, `src/app/icon.svg`, `public/videos/thiago-cansado.mp4`, docs de layout.
 - Riscos/cuidados: futuras trocas de video devem comparar qualidade visual antes de comprimir de forma mais agressiva.
+
+## 2026-06-02 - Guard server-side por modulo admin
+
+- Decisao: centralizar `adminRoutePermissions` e fazer paginas admin validarem roles no servidor, alem do filtro visual do menu.
+- Motivo: impedir acesso por URL direta a modulos que o colaborador nao deve abrir.
+- Impacto: `src/features/auth/permissions.ts`, `src/components/admin/admin-shell.tsx`, `src/components/admin/module-placeholder.tsx`, paginas em `src/app/admin`.
+- Riscos/cuidados: todo novo modulo admin deve ser registrado no mapa de permissoes antes de ser publicado.

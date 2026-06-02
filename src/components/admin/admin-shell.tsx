@@ -16,6 +16,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { auth, signOut } from "@/features/auth/auth";
+import {
+  adminRoutePermissions,
+  canAccessAdminRole,
+  type AdminRole,
+} from "@/features/auth/permissions";
 import { siteConfig } from "@/lib/site";
 
 const adminNav = [
@@ -23,62 +28,67 @@ const adminNav = [
     href: "/admin/criar-adm",
     icon: ShieldPlus,
     label: "Criar ADM",
-    roles: ["ADMIN"],
+    roles: adminRoutePermissions["/admin/criar-adm"],
   },
   {
     href: "/admin/criar-colaborador",
     icon: UserPlus,
     label: "Criar colaborador",
-    roles: ["ADMIN"],
+    roles: adminRoutePermissions["/admin/criar-colaborador"],
   },
   {
     href: "/admin/api-senhas",
     icon: KeyRound,
     label: "API e Senhas",
-    roles: ["ADMIN"],
+    roles: adminRoutePermissions["/admin/api-senhas"],
   },
   {
     href: "/admin/catalogos",
     icon: Boxes,
     label: "Catalogos",
-    roles: ["ADMIN", "MANAGER", "STAFF"],
+    roles: adminRoutePermissions["/admin/catalogos"],
   },
   {
     href: "/admin/ofertas",
     icon: BadgePercent,
     label: "Ofertas",
-    roles: ["ADMIN", "MANAGER", "STAFF"],
+    roles: adminRoutePermissions["/admin/ofertas"],
   },
   {
     href: "/admin/temas",
     icon: Palette,
     label: "Temas",
-    roles: ["ADMIN"],
+    roles: adminRoutePermissions["/admin/temas"],
   },
   {
     href: "/admin/cupons",
     icon: TicketPercent,
     label: "Cupons",
-    roles: ["ADMIN", "MANAGER"],
+    roles: adminRoutePermissions["/admin/cupons"],
   },
   {
     href: "/admin/cashback",
     icon: WalletCards,
     label: "Cash Back",
-    roles: ["ADMIN"],
+    roles: adminRoutePermissions["/admin/cashback"],
   },
   {
     href: "/admin/club-wimifarma",
     icon: Crown,
     label: "Club Wimifarma",
-    roles: ["ADMIN"],
+    roles: adminRoutePermissions["/admin/club-wimifarma"],
   },
 ];
 
 export async function AdminShell({
+  allowedRoles,
   children,
   title,
-}: Readonly<{ children: React.ReactNode; title: string }>) {
+}: Readonly<{
+  allowedRoles?: readonly AdminRole[];
+  children: React.ReactNode;
+  title: string;
+}>) {
   const session = await auth();
 
   if (!session?.user) {
@@ -87,11 +97,17 @@ export async function AdminShell({
 
   const role = session.user.role;
 
-  if (role === "CUSTOMER") {
+  if (!canAccessAdminRole(role, adminRoutePermissions["/admin/dashboard"])) {
     redirect("/login");
   }
 
-  const visibleNav = adminNav.filter((item) => item.roles.includes(role));
+  if (allowedRoles && !canAccessAdminRole(role, allowedRoles)) {
+    redirect("/admin/dashboard");
+  }
+
+  const visibleNav = adminNav.filter((item) =>
+    canAccessAdminRole(role, item.roles),
+  );
 
   return (
     <div className="min-h-screen bg-surface-subtle">
