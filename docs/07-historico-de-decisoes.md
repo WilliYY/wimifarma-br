@@ -113,3 +113,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: auditorias futuras nao devem depender apenas de build e inspecao estatica quando houver suspeita de hidratacao, console ou responsividade.
 - Impacto: `scripts/browser-audit.mjs`, `package.json`, `.gitignore`.
 - Riscos/cuidados: screenshots ficam em `artifacts/browser-audit` e nao devem ser versionados.
+
+## 2026-06-02 - Otimizacao conservadora de assets principais
+
+- Decisao: trocar o favicon e `src/app/icon.svg` por SVG vetorial compacto e recomprimir o video principal mantendo resolucao e audio.
+- Motivo: reduzir peso inicial de assets visiveis sem alterar identidade visual nem qualidade percebida do anuncio.
+- Impacto: `public/favicon.svg`, `src/app/icon.svg`, `public/videos/thiago-cansado.mp4`, docs de layout.
+- Riscos/cuidados: futuras trocas de video devem comparar qualidade visual antes de comprimir de forma mais agressiva.

@@ -49,6 +49,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Endereco exibido no site vem de `src/lib/site.ts`: Avenida Minas Gerais, 2263 - Ivate, Parana. O link de Maps usa URL curta do Google Maps, abre em nova aba sem mapa embutido e usa o icone transparente `public/brand/maps-pin-icon.svg`.
 - Faixa de campanhas da home usa `public/banners/faixa-home.webp` e o clique abre o WhatsApp principal.
 - Metadata global inclui Open Graph e Twitter Card usando a faixa de campanhas como imagem de compartilhamento.
+- Favicon e `src/app/icon.svg` usam SVG vetorial compacto do simbolo vermelho/branco da Wimifarma, sem imagem base64 embutida.
 
 ## Regras de Design
 
@@ -72,6 +73,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `lucide-react` usado para icones.
 - Produtos demonstrativos usam visuais CSS, nao fotos reais.
 - Video fica em `public/videos/thiago-cansado.mp4`, roda em loop e usa `public/videos/thiago-poster.svg` para evitar tela escura antes do carregamento.
+- O video principal foi recomprimido de forma conservadora, mantendo resolucao e audio, para reduzir peso sem alterar a composicao visual.
 
 ## Riscos ao Alterar
 
