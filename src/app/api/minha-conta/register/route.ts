@@ -1,6 +1,7 @@
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { customerPublicRegisterSchema } from "@/features/customers/schema";
+import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ function isUniqueConstraintError(error: unknown) {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  const body = await readJsonBody(request);
   const parsed = customerPublicRegisterSchema.safeParse(body);
 
   if (!parsed.success) {

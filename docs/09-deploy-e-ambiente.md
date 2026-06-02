@@ -82,6 +82,11 @@ Se nao resolver, conectar o container do Nginx Proxy Manager:
 docker network connect wimifarma-br-network nginx-proxy-manager-app-1
 ```
 
+## SEO Tecnico
+
+O App Router gera `robots.txt` e `sitemap.xml` em `src/app/robots.ts` e `src/app/sitemap.ts`.
+As rotas administrativas, APIs e `/minha-conta` ficam bloqueadas para robos; as rotas publicas basicas entram no sitemap.
+
 ## Variaveis de Ambiente
 
 Usar `.env.example` como contrato, mas nunca como senha final.

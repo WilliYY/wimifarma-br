@@ -99,3 +99,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: dar ao administrador uma metrica simples de entrada no site sem depender ainda de analytics externo.
 - Impacto: `prisma/schema.prisma`, `src/app/api/visitas`, `src/components/site/site-visit-tracker.tsx`, `src/app/admin/dashboard/page.tsx`.
 - Riscos/cuidados: nao usar dados pessoais diretos; IP fica apenas em hash opcional e a contagem representa navegadores/dispositivos, nao pessoas verificadas.
+
+## 2026-06-02 - SEO tecnico basico
+
+- Decisao: adicionar `robots.txt`, `sitemap.xml`, canonical e tags de compartilhamento social no App Router.
+- Motivo: evitar 404 em arquivos basicos de indexacao e apresentar a Wimifarma melhor em buscadores e compartilhamentos.
+- Impacto: `src/app/robots.ts`, `src/app/sitemap.ts`, `src/app/layout.tsx`.
+- Riscos/cuidados: manter admin, APIs e area do cliente fora de indexacao publica.

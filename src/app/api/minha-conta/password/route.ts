@@ -2,6 +2,7 @@ import { compare, hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { auth } from "@/features/auth/auth";
 import { customerPasswordSchema } from "@/features/customers/schema";
+import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ message: "Nao autorizado." }, { status: 401 });
   }
 
-  const body = await request.json();
+  const body = await readJsonBody(request);
   const parsed = customerPasswordSchema.safeParse(body);
 
   if (!parsed.success) {

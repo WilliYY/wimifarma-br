@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import { NextResponse } from "next/server";
+import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
 
 function cleanText(value: unknown, maxLength: number) {
@@ -26,7 +27,7 @@ function hashIp(ip: string) {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null);
+  const body = await readJsonBody(request);
   const sessionId = cleanText(body?.sessionId, 80);
 
   if (!sessionId || sessionId.length < 12) {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readJsonBody } from "@/lib/api";
 import { siteConfig } from "@/lib/site";
 
 type GeminiPart = {
@@ -47,7 +48,7 @@ function cleanReply(text: string) {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null);
+  const body = await readJsonBody(request);
   const message = String(body?.message ?? "").trim().slice(0, 500);
 
   if (!message) {
