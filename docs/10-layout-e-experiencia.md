@@ -39,6 +39,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - O link `Ofertas` nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.
 - Botao flutuante de WhatsApp fica no canto inferior direito.
+- Miauby aparece como bolinha informativa acima do WhatsApp, mostrando recado de campanha, sem abrir caixa de conversa ao clicar.
 - Login/cadastro usa dois blocos: entrar e cadastrar.
 - Botoes Google de login/cadastro redirecionam sem trocar o texto para estado de carregamento.
 - Cadastro comum inclui telefone e cria conta de cliente.
