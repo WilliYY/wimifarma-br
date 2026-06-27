@@ -5,6 +5,7 @@ import {
   Boxes,
   ChartNoAxesCombined,
   Crown,
+  Home,
   KeyRound,
   LogOut,
   MessageCircle,
@@ -160,6 +161,12 @@ export async function AdminShell({
               <h1 className="text-lg font-black text-ink">{title}</h1>
             </div>
             <div className="flex items-center gap-2">
+              <Button asChild size="sm" variant="secondary">
+                <Link href="/">
+                  <Home className="h-4 w-4" />
+                  Home
+                </Link>
+              </Button>
               <Button asChild size="sm" variant="secondary">
                 <a href="/api/health" rel="noreferrer" target="_blank">
                   Health

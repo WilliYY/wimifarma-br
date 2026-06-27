@@ -1,22 +1,31 @@
-import { AdminModuleList } from "@/components/admin/admin-module-list";
-import { ModulePlaceholder } from "@/components/admin/module-placeholder";
-import { adminRoutePermissions } from "@/features/auth/permissions";
+import { AdminShell } from "@/components/admin/admin-shell";
+import { AdminUsersPanel } from "@/components/admin/admin-users-panel";
+import {
+  adminRoutePermissions,
+  requireAdminPageRoute,
+} from "@/features/auth/permissions";
 
-export default function Page() {
+export default async function Page() {
+  await requireAdminPageRoute("/admin/criar-adm");
+
   return (
-    <ModulePlaceholder
+    <AdminShell
       allowedRoles={adminRoutePermissions["/admin/criar-adm"]}
-      description="Area inicial para o administrador criar outros ADMs, ativar ou bloquear acessos e acompanhar usuarios com permissao total."
       title="Criar ADM"
     >
-      <AdminModuleList
-        items={[
-          "Criar usuario administrador com nome, email e senha temporaria.",
-          "Listar ADMs ativos, bloqueados e ultimo acesso.",
-          "Permissao total: usuarios, temas, catalogos, ofertas, cupons, cashback e Club Wimifarma.",
-          "Registro futuro em AuditLog para cada alteracao critica.",
+      <AdminUsersPanel
+        createButtonLabel="Criar ADM"
+        description="Crie um administrador com permissao total. Use uma senha temporaria forte e peca para trocar depois."
+        roleOptions={[
+          {
+            description:
+              "acesso total ao painel, usuarios, credenciais, temas, configuracoes e modulos comerciais.",
+            label: "Administrador total",
+            value: "ADMIN",
+          },
         ]}
+        title="Novo administrador"
       />
-    </ModulePlaceholder>
+    </AdminShell>
   );
 }

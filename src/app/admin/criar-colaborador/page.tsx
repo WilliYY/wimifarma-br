@@ -1,22 +1,37 @@
-import { AdminModuleList } from "@/components/admin/admin-module-list";
-import { ModulePlaceholder } from "@/components/admin/module-placeholder";
-import { adminRoutePermissions } from "@/features/auth/permissions";
+import { AdminShell } from "@/components/admin/admin-shell";
+import { AdminUsersPanel } from "@/components/admin/admin-users-panel";
+import {
+  adminRoutePermissions,
+  requireAdminPageRoute,
+} from "@/features/auth/permissions";
 
-export default function Page() {
+export default async function Page() {
+  await requireAdminPageRoute("/admin/criar-colaborador");
+
   return (
-    <ModulePlaceholder
+    <AdminShell
       allowedRoles={adminRoutePermissions["/admin/criar-colaborador"]}
-      description="Area inicial para criar colaboradores com acesso limitado ao trabalho comercial do dia a dia."
       title="Criar colaborador"
     >
-      <AdminModuleList
-        items={[
-          "Criar colaborador para cadastrar produtos e atualizar precos.",
-          "Permitir ativar ofertas e acompanhar pedidos para efetuar a venda.",
-          "Bloquear acesso a temas, criacao de ADM e configuracoes sensiveis.",
-          "Preparar niveis STAFF e MANAGER para crescer sem bagunca.",
+      <AdminUsersPanel
+        createButtonLabel="Criar colaborador"
+        description="Crie acessos limitados para a operacao comercial sem liberar configuracoes sensiveis."
+        roleOptions={[
+          {
+            description:
+              "pode operar catalogos, produtos, ofertas, clientes e dashboard.",
+            label: "Colaborador",
+            value: "STAFF",
+          },
+          {
+            description:
+              "inclui operacao comercial e tambem cupons e roleta preparada.",
+            label: "Gerente",
+            value: "MANAGER",
+          },
         ]}
+        title="Novo colaborador"
       />
-    </ModulePlaceholder>
+    </AdminShell>
   );
 }

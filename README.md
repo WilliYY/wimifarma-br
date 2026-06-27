@@ -37,7 +37,7 @@ Nesta fase o sistema prioriza conversao por WhatsApp. Nao existe checkout nem pa
 - `/minha-conta` existe como painel do cliente com dados de usuario e entrega juntos, senha e resumo de cashback.
 - Cadastro comum por email, telefone e senha cria `Customer` e entra no painel do cliente.
 - Login administrativo usa Auth.js Credentials e direciona para `/admin/dashboard`.
-- Painel admin existe como estrutura inicial com placeholders de modulos.
+- Painel admin existe como estrutura modular; criacao de ADM/colaborador ja cria acessos reais com email e senha, e outros modulos seguem em evolucao.
 - Admin possui o modulo `API e Senhas` para guardar credenciais sensiveis cifradas no banco, restrito a `ADMIN`.
 - APIs reservadas existem e exigem sessao `ADMIN` ou `MANAGER`.
 - APIs do cofre administrativo exigem sessao `ADMIN`.

@@ -127,3 +127,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: impedir acesso por URL direta a modulos que o colaborador nao deve abrir.
 - Impacto: `src/features/auth/permissions.ts`, `src/components/admin/admin-shell.tsx`, `src/components/admin/module-placeholder.tsx`, paginas em `src/app/admin`.
 - Riscos/cuidados: todo novo modulo admin deve ser registrado no mapa de permissoes antes de ser publicado.
+
+## 2026-06-27 - Criacao real de ADM e colaborador
+
+- Decisao: substituir os placeholders `Criar ADM` e `Criar colaborador` por telas reais de criacao, listagem e bloqueio/reativacao de usuarios administrativos.
+- Motivo: permitir que o administrador gerencie acessos sem depender de seed ou alteracao manual no banco.
+- Impacto: `src/app/admin/criar-adm`, `src/app/admin/criar-colaborador`, `src/components/admin/admin-users-panel.tsx`, `src/app/api/admin/usuarios`.
+- Riscos/cuidados: senhas temporarias devem ser fortes e trocadas pelo usuario; o login temporario `adm / adm` continua pendencia critica para remover/proteger antes de producao.

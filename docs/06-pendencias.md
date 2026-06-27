@@ -11,10 +11,10 @@
 
 ### Bloqueio real por permissao nas paginas admin
 
-- Status: aberto.
-- Impacto: hoje o menu filtra links por role, mas as paginas ainda precisam de guard por rota.
+- Status: resolvido em 2026-06-02.
+- Impacto anterior: o menu filtrava links por role, mas as paginas ainda precisavam de guard por rota.
 - Arquivos: `src/components/admin/admin-shell.tsx`, `src/app/admin/*/page.tsx`.
-- Caminho sugerido: criar helper server-side para exigir roles por pagina.
+- Resolucao: `adminRoutePermissions`, `requireAdminPageRoute` e `requireAdminPageRole` centralizam a permissao server-side por modulo.
 
 ## Pendencias Altas
 
@@ -61,9 +61,9 @@
 
 ### CRUD real no admin
 
-- Status: aberto.
-- Impacto: painel ainda usa placeholders para criar ADM, colaborador, catalogos, ofertas, temas, cupons, cashback e clube.
-- Arquivos: `src/app/admin/*`, `src/components/admin/module-placeholder.tsx`.
+- Status: parcialmente resolvido em 2026-06-27.
+- Impacto: criacao de ADM e colaborador ja cria usuarios reais com email, senha, role, listagem e bloqueio/reativacao; catalogos, ofertas, temas, cupons, cashback e clube ainda seguem como modulos em evolucao.
+- Arquivos: `src/app/admin/*`, `src/components/admin/admin-users-panel.tsx`, `src/app/api/admin/usuarios/*`, `src/components/admin/module-placeholder.tsx`.
 
 ## Pendencias Medias
 

@@ -32,6 +32,8 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - `LoginAttempt` registra falhas/sucessos para limitar tentativas.
 - `/login` serve como tela de login/cadastro visual.
 - Login administrativo bem-sucedido redireciona para `/admin/dashboard`.
+- `Criar ADM` e `Criar colaborador` criam usuarios reais do modelo `User` com email, senha hasheada e role administrativa.
+- As telas de criacao de acesso permitem listar, bloquear e reativar usuarios administrativos sem apagar historico.
 - `API e Senhas` exige `ADMIN` na pagina e nas APIs.
 - Paginas admin usam guard server-side por modulo, alinhado ao mesmo mapa de roles usado pelo menu.
 
@@ -49,6 +51,7 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - Cliente nao deve acessar painel admin.
 - Login Google nao deve conceder role administrativa.
 - Criacao de ADM, temas, cashback e clube devem ser restritos a `ADMIN`.
+- Apenas `ADMIN` pode criar, bloquear ou reativar usuarios administrativos.
 - Configuracoes comerciais e cofre `API e Senhas` ficam restritos a `ADMIN`.
 - Cupons e roleta ficam restritos a `ADMIN` e `MANAGER`.
 - Catalogos, produtos, ofertas, clientes e dashboard aceitam `ADMIN`, `MANAGER` e `STAFF`.
@@ -64,6 +67,8 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - Fotos de perfil Google sao renderizadas no header publico a partir de `lh3.googleusercontent.com`.
 - API guards: `requireApiRole`, `requireAdminApi` e `requireAdminOnlyApi`.
 - Page guards: `requireAdminPageRoute` e `requireAdminPageRole` redirecionam sem sessao para `/login` e roles sem permissao para `/admin/dashboard`.
+- Usuarios administrativos sao criados por `/api/admin/usuarios`, que exige `ADMIN`, valida Zod, hasheia senha com bcrypt e registra `AuditLog`.
+- Bloqueio/reativacao usa `/api/admin/usuarios/[id]`, impede bloquear o proprio usuario e impede deixar o sistema sem ADM ativo.
 - Menu admin filtra links com base no mesmo `adminRoutePermissions` usado pelos guards server-side.
 
 ## Configuracao Google OAuth
@@ -102,6 +107,6 @@ Possivel desenho futuro:
 - `requirePageRole(["ADMIN"])` para paginas admin.
 - `requireApiRole(["ADMIN", "MANAGER"])` para endpoints.
 - Tela real de usuarios com status ativo/bloqueado.
-- Convite de colaborador com senha temporaria.
+- Convite de colaborador por email com senha temporaria.
 - Reset de senha seguro.
 - 2FA para administradores, se necessario.
