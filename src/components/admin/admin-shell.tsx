@@ -167,11 +167,6 @@ export async function AdminShell({
                   Home
                 </Link>
               </Button>
-              <Button asChild size="sm" variant="secondary">
-                <a href="/api/health" rel="noreferrer" target="_blank">
-                  Health
-                </a>
-              </Button>
               <Button asChild size="sm" variant="success">
                 <a
                   href={siteConfig.whatsappUrl}
