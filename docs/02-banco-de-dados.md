@@ -22,7 +22,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - `User`: usuarios administrativos e colaboradores.
 - `Product`: catalogo de produtos.
 - `Offer`: ofertas comerciais.
-- `Coupon`: cupons.
+- `Coupon`: cupons com codigo unico, descricao, tipo, valor, validade, limite de uso e contador de usos.
 - `Lead`: contatos comerciais ainda nao consolidados.
 - `Customer`: clientes consolidados, incluindo clientes autenticados por Google OAuth.
 - `SpinWheelCampaign`: campanhas de roleta.
@@ -57,6 +57,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - `Customer.email` e `Customer.googleSubject` sao unicos para ligar novas sessoes Google ao mesmo cliente.
 - `Customer.passwordHash` e `passwordSetAt` permitem conta de cliente por email/senha sem misturar com `User` administrativo.
 - `SiteVisit.sessionId` e unico para contar visitantes sem criar dados pessoais diretos; IP, quando disponivel, e salvo apenas como hash usando `VISIT_HASH_SALT` ou `AUTH_SECRET`.
+- O admin de cupons usa o modelo `Coupon` existente; `durationDays` e calculado na API para preencher `startsAt` e `endsAt`, sem nova migration.
 
 ## Riscos ao Alterar
 

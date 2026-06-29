@@ -78,7 +78,8 @@ Arquivos:
 4. Links aparecem conforme role (`ADMIN`, `MANAGER`, `STAFF`) usando o mesmo mapa de permissao das paginas.
 5. `ADMIN` ve tambem modulos sensiveis como `API e Senhas`, temas, configuracoes, cashback e clube.
 6. `Criar ADM` e `Criar colaborador` permitem criar acessos reais com email, senha temporaria, role, listagem e bloqueio/reativacao.
-7. Muitas telas ainda sao placeholders com descricao de futuro modulo.
+7. `Cupons` permite criar cupons reais com nome/codigo, tipo de desconto, validade por duracao em dias, limite de uso e contador de pessoas/usos registrados.
+8. Muitas telas ainda sao placeholders com descricao de futuro modulo.
 
 Arquivos:
 
@@ -86,7 +87,9 @@ Arquivos:
 - `src/components/admin/module-placeholder.tsx`
 - `src/features/auth/permissions.ts`
 - `src/components/admin/admin-users-panel.tsx`
+- `src/components/admin/coupons-panel.tsx`
 - `src/app/api/admin/usuarios/*`
+- `src/app/api/cupons/route.ts`
 - `src/app/admin/*/page.tsx`
 
 ## Fluxo API e Senhas

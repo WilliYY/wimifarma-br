@@ -8,6 +8,10 @@ O WhatsApp e o canal principal de conversao nesta fase. O site deve reduzir atri
 
 Ofertas podem ter produto associado, preco original, preco promocional, status, validade, destaque e texto de WhatsApp.
 
+## Cupons
+
+Cupons podem ter codigo, descricao, tipo de desconto, validade, limite de uso e contador de usos. O contador atual indica usos registrados no cupom; identificacao unica de pessoas por cupom ainda depende de fluxo futuro de pedido/cliente.
+
 ## Farmacia Popular
 
 A pagina orienta o cliente e chama para confirmacao. O sistema nao deve prometer disponibilidade automatica sem validacao da equipe.

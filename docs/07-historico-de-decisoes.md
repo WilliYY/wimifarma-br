@@ -134,3 +134,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: permitir que o administrador gerencie acessos sem depender de seed ou alteracao manual no banco.
 - Impacto: `src/app/admin/criar-adm`, `src/app/admin/criar-colaborador`, `src/components/admin/admin-users-panel.tsx`, `src/app/api/admin/usuarios`.
 - Riscos/cuidados: senhas temporarias devem ser fortes e trocadas pelo usuario; o login temporario `adm / adm` continua pendencia critica para remover/proteger antes de producao.
+
+## 2026-06-29 - Criacao real de cupons no admin
+
+- Decisao: substituir o placeholder `Cupons` por tela real de criacao e listagem usando o modelo `Coupon` existente.
+- Motivo: permitir cadastrar cupom com nome/codigo, tipo, validade por dias ativos, limite de uso e contador de pessoas/usos registrados.
+- Impacto: `src/app/admin/cupons`, `src/components/admin/coupons-panel.tsx`, `src/app/api/cupons/route.ts`, `src/features/coupons/schema.ts`.
+- Riscos/cuidados: o contador atual representa usos registrados no cupom; ainda nao existe tabela separada para identificar pessoas unicas por cupom.

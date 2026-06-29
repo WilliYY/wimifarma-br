@@ -61,9 +61,9 @@
 
 ### CRUD real no admin
 
-- Status: parcialmente resolvido em 2026-06-27.
-- Impacto: criacao de ADM e colaborador ja cria usuarios reais com email, senha, role, listagem e bloqueio/reativacao; catalogos, ofertas, temas, cupons, cashback e clube ainda seguem como modulos em evolucao.
-- Arquivos: `src/app/admin/*`, `src/components/admin/admin-users-panel.tsx`, `src/app/api/admin/usuarios/*`, `src/components/admin/module-placeholder.tsx`.
+- Status: parcialmente resolvido em 2026-06-29.
+- Impacto: criacao de ADM e colaborador ja cria usuarios reais com email, senha, role, listagem e bloqueio/reativacao; cupons ja cria registros reais com validade e contador de uso; catalogos, ofertas, temas, cashback e clube ainda seguem como modulos em evolucao.
+- Arquivos: `src/app/admin/*`, `src/components/admin/admin-users-panel.tsx`, `src/components/admin/coupons-panel.tsx`, `src/app/api/admin/usuarios/*`, `src/app/api/cupons/route.ts`, `src/components/admin/module-placeholder.tsx`.
 
 ## Pendencias Medias
 
