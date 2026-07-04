@@ -4,11 +4,11 @@ import {
   LogIn,
   LogOut,
   MessageCircle,
-  Search,
   UserRound,
 } from "lucide-react";
 import { auth, signOut } from "@/features/auth/auth";
 import { SiteNav } from "@/components/site/site-nav";
+import { SiteSearch } from "@/components/site/site-search";
 import { publicNavItems, siteConfig } from "@/lib/site";
 
 export async function SiteHeader() {
@@ -122,25 +122,7 @@ export async function SiteHeader() {
           )}
         </div>
 
-        <form
-          action="/ofertas"
-          className="mx-auto hidden h-14 w-full max-w-3xl flex-1 items-center gap-3 rounded-full border border-line bg-white py-1.5 pl-4 pr-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_28px_rgba(17,24,39,0.06)] md:flex"
-        >
-          <Search className="h-5 w-5 shrink-0 text-[#5f6f88]" />
-          <input
-            aria-label="Buscar produtos e servicos"
-            className="h-full min-w-0 flex-1 bg-transparent font-body text-base text-ink outline-none placeholder:text-[#70809a]"
-            name="q"
-            placeholder="Buscar produtos e servicos"
-            type="search"
-          />
-          <button
-            className="soft-breathe flex h-11 items-center rounded-full bg-brand px-7 font-body text-sm font-bold text-white shadow-[0_10px_24px_rgba(200,16,46,0.2)] transition duration-300 hover:-translate-y-0.5 hover:bg-brand-strong"
-            type="submit"
-          >
-            Buscar
-          </button>
-        </form>
+        <SiteSearch />
 
         <div className="ml-auto hidden min-w-0 shrink-0 justify-end md:flex">
           <a
