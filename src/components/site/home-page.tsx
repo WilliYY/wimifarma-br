@@ -170,6 +170,26 @@ function buildOfferWhatsAppUrl(productName: string) {
   )}`;
 }
 
+function parsePrice(value?: string) {
+  if (!value?.startsWith("R$")) {
+    return null;
+  }
+
+  const parsed = Number(value.replace("R$", "").replace(".", "").replace(",", ".").trim());
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getDiscountLabel(item: BestOfferItem) {
+  const oldPrice = parsePrice(item.oldPrice);
+  const price = parsePrice(item.price);
+
+  if (!oldPrice || !price || price >= oldPrice) {
+    return null;
+  }
+
+  return `${Math.round(((oldPrice - price) / oldPrice) * 100)}% OFF`;
+}
+
 function MotionBlock({
   children,
   className,
@@ -326,81 +346,156 @@ function HeroVideo() {
 }
 
 function BestOfferCatalog() {
+  const activeOffers = bestOfferItems.filter((item) => item.oldPrice).length;
+  const reservedOffers = bestOfferItems.length - activeOffers;
+
   return (
-    <section className="pharma-clouds bg-white px-4 pb-10 pt-2 sm:px-6 lg:px-8">
+    <section className="pharma-clouds bg-white px-4 pb-12 pt-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <MotionBlock delay={0.04}>
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-brand px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_12px_28px_rgba(200,16,46,0.18)]">
-                <Sparkles className="h-3.5 w-3.5" />
-                Catalogo
-              </span>
-              <h2 className="mt-3 text-3xl font-black leading-none text-ink sm:text-4xl">
-                Melhor oferta
-              </h2>
-            </div>
-            <p className="max-w-md text-sm font-medium leading-6 text-muted sm:text-right">
-              15 espacos prontos para destacar produtos, com compra direcionada
-              para o WhatsApp da equipe.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
-            {bestOfferItems.map((item, index) => (
-              <article
-                className="group flex min-h-[19rem] min-w-0 flex-col overflow-hidden rounded-lg border border-line/80 bg-white shadow-[0_16px_34px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[var(--offer-accent)] hover:shadow-[0_24px_52px_rgba(17,24,39,0.14)]"
-                key={`${item.name}-${index}`}
-                style={
-                  {
-                    "--offer-accent": item.accent,
-                    "--offer-soft": item.soft,
-                  } as CSSProperties
-                }
-              >
-                <span className="mx-3 mt-3 inline-flex min-h-7 items-center justify-center rounded-full bg-[var(--offer-soft)] px-3 text-center text-[0.68rem] font-black uppercase leading-none text-[var(--offer-accent)]">
-                  {item.label}
+          <div className="mb-5 overflow-hidden rounded-lg border border-line/80 bg-white/88 p-4 shadow-[0_22px_70px_rgba(17,24,39,0.08)] backdrop-blur sm:p-5">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-2xl">
+                <span className="inline-flex items-center gap-2 rounded-full bg-brand px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_12px_28px_rgba(200,16,46,0.18)]">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Catalogo
                 </span>
+                <h2 className="mt-3 text-3xl font-black leading-none text-ink sm:text-4xl lg:text-5xl">
+                  Melhores ofertas
+                </h2>
+                <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-muted sm:text-base">
+                  Destaques prontos para o cliente consultar pelo WhatsApp, com
+                  espacos preparados para receber o catalogo real depois.
+                </p>
+              </div>
 
-                <div className="m-3 mb-2 grid min-h-32 place-items-center overflow-hidden rounded-md bg-[linear-gradient(145deg,var(--offer-soft)_0%,#fff_100%)]">
-                  <div className="relative flex aspect-[0.78] w-20 items-center justify-center rounded-[0.9rem_0.9rem_0.45rem_0.45rem] border-2 border-white bg-[linear-gradient(180deg,#fff_0_36%,var(--offer-soft)_36%_58%,var(--offer-accent)_58%_100%)] shadow-[0_18px_30px_rgba(17,24,39,0.16)] ring-1 ring-black/10 transition duration-300 group-hover:rotate-[-2deg] group-hover:scale-105">
-                    <span className="absolute top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white text-[var(--offer-accent)] shadow-inner">
-                      <ShoppingBasket className="h-4 w-4" />
-                    </span>
-                    <strong className="absolute bottom-3 text-xs font-black text-white/86">
-                      {String(index + 1).padStart(2, "0")}
-                    </strong>
-                  </div>
-                </div>
-
-                <div className="grid flex-1 gap-1.5 px-3 pb-3">
-                  {item.oldPrice ? (
-                    <span className="text-xs font-bold text-slate-400 line-through">
-                      {item.oldPrice}
-                    </span>
-                  ) : null}
-                  <strong className="text-xl font-black leading-none text-[var(--offer-accent)]">
-                    {item.price}
+              <div className="grid grid-cols-3 gap-2 text-center sm:min-w-[24rem]">
+                <div className="rounded-md bg-brand-soft px-3 py-3">
+                  <strong className="block text-xl font-black text-brand">
+                    {activeOffers}
                   </strong>
-                  <h3 className="min-h-10 text-sm font-black leading-5 text-ink">
-                    {item.name}
-                  </h3>
-                  <p className="min-h-8 text-xs font-medium leading-4 text-muted">
-                    {item.detail}
-                  </p>
+                  <span className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-muted">
+                    ativas
+                  </span>
                 </div>
-
+                <div className="rounded-md bg-[#eefaf4] px-3 py-3">
+                  <strong className="block text-xl font-black text-pharma-green">
+                    {reservedOffers}
+                  </strong>
+                  <span className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-muted">
+                    vagas
+                  </span>
+                </div>
                 <a
-                  className="mx-3 mb-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[var(--offer-accent)] px-3 text-sm font-black text-white shadow-[0_12px_24px_rgba(17,24,39,0.16)] transition duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-                  href={buildOfferWhatsAppUrl(item.name)}
+                  className="soft-breathe inline-flex min-h-full items-center justify-center gap-2 rounded-md bg-[#25d366] px-3 py-3 text-sm font-black text-white shadow-[0_14px_30px_rgba(37,211,102,0.22)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#1ebe57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25d366] focus-visible:ring-offset-2"
+                  href={siteConfig.whatsappUrl}
                   rel="noreferrer"
                   target="_blank"
                 >
-                  <ShoppingBasket className="h-4 w-4" />
-                  Comprar
+                  <MessageCircle className="h-4 w-4" />
+                  WhatsApp
                 </a>
-              </article>
-            ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full bg-ink px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-white">
+                <Sparkles className="h-3.5 w-3.5" />
+                Destaques da vitrine
+              </span>
+              <span className="rounded-full border border-line bg-white px-3 py-1.5 text-xs font-bold text-muted">
+                Consulta direta com a equipe
+              </span>
+            </div>
+            <p className="text-sm font-semibold text-muted sm:text-right">
+              {bestOfferItems.length} espacos em grade responsiva
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 xl:gap-4">
+            {bestOfferItems.map((item, index) => {
+              const discountLabel = getDiscountLabel(item);
+              const isReserved = item.price === "Consulte";
+
+              return (
+                <article
+                  className="group relative flex min-h-[21rem] min-w-0 flex-col overflow-hidden rounded-lg border border-line/80 bg-white shadow-[0_16px_34px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[var(--offer-accent)] hover:shadow-[0_26px_60px_rgba(17,24,39,0.15)]"
+                  key={`${item.name}-${index}`}
+                  style={
+                    {
+                      "--offer-accent": item.accent,
+                      "--offer-soft": item.soft,
+                    } as CSSProperties
+                  }
+                >
+                  <div className="absolute inset-x-0 top-0 h-1 bg-[var(--offer-accent)] opacity-80" />
+                  <div className="flex items-center justify-between gap-2 px-3 pt-4">
+                    <span className="inline-flex min-h-7 min-w-0 flex-1 items-center justify-center rounded-full bg-[var(--offer-soft)] px-3 text-center text-[0.68rem] font-black uppercase leading-none text-[var(--offer-accent)]">
+                      {item.label}
+                    </span>
+                    <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line bg-white text-[0.68rem] font-black text-muted">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+
+                  <div className="m-3 mb-2 grid min-h-36 place-items-center overflow-hidden rounded-md bg-[linear-gradient(145deg,var(--offer-soft)_0%,#fff_74%)] ring-1 ring-[var(--offer-soft)]">
+                    <div className="relative flex aspect-[0.78] w-24 items-center justify-center rounded-[1rem_1rem_0.5rem_0.5rem] border-2 border-white bg-[linear-gradient(180deg,#fff_0_34%,var(--offer-soft)_34%_56%,var(--offer-accent)_56%_100%)] shadow-[0_20px_34px_rgba(17,24,39,0.18)] ring-1 ring-black/10 transition duration-300 group-hover:rotate-[-2deg] group-hover:scale-105">
+                      <span className="absolute top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[var(--offer-accent)] shadow-inner">
+                        <ShoppingBasket className="h-4 w-4" />
+                      </span>
+                      <strong className="absolute bottom-3 text-xs font-black uppercase tracking-[0.12em] text-white/90">
+                        {isReserved ? "novo" : "oferta"}
+                      </strong>
+                    </div>
+                    {discountLabel ? (
+                      <span className="absolute right-5 top-[5.1rem] rounded-full bg-white px-2.5 py-1 text-[0.68rem] font-black text-[var(--offer-accent)] shadow-[0_10px_22px_rgba(17,24,39,0.12)]">
+                        {discountLabel}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="grid flex-1 content-start gap-2 px-3 pb-3">
+                    {item.oldPrice ? (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold text-slate-400 line-through">
+                          {item.oldPrice}
+                        </span>
+                        {discountLabel ? (
+                          <span className="rounded-full bg-[var(--offer-soft)] px-2 py-0.5 text-[0.65rem] font-black text-[var(--offer-accent)]">
+                            economia
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <span className="text-xs font-black uppercase tracking-[0.08em] text-slate-400">
+                        espaco reservado
+                      </span>
+                    )}
+                    <strong className="text-2xl font-black leading-none text-[var(--offer-accent)]">
+                      {item.price}
+                    </strong>
+                    <h3 className="min-h-10 text-sm font-black leading-5 text-ink">
+                      {item.name}
+                    </h3>
+                    <p className="min-h-8 text-xs font-medium leading-4 text-muted">
+                      {item.detail}
+                    </p>
+                  </div>
+
+                  <a
+                    className="mx-3 mb-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[var(--offer-accent)] px-3 text-sm font-black text-white shadow-[0_12px_24px_rgba(17,24,39,0.16)] transition duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                    href={buildOfferWhatsAppUrl(item.name)}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    {isReserved ? "Reservar espaco" : "Consultar"}
+                  </a>
+                </article>
+              );
+            })}
           </div>
         </MotionBlock>
       </div>
