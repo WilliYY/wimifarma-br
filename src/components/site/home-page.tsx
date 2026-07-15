@@ -1,9 +1,18 @@
 "use client";
 
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { MessageCircle, Pause, Play, Volume2, VolumeX } from "lucide-react";
+import {
+  MessageCircle,
+  Pause,
+  Play,
+  ShoppingBasket,
+  Sparkles,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { siteConfig } from "@/lib/site";
 
 const easeOut = [0.16, 1, 0.3, 1] as const;
@@ -16,6 +25,150 @@ const entrance = {
     transition: { duration: 0.55, ease: easeOut },
   },
 };
+
+type BestOfferItem = {
+  label: string;
+  name: string;
+  detail: string;
+  oldPrice?: string;
+  price: string;
+  accent: string;
+  soft: string;
+};
+
+const bestOfferItems: BestOfferItem[] = [
+  {
+    label: "Leve 2 e pague menos",
+    name: "Niquitin Adesivo 21mg",
+    detail: "Com 7 adesivos",
+    oldPrice: "R$ 116,39",
+    price: "R$ 94,90",
+    accent: "#2563eb",
+    soft: "#dbeafe",
+  },
+  {
+    label: "Leve mais por menos",
+    name: "Hyabak Solucao Oftalmica",
+    detail: "Frasco 10ml",
+    oldPrice: "R$ 73,19",
+    price: "R$ 59,90",
+    accent: "#0891b2",
+    soft: "#cffafe",
+  },
+  {
+    label: "Oferta da semana",
+    name: "Cimegripe",
+    detail: "20 capsulas",
+    oldPrice: "R$ 11,89",
+    price: "R$ 9,90",
+    accent: "#7c3aed",
+    soft: "#ede9fe",
+  },
+  {
+    label: "51% OFF",
+    name: "Expec Tripla Acao",
+    detail: "Xarope 120ml",
+    oldPrice: "R$ 54,83",
+    price: "R$ 26,89",
+    accent: "#d97706",
+    soft: "#fef3c7",
+  },
+  {
+    label: "23% OFF",
+    name: "Muvinlax Limao",
+    detail: "20 saches 14g",
+    oldPrice: "R$ 68,71",
+    price: "R$ 52,71",
+    accent: "#16a34a",
+    soft: "#dcfce7",
+  },
+  {
+    label: "Melhor oferta",
+    name: "Produto 06",
+    detail: "Espaco para cadastrar oferta",
+    price: "Consulte",
+    accent: "#e11d48",
+    soft: "#ffe4e6",
+  },
+  {
+    label: "Melhor oferta",
+    name: "Produto 07",
+    detail: "Espaco para cadastrar oferta",
+    price: "Consulte",
+    accent: "#0f766e",
+    soft: "#ccfbf1",
+  },
+  {
+    label: "Melhor oferta",
+    name: "Produto 08",
+    detail: "Espaco para cadastrar oferta",
+    price: "Consulte",
+    accent: "#4f46e5",
+    soft: "#e0e7ff",
+  },
+  {
+    label: "Melhor oferta",
+    name: "Produto 09",
+    detail: "Espaco para cadastrar oferta",
+    price: "Consulte",
+    accent: "#ca8a04",
+    soft: "#fef9c3",
+  },
+  {
+    label: "Melhor oferta",
+    name: "Produto 10",
+    detail: "Espaco para cadastrar oferta",
+    price: "Consulte",
+    accent: "#14b8a6",
+    soft: "#ccfbf1",
+  },
+  {
+    label: "Melhor oferta",
+    name: "Produto 11",
+    detail: "Espaco para cadastrar oferta",
+    price: "Consulte",
+    accent: "#2563eb",
+    soft: "#dbeafe",
+  },
+  {
+    label: "Melhor oferta",
+    name: "Produto 12",
+    detail: "Espaco para cadastrar oferta",
+    price: "Consulte",
+    accent: "#0891b2",
+    soft: "#cffafe",
+  },
+  {
+    label: "Melhor oferta",
+    name: "Produto 13",
+    detail: "Espaco para cadastrar oferta",
+    price: "Consulte",
+    accent: "#7c3aed",
+    soft: "#ede9fe",
+  },
+  {
+    label: "Melhor oferta",
+    name: "Produto 14",
+    detail: "Espaco para cadastrar oferta",
+    price: "Consulte",
+    accent: "#d97706",
+    soft: "#fef3c7",
+  },
+  {
+    label: "Melhor oferta",
+    name: "Produto 15",
+    detail: "Espaco para cadastrar oferta",
+    price: "Consulte",
+    accent: "#16a34a",
+    soft: "#dcfce7",
+  },
+];
+
+function buildOfferWhatsAppUrl(productName: string) {
+  return `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent(
+    `Ola, gostaria de saber mais sobre ${productName} da Melhor oferta.`,
+  )}`;
+}
 
 function MotionBlock({
   children,
@@ -172,6 +325,89 @@ function HeroVideo() {
   );
 }
 
+function BestOfferCatalog() {
+  return (
+    <section className="pharma-clouds bg-white px-4 pb-10 pt-2 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <MotionBlock delay={0.04}>
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full bg-brand px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_12px_28px_rgba(200,16,46,0.18)]">
+                <Sparkles className="h-3.5 w-3.5" />
+                Catalogo
+              </span>
+              <h2 className="mt-3 text-3xl font-black leading-none text-ink sm:text-4xl">
+                Melhor oferta
+              </h2>
+            </div>
+            <p className="max-w-md text-sm font-medium leading-6 text-muted sm:text-right">
+              15 espacos prontos para destacar produtos, com compra direcionada
+              para o WhatsApp da equipe.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
+            {bestOfferItems.map((item, index) => (
+              <article
+                className="group flex min-h-[19rem] min-w-0 flex-col overflow-hidden rounded-lg border border-line/80 bg-white shadow-[0_16px_34px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[var(--offer-accent)] hover:shadow-[0_24px_52px_rgba(17,24,39,0.14)]"
+                key={`${item.name}-${index}`}
+                style={
+                  {
+                    "--offer-accent": item.accent,
+                    "--offer-soft": item.soft,
+                  } as CSSProperties
+                }
+              >
+                <span className="mx-3 mt-3 inline-flex min-h-7 items-center justify-center rounded-full bg-[var(--offer-soft)] px-3 text-center text-[0.68rem] font-black uppercase leading-none text-[var(--offer-accent)]">
+                  {item.label}
+                </span>
+
+                <div className="m-3 mb-2 grid min-h-32 place-items-center overflow-hidden rounded-md bg-[linear-gradient(145deg,var(--offer-soft)_0%,#fff_100%)]">
+                  <div className="relative flex aspect-[0.78] w-20 items-center justify-center rounded-[0.9rem_0.9rem_0.45rem_0.45rem] border-2 border-white bg-[linear-gradient(180deg,#fff_0_36%,var(--offer-soft)_36%_58%,var(--offer-accent)_58%_100%)] shadow-[0_18px_30px_rgba(17,24,39,0.16)] ring-1 ring-black/10 transition duration-300 group-hover:rotate-[-2deg] group-hover:scale-105">
+                    <span className="absolute top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white text-[var(--offer-accent)] shadow-inner">
+                      <ShoppingBasket className="h-4 w-4" />
+                    </span>
+                    <strong className="absolute bottom-3 text-xs font-black text-white/86">
+                      {String(index + 1).padStart(2, "0")}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="grid flex-1 gap-1.5 px-3 pb-3">
+                  {item.oldPrice ? (
+                    <span className="text-xs font-bold text-slate-400 line-through">
+                      {item.oldPrice}
+                    </span>
+                  ) : null}
+                  <strong className="text-xl font-black leading-none text-[var(--offer-accent)]">
+                    {item.price}
+                  </strong>
+                  <h3 className="min-h-10 text-sm font-black leading-5 text-ink">
+                    {item.name}
+                  </h3>
+                  <p className="min-h-8 text-xs font-medium leading-4 text-muted">
+                    {item.detail}
+                  </p>
+                </div>
+
+                <a
+                  className="mx-3 mb-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[var(--offer-accent)] px-3 text-sm font-black text-white shadow-[0_12px_24px_rgba(17,24,39,0.16)] transition duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                  href={buildOfferWhatsAppUrl(item.name)}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <ShoppingBasket className="h-4 w-4" />
+                  Comprar
+                </a>
+              </article>
+            ))}
+          </div>
+        </MotionBlock>
+      </div>
+    </section>
+  );
+}
+
 export function HomePage() {
   return (
     <>
@@ -182,6 +418,8 @@ export function HomePage() {
           </MotionBlock>
         </div>
       </section>
+
+      <BestOfferCatalog />
 
       <section className="pharma-clouds bg-white px-4 pb-20 pt-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">

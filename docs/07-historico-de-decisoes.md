@@ -65,6 +65,13 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Impacto: `src/components/site/home-page.tsx`, `src/components/site/site-header.tsx`, `src/lib/site.ts`, docs de fluxo e layout.
 - Riscos/cuidados: a arte do anuncio deve respeitar dimensoes responsivas; catalogo/ofertas continuam pendentes para retorno futuro com dados reais.
 
+## 2026-07-15 - Vitrine Melhor oferta na home
+
+- Decisao: adicionar uma vitrine fixa `Melhor oferta` entre o video principal e a faixa de campanhas, com 15 espacos de produto e grade 5x3 no desktop.
+- Motivo: permitir comecar a divulgar produtos na primeira pagina sem depender ainda do catalogo/admin definitivo.
+- Impacto: `src/components/site/home-page.tsx`, `README.md`, `docs/10-layout-e-experiencia.md`.
+- Riscos/cuidados: os produtos 06 a 15 sao espacos temporarios com preco `Consulte`; trocar por dados reais ou integrar ao banco antes de tratar como catalogo final.
+
 ## 2026-05-23 - Google OAuth apenas para clientes
 
 - Decisao: tratar login Google como sessao `CUSTOMER`, sem permissao administrativa, mantendo admin por Credentials.
