@@ -36,7 +36,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - O nome do cliente no header abre `/minha-conta`.
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
 - Banner principal atual e video da Wimifarma em uma vitrine responsiva com acabamento claro, chamada para WhatsApp, texto comercial sobre medicamentos e Farmacia Popular, poster de carregamento e controles integrados de pausar e som.
-- Home esta temporariamente focada em anuncio: o primeiro bloco de conteudo ja e a vitrine com video; entre o video e a faixa de campanhas aparece a vitrine `Melhores ofertas`, com cards comerciais, indicadores de ofertas ativas/espacos vagos e 15 espacos de produto em grade responsiva.
+- Home esta temporariamente focada em anuncio: o primeiro bloco de conteudo ja e a vitrine com video; entre o video e a faixa de campanhas aparece a vitrine `Melhores ofertas`, com padrao de prateleira de farmacia, chips de campanha, leitura de desconto/economia, indicadores de ofertas ativas/espacos vagos e 15 espacos de produto em grade responsiva.
 - Categorias em bolinhas nao aparecem na home nesta fase; a vitrine de produtos atual e fixa em `src/components/site/home-page.tsx` ate existir catalogo alimentado pelo banco/admin.
 - O link `Ofertas` nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.
@@ -77,7 +77,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Framer Motion usado para entradas suaves.
 - `lucide-react` usado para icones.
 - Produtos demonstrativos usam visuais CSS, nao fotos reais.
-- A vitrine `Melhores ofertas` usa visuais CSS enquanto nao houver fotos reais de produtos; editar os itens em `bestOfferItems` dentro de `src/components/site/home-page.tsx`. Os CTAs devem consultar via WhatsApp, sem sugerir checkout online.
+- A vitrine `Melhores ofertas` usa visuais CSS enquanto nao houver fotos reais de produtos; editar os itens em `bestOfferItems` dentro de `src/components/site/home-page.tsx`. Os cards seguem padrao de e-commerce farmaceutico com selo, categoria, preco de/por, economia e disponibilidade local, mas os CTAs devem consultar via WhatsApp, sem sugerir checkout online.
 - Video fica em `public/videos/thiago-cansado.mp4`, roda em loop e usa `public/videos/thiago-poster.svg` para evitar tela escura antes do carregamento.
 - O video principal foi recomprimido de forma conservadora, mantendo resolucao e audio, para reduzir peso sem alterar a composicao visual.
 

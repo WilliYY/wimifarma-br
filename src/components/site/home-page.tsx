@@ -5,6 +5,10 @@ import type { CSSProperties } from "react";
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
+  BadgePercent,
+  Bike,
+  ClipboardList,
+  HeartPulse,
   MessageCircle,
   Pause,
   Play,
@@ -34,6 +38,8 @@ type BestOfferItem = {
   price: string;
   accent: string;
   soft: string;
+  category?: string;
+  benefit?: string;
 };
 
 const bestOfferItems: BestOfferItem[] = [
@@ -45,6 +51,8 @@ const bestOfferItems: BestOfferItem[] = [
     price: "R$ 94,90",
     accent: "#2563eb",
     soft: "#dbeafe",
+    category: "Adesivo",
+    benefit: "Leve 2 e economize",
   },
   {
     label: "Leve mais por menos",
@@ -54,6 +62,8 @@ const bestOfferItems: BestOfferItem[] = [
     price: "R$ 59,90",
     accent: "#0891b2",
     soft: "#cffafe",
+    category: "Olhos",
+    benefit: "Entrega local",
   },
   {
     label: "Oferta da semana",
@@ -63,6 +73,8 @@ const bestOfferItems: BestOfferItem[] = [
     price: "R$ 9,90",
     accent: "#7c3aed",
     soft: "#ede9fe",
+    category: "Gripe",
+    benefit: "Oferta da semana",
   },
   {
     label: "51% OFF",
@@ -72,6 +84,8 @@ const bestOfferItems: BestOfferItem[] = [
     price: "R$ 26,89",
     accent: "#d97706",
     soft: "#fef3c7",
+    category: "Xarope",
+    benefit: "51% de desconto",
   },
   {
     label: "23% OFF",
@@ -81,6 +95,8 @@ const bestOfferItems: BestOfferItem[] = [
     price: "R$ 52,71",
     accent: "#16a34a",
     soft: "#dcfce7",
+    category: "Bem-estar",
+    benefit: "Consulte estoque",
   },
   {
     label: "Melhor oferta",
@@ -188,6 +204,17 @@ function getDiscountLabel(item: BestOfferItem) {
   }
 
   return `${Math.round(((oldPrice - price) / oldPrice) * 100)}% OFF`;
+}
+
+function getSavingLabel(item: BestOfferItem) {
+  const oldPrice = parsePrice(item.oldPrice);
+  const price = parsePrice(item.price);
+
+  if (!oldPrice || !price || price >= oldPrice) {
+    return null;
+  }
+
+  return `Economize R$ ${(oldPrice - price).toFixed(2).replace(".", ",")}`;
 }
 
 function MotionBlock({
@@ -348,13 +375,20 @@ function HeroVideo() {
 function BestOfferCatalog() {
   const activeOffers = bestOfferItems.filter((item) => item.oldPrice).length;
   const reservedOffers = bestOfferItems.length - activeOffers;
+  const catalogChips = [
+    "Ofertas da semana",
+    "Leve mais por menos",
+    "Farmacia Popular",
+    "Retire ou entregue",
+  ];
 
   return (
     <section className="pharma-clouds bg-white px-4 pb-12 pt-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <MotionBlock delay={0.04}>
-          <div className="mb-5 overflow-hidden rounded-lg border border-line/80 bg-white/88 p-4 shadow-[0_22px_70px_rgba(17,24,39,0.08)] backdrop-blur sm:p-5">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="mb-5 overflow-hidden rounded-lg border border-line/80 bg-white shadow-[0_22px_70px_rgba(17,24,39,0.08)]">
+            <div className="h-1 bg-[linear-gradient(90deg,#c8102e,#25d366,#2563eb)]" />
+            <div className="flex flex-col gap-5 p-4 sm:p-5 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-2xl">
                 <span className="inline-flex items-center gap-2 rounded-full bg-brand px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_12px_28px_rgba(200,16,46,0.18)]">
                   <Sparkles className="h-3.5 w-3.5" />
@@ -364,13 +398,14 @@ function BestOfferCatalog() {
                   Melhores ofertas
                 </h2>
                 <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-muted sm:text-base">
-                  Destaques prontos para o cliente consultar pelo WhatsApp, com
-                  espacos preparados para receber o catalogo real depois.
+                  Uma prateleira de destaques para o cliente consultar pelo
+                  WhatsApp, com leitura rapida de desconto, categoria e
+                  disponibilidade.
                 </p>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-center sm:min-w-[24rem]">
-                <div className="rounded-md bg-brand-soft px-3 py-3">
+              <div className="grid grid-cols-3 gap-2 text-center sm:min-w-[25rem]">
+                <div className="rounded-md border border-brand/10 bg-brand-soft px-3 py-3">
                   <strong className="block text-xl font-black text-brand">
                     {activeOffers}
                   </strong>
@@ -378,7 +413,7 @@ function BestOfferCatalog() {
                     ativas
                   </span>
                 </div>
-                <div className="rounded-md bg-[#eefaf4] px-3 py-3">
+                <div className="rounded-md border border-pharma-green/10 bg-[#eefaf4] px-3 py-3">
                   <strong className="block text-xl font-black text-pharma-green">
                     {reservedOffers}
                   </strong>
@@ -399,29 +434,37 @@ function BestOfferCatalog() {
             </div>
           </div>
 
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full bg-ink px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-white">
                 <Sparkles className="h-3.5 w-3.5" />
                 Destaques da vitrine
               </span>
-              <span className="rounded-full border border-line bg-white px-3 py-1.5 text-xs font-bold text-muted">
-                Consulta direta com a equipe
-              </span>
+              {catalogChips.map((chip) => (
+                <span
+                  className="rounded-full border border-line bg-white px-3 py-1.5 text-xs font-bold text-muted shadow-sm"
+                  key={chip}
+                >
+                  {chip}
+                </span>
+              ))}
             </div>
             <p className="text-sm font-semibold text-muted sm:text-right">
               {bestOfferItems.length} espacos em grade responsiva
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 xl:gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
             {bestOfferItems.map((item, index) => {
               const discountLabel = getDiscountLabel(item);
+              const savingLabel = getSavingLabel(item);
               const isReserved = item.price === "Consulte";
+              const category = item.category ?? "Espaco";
+              const benefit = item.benefit ?? "Pronto para cadastrar";
 
               return (
                 <article
-                  className="group relative flex min-h-[21rem] min-w-0 flex-col overflow-hidden rounded-lg border border-line/80 bg-white shadow-[0_16px_34px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[var(--offer-accent)] hover:shadow-[0_26px_60px_rgba(17,24,39,0.15)]"
+                  className="group relative flex min-h-[24.5rem] min-w-0 flex-col overflow-hidden rounded-lg border border-line/80 bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[var(--offer-accent)] hover:shadow-[0_26px_60px_rgba(17,24,39,0.15)]"
                   key={`${item.name}-${index}`}
                   style={
                     {
@@ -430,17 +473,17 @@ function BestOfferCatalog() {
                     } as CSSProperties
                   }
                 >
-                  <div className="absolute inset-x-0 top-0 h-1 bg-[var(--offer-accent)] opacity-80" />
-                  <div className="flex items-center justify-between gap-2 px-3 pt-4">
+                  <div className="absolute inset-x-0 top-0 h-1 bg-[var(--offer-accent)] opacity-90" />
+                  <div className="flex items-start justify-between gap-2 px-3 pt-4">
                     <span className="inline-flex min-h-7 min-w-0 flex-1 items-center justify-center rounded-full bg-[var(--offer-soft)] px-3 text-center text-[0.68rem] font-black uppercase leading-none text-[var(--offer-accent)]">
                       {item.label}
                     </span>
-                    <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line bg-white text-[0.68rem] font-black text-muted">
+                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line bg-white text-[0.68rem] font-black text-muted shadow-sm">
                       {String(index + 1).padStart(2, "0")}
                     </span>
                   </div>
 
-                  <div className="m-3 mb-2 grid min-h-36 place-items-center overflow-hidden rounded-md bg-[linear-gradient(145deg,var(--offer-soft)_0%,#fff_74%)] ring-1 ring-[var(--offer-soft)]">
+                  <div className="m-3 mb-3 grid min-h-36 place-items-center overflow-hidden rounded-md bg-[linear-gradient(145deg,var(--offer-soft)_0%,#fff_70%)] ring-1 ring-[var(--offer-soft)]">
                     <div className="relative flex aspect-[0.78] w-24 items-center justify-center rounded-[1rem_1rem_0.5rem_0.5rem] border-2 border-white bg-[linear-gradient(180deg,#fff_0_34%,var(--offer-soft)_34%_56%,var(--offer-accent)_56%_100%)] shadow-[0_20px_34px_rgba(17,24,39,0.18)] ring-1 ring-black/10 transition duration-300 group-hover:rotate-[-2deg] group-hover:scale-105">
                       <span className="absolute top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[var(--offer-accent)] shadow-inner">
                         <ShoppingBasket className="h-4 w-4" />
@@ -450,21 +493,31 @@ function BestOfferCatalog() {
                       </strong>
                     </div>
                     {discountLabel ? (
-                      <span className="absolute right-5 top-[5.1rem] rounded-full bg-white px-2.5 py-1 text-[0.68rem] font-black text-[var(--offer-accent)] shadow-[0_10px_22px_rgba(17,24,39,0.12)]">
+                      <span className="absolute right-5 top-[5.3rem] rounded-full bg-white px-2.5 py-1 text-[0.68rem] font-black text-[var(--offer-accent)] shadow-[0_10px_22px_rgba(17,24,39,0.12)]">
                         {discountLabel}
                       </span>
                     ) : null}
                   </div>
 
                   <div className="grid flex-1 content-start gap-2 px-3 pb-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="inline-flex min-w-0 items-center gap-1 rounded-full bg-surface-subtle px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.08em] text-muted">
+                        <HeartPulse className="h-3.5 w-3.5 text-[var(--offer-accent)]" />
+                        <span className="truncate">{category}</span>
+                      </span>
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white px-2 py-1 text-[0.68rem] font-bold text-muted ring-1 ring-line">
+                        <Bike className="h-3.5 w-3.5 text-pharma-green" />
+                        Ivate
+                      </span>
+                    </div>
                     {item.oldPrice ? (
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-bold text-slate-400 line-through">
-                          {item.oldPrice}
+                        <span className="text-xs font-bold text-slate-400">
+                          De <span className="line-through">{item.oldPrice}</span>
                         </span>
-                        {discountLabel ? (
-                          <span className="rounded-full bg-[var(--offer-soft)] px-2 py-0.5 text-[0.65rem] font-black text-[var(--offer-accent)]">
-                            economia
+                        {savingLabel ? (
+                          <span className="max-w-[8.5rem] truncate rounded-full bg-[var(--offer-soft)] px-2 py-0.5 text-[0.65rem] font-black text-[var(--offer-accent)]">
+                            {savingLabel}
                           </span>
                         ) : null}
                       </div>
@@ -473,15 +526,30 @@ function BestOfferCatalog() {
                         espaco reservado
                       </span>
                     )}
-                    <strong className="text-2xl font-black leading-none text-[var(--offer-accent)]">
-                      {item.price}
-                    </strong>
+                    <div>
+                      <span className="block text-[0.68rem] font-black uppercase tracking-[0.1em] text-muted">
+                        {isReserved ? "preco" : "por"}
+                      </span>
+                      <strong className="text-2xl font-black leading-none text-[var(--offer-accent)]">
+                        {item.price}
+                      </strong>
+                    </div>
                     <h3 className="min-h-10 text-sm font-black leading-5 text-ink">
                       {item.name}
                     </h3>
-                    <p className="min-h-8 text-xs font-medium leading-4 text-muted">
+                    <p className="min-h-8 text-xs font-semibold leading-4 text-muted">
                       {item.detail}
                     </p>
+                    <div className="grid gap-1.5 border-t border-line/70 pt-2">
+                      <span className="inline-flex min-w-0 items-center gap-1.5 text-[0.72rem] font-bold text-muted">
+                        <BadgePercent className="h-3.5 w-3.5 text-[var(--offer-accent)]" />
+                        <span className="truncate">{benefit}</span>
+                      </span>
+                      <span className="inline-flex min-w-0 items-center gap-1.5 text-[0.72rem] font-bold text-muted">
+                        <ClipboardList className="h-3.5 w-3.5 text-pharma-green" />
+                        <span className="truncate">Confirmar estoque no atendimento</span>
+                      </span>
+                    </div>
                   </div>
 
                   <a
@@ -491,7 +559,7 @@ function BestOfferCatalog() {
                     target="_blank"
                   >
                     <MessageCircle className="h-4 w-4" />
-                    {isReserved ? "Reservar espaco" : "Consultar"}
+                    {isReserved ? "Enviar produto" : "Consultar oferta"}
                   </a>
                 </article>
               );
