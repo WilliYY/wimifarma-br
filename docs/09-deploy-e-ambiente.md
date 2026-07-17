@@ -64,9 +64,12 @@ Rotina operacional solicitada para agentes: salvo pedido contrario, apos finaliz
 - Container postgres: `wimifarma-br-postgres`
 - Rede: `wimifarma-br-network`
 - Volume: `wimifarma-br-postgres-data`
+- Volume de imagens: `wimifarma-br-uploads`
 - Porta host se necessaria: `127.0.0.1:3001:3000`
 
 Postgres nao expoe porta no host.
+
+As imagens enviadas pelo admin ficam em `public/uploads/products` dentro do container e sao preservadas no volume `wimifarma-br-uploads`. Esse volume deve entrar na rotina de backup junto com o banco; atualizar ou reconstruir o container nao deve apagar as fotos.
 
 ## Nginx Proxy Manager
 

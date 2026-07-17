@@ -108,6 +108,22 @@ Arquivos:
 - `src/app/api/admin/api-senhas/route.ts`
 - `src/lib/secret-vault.ts`
 
+## Fluxo de Catalogos e Imagens
+
+1. Administrador ou gerente acessa `/admin/catalogos`.
+2. Preenche os dados do produto e envia uma imagem de ate 10 MB.
+3. A API administrativa valida o arquivo, corrige a orientacao, reduz imagens maiores que 1600 px e salva uma versao WebP com qualidade 86.
+4. O arquivo final fica em `/public/uploads/products` e o Docker preserva essa pasta no volume `wimifarma-br-uploads`.
+5. A tela cria o produto com status de rascunho, publicado ou arquivado; o slug e gerado automaticamente e mantido unico.
+6. A criacao registra auditoria. Imagem enviada sem produto nao deve ser usada na vitrine ate o cadastro ser concluido.
+
+Arquivos:
+
+- `src/components/admin/products-catalog-panel.tsx`
+- `src/app/api/produtos/route.ts`
+- `src/app/api/admin/uploads/produtos/route.ts`
+- `src/features/products/schema.ts`
+
 ## Fluxo de APIs
 
 1. Cliente chama endpoint em `src/app/api`.

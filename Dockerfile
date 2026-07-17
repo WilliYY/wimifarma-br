@@ -38,6 +38,7 @@ RUN groupadd --system --gid 1001 nodejs && \
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+RUN mkdir -p /app/public/uploads/products && chown -R nextjs:nodejs /app/public/uploads
 
 USER nextjs
 

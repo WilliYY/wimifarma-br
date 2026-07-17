@@ -13,6 +13,8 @@
 # testing
 /coverage
 /artifacts
+/public/uploads/*
+!/public/uploads/.gitkeep
 
 # next.js
 /.next/

@@ -35,6 +35,8 @@ services:
     ports:
       - "${APP_HOST_BIND:-127.0.0.1}:${APP_PORT:-3001}:3000"
     restart: unless-stopped
+    volumes:
+      - wimifarma-br-uploads:/app/public/uploads
 
   postgres:
     image: postgres:17-alpine
@@ -127,3 +129,5 @@ networks:
 volumes:
   wimifarma-br-postgres-data:
     name: wimifarma-br-postgres-data
+  wimifarma-br-uploads:
+    name: wimifarma-br-uploads

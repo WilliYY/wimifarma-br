@@ -148,3 +148,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: permitir cadastrar cupom com nome/codigo, tipo, validade por dias ativos, limite de uso e contador de pessoas/usos registrados.
 - Impacto: `src/app/admin/cupons`, `src/components/admin/coupons-panel.tsx`, `src/app/api/cupons/route.ts`, `src/features/coupons/schema.ts`.
 - Riscos/cuidados: o contador atual representa usos registrados no cupom; ainda nao existe tabela separada para identificar pessoas unicas por cupom.
+
+## 2026-07-17 - Cadastro de produtos com imagens WebP persistentes
+
+- Decisao: substituir o placeholder de catalogos por cadastro real de produtos e converter imagens enviadas para WebP no servidor.
+- Motivo: manter fotos de produtos leves e padronizadas sem exigir tratamento manual antes do envio.
+- Impacto: `src/components/admin/products-catalog-panel.tsx`, APIs de produtos e upload, `docker-compose.yml` e volume `wimifarma-br-uploads`.
+- Riscos/cuidados: imagens ficam fora do Git e precisam entrar no backup; a vitrine publica ainda depende de integracao futura com os produtos do banco.

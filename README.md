@@ -39,6 +39,7 @@ Nesta fase o sistema prioriza conversao por WhatsApp. Nao existe checkout nem pa
 - Login administrativo usa Auth.js Credentials e direciona para `/admin/dashboard`.
 - Painel admin existe como estrutura modular; criacao de ADM/colaborador ja cria acessos reais com email e senha, e outros modulos seguem em evolucao.
 - O modulo admin de cupons ja cria cupons reais com nome/codigo, validade por dias ativos, limite de uso e contador de pessoas/usos registrados.
+- Catalogos permite cadastrar produtos reais com preco, estoque, status, Farmacia Popular, receita e imagem; fotos enviadas sao convertidas automaticamente para WebP e persistidas no volume Docker `wimifarma-br-uploads`.
 - Admin possui o modulo `API e Senhas` para guardar credenciais sensiveis cifradas no banco, restrito a `ADMIN`.
 - APIs reservadas existem e exigem sessao `ADMIN` ou `MANAGER`.
 - APIs do cofre administrativo exigem sessao `ADMIN`.
