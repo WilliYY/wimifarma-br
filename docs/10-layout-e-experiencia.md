@@ -40,15 +40,15 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Categorias em bolinhas nao aparecem na home nesta fase; a vitrine de produtos atual e fixa em `src/components/site/home-page.tsx` ate existir catalogo alimentado pelo banco/admin.
 - O link `Ofertas` nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.
-- Botao flutuante de WhatsApp fica no canto inferior direito.
-- Miauby aparece como bolinha informativa acima do WhatsApp, mostrando recado de campanha, sem abrir caixa de conversa ao clicar.
+- Botao flutuante de WhatsApp fica no canto inferior direito, com tamanho reduzido no celular, e nao aparece nas telas de login ou Minha Conta para nao cobrir formularios.
+- Miauby aparece como bolinha informativa acima do WhatsApp em telas a partir de 640 px, mostrando recado de campanha sem abrir caixa de conversa ao clicar; no celular fica oculta para preservar a leitura.
 - Login/cadastro usa dois blocos: entrar e cadastrar.
 - Botoes Google de login/cadastro redirecionam sem trocar o texto para estado de carregamento.
 - Cadastro comum inclui telefone e cria conta de cliente.
 - O selo superior da tela de login foi removido para deixar o titulo direto.
 - A logo do header usa o GIF animado sem fundo em `public/brand/logo-animada.gif` sobre faixa escura; o SVG da Wimifarma permanece disponivel para outros pontos e o favicon voltou para a versao anterior usada antes da troca visual.
 - Paginas `Sobre` e `Contato` usam hero com respiro abaixo do header fixo; `Farmacia Popular` usa hero proprio com selo mais visivel, orientacoes, checklist e CTA para WhatsApp sem prometer disponibilidade automatica.
-- Rodape usa a logo, navegacao, dados de atendimento e WhatsApp, sem texto de plataforma em construcao nem nome repetido ao lado da logo.
+- Rodape usa a logo, navegacao, dados de atendimento e WhatsApp, com texto branco de alto contraste sobre o vermelho, sem texto de plataforma em construcao nem nome repetido ao lado da logo.
 - Endereco exibido no site vem de `src/lib/site.ts`: Avenida Minas Gerais, 2263 - Ivate, Parana. O link de Maps usa URL curta do Google Maps, abre em nova aba sem mapa embutido e usa o icone transparente `public/brand/maps-pin-icon.svg`.
 - Faixa de campanhas da home usa `public/banners/faixa-home.webp` e o clique abre o WhatsApp principal.
 - Metadata global inclui Open Graph e Twitter Card usando a faixa de campanhas como imagem de compartilhamento.

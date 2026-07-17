@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Bot } from "lucide-react";
 import { siteConfig } from "@/lib/site";
 
@@ -24,13 +25,18 @@ function WhatsAppLogo() {
 }
 
 export function FloatingWhatsApp() {
+  const pathname = usePathname();
   const news = miaubyNews[0];
 
+  if (pathname === "/login" || pathname.startsWith("/minha-conta")) {
+    return null;
+  }
+
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2 sm:bottom-5 sm:right-5 sm:gap-3">
       <div
         aria-label="Miauby"
-        className="group relative flex h-16 w-16 cursor-default items-center justify-center rounded-full bg-white shadow-[0_16px_40px_rgba(0,0,0,0.22)] ring-2 ring-brand/15"
+        className="group relative hidden h-16 w-16 cursor-default items-center justify-center rounded-full bg-white shadow-[0_16px_40px_rgba(0,0,0,0.22)] ring-2 ring-brand/15 sm:flex"
       >
         <span className="absolute -left-56 top-1/2 hidden w-52 -translate-y-1/2 rounded-xl bg-ink px-3 py-2 text-left text-xs font-semibold leading-4 text-white shadow-xl group-hover:block sm:block">
           {news}
@@ -51,7 +57,7 @@ export function FloatingWhatsApp() {
 
       <a
         aria-label="Chamar Wimifarma no WhatsApp"
-        className="flex h-16 w-16 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition hover:scale-105 hover:bg-[#1ebe57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition hover:scale-105 hover:bg-[#1ebe57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:h-16 sm:w-16"
         href={siteConfig.whatsappUrl}
         rel="noreferrer"
         target="_blank"

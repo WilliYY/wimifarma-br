@@ -25,7 +25,7 @@ const footerBubbles = Array.from({ length: 128 }, (_, index) => {
 
 export function SiteFooter() {
   return (
-    <footer className="site-gooey-footer text-ink">
+    <footer className="site-gooey-footer text-white">
       <div aria-hidden="true" className="site-gooey-footer__bubbles">
         {footerBubbles.map((style, index) => (
           <div className="site-gooey-footer__bubble" key={index} style={style} />
@@ -46,7 +46,7 @@ export function SiteFooter() {
             </span>
           </Link>
 
-          <p className="mt-5 max-w-xs text-sm font-medium leading-6 text-ink/80">
+          <p className="mt-5 max-w-xs text-sm font-medium leading-6 text-white/85">
             Atendimento local pelo WhatsApp para medicamentos, Farmacia Popular
             e entrega.
           </p>
@@ -64,13 +64,13 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-ink/66">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-white/70">
             Navegacao
           </p>
           <div className="mt-5 grid gap-3">
             {publicNavItems.map((item) => (
               <Link
-                className="w-fit text-sm font-bold text-ink/82 transition duration-300 hover:translate-x-1 hover:text-ink"
+                className="w-fit text-sm font-bold text-white/85 transition duration-300 hover:translate-x-1 hover:text-white"
                 href={item.href}
                 key={item.href}
               >
@@ -81,10 +81,10 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-ink/66">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-white/70">
             Atendimento
           </p>
-          <div className="mt-5 grid gap-4 text-sm font-medium text-ink/82">
+          <div className="mt-5 grid gap-4 text-sm font-medium text-white/85">
             <p className="flex items-center gap-3">
               <MapPin className="h-4 w-4 shrink-0 text-pharma-yellow" />
               {siteConfig.address}
@@ -93,14 +93,14 @@ export function SiteFooter() {
               <Phone className="h-4 w-4 shrink-0 text-pharma-yellow" />
               {siteConfig.displayPhone}
             </p>
-            <p className="border-t border-ink/10 pt-4 leading-6">
+            <p className="border-t border-white/20 pt-4 leading-6">
               Pedidos e disponibilidade sempre sob confirmacao da equipe.
             </p>
           </div>
         </div>
       </div>
-      <div className="relative z-10 border-t border-ink/10 py-4">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 text-xs font-medium text-ink/62 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <div className="relative z-10 border-t border-white/20 py-4">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 text-xs font-medium text-white/70 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>(c) 2026 Wimifarma. Todos os direitos reservados.</p>
         </div>
       </div>
