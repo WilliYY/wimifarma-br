@@ -36,7 +36,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - O nome do cliente no header abre `/minha-conta`.
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
 - Banner principal atual e video da Wimifarma em uma vitrine responsiva com acabamento claro, chamada para WhatsApp, texto comercial sobre medicamentos e Farmacia Popular, poster de carregamento e controles integrados de pausar e som.
-- Home esta temporariamente focada em anuncio: o primeiro bloco de conteudo ja e a vitrine com video; entre o video e a faixa de campanhas aparece a vitrine `Melhores ofertas`, com padrao de prateleira de farmacia, chips de campanha, leitura de desconto/economia, indicadores de ofertas ativas/espacos vagos e 15 espacos de produto em grade responsiva.
+- Home esta temporariamente focada em anuncio: o primeiro bloco de conteudo ja e a vitrine com video; entre o video e a faixa de campanhas aparece a vitrine `Melhores ofertas`, com cabecalho direto, CTA para WhatsApp, chips de campanha, leitura de desconto/economia e 15 espacos de produto em grade responsiva. O cabecalho nao exibe contadores de ofertas ativas ou vagas nem texto descritivo.
 - Categorias em bolinhas nao aparecem na home nesta fase; a vitrine de produtos atual e fixa em `src/components/site/home-page.tsx` ate existir catalogo alimentado pelo banco/admin.
 - O link `Ofertas` nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.

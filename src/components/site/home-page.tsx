@@ -373,8 +373,6 @@ function HeroVideo() {
 }
 
 function BestOfferCatalog() {
-  const activeOffers = bestOfferItems.filter((item) => item.oldPrice).length;
-  const reservedOffers = bestOfferItems.length - activeOffers;
   const catalogChips = [
     "Ofertas da semana",
     "Leve mais por menos",
@@ -388,8 +386,8 @@ function BestOfferCatalog() {
         <MotionBlock delay={0.04}>
           <div className="mb-5 overflow-hidden rounded-lg border border-line/80 bg-white shadow-[0_22px_70px_rgba(17,24,39,0.08)]">
             <div className="h-1 bg-[linear-gradient(90deg,#c8102e,#25d366,#2563eb)]" />
-            <div className="flex flex-col gap-5 p-4 sm:p-5 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-2xl">
+            <div className="flex flex-col gap-5 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+              <div>
                 <span className="inline-flex items-center gap-2 rounded-full bg-brand px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_12px_28px_rgba(200,16,46,0.18)]">
                   <Sparkles className="h-3.5 w-3.5" />
                   Catalogo
@@ -397,61 +395,33 @@ function BestOfferCatalog() {
                 <h2 className="mt-3 text-3xl font-black leading-none text-ink sm:text-4xl lg:text-5xl">
                   Melhores ofertas
                 </h2>
-                <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-muted sm:text-base">
-                  Uma prateleira de destaques para o cliente consultar pelo
-                  WhatsApp, com leitura rapida de desconto, categoria e
-                  disponibilidade.
-                </p>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-center sm:min-w-[25rem]">
-                <div className="rounded-md border border-brand/10 bg-brand-soft px-3 py-3">
-                  <strong className="block text-xl font-black text-brand">
-                    {activeOffers}
-                  </strong>
-                  <span className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-muted">
-                    ativas
-                  </span>
-                </div>
-                <div className="rounded-md border border-pharma-green/10 bg-[#eefaf4] px-3 py-3">
-                  <strong className="block text-xl font-black text-pharma-green">
-                    {reservedOffers}
-                  </strong>
-                  <span className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-muted">
-                    vagas
-                  </span>
-                </div>
-                <a
-                  className="soft-breathe inline-flex min-h-full items-center justify-center gap-2 rounded-md bg-[#25d366] px-3 py-3 text-sm font-black text-white shadow-[0_14px_30px_rgba(37,211,102,0.22)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#1ebe57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25d366] focus-visible:ring-offset-2"
-                  href={siteConfig.whatsappUrl}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  WhatsApp
-                </a>
-              </div>
+              <a
+                className="soft-breathe inline-flex items-center justify-center gap-2 rounded-md bg-[#25d366] px-5 py-3 text-sm font-black text-white shadow-[0_14px_30px_rgba(37,211,102,0.22)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#1ebe57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25d366] focus-visible:ring-offset-2"
+                href={siteConfig.whatsappUrl}
+                rel="noreferrer"
+                target="_blank"
+              >
+                <MessageCircle className="h-4 w-4" />
+                WhatsApp
+              </a>
             </div>
           </div>
 
-          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full bg-ink px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-white">
-                <Sparkles className="h-3.5 w-3.5" />
-                Destaques da vitrine
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full bg-ink px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-white">
+              <Sparkles className="h-3.5 w-3.5" />
+              Destaques da vitrine
+            </span>
+            {catalogChips.map((chip) => (
+              <span
+                className="rounded-full border border-line bg-white px-3 py-1.5 text-xs font-bold text-muted shadow-sm"
+                key={chip}
+              >
+                {chip}
               </span>
-              {catalogChips.map((chip) => (
-                <span
-                  className="rounded-full border border-line bg-white px-3 py-1.5 text-xs font-bold text-muted shadow-sm"
-                  key={chip}
-                >
-                  {chip}
-                </span>
-              ))}
-            </div>
-            <p className="text-sm font-semibold text-muted sm:text-right">
-              {bestOfferItems.length} espacos em grade responsiva
-            </p>
+            ))}
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
