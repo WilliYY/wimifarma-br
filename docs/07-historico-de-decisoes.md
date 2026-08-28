@@ -155,3 +155,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: manter fotos de produtos leves e padronizadas sem exigir tratamento manual antes do envio.
 - Impacto: `src/components/admin/products-catalog-panel.tsx`, APIs de produtos e upload, `docker-compose.yml` e volume `wimifarma-br-uploads`.
 - Riscos/cuidados: imagens ficam fora do Git e precisam entrar no backup; a vitrine publica ainda depende de integracao futura com os produtos do banco.
+
+## 2026-08-28 - Logo animada vetorial no header
+
+- Decisao: substituir o GIF do header pelo SVG animado da marca, removendo o fundo azul original e mantendo o ciclo continuo de quatro segundos.
+- Motivo: preservar nitidez em qualquer densidade de tela, melhorar o enquadramento e integrar a marca diretamente a faixa escura do cabecalho.
+- Impacto: `public/brand/logo-animada.svg`, `src/components/site/site-header.tsx` e docs de layout.
+- Riscos/cuidados: manter o `viewBox` e a proporcao da arte; futuras edicoes nao devem recolocar fundo nem ampliar a imagem a ponto de cortar a animacao.

@@ -16,7 +16,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `src/components/site/customer-auth-page.tsx`
 - `src/app/globals.css`
 - `public/brand/logo-wimifarma.svg`
-- `public/brand/logo-animada.gif`
+- `public/brand/logo-animada.svg`
 - `public/brand/farmacia-popular.webp`
 - `public/brand/delivery-truck.gif`
 - `public/brand/delivery-truck.png`
@@ -46,7 +46,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Botoes Google de login/cadastro redirecionam sem trocar o texto para estado de carregamento.
 - Cadastro comum inclui telefone e cria conta de cliente.
 - O selo superior da tela de login foi removido para deixar o titulo direto.
-- A logo do header usa o GIF animado sem fundo em `public/brand/logo-animada.gif` sobre faixa escura; o SVG da Wimifarma permanece disponivel para outros pontos e o favicon voltou para a versao anterior usada antes da troca visual.
+- A logo do header usa o SVG vetorial animado e sem fundo em `public/brand/logo-animada.svg` sobre faixa escura. A animacao roda em ciclo continuo, preserva a proporcao completa em diferentes larguras e o favicon permanece independente.
 - Paginas `Sobre` e `Contato` usam hero com respiro abaixo do header fixo; `Farmacia Popular` usa hero proprio com selo mais visivel, orientacoes, checklist e CTA para WhatsApp sem prometer disponibilidade automatica.
 - Rodape usa a logo, navegacao, dados de atendimento e WhatsApp, com texto branco de alto contraste sobre o vermelho, sem texto de plataforma em construcao nem nome repetido ao lado da logo.
 - Endereco exibido no site vem de `src/lib/site.ts`: Avenida Minas Gerais, 2263 - Ivate, Parana. O link de Maps usa URL curta do Google Maps, abre em nova aba sem mapa embutido e usa o icone transparente `public/brand/maps-pin-icon.svg`.
