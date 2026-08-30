@@ -278,7 +278,7 @@ function HeroVideo() {
 
   return (
     <div className="relative overflow-hidden rounded-lg border border-white bg-white p-2 shadow-[0_26px_90px_rgba(17,24,39,0.12)]">
-      <div className="relative overflow-hidden rounded-md bg-[linear-gradient(135deg,#fff_0%,#fff4f6_34%,#eff8f3_68%,#f8fafc_100%)] lg:aspect-[16/7] xl:aspect-[16/6.4]">
+      <div className="relative overflow-hidden rounded-md bg-[linear-gradient(135deg,#fff_0%,#fff4f6_34%,#eff8f3_68%,#f8fafc_100%)] lg:aspect-[8/3]">
         <video
           aria-hidden="true"
           autoPlay
@@ -316,8 +316,8 @@ function HeroVideo() {
             </a>
           </div>
 
-          <div className="flex min-h-0 items-center justify-center py-3 sm:py-5 lg:h-full lg:min-h-[420px] lg:py-0">
-            <div className="relative aspect-[9/16] w-[min(68vw,250px)] overflow-hidden rounded-md bg-[#111827] shadow-[0_28px_60px_rgba(17,24,39,0.24)] ring-1 ring-black/10 sm:w-[min(44vw,280px)] lg:h-full lg:max-h-[620px] lg:min-h-[420px] lg:w-auto">
+          <div className="flex min-h-0 items-center justify-center py-3 sm:py-5 lg:h-full lg:py-0">
+            <div className="relative aspect-[9/16] w-[min(68vw,250px)] overflow-hidden rounded-md bg-[#111827] shadow-[0_28px_60px_rgba(17,24,39,0.24)] ring-1 ring-black/10 sm:w-[min(44vw,280px)] lg:h-full lg:max-h-[432px] lg:min-h-0 lg:w-auto">
               <video
                 aria-label="Video da Wimifarma"
                 autoPlay

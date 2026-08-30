@@ -170,3 +170,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Remocao de fundo: usar a API do remove.bg somente quando `REMOVE_BG_API_KEY` estiver configurada; o processamento local com Sharp continua responsavel por orientacao, dimensoes e compressao.
 - Impacto: schema/migration Prisma, APIs de imagens, upload, formulario de catalogos, Docker Compose, `.env.example` e documentacao operacional.
 - Riscos/cuidados: remocao de fundo envia a foto ao provedor externo e pode consumir creditos; arquivos e banco precisam entrar juntos no backup; conversao nao recupera detalhes ausentes em uma foto de baixa resolucao.
+
+## 2026-08-30 - Proporcao padrao do banner principal
+
+- Decisao: padronizar o hero da home em `8:3` nas telas grandes, com exibicao maxima de `1280 x 480 px`, mantendo altura fluida abaixo do breakpoint `lg`.
+- Motivo: permitir que futuras campanhas tenham um enquadramento previsivel sem cortar o video vertical nem comprometer a leitura em celulares.
+- Padrao de arquivo: arte principal em `1920 x 720 px`, WebP e ate 350 KB; quando houver criativo exclusivo para celular, usar `1080 x 1350 px`, WebP e ate 250 KB.
+- Riscos/cuidados: manter informacoes importantes dentro da area segura central; evitar texto incorporado na imagem quando ele puder permanecer em HTML; nao reutilizar a arte horizontal no celular sem validar o recorte.
