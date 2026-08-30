@@ -6,6 +6,7 @@ export const productCreateSchema = z.object({
   description: z.string().max(800).optional(),
   ean: z.string().max(32).optional(),
   imageUrl: z.string().max(300).optional(),
+  imageAssetId: z.string().max(40).optional(),
   isPopularPharmacy: z.boolean().default(false),
   name: z.string().min(3).max(160),
   price: z.coerce.number().positive(),

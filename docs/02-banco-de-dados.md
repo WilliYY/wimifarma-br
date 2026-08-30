@@ -12,6 +12,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - Migration de clientes Google: `prisma/migrations/20260523224500_persist_google_customers/migration.sql`
 - Migration de senha de cliente: `prisma/migrations/20260524013000_add_customer_password/migration.sql`
 - Migration de visitas do site: `prisma/migrations/20260601172000_add_site_visits/migration.sql`
+- Migration da biblioteca de imagens: `prisma/migrations/20260830165000_add_product_image_library/migration.sql`
 - Seed: `prisma/seed.ts`
 - Cliente Prisma: `src/lib/prisma.ts`
 - Prisma config: `prisma.config.ts`
@@ -21,6 +22,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 
 - `User`: usuarios administrativos e colaboradores.
 - `Product`: catalogo de produtos.
+- `ProductImage`: biblioteca reutilizavel de imagens de produtos, com dimensoes, peso, origem e indicador de fundo removido.
 - `Offer`: ofertas comerciais.
 - `Coupon`: cupons com codigo unico, descricao, tipo, valor, validade, limite de uso e contador de usos.
 - `Lead`: contatos comerciais ainda nao consolidados.
@@ -58,6 +60,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - `Customer.passwordHash` e `passwordSetAt` permitem conta de cliente por email/senha sem misturar com `User` administrativo.
 - `SiteVisit.sessionId` e unico para contar visitantes sem criar dados pessoais diretos; IP, quando disponivel, e salvo apenas como hash usando `VISIT_HASH_SALT` ou `AUTH_SECRET`.
 - O admin de cupons usa o modelo `Coupon` existente; `durationDays` e calculado na API para preencher `startsAt` e `endsAt`, sem nova migration.
+- `Product.imageAssetId` referencia opcionalmente a imagem reutilizavel, enquanto `imageUrl` continua preservado para compatibilidade com produtos anteriores.
 
 ## Riscos ao Alterar
 

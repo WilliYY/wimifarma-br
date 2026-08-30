@@ -71,6 +71,8 @@ Postgres nao expoe porta no host.
 
 As imagens enviadas pelo admin ficam em `public/uploads/products` dentro do container e sao preservadas no volume `wimifarma-br-uploads`. Esse volume deve entrar na rotina de backup junto com o banco; atualizar ou reconstruir o container nao deve apagar as fotos.
 
+`REMOVE_BG_API_KEY` e opcional. Sem ela, upload, WebP, compressao e biblioteca continuam funcionando, mas o controle `Remover fundo com IA` fica desabilitado. A chave deve permanecer somente no `.env` do servidor e nunca no Git.
+
 ## Nginx Proxy Manager
 
 O proxy deve apontar para:

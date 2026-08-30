@@ -111,17 +111,20 @@ Arquivos:
 ## Fluxo de Catalogos e Imagens
 
 1. Administrador ou gerente acessa `/admin/catalogos`.
-2. Preenche os dados do produto e envia uma imagem de ate 10 MB.
-3. A API administrativa valida o arquivo, corrige a orientacao, reduz imagens maiores que 1600 px e salva uma versao WebP com qualidade 86.
-4. O arquivo final fica em `/public/uploads/products` e o Docker preserva essa pasta no volume `wimifarma-br-uploads`.
-5. A tela cria o produto com status de rascunho, publicado ou arquivado; o slug e gerado automaticamente e mantido unico.
-6. A criacao registra auditoria. Imagem enviada sem produto nao deve ser usada na vitrine ate o cadastro ser concluido.
+2. Preenche os dados do produto e escolhe entre enviar uma nova foto ou reutilizar uma imagem da biblioteca.
+3. Uma nova foto aceita JPG, PNG, WebP ou AVIF de ate 10 MB. A remocao profissional de fundo e opcional e depende de `REMOVE_BG_API_KEY` configurada no servidor.
+4. A API valida o arquivo, corrige a orientacao, limita a 2000 px sem ampliar imagem pequena e gera WebP com compressao progressiva quando o resultado ultrapassa aproximadamente 1,2 MB.
+5. O arquivo final fica em `/public/uploads/products`, preservado no volume `wimifarma-br-uploads`, e seus metadados ficam em `ProductImage` no PostgreSQL.
+6. A biblioteca permite buscar, selecionar e excluir imagens sem uso. Imagens associadas a produtos ficam protegidas contra exclusao.
+7. A tela cria o produto com status de rascunho, publicado ou arquivado; o slug e gerado automaticamente e a criacao registra auditoria.
 
 Arquivos:
 
 - `src/components/admin/products-catalog-panel.tsx`
 - `src/app/api/produtos/route.ts`
 - `src/app/api/admin/uploads/produtos/route.ts`
+- `src/app/api/admin/imagens-produtos/*`
+- `src/features/product-images/service.ts`
 - `src/features/products/schema.ts`
 
 ## Fluxo de APIs

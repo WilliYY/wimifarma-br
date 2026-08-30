@@ -60,67 +60,90 @@ enum CashbackTransactionType {
 }
 
 model User {
-  id           String     @id @default(cuid())
-  name         String
-  email        String     @unique
-  passwordHash String
-  role         UserRole   @default(STAFF)
-  isActive     Boolean    @default(true)
-  lastLoginAt  DateTime?
-  createdOffers Offer[]   @relation("OfferCreator")
-  auditLogs    AuditLog[]
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id                    String         @id @default(cuid())
+  name                  String
+  email                 String         @unique
+  passwordHash          String
+  role                  UserRole       @default(STAFF)
+  isActive              Boolean        @default(true)
+  lastLoginAt           DateTime?
+  createdOffers         Offer[]        @relation("OfferCreator")
+  uploadedProductImages ProductImage[] @relation("ProductImageUploader")
+  auditLogs             AuditLog[]
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 
   @@index([role])
   @@index([isActive])
 }
 
 model Product {
-  id                 String        @id @default(cuid())
-  name               String
-  slug               String        @unique
-  sku                String?       @unique
-  ean                String?
-  brand              String?
-  category           String?
-  description        String?
-  price              Decimal       @db.Decimal(10, 2)
-  promotionalPrice   Decimal?      @db.Decimal(10, 2)
-  imageUrl           String?
-  isPopularPharmacy  Boolean       @default(false)
-  requiresPrescription Boolean     @default(false)
-  status             ProductStatus @default(DRAFT)
-  stock              Int           @default(0)
-  sortOrder          Int           @default(0)
-  offers             Offer[]
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  id                   String        @id @default(cuid())
+  name                 String
+  slug                 String        @unique
+  sku                  String?       @unique
+  ean                  String?
+  brand                String?
+  category             String?
+  description          String?
+  price                Decimal       @db.Decimal(10, 2)
+  promotionalPrice     Decimal?      @db.Decimal(10, 2)
+  imageUrl             String?
+  imageAssetId         String?
+  imageAsset           ProductImage? @relation(fields: [imageAssetId], references: [id], onDelete: SetNull)
+  isPopularPharmacy    Boolean       @default(false)
+  requiresPrescription Boolean       @default(false)
+  status               ProductStatus @default(DRAFT)
+  stock                Int           @default(0)
+  sortOrder            Int           @default(0)
+  offers               Offer[]
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
 
   @@index([category])
+  @@index([imageAssetId])
   @@index([status])
   @@index([isPopularPharmacy])
 }
 
+model ProductImage {
+  id                String    @id @default(cuid())
+  url               String    @unique
+  originalName      String
+  mimeType          String    @default("image/webp")
+  width             Int
+  height            Int
+  sizeBytes         Int
+  backgroundRemoved Boolean   @default(false)
+  createdById       String?
+  createdBy         User?     @relation("ProductImageUploader", fields: [createdById], references: [id], onDelete: SetNull)
+  products          Product[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([createdAt])
+  @@index([createdById])
+}
+
 model Offer {
-  id             String      @id @default(cuid())
-  title          String
-  slug           String      @unique
-  description    String?
-  productId      String?
-  product        Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
-  originalPrice  Decimal?    @db.Decimal(10, 2)
-  offerPrice     Decimal     @db.Decimal(10, 2)
-  startsAt       DateTime?
-  endsAt         DateTime?
-  status         OfferStatus @default(DRAFT)
-  imageUrl       String?
-  highlight      Boolean     @default(false)
-  whatsappText   String?
-  createdById    String?
-  createdBy      User?       @relation("OfferCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id            String      @id @default(cuid())
+  title         String
+  slug          String      @unique
+  description   String?
+  productId     String?
+  product       Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  originalPrice Decimal?    @db.Decimal(10, 2)
+  offerPrice    Decimal     @db.Decimal(10, 2)
+  startsAt      DateTime?
+  endsAt        DateTime?
+  status        OfferStatus @default(DRAFT)
+  imageUrl      String?
+  highlight     Boolean     @default(false)
+  whatsappText  String?
+  createdById   String?
+  createdBy     User?       @relation("OfferCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@index([productId])
   @@index([status])
@@ -129,20 +152,20 @@ model Offer {
 }
 
 model Coupon {
-  id            String            @id @default(cuid())
-  code          String            @unique
+  id            String           @id @default(cuid())
+  code          String           @unique
   description   String?
   type          CouponType
-  value         Decimal           @db.Decimal(10, 2)
-  minOrderValue Decimal?          @db.Decimal(10, 2)
+  value         Decimal          @db.Decimal(10, 2)
+  minOrderValue Decimal?         @db.Decimal(10, 2)
   maxUses       Int?
-  usesCount     Int               @default(0)
+  usesCount     Int              @default(0)
   startsAt      DateTime?
   endsAt        DateTime?
-  isActive      Boolean           @default(true)
+  isActive      Boolean          @default(true)
   prizes        SpinWheelPrize[]
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   @@index([isActive])
   @@index([startsAt, endsAt])
@@ -166,27 +189,27 @@ model Lead {
 }
 
 model Customer {
-  id                String              @id @default(cuid())
+  id                String             @id @default(cuid())
   name              String
-  phone             String?             @unique
-  email             String?             @unique
-  document          String?             @unique
+  phone             String?            @unique
+  email             String?            @unique
+  document          String?            @unique
   birthDate         DateTime?
   address           String?
-  city              String              @default("Ivate")
+  city              String             @default("Ivate")
   neighborhood      String?
   notes             String?
   imageUrl          String?
-  googleSubject     String?             @unique
+  googleSubject     String?            @unique
   passwordHash      String?
   passwordSetAt     DateTime?
   lastLoginAt       DateTime?
-  status            CustomerStatus      @default(ACTIVE)
+  status            CustomerStatus     @default(ACTIVE)
   spinWheelAttempts SpinWheelAttempt[]
   cashbackAccount   CashbackAccount?
   whatsappContacts  WhatsAppContact[]
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   @@index([status])
   @@index([city])
@@ -194,19 +217,19 @@ model Customer {
 }
 
 model SpinWheelCampaign {
-  id                   String             @id @default(cuid())
-  name                 String
-  slug                 String             @unique
-  description          String?
-  startsAt             DateTime?
-  endsAt               DateTime?
-  isActive             Boolean            @default(false)
-  dailyLimitPerPhone   Int                @default(1)
-  maxAttemptsPerCustomer Int              @default(1)
-  prizes               SpinWheelPrize[]
-  attempts             SpinWheelAttempt[]
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  id                     String             @id @default(cuid())
+  name                   String
+  slug                   String             @unique
+  description            String?
+  startsAt               DateTime?
+  endsAt                 DateTime?
+  isActive               Boolean            @default(false)
+  dailyLimitPerPhone     Int                @default(1)
+  maxAttemptsPerCustomer Int                @default(1)
+  prizes                 SpinWheelPrize[]
+  attempts               SpinWheelAttempt[]
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
 
   @@index([isActive])
   @@index([startsAt, endsAt])
@@ -229,25 +252,25 @@ model SpinWheelPrize {
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 
+  @@unique([campaignId, label])
   @@index([campaignId])
   @@index([couponId])
   @@index([isActive])
-  @@unique([campaignId, label])
 }
 
 model SpinWheelAttempt {
-  id          String                 @id @default(cuid())
-  campaignId  String
-  campaign    SpinWheelCampaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  prizeId     String?
-  prize       SpinWheelPrize?        @relation(fields: [prizeId], references: [id], onDelete: SetNull)
-  customerId  String?
-  customer    Customer?              @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  phone       String
-  ipAddress   String?
-  userAgent   String?
-  status      SpinWheelAttemptStatus @default(LOST)
-  createdAt   DateTime               @default(now())
+  id         String                 @id @default(cuid())
+  campaignId String
+  campaign   SpinWheelCampaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  prizeId    String?
+  prize      SpinWheelPrize?        @relation(fields: [prizeId], references: [id], onDelete: SetNull)
+  customerId String?
+  customer   Customer?              @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  phone      String
+  ipAddress  String?
+  userAgent  String?
+  status     SpinWheelAttemptStatus @default(LOST)
+  createdAt  DateTime               @default(now())
 
   @@index([campaignId])
   @@index([prizeId])

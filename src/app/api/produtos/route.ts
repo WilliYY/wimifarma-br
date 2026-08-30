@@ -13,6 +13,7 @@ const productSelect = {
   createdAt: true,
   ean: true,
   id: true,
+  imageAssetId: true,
   imageUrl: true,
   isPopularPharmacy: true,
   name: true,
@@ -102,13 +103,29 @@ export async function POST(request: Request) {
 
   const prisma = getPrisma();
   const slug = await uniqueSlug(parsed.data.slug ?? parsed.data.name);
+  const imageAssetId = normalizeOptional(parsed.data.imageAssetId);
+  const imageAsset = imageAssetId
+    ? await prisma.productImage.findUnique({
+        select: { id: true, url: true },
+        where: { id: imageAssetId },
+      })
+    : null;
+
+  if (imageAssetId && !imageAsset) {
+    return NextResponse.json(
+      { error: "A imagem selecionada nao existe mais na biblioteca." },
+      { status: 422 },
+    );
+  }
+
   const product = await prisma.product.create({
     data: {
       ...parsed.data,
       brand: normalizeOptional(parsed.data.brand),
       category: normalizeOptional(parsed.data.category),
       ean: normalizeOptional(parsed.data.ean),
-      imageUrl: normalizeOptional(parsed.data.imageUrl),
+      imageAssetId: imageAsset?.id,
+      imageUrl: imageAsset?.url ?? normalizeOptional(parsed.data.imageUrl),
       sku: normalizeOptional(parsed.data.sku),
       slug,
     },
