@@ -62,6 +62,8 @@ docker run --rm \
   postgres:17-alpine \
   tar -czf /backup/uploads.tar.gz -C /source .
 
+chmod 600 "$partial_dir/uploads.tar.gz"
+
 install -m 600 "$PROJECT_DIR/.env" "$partial_dir/app.env"
 
 docker run --rm \
