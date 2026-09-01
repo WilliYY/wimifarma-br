@@ -45,7 +45,7 @@ Nesta fase o sistema prioriza conversao por WhatsApp. Nao existe checkout nem pa
 - APIs do cofre administrativo exigem sessao `ADMIN`.
 - Prisma schema, migration inicial e seed existem.
 - Docker Compose oficial usa `wimifarma-br-app` e `wimifarma-br-postgres`.
-- Pendencia critica: o login temporario `adm / adm` existe para desenvolvimento e deve ser removido ou protegido antes de producao.
+- O login temporario `adm / adm` foi removido; administradores usam registros reais do banco com senha protegida.
 
 ## Instalacao Local
 
@@ -253,6 +253,7 @@ A pasta `docs/` e a memoria longa do projeto. Comece por:
 - `docs/08-autenticacao-e-permissoes.md`
 - `docs/09-deploy-e-ambiente.md`
 - `docs/10-layout-e-experiencia.md`
+- `docs/11-seguranca-backup-e-recuperacao.md`
 
 ## Cuidados
 

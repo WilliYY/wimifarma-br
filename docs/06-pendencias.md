@@ -4,10 +4,10 @@
 
 ### Remover ou proteger login temporario `adm / adm`
 
-- Status: aberto.
-- Impacto: qualquer pessoa poderia entrar como administrador se isso estiver em producao.
+- Status: resolvido em 2026-09-01.
+- Impacto anterior: qualquer pessoa poderia entrar como administrador se isso estivesse em producao.
 - Arquivo: `src/features/auth/auth.ts`.
-- Caminho sugerido: permitir somente em ambiente local por variavel explicita, ou remover totalmente e usar admin criado pelo seed.
+- Resolucao: o atalho foi removido; somente usuarios persistidos e ativos podem autenticar por credenciais.
 
 ### Bloqueio real por permissao nas paginas admin
 
@@ -20,10 +20,24 @@
 
 ### Atualizar dependencias com alertas do `npm audit`
 
-- Status: resolvido em 2026-05-23.
-- Impacto anterior: `npm audit --audit-level=moderate` apontava alerta alto no Next.js e alerta moderado em dependencia transitiva de lint.
+- Status: monitorado; ultima revisao em 2026-09-01.
+- Impacto: alertas de runtime corrigiveis foram atualizados sem trocar versoes principais.
 - Arquivos: `package.json`, `package-lock.json`.
-- Resolucao: `next` e `eslint-config-next` foram atualizados para `15.5.18`; `brace-expansion` transitivo foi atualizado para `5.0.6`; `npm audit --audit-level=moderate` passou sem vulnerabilidades.
+- Situacao atual: zero alertas criticos; 3 alertas altos permanecem no Prisma de desenvolvimento por falta de correcao compativel com Prisma 7. Nao aplicar o downgrade forçado para Prisma 6.
+
+### WAF, DDoS e MFA administrativo
+
+- Status: aberto; depende de configuracao externa.
+- Impacto: o servidor de origem ainda recebe trafego direto e administradores por credencial ainda nao possuem segundo fator.
+- Caminho sugerido: migrar DNS para Cloudflare, validar proxy/WAF/rate limiting, bloquear acesso direto a origem e exigir MFA em `/admin/*` via Access ou TOTP/WebAuthn.
+- Referencia: `docs/11-seguranca-backup-e-recuperacao.md`.
+
+### Backup externo e alertas
+
+- Status: parcialmente resolvido em 2026-09-01.
+- Resolucao atual: backup local diario do PostgreSQL, uploads e `.env`, com checksum, validacao e retencao de 14 dias.
+- Pendente: segunda copia cifrada fora da VPS, alerta de falha e teste trimestral documentado.
+- Referencia: `docs/11-seguranca-backup-e-recuperacao.md`.
 
 ### Permissoes granulares nas APIs
 

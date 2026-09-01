@@ -143,21 +143,6 @@ export const authConfig = {
 
         const { email, password } = parsed.data;
 
-        const isDemoAdmin =
-          password === "adm" &&
-          ["adm", "adm@wimifarma.local", "admin@wimifarma.local"].includes(
-            email,
-          );
-
-        if (isDemoAdmin) {
-          return {
-            email: "adm@wimifarma.local",
-            id: "demo-admin",
-            name: "Administrador Wimifarma",
-            role: "ADMIN",
-          };
-        }
-
         if (await hasTooManyFailedLogins(email)) {
           return null;
         }

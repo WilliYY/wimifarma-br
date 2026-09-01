@@ -87,7 +87,7 @@ Se o client secret for exposto em print ou conversa, rotacionar a credencial no 
 
 ## Riscos
 
-- Login temporario `adm / adm` existe em `src/features/auth/auth.ts` e precisa ser removido/protegido antes de producao.
+- Administradores por credencial ainda nao possuem MFA no aplicativo; proteger `/admin/*` com Access ou implementar TOTP/WebAuthn.
 - Muitas APIs ainda usam permissao generica para `ADMIN` e `MANAGER`.
 - `SECRET_VAULT_KEY` deve permanecer estavel; trocar a chave sem recriptografar registros impede abrir segredos antigos.
 - Redefinicao de senha por email ainda nao envia email real.
@@ -95,10 +95,10 @@ Se o client secret for exposto em print ou conversa, rotacionar a credencial no 
 
 ## Pendencias
 
-- Remover/proteger login temporario.
 - Criar permissoes granulares por API nos endpoints restantes.
 - Implementar token e envio real de email para redefinicao de senha.
 - Registrar auditoria em acoes administrativas reais.
+- Exigir MFA para administradores antes de checkout, pagamento ou operacoes financeiras.
 
 ## Evolucao
 
@@ -109,4 +109,4 @@ Possivel desenho futuro:
 - Tela real de usuarios com status ativo/bloqueado.
 - Convite de colaborador por email com senha temporaria.
 - Reset de senha seguro.
-- 2FA para administradores, se necessario.
+- 2FA para administradores via Access, TOTP ou WebAuthn.

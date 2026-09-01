@@ -1,0 +1,11 @@
+[Unit]
+Description=Agenda o backup diario da Wimifarma BR
+
+[Timer]
+OnCalendar=*-*-* 02:30:00 America/Sao_Paulo
+RandomizedDelaySec=15m
+Persistent=true
+Unit=wimifarma-br-backup.service
+
+[Install]
+WantedBy=timers.target

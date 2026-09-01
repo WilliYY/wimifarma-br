@@ -1,0 +1,16 @@
+[Unit]
+Description=Backup diario da Wimifarma BR
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+SupplementaryGroups=docker
+UMask=0077
+WorkingDirectory=/home/ubuntu/projetos/wimifarma-br
+ExecStart=/bin/bash /home/ubuntu/projetos/wimifarma-br/ops/backup-wimifarma-br.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

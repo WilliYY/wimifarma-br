@@ -120,6 +120,7 @@ Obrigatorias em producao:
 ## Regras de Negocio a Preservar
 
 - `.env` real nunca entra no Git.
+- `.env` real deve usar permissao `600` no servidor.
 - Senhas de exemplo devem ser trocadas no servidor.
 - `AUTH_URL` e `NEXTAUTH_URL` devem apontar para dominio real com HTTPS.
 - Secrets de OAuth, APIs e senhas administrativas devem ficar no `.env` do servidor ou no cofre admin cifrado.
@@ -136,17 +137,16 @@ Obrigatorias em producao:
 
 ## Pendencias
 
-- Documentar rotina de backup.
-- Documentar restore.
 - Documentar monitoramento e logs.
 - Definir checklist de troca de secrets quando sair de desenvolvimento.
 - Definir rotina de rotacao e recuperacao para `SECRET_VAULT_KEY`.
+- Criar copia externa cifrada dos backups e alerta de falha.
 
 ## Evolucao
 
-Criar docs especificos para:
+Documentos e evolucoes:
 
-- backup e restauracao;
+- backup e restauracao: `docs/11-seguranca-backup-e-recuperacao.md`;
 - observabilidade;
 - hardening do Ubuntu;
 - rotina de deploy com rollback.

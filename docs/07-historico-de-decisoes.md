@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-01 - Primeira camada de hardening e backup automatico
+
+- Decisao: remover `adm / adm`, aplicar cabecalhos seguros, validacao de origem e rate limit nas APIs, atualizar dependencias compativeis e automatizar backup diario validado.
+- Motivo: reduzir risco imediato de invasao e perda de dados sem alterar regras comerciais nem introduzir checkout.
+- Impacto: `src/features/auth/auth.ts`, `src/middleware.ts`, `next.config.ts`, dependencias, workflow de seguranca, Dependabot, `ops/*` e documentacao operacional.
+- Riscos/cuidados: o limitador em memoria nao substitui WAF; Cloudflare, MFA, copia externa, alertas e pentest continuam pendentes. O Prisma de desenvolvimento mantem 3 alertas altos sem correcao compativel com Prisma 7.
+
 Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for tomada, alterada ou substituida, adicionar novo registro.
 
 ## 2026-05 - Framework inicial da plataforma

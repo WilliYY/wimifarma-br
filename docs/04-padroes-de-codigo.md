@@ -45,7 +45,7 @@ Define como evoluir o codigo mantendo consistencia, rastreabilidade e seguranca.
 - Config principal: `src/features/auth/auth.ts`.
 - Permissoes de API: `src/features/auth/permissions.ts`.
 - Tipos NextAuth: `src/types/next-auth.d.ts`.
-- Login temporario `adm / adm` e risco conhecido e deve ser removido/protegido antes de producao.
+- Login temporario `adm / adm` foi removido e nao deve ser reintroduzido.
 
 ## Documentacao
 

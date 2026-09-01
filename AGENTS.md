@@ -48,7 +48,7 @@ Preservar os padroes ja existentes no projeto, salvo quando houver motivo tecnic
 - Nunca usar dados reais de clientes em seed, teste ou exemplo.
 - Nunca expor PostgreSQL publicamente.
 - Nunca deixar credenciais temporarias em producao.
-- O login temporario `adm / adm` e pendencia critica e deve ser removido ou condicionado antes de producao.
+- O login temporario `adm / adm` foi removido e nunca deve ser reintroduzido.
 
 ## Regra 6: Escopo Comercial
 
