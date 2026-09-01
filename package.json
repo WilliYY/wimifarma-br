@@ -46,6 +46,7 @@
   },
   "overrides": {
     "@hono/node-server": "1.19.13",
+    "mysql2": "3.24.2",
     "postcss": "8.5.26"
   },
   "devDependencies": {
