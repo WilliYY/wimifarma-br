@@ -12,6 +12,7 @@ type RateLimitEntry = {
 };
 
 const MUTATION_METHODS = new Set(["DELETE", "PATCH", "POST", "PUT"]);
+const MAX_RATE_LIMIT_ENTRIES = 10_000;
 const rateLimitStore = new Map<string, RateLimitEntry>();
 const rateLimitRules: RateLimitRule[] = [
   {
@@ -84,6 +85,16 @@ function pruneExpiredEntries(now: number) {
     if (entry.resetAt <= now) {
       rateLimitStore.delete(key);
     }
+  }
+
+  while (rateLimitStore.size >= MAX_RATE_LIMIT_ENTRIES) {
+    const oldestKey = rateLimitStore.keys().next().value;
+
+    if (!oldestKey) {
+      break;
+    }
+
+    rateLimitStore.delete(oldestKey);
   }
 }
 
