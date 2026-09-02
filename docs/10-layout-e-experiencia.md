@@ -79,6 +79,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `lucide-react` usado para icones.
 - Produtos demonstrativos usam visuais CSS, nao fotos reais.
 - A vitrine `Melhores ofertas` usa visuais CSS enquanto nao houver fotos reais de produtos; editar os itens em `bestOfferItems` dentro de `src/components/site/home-page.tsx`. Os cards seguem padrao de e-commerce farmaceutico com selo, categoria, preco de/por, economia e disponibilidade local, mas os CTAs devem consultar via WhatsApp, sem sugerir checkout online.
+- O cadastro de produtos oferece editor responsivo em modal para enquadramento quadrado, zoom e rotacao. No celular, a area de recorte preserva espaco para os controles e os botoes ocupam a largura disponivel.
 - Video fica em `public/videos/thiago-cansado.mp4`, roda em loop e usa `public/videos/thiago-poster.svg` para evitar tela escura antes do carregamento.
 - O video principal foi recomprimido de forma conservadora, mantendo resolucao e audio, para reduzir peso sem alterar a composicao visual.
 

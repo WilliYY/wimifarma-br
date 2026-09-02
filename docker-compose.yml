@@ -17,6 +17,7 @@ services:
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3001}
       NODE_ENV: production
       NODE_OPTIONS: ${NODE_OPTIONS:---max_old_space_size=1024}
+      BACKGROUND_REMOVAL_URL: ${BACKGROUND_REMOVAL_URL:-http://background-removal:7000}
       REMOVE_BG_API_KEY: ${REMOVE_BG_API_KEY:-}
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
@@ -38,6 +39,32 @@ services:
     restart: unless-stopped
     volumes:
       - wimifarma-br-uploads:/app/public/uploads
+
+  background-removal:
+    build:
+      context: .
+      dockerfile: Dockerfile.rembg
+    container_name: wimifarma-br-background-removal
+    environment:
+      LOG_LEVEL: ${BACKGROUND_REMOVAL_LOG_LEVEL:-warning}
+      OMP_NUM_THREADS: ${BACKGROUND_REMOVAL_THREADS:-2}
+      U2NET_HOME: /models
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    mem_limit: ${BACKGROUND_REMOVAL_MEM_LIMIT:-2048m}
+    mem_reservation: ${BACKGROUND_REMOVAL_MEM_RESERVATION:-512m}
+    networks:
+      - wimifarma-br-network
+    restart: unless-stopped
 
   postgres:
     image: postgres:17-alpine

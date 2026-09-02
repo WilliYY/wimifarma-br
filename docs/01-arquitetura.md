@@ -81,7 +81,8 @@ As APIs de negocio usam `requireAdminApi`. O cofre `API e Senhas` usa `requireAd
 ## Infraestrutura
 
 - `Dockerfile`: build standalone do Next.
-- `docker-compose.yml`: app, postgres, migrate e seed.
+- `Dockerfile.rembg` e `background-removal/server.py`: servico interno de remocao de fundo com U-2-Net.
+- `docker-compose.yml`: app, remocao de fundo, postgres, migrate e seed.
 - `prisma.config.ts`: config do Prisma.
 - `.env.example`: contrato de configuracao.
 
@@ -92,6 +93,7 @@ As APIs de negocio usam `requireAdminApi`. O cofre `API e Senhas` usa `requireAd
 - Rotas administrativas sensiveis podem usar subpastas em `src/app/api/admin`.
 - Banco fica atras do app e nao exposto publicamente.
 - App Docker usa `output: standalone` do Next.
+- A IA de imagens recebe somente upload pela rede Docker interna; nao publica porta no host nem aceita URLs remotas ou escolha de modelo pelo cliente.
 
 ## Riscos ao Alterar
 

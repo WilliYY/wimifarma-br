@@ -112,11 +112,12 @@ Arquivos:
 
 1. Administrador ou gerente acessa `/admin/catalogos`.
 2. Preenche os dados do produto e escolhe entre enviar uma nova foto ou reutilizar uma imagem da biblioteca.
-3. Uma nova foto aceita JPG, PNG, WebP ou AVIF de ate 10 MB. A remocao profissional de fundo e opcional e depende de `REMOVE_BG_API_KEY` configurada no servidor.
-4. A API valida o arquivo, corrige a orientacao, limita a 2000 px sem ampliar imagem pequena e gera WebP com compressao progressiva quando o resultado ultrapassa aproximadamente 1,2 MB.
-5. O arquivo final fica em `/public/uploads/products`, preservado no volume `wimifarma-br-uploads`, e seus metadados ficam em `ProductImage` no PostgreSQL.
-6. A biblioteca permite buscar, selecionar e excluir imagens sem uso. Imagens associadas a produtos ficam protegidas contra exclusao.
-7. A tela cria o produto com status de rascunho, publicado ou arquivado; o slug e gerado automaticamente e a criacao registra auditoria.
+3. Antes de salvar, pode abrir `Ajustar foto` para recortar, reposicionar, ampliar ou girar. O ajuste gera no navegador uma copia quadrada em WebP, de ate 1600 x 1600 px e com fundo branco; imagens pequenas nao sao ampliadas e a original nao e alterada.
+4. Uma nova foto aceita JPG, PNG, WebP ou AVIF de ate 10 MB. A remocao de fundo e opcional e usa primeiro o servico local U-2-Net; `REMOVE_BG_API_KEY` permanece apenas como alternativa externa quando a URL local nao estiver configurada.
+5. Quando a IA remove o fundo, a API aplica fundo branco antes de gerar o WebP final. Em todos os uploads, valida o arquivo, corrige a orientacao, limita a 2000 px sem ampliar imagem pequena e aplica compressao progressiva quando o resultado ultrapassa aproximadamente 1,2 MB.
+6. O arquivo final fica em `/public/uploads/products`, preservado no volume `wimifarma-br-uploads`, e seus metadados ficam em `ProductImage` no PostgreSQL.
+7. A biblioteca permite buscar, selecionar e excluir imagens sem uso. `Ajustar uma copia` preserva a imagem existente e cria um novo upload, evitando alterar produtos ja associados. Imagens em uso ficam protegidas contra exclusao.
+8. A tela cria o produto com status de rascunho, publicado ou arquivado; o slug e gerado automaticamente e a criacao registra auditoria.
 
 Arquivos:
 
@@ -124,6 +125,7 @@ Arquivos:
 - `src/app/api/produtos/route.ts`
 - `src/app/api/admin/uploads/produtos/route.ts`
 - `src/app/api/admin/imagens-produtos/*`
+- `src/components/admin/product-image-editor.tsx`
 - `src/features/product-images/service.ts`
 - `src/features/products/schema.ts`
 

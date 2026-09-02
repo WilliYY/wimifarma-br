@@ -17,11 +17,13 @@ import {
   ImagePlus,
   Loader2,
   Search,
+  SlidersHorizontal,
   Sparkles,
   Trash2,
   Upload,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ProductImageEditor } from "@/components/admin/product-image-editor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,12 +66,15 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle>(
     const [images, setImages] = useState<ProductImage[]>([]);
     const [imageMode, setImageMode] = useState<ImageMode>("upload");
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [editorSource, setEditorSource] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [selectedImage, setSelectedImage] = useState<ProductImage | null>(null);
     const [imageSearch, setImageSearch] = useState("");
     const [removeBackground, setRemoveBackground] = useState(false);
     const [backgroundRemovalAvailable, setBackgroundRemovalAvailable] = useState(false);
     const [isLibraryLoading, setIsLibraryLoading] = useState(true);
+    const [isEditorOpen, setIsEditorOpen] = useState(false);
+    const [isPreparingLibraryImage, setIsPreparingLibraryImage] = useState(false);
     const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
 
     const loadImages = useCallback(async () => {
@@ -105,9 +110,17 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle>(
       };
     }, [imagePreview]);
 
+    useEffect(() => {
+      return () => {
+        if (editorSource?.startsWith("blob:")) URL.revokeObjectURL(editorSource);
+      };
+    }, [editorSource]);
+
     const clearPreview = useCallback(() => {
       setImagePreview(null);
+      setEditorSource(null);
       setSelectedFile(null);
+      setIsEditorOpen(false);
       if (imageInputRef.current) imageInputRef.current.value = "";
     }, []);
 
@@ -157,16 +170,48 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle>(
       );
     }, [imageSearch, images]);
 
-    function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
-      const file = event.target.files?.[0] ?? null;
+    function prepareFile(file: File, openEditor = false) {
       setSelectedImage(null);
       setSelectedFile(file);
-      setImagePreview(file ? URL.createObjectURL(file) : null);
+      setImagePreview(URL.createObjectURL(file));
+      setEditorSource(URL.createObjectURL(file));
+      setIsEditorOpen(openEditor);
+    }
+
+    function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
+      const file = event.target.files?.[0] ?? null;
+      if (file) {
+        prepareFile(file);
+      } else {
+        clearPreview();
+      }
     }
 
     function selectLibraryImage(image: ProductImage) {
       clearPreview();
       setSelectedImage(image);
+    }
+
+    async function adjustLibraryImage() {
+      if (!selectedImage) return;
+
+      try {
+        setIsPreparingLibraryImage(true);
+        const response = await fetch(selectedImage.url, { cache: "no-store" });
+        if (!response.ok) throw new Error("Nao foi possivel abrir a imagem da biblioteca.");
+
+        const blob = await response.blob();
+        const file = new File([blob], selectedImage.originalName, {
+          lastModified: Date.now(),
+          type: blob.type || "image/webp",
+        });
+        setImageMode("upload");
+        prepareFile(file, true);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Nao foi possivel ajustar a imagem.");
+      } finally {
+        setIsPreparingLibraryImage(false);
+      }
     }
 
     async function deleteImage(image: ProductImage) {
@@ -245,7 +290,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle>(
                   ? "cursor-pointer border-brand/20 bg-brand-soft text-ink"
                   : "cursor-not-allowed border-line bg-surface-subtle text-muted",
               )}
-              title={backgroundRemovalAvailable ? undefined : "Configure REMOVE_BG_API_KEY no servidor"}
+              title={backgroundRemovalAvailable ? undefined : "Servico de remocao de fundo nao configurado no servidor"}
             >
               <input
                 checked={removeBackground}
@@ -256,15 +301,21 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle>(
               />
               <Sparkles className="h-4 w-4 text-brand" />
               <span className="min-w-0 flex-1">Remover fundo com IA</span>
-              {!backgroundRemovalAvailable ? <Badge variant="muted">Configurar</Badge> : null}
+              <Badge variant="muted">
+                {backgroundRemovalAvailable ? "Fundo branco" : "Configurar"}
+              </Badge>
             </label>
             {imagePreview ? (
-              <div className="flex items-center gap-3 rounded-md border border-line bg-surface-subtle p-3">
+              <div className="flex flex-wrap items-center gap-3 rounded-md border border-line bg-surface-subtle p-3">
                 <Image alt="Previa da imagem do produto" className="h-24 w-24 shrink-0 rounded-md border border-line bg-white object-contain" height={96} src={imagePreview} unoptimized width={96} />
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-ink">Pronta para otimizar</p>
                   <p className="mt-1 text-xs font-semibold text-muted">WebP com compressao inteligente</p>
                 </div>
+                <Button onClick={() => setIsEditorOpen(true)} size="sm" type="button" variant="secondary">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  Ajustar foto
+                </Button>
               </div>
             ) : (
               <div className="flex min-h-20 items-center gap-3 rounded-md border border-dashed border-line px-3 py-4 text-sm font-semibold text-muted">
@@ -306,7 +357,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle>(
                             <span className="absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand text-white"><Check className="h-4 w-4" /></span>
                           ) : null}
                           {image.backgroundRemoved ? (
-                            <span className="absolute bottom-2 left-2 rounded-md bg-white/95 px-2 py-1 text-[10px] font-bold text-brand shadow-sm">Sem fundo</span>
+                            <span className="absolute bottom-2 left-2 rounded-md bg-white/95 px-2 py-1 text-[10px] font-bold text-brand shadow-sm">Fundo tratado</span>
                           ) : null}
                         </span>
                         <span className="min-w-0 p-2">
@@ -333,8 +384,30 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle>(
                 })}
               </div>
             )}
+            {selectedImage ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-surface-subtle p-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-ink">{selectedImage.originalName}</p>
+                  <p className="mt-1 text-xs font-semibold text-muted">Selecionada para reutilizar sem alteracoes</p>
+                </div>
+                <Button disabled={isPreparingLibraryImage} onClick={() => void adjustLibraryImage()} size="sm" type="button" variant="secondary">
+                  {isPreparingLibraryImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <SlidersHorizontal className="h-4 w-4" />}
+                  Ajustar uma copia
+                </Button>
+              </div>
+            ) : null}
           </div>
         )}
+        <ProductImageEditor
+          onApply={(file) => {
+            setSelectedFile(file);
+            setImagePreview(URL.createObjectURL(file));
+          }}
+          onOpenChange={setIsEditorOpen}
+          open={isEditorOpen}
+          originalName={selectedFile?.name ?? "produto.webp"}
+          source={editorSource}
+        />
       </div>
     );
   },

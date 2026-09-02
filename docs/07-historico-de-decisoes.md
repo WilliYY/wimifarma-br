@@ -184,3 +184,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: permitir que futuras campanhas tenham um enquadramento previsivel sem cortar o video vertical nem comprometer a leitura em celulares.
 - Padrao de arquivo: arte principal em `1920 x 720 px`, WebP e ate 350 KB; quando houver criativo exclusivo para celular, usar `1080 x 1350 px`, WebP e ate 250 KB.
 - Riscos/cuidados: manter informacoes importantes dentro da area segura central; evitar texto incorporado na imagem quando ele puder permanecer em HTML; nao reutilizar a arte horizontal no celular sem validar o recorte.
+
+## 2026-09-02 - Remocao local de fundo e editor de imagens
+
+- Decisao: substituir como padrao o envio de fotos ao remove.bg por um servico interno `rembg` com modelo `u2net`, mantendo remove.bg apenas como alternativa, e adicionar recorte, zoom e rotacao antes do upload.
+- Motivo: permitir remocao de fundo sem credito por imagem, manter a foto dentro do servidor e padronizar o enquadramento dos produtos. O resultado da IA recebe fundo branco e a edicao de uma imagem da biblioteca sempre cria uma copia.
+- Impacto: `Dockerfile.rembg`, `background-removal/server.py`, `docker-compose.yml`, `src/features/product-images/service.ts`, editor e seletor de imagens do admin.
+- Riscos/cuidados: o modelo usa aproximadamente 1 GB de RAM carregado e aumenta o tempo/tamanho do build; o servico deve continuar sem porta publica, fixo em `u2net` e limitado a arquivos de 10 MB. A remocao automatica pode exigir ajuste manual em embalagens transparentes ou bordas muito finas.

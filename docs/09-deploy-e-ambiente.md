@@ -61,6 +61,7 @@ Rotina operacional solicitada para agentes: salvo pedido contrario, apos finaliz
 ## Docker Oficial
 
 - Container app: `wimifarma-br-app`
+- Container de remocao de fundo: `wimifarma-br-background-removal`
 - Container postgres: `wimifarma-br-postgres`
 - Rede: `wimifarma-br-network`
 - Volume: `wimifarma-br-postgres-data`
@@ -71,7 +72,9 @@ Postgres nao expoe porta no host.
 
 As imagens enviadas pelo admin ficam em `public/uploads/products` dentro do container e sao preservadas no volume `wimifarma-br-uploads`. Esse volume deve entrar na rotina de backup junto com o banco; atualizar ou reconstruir o container nao deve apagar as fotos.
 
-`REMOVE_BG_API_KEY` e opcional. Sem ela, upload, WebP, compressao e biblioteca continuam funcionando, mas o controle `Remover fundo com IA` fica desabilitado. A chave deve permanecer somente no `.env` do servidor e nunca no Git.
+`BACKGROUND_REMOVAL_URL` aponta por padrao para `http://background-removal:7000`. O servico usa `rembg` com o modelo aberto `u2net`, fica somente na rede Docker interna, inicia com um worker e tem limite padrao de 2 GB de memoria. Nao publicar a porta `7000` no host.
+
+`REMOVE_BG_API_KEY` e opcional e funciona apenas como alternativa externa quando `BACKGROUND_REMOVAL_URL` estiver vazio. A chave deve permanecer somente no `.env` do servidor e nunca no Git. Sem nenhum provedor, upload, WebP, compressao, editor e biblioteca continuam funcionando, mas o controle `Remover fundo com IA` fica desabilitado.
 
 ## Nginx Proxy Manager
 
