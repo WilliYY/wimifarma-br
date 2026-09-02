@@ -46,7 +46,11 @@ export type ProductImage = {
 export type ProductImagePickerHandle = {
   refresh: () => Promise<void>;
   reset: () => void;
-  resolveImage: () => Promise<ProductImage>;
+  resolveImage: (options?: { optional?: boolean }) => Promise<ProductImage | null>;
+};
+
+type ProductImagePickerProps = {
+  initialImageAssetId?: string | null;
 };
 
 function errorMessage(error: unknown, fallback: string) {
@@ -60,8 +64,8 @@ function formatFileSize(bytes: number) {
     : `${Math.max(1, Math.round(bytes / 1000))} KB`;
 }
 
-export const ProductImagePicker = forwardRef<ProductImagePickerHandle>(
-  function ProductImagePicker(_props, ref) {
+export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductImagePickerProps>(
+  function ProductImagePicker({ initialImageAssetId }: ProductImagePickerProps, ref) {
     const imageInputRef = useRef<HTMLInputElement>(null);
     const [images, setImages] = useState<ProductImage[]>([]);
     const [imageMode, setImageMode] = useState<ImageMode>("upload");
@@ -103,6 +107,16 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle>(
     useEffect(() => {
       void loadImages();
     }, [loadImages]);
+
+    useEffect(() => {
+      if (!initialImageAssetId || selectedFile || selectedImage) return;
+
+      const initialImage = images.find((image) => image.id === initialImageAssetId);
+      if (initialImage) {
+        setSelectedImage(initialImage);
+        setImageMode("library");
+      }
+    }, [images, initialImageAssetId, selectedFile, selectedImage]);
 
     useEffect(() => {
       return () => {
@@ -155,9 +169,10 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle>(
     useImperativeHandle(ref, () => ({
       refresh: loadImages,
       reset,
-      resolveImage: async () => {
+      resolveImage: async (options) => {
         if (selectedFile) return uploadImage(selectedFile);
         if (selectedImage) return selectedImage;
+        if (options?.optional) return null;
         throw new Error("Envie uma foto ou escolha uma imagem da biblioteca.");
       },
     }), [loadImages, reset, selectedFile, selectedImage, uploadImage]);

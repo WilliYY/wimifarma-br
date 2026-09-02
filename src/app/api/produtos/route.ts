@@ -11,6 +11,7 @@ const productSelect = {
   brand: true,
   category: true,
   createdAt: true,
+  description: true,
   ean: true,
   id: true,
   imageAssetId: true,

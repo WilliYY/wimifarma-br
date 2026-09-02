@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const productCreateSchema = z.object({
+const productFieldsSchema = z.object({
   brand: z.string().max(120).optional(),
   category: z.string().max(120).optional(),
   description: z.string().max(800).optional(),
@@ -16,11 +16,34 @@ export const productCreateSchema = z.object({
   slug: z.string().min(3).max(120).optional(),
   status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).default("DRAFT"),
   stock: z.coerce.number().int().min(0).default(0),
-}).refine(
-  (product) =>
-    !product.promotionalPrice || product.promotionalPrice <= product.price,
-  {
-    message: "O preco promocional nao pode ser maior que o preco normal.",
-    path: ["promotionalPrice"],
-  },
+});
+
+const validPromotionalPrice = (product: { price: number; promotionalPrice?: number | null }) =>
+  !product.promotionalPrice || product.promotionalPrice <= product.price;
+
+const promotionalPriceError = {
+  message: "O preco promocional nao pode ser maior que o preco normal.",
+  path: ["promotionalPrice"],
+};
+
+export const productCreateSchema = productFieldsSchema.refine(
+  validPromotionalPrice,
+  promotionalPriceError,
 );
+
+export const productUpdateSchema = productFieldsSchema
+  .omit({ slug: true })
+  .extend({
+    brand: z.string().max(120).nullable().optional(),
+    category: z.string().max(120).nullable().optional(),
+    description: z.string().max(800).nullable().optional(),
+    ean: z.string().max(32).nullable().optional(),
+    expectedUpdatedAt: z.iso.datetime(),
+    promotionalPrice: z.coerce.number().positive().nullable().optional(),
+    sku: z.string().max(80).nullable().optional(),
+  })
+  .refine(
+  (product) =>
+    validPromotionalPrice(product),
+    promotionalPriceError,
+  );

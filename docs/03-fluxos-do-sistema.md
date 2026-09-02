@@ -118,11 +118,14 @@ Arquivos:
 6. O arquivo final fica em `/public/uploads/products`, preservado no volume `wimifarma-br-uploads`, e seus metadados ficam em `ProductImage` no PostgreSQL. Como o upload ja sai dimensionado, comprimido e convertido para WebP, as miniaturas administrativas usam a URL persistida diretamente, sem uma segunda otimizacao pelo Next.js.
 7. A biblioteca permite buscar, selecionar e excluir imagens sem uso. `Ajustar uma copia` preserva a imagem existente e cria um novo upload, evitando alterar produtos ja associados. Imagens em uso ficam protegidas contra exclusao.
 8. A tela cria o produto com status de rascunho, publicado ou arquivado; o slug e gerado automaticamente e a criacao registra auditoria.
+9. A lista permite buscar por nome, marca, SKU ou EAN, filtrar por categoria e status e classificar por data, nome, estoque ou preco.
+10. `Editar` abre um formulario individual preenchido com os dados atuais. A imagem existente e preservada quando nao for trocada; a atualizacao usa `updatedAt` para impedir que uma edicao antiga sobrescreva outra mais recente e registra auditoria.
 
 Arquivos:
 
 - `src/components/admin/products-catalog-panel.tsx`
 - `src/app/api/produtos/route.ts`
+- `src/app/api/produtos/[id]/route.ts`
 - `src/app/api/admin/uploads/produtos/route.ts`
 - `src/app/api/admin/imagens-produtos/*`
 - `src/components/admin/product-image-editor.tsx`
@@ -134,12 +137,13 @@ Arquivos:
 1. Cliente chama endpoint em `src/app/api`.
 2. APIs de negocio executam `requireAdminApi`; APIs mais sensiveis podem executar `requireAdminOnlyApi`.
 3. Sem sessao valida, retornam `401`.
-4. Com sessao `ADMIN` ou `MANAGER`, executam consulta ou criacao com validacao Zod.
+4. Com sessao `ADMIN` ou `MANAGER`, executam consulta, criacao ou atualizacao com validacao Zod.
 
 Arquivos:
 
 - `src/features/auth/permissions.ts`
 - `src/app/api/produtos/route.ts`
+- `src/app/api/produtos/[id]/route.ts`
 - `src/app/api/ofertas/route.ts`
 - `src/app/api/clientes/route.ts`
 - `src/app/api/cupons/route.ts`

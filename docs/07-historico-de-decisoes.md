@@ -192,3 +192,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: permitir remocao de fundo sem credito por imagem, manter a foto dentro do servidor e padronizar o enquadramento dos produtos. O resultado da IA recebe fundo branco e a edicao de uma imagem da biblioteca sempre cria uma copia.
 - Impacto: `Dockerfile.rembg`, `background-removal/server.py`, `docker-compose.yml`, `src/features/product-images/service.ts`, editor e seletor de imagens do admin.
 - Riscos/cuidados: o modelo usa aproximadamente 1 GB de RAM carregado e aumenta o tempo/tamanho do build; o servico deve continuar sem porta publica, fixo em `u2net` e limitado a arquivos de 10 MB. A remocao automatica pode exigir ajuste manual em embalagens transparentes ou bordas muito finas.
+
+## 2026-09-02 - Classificacao e edicao individual de produtos
+
+- Decisao: adicionar busca, filtros por categoria/status, ordenacao e edicao individual no catalogo administrativo.
+- Motivo: permitir localizar e manter produtos conforme o catalogo crescer, sem precisar recriar registros para corrigir preco, estoque, classificacao ou imagem.
+- Impacto: painel de catalogos, schema de validacao, `PATCH /api/produtos/[id]`, testes de classificacao e documentacao.
+- Riscos/cuidados: a API exige a versao `updatedAt` carregada pelo formulario e retorna conflito quando outra pessoa alterou o produto primeiro; o slug atual e preservado durante a edicao.
