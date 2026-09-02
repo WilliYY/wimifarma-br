@@ -174,6 +174,7 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 
 - Decisao: manter os arquivos no volume proprio da aplicacao, registrar metadados em `ProductImage` e preservar `Product.imageUrl` para compatibilidade. Novos produtos podem reutilizar uma imagem por `imageAssetId`.
 - Motivo: evitar uploads repetidos, padronizar WebP, controlar peso e permitir administrar fotos diretamente no cadastro de produtos.
+- Exibicao: miniaturas de uploads persistentes usam a URL WebP direta, pois o arquivo ja foi otimizado no envio; isso evita cache intermediario desatualizado logo apos cadastrar uma foto.
 - Remocao de fundo: usar a API do remove.bg somente quando `REMOVE_BG_API_KEY` estiver configurada; o processamento local com Sharp continua responsavel por orientacao, dimensoes e compressao.
 - Impacto: schema/migration Prisma, APIs de imagens, upload, formulario de catalogos, Docker Compose, `.env.example` e documentacao operacional.
 - Riscos/cuidados: remocao de fundo envia a foto ao provedor externo e pode consumir creditos; arquivos e banco precisam entrar juntos no backup; conversao nao recupera detalhes ausentes em uma foto de baixa resolucao.

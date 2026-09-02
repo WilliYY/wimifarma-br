@@ -352,7 +352,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle>(
                         type="button"
                       >
                         <span className="relative flex aspect-square items-center justify-center bg-surface-subtle p-2">
-                          <Image alt={image.originalName} className="h-full w-full object-contain" height={150} src={image.url} width={150} />
+                          <Image alt={image.originalName} className="h-full w-full object-contain" height={150} src={image.url} unoptimized width={150} />
                           {isSelected ? (
                             <span className="absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand text-white"><Check className="h-4 w-4" /></span>
                           ) : null}

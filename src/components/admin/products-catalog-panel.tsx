@@ -287,7 +287,7 @@ export function ProductsCatalogPanel() {
                   return (
                     <div className="flex flex-col gap-4 rounded-lg border border-line bg-white p-4 shadow-sm sm:flex-row" key={product.id}>
                       {product.imageUrl ? (
-                        <Image alt="" className="h-24 w-24 rounded-md border border-line bg-white object-contain" height={96} src={product.imageUrl} width={96} />
+                        <Image alt={product.name} className="h-24 w-24 rounded-md border border-line bg-white object-contain" height={96} src={product.imageUrl} unoptimized width={96} />
                       ) : (
                         <div className="flex h-24 w-24 items-center justify-center rounded-md bg-surface-subtle text-muted"><ImagePlus className="h-5 w-5" /></div>
                       )}
