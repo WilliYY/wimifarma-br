@@ -49,11 +49,13 @@ import {
   getProductCategories,
   type ProductCatalogSort,
 } from "@/features/products/catalog";
+import { parseProductTerms } from "@/features/products/public-search";
 import { cn, formatCurrency } from "@/lib/utils";
 
 type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 
 type ProductListItem = {
+  activeIngredients: string[];
   brand: string | null;
   category: string | null;
   createdAt: string;
@@ -68,6 +70,7 @@ type ProductListItem = {
   price: string;
   promotionalPrice: string | null;
   requiresPrescription: boolean;
+  searchTerms: string[];
   sku: string | null;
   slug: string;
   status: ProductStatus;
@@ -112,6 +115,7 @@ function productPayload(
     clearEmptyFields ? fieldValue(formData, key) || null : optionalField(formData, key);
 
   return {
+    activeIngredients: parseProductTerms(fieldValue(formData, "activeIngredients")),
     brand: optionalValue("brand"),
     category: optionalValue("category"),
     description: optionalValue("description"),
@@ -123,6 +127,7 @@ function productPayload(
     price: fieldValue(formData, "price"),
     promotionalPrice: optionalValue("promotionalPrice"),
     requiresPrescription: formData.get("requiresPrescription") === "on",
+    searchTerms: parseProductTerms(fieldValue(formData, "searchTerms")),
     sku: optionalValue("sku"),
     status: fieldValue(formData, "status"),
     stock: fieldValue(formData, "stock") || "0",
@@ -157,6 +162,32 @@ function ProductFormFields({
           <datalist id={categoryListId}>
             {categoryOptions.map((category) => <option key={category} value={category} />)}
           </datalist>
+        </label>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="grid gap-2 text-sm font-semibold text-ink">
+          Principios ativos
+          <Input
+            defaultValue={product?.activeIngredients.join(", ") ?? ""}
+            maxLength={1200}
+            name="activeIngredients"
+            placeholder="Ex.: paracetamol, fenilefrina"
+          />
+          <span className="text-xs font-medium leading-5 text-muted">
+            Separe por virgula. Eles ajudam a encontrar correlatos.
+          </span>
+        </label>
+        <label className="grid gap-2 text-sm font-semibold text-ink">
+          Termos de busca e indicacao
+          <Input
+            defaultValue={product?.searchTerms.join(", ") ?? ""}
+            maxLength={1000}
+            name="searchTerms"
+            placeholder="Ex.: gripe, resfriado, congestao"
+          />
+          <span className="text-xs font-medium leading-5 text-muted">
+            Use termos objetivos do cadastro, sem orientacao medica.
+          </span>
         </label>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -477,6 +508,11 @@ export function ProductsCatalogPanel() {
                               {product.isPopularPharmacy ? <Badge variant="muted">Farmacia Popular</Badge> : null}
                             </div>
                             <p className="mt-1 text-sm font-semibold text-muted">{[product.brand, product.category].filter(Boolean).join(" - ") || "Sem categoria"}</p>
+                            {product.activeIngredients.length > 0 ? (
+                              <p className="mt-1 line-clamp-1 text-xs font-semibold text-muted">
+                                Principios ativos: {product.activeIngredients.join(", ")}
+                              </p>
+                            ) : null}
                             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold text-muted">
                               <span>Estoque: <strong className="text-ink">{product.stock}</strong></span>
                               <span>Preco: <strong className="text-ink">{formatCurrency(Number(product.promotionalPrice ?? product.price))}</strong></span>

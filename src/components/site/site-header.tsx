@@ -43,7 +43,7 @@ export async function SiteHeader() {
       <div className="relative flex items-center gap-2 bg-[#121820] px-4 py-1.5 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         <Link
           aria-label="Wimifarma"
-          className="relative flex h-20 w-56 shrink-0 items-center justify-start overflow-hidden sm:h-24 sm:w-64 xl:w-72"
+          className="relative flex h-20 w-40 shrink-0 items-center justify-start overflow-hidden sm:h-24 sm:w-64 xl:w-72"
           href="/"
         >
           <Image
@@ -73,7 +73,7 @@ export async function SiteHeader() {
           />
         </Link>
 
-        <div className="ml-3 flex items-center gap-2 md:hidden">
+        <div className="ml-auto flex items-center gap-2 md:hidden">
           {session?.user ? (
             <>
               <Link

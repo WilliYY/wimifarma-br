@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireAdminApi } from "@/features/auth/permissions";
 import { productUpdateSchema } from "@/features/products/schema";
+import { buildProductSearchText } from "@/features/products/public-search";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
 
@@ -9,6 +10,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const productSelect = {
+  activeIngredients: true,
   brand: true,
   category: true,
   createdAt: true,
@@ -23,6 +25,7 @@ const productSelect = {
   price: true,
   promotionalPrice: true,
   requiresPrescription: true,
+  searchTerms: true,
   sku: true,
   slug: true,
   status: true,
@@ -93,6 +96,7 @@ export async function PATCH(
 
   const { expectedUpdatedAt } = parsed.data;
   const productData = {
+    activeIngredients: parsed.data.activeIngredients,
     brand: parsed.data.brand,
     category: parsed.data.category,
     description: parsed.data.description,
@@ -102,6 +106,7 @@ export async function PATCH(
     price: parsed.data.price,
     promotionalPrice: parsed.data.promotionalPrice,
     requiresPrescription: parsed.data.requiresPrescription,
+    searchTerms: parsed.data.searchTerms,
     sku: parsed.data.sku,
     status: parsed.data.status,
     stock: parsed.data.stock,
@@ -125,6 +130,7 @@ export async function PATCH(
               : undefined,
           imageUrl: imageAsset?.url ?? normalizedImageUrl,
           promotionalPrice: productData.promotionalPrice ?? null,
+          searchText: buildProductSearchText(productData),
           sku: normalizeOptional(productData.sku) ?? null,
         },
         where: {

@@ -123,6 +123,9 @@ Arquivos:
 11. Em `/admin/ofertas`, o usuario escolhe quais produtos publicados e com foto ocupam as 15 posicoes de `Melhores ofertas`; a mesma selecao tambem define a ordem.
 12. O salvamento da vitrine e atomico, impede produto repetido e registra `PRODUCT_SHOWCASE_UPDATED`. Arquivar ou voltar um produto para rascunho remove sua posicao.
 13. A home consulta somente produtos publicados, com foto e `featuredPosition`, usando nome, categoria, descricao, precos e WebP reais. Posicoes sem selecao continuam como espacos de consulta pelo WhatsApp.
+14. O cadastro e a edicao permitem informar principios ativos e termos de busca/indicacao separados por virgula; a API normaliza esses dados no `searchText` sem alterar a grafia exibida.
+15. Enquanto o cliente digita pelo menos dois caracteres, `/api/produtos/busca` retorna produtos publicados com foto, preco e principios ativos, alem de correlatos do primeiro resultado.
+16. Enter, setas ou clique abrem `/produto/[slug]`; a pagina apresenta os dados e correlatos, mas deixa claro que correlacao nao significa substituicao e envia a confirmacao final ao WhatsApp.
 
 Arquivos:
 
@@ -137,6 +140,10 @@ Arquivos:
 - `src/components/admin/featured-products-panel.tsx`
 - `src/app/api/ofertas/vitrine/route.ts`
 - `src/features/offers/showcase.ts`
+- `src/features/products/public-search.ts`
+- `src/app/api/produtos/busca/route.ts`
+- `src/components/site/site-search.tsx`
+- `src/app/(site)/produto/[slug]/page.tsx`
 
 ## Fluxo de APIs
 
@@ -187,7 +194,7 @@ Arquivos:
 
 - Implementar envio real de email para redefinicao de senha.
 - Implementar CRUD real nos modulos admin.
-- Integrar site publico com dados reais do banco.
+- Integrar as paginas publicas secundarias restantes com dados reais do banco.
 
 ## Evolucao
 

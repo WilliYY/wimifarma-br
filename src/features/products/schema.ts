@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const productFieldsSchema = z.object({
+  activeIngredients: z.array(z.string().trim().min(2).max(120)).max(20).default([]),
   brand: z.string().max(120).optional(),
   category: z.string().max(120).optional(),
   description: z.string().max(800).optional(),
@@ -12,6 +13,7 @@ const productFieldsSchema = z.object({
   price: z.coerce.number().positive(),
   promotionalPrice: z.coerce.number().positive().optional(),
   requiresPrescription: z.boolean().default(false),
+  searchTerms: z.array(z.string().trim().min(2).max(80)).max(20).default([]),
   sku: z.string().max(80).optional(),
   slug: z.string().min(3).max(120).optional(),
   status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).default("DRAFT"),

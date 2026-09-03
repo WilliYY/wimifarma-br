@@ -84,8 +84,8 @@
 ### Site publico usar dados do banco
 
 - Status: concluido em 2026-09-03 para a vitrine `Melhores ofertas`.
-- Resolucao: `/admin/ofertas` controla ate 15 produtos publicados com foto; a home consulta essas posicoes no PostgreSQL e usa os dados e imagens reais do catalogo.
-- Arquivos: `src/components/admin/featured-products-panel.tsx`, `src/app/api/ofertas/vitrine/route.ts`, `src/components/site/home-page.tsx`, `src/app/(site)/page.tsx`.
+- Resolucao: `/admin/ofertas` controla ate 15 produtos publicados com foto; a home consulta essas posicoes no PostgreSQL e usa os dados e imagens reais do catalogo. A busca do header tambem consulta o banco, exibe produto, preco e correlatos e abre a pagina publica individual.
+- Arquivos: `src/components/admin/featured-products-panel.tsx`, `src/app/api/ofertas/vitrine/route.ts`, `src/components/site/home-page.tsx`, `src/app/(site)/page.tsx`, `src/app/api/produtos/busca/route.ts`, `src/app/(site)/produto/[slug]/page.tsx`.
 
 ### Auditoria de mutacoes
 

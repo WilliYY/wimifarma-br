@@ -86,6 +86,9 @@ model Product {
   brand                String?
   category             String?
   description          String?
+  activeIngredients    String[]      @default([])
+  searchTerms          String[]      @default([])
+  searchText           String        @default("")
   price                Decimal       @db.Decimal(10, 2)
   promotionalPrice     Decimal?      @db.Decimal(10, 2)
   imageUrl             String?

@@ -206,3 +206,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: impedir publicacao automatica de todo o catalogo e dar controle operacional sobre quais itens aparecem, sem duplicar nome, preco ou imagem em outro cadastro.
 - Impacto: schema/migration Prisma, painel e API de vitrine, consulta server-side da home, cards publicos, testes e documentacao.
 - Riscos/cuidados: somente produtos publicados e com foto podem ser escolhidos; posicoes sao exclusivas, o salvamento e atomico e a venda continua direcionada ao WhatsApp.
+
+## 2026-09-03 - Busca publica com produtos e correlatos
+
+- Decisao: substituir os exemplos locais da busca por produtos `ACTIVE` do PostgreSQL, com autocomplete por nome e dados farmaceuticos cadastrados, pagina individual e correlatos.
+- Motivo: permitir que o cliente encontre um item real, veja foto e preco durante a digitacao e consulte produtos proximos sem sair do fluxo da farmacia.
+- Impacto: novos campos `activeIngredients`, `searchTerms` e `searchText` em `Product`, API publica de busca, cadastro administrativo, busca desktop/mobile e rota `/produto/[slug]`.
+- Riscos/cuidados: principios ativos e termos devem ser preenchidos com base no cadastro oficial do produto; correlato significa apenas proximidade de busca, nunca substituicao terapeutica, e disponibilidade/preco continuam sujeitos a confirmacao humana pelo WhatsApp.

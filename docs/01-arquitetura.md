@@ -113,3 +113,11 @@ As APIs de negocio usam `requireAdminApi`. O cofre `API e Senhas` usa `requireAd
 ## Evolucao
 
 Adicionar novos docs especificos quando surgirem modulos maiores: integracoes, auditoria, financeiro, performance, testes, seguranca e painel administrativo.
+
+## Busca Publica de Produtos
+
+- `GET /api/produtos/busca?q=` consulta apenas produtos `ACTIVE` e devolve no maximo seis resultados e quatro correlatos.
+- `Product.searchText` guarda uma versao normalizada para busca; `activeIngredients` e `searchTerms` preservam os valores exibidos e orientam a correlacao.
+- `src/features/products/public-search.ts` concentra normalizacao, ordenacao de resultados e pontuacao dos correlatos.
+- O autocomplete fica em `src/components/site/site-search.tsx`; o Enter abre `/produto/[slug]`, onde a disponibilidade continua sendo confirmada pelo WhatsApp.
+- A busca movel abre em dialogo de tela cheia para preservar espaco no header e manter teclado, foco e resultados visiveis.

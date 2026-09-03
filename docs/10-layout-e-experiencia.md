@@ -30,7 +30,8 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 ## Estado Atual
 
 - Header fixo com faixa vermelha de frete gratis, caminhaozinho com deslocamento animado, faixa escura integrada a logo animada sem fundo ancorada no canto esquerdo, selo Farmacia Popular ao lado da logo em telas largas, busca, link de localizacao no Google Maps, botao WhatsApp verde com icone destacado, login/cadastrar e nav.
-- A busca do header funciona como consulta rapida: o cliente digita produto/servico, ve sugestoes relacionadas em uma base local temporaria e o Enter/botao `Consultar` abre o WhatsApp principal com a mensagem preenchida.
+- A busca do header consulta produtos publicados do banco com atraso curto durante a digitacao. O autocomplete mostra foto, nome, preco normal/promocional, principio ativo e correlatos; setas mudam a selecao e Enter abre `/produto/[slug]`. Sem resultado, Enter mantem a consulta pelo WhatsApp.
+- No celular, um botao de busca abre um dialogo de tela cheia com campo e resultados, evitando comprimir a logo e os controles do header.
 - Menu principal destaca a rota ativa em telas largas para deixar claro em qual aba o usuario esta.
 - Quando ha sessao de cliente, o header troca `Login / Cadastrar` por foto/nome da conta Google e um botao `Sair`.
 - O nome do cliente no header abre `/minha-conta`.
@@ -99,7 +100,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Definir imagens/fotos reais de produtos quando houver catalogo.
 - Testar visual em mobile real.
 - Criar fluxo visual final para paginas secundarias.
-- Trocar a base local temporaria de relacionados da busca por dados reais quando catalogo/ofertas forem alimentados pelo banco.
+- Validar periodicamente os termos e principios ativos usados para correlacao conforme o catalogo real crescer.
 
 ## Evolucao
 

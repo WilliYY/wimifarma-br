@@ -13,6 +13,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - Migration de senha de cliente: `prisma/migrations/20260524013000_add_customer_password/migration.sql`
 - Migration de visitas do site: `prisma/migrations/20260601172000_add_site_visits/migration.sql`
 - Migration da biblioteca de imagens: `prisma/migrations/20260830165000_add_product_image_library/migration.sql`
+- Migration da busca e correlatos: `prisma/migrations/20260903170000_add_product_search_fields/migration.sql`
 - Seed: `prisma/seed.ts`
 - Cliente Prisma: `src/lib/prisma.ts`
 - Prisma config: `prisma.config.ts`
@@ -62,6 +63,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - O admin de cupons usa o modelo `Coupon` existente; `durationDays` e calculado na API para preencher `startsAt` e `endsAt`, sem nova migration.
 - `Product.imageAssetId` referencia opcionalmente a imagem reutilizavel, enquanto `imageUrl` continua preservado para compatibilidade com produtos anteriores.
 - `Product.featuredPosition` indica uma das 15 posicoes exclusivas da vitrine `Melhores ofertas`; valor nulo mantem o produto fora da home.
+- `Product.activeIngredients` e `Product.searchTerms` sao listas controladas pelo catalogo administrativo. `Product.searchText` agrega os campos pesquisaveis em formato minusculo e sem acentos; o filtro por `status` continua apoiado pelo indice existente.
 
 ## Riscos ao Alterar
 

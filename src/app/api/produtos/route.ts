@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/features/auth/permissions";
 import { productCreateSchema } from "@/features/products/schema";
+import { buildProductSearchText } from "@/features/products/public-search";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
 
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const productSelect = {
+  activeIngredients: true,
   brand: true,
   category: true,
   createdAt: true,
@@ -22,6 +24,7 @@ const productSelect = {
   price: true,
   promotionalPrice: true,
   requiresPrescription: true,
+  searchTerms: true,
   sku: true,
   slug: true,
   status: true,
@@ -128,6 +131,7 @@ export async function POST(request: Request) {
       ean: normalizeOptional(parsed.data.ean),
       imageAssetId: imageAsset?.id,
       imageUrl: imageAsset?.url ?? normalizeOptional(parsed.data.imageUrl),
+      searchText: buildProductSearchText(parsed.data),
       sku: normalizeOptional(parsed.data.sku),
       slug,
     },
