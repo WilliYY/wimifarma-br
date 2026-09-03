@@ -57,6 +57,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Favicon e `src/app/icon.svg` usam SVG vetorial compacto do simbolo vermelho/branco da Wimifarma, sem imagem base64 embutida.
 - O topo do painel administrativo possui botao `Home` para voltar ao site publico, alem de WhatsApp e sair; o endpoint tecnico `/api/health` permanece disponivel sem aparecer como acao principal.
 - O dashboard administrativo separa metricas comerciais em uma grade compacta e deixa o status operacional em card proprio para evitar linhas vazias e melhorar leitura.
+- `Produtos / Catalogo` prioriza a lista em largura total, usa indicadores compactos, abre o cadastro em modal e oferece acoes diretas para editar ou destacar cada produto. A organizacao das 15 posicoes continua em `/admin/ofertas`.
 
 ## Regras de Design
 

@@ -6,7 +6,7 @@ export default function Page() {
   return (
     <AdminShell
       allowedRoles={adminRoutePermissions["/admin/catalogos"]}
-      title="Catalogos"
+      title="Produtos / Catálogo"
     >
       <ProductsCatalogPanel />
     </AdminShell>

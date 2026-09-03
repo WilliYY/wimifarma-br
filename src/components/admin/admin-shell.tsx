@@ -46,7 +46,7 @@ const adminNav = [
   {
     href: "/admin/catalogos",
     icon: Boxes,
-    label: "Catalogos",
+    label: "Produtos / Catálogo",
     roles: adminRoutePermissions["/admin/catalogos"],
   },
   {
@@ -146,7 +146,7 @@ export async function AdminShell({
           <ChartNoAxesCombined className="h-5 w-5 text-brand" />
           <p className="mt-3 text-sm font-bold text-ink">Permissoes por perfil</p>
           <p className="mt-1 text-xs leading-5 text-muted">
-            ADM controla tudo. Colaborador opera catalogos, ofertas e pedidos.
+            ADM controla tudo. Colaborador opera produtos, ofertas e pedidos.
           </p>
         </div>
       </aside>

@@ -20,7 +20,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { SHOWCASE_SLOT_COUNT } from "@/features/offers/showcase";
+import {
+  productIdsFromShowcase,
+  SHOWCASE_SLOT_COUNT,
+} from "@/features/offers/showcase";
 import { formatCurrency } from "@/lib/utils";
 
 type ShowcaseProduct = {
@@ -48,22 +51,6 @@ function errorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-function slotsFromProducts(products: ShowcaseProduct[]) {
-  const slots = emptySlots();
-
-  for (const product of products) {
-    if (
-      product.featuredPosition !== null &&
-      product.featuredPosition >= 1 &&
-      product.featuredPosition <= SHOWCASE_SLOT_COUNT
-    ) {
-      slots[product.featuredPosition - 1] = product.id;
-    }
-  }
-
-  return slots;
-}
-
 export function FeaturedProductsPanel() {
   const [products, setProducts] = useState<ShowcaseProduct[]>([]);
   const [slots, setSlots] = useState<Array<string | null>>(emptySlots);
@@ -85,7 +72,7 @@ export function FeaturedProductsPanel() {
       }
 
       const nextProducts = payload.data ?? [];
-      const nextSlots = slotsFromProducts(nextProducts);
+      const nextSlots = productIdsFromShowcase(nextProducts);
       setProducts(nextProducts);
       setSlots(nextSlots);
       setSavedSlots(nextSlots);

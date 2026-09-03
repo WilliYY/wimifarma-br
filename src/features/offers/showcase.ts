@@ -52,3 +52,27 @@ export function arrangeShowcaseProducts<T extends { featuredPosition: number | n
 
   return slots;
 }
+
+export function productIdsFromShowcase<
+  T extends { featuredPosition: number | null; id: string },
+>(products: T[]) {
+  return arrangeShowcaseProducts(products).map((product) => product?.id ?? null);
+}
+
+export function updateShowcaseProduct(
+  currentProductIds: Array<string | null>,
+  productId: string,
+  shouldFeature: boolean,
+) {
+  const nextProductIds = currentProductIds.map((selectedId) =>
+    selectedId === productId ? null : selectedId,
+  );
+
+  if (!shouldFeature) return nextProductIds;
+
+  const availablePosition = nextProductIds.findIndex((selectedId) => selectedId === null);
+  if (availablePosition === -1) return null;
+
+  nextProductIds[availablePosition] = productId;
+  return nextProductIds;
+}

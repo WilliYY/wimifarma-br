@@ -202,9 +202,9 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 
 ## 2026-09-03 - Produtos reais na vitrine Melhores ofertas
 
-- Decisao: usar `Product.featuredPosition` para selecionar e ordenar manualmente ate 15 produtos na home, administrados em `/admin/ofertas`.
+- Decisao: usar `Product.featuredPosition` para selecionar e ordenar manualmente ate 15 produtos na home. O catalogo oferece `Destacar` e `Remover destaque` para alteracao rapida, enquanto `/admin/ofertas` preserva o controle completo da ordem.
 - Motivo: impedir publicacao automatica de todo o catalogo e dar controle operacional sobre quais itens aparecem, sem duplicar nome, preco ou imagem em outro cadastro.
-- Impacto: schema/migration Prisma, painel e API de vitrine, consulta server-side da home, cards publicos, testes e documentacao.
+- Impacto: schema/migration Prisma, painel e API de vitrine, atalho em `Produtos / Catalogo`, consulta server-side da home, cards publicos, testes e documentacao.
 - Riscos/cuidados: somente produtos publicados e com foto podem ser escolhidos; posicoes sao exclusivas, o salvamento e atomico e a venda continua direcionada ao WhatsApp.
 
 ## 2026-09-03 - Busca publica com produtos e correlatos

@@ -9,14 +9,18 @@ import {
   useState,
 } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Archive,
   ImagePlus,
+  LayoutGrid,
   Loader2,
   PackagePlus,
   Pencil,
   Pill,
+  Plus,
   Search,
+  Star,
   UploadCloud,
   X,
 } from "lucide-react";
@@ -49,6 +53,10 @@ import {
   getProductCategories,
   type ProductCatalogSort,
 } from "@/features/products/catalog";
+import {
+  productIdsFromShowcase,
+  updateShowcaseProduct,
+} from "@/features/offers/showcase";
 import { parseProductTerms } from "@/features/products/public-search";
 import { cn, formatCurrency } from "@/lib/utils";
 
@@ -249,7 +257,9 @@ export function ProductsCatalogPanel() {
   const imagePickerRef = useRef<ProductImagePickerHandle>(null);
   const editImagePickerRef = useRef<ProductImagePickerHandle>(null);
   const [products, setProducts] = useState<ProductListItem[]>([]);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductListItem | null>(null);
+  const [featuredProductId, setFeaturedProductId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -307,6 +317,7 @@ export function ProductsCatalogPanel() {
       imagePickerRef.current?.reset();
       await loadProducts();
       await imagePickerRef.current?.refresh();
+      setIsCreateOpen(false);
       toast.success("Produto cadastrado com imagem otimizada em WebP.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel salvar o produto.");
@@ -373,35 +384,88 @@ export function ProductsCatalogPanel() {
     setSort("newest");
   }
 
+  async function toggleFeatured(product: ProductListItem) {
+    const shouldFeature = product.featuredPosition === null;
+
+    if (shouldFeature && (product.status !== "ACTIVE" || !product.imageUrl)) {
+      toast.error("Publique o produto e adicione uma foto antes de coloca-lo em destaque.");
+      return;
+    }
+
+    try {
+      setFeaturedProductId(product.id);
+      const showcaseResponse = await fetch("/api/ofertas/vitrine", { cache: "no-store" });
+      const showcasePayload = (await showcaseResponse.json()) as {
+        data?: Array<{ featuredPosition: number | null; id: string }>;
+        error?: unknown;
+      };
+
+      if (!showcaseResponse.ok) {
+        throw new Error(errorMessage(showcasePayload.error, "Nao foi possivel carregar a vitrine."));
+      }
+
+      const currentProductIds = productIdsFromShowcase(showcasePayload.data ?? []);
+      const nextProductIds = updateShowcaseProduct(
+        currentProductIds,
+        product.id,
+        shouldFeature,
+      );
+
+      if (!nextProductIds) {
+        throw new Error("As 15 posicoes estao ocupadas. Organize a vitrine para liberar um espaco.");
+      }
+
+      const updateResponse = await fetch("/api/ofertas/vitrine", {
+        body: JSON.stringify({ productIds: nextProductIds }),
+        headers: { "Content-Type": "application/json" },
+        method: "PUT",
+      });
+      const updatePayload = (await updateResponse.json()) as { error?: unknown };
+
+      if (!updateResponse.ok) {
+        throw new Error(errorMessage(updatePayload.error, "Nao foi possivel atualizar o destaque."));
+      }
+
+      await loadProducts();
+      toast.success(shouldFeature ? "Produto adicionado a Melhores ofertas." : "Produto removido dos destaques.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar o destaque.");
+    } finally {
+      setFeaturedProductId(null);
+    }
+  }
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-      <Card>
-        <CardHeader>
-          <div className="flex h-11 w-11 items-center justify-center rounded-md bg-brand-soft text-brand">
-            <PackagePlus className="h-5 w-5" />
+    <div className="grid gap-5">
+      <section className="flex flex-col gap-5 rounded-lg border border-line bg-white p-5 shadow-sm sm:p-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-brand-soft text-brand">
+            <Pill className="h-6 w-6" />
           </div>
-          <CardTitle>Novo produto</CardTitle>
-          <CardDescription>
-            Fotos em WebP, com ate 2000 px e compressao automatica para arquivos pesados.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="grid gap-4" onSubmit={handleSubmit}>
-            <ProductFormFields
-              categoryListId="new-product-categories"
-              categoryOptions={categoryOptions}
-              imagePickerRef={imagePickerRef}
-            />
-            <Button disabled={isSubmitting} type="submit">
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
-              Cadastrar produto
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase text-brand">Gestao de produtos</p>
+            <h2 className="mt-1 text-xl font-black text-ink sm:text-2xl">Produtos / Catálogo</h2>
+            <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-muted">
+              Cadastre, publique, organize e escolha os itens que aparecem em Melhores ofertas.
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button asChild variant="secondary">
+            <Link href="/admin/ofertas">
+              <LayoutGrid className="h-4 w-4" />
+              Organizar vitrine
+            </Link>
+          </Button>
+          <Button onClick={() => setIsCreateOpen(true)} type="button">
+            <Plus className="h-4 w-4" />
+            Novo produto
+          </Button>
+        </div>
+      </section>
 
       <div className="grid gap-5">
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Card className="border-brand/15">
             <CardContent className="p-4">
               <Pill className="h-5 w-5 text-brand" />
@@ -416,6 +480,13 @@ export function ProductsCatalogPanel() {
               <p className="text-3xl font-black text-ink">{activeProducts}</p>
             </CardContent>
           </Card>
+          <Card className="border-amber-200">
+            <CardContent className="p-4">
+              <Star className="h-5 w-5 text-amber-600" />
+              <p className="mt-3 text-sm font-bold text-muted">Em destaque</p>
+              <p className="text-3xl font-black text-ink">{products.filter((product) => product.featuredPosition !== null).length}</p>
+            </CardContent>
+          </Card>
           <Card className="border-line">
             <CardContent className="p-4">
               <Archive className="h-5 w-5 text-muted" />
@@ -425,9 +496,9 @@ export function ProductsCatalogPanel() {
           </Card>
         </div>
         <Card>
-          <CardHeader>
-            <CardTitle>Produtos cadastrados</CardTitle>
-            <CardDescription>Busque, classifique e edite cada item do catalogo.</CardDescription>
+          <CardHeader className="gap-1">
+            <CardTitle>Catalogo de produtos</CardTitle>
+            <CardDescription>Busque, classifique, edite ou destaque cada item.</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -519,10 +590,28 @@ export function ProductsCatalogPanel() {
                               {product.promotionalPrice ? <span className="line-through">{formatCurrency(Number(product.price))}</span> : null}
                             </div>
                           </div>
-                          <Button className="w-full sm:w-auto" onClick={() => setEditingProduct(product)} size="sm" type="button" variant="secondary">
-                            <Pencil className="h-4 w-4" />
-                            Editar
-                          </Button>
+                          <div className="grid w-full gap-2 sm:w-auto sm:min-w-40">
+                            <Button
+                              aria-label={product.featuredPosition ? `Remover ${product.name} dos destaques` : `Destacar ${product.name}`}
+                              disabled={featuredProductId !== null || (product.featuredPosition === null && (product.status !== "ACTIVE" || !product.imageUrl))}
+                              onClick={() => void toggleFeatured(product)}
+                              size="sm"
+                              title={product.featuredPosition === null && (product.status !== "ACTIVE" || !product.imageUrl) ? "Publique o produto e adicione uma foto para destacar" : undefined}
+                              type="button"
+                              variant={product.featuredPosition ? "default" : "secondary"}
+                            >
+                              {featuredProductId === product.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Star className={cn("h-4 w-4", product.featuredPosition && "fill-current")} />
+                              )}
+                              {product.featuredPosition ? "Remover destaque" : "Destacar"}
+                            </Button>
+                            <Button onClick={() => setEditingProduct(product)} size="sm" type="button" variant="secondary">
+                              <Pencil className="h-4 w-4" />
+                              Editar produto
+                            </Button>
+                          </div>
                         </div>
                       );
                     })}
@@ -533,6 +622,43 @@ export function ProductsCatalogPanel() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog
+        onOpenChange={(open) => {
+          if (!open && isSubmitting) return;
+          setIsCreateOpen(open);
+          if (!open) imagePickerRef.current?.reset();
+        }}
+        open={isCreateOpen}
+      >
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-md bg-brand-soft text-brand">
+              <PackagePlus className="h-5 w-5" />
+            </div>
+            <DialogTitle>Cadastrar produto</DialogTitle>
+            <DialogDescription>
+              A imagem sera otimizada em WebP com ate 2000 px antes de ser salva.
+            </DialogDescription>
+          </DialogHeader>
+          <form className="grid gap-4" onSubmit={handleSubmit}>
+            <ProductFormFields
+              categoryListId="new-product-categories"
+              categoryOptions={categoryOptions}
+              imagePickerRef={imagePickerRef}
+            />
+            <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
+              <Button disabled={isSubmitting} onClick={() => setIsCreateOpen(false)} type="button" variant="secondary">
+                Cancelar
+              </Button>
+              <Button disabled={isSubmitting} type="submit">
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                Cadastrar produto
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         onOpenChange={(open) => {
