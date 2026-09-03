@@ -14,6 +14,7 @@ const productSelect = {
   createdAt: true,
   description: true,
   ean: true,
+  featuredPosition: true,
   id: true,
   imageAssetId: true,
   imageUrl: true,
@@ -116,6 +117,7 @@ export async function PATCH(
           category: normalizeOptional(productData.category) ?? null,
           description: normalizeOptional(productData.description) ?? null,
           ean: normalizeOptional(productData.ean) ?? null,
+          featuredPosition: productData.status === "ACTIVE" ? undefined : null,
           imageAssetId: imageAsset
             ? imageAsset.id
             : normalizedImageUrl
@@ -145,6 +147,7 @@ export async function PATCH(
           entityId: savedProduct.id,
           metadata: {
             hasImage: Boolean(savedProduct.imageUrl),
+            featuredPosition: savedProduct.featuredPosition,
             name: savedProduct.name,
             status: savedProduct.status,
           },

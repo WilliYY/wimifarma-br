@@ -59,6 +59,7 @@ type ProductListItem = {
   createdAt: string;
   description: string | null;
   ean: string | null;
+  featuredPosition: number | null;
   id: string;
   imageAssetId: string | null;
   imageUrl: string | null;
@@ -470,6 +471,9 @@ export function ProductsCatalogPanel() {
                             <div className="flex flex-wrap items-center gap-2">
                               <h3 className="font-black text-ink">{product.name}</h3>
                               <span className={cn("rounded-md px-2.5 py-1 text-xs font-bold", status.className)}>{status.label}</span>
+                              {product.featuredPosition ? (
+                                <Badge>Vitrine {String(product.featuredPosition).padStart(2, "0")}</Badge>
+                              ) : null}
                               {product.isPopularPharmacy ? <Badge variant="muted">Farmacia Popular</Badge> : null}
                             </div>
                             <p className="mt-1 text-sm font-semibold text-muted">{[product.brand, product.category].filter(Boolean).join(" - ") || "Sem categoria"}</p>

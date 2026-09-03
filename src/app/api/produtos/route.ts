@@ -13,6 +13,7 @@ const productSelect = {
   createdAt: true,
   description: true,
   ean: true,
+  featuredPosition: true,
   id: true,
   imageAssetId: true,
   imageUrl: true,
@@ -140,6 +141,7 @@ export async function POST(request: Request) {
       entityId: product.id,
       metadata: {
         hasImage: Boolean(product.imageUrl),
+        featuredPosition: product.featuredPosition,
         name: product.name,
         slug: product.slug,
         status: product.status,

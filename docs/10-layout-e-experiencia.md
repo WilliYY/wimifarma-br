@@ -38,7 +38,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Banner principal atual e video da Wimifarma em uma vitrine responsiva com acabamento claro, chamada para WhatsApp, texto comercial sobre medicamentos e Farmacia Popular, poster de carregamento e controles integrados de pausar e som. Em telas a partir de `lg`, o banner usa proporcao fixa `8:3`, chegando a `1280 x 480 px` no limite de largura do site; no celular, a composicao volta a ter altura fluida para preservar o video vertical e os controles sem cortes.
 - Para futuras artes do banner principal, usar preferencialmente `1920 x 720 px` em WebP, com ate 350 KB e area segura central de 1600 x 560 px. Se a campanha precisar de uma arte propria no celular, preparar tambem `1080 x 1350 px` em WebP, com ate 250 KB; textos e botoes comerciais devem continuar em HTML sempre que possivel.
 - Home esta temporariamente focada em anuncio: o primeiro bloco de conteudo ja e a vitrine com video; entre o video e a faixa de campanhas aparece a vitrine `Melhores ofertas`, com cabecalho direto, CTA para WhatsApp, chips de campanha, leitura de desconto/economia e 15 espacos de produto em grade responsiva. O cabecalho nao exibe contadores de ofertas ativas ou vagas nem texto descritivo.
-- Categorias em bolinhas nao aparecem na home nesta fase; a vitrine de produtos atual e fixa em `src/components/site/home-page.tsx` ate existir catalogo alimentado pelo banco/admin.
+- Categorias em bolinhas nao aparecem na home nesta fase; os 15 lugares da vitrine sao alimentados pelo banco e ordenados manualmente em `/admin/ofertas`.
 - O link `Ofertas` nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.
 - Botao flutuante de WhatsApp fica no canto inferior direito, com tamanho reduzido no celular, e nao aparece nas telas de login ou Minha Conta para nao cobrir formularios.
@@ -77,8 +77,8 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 - Framer Motion usado para entradas suaves.
 - `lucide-react` usado para icones.
-- Produtos demonstrativos usam visuais CSS, nao fotos reais.
-- A vitrine `Melhores ofertas` usa visuais CSS enquanto nao houver fotos reais de produtos; editar os itens em `bestOfferItems` dentro de `src/components/site/home-page.tsx`. Os cards seguem padrao de e-commerce farmaceutico com selo, categoria, preco de/por, economia e disponibilidade local, mas os CTAs devem consultar via WhatsApp, sem sugerir checkout online.
+- Produtos selecionados usam a imagem WebP real do catalogo com `object-contain`; apenas as posicoes ainda vazias mantem o visual CSS reservado.
+- A vitrine `Melhores ofertas` segue padrao de e-commerce farmaceutico com selo, categoria, preco de/por, economia e disponibilidade local. A ordem vem de `Product.featuredPosition`, e os CTAs continuam consultando pelo WhatsApp, sem sugerir checkout online.
 - O cadastro de produtos oferece editor responsivo em modal para enquadramento quadrado, zoom e rotacao. No celular, a area de recorte preserva espaco para os controles e os botoes ocupam a largura disponivel.
 - Video fica em `public/videos/thiago-cansado.mp4`, roda em loop e usa `public/videos/thiago-poster.svg` para evitar tela escura antes do carregamento.
 - O video principal foi recomprimido de forma conservadora, mantendo resolucao e audio, para reduzir peso sem alterar a composicao visual.

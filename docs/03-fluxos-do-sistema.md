@@ -120,6 +120,9 @@ Arquivos:
 8. A tela cria o produto com status de rascunho, publicado ou arquivado; o slug e gerado automaticamente e a criacao registra auditoria.
 9. A lista permite buscar por nome, marca, SKU ou EAN, filtrar por categoria e status e classificar por data, nome, estoque ou preco.
 10. `Editar` abre um formulario individual preenchido com os dados atuais. A imagem existente e preservada quando nao for trocada; a atualizacao usa `updatedAt` para impedir que uma edicao antiga sobrescreva outra mais recente e registra auditoria.
+11. Em `/admin/ofertas`, o usuario escolhe quais produtos publicados e com foto ocupam as 15 posicoes de `Melhores ofertas`; a mesma selecao tambem define a ordem.
+12. O salvamento da vitrine e atomico, impede produto repetido e registra `PRODUCT_SHOWCASE_UPDATED`. Arquivar ou voltar um produto para rascunho remove sua posicao.
+13. A home consulta somente produtos publicados, com foto e `featuredPosition`, usando nome, categoria, descricao, precos e WebP reais. Posicoes sem selecao continuam como espacos de consulta pelo WhatsApp.
 
 Arquivos:
 
@@ -131,6 +134,9 @@ Arquivos:
 - `src/components/admin/product-image-editor.tsx`
 - `src/features/product-images/service.ts`
 - `src/features/products/schema.ts`
+- `src/components/admin/featured-products-panel.tsx`
+- `src/app/api/ofertas/vitrine/route.ts`
+- `src/features/offers/showcase.ts`
 
 ## Fluxo de APIs
 

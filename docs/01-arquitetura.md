@@ -65,6 +65,7 @@ Muitas rotas admin ainda sao placeholders.
 - `/api/minha-conta/register`
 - `/api/minha-conta/password`
 - `/api/ofertas`
+- `/api/ofertas/vitrine`
 - `/api/produtos`
 - `/api/produtos/[id]`
 - `/api/clientes`

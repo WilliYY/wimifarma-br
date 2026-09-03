@@ -17,6 +17,10 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
+import {
+  arrangeShowcaseProducts,
+  type PublicShowcaseProduct,
+} from "@/features/offers/showcase";
 import { siteConfig } from "@/lib/site";
 
 const easeOut = [0.16, 1, 0.3, 1] as const;
@@ -31,6 +35,7 @@ const entrance = {
 };
 
 type BestOfferItem = {
+  id: string;
   label: string;
   name: string;
   detail: string;
@@ -40,145 +45,77 @@ type BestOfferItem = {
   soft: string;
   category?: string;
   benefit?: string;
+  imageUrl?: string;
+  isReserved: boolean;
 };
 
-const bestOfferItems: BestOfferItem[] = [
-  {
-    label: "Leve 2 e pague menos",
-    name: "Niquitin Adesivo 21mg",
-    detail: "Com 7 adesivos",
-    oldPrice: "R$ 116,39",
-    price: "R$ 94,90",
-    accent: "#2563eb",
-    soft: "#dbeafe",
-    category: "Adesivo",
-    benefit: "Leve 2 e economize",
-  },
-  {
-    label: "Leve mais por menos",
-    name: "Hyabak Solucao Oftalmica",
-    detail: "Frasco 10ml",
-    oldPrice: "R$ 73,19",
-    price: "R$ 59,90",
-    accent: "#0891b2",
-    soft: "#cffafe",
-    category: "Olhos",
-    benefit: "Entrega local",
-  },
-  {
-    label: "Oferta da semana",
-    name: "Cimegripe",
-    detail: "20 capsulas",
-    oldPrice: "R$ 11,89",
-    price: "R$ 9,90",
-    accent: "#7c3aed",
-    soft: "#ede9fe",
-    category: "Gripe",
-    benefit: "Oferta da semana",
-  },
-  {
-    label: "51% OFF",
-    name: "Expec Tripla Acao",
-    detail: "Xarope 120ml",
-    oldPrice: "R$ 54,83",
-    price: "R$ 26,89",
-    accent: "#d97706",
-    soft: "#fef3c7",
-    category: "Xarope",
-    benefit: "51% de desconto",
-  },
-  {
-    label: "23% OFF",
-    name: "Muvinlax Limao",
-    detail: "20 saches 14g",
-    oldPrice: "R$ 68,71",
-    price: "R$ 52,71",
-    accent: "#16a34a",
-    soft: "#dcfce7",
-    category: "Bem-estar",
-    benefit: "Consulte estoque",
-  },
-  {
-    label: "Melhor oferta",
-    name: "Produto 06",
-    detail: "Espaco para cadastrar oferta",
-    price: "Consulte",
-    accent: "#e11d48",
-    soft: "#ffe4e6",
-  },
-  {
-    label: "Melhor oferta",
-    name: "Produto 07",
-    detail: "Espaco para cadastrar oferta",
-    price: "Consulte",
-    accent: "#0f766e",
-    soft: "#ccfbf1",
-  },
-  {
-    label: "Melhor oferta",
-    name: "Produto 08",
-    detail: "Espaco para cadastrar oferta",
-    price: "Consulte",
-    accent: "#4f46e5",
-    soft: "#e0e7ff",
-  },
-  {
-    label: "Melhor oferta",
-    name: "Produto 09",
-    detail: "Espaco para cadastrar oferta",
-    price: "Consulte",
-    accent: "#ca8a04",
-    soft: "#fef9c3",
-  },
-  {
-    label: "Melhor oferta",
-    name: "Produto 10",
-    detail: "Espaco para cadastrar oferta",
-    price: "Consulte",
-    accent: "#14b8a6",
-    soft: "#ccfbf1",
-  },
-  {
-    label: "Melhor oferta",
-    name: "Produto 11",
-    detail: "Espaco para cadastrar oferta",
-    price: "Consulte",
-    accent: "#2563eb",
-    soft: "#dbeafe",
-  },
-  {
-    label: "Melhor oferta",
-    name: "Produto 12",
-    detail: "Espaco para cadastrar oferta",
-    price: "Consulte",
-    accent: "#0891b2",
-    soft: "#cffafe",
-  },
-  {
-    label: "Melhor oferta",
-    name: "Produto 13",
-    detail: "Espaco para cadastrar oferta",
-    price: "Consulte",
-    accent: "#7c3aed",
-    soft: "#ede9fe",
-  },
-  {
-    label: "Melhor oferta",
-    name: "Produto 14",
-    detail: "Espaco para cadastrar oferta",
-    price: "Consulte",
-    accent: "#d97706",
-    soft: "#fef3c7",
-  },
-  {
-    label: "Melhor oferta",
-    name: "Produto 15",
-    detail: "Espaco para cadastrar oferta",
-    price: "Consulte",
-    accent: "#16a34a",
-    soft: "#dcfce7",
-  },
+const offerPalettes = [
+  { accent: "#2563eb", soft: "#dbeafe" },
+  { accent: "#0891b2", soft: "#cffafe" },
+  { accent: "#7c3aed", soft: "#ede9fe" },
+  { accent: "#d97706", soft: "#fef3c7" },
+  { accent: "#16a34a", soft: "#dcfce7" },
+  { accent: "#e11d48", soft: "#ffe4e6" },
+  { accent: "#0f766e", soft: "#ccfbf1" },
+  { accent: "#4f46e5", soft: "#e0e7ff" },
+  { accent: "#ca8a04", soft: "#fef9c3" },
+  { accent: "#14b8a6", soft: "#ccfbf1" },
 ];
+
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+  currency: "BRL",
+  style: "currency",
+});
+
+function formatProductPrice(value: string) {
+  return currencyFormatter.format(Number(value));
+}
+
+function buildBestOfferItems(products: PublicShowcaseProduct[]): BestOfferItem[] {
+  return arrangeShowcaseProducts(products).map((product, index) => {
+    const palette = offerPalettes[index % offerPalettes.length];
+
+    if (!product) {
+      return {
+        ...palette,
+        benefit: "Atendimento pelo WhatsApp",
+        category: "Farmacia",
+        detail: "Fale com a equipe para consultar outros itens.",
+        id: `reserved-${index + 1}`,
+        isReserved: true,
+        label: "Espaco disponivel",
+        name: "Consulte outros produtos",
+        price: "Consulte",
+      };
+    }
+
+    const regularPrice = Number(product.price);
+    const currentPrice = Number(product.promotionalPrice ?? product.price);
+    const hasPromotion = Boolean(
+      product.promotionalPrice && currentPrice < regularPrice,
+    );
+    const discount = hasPromotion
+      ? Math.round(((regularPrice - currentPrice) / regularPrice) * 100)
+      : null;
+
+    return {
+      ...palette,
+      benefit: hasPromotion ? "Preco promocional" : "Consulte disponibilidade",
+      category: product.category ?? "Farmacia",
+      detail:
+        product.description ??
+        product.brand ??
+        "Consulte disponibilidade com a equipe.",
+      id: product.id,
+      imageUrl: product.imageUrl,
+      isReserved: false,
+      label: discount ? `${discount}% OFF` : "Melhor oferta",
+      name: product.name,
+      oldPrice: hasPromotion ? formatProductPrice(product.price) : undefined,
+      price: formatProductPrice(product.promotionalPrice ?? product.price),
+    };
+  });
+}
 
 function buildOfferWhatsAppUrl(productName: string) {
   return `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent(
@@ -372,13 +309,14 @@ function HeroVideo() {
   );
 }
 
-function BestOfferCatalog() {
+function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
   const catalogChips = [
     "Ofertas da semana",
     "Leve mais por menos",
     "Farmacia Popular",
     "Retire ou entregue",
   ];
+  const bestOfferItems = buildBestOfferItems(products);
 
   return (
     <section className="pharma-clouds bg-white px-4 pb-12 pt-4 sm:px-6 lg:px-8">
@@ -428,14 +366,14 @@ function BestOfferCatalog() {
             {bestOfferItems.map((item, index) => {
               const discountLabel = getDiscountLabel(item);
               const savingLabel = getSavingLabel(item);
-              const isReserved = item.price === "Consulte";
+              const isReserved = item.isReserved;
               const category = item.category ?? "Espaco";
               const benefit = item.benefit ?? "Pronto para cadastrar";
 
               return (
                 <article
                   className="group relative flex min-h-[24.5rem] min-w-0 flex-col overflow-hidden rounded-lg border border-line/80 bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[var(--offer-accent)] hover:shadow-[0_26px_60px_rgba(17,24,39,0.15)]"
-                  key={`${item.name}-${index}`}
+                  key={item.id}
                   style={
                     {
                       "--offer-accent": item.accent,
@@ -453,17 +391,27 @@ function BestOfferCatalog() {
                     </span>
                   </div>
 
-                  <div className="m-3 mb-3 grid min-h-36 place-items-center overflow-hidden rounded-md bg-[linear-gradient(145deg,var(--offer-soft)_0%,#fff_70%)] ring-1 ring-[var(--offer-soft)]">
-                    <div className="relative flex aspect-[0.78] w-24 items-center justify-center rounded-[1rem_1rem_0.5rem_0.5rem] border-2 border-white bg-[linear-gradient(180deg,#fff_0_34%,var(--offer-soft)_34%_56%,var(--offer-accent)_56%_100%)] shadow-[0_20px_34px_rgba(17,24,39,0.18)] ring-1 ring-black/10 transition duration-300 group-hover:rotate-[-2deg] group-hover:scale-105">
-                      <span className="absolute top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[var(--offer-accent)] shadow-inner">
-                        <ShoppingBasket className="h-4 w-4" />
-                      </span>
-                      <strong className="absolute bottom-3 text-xs font-black uppercase tracking-[0.12em] text-white/90">
-                        {isReserved ? "novo" : "oferta"}
-                      </strong>
-                    </div>
+                  <div className="relative m-3 mb-3 grid min-h-36 place-items-center overflow-hidden rounded-md bg-[linear-gradient(145deg,var(--offer-soft)_0%,#fff_70%)] ring-1 ring-[var(--offer-soft)]">
+                    {item.imageUrl ? (
+                      <Image
+                        alt={item.name}
+                        className="object-contain p-3 transition duration-300 group-hover:scale-105"
+                        fill
+                        sizes="(min-width: 1280px) 230px, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
+                        src={item.imageUrl}
+                      />
+                    ) : (
+                      <div className="relative flex aspect-[0.78] w-24 items-center justify-center rounded-[1rem_1rem_0.5rem_0.5rem] border-2 border-white bg-[linear-gradient(180deg,#fff_0_34%,var(--offer-soft)_34%_56%,var(--offer-accent)_56%_100%)] shadow-[0_20px_34px_rgba(17,24,39,0.18)] ring-1 ring-black/10 transition duration-300 group-hover:rotate-[-2deg] group-hover:scale-105">
+                        <span className="absolute top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[var(--offer-accent)] shadow-inner">
+                          <ShoppingBasket className="h-4 w-4" />
+                        </span>
+                        <strong className="absolute bottom-3 text-xs font-black uppercase tracking-[0.12em] text-white/90">
+                          novo
+                        </strong>
+                      </div>
+                    )}
                     {discountLabel ? (
-                      <span className="absolute right-5 top-[5.3rem] rounded-full bg-white px-2.5 py-1 text-[0.68rem] font-black text-[var(--offer-accent)] shadow-[0_10px_22px_rgba(17,24,39,0.12)]">
+                      <span className="absolute right-3 top-3 rounded-full bg-white px-2.5 py-1 text-[0.68rem] font-black text-[var(--offer-accent)] shadow-[0_10px_22px_rgba(17,24,39,0.12)]">
                         {discountLabel}
                       </span>
                     ) : null}
@@ -491,9 +439,13 @@ function BestOfferCatalog() {
                           </span>
                         ) : null}
                       </div>
-                    ) : (
+                    ) : isReserved ? (
                       <span className="text-xs font-black uppercase tracking-[0.08em] text-slate-400">
                         espaco reservado
+                      </span>
+                    ) : (
+                      <span className="text-xs font-black uppercase tracking-[0.08em] text-slate-400">
+                        preco regular
                       </span>
                     )}
                     <div>
@@ -507,7 +459,7 @@ function BestOfferCatalog() {
                     <h3 className="min-h-10 text-sm font-black leading-5 text-ink">
                       {item.name}
                     </h3>
-                    <p className="min-h-8 text-xs font-semibold leading-4 text-muted">
+                    <p className="line-clamp-2 min-h-8 text-xs font-semibold leading-4 text-muted">
                       {item.detail}
                     </p>
                     <div className="grid gap-1.5 border-t border-line/70 pt-2">
@@ -529,7 +481,7 @@ function BestOfferCatalog() {
                     target="_blank"
                   >
                     <MessageCircle className="h-4 w-4" />
-                    {isReserved ? "Enviar produto" : "Consultar oferta"}
+                    {isReserved ? "Consultar produto" : "Consultar oferta"}
                   </a>
                 </article>
               );
@@ -541,7 +493,11 @@ function BestOfferCatalog() {
   );
 }
 
-export function HomePage() {
+export function HomePage({
+  featuredProducts,
+}: {
+  featuredProducts: PublicShowcaseProduct[];
+}) {
   return (
     <>
       <section className="pharma-clouds bg-white px-4 pb-8 pt-32 sm:px-6 sm:pt-36 lg:px-8 lg:pt-44">
@@ -552,7 +508,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <BestOfferCatalog />
+      <BestOfferCatalog products={featuredProducts} />
 
       <section className="pharma-clouds bg-white px-4 pb-20 pt-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">

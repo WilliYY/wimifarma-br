@@ -83,9 +83,9 @@
 
 ### Site publico usar dados do banco
 
-- Status: aberto.
-- Impacto: home esta temporariamente focada em anuncio e nao exibe cards estaticos; catalogo/ofertas ainda precisam vir do banco quando essa vitrine voltar.
-- Arquivos: `src/components/site/home-page.tsx`, `src/app/(site)/page.tsx`.
+- Status: concluido em 2026-09-03 para a vitrine `Melhores ofertas`.
+- Resolucao: `/admin/ofertas` controla ate 15 produtos publicados com foto; a home consulta essas posicoes no PostgreSQL e usa os dados e imagens reais do catalogo.
+- Arquivos: `src/components/admin/featured-products-panel.tsx`, `src/app/api/ofertas/vitrine/route.ts`, `src/components/site/home-page.tsx`, `src/app/(site)/page.tsx`.
 
 ### Auditoria de mutacoes
 

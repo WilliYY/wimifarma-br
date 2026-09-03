@@ -96,6 +96,7 @@ model Product {
   status               ProductStatus @default(DRAFT)
   stock                Int           @default(0)
   sortOrder            Int           @default(0)
+  featuredPosition     Int?          @unique
   offers               Offer[]
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
@@ -103,6 +104,7 @@ model Product {
   @@index([category])
   @@index([imageAssetId])
   @@index([status])
+  @@index([status, featuredPosition])
   @@index([isPopularPharmacy])
 }
 

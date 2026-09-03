@@ -61,6 +61,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - `SiteVisit.sessionId` e unico para contar visitantes sem criar dados pessoais diretos; IP, quando disponivel, e salvo apenas como hash usando `VISIT_HASH_SALT` ou `AUTH_SECRET`.
 - O admin de cupons usa o modelo `Coupon` existente; `durationDays` e calculado na API para preencher `startsAt` e `endsAt`, sem nova migration.
 - `Product.imageAssetId` referencia opcionalmente a imagem reutilizavel, enquanto `imageUrl` continua preservado para compatibilidade com produtos anteriores.
+- `Product.featuredPosition` indica uma das 15 posicoes exclusivas da vitrine `Melhores ofertas`; valor nulo mantem o produto fora da home.
 
 ## Riscos ao Alterar
 
