@@ -153,12 +153,12 @@ export async function AdminShell({
 
       <div className="lg:pl-72">
         <header className="sticky top-0 z-30 border-b border-line bg-white/92 backdrop-blur">
-          <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-muted">
+          <div className="flex min-h-16 flex-col items-stretch gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase text-muted">
                 Painel reservado · {role}
               </p>
-              <h1 className="text-lg font-black text-ink">{title}</h1>
+              <h1 className="text-base font-black text-ink sm:text-lg">{title}</h1>
             </div>
             <div className="flex items-center gap-2">
               <Button asChild size="sm" variant="secondary">
