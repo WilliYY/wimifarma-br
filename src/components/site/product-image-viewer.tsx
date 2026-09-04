@@ -24,7 +24,7 @@ export function ProductImageViewer({ imageUrl, name }: { imageUrl: string | null
   return (
     <Dialog>
       <div className="grid gap-3 sm:grid-cols-[5rem_minmax(0,1fr)]">
-        <div className="order-2 sm:order-1">
+        <div className="order-2 hidden sm:order-1 sm:block">
           <div className="flex aspect-square items-center justify-center border-2 border-brand bg-white p-2">
             <Image alt="" className="h-full w-full object-contain" height={96} src={imageUrl} unoptimized width={96} />
           </div>
