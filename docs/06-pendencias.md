@@ -99,6 +99,13 @@
 - Impacto: o cofre salva segredos cifrados, mas ainda falta politica formal de rotacao, backup, exportacao segura e troca de `SECRET_VAULT_KEY`.
 - Arquivos: `src/lib/secret-vault.ts`, `src/app/api/admin/api-senhas/*`, `docs/09-deploy-e-ambiente.md`.
 
+### Ativar sugestoes de catalogo com Gemini
+
+- Status: aguardando configuracao externa.
+- Impacto: a interface, a rota protegida, a pesquisa fundamentada e os testes estao prontos, mas `GEMINI_API_KEY` ainda esta ausente no VPS. Sem a chave, o botao informa que a IA nao foi configurada e nenhum dado e enviado.
+- Caminho sugerido: criar uma chave restrita no Google AI Studio, salvar somente no `.env` do servidor e testar com um produto generico e um medicamento de marca comparando o resultado com a bula da Anvisa.
+- Arquivos: `.env.example`, `src/app/api/produtos/sugestoes/route.ts`, `src/features/products/ai-suggestions.ts`, `docs/09-deploy-e-ambiente.md`.
+
 ### Roleta real
 
 - Status: aberto.

@@ -68,6 +68,7 @@ Muitas rotas admin ainda sao placeholders.
 - `/api/ofertas/vitrine`
 - `/api/produtos`
 - `/api/produtos/[id]`
+- `/api/produtos/sugestoes`
 - `/api/clientes`
 - `/api/cupons`
 - `/api/roleta`
@@ -96,6 +97,7 @@ As APIs de negocio usam `requireAdminApi`. O cofre `API e Senhas` usa `requireAd
 - Banco fica atras do app e nao exposto publicamente.
 - App Docker usa `output: standalone` do Next.
 - A IA de imagens recebe somente upload pela rede Docker interna; nao publica porta no host nem aceita URLs remotas ou escolha de modelo pelo cliente.
+- A sugestao de dados de produto usa Gemini somente no servidor, faz uma pesquisa fundamentada antes da estruturacao, valida a resposta com Zod e nunca envia preco, estoque, imagem ou dados de cliente ao provedor.
 
 ## Riscos ao Alterar
 

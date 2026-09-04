@@ -220,3 +220,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: manter os cards em tamanho legivel sem alongar a home e permitir que o cliente percorra duas sequencias de cinco ofertas.
 - Impacto: contrato e testes da vitrine, consulta server-side da home, painel administrativo de destaques, cards publicos e documentacao.
 - Riscos/cuidados: posicoes antigas acima de 10 sao ignoradas e deixam de contar como destaque; ao salvar a organizacao da vitrine, a API limpa qualquer posicao antiga antes de gravar a selecao atual.
+
+## 2026-09-04 - Sugestoes fundamentadas para cadastro de produtos
+
+- Decisao: adicionar um assistente opcional de catalogo usando Gemini em duas etapas: pesquisa com Google Search e estruturacao validada por Zod. O resultado inclui confianca, alertas e fontes; somente alta confianca preenche automaticamente campos vazios.
+- Motivo: reduzir trabalho manual em categoria, descricao, principios ativos e termos de busca sem transformar a resposta do modelo em verdade automatica.
+- Impacto: formulario de produtos, nova API administrativa, contrato e testes em `src/features/products/ai-suggestions.ts`, rate limit, ambiente e documentacao.
+- Riscos/cuidados: produto ambiguo, apresentacao incompleta ou fonte ausente exige revisao da embalagem ou bula; a IA nao define receita, Farmacia Popular, dose, posologia, substituicao, preco ou estoque. O recurso permanece inativo enquanto `GEMINI_API_KEY` nao estiver configurada no VPS.

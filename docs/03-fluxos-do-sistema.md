@@ -112,31 +112,35 @@ Arquivos:
 
 1. Administrador ou gerente acessa `Produtos / Catalogo` em `/admin/catalogos`; a lista e os filtros aparecem primeiro, e `Novo produto` abre o formulario em uma janela dedicada.
 2. Preenche os dados do produto e escolhe entre enviar uma nova foto ou reutilizar uma imagem da biblioteca.
-3. Antes de salvar, pode abrir `Ajustar foto` para recortar, reposicionar, ampliar ou girar. O ajuste gera no navegador uma copia quadrada em WebP, de ate 1600 x 1600 px e com fundo branco; imagens pequenas nao sao ampliadas e a original nao e alterada.
-4. Uma nova foto aceita JPG, PNG, WebP ou AVIF de ate 10 MB. A remocao de fundo e opcional e usa primeiro o servico local U-2-Net; `REMOVE_BG_API_KEY` permanece apenas como alternativa externa quando a URL local nao estiver configurada.
-5. Quando a IA remove o fundo, a API aplica fundo branco antes de gerar o WebP final. Em todos os uploads, valida o arquivo, corrige a orientacao, limita a 2000 px sem ampliar imagem pequena e aplica compressao progressiva quando o resultado ultrapassa aproximadamente 1,2 MB.
-6. O arquivo final fica em `/public/uploads/products`, preservado no volume `wimifarma-br-uploads`, e seus metadados ficam em `ProductImage` no PostgreSQL. Como o upload ja sai dimensionado, comprimido e convertido para WebP, as miniaturas administrativas usam a URL persistida diretamente, sem uma segunda otimizacao pelo Next.js.
-7. A biblioteca permite buscar, selecionar e excluir imagens sem uso. `Ajustar uma copia` preserva a imagem existente e cria um novo upload, evitando alterar produtos ja associados. Imagens em uso ficam protegidas contra exclusao.
-8. A tela cria o produto com status de rascunho, publicado ou arquivado; o slug e gerado automaticamente e a criacao registra auditoria.
-9. A lista permite buscar por nome, marca, SKU ou EAN, filtrar por categoria e status e classificar por data, nome, estoque ou preco.
-10. `Editar` abre um formulario individual preenchido com os dados atuais. A imagem existente e preservada quando nao for trocada; a atualizacao usa `updatedAt` para impedir que uma edicao antiga sobrescreva outra mais recente e registra auditoria.
-11. Na propria lista de produtos, `Destacar` coloca um item publicado e com foto na primeira posicao livre de `Melhores ofertas`, e `Remover destaque` o retira. Em `/admin/ofertas`, o usuario continua escolhendo e reorganizando manualmente as 10 posicoes.
-12. O salvamento da vitrine e atomico, impede produto repetido e registra `PRODUCT_SHOWCASE_UPDATED`. Arquivar ou voltar um produto para rascunho remove sua posicao.
-13. A home consulta somente produtos publicados, com foto e `featuredPosition`, usando nome, categoria, descricao, precos e WebP reais. Posicoes sem selecao continuam como espacos de consulta pelo WhatsApp.
-14. O cadastro e a edicao permitem informar principios ativos e termos de busca/indicacao separados por virgula; a API normaliza esses dados no `searchText` sem alterar a grafia exibida.
-15. Enquanto o cliente digita pelo menos dois caracteres, `/api/produtos/busca` retorna produtos publicados com foto, preco e principios ativos, alem de correlatos do primeiro resultado.
-16. Enter, setas ou clique abrem `/produto/[slug]`; a pagina apresenta os dados e correlatos, mas deixa claro que correlacao nao significa substituicao e envia a confirmacao final ao WhatsApp.
+3. Opcionalmente, `Sugerir dados` envia somente nome, marca, EAN e categorias existentes para `/api/produtos/sugestoes`. O Gemini pesquisa fontes publicas, prioriza Anvisa e fabricante e devolve categoria, descricao, principios ativos, termos, confianca, alertas e links das fontes.
+4. Sugestoes de alta confianca preenchem apenas campos vazios. Resultado medio ou baixo exige aplicacao manual; todos os campos continuam editaveis e devem ser comparados com embalagem ou bula antes de salvar.
+5. Antes de salvar, pode abrir `Ajustar foto` para recortar, reposicionar, ampliar ou girar. O ajuste gera no navegador uma copia quadrada em WebP, de ate 1600 x 1600 px e com fundo branco; imagens pequenas nao sao ampliadas e a original nao e alterada.
+6. Uma nova foto aceita JPG, PNG, WebP ou AVIF de ate 10 MB. A remocao de fundo e opcional e usa primeiro o servico local U-2-Net; `REMOVE_BG_API_KEY` permanece apenas como alternativa externa quando a URL local nao estiver configurada.
+7. Quando a IA remove o fundo, a API aplica fundo branco antes de gerar o WebP final. Em todos os uploads, valida o arquivo, corrige a orientacao, limita a 2000 px sem ampliar imagem pequena e aplica compressao progressiva quando o resultado ultrapassa aproximadamente 1,2 MB.
+8. O arquivo final fica em `/public/uploads/products`, preservado no volume `wimifarma-br-uploads`, e seus metadados ficam em `ProductImage` no PostgreSQL. Como o upload ja sai dimensionado, comprimido e convertido para WebP, as miniaturas administrativas usam a URL persistida diretamente, sem uma segunda otimizacao pelo Next.js.
+9. A biblioteca permite buscar, selecionar e excluir imagens sem uso. `Ajustar uma copia` preserva a imagem existente e cria um novo upload, evitando alterar produtos ja associados. Imagens em uso ficam protegidas contra exclusao.
+10. A tela cria o produto com status de rascunho, publicado ou arquivado; o slug e gerado automaticamente e a criacao registra auditoria.
+11. A lista permite buscar por nome, marca, SKU ou EAN, filtrar por categoria e status e classificar por data, nome, estoque ou preco.
+12. `Editar` abre um formulario individual preenchido com os dados atuais. A imagem existente e preservada quando nao for trocada; a atualizacao usa `updatedAt` para impedir que uma edicao antiga sobrescreva outra mais recente e registra auditoria.
+13. Na propria lista de produtos, `Destacar` coloca um item publicado e com foto na primeira posicao livre de `Melhores ofertas`, e `Remover destaque` o retira. Em `/admin/ofertas`, o usuario continua escolhendo e reorganizando manualmente as 10 posicoes.
+14. O salvamento da vitrine e atomico, impede produto repetido e registra `PRODUCT_SHOWCASE_UPDATED`. Arquivar ou voltar um produto para rascunho remove sua posicao.
+15. A home consulta somente produtos publicados, com foto e `featuredPosition`, usando nome, categoria, descricao, precos e WebP reais. Posicoes sem selecao continuam como espacos de consulta pelo WhatsApp.
+16. O cadastro e a edicao permitem informar principios ativos e termos de busca/indicacao separados por virgula; a API normaliza esses dados no `searchText` sem alterar a grafia exibida.
+17. Enquanto o cliente digita pelo menos dois caracteres, `/api/produtos/busca` retorna produtos publicados com foto, preco e principios ativos, alem de correlatos do primeiro resultado.
+18. Enter, setas ou clique abrem `/produto/[slug]`; a pagina apresenta os dados e correlatos, mas deixa claro que correlacao nao significa substituicao e envia a confirmacao final ao WhatsApp.
 
 Arquivos:
 
 - `src/components/admin/products-catalog-panel.tsx`
 - `src/app/api/produtos/route.ts`
 - `src/app/api/produtos/[id]/route.ts`
+- `src/app/api/produtos/sugestoes/route.ts`
 - `src/app/api/admin/uploads/produtos/route.ts`
 - `src/app/api/admin/imagens-produtos/*`
 - `src/components/admin/product-image-editor.tsx`
 - `src/features/product-images/service.ts`
 - `src/features/products/schema.ts`
+- `src/features/products/ai-suggestions.ts`
 - `src/components/admin/featured-products-panel.tsx`
 - `src/app/api/ofertas/vitrine/route.ts`
 - `src/features/offers/showcase.ts`

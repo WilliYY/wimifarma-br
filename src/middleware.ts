@@ -26,6 +26,7 @@ const rateLimitRules: RateLimitRule[] = [
     windowMs: 15 * 60 * 1000,
   },
   { limit: 20, pathname: /^\/api\/miauby$/, windowMs: 60 * 1000 },
+  { limit: 8, pathname: /^\/api\/produtos\/sugestoes$/, windowMs: 60 * 1000 },
   { limit: 120, pathname: /^\/api\/visitas$/, windowMs: 60 * 1000 },
   { limit: 90, pathname: /^\/api\//, windowMs: 60 * 1000 },
 ];

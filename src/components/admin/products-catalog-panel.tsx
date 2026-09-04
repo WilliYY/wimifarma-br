@@ -12,6 +12,8 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Archive,
+  CheckCircle2,
+  ExternalLink,
   ImagePlus,
   LayoutGrid,
   Loader2,
@@ -20,6 +22,7 @@ import {
   Pill,
   Plus,
   Search,
+  Sparkles,
   Star,
   UploadCloud,
   X,
@@ -59,6 +62,10 @@ import {
   SHOWCASE_SLOT_COUNT,
   updateShowcaseProduct,
 } from "@/features/offers/showcase";
+import type {
+  ProductSuggestion,
+  ProductSuggestionSource,
+} from "@/features/products/ai-suggestions";
 import { parseProductTerms } from "@/features/products/public-search";
 import { cn, formatCurrency } from "@/lib/utils";
 
@@ -155,12 +162,166 @@ function ProductFormFields({
   imagePickerRef: RefObject<ProductImagePickerHandle | null>;
   product?: ProductListItem;
 }) {
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [suggestion, setSuggestion] = useState<
+    (ProductSuggestion & { sources: ProductSuggestionSource[] }) | null
+  >(null);
+
+  function formValue(name: string) {
+    const form = nameInputRef.current?.form;
+    const field = form?.elements.namedItem(name);
+    return field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement
+      ? field.value.trim()
+      : "";
+  }
+
+  function applySuggestion(
+    data: ProductSuggestion,
+    { overwrite }: { overwrite: boolean },
+  ) {
+    const form = nameInputRef.current?.form;
+    if (!form) return 0;
+
+    const values = {
+      activeIngredients: data.activeIngredients.join(", "),
+      category: data.category ?? "",
+      description: data.description ?? "",
+      searchTerms: data.searchTerms.join(", "),
+    };
+    let appliedFields = 0;
+
+    for (const [name, value] of Object.entries(values)) {
+      const field = form.elements.namedItem(name);
+      if (!value || !(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement)) {
+        continue;
+      }
+      if (!overwrite && field.value.trim()) continue;
+
+      field.value = value;
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+      appliedFields += 1;
+    }
+
+    return appliedFields;
+  }
+
+  async function requestSuggestions() {
+    const name = formValue("name");
+    if (name.length < 3) {
+      toast.error("Informe pelo menos 3 caracteres do nome do produto.");
+      nameInputRef.current?.focus();
+      return;
+    }
+
+    try {
+      setIsSuggesting(true);
+      setSuggestion(null);
+      const response = await fetch("/api/produtos/sugestoes", {
+        body: JSON.stringify({
+          brand: formValue("brand"),
+          ean: formValue("ean"),
+          knownCategories: categoryOptions.slice(0, 40),
+          name,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+      const payload = (await response.json()) as {
+        data?: ProductSuggestion & { sources: ProductSuggestionSource[] };
+        error?: unknown;
+      };
+
+      if (!response.ok || !payload.data) {
+        throw new Error(errorMessage(payload.error, "Nao foi possivel pesquisar este produto."));
+      }
+
+      setSuggestion(payload.data);
+      if (payload.data.confidence === "high") {
+        const appliedFields = applySuggestion(payload.data, { overwrite: false });
+        toast.success(
+          appliedFields > 0
+            ? "Dados confirmados foram preenchidos nos campos vazios."
+            : "Sugestao pronta para revisao.",
+        );
+      } else {
+        toast.warning("A identificacao precisa de revisao antes de preencher os campos.");
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel pesquisar este produto.");
+    } finally {
+      setIsSuggesting(false);
+    }
+  }
+
+  const confidenceInfo = suggestion
+    ? {
+        high: { className: "bg-emerald-50 text-emerald-700", label: "Alta confianca" },
+        low: { className: "bg-rose-50 text-rose-700", label: "Baixa confianca" },
+        medium: { className: "bg-amber-50 text-amber-700", label: "Revisar" },
+      }[suggestion.confidence]
+    : null;
+
   return (
     <>
       <label className="grid gap-2 text-sm font-semibold text-ink">
         Nome do produto
-        <Input defaultValue={product?.name} maxLength={160} name="name" placeholder="Ex.: Dipirona 500 mg" required />
+        <Input defaultValue={product?.name} maxLength={160} name="name" placeholder="Ex.: Dipirona 500 mg" ref={nameInputRef} required />
       </label>
+      <div className="overflow-hidden rounded-md border border-brand/20 bg-surface-subtle">
+        <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-brand/10 text-brand">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-black text-ink">Assistente de cadastro</p>
+              <p className="text-xs font-medium leading-5 text-muted">Pesquisa fontes publicas e preserva seus campos preenchidos.</p>
+            </div>
+          </div>
+          <Button disabled={isSuggesting} onClick={() => void requestSuggestions()} size="sm" type="button" variant="secondary">
+            {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {isSuggesting ? "Pesquisando" : "Sugerir dados"}
+          </Button>
+        </div>
+
+        {suggestion && confidenceInfo ? (
+          <div className="grid gap-3 border-t border-line bg-white p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className={cn("rounded-md px-2.5 py-1 text-xs font-black", confidenceInfo.className)}>
+                {confidenceInfo.label}
+              </span>
+              <Button onClick={() => {
+                const appliedFields = applySuggestion(suggestion, { overwrite: true });
+                toast.success(appliedFields > 0 ? "Sugestoes aplicadas. Revise antes de salvar." : "Nao ha dados confirmados para aplicar.");
+              }} size="sm" type="button" variant="secondary">
+                <CheckCircle2 className="h-4 w-4" />
+                Aplicar sugestoes
+              </Button>
+            </div>
+            <div className="grid gap-2 text-xs leading-5 text-muted sm:grid-cols-2">
+              <p><strong className="text-ink">Categoria:</strong> {suggestion.category ?? "Nao confirmada"}</p>
+              <p><strong className="text-ink">Principios:</strong> {suggestion.activeIngredients.join(", ") || "Nao confirmados"}</p>
+              <p className="sm:col-span-2"><strong className="text-ink">Termos:</strong> {suggestion.searchTerms.join(", ") || "Nenhum termo confirmado"}</p>
+              {suggestion.description ? <p className="sm:col-span-2"><strong className="text-ink">Descricao:</strong> {suggestion.description}</p> : null}
+            </div>
+            {suggestion.warnings.length > 0 ? (
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-5 text-amber-900">
+                {suggestion.warnings.join(" ")}
+              </div>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-muted">
+              <span>Fontes:</span>
+              {suggestion.sources.length > 0 ? suggestion.sources.map((source) => (
+                <a className="inline-flex max-w-56 items-center gap-1 text-brand hover:underline" href={source.url} key={source.url} rel="noreferrer" target="_blank">
+                  <span className="truncate">{source.title}</span>
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                </a>
+              )) : <span>Nenhuma fonte retornada</span>}
+            </div>
+          </div>
+        ) : null}
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-2 text-sm font-semibold text-ink">
           Marca

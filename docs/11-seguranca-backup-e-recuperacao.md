@@ -11,6 +11,7 @@ Registrar as protecoes ja aplicadas, o procedimento de backup e os controles que
 - `src/middleware.ts` rejeita mutacoes cross-site fora do Auth.js e aplica limites por IP nas APIs.
 - As rotas administrativas e APIs reservadas validam sessao e role no servidor.
 - As entradas das APIs usam Zod e as consultas usam Prisma, sem SQL concatenado.
+- A sugestao de catalogo exige sessao `ADMIN` ou `MANAGER`, limita chamadas por IP, trata nome/categoria como dados nao confiaveis, valida a resposta do Gemini e nao envia dados de clientes, preco, estoque ou imagens ao provedor.
 - Cookies do Auth.js usam as protecoes seguras do framework em producao.
 - O site envia CSP, HSTS em producao, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` e `Permissions-Policy`.
 
