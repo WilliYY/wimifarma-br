@@ -131,3 +131,10 @@ Adicionar novos docs especificos quando surgirem modulos maiores: integracoes, a
 - `src/features/products/public-search.ts` concentra normalizacao, ordenacao de resultados e pontuacao dos correlatos.
 - O autocomplete fica em `src/components/site/site-search.tsx`; o Enter abre `/produto/[slug]`, onde a disponibilidade continua sendo confirmada pelo WhatsApp.
 - A busca movel abre em dialogo de tela cheia para preservar espaco no header e manter teclado, foco e resultados visiveis.
+
+## Pagina de Produto e Avaliacoes
+
+- `/produto/[slug]` e server-rendered e consulta produto publicado, correlatos, resumo de notas e as oito avaliacoes publicadas mais recentes.
+- Componentes client isolam zoom da imagem, quantidade/carrinho, simulacao local de CEP e formulario de avaliacao; precos, estoque e elegibilidade continuam validados no servidor.
+- `POST /api/produtos/[id]/avaliacoes` usa a sessao Auth.js e a relacao `ProductReview -> Customer + Order + Product` para provar compra concluida.
+- O redirecionamento de cliente apos login passa por `getSafeCustomerCallbackUrl`, que aceita somente destino local fora de `/admin`, `/api` e `/login`.

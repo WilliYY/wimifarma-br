@@ -64,6 +64,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - `Product.imageAssetId` referencia opcionalmente a imagem reutilizavel, enquanto `imageUrl` continua preservado para compatibilidade com produtos anteriores.
 - `Product.featuredPosition` indica uma das 10 posicoes exclusivas da vitrine `Melhores ofertas`; valor nulo mantem o produto fora da home.
 - `Product.activeIngredients` e `Product.searchTerms` sao listas controladas pelo catalogo administrativo. `Product.searchText` agrega os campos pesquisaveis em formato minusculo e sem acentos; o filtro por `status` continua apoiado pelo indice existente.
+- `ProductReview` liga produto, cliente e pedido concluido. A combinacao `productId + customerId` e unica, a nota fica limitada de 1 a 5 pelo schema e pela constraint SQL, e somente registros `isPublished` entram na pagina publica.
 
 ## Riscos ao Alterar
 

@@ -72,7 +72,7 @@ function Field({
   );
 }
 
-export function CustomerAuthPage() {
+export function CustomerAuthPage({ callbackUrl = "/minha-conta" }: { callbackUrl?: string }) {
   const router = useRouter();
   const [isEntering, setIsEntering] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -85,7 +85,7 @@ export function CustomerAuthPage() {
       return;
     }
 
-    await signIn("google", { callbackUrl: "/minha-conta" });
+    await signIn("google", { callbackUrl });
   }
 
   async function handleLoginSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -115,7 +115,7 @@ export function CustomerAuthPage() {
       );
 
       toast.success(isAdmin ? "Acesso administrativo liberado." : "Bem-vindo.");
-      router.push(isAdmin ? "/admin/dashboard" : "/minha-conta");
+      router.push(isAdmin ? "/admin/dashboard" : callbackUrl);
       router.refresh();
       return;
     }
@@ -161,7 +161,7 @@ export function CustomerAuthPage() {
     });
 
     if (!result?.error) {
-      router.push("/minha-conta");
+      router.push(callbackUrl);
       router.refresh();
       return;
     }

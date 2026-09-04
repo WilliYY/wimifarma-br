@@ -84,6 +84,9 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - O cadastro de produtos oferece editor responsivo em modal para enquadramento quadrado, zoom e rotacao. No celular, a area de recorte preserva espaco para os controles e os botoes ocupam a largura disponivel.
 - Video fica em `public/videos/thiago-cansado.mp4`, roda em loop e usa `public/videos/thiago-poster.svg` para evitar tela escura antes do carregamento.
 - O video principal foi recomprimido de forma conservadora, mantendo resolucao e audio, para reduzir peso sem alterar a composicao visual.
+- A pagina individual usa composicao de e-commerce farmaceutico: breadcrumb, foto ampliavel sem fabricar miniaturas, informacoes comerciais, seletor de quantidade, entrega/retirada, detalhes em secoes expansivas, avaliacoes verificadas e produtos relacionados.
+- No mobile, compra e frete ficam em uma coluna, controles mantem alvos de toque amplos e os relacionados usam rolagem horizontal com snap. No desktop, imagem e painel comercial dividem a primeira dobra sem cards aninhados.
+- Estrelas so representam avaliacoes reais. Quando ainda nao ha avaliacao, o estado vazio informa isso claramente em vez de exibir uma nota demonstrativa.
 
 ## Riscos ao Alterar
 

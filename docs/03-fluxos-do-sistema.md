@@ -172,6 +172,28 @@ Arquivos:
 - `src/components/site/site-search.tsx`
 - `src/app/(site)/produto/[slug]/page.tsx`
 
+## Fluxo da Pagina de Produto e Avaliacoes
+
+1. O cliente abre `/produto/[slug]` a partir da busca, da vitrine ou dos produtos relacionados.
+2. A pagina carrega somente produto `ACTIVE` e exibe foto real ampliavel, marca, nome, precos, economia, estoque, descricao, principios ativos, SKU/EAN quando cadastrados e correlatos.
+3. Produtos comuns podem receber quantidade e seguir para o carrinho. Produto com receita, Farmacia Popular ou sem estoque continua no atendimento por WhatsApp.
+4. O simulador de entrega normaliza o CEP localmente. CEP de Ivate entre `87525-000` e `87527-999` informa entrega gratis; outros CEPs orientam consulta pelo WhatsApp. Retirada permanece gratis, e prazo/estoque dependem de confirmacao da equipe.
+5. A pagina nao inventa galeria, avaliacao, frete ou disponibilidade. Sem dados reais, apresenta o estado correspondente de forma explicita.
+6. `POST /api/produtos/[id]/avaliacoes` exige sessao `CUSTOMER`, produto publicado e um pedido `COMPLETED` do proprio cliente contendo o produto.
+7. Cada cliente mantem uma avaliacao por produto. Novo envio atualiza nota e comentario; o nome publico e abreviado e o pedido nao e exposto.
+8. O link de login usa retorno local validado para levar o cliente de volta a secao de avaliacoes sem aceitar redirecionamento externo ou caminho administrativo.
+
+Arquivos principais:
+
+- `src/app/(site)/produto/[slug]/page.tsx`
+- `src/components/site/product-image-viewer.tsx`
+- `src/components/site/product-purchase-panel.tsx`
+- `src/components/site/delivery-estimator.tsx`
+- `src/components/site/product-review-form.tsx`
+- `src/app/api/produtos/[id]/avaliacoes/route.ts`
+- `src/features/products/product-detail.ts`
+- `src/features/auth/customer-redirect.ts`
+
 ## Fluxo de APIs
 
 1. Cliente chama endpoint em `src/app/api`.

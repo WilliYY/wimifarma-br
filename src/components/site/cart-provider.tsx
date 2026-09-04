@@ -31,7 +31,7 @@ type CartContextValue = {
   items: CartItem[];
   itemCount: number;
   subtotalCents: number;
-  addProduct: (product: CartProduct) => void;
+  addProduct: (product: CartProduct, quantity?: number) => void;
   clearCart: () => void;
   removeProduct: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -63,7 +63,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [hydrated, items]);
 
-  const addProduct = useCallback((product: CartProduct) => {
+  const addProduct = useCallback((product: CartProduct, quantity = 1) => {
     if (
       product.stock < 1 ||
       product.requiresPrescription ||
@@ -72,12 +72,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    const safeQuantity = Math.min(Math.max(Math.trunc(quantity), 1), product.stock, 20);
+
     setItems((current) => {
       const existing = current.find((item) => item.id === product.id);
-      if (!existing) return [...current, { ...product, quantity: 1 }];
+      if (!existing) return [...current, { ...product, quantity: safeQuantity }];
       return current.map((item) =>
         item.id === product.id
-          ? { ...item, ...product, quantity: Math.min(item.quantity + 1, product.stock, 20) }
+          ? {
+              ...item,
+              ...product,
+              quantity: Math.min(item.quantity + safeQuantity, product.stock, 20),
+            }
           : item,
       );
     });

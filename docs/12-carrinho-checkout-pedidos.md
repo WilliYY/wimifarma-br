@@ -25,6 +25,13 @@ Pagamento: `PENDING`, `PAID`, `CANCELED`, `REFUNDED`.
 
 As transicoes permitidas ficam em `src/features/orders/checkout.ts`; saltos e alteracoes depois de estados terminais sao recusados pela API. A atualizacao usa o estado anterior como condicao para impedir sobrescrita silenciosa quando duas pessoas operam o mesmo pedido.
 
+## Avaliacoes Verificadas
+
+- Somente uma sessao de cliente com pedido `COMPLETED` pode avaliar um produto presente naquele pedido.
+- Cada cliente possui no maximo uma avaliacao por produto e pode atualizar nota e comentario.
+- A pagina publica mostra apenas avaliacoes publicadas, com nome abreviado e sem numero do pedido ou outros dados pessoais.
+- A API limita nota, tamanho do comentario e frequencia de envios. Moderacao administrativa e denuncia de conteudo ficam para uma proxima fase se o volume justificar.
+
 ## Proxima Fase
 
 Escolher e homologar gateway/adquirente, definir Pix dinamico, antifraude, conciliacao, estorno, nota fiscal, reserva de estoque, frete fora de Ivate e fluxo regulatorio para medicamentos com receita. Essa fase exige contrato, credenciais no servidor, revisao juridica e testes em sandbox antes de producao.

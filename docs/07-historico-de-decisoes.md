@@ -234,3 +234,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: reduzir trabalho manual em categoria, descricao, principios ativos e termos de busca sem transformar a resposta do modelo em verdade automatica.
 - Impacto: formulario de produtos, nova API administrativa, contrato e testes em `src/features/products/ai-suggestions.ts`, rate limit, ambiente e documentacao.
 - Riscos/cuidados: produto ambiguo, apresentacao incompleta ou fonte ausente exige revisao da embalagem ou bula; a IA nao define receita, Farmacia Popular, dose, posologia, substituicao, preco ou estoque. Textos que excedam os limites do formulario sao reduzidos de forma defensiva sem invalidar os demais campos. Para `gemini-2.5-flash`, o raciocinio interno e desativado nas duas chamadas curtas para evitar que consuma o limite antes de concluir a pesquisa ou o JSON. O recurso exige `GEMINI_API_KEY` somente no `.env` do VPS.
+
+## 2026-09-04 - Pagina comercial de produto e avaliacoes verificadas
+
+- Decisao: transformar `/produto/[slug]` em uma pagina completa de produto, com foto ampliavel, compra por quantidade, frete local, detalhes, avaliacoes de compradores e correlatos, mantendo as restricoes regulatorias e o checkout pendente ja existente.
+- Motivo: permitir que o cliente leia e compare informacoes reais antes de colocar um item no carrinho, sem depender apenas do card da vitrine.
+- Impacto: pagina e componentes publicos do produto, carrinho com quantidade inicial, modelo/migration `ProductReview`, API de avaliacao, retorno seguro apos login, rate limit, politica de privacidade, testes e documentacao.
+- Riscos/cuidados: avaliacao exige pedido concluido e nao e anonimizada internamente; nome publico e abreviado. O frete automatico cobre apenas a faixa operacional de Ivate e nao promete prazo. Produtos com receita/Farmacia Popular continuam no WhatsApp, e nenhum pagamento e aprovado pela pagina.

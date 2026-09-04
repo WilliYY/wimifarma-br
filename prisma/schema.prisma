@@ -130,6 +130,7 @@ model Product {
   featuredPosition     Int?          @unique
   offers               Offer[]
   orderItems           OrderItem[]
+  reviews              ProductReview[]
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
 
@@ -243,6 +244,7 @@ model Customer {
   cashbackAccount   CashbackAccount?
   whatsappContacts  WhatsAppContact[]
   orders            Order[]
+  productReviews    ProductReview[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 
@@ -276,6 +278,7 @@ model Order {
   notes               String?
   privacyConsentAt    DateTime
   items               OrderItem[]
+  productReviews      ProductReview[]
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
 
@@ -300,6 +303,26 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+}
+
+model ProductReview {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  rating      Int
+  comment     String
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([productId, customerId])
+  @@index([productId, isPublished, createdAt])
+  @@index([customerId])
+  @@index([orderId])
 }
 
 model SpinWheelCampaign {

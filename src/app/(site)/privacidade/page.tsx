@@ -26,6 +26,10 @@ const sections = [
     text: "O carrinho usa o armazenamento local do navegador para lembrar produtos e quantidades. Cookies estritamente necessarios podem manter login e seguranca da sessao. Atualmente nao usamos cookies de publicidade; se isso mudar, o aviso e os controles de consentimento deverao ser atualizados.",
   },
   {
+    title: "Avaliacoes de produtos",
+    text: "Somente clientes autenticados com pedido concluido podem avaliar um produto comprado. Na pagina publica exibimos a nota, o comentario, a data e o primeiro nome com o sobrenome abreviado; o vinculo com a conta e o pedido permanece restrito a equipe autorizada.",
+  },
+  {
     title: "Retencao e seguranca",
     text: "Mantemos os dados pelo tempo necessario ao atendimento e as obrigacoes legais, regulatorias e de defesa de direitos. Depois, os dados devem ser eliminados ou anonimizados quando aplicavel. Usamos controles de acesso, validacao, conexao protegida, backups e monitoramento, sem prometer risco zero.",
   },
