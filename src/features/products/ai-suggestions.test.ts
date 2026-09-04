@@ -52,6 +52,25 @@ test("normaliza a sugestao estruturada e remove termos repetidos", () => {
   assert.equal(suggestion.category, "Dor e febre");
 });
 
+test("limita textos excessivos do Gemini sem descartar a sugestao", () => {
+  const suggestion = parseProductSuggestion(JSON.stringify({
+    activeIngredients: ["A".repeat(140)],
+    category: "C".repeat(140),
+    confidence: "medium",
+    description: "D".repeat(900),
+    searchTerms: Array.from({ length: 25 }, (_, index) => `termo ${index} ${"x".repeat(90)}`),
+    warnings: ["W".repeat(300)],
+  }));
+
+  assert.ok((suggestion.activeIngredients[0]?.length ?? 0) <= 120);
+  assert.ok((suggestion.category?.length ?? 0) <= 120);
+  assert.ok((suggestion.description?.length ?? 0) <= 800);
+  assert.equal(suggestion.searchTerms.length, 20);
+  assert.ok((suggestion.searchTerms[0]?.length ?? 0) <= 80);
+  assert.ok((suggestion.warnings[0]?.length ?? 0) <= 220);
+  assert.match(suggestion.warnings[0] ?? "", /\.\.\.$/);
+});
+
 test("aceita JSON cercado por bloco markdown", () => {
   const suggestion = parseProductSuggestion(`\`\`\`json
   {
@@ -98,11 +117,15 @@ test("pesquisa com Google antes de estruturar e preserva as fontes", async () =>
 
   const result = await suggestProductData(
     { brand: "", ean: "", knownCategories: ["Dor e febre"], name: "Dipirona 500 mg" },
-    { apiKey: "test-key", fetchImplementation: fakeFetch as typeof fetch, model: "gemini-test" },
+    { apiKey: "test-key", fetchImplementation: fakeFetch as typeof fetch, model: "gemini-2.5-flash" },
   );
 
   assert.equal(requestBodies.length, 2);
   assert.deepEqual(requestBodies[0]?.tools, [{ google_search: {} }]);
+  assert.deepEqual(
+    (requestBodies[0]?.generationConfig as { thinkingConfig?: unknown }).thinkingConfig,
+    { thinkingBudget: 0 },
+  );
   assert.equal(
     (requestBodies[1]?.generationConfig as { responseMimeType?: string }).responseMimeType,
     "application/json",

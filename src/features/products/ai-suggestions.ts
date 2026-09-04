@@ -11,11 +11,40 @@ const uniqueStrings = (values: string[]) => {
   });
 };
 
+const normalizeSuggestionText = (value: unknown, maxLength: number) => {
+  if (typeof value !== "string") return value;
+
+  const normalized = value.trim();
+  if (normalized.length <= maxLength) return normalized;
+
+  const clipped = normalized.slice(0, maxLength - 3);
+  const lastSpace = clipped.lastIndexOf(" ");
+  const readable = lastSpace >= Math.floor(maxLength * 0.7)
+    ? clipped.slice(0, lastSpace)
+    : clipped;
+
+  return `${readable.replace(/[,:;.\s]+$/, "")}...`;
+};
+
+const nullableSuggestionText = (minLength: number, maxLength: number) =>
+  z.preprocess((value) => {
+    const normalized = normalizeSuggestionText(value, maxLength);
+    return typeof normalized === "string" && normalized.length < minLength
+      ? null
+      : normalized;
+  }, z.string().min(minLength).max(maxLength).nullable());
+
 const suggestionList = (itemMaxLength: number, maxItems: number) =>
-  z
-    .array(z.string().trim().min(2).max(itemMaxLength))
-    .max(maxItems)
-    .transform(uniqueStrings);
+  z.preprocess(
+    (value) => Array.isArray(value)
+      ? uniqueStrings(value
+          .filter((item): item is string => typeof item === "string")
+          .map((item) => normalizeSuggestionText(item, itemMaxLength))
+          .filter((item): item is string => typeof item === "string" && item.length >= 2))
+          .slice(0, maxItems)
+      : value,
+    z.array(z.string().min(2).max(itemMaxLength)).max(maxItems),
+  );
 
 export const productSuggestionRequestSchema = z.object({
   brand: z.string().trim().max(120).default(""),
@@ -30,9 +59,9 @@ export const productSuggestionRequestSchema = z.object({
 
 export const productSuggestionSchema = z.object({
   activeIngredients: suggestionList(120, 20),
-  category: z.string().trim().min(2).max(120).nullable(),
+  category: nullableSuggestionText(2, 120),
   confidence: z.enum(["high", "medium", "low"]),
-  description: z.string().trim().min(3).max(800).nullable(),
+  description: nullableSuggestionText(3, 800),
   searchTerms: suggestionList(80, 20),
   warnings: suggestionList(220, 6),
 });
@@ -105,6 +134,11 @@ const productSuggestionJsonSchema = {
   ],
   type: "object",
 } as const;
+
+const thinkingConfigForModel = (model: string) =>
+  model.startsWith("gemini-2.5-flash")
+    ? { thinkingConfig: { thinkingBudget: 0 } }
+    : {};
 
 export function buildProductResearchPrompt(input: ProductSuggestionRequest) {
   return [
@@ -206,7 +240,11 @@ export async function suggestProductData(
   const researchPayload = await requestGemini(
     {
       contents: [{ parts: [{ text: buildProductResearchPrompt(input) }], role: "user" }],
-      generationConfig: { maxOutputTokens: 1_000, temperature: 0.1 },
+      generationConfig: {
+        maxOutputTokens: 1_800,
+        temperature: 0.1,
+        ...thinkingConfigForModel(options.model),
+      },
       tools: [{ google_search: {} }],
     },
     options,
@@ -218,10 +256,11 @@ export async function suggestProductData(
     {
       contents: [{ parts: [{ text: buildStructuringPrompt(input, research) }], role: "user" }],
       generationConfig: {
-        maxOutputTokens: 900,
+        maxOutputTokens: 1_200,
         responseMimeType: "application/json",
         responseSchema: productSuggestionJsonSchema,
         temperature: 0,
+        ...thinkingConfigForModel(options.model),
       },
       systemInstruction: {
         parts: [{
