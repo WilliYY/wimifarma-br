@@ -202,7 +202,7 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 
 ## 2026-09-03 - Produtos reais na vitrine Melhores ofertas
 
-- Decisao: usar `Product.featuredPosition` para selecionar e ordenar manualmente ate 15 produtos na home. O catalogo oferece `Destacar` e `Remover destaque` para alteracao rapida, enquanto `/admin/ofertas` preserva o controle completo da ordem.
+- Decisao original: usar `Product.featuredPosition` para selecionar e ordenar manualmente ate 15 produtos na home. O limite foi substituido pela decisao de carrossel com 10 destaques registrada abaixo. O catalogo oferece `Destacar` e `Remover destaque` para alteracao rapida, enquanto `/admin/ofertas` preserva o controle completo da ordem.
 - Motivo: impedir publicacao automatica de todo o catalogo e dar controle operacional sobre quais itens aparecem, sem duplicar nome, preco ou imagem em outro cadastro.
 - Impacto: schema/migration Prisma, painel e API de vitrine, atalho em `Produtos / Catalogo`, consulta server-side da home, cards publicos, testes e documentacao.
 - Riscos/cuidados: somente produtos publicados e com foto podem ser escolhidos; posicoes sao exclusivas, o salvamento e atomico e a venda continua direcionada ao WhatsApp.
@@ -213,3 +213,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: permitir que o cliente encontre um item real, veja foto e preco durante a digitacao e consulte produtos proximos sem sair do fluxo da farmacia.
 - Impacto: novos campos `activeIngredients`, `searchTerms` e `searchText` em `Product`, API publica de busca, cadastro administrativo, busca desktop/mobile e rota `/produto/[slug]`.
 - Riscos/cuidados: principios ativos e termos devem ser preenchidos com base no cadastro oficial do produto; correlato significa apenas proximidade de busca, nunca substituicao terapeutica, e disponibilidade/preco continuam sujeitos a confirmacao humana pelo WhatsApp.
+
+## 2026-09-04 - Carrossel com dez destaques na home
+
+- Decisao: reduzir a vitrine publica de 15 para 10 posicoes e exibi-la em carrossel, com cinco cards por pagina no desktop, setas, arraste por mouse e gesto horizontal em telas de toque.
+- Motivo: manter os cards em tamanho legivel sem alongar a home e permitir que o cliente percorra duas sequencias de cinco ofertas.
+- Impacto: contrato e testes da vitrine, consulta server-side da home, painel administrativo de destaques, cards publicos e documentacao.
+- Riscos/cuidados: posicoes antigas acima de 10 sao ignoradas e deixam de contar como destaque; ao salvar a organizacao da vitrine, a API limpa qualquer posicao antiga antes de gravar a selecao atual.

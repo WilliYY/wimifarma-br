@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const SHOWCASE_SLOT_COUNT = 15;
+export const SHOWCASE_SLOT_COUNT = 10;
 
 export type PublicShowcaseProduct = {
   brand: string | null;
@@ -32,6 +32,10 @@ export const showcaseSelectionSchema = z
     }
   });
 
+export function isShowcasePosition(position: number | null): position is number {
+  return position !== null && position >= 1 && position <= SHOWCASE_SLOT_COUNT;
+}
+
 export function arrangeShowcaseProducts<T extends { featuredPosition: number | null }>(
   products: T[],
 ) {
@@ -41,11 +45,7 @@ export function arrangeShowcaseProducts<T extends { featuredPosition: number | n
   );
 
   for (const product of products) {
-    if (
-      product.featuredPosition !== null &&
-      product.featuredPosition >= 1 &&
-      product.featuredPosition <= SHOWCASE_SLOT_COUNT
-    ) {
+    if (isShowcasePosition(product.featuredPosition)) {
       slots[product.featuredPosition - 1] = product;
     }
   }

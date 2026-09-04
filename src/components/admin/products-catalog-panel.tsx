@@ -54,7 +54,9 @@ import {
   type ProductCatalogSort,
 } from "@/features/products/catalog";
 import {
+  isShowcasePosition,
   productIdsFromShowcase,
+  SHOWCASE_SLOT_COUNT,
   updateShowcaseProduct,
 } from "@/features/offers/showcase";
 import { parseProductTerms } from "@/features/products/public-search";
@@ -385,7 +387,7 @@ export function ProductsCatalogPanel() {
   }
 
   async function toggleFeatured(product: ProductListItem) {
-    const shouldFeature = product.featuredPosition === null;
+    const shouldFeature = !isShowcasePosition(product.featuredPosition);
 
     if (shouldFeature && (product.status !== "ACTIVE" || !product.imageUrl)) {
       toast.error("Publique o produto e adicione uma foto antes de coloca-lo em destaque.");
@@ -412,7 +414,7 @@ export function ProductsCatalogPanel() {
       );
 
       if (!nextProductIds) {
-        throw new Error("As 15 posicoes estao ocupadas. Organize a vitrine para liberar um espaco.");
+        throw new Error(`As ${SHOWCASE_SLOT_COUNT} posicoes estao ocupadas. Organize a vitrine para liberar um espaco.`);
       }
 
       const updateResponse = await fetch("/api/ofertas/vitrine", {
@@ -484,7 +486,7 @@ export function ProductsCatalogPanel() {
             <CardContent className="p-4">
               <Star className="h-5 w-5 text-amber-600" />
               <p className="mt-3 text-sm font-bold text-muted">Em destaque</p>
-              <p className="text-3xl font-black text-ink">{products.filter((product) => product.featuredPosition !== null).length}</p>
+              <p className="text-3xl font-black text-ink">{products.filter((product) => isShowcasePosition(product.featuredPosition)).length}</p>
             </CardContent>
           </Card>
           <Card className="border-line">
@@ -562,6 +564,7 @@ export function ProductsCatalogPanel() {
                   <div className="grid gap-3">
                     {visibleProducts.map((product) => {
                       const status = statusInfo[product.status];
+                      const isFeatured = isShowcasePosition(product.featuredPosition);
                       return (
                         <div className="flex flex-col gap-4 rounded-lg border border-line bg-white p-4 shadow-sm sm:flex-row sm:items-center" key={product.id}>
                           {product.imageUrl ? (
@@ -573,7 +576,7 @@ export function ProductsCatalogPanel() {
                             <div className="flex flex-wrap items-center gap-2">
                               <h3 className="font-black text-ink">{product.name}</h3>
                               <span className={cn("rounded-md px-2.5 py-1 text-xs font-bold", status.className)}>{status.label}</span>
-                              {product.featuredPosition ? (
+                              {isFeatured ? (
                                 <Badge>Vitrine {String(product.featuredPosition).padStart(2, "0")}</Badge>
                               ) : null}
                               {product.isPopularPharmacy ? <Badge variant="muted">Farmacia Popular</Badge> : null}
@@ -592,20 +595,20 @@ export function ProductsCatalogPanel() {
                           </div>
                           <div className="grid w-full gap-2 sm:w-auto sm:min-w-40">
                             <Button
-                              aria-label={product.featuredPosition ? `Remover ${product.name} dos destaques` : `Destacar ${product.name}`}
-                              disabled={featuredProductId !== null || (product.featuredPosition === null && (product.status !== "ACTIVE" || !product.imageUrl))}
+                              aria-label={isFeatured ? `Remover ${product.name} dos destaques` : `Destacar ${product.name}`}
+                              disabled={featuredProductId !== null || (!isFeatured && (product.status !== "ACTIVE" || !product.imageUrl))}
                               onClick={() => void toggleFeatured(product)}
                               size="sm"
-                              title={product.featuredPosition === null && (product.status !== "ACTIVE" || !product.imageUrl) ? "Publique o produto e adicione uma foto para destacar" : undefined}
+                              title={!isFeatured && (product.status !== "ACTIVE" || !product.imageUrl) ? "Publique o produto e adicione uma foto para destacar" : undefined}
                               type="button"
-                              variant={product.featuredPosition ? "default" : "secondary"}
+                              variant={isFeatured ? "default" : "secondary"}
                             >
                               {featuredProductId === product.id ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
                               ) : (
-                                <Star className={cn("h-4 w-4", product.featuredPosition && "fill-current")} />
+                                <Star className={cn("h-4 w-4", isFeatured && "fill-current")} />
                               )}
-                              {product.featuredPosition ? "Remover destaque" : "Destacar"}
+                              {isFeatured ? "Remover destaque" : "Destacar"}
                             </Button>
                             <Button onClick={() => setEditingProduct(product)} size="sm" type="button" variant="secondary">
                               <Pencil className="h-4 w-4" />

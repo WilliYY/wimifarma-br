@@ -2,13 +2,17 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   arrangeShowcaseProducts,
+  isShowcasePosition,
   productIdsFromShowcase,
   SHOWCASE_SLOT_COUNT,
   showcaseSelectionSchema,
   updateShowcaseProduct,
 } from "./showcase";
 
-test("aceita quinze posicoes com produtos unicos e espacos vazios", () => {
+test("mantem dez posicoes organizadas em dois grupos de cinco", () => {
+  assert.equal(SHOWCASE_SLOT_COUNT, 10);
+  assert.equal(SHOWCASE_SLOT_COUNT / 5, 2);
+
   const productIds = Array.from(
     { length: SHOWCASE_SLOT_COUNT },
     (_, index): string | null => (index < 2 ? `produto-${index + 1}` : null),
@@ -41,7 +45,13 @@ test("organiza produtos na posicao exata da vitrine", () => {
   assert.equal(slots[2]?.name, "Terceiro");
 });
 
-test("converte produtos destacados em quinze ids ordenados", () => {
+test("ignora posicoes antigas fora das dez atuais", () => {
+  assert.equal(isShowcasePosition(10), true);
+  assert.equal(isShowcasePosition(11), false);
+  assert.equal(isShowcasePosition(null), false);
+});
+
+test("converte produtos destacados em dez ids ordenados", () => {
   const productIds = productIdsFromShowcase([
     { featuredPosition: 4, id: "produto-4" },
     { featuredPosition: 1, id: "produto-1" },
@@ -73,5 +83,5 @@ test("nao altera a vitrine quando todas as posicoes estao ocupadas", () => {
     (_, index) => `produto-${index + 1}`,
   );
 
-  assert.equal(updateShowcaseProduct(full, "produto-16", true), null);
+  assert.equal(updateShowcaseProduct(full, "produto-11", true), null);
 });

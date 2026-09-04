@@ -38,7 +38,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
 - Banner principal atual e video da Wimifarma em uma vitrine responsiva com acabamento claro, chamada para WhatsApp, texto comercial sobre medicamentos e Farmacia Popular, poster de carregamento e controles integrados de pausar e som. Em telas a partir de `lg`, o banner usa proporcao fixa `8:3`, chegando a `1280 x 480 px` no limite de largura do site; no celular, a composicao volta a ter altura fluida para preservar o video vertical e os controles sem cortes.
 - Para futuras artes do banner principal, usar preferencialmente `1920 x 720 px` em WebP, com ate 350 KB e area segura central de 1600 x 560 px. Se a campanha precisar de uma arte propria no celular, preparar tambem `1080 x 1350 px` em WebP, com ate 250 KB; textos e botoes comerciais devem continuar em HTML sempre que possivel.
-- Home esta temporariamente focada em anuncio: o primeiro bloco de conteudo ja e a vitrine com video; entre o video e a faixa de campanhas aparece a vitrine `Melhores ofertas`, com cabecalho direto, CTA para WhatsApp, chips de campanha, leitura de desconto/economia e 15 espacos de produto em grade responsiva. O cabecalho nao exibe contadores de ofertas ativas ou vagas nem texto descritivo.
+- Home esta temporariamente focada em anuncio: o primeiro bloco de conteudo ja e a vitrine com video; entre o video e a faixa de campanhas aparece a vitrine `Melhores ofertas`, com cabecalho direto, CTA para WhatsApp, chips de campanha, leitura de desconto/economia e carrossel responsivo com 10 espacos de produto. O desktop exibe cinco cards por vez e avanca em grupos de cinco por seta ou arraste; telas menores adaptam a quantidade visivel e preservam o gesto de toque. O cabecalho nao exibe contadores de ofertas ativas ou vagas nem texto descritivo.
 - Categorias em bolinhas nao aparecem na home nesta fase; os 15 lugares da vitrine sao alimentados pelo banco e ordenados manualmente em `/admin/ofertas`.
 - O link `Ofertas` nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.
@@ -57,7 +57,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Favicon e `src/app/icon.svg` usam SVG vetorial compacto do simbolo vermelho/branco da Wimifarma, sem imagem base64 embutida.
 - O topo do painel administrativo possui botao `Home` para voltar ao site publico, alem de WhatsApp e sair; no celular, titulo e acoes ocupam linhas separadas para evitar cortes. O endpoint tecnico `/api/health` permanece disponivel sem aparecer como acao principal.
 - O dashboard administrativo separa metricas comerciais em uma grade compacta e deixa o status operacional em card proprio para evitar linhas vazias e melhorar leitura.
-- `Produtos / Catalogo` prioriza a lista em largura total, usa indicadores compactos, abre o cadastro em modal e oferece acoes diretas para editar ou destacar cada produto. A organizacao das 15 posicoes continua em `/admin/ofertas`.
+- `Produtos / Catalogo` prioriza a lista em largura total, usa indicadores compactos, abre o cadastro em modal e oferece acoes diretas para editar ou destacar cada produto. A organizacao das 10 posicoes continua em `/admin/ofertas`.
 
 ## Regras de Design
 

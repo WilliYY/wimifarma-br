@@ -120,7 +120,7 @@ Arquivos:
 8. A tela cria o produto com status de rascunho, publicado ou arquivado; o slug e gerado automaticamente e a criacao registra auditoria.
 9. A lista permite buscar por nome, marca, SKU ou EAN, filtrar por categoria e status e classificar por data, nome, estoque ou preco.
 10. `Editar` abre um formulario individual preenchido com os dados atuais. A imagem existente e preservada quando nao for trocada; a atualizacao usa `updatedAt` para impedir que uma edicao antiga sobrescreva outra mais recente e registra auditoria.
-11. Na propria lista de produtos, `Destacar` coloca um item publicado e com foto na primeira posicao livre de `Melhores ofertas`, e `Remover destaque` o retira. Em `/admin/ofertas`, o usuario continua escolhendo e reorganizando manualmente as 15 posicoes.
+11. Na propria lista de produtos, `Destacar` coloca um item publicado e com foto na primeira posicao livre de `Melhores ofertas`, e `Remover destaque` o retira. Em `/admin/ofertas`, o usuario continua escolhendo e reorganizando manualmente as 10 posicoes.
 12. O salvamento da vitrine e atomico, impede produto repetido e registra `PRODUCT_SHOWCASE_UPDATED`. Arquivar ou voltar um produto para rascunho remove sua posicao.
 13. A home consulta somente produtos publicados, com foto e `featuredPosition`, usando nome, categoria, descricao, precos e WebP reais. Posicoes sem selecao continuam como espacos de consulta pelo WhatsApp.
 14. O cadastro e a edicao permitem informar principios ativos e termos de busca/indicacao separados por virgula; a API normaliza esses dados no `searchText` sem alterar a grafia exibida.

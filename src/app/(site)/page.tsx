@@ -1,5 +1,8 @@
 import { HomePage } from "@/components/site/home-page";
-import type { PublicShowcaseProduct } from "@/features/offers/showcase";
+import {
+  SHOWCASE_SLOT_COUNT,
+  type PublicShowcaseProduct,
+} from "@/features/offers/showcase";
 import { getPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -20,9 +23,9 @@ export default async function Page() {
       price: true,
       promotionalPrice: true,
     },
-    take: 15,
+    take: SHOWCASE_SLOT_COUNT,
     where: {
-      featuredPosition: { not: null },
+      featuredPosition: { gte: 1, lte: SHOWCASE_SLOT_COUNT },
       imageUrl: { not: null },
       status: "ACTIVE",
     },

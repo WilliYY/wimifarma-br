@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import type { CSSProperties } from "react";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   BadgePercent,
   Bike,
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   HeartPulse,
   MessageCircle,
@@ -317,6 +319,108 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
     "Retire ou entregue",
   ];
   const bestOfferItems = buildBestOfferItems(products);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const dragState = useRef({
+    moved: false,
+    pointerId: null as number | null,
+    scrollLeft: 0,
+    startX: 0,
+  });
+  const [carouselControls, setCarouselControls] = useState({
+    next: false,
+    previous: false,
+  });
+
+  const updateCarouselControls = useCallback(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+
+    const maximumScroll = Math.max(0, carousel.scrollWidth - carousel.clientWidth);
+    setCarouselControls({
+      next: carousel.scrollLeft < maximumScroll - 2,
+      previous: carousel.scrollLeft > 2,
+    });
+  }, []);
+
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+
+    const animationFrame = window.requestAnimationFrame(updateCarouselControls);
+    const resizeObserver = new ResizeObserver(updateCarouselControls);
+    resizeObserver.observe(carousel);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      resizeObserver.disconnect();
+    };
+  }, [updateCarouselControls]);
+
+  function scrollOffers(direction: -1 | 1) {
+    const carousel = carouselRef.current;
+    const firstCard = carousel?.querySelector<HTMLElement>("[data-offer-card]");
+    if (!carousel || !firstCard) return;
+
+    const styles = window.getComputedStyle(carousel);
+    const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0;
+    const cardStep = firstCard.offsetWidth + gap;
+    const visibleCards = Math.max(
+      1,
+      Math.round((carousel.clientWidth + gap) / cardStep),
+    );
+
+    carousel.scrollBy({
+      behavior: "smooth",
+      left: direction * visibleCards * cardStep,
+    });
+  }
+
+  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "mouse" || event.button !== 0) return;
+
+    dragState.current = {
+      moved: false,
+      pointerId: event.pointerId,
+      scrollLeft: event.currentTarget.scrollLeft,
+      startX: event.clientX,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    const drag = dragState.current;
+    if (drag.pointerId !== event.pointerId) return;
+
+    const movement = event.clientX - drag.startX;
+    if (Math.abs(movement) > 4) drag.moved = true;
+    event.currentTarget.scrollLeft = drag.scrollLeft - movement;
+  }
+
+  function finishPointerDrag(event: React.PointerEvent<HTMLDivElement>) {
+    const drag = dragState.current;
+    if (drag.pointerId !== event.pointerId) return;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    drag.pointerId = null;
+    window.setTimeout(() => {
+      drag.moved = false;
+    }, 0);
+  }
+
+  function cancelPointerDrag(event: React.PointerEvent<HTMLDivElement>) {
+    if (dragState.current.pointerId !== event.pointerId) return;
+    dragState.current.pointerId = null;
+    dragState.current.moved = false;
+  }
+
+  function preventClickAfterDrag(event: React.MouseEvent<HTMLDivElement>) {
+    if (!dragState.current.moved) return;
+    event.preventDefault();
+    event.stopPropagation();
+    dragState.current.moved = false;
+  }
 
   return (
     <section className="pharma-clouds bg-white px-4 pb-12 pt-4 sm:px-6 lg:px-8">
@@ -347,22 +451,61 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
             </div>
           </div>
 
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full bg-ink px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-white">
-              <Sparkles className="h-3.5 w-3.5" />
-              Destaques da vitrine
-            </span>
-            {catalogChips.map((chip) => (
-              <span
-                className="rounded-full border border-line bg-white px-3 py-1.5 text-xs font-bold text-muted shadow-sm"
-                key={chip}
-              >
-                {chip}
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full bg-ink px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-white">
+                <Sparkles className="h-3.5 w-3.5" />
+                Destaques da vitrine
               </span>
-            ))}
+              {catalogChips.map((chip) => (
+                <span
+                  className="rounded-full border border-line bg-white px-3 py-1.5 text-xs font-bold text-muted shadow-sm"
+                  key={chip}
+                >
+                  {chip}
+                </span>
+              ))}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                aria-controls="best-offers-carousel"
+                aria-label="Ver ofertas anteriores"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35"
+                disabled={!carouselControls.previous}
+                onClick={() => scrollOffers(-1)}
+                title="Ofertas anteriores"
+                type="button"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                aria-controls="best-offers-carousel"
+                aria-label="Ver proximas ofertas"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35"
+                disabled={!carouselControls.next}
+                onClick={() => scrollOffers(1)}
+                title="Proximas ofertas"
+                type="button"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+          <div
+            aria-label="Melhores ofertas"
+            aria-roledescription="carrossel"
+            className="flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-3 select-none active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_img]:pointer-events-none"
+            id="best-offers-carousel"
+            onClickCapture={preventClickAfterDrag}
+            onPointerCancel={cancelPointerDrag}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={finishPointerDrag}
+            onScroll={updateCarouselControls}
+            ref={carouselRef}
+            role="region"
+          >
             {bestOfferItems.map((item, index) => {
               const discountLabel = getDiscountLabel(item);
               const savingLabel = getSavingLabel(item);
@@ -372,8 +515,12 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
 
               return (
                 <article
-                  className="group relative flex min-h-[24.5rem] min-w-0 flex-col overflow-hidden rounded-lg border border-line/80 bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[var(--offer-accent)] hover:shadow-[0_26px_60px_rgba(17,24,39,0.15)]"
+                  aria-label={`Oferta ${index + 1} de ${bestOfferItems.length}`}
+                  aria-roledescription="slide"
+                  className="group relative flex min-h-[24.5rem] min-w-0 shrink-0 basis-[86%] snap-start flex-col overflow-hidden rounded-lg border border-line/80 bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[var(--offer-accent)] hover:shadow-[0_26px_60px_rgba(17,24,39,0.15)] sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-2rem)/3)] xl:basis-[calc((100%-4rem)/5)]"
+                  data-offer-card
                   key={item.id}
+                  role="group"
                   style={
                     {
                       "--offer-accent": item.accent,
