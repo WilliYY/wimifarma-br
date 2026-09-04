@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, BadgeCheck, ImageIcon, MessageCircle, Pill, ShieldCheck } from "lucide-react";
+import { ArrowLeft, BadgeCheck, ImageIcon, Pill, ShieldCheck } from "lucide-react";
 import type { Prisma } from "@/generated/prisma/client";
 import { PublicProductCard } from "@/components/site/public-product-card";
+import { AddToCartButton } from "@/components/site/add-to-cart-button";
 import {
   normalizeProductSearch,
   rankRelatedProducts,
@@ -11,7 +12,6 @@ import {
 } from "@/features/products/public-search";
 import { getPrisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
-import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +29,7 @@ const productSelect = {
   requiresPrescription: true,
   searchTerms: true,
   slug: true,
+  stock: true,
 } as const;
 
 type ProductRecord = Prisma.ProductGetPayload<{ select: typeof productSelect }>;
@@ -94,9 +95,6 @@ export default async function ProductPage({
   const currentPrice = Number(product.promotionalPrice ?? product.price);
   const hasPromotion = Boolean(
     product.promotionalPrice && Number(product.promotionalPrice) < Number(product.price),
-  );
-  const whatsappUrl = buildWhatsAppUrl(
-    `Ola, gostaria de consultar disponibilidade e confirmar os detalhes de ${product.name}.`,
   );
 
   return (
@@ -182,15 +180,21 @@ export default async function ProductPage({
                 <p className="mt-7 max-w-2xl text-base leading-7 text-muted">{product.description}</p>
               ) : null}
 
-              <a
+              <AddToCartButton
                 className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#20c864] px-6 py-3 text-sm font-black text-white shadow-[0_14px_32px_rgba(32,200,100,0.24)] transition hover:-translate-y-0.5 hover:bg-[#16ad55] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20c864] focus-visible:ring-offset-2"
-                href={whatsappUrl}
-                rel="noreferrer"
-                target="_blank"
-              >
-                <MessageCircle className="h-5 w-5" />
-                Consultar no WhatsApp
-              </a>
+                product={{
+                  category: product.category,
+                  id: product.id,
+                  imageUrl: product.imageUrl,
+                  isPopularPharmacy: product.isPopularPharmacy,
+                  name: product.name,
+                  originalPriceCents: hasPromotion ? Math.round(Number(product.price) * 100) : null,
+                  requiresPrescription: product.requiresPrescription,
+                  slug: product.slug,
+                  stock: product.stock,
+                  unitPriceCents: Math.round(currentPrice * 100),
+                }}
+              />
             </div>
           </div>
         </div>

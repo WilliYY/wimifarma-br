@@ -18,6 +18,13 @@
 
 ## Pendencias Altas
 
+### Homologar pagamento online e regras comerciais do checkout
+
+- Definir: adquirente/gateway, contrato, antifraude, Pix dinamico, conciliacao, estorno, fiscal, frete fora de Ivate e reserva/baixa de estoque.
+- Ate a homologacao: checkout cria somente pedido pendente; nao coleta cartao e nao confirma pagamento automaticamente.
+- Itens com receita e Farmacia Popular permanecem bloqueados no checkout ate existir fluxo juridico e farmaceutico aprovado.
+- Revisar a Politica de Privacidade com responsavel juridico e completar razao social, CNPJ, encarregado/canal LGPD e prazos formais de retencao.
+
 ### Atualizar dependencias com alertas do `npm audit`
 
 - Status: monitorado; ultima revisao em 2026-09-01.

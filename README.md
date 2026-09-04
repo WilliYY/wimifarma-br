@@ -6,7 +6,7 @@ Plataforma comercial da Wimifarma, farmacia em Ivate-PR. O projeto nao e WordPre
 
 Criar uma base moderna e evolutiva para site publico, ofertas, catalogo, atendimento via WhatsApp, login, painel administrativo, APIs internas, banco de dados e modulos futuros como cupons, roleta promocional controlada e cashback.
 
-Nesta fase o sistema prioriza conversao por WhatsApp. Nao existe checkout nem pagamento online implementado.
+O sistema possui carrinho e checkout para registrar pedidos pendentes, com entrega local ou retirada e confirmacao humana. O WhatsApp continua como apoio; ainda nao existe cobranca online nem coleta de dados de cartao.
 
 ## Stack
 
@@ -42,6 +42,9 @@ Nesta fase o sistema prioriza conversao por WhatsApp. Nao existe checkout nem pa
 - O modulo admin de cupons ja cria cupons reais com nome/codigo, validade por dias ativos, limite de uso e contador de pessoas/usos registrados.
 - `Produtos / Catalogo` permite cadastrar em modal, buscar, classificar, editar e adicionar ou remover produtos de `Melhores ofertas`; fotos enviadas sao convertidas automaticamente para WebP e persistidas no volume Docker `wimifarma-br-uploads`.
 - A busca publica consulta produtos publicados no PostgreSQL por nome, marca, categoria, SKU, EAN, principios ativos e termos de busca; o autocomplete mostra foto e preco, abre `/produto/[slug]` no Enter e apresenta correlatos para consulta, sem tratar correlacao como substituicao automatica.
+- Produtos elegiveis podem ser adicionados ao carrinho e enviados pelo checkout em `/checkout`; o servidor recalcula preco, confere estoque e cria um pedido pendente para a equipe acompanhar em `/admin/pedidos`.
+- Itens com receita ou Farmacia Popular continuam no atendimento pelo WhatsApp. Pix, cartao e dinheiro sao apenas preferencias; nenhum dado de cartao e coletado e nenhum pagamento e aprovado pelo site.
+- A politica publica em `/privacidade` descreve dados de conta, pedido, armazenamento local do carrinho e direitos do titular.
 - Admin possui o modulo `API e Senhas` para guardar credenciais sensiveis cifradas no banco, restrito a `ADMIN`.
 - APIs reservadas existem e exigem sessao `ADMIN` ou `MANAGER`.
 - APIs do cofre administrativo exigem sessao `ADMIN`.
@@ -256,12 +259,13 @@ A pasta `docs/` e a memoria longa do projeto. Comece por:
 - `docs/09-deploy-e-ambiente.md`
 - `docs/10-layout-e-experiencia.md`
 - `docs/11-seguranca-backup-e-recuperacao.md`
+- `docs/12-carrinho-checkout-pedidos.md`
 
 ## Cuidados
 
 - Nao versionar `.env` real.
 - Nao colocar senha real no repositorio.
 - Nao usar dados reais de clientes em seed, teste ou exemplo.
-- Nao implementar checkout/pagamento nesta fase.
+- Nao integrar cobranca online nem coletar dados de cartao sem gateway homologado e decisao registrada.
 - Nao misturar este projeto com `candy-english` ou `wimifarma-com`.
 - Antes de producao, resolver as pendencias de seguranca em `docs/06-pendencias.md`.

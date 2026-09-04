@@ -102,6 +102,7 @@ export function SiteFooter() {
       <div className="relative z-10 border-t border-white/20 py-4">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 text-xs font-medium text-white/70 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>(c) 2026 Wimifarma. Todos os direitos reservados.</p>
+          <Link className="font-bold text-white/85 underline-offset-4 hover:text-white hover:underline" href="/privacidade">Politica de Privacidade</Link>
         </div>
       </div>
       <svg

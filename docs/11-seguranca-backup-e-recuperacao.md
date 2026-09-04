@@ -14,6 +14,7 @@ Registrar as protecoes ja aplicadas, o procedimento de backup e os controles que
 - A sugestao de catalogo exige sessao `ADMIN` ou `MANAGER`, limita chamadas por IP, trata nome/categoria como dados nao confiaveis, valida a resposta do Gemini e nao envia dados de clientes, preco, estoque ou imagens ao provedor.
 - Cookies do Auth.js usam as protecoes seguras do framework em producao.
 - O site envia CSP, HSTS em producao, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` e `Permissions-Policy`.
+- A CSP permite `unsafe-eval` somente no servidor de desenvolvimento porque o compilador do Next depende disso; o build de producao nao recebe essa permissao.
 
 O rate limit do middleware e uma barreira complementar em memoria. Ele nao substitui protecao DDoS, WAF ou limitacao distribuida na borda.
 
@@ -94,5 +95,13 @@ Em 2026-09-01, `npm audit` ficou sem vulnerabilidades criticas. Permaneceram 3 a
 - Revisar Dependabot e `npm audit` semanalmente.
 - Testar restauracao trimestralmente.
 - Rotacionar chaves e credenciais quando houver exposicao ou troca de responsavel.
-- Fazer pentest antes de checkout/pagamento e depois de mudancas relevantes em autenticacao ou APIs.
+- Fazer pentest antes de integrar cobranca online e depois de mudancas relevantes em autenticacao, checkout ou APIs.
 - Revisar portas administrativas da VPS e restringi-las por VPN ou Access sem interromper outros sistemas.
+## Dados de Carrinho e Pedidos
+
+- O carrinho usa `localStorage` apenas para identificadores, nomes, imagens, precos exibidos e quantidades; nao guarda sessao, senha ou dados de pagamento.
+- `POST /api/pedidos` valida entrada, origem, volume de requisicoes, status do produto, estoque, restricoes e preco atual no servidor.
+- Nome, telefone, e-mail opcional e endereco de entrega sao dados pessoais e devem aparecer apenas no checkout e no painel autenticado.
+- A preferencia de pagamento nao inclui numero de cartao, CVV, senha, chave Pix do cliente ou dados bancarios.
+- Auditorias de mudanca de status guardam identificadores e estados, sem copiar dados pessoais do pedido.
+- Backups do PostgreSQL passam a incluir pedidos e devem seguir os mesmos controles de acesso, retencao e restauracao testada.

@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-04 - Carrinho e checkout de pedido pendente
+
+- Decisao: permitir compra de produtos elegiveis por carrinho e checkout, gravando `Order` e `OrderItem` para confirmacao humana e operacao em `/admin/pedidos`.
+- Motivo: reduzir atrito entre vitrine e pedido sem simular uma integracao financeira ainda inexistente.
+- Impacto: rotas `/carrinho`, `/checkout`, `/privacidade`, APIs `/api/pedidos*`, modelos Prisma, painel administrativo, rate limit, cards publicos, testes e documentacao.
+- Riscos/cuidados: o servidor recalcula preco e valida estoque; pedido nasce pendente e nao baixa estoque; nao ha coleta de cartao, geracao de Pix ou aprovacao automatica; receita e Farmacia Popular continuam no WhatsApp; politica juridica e gateway permanecem pendentes.
+
 ## 2026-09-01 - Primeira camada de hardening e backup automatico
 
 - Decisao: remover `adm / adm`, aplicar cabecalhos seguros, validacao de origem e rate limit nas APIs, atualizar dependencias compativeis e automatizar backup diario validado.

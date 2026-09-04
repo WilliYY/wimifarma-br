@@ -28,7 +28,12 @@ export function FloatingWhatsApp() {
   const pathname = usePathname();
   const news = miaubyNews[0];
 
-  if (pathname === "/login" || pathname.startsWith("/minha-conta")) {
+  if (
+    pathname === "/login" ||
+    pathname.startsWith("/minha-conta") ||
+    pathname.startsWith("/carrinho") ||
+    pathname.startsWith("/checkout")
+  ) {
     return null;
   }
 

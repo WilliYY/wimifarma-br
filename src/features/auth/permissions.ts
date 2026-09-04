@@ -16,6 +16,7 @@ export const adminRoutePermissions = {
   "/admin/criar-colaborador": ["ADMIN"],
   "/admin/cupons": ["ADMIN", "MANAGER"],
   "/admin/ofertas": ["ADMIN", "MANAGER", "STAFF"],
+  "/admin/pedidos": ["ADMIN", "MANAGER", "STAFF"],
   "/admin/produtos": ["ADMIN", "MANAGER", "STAFF"],
   "/admin/roleta": ["ADMIN", "MANAGER"],
   "/admin/temas": ["ADMIN"],

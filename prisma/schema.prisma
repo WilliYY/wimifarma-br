@@ -59,6 +59,34 @@ enum CashbackTransactionType {
   ADJUSTMENT
 }
 
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  OUT_FOR_DELIVERY
+  COMPLETED
+  CANCELED
+}
+
+enum FulfillmentMethod {
+  DELIVERY
+  PICKUP
+}
+
+enum OrderPaymentMethod {
+  PIX
+  CARD_ON_DELIVERY
+  CASH
+}
+
+enum OrderPaymentStatus {
+  PENDING
+  PAID
+  CANCELED
+  REFUNDED
+}
+
 model User {
   id                    String         @id @default(cuid())
   name                  String
@@ -101,6 +129,7 @@ model Product {
   sortOrder            Int           @default(0)
   featuredPosition     Int?          @unique
   offers               Offer[]
+  orderItems           OrderItem[]
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
 
@@ -213,12 +242,64 @@ model Customer {
   spinWheelAttempts SpinWheelAttempt[]
   cashbackAccount   CashbackAccount?
   whatsappContacts  WhatsAppContact[]
+  orders            Order[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 
   @@index([status])
   @@index([city])
   @@index([lastLoginAt])
+}
+
+model Order {
+  id                  String             @id @default(cuid())
+  number              String             @unique
+  customerId          String?
+  customer            Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName        String
+  customerPhone       String
+  customerEmail       String?
+  fulfillmentMethod   FulfillmentMethod
+  paymentMethod       OrderPaymentMethod
+  paymentStatus       OrderPaymentStatus @default(PENDING)
+  status              OrderStatus        @default(PENDING)
+  subtotalCents       Int
+  deliveryFeeCents    Int                @default(0)
+  totalCents          Int
+  postalCode          String?
+  street              String?
+  addressNumber       String?
+  complement          String?
+  neighborhood        String?
+  city                String?
+  state               String?
+  notes               String?
+  privacyConsentAt    DateTime
+  items               OrderItem[]
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  @@index([status, createdAt])
+  @@index([customerId, createdAt])
+  @@index([paymentStatus])
+}
+
+model OrderItem {
+  id              String   @id @default(cuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String?
+  product         Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName     String
+  productSlug     String
+  productImageUrl String?
+  unitPriceCents  Int
+  quantity        Int
+  totalCents      Int
+  createdAt       DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model SpinWheelCampaign {

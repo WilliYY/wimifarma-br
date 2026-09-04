@@ -34,7 +34,7 @@ export function PageHero({ children, description, title }: PageHeroProps) {
           {children ?? (
             <div className="grid gap-3 text-sm text-muted">
               <p>Modulo estruturado para evoluir com dados reais.</p>
-              <p>Sem clientes reais, sem senhas reais e sem checkout agora.</p>
+              <p>Dados reais somente em fluxos protegidos e com finalidade definida.</p>
             </div>
           )}
         </div>

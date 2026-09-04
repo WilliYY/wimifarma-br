@@ -12,7 +12,7 @@ Este projeto:
 - Nao depende de HostGator.
 - Nao deve ser misturado com Candy English.
 - Nao deve ser misturado com o projeto local antigo `wimifarma-com`.
-- Nao possui checkout/pagamento nesta fase.
+- Possui carrinho e checkout para registrar pedidos pendentes; nao processa pagamento online nesta fase.
 
 ## Regra 1: Leitura Obrigatoria Antes de Alterar Arquivos
 
@@ -52,8 +52,9 @@ Preservar os padroes ja existentes no projeto, salvo quando houver motivo tecnic
 
 ## Regra 6: Escopo Comercial
 
-- WhatsApp e o canal principal de conversao nesta fase.
-- Nao implementar checkout/pagamento agora.
+- Carrinho e checkout registram pedidos para confirmacao humana da farmacia.
+- WhatsApp continua como apoio ao atendimento e e obrigatorio para itens com receita ou Farmacia Popular.
+- Nao coletar dados de cartao nem marcar pagamento como aprovado sem gateway homologado.
 - Roleta, cashback e clube devem ficar preparados, mas sem regras comerciais reais ate aprovacao.
 - Farmacia Popular nao deve prometer disponibilidade automatica.
 
@@ -187,5 +188,5 @@ npm.cmd audit --audit-level=moderate
 - Nao commitar `.env`.
 - Nao trocar a stack sem necessidade.
 - Nao quebrar compatibilidade com Docker Compose.
-- Nao criar checkout/pagamento sem pedido explicito e nova decisao registrada.
+- Nao integrar cobranca online ou gateway sem pedido explicito, credenciais seguras e nova decisao registrada.
 - Nao remover modulos futuros sem registrar motivo.

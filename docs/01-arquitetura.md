@@ -33,6 +33,9 @@ public                Assets publicos
 - `/roleta`
 - `/login`
 - `/minha-conta`
+- `/carrinho`
+- `/checkout`
+- `/privacidade`
 
 Observacao: `/roleta` publica redireciona para `/ofertas` nesta fase.
 
@@ -54,6 +57,7 @@ Observacao: `/roleta` publica redireciona para `/ofertas` nesta fase.
 - `/admin/catalogos`
 - `/admin/temas`
 - `/admin/club-wimifarma`
+- `/admin/pedidos`
 
 Muitas rotas admin ainda sao placeholders.
 
@@ -75,11 +79,15 @@ Muitas rotas admin ainda sao placeholders.
 - `/api/cashback`
 - `/api/whatsapp`
 - `/api/visitas`
+- `/api/pedidos`
+- `/api/pedidos/[id]`
 - `/api/admin/api-senhas`
 - `/api/admin/api-senhas/[id]`
 - `/api/admin/api-senhas/[id]/reveal`
 
 As APIs de negocio usam `requireAdminApi`. O cofre `API e Senhas` usa `requireAdminOnlyApi` e deve responder segredos apenas no endpoint de revelacao.
+
+`POST /api/pedidos` e publico, recebe somente os dados necessarios ao pedido e tem limite especifico de requisicoes. O servidor ignora o preco como fonte de verdade, consulta novamente os produtos e valida status, estoque, restricoes e preco. `PATCH /api/pedidos/[id]` exige perfil administrativo autorizado e limita as transicoes de status.
 
 ## Infraestrutura
 

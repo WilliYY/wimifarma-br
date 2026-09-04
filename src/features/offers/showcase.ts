@@ -9,9 +9,13 @@ export type PublicShowcaseProduct = {
   featuredPosition: number;
   id: string;
   imageUrl: string;
+  isPopularPharmacy: boolean;
   name: string;
   price: string;
   promotionalPrice: string | null;
+  requiresPrescription: boolean;
+  slug: string;
+  stock: number;
 };
 
 export const showcaseSelectionSchema = z

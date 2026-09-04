@@ -23,6 +23,8 @@ import {
   arrangeShowcaseProducts,
   type PublicShowcaseProduct,
 } from "@/features/offers/showcase";
+import { AddToCartButton } from "@/components/site/add-to-cart-button";
+import type { CartProduct } from "@/components/site/cart-provider";
 import { siteConfig } from "@/lib/site";
 
 const easeOut = [0.16, 1, 0.3, 1] as const;
@@ -49,6 +51,7 @@ type BestOfferItem = {
   benefit?: string;
   imageUrl?: string;
   isReserved: boolean;
+  product?: CartProduct;
 };
 
 const offerPalettes = [
@@ -115,6 +118,18 @@ function buildBestOfferItems(products: PublicShowcaseProduct[]): BestOfferItem[]
       name: product.name,
       oldPrice: hasPromotion ? formatProductPrice(product.price) : undefined,
       price: formatProductPrice(product.promotionalPrice ?? product.price),
+      product: {
+        category: product.category,
+        id: product.id,
+        imageUrl: product.imageUrl,
+        isPopularPharmacy: product.isPopularPharmacy,
+        name: product.name,
+        originalPriceCents: hasPromotion ? Math.round(regularPrice * 100) : null,
+        requiresPrescription: product.requiresPrescription,
+        slug: product.slug,
+        stock: product.stock,
+        unitPriceCents: Math.round(currentPrice * 100),
+      },
     };
   });
 }
@@ -621,15 +636,22 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
                     </div>
                   </div>
 
-                  <a
-                    className="mx-3 mb-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[var(--offer-accent)] px-3 text-sm font-black text-white shadow-[0_12px_24px_rgba(17,24,39,0.16)] transition duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-                    href={buildOfferWhatsAppUrl(item.name)}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    {isReserved ? "Consultar produto" : "Consultar oferta"}
-                  </a>
+                  {isReserved || !item.product ? (
+                    <a
+                      className="mx-3 mb-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[var(--offer-accent)] px-3 text-sm font-black text-white shadow-[0_12px_24px_rgba(17,24,39,0.16)] transition duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                      href={buildOfferWhatsAppUrl(item.name)}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Consultar produto
+                    </a>
+                  ) : (
+                    <AddToCartButton
+                      className="mx-3 mb-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[var(--offer-accent)] px-3 text-sm font-black text-white shadow-[0_12px_24px_rgba(17,24,39,0.16)] transition duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                      product={item.product}
+                    />
+                  )}
                 </article>
               );
             })}

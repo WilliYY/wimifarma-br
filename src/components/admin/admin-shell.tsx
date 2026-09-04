@@ -10,6 +10,7 @@ import {
   LogOut,
   MessageCircle,
   Palette,
+  ShoppingBag,
   ShieldPlus,
   TicketPercent,
   UserPlus,
@@ -54,6 +55,12 @@ const adminNav = [
     icon: BadgePercent,
     label: "Ofertas",
     roles: adminRoutePermissions["/admin/ofertas"],
+  },
+  {
+    href: "/admin/pedidos",
+    icon: ShoppingBag,
+    label: "Pedidos",
+    roles: adminRoutePermissions["/admin/pedidos"],
   },
   {
     href: "/admin/temas",

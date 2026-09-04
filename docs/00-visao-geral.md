@@ -4,7 +4,7 @@
 
 Wimifarma BR e a base de uma plataforma comercial para uma farmacia em Ivate-PR. O sistema combina site publico, chamadas para WhatsApp, catalogo/ofertas, login, painel administrativo, APIs internas, PostgreSQL e modulos preparados para evolucao.
 
-O foco atual e usar a home como vitrine de anuncio e facilitar atendimento local. A venda final ainda acontece por WhatsApp e atendimento humano.
+O foco atual e usar a home como vitrine de anuncio e facilitar a compra local. Produtos elegiveis entram em carrinho e checkout; o pedido fica pendente ate a confirmacao humana da farmacia. Itens com receita ou Farmacia Popular continuam no WhatsApp.
 
 ## Arquivos e Rotas Envolvidos
 
@@ -20,8 +20,9 @@ O foco atual e usar a home como vitrine de anuncio e facilitar atendimento local
 
 ## Regras de Negocio a Preservar
 
-- WhatsApp e o canal principal de conversao nesta fase.
-- Nao implementar checkout ou pagamento online agora.
+- O checkout registra pedidos pendentes, sem cobrar ou prometer aprovacao automatica.
+- WhatsApp continua como apoio e como canal obrigatorio para itens com receita ou Farmacia Popular.
+- Nao coletar numero de cartao, CVV ou credenciais bancarias sem gateway homologado.
 - Nao usar dados reais de clientes em exemplos, seed ou testes.
 - Farmacia Popular deve orientar e chamar para confirmacao, sem prometer disponibilidade automatica.
 - Roleta e cashback existem como estrutura futura, sem ativacao comercial real.
@@ -45,7 +46,7 @@ O foco atual e usar a home como vitrine de anuncio e facilitar atendimento local
 - Tornar dados administrativos acessiveis a usuarios comuns.
 - Expor segredos do cofre por log, resposta de listagem ou print de tela.
 - Deixar credenciais temporarias em producao.
-- Prometer compra/pagamento sem o modulo existir.
+- Tratar pedido pendente como venda confirmada ou pagamento aprovado.
 
 ## Pendencias
 

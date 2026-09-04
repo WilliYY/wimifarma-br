@@ -5,16 +5,16 @@ export default function Page() {
   return (
     <>
       <PageHero
-        description="Delivery local pensado para reduzir atrito: pedido via WhatsApp, confirmacao humana e evolucao futura com regras internas."
+        description="Entrega local com checkout organizado, confirmacao humana da farmacia e apoio pelo WhatsApp quando necessario."
         title="Delivery em Ivate"
       >
         <div className="flex gap-4">
           <Bike className="h-8 w-8 text-brand" />
           <div>
-            <p className="font-bold text-ink">Sem checkout neste momento</p>
+            <p className="font-bold text-ink">Checkout com entrega em Ivate</p>
             <p className="mt-2 text-sm leading-6 text-muted">
-              A compra começa no site e fecha com a equipe, com seguranca e
-              contexto.
+              Monte o carrinho, informe o endereco e aguarde a confirmacao da
+              equipe antes do pagamento.
             </p>
           </div>
         </div>

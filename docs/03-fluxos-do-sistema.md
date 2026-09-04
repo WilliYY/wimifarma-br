@@ -32,6 +32,29 @@ Arquivos:
 - `src/app/api/whatsapp/route.ts`
 - `src/features/whatsapp/schema.ts`
 
+## Fluxo de Carrinho e Checkout
+
+1. Cliente clica em `Comprar` em um produto elegivel da vitrine ou pagina de produto.
+2. O carrinho fica salvo no navegador e permite alterar quantidade ou remover itens.
+3. Em `/checkout`, o cliente informa identificacao, escolhe entrega em Ivate-PR ou retirada na loja e indica Pix, cartao na entrega/retirada ou dinheiro.
+4. A revisao mostra contato, atendimento, pagamento e itens antes do envio.
+5. `POST /api/pedidos` valida os dados com Zod e consulta novamente produto, status, estoque e preco no PostgreSQL.
+6. O pedido e seus itens sao gravados como snapshots em `Order` e `OrderItem`, com status `PENDING`. O estoque nao e baixado antes da confirmacao humana.
+7. A equipe acompanha `/admin/pedidos` e avanca andamento e pagamento apenas pelas transicoes permitidas; cada alteracao gera auditoria sem dados pessoais no metadata.
+8. Itens com receita ou Farmacia Popular nao entram no checkout e continuam no WhatsApp.
+
+O checkout nao coleta dados de cartao, nao gera Pix e nao aprova pagamento. A forma escolhida e apenas uma preferencia ate a farmacia confirmar o pedido.
+
+Arquivos:
+
+- `src/components/site/cart-provider.tsx`
+- `src/components/site/cart-page.tsx`
+- `src/components/site/checkout-page.tsx`
+- `src/features/orders/checkout.ts`
+- `src/app/api/pedidos/*`
+- `src/app/admin/pedidos/page.tsx`
+- `src/components/admin/orders-panel.tsx`
+
 ## Fluxo de Login
 
 1. Usuario acessa `/login`.
@@ -182,7 +205,7 @@ Arquivos:
 
 ## Regras a Preservar
 
-- Nao prometer compra online.
+- Nao apresentar pedido pendente como compra confirmada.
 - Nao prometer disponibilidade sem atendimento.
 - Nao abrir APIs administrativas ao publico.
 - Nao usar dados reais de clientes.

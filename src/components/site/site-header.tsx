@@ -9,6 +9,7 @@ import {
 import { auth, signOut } from "@/features/auth/auth";
 import { SiteNav } from "@/components/site/site-nav";
 import { SiteSearch } from "@/components/site/site-search";
+import { CartHeaderButton } from "@/components/site/cart-header-button";
 import { publicNavItems, siteConfig } from "@/lib/site";
 
 export async function SiteHeader() {
@@ -74,6 +75,7 @@ export async function SiteHeader() {
         </Link>
 
         <div className="ml-auto flex items-center gap-2 md:hidden">
+          <CartHeaderButton />
           {session?.user ? (
             <>
               <Link
@@ -163,6 +165,7 @@ export async function SiteHeader() {
               <MessageCircle className="h-4 w-4 stroke-[2.6]" />
             </span>
           </a>
+          <CartHeaderButton />
           {session?.user ? (
             <div className="ml-2 flex min-w-0 items-center gap-2">
               <Link

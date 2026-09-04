@@ -19,9 +19,13 @@ export default async function Page() {
       featuredPosition: true,
       id: true,
       imageUrl: true,
+      isPopularPharmacy: true,
       name: true,
       price: true,
       promotionalPrice: true,
+      requiresPrescription: true,
+      slug: true,
+      stock: true,
     },
     take: SHOWCASE_SLOT_COUNT,
     where: {
