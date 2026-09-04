@@ -392,6 +392,12 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
 
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.pointerType !== "mouse" || event.button !== 0) return;
+    if (
+      event.target instanceof Element &&
+      event.target.closest("a, button, input, select, textarea, label")
+    ) {
+      return;
+    }
 
     dragState.current = {
       moved: false,
