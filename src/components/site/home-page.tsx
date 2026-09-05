@@ -681,9 +681,7 @@ export function HomePage({
     <>
       <section className="pharma-clouds bg-white px-4 pb-8 pt-32 sm:px-6 sm:pt-36 lg:px-8 lg:pt-44">
         <div className="mx-auto max-w-7xl">
-          <MotionBlock>
-            <HeroVideo />
-          </MotionBlock>
+          <HeroVideo />
         </div>
       </section>
 

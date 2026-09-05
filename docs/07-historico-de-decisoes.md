@@ -2,7 +2,7 @@
 
 ## 2026-09-05 - Correcao responsiva, performance e metadados por rota
 
-- Decisao: manter todos os controles do header acessiveis em celulares pequenos, substituir o segundo carregamento do video pelo poster leve, aplicar cache ao MP4, renderizar a primeira vitrine sem atraso de animacao e definir canonical, titulo e compartilhamento proprios para cada pagina publica indexavel.
+- Decisao: manter todos os controles do header acessiveis em celulares pequenos, substituir o segundo carregamento do video pelo poster leve, aplicar cache ao MP4, renderizar hero e primeira vitrine sem atraso de animacao e definir canonical, titulo e compartilhamento proprios para cada pagina publica indexavel.
 - Motivo: corrigir corte da busca em 360 px, reduzir disputa de rede no carregamento inicial e impedir que paginas institucionais sejam interpretadas como duplicatas da home.
 - Impacto: header, botao de carrinho, hero da home, fonte local com `next/font`, configuracao de headers, metadados das rotas publicas, contraste do rodape, teste automatizado e documentacao de layout.
 - Riscos/cuidados: o video principal continua em autoplay e loop por decisao visual; futuras trocas do arquivo devem preservar o poster leve e revisar a politica de cache. Paginas de conta, carrinho e checkout continuam com `noindex`.
