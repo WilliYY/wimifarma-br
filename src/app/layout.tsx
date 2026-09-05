@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
+import { Barlow } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
+
+const barlow = Barlow({
+  display: "swap",
+  preload: true,
+  subsets: ["latin"],
+  variable: "--font-barlow",
+  weight: ["400", "500", "600", "700", "900"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://wimifarma.com.br"),
@@ -47,7 +56,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="h-full antialiased">
+    <html lang="pt-BR" className={`${barlow.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         {children}
         <Toaster richColors position="top-right" />

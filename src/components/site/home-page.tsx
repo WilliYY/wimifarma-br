@@ -267,6 +267,7 @@ function HeroVideo() {
           aria-hidden="true"
           className="absolute inset-0 h-full w-full scale-125 object-cover object-center opacity-20 blur-2xl saturate-[0.8]"
           fill
+          priority
           sizes="100vw"
           src="/videos/thiago-poster.svg"
           unoptimized
