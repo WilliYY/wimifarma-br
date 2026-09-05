@@ -79,7 +79,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 - Framer Motion usado para entradas suaves.
 - `lucide-react` usado para icones.
-- Produtos selecionados usam a imagem WebP real do catalogo com `object-contain`; apenas as posicoes ainda vazias mantem o visual CSS reservado.
+- Produtos selecionados usam a imagem WebP real do catalogo com `object-contain`, centralizada sobre fundo branco neutro para que fotos ja tratadas nao formem um quadrado branco sobre a cor da oferta; apenas as posicoes ainda vazias mantem o visual CSS colorido reservado.
 - A vitrine `Melhores ofertas` segue padrao de e-commerce farmaceutico com selo, categoria, preco de/por, economia e disponibilidade local. A ordem vem de `Product.featuredPosition`, e os CTAs continuam consultando pelo WhatsApp, sem sugerir checkout online.
 - O cadastro de produtos oferece editor responsivo em modal para enquadramento quadrado, zoom e rotacao. No celular, a area de recorte preserva espaco para os controles e os botoes ocupam a largura disponivel.
 - Video fica em `public/videos/thiago-cansado.mp4`, roda em loop e usa `public/videos/thiago-poster.svg` para evitar tela escura antes do carregamento.

@@ -559,11 +559,17 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
                     </span>
                   </div>
 
-                  <div className="relative m-3 mb-3 grid min-h-36 place-items-center overflow-hidden rounded-md bg-[linear-gradient(145deg,var(--offer-soft)_0%,#fff_70%)] ring-1 ring-[var(--offer-soft)]">
+                  <div
+                    className={`relative m-3 mb-3 grid min-h-36 place-items-center overflow-hidden rounded-md ring-1 ${
+                      item.imageUrl
+                        ? "bg-white ring-line/70"
+                        : "bg-[linear-gradient(145deg,var(--offer-soft)_0%,#fff_70%)] ring-[var(--offer-soft)]"
+                    }`}
+                  >
                     {item.imageUrl ? (
                       <Image
                         alt={item.name}
-                        className="object-contain p-3 transition duration-300 group-hover:scale-105"
+                        className="object-contain object-center p-3 transition duration-300 group-hover:scale-105"
                         fill
                         sizes="(min-width: 1280px) 230px, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
                         src={item.imageUrl}
