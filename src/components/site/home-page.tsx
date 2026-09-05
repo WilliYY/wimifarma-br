@@ -194,39 +194,11 @@ function MotionBlock({
 }
 
 function HeroVideo() {
-  const autoPlayTimerRef = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isMuted, setIsMuted] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  useEffect(() => {
-    const video = videoRef.current;
-
-    if (!video || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
-    }
-
-    autoPlayTimerRef.current = window.setTimeout(() => {
-      autoPlayTimerRef.current = null;
-      void video.play().catch(() => setIsPlaying(false));
-    }, 1200);
-
-    return () => {
-      if (autoPlayTimerRef.current !== null) {
-        window.clearTimeout(autoPlayTimerRef.current);
-      }
-    };
-  }, []);
-
-  const cancelScheduledAutoPlay = () => {
-    if (autoPlayTimerRef.current !== null) {
-      window.clearTimeout(autoPlayTimerRef.current);
-      autoPlayTimerRef.current = null;
-    }
-  };
+  const [isPlaying, setIsPlaying] = useState(true);
 
   const togglePlay = () => {
-    cancelScheduledAutoPlay();
     const video = videoRef.current;
 
     if (!video) {
@@ -243,7 +215,6 @@ function HeroVideo() {
   };
 
   const toggleMute = () => {
-    cancelScheduledAutoPlay();
     const video = videoRef.current;
 
     if (!video) {
@@ -301,6 +272,7 @@ function HeroVideo() {
             <div className="relative aspect-[9/16] w-[min(68vw,250px)] overflow-hidden rounded-md bg-[#111827] shadow-[0_28px_60px_rgba(17,24,39,0.24)] ring-1 ring-black/10 sm:w-[min(44vw,280px)] lg:h-full lg:max-h-[432px] lg:min-h-0 lg:w-auto">
               <video
                 aria-label="Video da Wimifarma"
+                autoPlay
                 className="h-full w-full object-cover object-center"
                 loop
                 muted
@@ -309,7 +281,7 @@ function HeroVideo() {
                 onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
                 playsInline
                 poster="/videos/thiago-poster.svg"
-                preload="none"
+                preload="metadata"
                 ref={videoRef}
               >
                 <source src="/videos/thiago-cansado.mp4" type="video/mp4" />
