@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-05 - Correcao responsiva, performance e metadados por rota
+
+- Decisao: manter todos os controles do header acessiveis em celulares pequenos, substituir o segundo carregamento do video pelo poster leve, aplicar cache ao MP4 e definir canonical, titulo e compartilhamento proprios para cada pagina publica indexavel.
+- Motivo: corrigir corte da busca em 360 px, reduzir disputa de rede no carregamento inicial e impedir que paginas institucionais sejam interpretadas como duplicatas da home.
+- Impacto: header, botao de carrinho, hero da home, configuracao de headers, metadados das rotas publicas, contraste do rodape, teste automatizado e documentacao de layout.
+- Riscos/cuidados: o video principal continua em autoplay e loop por decisao visual; futuras trocas do arquivo devem preservar o poster leve e revisar a politica de cache. Paginas de conta, carrinho e checkout continuam com `noindex`.
+
 ## 2026-09-04 - Carrinho e checkout de pedido pendente
 
 - Decisao: permitir compra de produtos elegiveis por carrinho e checkout, gravando `Order` e `OrderItem` para confirmacao humana e operacao em `/admin/pedidos`.

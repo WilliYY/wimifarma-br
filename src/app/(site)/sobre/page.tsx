@@ -7,7 +7,15 @@ import {
 } from "lucide-react";
 import { PageHero } from "@/components/site/page-hero";
 import { Button } from "@/components/ui/button";
+import { createPublicPageMetadata } from "@/lib/metadata";
 import { siteConfig } from "@/lib/site";
+
+export const metadata = createPublicPageMetadata({
+  description:
+    "Conheça a Wimifarma, farmácia local em Ivaté-PR com atendimento humano, delivery e apoio pelo WhatsApp.",
+  path: "/sobre",
+  title: "Sobre nossa farmácia em Ivaté-PR",
+});
 
 const values = [
   {

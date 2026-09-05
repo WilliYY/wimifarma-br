@@ -233,18 +233,15 @@ function HeroVideo() {
   return (
     <div className="relative overflow-hidden rounded-lg border border-white bg-white p-2 shadow-[0_26px_90px_rgba(17,24,39,0.12)]">
       <div className="relative overflow-hidden rounded-md bg-[linear-gradient(135deg,#fff_0%,#fff4f6_34%,#eff8f3_68%,#f8fafc_100%)] lg:aspect-[8/3]">
-        <video
+        <Image
+          alt=""
           aria-hidden="true"
-          autoPlay
           className="absolute inset-0 h-full w-full scale-125 object-cover object-center opacity-20 blur-2xl saturate-[0.8]"
-          loop
-          muted
-          playsInline
-          preload="auto"
-          tabIndex={-1}
-        >
-          <source src="/videos/thiago-cansado.mp4" type="video/mp4" />
-        </video>
+          fill
+          sizes="100vw"
+          src="/videos/thiago-poster.svg"
+          unoptimized
+        />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.92),rgba(255,255,255,0.42)_32%,rgba(255,255,255,0.42)_68%,rgba(255,255,255,0.92))]" />
         <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#c8102e,#138a45,#064b8e)]" />
 
@@ -283,7 +280,7 @@ function HeroVideo() {
                 onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
                 playsInline
                 poster="/videos/thiago-poster.svg"
-                preload="auto"
+                preload="metadata"
                 ref={videoRef}
               >
                 <source src="/videos/thiago-cansado.mp4" type="video/mp4" />

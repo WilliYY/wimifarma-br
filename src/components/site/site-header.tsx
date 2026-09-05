@@ -65,10 +65,10 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <div className="relative flex items-center gap-2 bg-[#121820] px-4 py-1.5 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
+      <div className="relative flex items-center gap-2 bg-[#121820] px-1 py-1.5 min-[360px]:px-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         <Link
           aria-label="Wimifarma"
-          className="relative flex h-20 w-40 shrink-0 items-center justify-start overflow-hidden sm:h-24 sm:w-64 xl:w-72"
+          className="relative flex h-20 w-24 shrink-0 items-center justify-start overflow-hidden min-[360px]:w-28 sm:h-24 sm:w-64 xl:w-72"
           href="/"
         >
           <Image
@@ -77,7 +77,7 @@ export async function SiteHeader() {
             className="object-contain object-left"
             fill
             priority
-            sizes="(min-width: 1280px) 288px, (min-width: 640px) 256px, 224px"
+            sizes="(min-width: 1280px) 288px, (min-width: 640px) 256px, (min-width: 360px) 112px, 96px"
             src="/brand/logo-animada.svg"
             unoptimized
           />
@@ -98,8 +98,8 @@ export async function SiteHeader() {
           />
         </Link>
 
-        <div className="ml-auto flex items-center gap-2 md:hidden">
-          <CartHeaderButton />
+        <div className="ml-auto flex items-center gap-1 md:hidden">
+          <CartHeaderButton className="ml-0" />
           {session?.user ? (
             <>
               <Link
@@ -123,6 +123,7 @@ export async function SiteHeader() {
                 )}
               </Link>
               <form
+                className="shrink-0"
                 action={async () => {
                   "use server";
                   await signOut({ redirectTo: "/" });

@@ -1,12 +1,13 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
+import { createPublicPageMetadata } from "@/lib/metadata";
 import { siteConfig } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Politica de Privacidade | Wimifarma",
+export const metadata = createPublicPageMetadata({
   description: "Como a Wimifarma trata dados pessoais no site, na conta e nos pedidos.",
-};
+  path: "/privacidade",
+  title: "Política de Privacidade",
+});
 
 const sections = [
   {

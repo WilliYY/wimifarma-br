@@ -14,7 +14,15 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { createPublicPageMetadata } from "@/lib/metadata";
 import { siteConfig } from "@/lib/site";
+
+export const metadata = createPublicPageMetadata({
+  description:
+    "Atendimento para Farmácia Popular em Ivaté-PR com orientação da equipe, conferência de documentos e disponibilidade.",
+  path: "/farmacia-popular",
+  title: "Farmácia Popular em Ivaté-PR",
+});
 
 const steps = [
   {

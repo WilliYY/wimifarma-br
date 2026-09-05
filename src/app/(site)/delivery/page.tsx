@@ -1,5 +1,13 @@
 import { Bike, Clock, MapPin } from "lucide-react";
 import { PageHero } from "@/components/site/page-hero";
+import { createPublicPageMetadata } from "@/lib/metadata";
+
+export const metadata = createPublicPageMetadata({
+  description:
+    "Delivery de farmácia em Ivaté-PR com carrinho organizado, entrega local e confirmação humana da Wimifarma.",
+  path: "/delivery",
+  title: "Delivery de farmácia em Ivaté-PR",
+});
 
 export default function Page() {
   return (

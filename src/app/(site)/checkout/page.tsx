@@ -5,7 +5,7 @@ import { getPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "Checkout | Wimifarma",
+  title: "Checkout",
   robots: { follow: false, index: false },
 };
 

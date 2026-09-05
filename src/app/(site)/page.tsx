@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { HomePage } from "@/components/site/home-page";
 import {
   SHOWCASE_SLOT_COUNT,
@@ -7,6 +8,9 @@ import { getPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default async function Page() {
   const prisma = getPrisma();

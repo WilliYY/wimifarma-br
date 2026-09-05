@@ -31,7 +31,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 - Header fixo com faixa vermelha de frete gratis, caminhaozinho com deslocamento animado, faixa escura integrada a logo animada sem fundo ancorada no canto esquerdo, selo Farmacia Popular ao lado da logo em telas largas, busca, link de localizacao no Google Maps, botao WhatsApp verde com icone destacado, login/cadastrar e nav.
 - A busca do header consulta produtos publicados do banco com atraso curto durante a digitacao. O autocomplete mostra foto, nome, preco normal/promocional, principio ativo e correlatos; setas mudam a selecao e Enter abre `/produto/[slug]`. Sem resultado, Enter mantem a consulta pelo WhatsApp.
-- No celular, um botao de busca abre um dialogo de tela cheia com campo e resultados, evitando comprimir a logo e os controles do header.
+- No celular, um botao de busca abre um dialogo de tela cheia com campo e resultados. Em larguras pequenas, a logo reduz de forma responsiva e os quatro controles de carrinho, conta, saida e busca permanecem visiveis com alvo de toque de 44 px.
 - Menu principal destaca a rota ativa em telas largas para deixar claro em qual aba o usuario esta.
 - Quando ha sessao, o header troca `Login / Cadastrar` por foto/nome abreviado da conta e um botao `Sair`. Perfis internos usam os rotulos curtos `Admin`, `Gerente` ou `Equipe`; clientes exibem apenas o primeiro nome, mantendo o nome completo na dica e no rotulo acessivel.
 - O nome da conta no header abre `/minha-conta`, que redireciona perfis internos para o painel administrativo.
@@ -82,7 +82,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Produtos selecionados usam a imagem WebP real do catalogo com `object-contain`, centralizada sobre fundo branco neutro para que fotos ja tratadas nao formem um quadrado branco sobre a cor da oferta; apenas as posicoes ainda vazias mantem o visual CSS colorido reservado.
 - A vitrine `Melhores ofertas` segue padrao de e-commerce farmaceutico com selo, categoria, preco de/por, economia e disponibilidade local. A ordem vem de `Product.featuredPosition`, e os CTAs continuam consultando pelo WhatsApp, sem sugerir checkout online.
 - O cadastro de produtos oferece editor responsivo em modal para enquadramento quadrado, zoom e rotacao. No celular, a area de recorte preserva espaco para os controles e os botoes ocupam a largura disponivel.
-- Video fica em `public/videos/thiago-cansado.mp4`, roda em loop e usa `public/videos/thiago-poster.svg` para evitar tela escura antes do carregamento.
+- Video fica em `public/videos/thiago-cansado.mp4`, roda em loop e usa `public/videos/thiago-poster.svg` para evitar tela escura antes do carregamento. O poster leve tambem compoe o fundo desfocado, evitando baixar o mesmo MP4 duas vezes; o video usa preload de metadados e cache semanal com revalidacao em segundo plano.
 - O video principal foi recomprimido de forma conservadora, mantendo resolucao e audio, para reduzir peso sem alterar a composicao visual.
 - A pagina individual usa composicao de e-commerce farmaceutico: breadcrumb, foto ampliavel sem fabricar miniaturas, informacoes comerciais, seletor de quantidade, entrega/retirada, detalhes em secoes expansivas, avaliacoes verificadas e produtos relacionados.
 - No mobile, compra e frete ficam em uma coluna, controles mantem alvos de toque amplos e os relacionados usam rolagem horizontal com snap. No desktop, imagem e painel comercial dividem a primeira dobra sem cards aninhados.

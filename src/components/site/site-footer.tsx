@@ -64,7 +64,7 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-white/70">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-white/90">
             Navegacao
           </p>
           <div className="mt-5 grid gap-3">
@@ -81,7 +81,7 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-white/70">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-white/90">
             Atendimento
           </p>
           <div className="mt-5 grid gap-4 text-sm font-medium text-white/85">
@@ -100,7 +100,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="relative z-10 border-t border-white/20 py-4">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 text-xs font-medium text-white/70 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 text-xs font-medium text-white/90 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>(c) 2026 Wimifarma. Todos os direitos reservados.</p>
           <Link className="font-bold text-white/85 underline-offset-4 hover:text-white hover:underline" href="/privacidade">Politica de Privacidade</Link>
         </div>

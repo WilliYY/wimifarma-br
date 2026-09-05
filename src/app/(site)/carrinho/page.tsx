@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CartPage } from "@/components/site/cart-page";
 
 export const metadata: Metadata = {
-  title: "Carrinho | Wimifarma",
+  title: "Carrinho",
   robots: { follow: false, index: false },
 };
 

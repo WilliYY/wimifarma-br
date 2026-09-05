@@ -3,6 +3,14 @@ import { PageHero } from "@/components/site/page-hero";
 import { Card, CardContent } from "@/components/ui/card";
 import { siteConfig } from "@/lib/site";
 import { formatCurrency } from "@/lib/utils";
+import { createPublicPageMetadata } from "@/lib/metadata";
+
+export const metadata = createPublicPageMetadata({
+  description:
+    "Confira ofertas de medicamentos, higiene, beleza e bem-estar da Wimifarma em Ivaté-PR.",
+  path: "/ofertas",
+  title: "Ofertas de farmácia em Ivaté-PR",
+});
 
 const offers = [
   ["Cuidado diario", "Produtos essenciais com preco de campanha.", 19.9],

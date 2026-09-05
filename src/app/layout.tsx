@@ -4,9 +4,6 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://wimifarma.com.br"),
-  alternates: {
-    canonical: "/",
-  },
   title: {
     default: "Wimifarma | Farmacia em Ivate-PR",
     template: "%s | Wimifarma",
