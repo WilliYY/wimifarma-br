@@ -12,10 +12,34 @@ import { SiteSearch } from "@/components/site/site-search";
 import { CartHeaderButton } from "@/components/site/cart-header-button";
 import { publicNavItems, siteConfig } from "@/lib/site";
 
+function getCompactAccountName(displayName: string, role?: string) {
+  const roleLabels: Record<string, string> = {
+    ADMIN: "Admin",
+    MANAGER: "Gerente",
+    STAFF: "Equipe",
+  };
+
+  if (role && roleLabels[role]) {
+    return roleLabels[role];
+  }
+
+  const firstName = displayName.trim().split(/\s+/)[0];
+
+  if (!firstName) {
+    return "Cliente";
+  }
+
+  return firstName.length > 16 ? `${firstName.slice(0, 13)}...` : firstName;
+}
+
 export async function SiteHeader() {
   const session = await auth();
   const displayName =
     session?.user?.name || session?.user?.email?.split("@")[0] || "Cliente";
+  const compactDisplayName = getCompactAccountName(
+    displayName,
+    session?.user?.role,
+  );
   const userImage = session?.user?.image;
 
   return (
@@ -61,7 +85,7 @@ export async function SiteHeader() {
 
         <Link
           aria-label="Farmacia Popular"
-          className="hidden h-20 w-20 shrink-0 items-center justify-center overflow-hidden lg:flex xl:h-[5.5rem] xl:w-[5.5rem]"
+          className="hidden h-[5.5rem] w-[5.5rem] shrink-0 items-center justify-center overflow-hidden xl:flex"
           href="/farmacia-popular"
         >
           <Image
@@ -155,12 +179,13 @@ export async function SiteHeader() {
             </span>
           </a>
           <a
-            className="soft-breathe hidden min-h-14 items-center gap-3 rounded-full bg-[linear-gradient(135deg,#22d365_0%,#14b85a_52%,#0f9f4f_100%)] px-5 py-2.5 font-body text-sm font-black text-white shadow-[0_16px_36px_rgba(34,211,101,0.28),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-white/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(34,211,101,0.34),inset_0_1px_0_rgba(255,255,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9ff0be] focus-visible:ring-offset-2 focus-visible:ring-offset-[#121820] lg:inline-flex"
+            aria-label="Falar com a Wimifarma pelo WhatsApp"
+            className="soft-breathe hidden h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#22d365_0%,#14b85a_52%,#0f9f4f_100%)] font-body text-sm font-black text-white shadow-[0_16px_36px_rgba(34,211,101,0.28),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-white/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(34,211,101,0.34),inset_0_1px_0_rgba(255,255,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9ff0be] focus-visible:ring-offset-2 focus-visible:ring-offset-[#121820] lg:inline-flex xl:w-auto xl:gap-3 xl:px-5"
             href={siteConfig.whatsappUrl}
             rel="noreferrer"
             target="_blank"
           >
-            <span>WhatsApp</span>
+            <span className="hidden xl:inline">WhatsApp</span>
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/18 ring-1 ring-white/30">
               <MessageCircle className="h-4 w-4 stroke-[2.6]" />
             </span>
@@ -169,8 +194,8 @@ export async function SiteHeader() {
           {session?.user ? (
             <div className="ml-2 flex min-w-0 items-center gap-2">
               <Link
-                aria-label="Abrir minha conta"
-                className="inline-flex h-11 w-11 min-w-0 items-center justify-center rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:h-auto sm:w-auto sm:max-w-[11rem] sm:justify-start sm:gap-2 sm:py-2 sm:pl-2 sm:pr-4 lg:max-w-[13rem]"
+                aria-label={`Abrir conta de ${displayName}`}
+                className="inline-flex h-11 min-w-0 max-w-[9rem] items-center justify-start gap-2 rounded-full border border-line bg-white py-2 pl-2 pr-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:max-w-[11rem] xl:pr-4"
                 href="/minha-conta"
                 title={displayName}
               >
@@ -189,7 +214,7 @@ export async function SiteHeader() {
                     <UserRound className="h-4 w-4 text-brand" />
                   </span>
                 )}
-                <span className="hidden truncate sm:inline">{displayName}</span>
+                <span className="min-w-0 truncate">{compactDisplayName}</span>
               </Link>
               <form
                 action={async () => {
@@ -199,10 +224,10 @@ export async function SiteHeader() {
               >
                 <button
                   aria-label="Sair"
-                  className="inline-flex h-11 w-11 items-center justify-center whitespace-nowrap rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:h-auto sm:w-auto sm:gap-2 sm:px-5 sm:py-3"
+                  className="inline-flex h-11 w-11 items-center justify-center whitespace-nowrap rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:w-auto xl:gap-2 xl:px-5"
                   type="submit"
                 >
-                  <span className="hidden sm:inline">Sair</span>
+                  <span className="hidden xl:inline">Sair</span>
                   <LogOut className="h-4 w-4" />
                 </button>
               </form>
@@ -210,10 +235,10 @@ export async function SiteHeader() {
           ) : (
             <Link
               aria-label="Login ou cadastro"
-              className="ml-2 inline-flex h-11 w-11 items-center justify-center whitespace-nowrap rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand sm:h-auto sm:w-auto sm:gap-2 sm:px-5 sm:py-3"
+              className="ml-2 inline-flex h-11 w-11 items-center justify-center whitespace-nowrap rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:w-auto xl:gap-2 xl:px-5"
               href="/login"
             >
-              <span className="hidden sm:inline">Login / Cadastrar</span>
+              <span className="hidden xl:inline">Login / Cadastrar</span>
               <LogIn className="h-4 w-4" />
             </Link>
           )}

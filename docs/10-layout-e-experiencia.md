@@ -33,8 +33,8 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - A busca do header consulta produtos publicados do banco com atraso curto durante a digitacao. O autocomplete mostra foto, nome, preco normal/promocional, principio ativo e correlatos; setas mudam a selecao e Enter abre `/produto/[slug]`. Sem resultado, Enter mantem a consulta pelo WhatsApp.
 - No celular, um botao de busca abre um dialogo de tela cheia com campo e resultados, evitando comprimir a logo e os controles do header.
 - Menu principal destaca a rota ativa em telas largas para deixar claro em qual aba o usuario esta.
-- Quando ha sessao de cliente, o header troca `Login / Cadastrar` por foto/nome da conta Google e um botao `Sair`.
-- O nome do cliente no header abre `/minha-conta`.
+- Quando ha sessao, o header troca `Login / Cadastrar` por foto/nome abreviado da conta e um botao `Sair`. Perfis internos usam os rotulos curtos `Admin`, `Gerente` ou `Equipe`; clientes exibem apenas o primeiro nome, mantendo o nome completo na dica e no rotulo acessivel.
+- O nome da conta no header abre `/minha-conta`, que redireciona perfis internos para o painel administrativo.
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
 - Banner principal atual e video da Wimifarma em uma vitrine responsiva com acabamento claro, chamada para WhatsApp, texto comercial sobre medicamentos e Farmacia Popular, poster de carregamento e controles integrados de pausar e som. Em telas a partir de `lg`, o banner usa proporcao fixa `8:3`, chegando a `1280 x 480 px` no limite de largura do site; no celular, a composicao volta a ter altura fluida para preservar o video vertical e os controles sem cortes.
 - Para futuras artes do banner principal, usar preferencialmente `1920 x 720 px` em WebP, com ate 350 KB e area segura central de 1600 x 560 px. Se a campanha precisar de uma arte propria no celular, preparar tambem `1080 x 1350 px` em WebP, com ate 250 KB; textos e botoes comerciais devem continuar em HTML sempre que possivel.
@@ -67,7 +67,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Evitar excesso de informacao sobre o video; a vitrine deve ter um unico CTA principal para WhatsApp.
 - Logo nao deve ficar cortada nem presa em bolha desnecessaria.
 - Logo animada do header deve ficar alinhada ao canto esquerdo da janela, em fundo escuro integrado ao GIF, com escala suficiente para mostrar toda a animacao sem cortar topo ou base, e nao deve invadir a busca.
-- Selo Farmacia Popular do header deve ficar ao lado da logo animada apenas quando houver espaco suficiente, sem cobrir a animacao nem apertar a busca.
+- Selo Farmacia Popular do header deve ficar ao lado da logo animada apenas em telas `xl` ou maiores, sem cobrir a animacao nem apertar a busca. Em larguras intermediarias, WhatsApp, login e saida usam versoes compactas com icone.
 - Layout deve ser responsivo e nao gerar barra lateral horizontal.
 - Paginas internas precisam iniciar abaixo do header fixo para evitar conteudo cortado no primeiro viewport.
 - Animacoes devem ser leves e nao prejudicar performance.
