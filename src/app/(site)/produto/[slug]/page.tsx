@@ -99,7 +99,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: product.name,
       type: "website",
     },
-    title: `${product.name} | Wimifarma`,
+    title: product.name,
   };
 }
 
