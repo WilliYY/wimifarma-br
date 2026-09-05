@@ -18,7 +18,10 @@ import { ProductReviewForm } from "@/components/site/product-review-form";
 import { PublicProductCard } from "@/components/site/public-product-card";
 import { auth } from "@/features/auth/auth";
 import {
+  buildProductMetaDescription,
+  buildProductStructuredData,
   publicReviewerName,
+  serializeProductStructuredData,
   summarizeProductReviews,
 } from "@/features/products/product-detail";
 import {
@@ -86,20 +89,29 @@ function RatingStars({ rating, size = "h-4 w-4" }: { rating: number | null; size
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const product = await getPrisma().product.findFirst({
-    select: { description: true, imageUrl: true, name: true },
+    select: { brand: true, description: true, imageUrl: true, name: true },
     where: { slug, status: "ACTIVE" },
   });
   if (!product) return {};
-  const description = product.description?.slice(0, 155) ?? `Consulte preco e disponibilidade de ${product.name} na Wimifarma.`;
+  const description = buildProductMetaDescription(product);
+  const productUrl = `/produto/${encodeURIComponent(slug)}`;
   return {
+    alternates: { canonical: productUrl },
     description,
     openGraph: {
       description,
       images: product.imageUrl ? [{ alt: product.name, url: product.imageUrl }] : undefined,
       title: product.name,
       type: "website",
+      url: productUrl,
     },
     title: product.name,
+    twitter: {
+      card: "summary_large_image",
+      description,
+      images: product.imageUrl ? [product.imageUrl] : undefined,
+      title: product.name,
+    },
   };
 }
 
@@ -161,6 +173,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const saving = hasPromotion ? normalPrice - currentPrice : 0;
   const discountPercentage = hasPromotion ? Math.round((saving / normalPrice) * 100) : 0;
   const dateFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" });
+  const productStructuredData = buildProductStructuredData({
+    brand: product.brand,
+    description: product.description,
+    ean: product.ean,
+    imageUrl: product.imageUrl,
+    name: product.name,
+    price: currentPrice,
+    rating: ratingSummary,
+    sku: product.sku,
+    slug: product.slug,
+    stock: product.stock,
+  });
   const cartProduct = {
     category: product.category,
     id: product.id,
@@ -176,6 +200,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
+      <script
+        dangerouslySetInnerHTML={{ __html: serializeProductStructuredData(productStructuredData) }}
+        type="application/ld+json"
+      />
       <section className="border-b border-line bg-[#f5f6f8]">
         <div className="mx-auto w-full max-w-7xl px-4 pb-12 pt-36 sm:px-6 sm:pt-40 lg:px-8 lg:pb-16 lg:pt-56">
           <nav aria-label="Navegacao estrutural" className="flex items-center gap-1 overflow-hidden text-xs font-bold text-muted sm:text-sm">

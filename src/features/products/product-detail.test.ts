@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildProductMetaDescription,
+  buildProductStructuredData,
   getDeliveryAvailability,
   productReviewInputSchema,
   publicReviewerName,
+  serializeProductStructuredData,
   summarizeProductReviews,
 } from "./product-detail";
 
@@ -51,4 +54,59 @@ test("valida nota e comentario da avaliacao", () => {
   );
   assert.equal(productReviewInputSchema.safeParse({ comment: "curto", rating: 5 }).success, false);
   assert.equal(productReviewInputSchema.safeParse({ comment: "", rating: 6 }).success, false);
+});
+
+test("gera descricao SEO unica e legivel sem cortar palavras", () => {
+  const description = buildProductMetaDescription({
+    brand: "Cimed",
+    description: "Cimegripe 20 capsulas da Cimed combina os principios ativos confirmados na bula em uma apresentacao pratica para consulta de preco e disponibilidade na farmacia local.",
+    name: "Cimegripe 20 capsulas",
+  });
+
+  assert.ok(description.length <= 160);
+  assert.match(description, /^Cimegripe 20 capsulas/i);
+  assert.match(description, /[.!?]$/);
+  assert.doesNotMatch(description, /\s[\p{L}\p{N}]{1,20}$/u);
+});
+
+test("gera descricao SEO segura quando o produto ainda nao tem descricao", () => {
+  const description = buildProductMetaDescription({
+    brand: "Cimed",
+    description: null,
+    name: "Cimegripe 20 capsulas",
+  });
+
+  assert.match(description, /Cimegripe 20 capsulas da Cimed/i);
+  assert.match(description, /Wimifarma em Ivate-PR/i);
+  assert.ok(description.length <= 160);
+});
+
+test("gera dados estruturados de produto apenas com informacoes reais", () => {
+  const structuredData = buildProductStructuredData({
+    brand: "Cimed",
+    description: "Cimegripe 20 capsulas da Cimed em apresentacao para consulta na Wimifarma.",
+    ean: "7896523200576",
+    imageUrl: "/uploads/products/cimegripe.webp",
+    name: "Cimegripe 20 capsulas",
+    price: 9.99,
+    rating: { average: 4.8, count: 12 },
+    sku: null,
+    slug: "cimegripe-20-capsulas",
+    stock: 30,
+  });
+
+  assert.equal(structuredData["@type"], "Product");
+  assert.equal(structuredData.gtin13, "7896523200576");
+  assert.equal(structuredData.offers.availability, "https://schema.org/InStock");
+  assert.equal(structuredData.aggregateRating?.reviewCount, 12);
+  assert.equal(structuredData.offers.price, "9.99");
+});
+
+test("serializa JSON-LD sem permitir fechar a tag script", () => {
+  const serialized = serializeProductStructuredData({
+    description: "</script><script>alert(1)</script>",
+  });
+
+  assert.doesNotMatch(serialized, /<\/script>/i);
+  assert.match(serialized, /\\u003c\/script\\u003e/i);
 });

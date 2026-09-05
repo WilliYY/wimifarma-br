@@ -105,7 +105,7 @@ As APIs de negocio usam `requireAdminApi`. O cofre `API e Senhas` usa `requireAd
 - Banco fica atras do app e nao exposto publicamente.
 - App Docker usa `output: standalone` do Next.
 - A IA de imagens recebe somente upload pela rede Docker interna; nao publica porta no host nem aceita URLs remotas ou escolha de modelo pelo cliente.
-- A sugestao de dados de produto usa Gemini somente no servidor, faz uma pesquisa fundamentada antes da estruturacao, valida a resposta com Zod e nunca envia preco, estoque, imagem ou dados de cliente ao provedor.
+- A sugestao de dados de produto usa Gemini somente no servidor, pesquisa identificacao, apresentacao, composicao e categoria antes da estruturacao, prioriza Anvisa e fabricante, compara fontes independentes, valida a resposta com Zod e nunca envia preco, estoque, imagem ou dados de cliente ao provedor.
 
 ## Riscos ao Alterar
 
@@ -135,6 +135,7 @@ Adicionar novos docs especificos quando surgirem modulos maiores: integracoes, a
 ## Pagina de Produto e Avaliacoes
 
 - `/produto/[slug]` e server-rendered e consulta produto publicado, correlatos, resumo de notas e as oito avaliacoes publicadas mais recentes.
+- Cada produto publicado gera metadados proprios, URL canonica e JSON-LD `Product` com preco, estoque, EAN, marca e resumo de avaliacoes somente quando esses dados existem; o sitemap inclui dinamicamente as URLs `ACTIVE`.
 - Componentes client isolam zoom da imagem, quantidade/carrinho, simulacao local de CEP e formulario de avaliacao; precos, estoque e elegibilidade continuam validados no servidor.
 - `POST /api/produtos/[id]/avaliacoes` usa a sessao Auth.js e a relacao `ProductReview -> Customer + Order + Product` para provar compra concluida.
 - O redirecionamento de cliente apos login passa por `getSafeCustomerCallbackUrl`, que aceita somente destino local fora de `/admin`, `/api` e `/login`.

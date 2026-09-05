@@ -135,8 +135,8 @@ Arquivos:
 
 1. Administrador ou gerente acessa `Produtos / Catalogo` em `/admin/catalogos`; a lista e os filtros aparecem primeiro, e `Novo produto` abre o formulario em uma janela dedicada.
 2. Preenche os dados do produto e escolhe entre enviar uma nova foto ou reutilizar uma imagem da biblioteca.
-3. Opcionalmente, `Sugerir dados` envia somente nome, marca, EAN e categorias existentes para `/api/produtos/sugestoes`. O Gemini pesquisa fontes publicas, prioriza Anvisa e fabricante e devolve categoria, descricao, principios ativos, termos, confianca, alertas e links das fontes.
-4. Sugestoes de alta confianca preenchem apenas campos vazios. Resultado medio ou baixo exige aplicacao manual; todos os campos continuam editaveis e devem ser comparados com embalagem ou bula antes de salvar.
+3. Opcionalmente, `Sugerir dados` envia somente nome, marca, EAN e categorias existentes para `/api/produtos/sugestoes`. O Gemini pesquisa identificacao exata, apresentacao, composicao e categoria, prioriza Anvisa e fabricante e usa lojas apenas para corroborar dados comerciais. A resposta inclui descricao factual normalmente entre 140 e 220 caracteres, principios ativos, termos objetivos de busca, confianca, alertas e ate oito fontes.
+4. Alta confianca exige ao menos uma fonte oficial da Anvisa ou do fabricante e preenche apenas campos vazios. Resultado sustentado somente por lojas e rebaixado e exige aplicacao manual; todos os campos continuam editaveis e devem ser comparados com embalagem, bula ou registro antes de salvar.
 5. Antes de salvar, pode abrir `Ajustar foto` para recortar, reposicionar, ampliar ou girar. O ajuste gera no navegador uma copia quadrada em WebP, de ate 1600 x 1600 px e com fundo branco; imagens pequenas nao sao ampliadas e a original nao e alterada.
 6. Uma nova foto aceita JPG, PNG, WebP ou AVIF de ate 10 MB. A remocao de fundo e opcional e usa primeiro o servico local U-2-Net; `REMOVE_BG_API_KEY` permanece apenas como alternativa externa quando a URL local nao estiver configurada.
 7. Quando a IA remove o fundo, a API aplica fundo branco antes de gerar o WebP final. Em todos os uploads, valida o arquivo, corrige a orientacao, limita a 2000 px sem ampliar imagem pequena e aplica compressao progressiva quando o resultado ultrapassa aproximadamente 1,2 MB.
@@ -182,6 +182,7 @@ Arquivos:
 6. `POST /api/produtos/[id]/avaliacoes` exige sessao `CUSTOMER`, produto publicado e um pedido `COMPLETED` do proprio cliente contendo o produto.
 7. Cada cliente mantem uma avaliacao por produto. Novo envio atualiza nota e comentario; o nome publico e abreviado e o pedido nao e exposto.
 8. O link de login usa retorno local validado para levar o cliente de volta a secao de avaliacoes sem aceitar redirecionamento externo ou caminho administrativo.
+9. A rota publica gera descricao SEO sem cortar palavras, URL canonica e JSON-LD `Product` apenas com os dados visiveis do cadastro. Produtos `ACTIVE` entram automaticamente no sitemap; rascunhos e arquivados nao entram.
 
 Arquivos principais:
 
@@ -192,6 +193,7 @@ Arquivos principais:
 - `src/components/site/product-review-form.tsx`
 - `src/app/api/produtos/[id]/avaliacoes/route.ts`
 - `src/features/products/product-detail.ts`
+- `src/app/sitemap.ts`
 - `src/features/auth/customer-redirect.ts`
 
 ## Fluxo de APIs

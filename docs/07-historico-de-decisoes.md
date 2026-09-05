@@ -241,3 +241,10 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Motivo: permitir que o cliente leia e compare informacoes reais antes de colocar um item no carrinho, sem depender apenas do card da vitrine.
 - Impacto: pagina e componentes publicos do produto, carrinho com quantidade inicial, modelo/migration `ProductReview`, API de avaliacao, retorno seguro apos login, rate limit, politica de privacidade, testes e documentacao.
 - Riscos/cuidados: avaliacao exige pedido concluido e nao e anonimizada internamente; nome publico e abreviado. O frete automatico cobre apenas a faixa operacional de Ivate e nao promete prazo. Produtos com receita/Farmacia Popular continuam no WhatsApp, e nenhum pagamento e aprovado pela pagina.
+
+## 2026-09-05 - Pesquisa farmacologica rigorosa e SEO de produtos
+
+- Decisao: reforcar o assistente Gemini para conferir identificacao, apresentacao, composicao e categoria em fontes rastreaveis, gerar descricao factual normalmente entre 140 e 220 caracteres e conceder alta confianca somente quando houver fonte oficial da Anvisa ou do fabricante. Cada produto publicado tambem recebe metadados proprios, URL canonica, JSON-LD `Product` e entrada dinamica no sitemap.
+- Motivo: reduzir sugestoes genericas ou sustentadas somente por lojas e dar ao Google conteudo individual, consistente e tecnicamente indexavel sem repetir palavras-chave artificialmente.
+- Impacto: `src/features/products/ai-suggestions.ts`, testes de sugestao e SEO, `src/features/products/product-detail.ts`, pagina publica do produto, sitemap e documentacao.
+- Riscos/cuidados: a IA continua sendo assistente e nao fonte sanitaria definitiva; divergencia de EAN, registro, apresentacao ou composicao exige conferencia manual. Dados estruturados aumentam a elegibilidade para resultados enriquecidos, mas nao garantem exibicao nem posicao no Google.
