@@ -444,7 +444,7 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
   return (
     <section className="pharma-clouds bg-white px-4 pb-12 pt-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <MotionBlock delay={0.04}>
+        <div>
           <div className="mb-5 overflow-hidden rounded-lg border border-line/80 bg-white shadow-[0_22px_70px_rgba(17,24,39,0.08)]">
             <div className="h-1 bg-[linear-gradient(90deg,#c8102e,#25d366,#2563eb)]" />
             <div className="flex flex-col gap-5 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
@@ -666,7 +666,7 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
               );
             })}
           </div>
-        </MotionBlock>
+        </div>
       </div>
     </section>
   );

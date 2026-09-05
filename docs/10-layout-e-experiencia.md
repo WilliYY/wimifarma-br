@@ -42,7 +42,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Categorias em bolinhas nao aparecem na home nesta fase; os 15 lugares da vitrine sao alimentados pelo banco e ordenados manualmente em `/admin/ofertas`.
 - O link `Ofertas` nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.
-- A fonte Barlow e servida localmente pelo `next/font`, sem folha externa bloqueando a primeira pintura. O poster leve do hero recebe prioridade por ocupar a maior area visivel antes do video.
+- A fonte Barlow e servida localmente pelo `next/font`, sem folha externa bloqueando a primeira pintura. O poster leve do hero recebe prioridade por ocupar a maior area visivel antes do video, e a vitrine `Melhores ofertas` e renderizada imediatamente para nao atrasar o primeiro conteudo visivel no celular.
 - Botao flutuante de WhatsApp fica no canto inferior direito, com tamanho reduzido no celular, e nao aparece nas telas de login ou Minha Conta para nao cobrir formularios.
 - Miauby aparece como bolinha informativa acima do WhatsApp em telas a partir de 640 px, mostrando recado de campanha sem abrir caixa de conversa ao clicar; no celular fica oculta para preservar a leitura.
 - Login/cadastro usa dois blocos: entrar e cadastrar.
