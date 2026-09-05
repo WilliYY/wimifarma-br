@@ -728,32 +728,39 @@ export function ProductsCatalogPanel() {
                       const isFeatured = isShowcasePosition(product.featuredPosition);
                       return (
                         <div className="flex flex-col gap-4 rounded-lg border border-line bg-white p-4 shadow-sm sm:flex-row sm:items-center" key={product.id}>
-                          {product.imageUrl ? (
-                            <Image alt={product.name} className="h-24 w-24 shrink-0 rounded-md border border-line bg-white object-contain" height={96} src={product.imageUrl} unoptimized width={96} />
-                          ) : (
-                            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-md bg-surface-subtle text-muted"><ImagePlus className="h-5 w-5" /></div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="font-black text-ink">{product.name}</h3>
-                              <span className={cn("rounded-md px-2.5 py-1 text-xs font-bold", status.className)}>{status.label}</span>
-                              {isFeatured ? (
-                                <Badge>Vitrine {String(product.featuredPosition).padStart(2, "0")}</Badge>
+                          <button
+                            aria-label={`Editar ${product.name}`}
+                            className="flex min-w-0 flex-1 cursor-pointer flex-col gap-4 rounded-md p-2 text-left transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 focus-visible:ring-offset-2 sm:flex-row sm:items-center"
+                            onClick={() => setEditingProduct(product)}
+                            type="button"
+                          >
+                            {product.imageUrl ? (
+                              <Image alt={product.name} className="h-24 w-24 shrink-0 rounded-md border border-line bg-white object-contain" height={96} src={product.imageUrl} unoptimized width={96} />
+                            ) : (
+                              <span className="flex h-24 w-24 shrink-0 items-center justify-center rounded-md bg-surface-subtle text-muted"><ImagePlus className="h-5 w-5" /></span>
+                            )}
+                            <span className="min-w-0 flex-1">
+                              <span className="flex flex-wrap items-center gap-2">
+                                <span className="font-black text-ink">{product.name}</span>
+                                <span className={cn("rounded-md px-2.5 py-1 text-xs font-bold", status.className)}>{status.label}</span>
+                                {isFeatured ? (
+                                  <Badge>Vitrine {String(product.featuredPosition).padStart(2, "0")}</Badge>
+                                ) : null}
+                                {product.isPopularPharmacy ? <Badge variant="muted">Farmacia Popular</Badge> : null}
+                              </span>
+                              <span className="mt-1 block text-sm font-semibold text-muted">{[product.brand, product.category].filter(Boolean).join(" - ") || "Sem categoria"}</span>
+                              {product.activeIngredients.length > 0 ? (
+                                <span className="mt-1 block line-clamp-1 text-xs font-semibold text-muted">
+                                  Principios ativos: {product.activeIngredients.join(", ")}
+                                </span>
                               ) : null}
-                              {product.isPopularPharmacy ? <Badge variant="muted">Farmacia Popular</Badge> : null}
-                            </div>
-                            <p className="mt-1 text-sm font-semibold text-muted">{[product.brand, product.category].filter(Boolean).join(" - ") || "Sem categoria"}</p>
-                            {product.activeIngredients.length > 0 ? (
-                              <p className="mt-1 line-clamp-1 text-xs font-semibold text-muted">
-                                Principios ativos: {product.activeIngredients.join(", ")}
-                              </p>
-                            ) : null}
-                            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold text-muted">
-                              <span>Estoque: <strong className="text-ink">{product.stock}</strong></span>
-                              <span>Preco: <strong className="text-ink">{formatCurrency(Number(product.promotionalPrice ?? product.price))}</strong></span>
-                              {product.promotionalPrice ? <span className="line-through">{formatCurrency(Number(product.price))}</span> : null}
-                            </div>
-                          </div>
+                              <span className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold text-muted">
+                                <span>Estoque: <strong className="text-ink">{product.stock}</strong></span>
+                                <span>Preco: <strong className="text-ink">{formatCurrency(Number(product.promotionalPrice ?? product.price))}</strong></span>
+                                {product.promotionalPrice ? <span className="line-through">{formatCurrency(Number(product.price))}</span> : null}
+                              </span>
+                            </span>
+                          </button>
                           <div className="grid w-full gap-2 sm:w-auto sm:min-w-40">
                             <Button
                               aria-label={isFeatured ? `Remover ${product.name} dos destaques` : `Destacar ${product.name}`}
