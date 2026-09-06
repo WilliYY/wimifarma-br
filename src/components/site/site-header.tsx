@@ -151,7 +151,7 @@ export async function SiteHeader() {
 
         <SiteSearch />
 
-        <div className="ml-auto hidden min-w-0 shrink-0 justify-end md:flex">
+        <div className="ml-auto hidden min-w-0 shrink-0 items-center justify-end md:flex">
           <a
             aria-label="Abrir localizacao da Wimifarma no Google Maps"
             className="soft-breathe mr-2 hidden min-h-14 max-w-[15.75rem] items-center gap-3 rounded-full border border-white/80 bg-white px-3.5 py-2 font-body text-xs font-black text-ink shadow-[0_14px_34px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.9)] transition duration-300 hover:-translate-y-0.5 hover:border-brand/30 hover:bg-[#fff7f8] hover:text-brand 2xl:inline-flex"
