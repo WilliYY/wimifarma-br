@@ -61,17 +61,30 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
   const maxQuantity = Math.min(product.stock, 20);
 
   useEffect(() => {
-    const purchasePanel = purchasePanelRef.current;
-    if (!purchasePanel) return;
+    let animationFrame: number | null = null;
 
-    const observer = new IntersectionObserver(([entry]) => {
+    const updatePurchaseDock = () => {
+      animationFrame = null;
+      const purchasePanel = purchasePanelRef.current;
       setShowPurchaseDock(
-        !entry.isIntersecting && entry.boundingClientRect.bottom < 0,
+        Boolean(purchasePanel && purchasePanel.getBoundingClientRect().bottom < 0),
       );
-    });
-    observer.observe(purchasePanel);
+    };
 
-    return () => observer.disconnect();
+    const scheduleUpdate = () => {
+      if (animationFrame !== null) return;
+      animationFrame = window.requestAnimationFrame(updatePurchaseDock);
+    };
+
+    updatePurchaseDock();
+    window.addEventListener("resize", scheduleUpdate);
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+
+    return () => {
+      if (animationFrame !== null) window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener("resize", scheduleUpdate);
+      window.removeEventListener("scroll", scheduleUpdate);
+    };
   }, []);
 
   if (requiresAssistance) {
