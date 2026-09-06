@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-06 - Cards padronizados e avaliacoes verificadas na home
+
+- Decisao: aproximar os cards de `Melhores ofertas` do padrao visual de e-commerce farmaceutico, mantendo cinco itens visiveis no desktop, e incluir um segundo carrossel alimentado somente por avaliacoes publicadas de compras concluidas.
+- Motivo: melhorar leitura de imagem, nome, marca, nota, preco e acao sem transformar depoimentos inventados em prova social falsa.
+- Impacto: consulta server-side da home, contrato publico da vitrine, cards, botao compacto de compra, carrossel de avaliacoes e documentacao de layout/fluxo.
+- Riscos/cuidados: estrelas e comentarios dependem de dados reais; nomes permanecem abreviados; quando nao ha avaliacao, a interface mostra `Novo` no produto e um estado vazio no carrossel.
+
 ## 2026-09-05 - Correcao responsiva, performance e metadados por rota
 
 - Decisao: manter todos os controles do header acessiveis em celulares pequenos, substituir o segundo carregamento do video pelo poster leve, aplicar cache ao MP4, renderizar hero e primeira vitrine sem atraso de animacao e definir canonical, titulo e compartilhamento proprios para cada pagina publica indexavel.

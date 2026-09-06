@@ -183,6 +183,7 @@ Arquivos:
 7. Cada cliente mantem uma avaliacao por produto. Novo envio atualiza nota e comentario; o nome publico e abreviado e o pedido nao e exposto.
 8. O link de login usa retorno local validado para levar o cliente de volta a secao de avaliacoes sem aceitar redirecionamento externo ou caminho administrativo.
 9. A rota publica gera descricao SEO sem cortar palavras, URL canonica e JSON-LD `Product` apenas com os dados visiveis do cadastro. Produtos `ACTIVE` entram automaticamente no sitemap; rascunhos e arquivados nao entram.
+10. A home resume as notas reais nos cards de produtos destacados e lista ate 10 avaliacoes publicadas em carrossel, sempre com nome publico abreviado e link para o produto. Sem avaliacoes verificadas, nenhum depoimento e fabricado.
 
 Arquivos principais:
 

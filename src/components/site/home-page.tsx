@@ -1,21 +1,21 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  BadgePercent,
-  Bike,
   ChevronLeft,
   ChevronRight,
-  ClipboardList,
-  HeartPulse,
   MessageCircle,
   Pause,
   Play,
+  Quote,
+  ShieldCheck,
   ShoppingBasket,
   Sparkles,
+  Star,
   Volume2,
   VolumeX,
 } from "lucide-react";
@@ -39,33 +39,31 @@ const entrance = {
 };
 
 type BestOfferItem = {
+  brand: string;
   id: string;
   label: string;
   name: string;
-  detail: string;
   oldPrice?: string;
   price: string;
   accent: string;
   soft: string;
-  category?: string;
-  benefit?: string;
   imageUrl?: string;
   isReserved: boolean;
   product?: CartProduct;
+  ratingAverage: number | null;
+  ratingCount: number;
 };
 
-const offerPalettes = [
-  { accent: "#2563eb", soft: "#dbeafe" },
-  { accent: "#0891b2", soft: "#cffafe" },
-  { accent: "#7c3aed", soft: "#ede9fe" },
-  { accent: "#d97706", soft: "#fef3c7" },
-  { accent: "#16a34a", soft: "#dcfce7" },
-  { accent: "#e11d48", soft: "#ffe4e6" },
-  { accent: "#0f766e", soft: "#ccfbf1" },
-  { accent: "#4f46e5", soft: "#e0e7ff" },
-  { accent: "#ca8a04", soft: "#fef9c3" },
-  { accent: "#14b8a6", soft: "#ccfbf1" },
-];
+export type HomeReview = {
+  comment: string;
+  id: string;
+  productName: string;
+  productSlug: string;
+  rating: number;
+  reviewerName: string;
+};
+
+const offerPalette = { accent: "#c8102e", soft: "#fff1f2" };
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
@@ -78,19 +76,17 @@ function formatProductPrice(value: string) {
 
 function buildBestOfferItems(products: PublicShowcaseProduct[]): BestOfferItem[] {
   return arrangeShowcaseProducts(products).map((product, index) => {
-    const palette = offerPalettes[index % offerPalettes.length];
-
     if (!product) {
       return {
-        ...palette,
-        benefit: "Atendimento pelo WhatsApp",
-        category: "Farmacia",
-        detail: "Fale com a equipe para consultar outros itens.",
+        ...offerPalette,
+        brand: "Wimifarma",
         id: `reserved-${index + 1}`,
         isReserved: true,
         label: "Espaco disponivel",
         name: "Consulte outros produtos",
         price: "Consulte",
+        ratingAverage: null,
+        ratingCount: 0,
       };
     }
 
@@ -104,13 +100,8 @@ function buildBestOfferItems(products: PublicShowcaseProduct[]): BestOfferItem[]
       : null;
 
     return {
-      ...palette,
-      benefit: hasPromotion ? "Preco promocional" : "Consulte disponibilidade",
-      category: product.category ?? "Farmacia",
-      detail:
-        product.description ??
-        product.brand ??
-        "Consulte disponibilidade com a equipe.",
+      ...offerPalette,
+      brand: product.brand ?? product.category ?? "Wimifarma",
       id: product.id,
       imageUrl: product.imageUrl,
       isReserved: false,
@@ -118,6 +109,8 @@ function buildBestOfferItems(products: PublicShowcaseProduct[]): BestOfferItem[]
       name: product.name,
       oldPrice: hasPromotion ? formatProductPrice(product.price) : undefined,
       price: formatProductPrice(product.promotionalPrice ?? product.price),
+      ratingAverage: product.ratingAverage,
+      ratingCount: product.ratingCount,
       product: {
         category: product.category,
         id: product.id,
@@ -169,6 +162,29 @@ function getSavingLabel(item: BestOfferItem) {
   }
 
   return `Economize R$ ${(oldPrice - price).toFixed(2).replace(".", ",")}`;
+}
+
+function RatingStars({ rating, size = "h-4 w-4" }: { rating: number; size?: string }) {
+  const roundedRating = Math.round(rating);
+
+  return (
+    <span
+      aria-label={`${rating.toFixed(1).replace(".", ",")} de 5 estrelas`}
+      className="inline-flex gap-0.5"
+    >
+      {[1, 2, 3, 4, 5].map((value) => (
+        <Star
+          aria-hidden="true"
+          className={`${size} ${
+            value <= roundedRating
+              ? "fill-amber-400 text-amber-400"
+              : "fill-transparent text-slate-300"
+          }`}
+          key={value}
+        />
+      ))}
+    </span>
+  );
 }
 
 function MotionBlock({
@@ -529,14 +545,15 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
               const discountLabel = getDiscountLabel(item);
               const savingLabel = getSavingLabel(item);
               const isReserved = item.isReserved;
-              const category = item.category ?? "Espaco";
-              const benefit = item.benefit ?? "Pronto para cadastrar";
+              const productHref = item.product
+                ? `/produto/${item.product.slug}`
+                : null;
 
               return (
                 <article
                   aria-label={`Oferta ${index + 1} de ${bestOfferItems.length}`}
                   aria-roledescription="slide"
-                  className="group relative flex min-h-[24.5rem] min-w-0 shrink-0 basis-[86%] snap-start flex-col overflow-hidden rounded-lg border border-line/80 bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[var(--offer-accent)] hover:shadow-[0_26px_60px_rgba(17,24,39,0.15)] sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-2rem)/3)] xl:basis-[calc((100%-4rem)/5)]"
+                  className="group relative flex min-h-[23.5rem] min-w-0 shrink-0 basis-[86%] snap-start flex-col overflow-hidden rounded-md border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.07)] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_20px_44px_rgba(17,24,39,0.12)] sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-2rem)/3)] xl:basis-[calc((100%-4rem)/5)]"
                   data-offer-card
                   key={item.id}
                   role="group"
@@ -547,121 +564,118 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
                     } as CSSProperties
                   }
                 >
-                  <div className="absolute inset-x-0 top-0 h-1 bg-[var(--offer-accent)] opacity-90" />
-                  <div className="flex items-start justify-between gap-2 px-3 pt-4">
-                    <span className="inline-flex min-h-7 min-w-0 flex-1 items-center justify-center rounded-full bg-[var(--offer-soft)] px-3 text-center text-[0.68rem] font-black uppercase leading-none text-[var(--offer-accent)]">
+                  <div className="flex min-h-9 items-start px-3 pt-3">
+                    <span className="inline-flex min-h-7 max-w-full items-center rounded-sm bg-brand-soft px-2.5 text-[0.68rem] font-bold leading-none text-brand">
                       {item.label}
-                    </span>
-                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line bg-white text-[0.68rem] font-black text-muted shadow-sm">
-                      {String(index + 1).padStart(2, "0")}
                     </span>
                   </div>
 
-                  <div
-                    className={`relative m-3 mb-3 grid min-h-36 place-items-center overflow-hidden rounded-md ring-1 ${
+                  {productHref ? (
+                    <Link
+                      aria-label={`Ver ${item.name}`}
+                      className={`relative mx-3 mt-2 grid h-40 place-items-center overflow-hidden rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
                       item.imageUrl
-                        ? "bg-white ring-line/70"
-                        : "bg-[linear-gradient(145deg,var(--offer-soft)_0%,#fff_70%)] ring-[var(--offer-soft)]"
+                        ? "bg-white"
+                        : "bg-surface-subtle"
                     }`}
-                  >
-                    {item.imageUrl ? (
+                      href={productHref}
+                    >
                       <Image
                         alt={item.name}
-                        className="object-contain object-center p-3 transition duration-300 group-hover:scale-105"
+                        className="object-contain object-center p-2 transition duration-300 group-hover:scale-105"
                         fill
                         sizes="(min-width: 1280px) 230px, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
-                        src={item.imageUrl}
+                        src={item.imageUrl as string}
                       />
-                    ) : (
+                      {discountLabel ? (
+                        <span className="absolute right-2 top-2 rounded-sm bg-white px-2 py-1 text-[0.68rem] font-black text-brand shadow-sm">
+                          {discountLabel}
+                        </span>
+                      ) : null}
+                    </Link>
+                  ) : (
+                    <div className="relative mx-3 mt-2 grid h-40 place-items-center overflow-hidden rounded-sm bg-surface-subtle">
                       <div className="relative flex aspect-[0.78] w-24 items-center justify-center rounded-[1rem_1rem_0.5rem_0.5rem] border-2 border-white bg-[linear-gradient(180deg,#fff_0_34%,var(--offer-soft)_34%_56%,var(--offer-accent)_56%_100%)] shadow-[0_20px_34px_rgba(17,24,39,0.18)] ring-1 ring-black/10 transition duration-300 group-hover:rotate-[-2deg] group-hover:scale-105">
                         <span className="absolute top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[var(--offer-accent)] shadow-inner">
                           <ShoppingBasket className="h-4 w-4" />
                         </span>
-                        <strong className="absolute bottom-3 text-xs font-black uppercase tracking-[0.12em] text-white/90">
+                        <strong className="absolute bottom-3 text-xs font-black uppercase text-white/90">
                           novo
                         </strong>
                       </div>
-                    )}
-                    {discountLabel ? (
-                      <span className="absolute right-3 top-3 rounded-full bg-white px-2.5 py-1 text-[0.68rem] font-black text-[var(--offer-accent)] shadow-[0_10px_22px_rgba(17,24,39,0.12)]">
-                        {discountLabel}
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className="grid flex-1 content-start gap-2 px-3 pb-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="inline-flex min-w-0 items-center gap-1 rounded-full bg-surface-subtle px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.08em] text-muted">
-                        <HeartPulse className="h-3.5 w-3.5 text-[var(--offer-accent)]" />
-                        <span className="truncate">{category}</span>
-                      </span>
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white px-2 py-1 text-[0.68rem] font-bold text-muted ring-1 ring-line">
-                        <Bike className="h-3.5 w-3.5 text-pharma-green" />
-                        Ivate
-                      </span>
                     </div>
-                    {item.oldPrice ? (
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-bold text-slate-400">
-                          De <span className="line-through">{item.oldPrice}</span>
-                        </span>
-                        {savingLabel ? (
-                          <span className="max-w-[8.5rem] truncate rounded-full bg-[var(--offer-soft)] px-2 py-0.5 text-[0.65rem] font-black text-[var(--offer-accent)]">
-                            {savingLabel}
-                          </span>
-                        ) : null}
-                      </div>
-                    ) : isReserved ? (
-                      <span className="text-xs font-black uppercase tracking-[0.08em] text-slate-400">
-                        espaco reservado
-                      </span>
-                    ) : (
-                      <span className="text-xs font-black uppercase tracking-[0.08em] text-slate-400">
-                        preco regular
-                      </span>
-                    )}
-                    <div>
-                      <span className="block text-[0.68rem] font-black uppercase tracking-[0.1em] text-muted">
-                        {isReserved ? "preco" : "por"}
-                      </span>
-                      <strong className="text-2xl font-black leading-none text-[var(--offer-accent)]">
-                        {item.price}
-                      </strong>
-                    </div>
-                    <h3 className="min-h-10 text-sm font-black leading-5 text-ink">
-                      {item.name}
-                    </h3>
-                    <p className="line-clamp-2 min-h-8 text-xs font-semibold leading-4 text-muted">
-                      {item.detail}
-                    </p>
-                    <div className="grid gap-1.5 border-t border-line/70 pt-2">
-                      <span className="inline-flex min-w-0 items-center gap-1.5 text-[0.72rem] font-bold text-muted">
-                        <BadgePercent className="h-3.5 w-3.5 text-[var(--offer-accent)]" />
-                        <span className="truncate">{benefit}</span>
-                      </span>
-                      <span className="inline-flex min-w-0 items-center gap-1.5 text-[0.72rem] font-bold text-muted">
-                        <ClipboardList className="h-3.5 w-3.5 text-pharma-green" />
-                        <span className="truncate">Confirmar estoque no atendimento</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  {isReserved || !item.product ? (
-                    <a
-                      className="mx-3 mb-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[var(--offer-accent)] px-3 text-sm font-black text-white shadow-[0_12px_24px_rgba(17,24,39,0.16)] transition duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-                      href={buildOfferWhatsAppUrl(item.name)}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      Consultar produto
-                    </a>
-                  ) : (
-                    <AddToCartButton
-                      className="mx-3 mb-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[var(--offer-accent)] px-3 text-sm font-black text-white shadow-[0_12px_24px_rgba(17,24,39,0.16)] transition duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-                      product={item.product}
-                    />
                   )}
+
+                  <div className="flex flex-1 flex-col px-4 pb-4 pt-3">
+                    <h3 className="min-h-10 text-sm font-bold leading-5 text-ink">
+                      {productHref ? (
+                        <Link
+                          className="line-clamp-2 transition hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                          href={productHref}
+                        >
+                          {item.name}
+                        </Link>
+                      ) : (
+                        item.name
+                      )}
+                    </h3>
+
+                    <div className="mt-1 flex min-h-5 items-center gap-1.5 text-[0.7rem] font-semibold text-muted">
+                      {item.ratingAverage !== null && item.ratingCount > 0 ? (
+                        <>
+                          <RatingStars rating={item.ratingAverage} size="h-3.5 w-3.5" />
+                          <span>({item.ratingCount})</span>
+                        </>
+                      ) : isReserved ? (
+                        <span>Atendimento pelo WhatsApp</span>
+                      ) : (
+                        <span>Novo</span>
+                      )}
+                    </div>
+
+                    <p className="mt-2 truncate text-xs font-black uppercase text-ink">
+                      {item.brand}
+                    </p>
+
+                    <div className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-3">
+                      <div className="min-w-0">
+                        {item.oldPrice ? (
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.68rem]">
+                            <span className="font-semibold text-muted line-through">
+                              {item.oldPrice}
+                            </span>
+                            {savingLabel ? (
+                              <span className="font-bold text-brand">
+                                {savingLabel}
+                              </span>
+                            ) : null}
+                          </div>
+                        ) : null}
+                        <strong className="mt-1 block text-2xl font-black leading-none text-brand">
+                          {item.price}
+                        </strong>
+                      </div>
+
+                      {isReserved || !item.product ? (
+                        <a
+                          aria-label={`Consultar ${item.name} pelo WhatsApp`}
+                          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-[0_10px_22px_rgba(200,16,46,0.2)] transition hover:-translate-y-0.5 hover:bg-[#a80d27] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                          href={buildOfferWhatsAppUrl(item.name)}
+                          rel="noreferrer"
+                          target="_blank"
+                          title={`Consultar ${item.name}`}
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </a>
+                      ) : (
+                        <AddToCartButton
+                          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-[0_10px_22px_rgba(200,16,46,0.2)] transition hover:-translate-y-0.5 hover:bg-[#a80d27] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                          iconOnly
+                          product={item.product}
+                        />
+                      )}
+                    </div>
+                  </div>
                 </article>
               );
             })}
@@ -672,9 +686,161 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
   );
 }
 
+function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [carouselControls, setCarouselControls] = useState({
+    next: false,
+    previous: false,
+  });
+
+  const updateCarouselControls = useCallback(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+
+    const maximumScroll = Math.max(0, carousel.scrollWidth - carousel.clientWidth);
+    setCarouselControls({
+      next: carousel.scrollLeft < maximumScroll - 2,
+      previous: carousel.scrollLeft > 2,
+    });
+  }, []);
+
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+
+    const animationFrame = window.requestAnimationFrame(updateCarouselControls);
+    const resizeObserver = new ResizeObserver(updateCarouselControls);
+    resizeObserver.observe(carousel);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      resizeObserver.disconnect();
+    };
+  }, [updateCarouselControls]);
+
+  function scrollReviews(direction: -1 | 1) {
+    const carousel = carouselRef.current;
+    const firstCard = carousel?.querySelector<HTMLElement>("[data-review-card]");
+    if (!carousel || !firstCard) return;
+
+    const styles = window.getComputedStyle(carousel);
+    const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0;
+    const cardStep = firstCard.offsetWidth + gap;
+    const visibleCards = Math.max(
+      1,
+      Math.round((carousel.clientWidth + gap) / cardStep),
+    );
+
+    carousel.scrollBy({
+      behavior: "smooth",
+      left: direction * visibleCards * cardStep,
+    });
+  }
+
+  return (
+    <section className="bg-surface-subtle px-4 py-14 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <div>
+            <span className="inline-flex items-center gap-2 text-xs font-black uppercase text-brand">
+              <ShieldCheck className="h-4 w-4" />
+              Compra verificada
+            </span>
+            <h2 className="mt-2 text-3xl font-black leading-tight text-ink sm:text-4xl">
+              Avaliacoes de clientes
+            </h2>
+          </div>
+
+          {reviews.length > 0 ? (
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                aria-controls="customer-reviews-carousel"
+                aria-label="Ver avaliacoes anteriores"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35"
+                disabled={!carouselControls.previous}
+                onClick={() => scrollReviews(-1)}
+                title="Avaliacoes anteriores"
+                type="button"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                aria-controls="customer-reviews-carousel"
+                aria-label="Ver proximas avaliacoes"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35"
+                disabled={!carouselControls.next}
+                onClick={() => scrollReviews(1)}
+                title="Proximas avaliacoes"
+                type="button"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+          ) : null}
+        </div>
+
+        {reviews.length > 0 ? (
+          <div
+            aria-label="Avaliacoes verificadas de clientes"
+            aria-roledescription="carrossel"
+            className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            id="customer-reviews-carousel"
+            onScroll={updateCarouselControls}
+            ref={carouselRef}
+            role="region"
+          >
+            {reviews.map((review, index) => (
+              <article
+                aria-label={`Avaliacao ${index + 1} de ${reviews.length}`}
+                aria-roledescription="slide"
+                className="relative flex min-h-56 min-w-0 shrink-0 basis-[88%] snap-start flex-col rounded-md border border-line bg-white p-5 shadow-[0_12px_32px_rgba(17,24,39,0.06)] sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-2rem)/3)]"
+                data-review-card
+                key={review.id}
+                role="group"
+              >
+                <Quote
+                  aria-hidden="true"
+                  className="absolute right-5 top-5 h-7 w-7 text-brand/15"
+                />
+                <RatingStars rating={review.rating} size="h-4 w-4" />
+                <blockquote className="mt-4 line-clamp-4 text-base font-semibold leading-6 text-ink">
+                  &ldquo;{review.comment}&rdquo;
+                </blockquote>
+                <div className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-4">
+                  <div className="min-w-0">
+                    <strong className="block truncate text-sm text-ink">
+                      {review.reviewerName}
+                    </strong>
+                    <span className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-pharma-green">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      Compra verificada
+                    </span>
+                  </div>
+                  <Link
+                    className="max-w-[9rem] truncate text-xs font-bold text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    href={`/produto/${review.productSlug}#avaliacoes`}
+                  >
+                    {review.productName}
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-md border border-dashed border-line bg-white px-5 py-8 text-sm font-semibold text-muted">
+            Ainda nao ha avaliacoes verificadas publicadas.
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export function HomePage({
+  customerReviews,
   featuredProducts,
 }: {
+  customerReviews: HomeReview[];
   featuredProducts: PublicShowcaseProduct[];
 }) {
   return (
@@ -686,6 +852,8 @@ export function HomePage({
       </section>
 
       <BestOfferCatalog products={featuredProducts} />
+
+      <CustomerReviews reviews={customerReviews} />
 
       <section className="pharma-clouds bg-white px-4 pb-20 pt-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">

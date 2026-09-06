@@ -13,6 +13,8 @@ export type PublicShowcaseProduct = {
   name: string;
   price: string;
   promotionalPrice: string | null;
+  ratingAverage: number | null;
+  ratingCount: number;
   requiresPrescription: boolean;
   slug: string;
   stock: number;

@@ -7,9 +7,11 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export function AddToCartButton({
   className,
+  iconOnly = false,
   product,
 }: {
   className: string;
+  iconOnly?: boolean;
   product: CartProduct;
 }) {
   const router = useRouter();
@@ -19,38 +21,48 @@ export function AddToCartButton({
   if (requiresAssistance) {
     return (
       <a
+        aria-label={`Consultar ${product.name} pelo WhatsApp`}
         className={className}
         href={buildWhatsAppUrl(
           `Ola, gostaria de consultar ${product.name} e confirmar os documentos necessarios.`,
         )}
         rel="noreferrer"
         target="_blank"
+        title={`Consultar ${product.name}`}
       >
         <MessageCircle className="h-4 w-4" />
-        Consultar produto
+        {iconOnly ? null : "Consultar produto"}
       </a>
     );
   }
 
   if (product.stock < 1) {
     return (
-      <button className={`${className} cursor-not-allowed opacity-55`} disabled type="button">
-        Produto indisponivel
+      <button
+        aria-label={`${product.name} indisponivel`}
+        className={`${className} cursor-not-allowed opacity-55`}
+        disabled
+        title="Produto indisponivel"
+        type="button"
+      >
+        {iconOnly ? <ShoppingCart className="h-4 w-4" /> : "Produto indisponivel"}
       </button>
     );
   }
 
   return (
     <button
+      aria-label={`Comprar ${product.name}`}
       className={className}
       onClick={() => {
         addProduct(product);
         router.push("/carrinho");
       }}
+      title={`Comprar ${product.name}`}
       type="button"
     >
       <ShoppingCart className="h-4 w-4" />
-      Comprar
+      {iconOnly ? null : "Comprar"}
     </button>
   );
 }
