@@ -27,6 +27,7 @@ function WhatsAppLogo() {
 export function FloatingWhatsApp() {
   const pathname = usePathname();
   const news = miaubyNews[0];
+  const isProductPage = pathname.startsWith("/produto/");
 
   if (
     pathname === "/login" ||
@@ -38,7 +39,11 @@ export function FloatingWhatsApp() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2 sm:bottom-5 sm:right-5 sm:gap-3">
+    <div
+      className={`fixed right-4 z-50 flex flex-col items-end gap-2 sm:right-5 sm:gap-3 ${
+        isProductPage ? "bottom-24" : "bottom-4 sm:bottom-5"
+      }`}
+    >
       <div
         aria-label="Miauby"
         className="group relative hidden h-16 w-16 cursor-default items-center justify-center rounded-full bg-white shadow-[0_16px_40px_rgba(0,0,0,0.22)] ring-2 ring-brand/15 sm:flex"

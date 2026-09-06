@@ -15,7 +15,8 @@ import { DeliveryEstimator } from "@/components/site/delivery-estimator";
 import { ProductImageViewer } from "@/components/site/product-image-viewer";
 import { ProductPurchasePanel } from "@/components/site/product-purchase-panel";
 import { ProductReviewForm } from "@/components/site/product-review-form";
-import { PublicProductCard } from "@/components/site/public-product-card";
+import { RelatedProductsCarousel } from "@/components/site/related-products-carousel";
+import type { RelatedProductCardItem } from "@/components/site/public-product-card";
 import { auth } from "@/features/auth/auth";
 import {
   buildProductMetaDescription,
@@ -27,7 +28,6 @@ import {
 import {
   normalizeProductSearch,
   rankRelatedProducts,
-  type PublicProductSearchItem,
 } from "@/features/products/public-search";
 import { getPrisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
@@ -55,19 +55,21 @@ const productSelect = {
 
 type ProductRecord = Prisma.ProductGetPayload<{ select: typeof productSelect }>;
 
-function serializeProduct(product: ProductRecord): PublicProductSearchItem {
+function serializeProduct(product: ProductRecord): RelatedProductCardItem {
   return {
     activeIngredients: product.activeIngredients,
     brand: product.brand,
     category: product.category,
     id: product.id,
     imageUrl: product.imageUrl,
+    isPopularPharmacy: product.isPopularPharmacy,
     name: product.name,
     price: product.price.toString(),
     promotionalPrice: product.promotionalPrice?.toString() ?? null,
     requiresPrescription: product.requiresPrescription,
     searchTerms: product.searchTerms,
     slug: product.slug,
+    stock: product.stock,
   };
 }
 
@@ -145,11 +147,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       orderBy: { createdAt: "desc" },
       select: { comment: true, createdAt: true, customer: { select: { name: true } }, id: true, rating: true },
       take: 8,
-      where: { isPublished: true, productId: product.id },
+      where: { isPublished: true, order: { status: "COMPLETED" }, productId: product.id },
     }),
     prisma.productReview.findMany({
       select: { rating: true },
-      where: { isPublished: true, productId: product.id },
+      where: { isPublished: true, order: { status: "COMPLETED" }, productId: product.id },
     }),
     customerId
       ? prisma.productReview.findUnique({
@@ -165,7 +167,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       : Promise.resolve(null),
   ]);
 
-  const relatedProducts = rankRelatedProducts(product, relatedCandidates).slice(0, 6).map(serializeProduct);
+  const relatedProducts = rankRelatedProducts(product, relatedCandidates).slice(0, 10).map(serializeProduct);
   const ratingSummary = summarizeProductReviews(reviewRatings.map((review) => review.rating));
   const normalPrice = Number(product.price);
   const currentPrice = Number(product.promotionalPrice ?? product.price);
@@ -287,6 +289,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     <div><dt className="font-bold text-muted">Principios ativos</dt><dd className="mt-1 font-black text-ink">{product.activeIngredients.join(", ") || "Nao informado"}</dd></div>
                     <div><dt className="font-bold text-muted">Marca</dt><dd className="mt-1 font-black text-ink">{product.brand ?? "Nao informada"}</dd></div>
                     <div><dt className="font-bold text-muted">Categoria</dt><dd className="mt-1 font-black text-ink">{product.category ?? "Nao informada"}</dd></div>
+                    <div><dt className="font-bold text-muted">SKU</dt><dd className="mt-1 font-black text-ink">{product.sku ?? "Nao informado"}</dd></div>
                     <div><dt className="font-bold text-muted">EAN</dt><dd className="mt-1 font-black text-ink">{product.ean ?? "Nao informado"}</dd></div>
                   </dl>
                 </details>
@@ -368,7 +371,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <p className="flex max-w-md items-start gap-2 text-xs font-semibold leading-5 text-muted"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-pharma-green" aria-hidden="true" />Correlato nao significa substituto. Confirme a opcao adequada com a equipe.</p>
           </div>
           {relatedProducts.length > 0 ? (
-            <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{relatedProducts.map((relatedProduct) => <PublicProductCard key={relatedProduct.id} product={relatedProduct} />)}</div>
+            <RelatedProductsCarousel products={relatedProducts} />
           ) : <div className="mt-7 flex min-h-36 items-center justify-center border border-dashed border-line px-5 text-center text-sm font-semibold text-muted">Ainda nao ha correlatos publicados para este produto.</div>}
         </div>
       </section>

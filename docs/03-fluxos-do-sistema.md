@@ -176,14 +176,15 @@ Arquivos:
 
 1. O cliente abre `/produto/[slug]` a partir da busca, da vitrine ou dos produtos relacionados.
 2. A pagina carrega somente produto `ACTIVE` e exibe foto real ampliavel, marca, nome, precos, economia, estoque, descricao, principios ativos, SKU/EAN quando cadastrados e correlatos.
-3. Produtos comuns podem receber quantidade e seguir para o carrinho. Produto com receita, Farmacia Popular ou sem estoque continua no atendimento por WhatsApp.
+3. Produtos comuns podem receber quantidade, ser adicionados ao carrinho ou usar `Comprar agora`, que preserva o carrinho e segue diretamente ao checkout. Produto com receita, Farmacia Popular ou sem estoque continua no atendimento por WhatsApp.
 4. O simulador de entrega normaliza o CEP localmente. CEP de Ivate entre `87525-000` e `87527-999` informa entrega gratis; outros CEPs orientam consulta pelo WhatsApp. Retirada permanece gratis, e prazo/estoque dependem de confirmacao da equipe.
-5. A pagina nao inventa galeria, avaliacao, frete ou disponibilidade. Sem dados reais, apresenta o estado correspondente de forma explicita.
-6. `POST /api/produtos/[id]/avaliacoes` exige sessao `CUSTOMER`, produto publicado e um pedido `COMPLETED` do proprio cliente contendo o produto.
-7. Cada cliente mantem uma avaliacao por produto. Novo envio atualiza nota e comentario; o nome publico e abreviado e o pedido nao e exposto.
-8. O link de login usa retorno local validado para levar o cliente de volta a secao de avaliacoes sem aceitar redirecionamento externo ou caminho administrativo.
-9. A rota publica gera descricao SEO sem cortar palavras, URL canonica e JSON-LD `Product` apenas com os dados visiveis do cadastro. Produtos `ACTIVE` entram automaticamente no sitemap; rascunhos e arquivados nao entram.
-10. A home resume as notas reais nos cards de produtos destacados e lista ate 10 avaliacoes publicadas em carrossel, sempre com nome publico abreviado e link para o produto. Sem avaliacoes verificadas, nenhum depoimento e fabricado.
+5. Quando o painel principal sai da area visivel, a pagina oferece uma barra fixa de compra sem alterar as mesmas validacoes. Os correlatos aparecem em carrossel com setas, arraste e gesto horizontal, usando ate dez produtos reais ordenados pela proximidade do cadastro.
+6. A pagina nao inventa galeria, avaliacao, frete ou disponibilidade. Sem dados reais, apresenta o estado correspondente de forma explicita.
+7. `POST /api/produtos/[id]/avaliacoes` exige sessao `CUSTOMER`, produto publicado e um pedido `COMPLETED` do proprio cliente contendo o produto.
+8. Cada cliente mantem uma avaliacao por produto. Novo envio atualiza nota e comentario; o nome publico e abreviado e o pedido nao e exposto.
+9. O link de login usa retorno local validado para levar o cliente de volta a secao de avaliacoes sem aceitar redirecionamento externo ou caminho administrativo.
+10. A rota publica gera descricao SEO sem cortar palavras, URL canonica e JSON-LD `Product` apenas com os dados visiveis do cadastro. Produtos `ACTIVE` entram automaticamente no sitemap; rascunhos e arquivados nao entram.
+11. A home resume as notas reais nos cards de produtos destacados e lista ate 10 avaliacoes publicadas em carrossel, sempre com nome publico abreviado e link para o produto. Sem avaliacoes verificadas, nenhum depoimento e fabricado.
 
 Arquivos principais:
 

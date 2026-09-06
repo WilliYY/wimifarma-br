@@ -3,6 +3,7 @@
 ## Escopo Entregue
 
 - Carrinho persistente no navegador, com quantidade, remocao e resumo.
+- Compra direta pela pagina do produto: `Comprar agora` adiciona a quantidade selecionada ao carrinho existente e abre o checkout.
 - Checkout em quatro etapas: identificacao, entrega/retirada, pagamento e revisao.
 - Entrega gratuita limitada a Ivate-PR e retirada na Wimifarma.
 - Preferencias de pagamento: Pix, cartao na entrega/retirada e dinheiro.
@@ -13,6 +14,7 @@
 
 - O navegador envia o preco esperado apenas para detectar alteracao; o banco e a fonte de verdade.
 - O servidor recusa produto inexistente, nao publicado, sem estoque suficiente, com preco alterado, com receita ou Farmacia Popular.
+- `Comprar agora` nao aprova pagamento nem reserva estoque; apenas antecipa a navegacao para o mesmo checkout de pedido pendente.
 - O pedido nasce `PENDING`, com pagamento `PENDING`, e nao reduz estoque automaticamente.
 - Nenhum numero de cartao, CVV, senha bancaria ou chave Pix do cliente e solicitado ou armazenado.
 - A equipe deve confirmar disponibilidade, total e atendimento antes de orientar o pagamento.

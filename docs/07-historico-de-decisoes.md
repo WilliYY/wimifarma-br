@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-06 - Compra direta e carrossel de correlatos no produto
+
+- Decisao: ampliar a pagina individual com acao primaria `Comprar agora`, acao secundaria de carrinho, barra fixa de compra apos a primeira dobra e carrossel horizontal de ate dez correlatos reais.
+- Motivo: aproximar a experiencia de compra do padrao atual de farmacia digital sem duplicar checkout, criar galeria ficticia ou alterar as restricoes comerciais existentes.
+- Impacto: painel de compra, botao flutuante do WhatsApp, cards de correlatos, consulta server-side da pagina de produto e documentacao de layout/fluxo.
+- Riscos/cuidados: a compra direta ainda gera apenas pedido pendente; receita, Farmacia Popular e falta de estoque continuam no WhatsApp; avaliacoes exigem compra concluida; a galeria mostra somente a imagem real cadastrada.
+
 ## 2026-09-06 - Cards padronizados e avaliacoes verificadas na home
 
 - Decisao: aproximar os cards de `Melhores ofertas` do padrao visual de e-commerce farmaceutico, mantendo cinco itens visiveis no desktop, e incluir um segundo carrossel alimentado somente por avaliacoes publicadas de compras concluidas.
