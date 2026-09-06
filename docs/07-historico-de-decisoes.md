@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-06 - Paginas institucionais orientadas a atendimento
+
+- Decisao: redesenhar `Contato` e `Sobre` com hierarquia mais clara, identidade visual de farmacia, cartoes de acao inteiros clicaveis e caminhos diretos para WhatsApp, Maps, e-mail, ofertas, Farmacia Popular e delivery.
+- Motivo: tornar os canais de atendimento e os servicos locais mais faceis de reconhecer no desktop e no celular, seguindo padroes recorrentes de farmacias digitais sem copiar uma marca concorrente.
+- Impacto: hero institucional compartilhado, paginas publicas `Contato` e `Sobre` e documentacao de layout.
+- Riscos/cuidados: nenhum horario, volume de atendimento ou promessa comercial foi inventado; precos, estoque, entrega, receita e Farmacia Popular continuam sujeitos a confirmacao da equipe.
+
 ## 2026-09-06 - Compra direta e carrossel de correlatos no produto
 
 - Decisao: ampliar a pagina individual com acao primaria `Comprar agora`, acao secundaria de carrinho, barra fixa de compra apos a primeira dobra e carrossel horizontal de ate dez correlatos reais.
