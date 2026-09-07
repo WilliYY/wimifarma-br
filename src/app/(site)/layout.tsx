@@ -1,4 +1,3 @@
-import { SmoothScroll } from "@/components/motion/smooth-scroll";
 import { FloatingWhatsApp } from "@/components/site/floating-whatsapp";
 import { SiteVisitTracker } from "@/components/site/site-visit-tracker";
 import { SiteFooter } from "@/components/site/site-footer";
@@ -10,7 +9,6 @@ export default function SiteLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <CartProvider>
-      <SmoothScroll />
       <SiteVisitTracker />
       <SiteHeader />
       <main className="flex-1">{children}</main>

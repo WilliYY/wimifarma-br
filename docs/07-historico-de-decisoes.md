@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-06 - Rolagem vertical nativa no site publico
+
+- Decisao: retirar a camada global do Lenis do layout publico e manter a rolagem vertical nativa do navegador.
+- Motivo: eliminar um ponto intermediario que podia deixar a rolagem indisponivel de forma intermitente, especialmente apos navegacao, redimensionamento ou uso em dispositivos de toque.
+- Impacto: apenas o mecanismo de rolagem global do site publico; animacoes de componentes, carrosseis e `scroll-behavior` do CSS permanecem inalterados.
+- Riscos/cuidados: a rolagem perde a interpolacao artificial do Lenis, mas preserva mouse, trackpad, teclado, toque e recursos de acessibilidade do navegador.
+
 ## 2026-09-06 - Paginas institucionais orientadas a atendimento
 
 - Decisao: redesenhar `Contato` e `Sobre` com hierarquia mais clara, identidade visual de farmacia, cartoes de acao inteiros clicaveis e caminhos diretos para WhatsApp, Maps, e-mail, ofertas, Farmacia Popular e delivery.

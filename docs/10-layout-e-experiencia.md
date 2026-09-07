@@ -73,6 +73,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Layout deve ser responsivo e nao gerar barra lateral horizontal.
 - Paginas internas precisam iniciar abaixo do header fixo para evitar conteudo cortado no primeiro viewport.
 - Animacoes devem ser leves e nao prejudicar performance.
+- A rolagem vertical do site publico usa o comportamento nativo do navegador. Animacoes visuais nao podem interceptar roda do mouse, trackpad, teclas ou gesto de toque.
 - O caminhaozinho da faixa superior deve manter fundo transparente, andar em uma pista curta e nao aumentar demais a altura do header.
 - Para o anuncio principal da home, dimensao recomendada em desktop: 1920x840 px, proporcao 16:7. Se houver arte mobile separada, usar 1080x1350 px, proporcao 4:5.
 - Manter informacoes importantes do anuncio no centro da arte para evitar cortes em telas menores.
