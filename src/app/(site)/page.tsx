@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HomePage, type HomeReview } from "@/components/site/home-page";
+import type { RelatedProductCardItem } from "@/components/site/public-product-card";
 import {
   SHOWCASE_SLOT_COUNT,
   type PublicShowcaseProduct,
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const prisma = getPrisma();
-  const [products, reviews] = await Promise.all([
+  const [products, catalogProductsData, reviews] = await Promise.all([
     prisma.product.findMany({
       orderBy: { featuredPosition: "asc" },
       select: {
@@ -43,6 +44,34 @@ export default async function Page() {
       take: SHOWCASE_SLOT_COUNT,
       where: {
         featuredPosition: { gte: 1, lte: SHOWCASE_SLOT_COUNT },
+        imageUrl: { not: null },
+        status: "ACTIVE",
+      },
+    }),
+    prisma.product.findMany({
+      orderBy: [
+        { featuredPosition: "asc" },
+        { sortOrder: "asc" },
+        { createdAt: "desc" },
+      ],
+      select: {
+        activeIngredients: true,
+        brand: true,
+        category: true,
+        id: true,
+        imageUrl: true,
+        isPopularPharmacy: true,
+        name: true,
+        price: true,
+        promotionalPrice: true,
+        requiresPrescription: true,
+        searchTerms: true,
+        slug: true,
+        stock: true,
+      },
+      take: 10,
+      where: {
+        category: { contains: "medic", mode: "insensitive" },
         imageUrl: { not: null },
         status: "ACTIVE",
       },
@@ -87,9 +116,15 @@ export default async function Page() {
     rating: review.rating,
     reviewerName: publicReviewerName(review.customer.name),
   })) satisfies HomeReview[];
+  const catalogProducts = catalogProductsData.map((product) => ({
+    ...product,
+    price: product.price.toString(),
+    promotionalPrice: product.promotionalPrice?.toString() ?? null,
+  })) satisfies RelatedProductCardItem[];
 
   return (
     <HomePage
+      catalogProducts={catalogProducts}
       customerReviews={customerReviews}
       featuredProducts={featuredProducts}
     />

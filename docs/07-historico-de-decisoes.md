@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-07 - Faixa Dove e segunda vitrine de medicamentos
+
+- A home passa a separar ofertas e avaliacoes com uma faixa Dove compacta e clicavel para consulta no WhatsApp.
+- Um segundo carrossel lista automaticamente ate dez medicamentos publicados com imagem, sem inventar itens ou disponibilidade.
+- O componente reutiliza o card comercial publico e preserva as regras existentes de carrinho, receita e Farmacia Popular.
+
 ## 2026-09-07 - Miauby conversacional com Gemini e catalogo real
 
 - Decisao: transformar a Miauby em assistente conversacional responsiva, usando Gemini no servidor, memoria curta da propria conversa e ate quatro produtos publicados relacionados como contexto e atalhos.
