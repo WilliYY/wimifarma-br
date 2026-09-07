@@ -131,57 +131,70 @@ export default function Page() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-line bg-white/92 p-5 shadow-[0_28px_80px_rgba(17,24,39,0.11)] backdrop-blur">
-            <div className="flex items-start gap-4">
-              <div className="grid h-28 w-28 shrink-0 place-items-center rounded-lg bg-ink p-2 shadow-inner">
-                <Image
-                  alt="Aqui tem Farmacia Popular"
-                  className="h-full w-full rounded-md object-contain"
-                  height={320}
-                  priority
-                  src="/brand/farmacia-popular.webp"
-                  width={320}
-                />
-              </div>
-              <div>
-                <span className="inline-flex rounded-full bg-[#ecfdf3] px-3 py-1 text-xs font-black uppercase text-[#027a48]">
-                  Atendimento orientado
-                </span>
-                <p className="mt-3 text-xl font-black text-ink">
-                  A equipe confere antes de confirmar
-                </p>
-                <p className="mt-2 text-sm leading-6 text-muted">
-                  A Wimifarma ajuda voce a entender o que precisa levar e
-                  confirma tudo pelo WhatsApp.
-                </p>
+          <div className="overflow-hidden rounded-lg border border-line bg-white/95 shadow-[0_28px_80px_rgba(17,24,39,0.11)] backdrop-blur">
+            <div className="relative aspect-[16/9] overflow-hidden bg-surface-subtle">
+              <Image
+                alt="Imagem ilustrativa de uma farmaceutica atendendo uma cliente"
+                className="object-cover object-center"
+                fill
+                priority
+                sizes="(max-width: 1024px) calc(100vw - 2rem), 480px"
+                src="/banners/farmacia-popular-atendimento.webp"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.96)_0%,rgba(255,255,255,0.74)_36%,rgba(255,255,255,0.08)_72%)]"
+              />
+
+              <div className="absolute inset-0 flex flex-col justify-between p-4 sm:p-5">
+                <div className="grid h-14 w-14 place-items-center rounded-md bg-ink p-1.5 shadow-lg ring-1 ring-white/80 sm:h-16 sm:w-16">
+                  <Image
+                    alt="Aqui tem Farmacia Popular"
+                    className="h-full w-full rounded-sm object-contain"
+                    height={160}
+                    src="/brand/farmacia-popular.webp"
+                    width={160}
+                  />
+                </div>
+
+                <div className="max-w-[15rem]">
+                  <span className="inline-flex rounded-full bg-[#ecfdf3] px-3 py-1 text-xs font-black uppercase text-[#027a48] shadow-sm">
+                    Atendimento orientado
+                  </span>
+                  <p className="mt-2 text-xl font-black leading-tight text-ink sm:text-2xl">
+                    A equipe confere antes de confirmar
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="mt-6 grid gap-3 border-t border-line pt-5 sm:grid-cols-2">
-              <div className="rounded-lg bg-brand-soft p-4">
-                <p className="text-xs font-black uppercase text-brand">
-                  Documentos
-                </p>
-                <p className="mt-2 text-sm leading-6 text-ink">
-                  Tenha CPF, documento com foto e receita quando houver.
-                </p>
+            <div className="p-4 sm:p-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg bg-brand-soft p-4">
+                  <p className="text-xs font-black uppercase text-brand">
+                    Documentos
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-ink">
+                    Tenha CPF, documento com foto e receita quando houver.
+                  </p>
+                </div>
+                <div className="rounded-lg bg-[#ecfdf3] p-4">
+                  <p className="text-xs font-black uppercase text-[#027a48]">
+                    Confirmacao humana
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-ink">
+                    Disponibilidade e regras sao sempre confirmadas pela equipe.
+                  </p>
+                </div>
               </div>
-              <div className="rounded-lg bg-[#ecfdf3] p-4">
-                <p className="text-xs font-black uppercase text-[#027a48]">
-                  Confirmacao humana
-                </p>
-                <p className="mt-2 text-sm leading-6 text-ink">
-                  Disponibilidade e regras sao sempre confirmadas pela equipe.
-                </p>
-              </div>
-            </div>
 
-            <div className="mt-5 flex items-start gap-3 rounded-lg border border-line bg-surface-subtle p-4">
-              <Info className="mt-0.5 h-5 w-5 shrink-0 text-brand" />
-              <p className="text-sm leading-6 text-muted">
-                A pagina orienta o atendimento. A separacao do pedido so
-                acontece apos a confirmacao da equipe.
-              </p>
+              <div className="mt-4 flex items-start gap-3 rounded-lg border border-line bg-surface-subtle p-4">
+                <Info className="mt-0.5 h-5 w-5 shrink-0 text-brand" />
+                <p className="text-sm leading-6 text-muted">
+                  A pagina orienta o atendimento. A separacao do pedido so
+                  acontece apos a confirmacao da equipe.
+                </p>
+              </div>
             </div>
           </div>
         </div>

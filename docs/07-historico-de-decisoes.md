@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-07 - Banner humano na Farmacia Popular
+
+- O painel de orientacao do hero da pagina `Farmacia Popular` passa a usar uma fotografia ilustrativa propria de atendimento em farmacia, sem marcas, textos gravados ou promessa de disponibilidade.
+- A arte e servida em WebP `1200 x 720 px` com 42 KB; logo, chamada e avisos continuam em HTML para preservar nitidez, acessibilidade e leitura no celular.
+- Os blocos de documentos, confirmacao humana e separacao apos conferencia permanecem visiveis e sem alteracao nas regras comerciais.
+
 ## 2026-09-07 - Hero com tres campanhas fotograficas
 
 - O video principal foi retirado da home e substituido por tres banners proprios para medicamentos, perfumaria e mae e bebe, inspirados na organizacao de categorias de grandes redes sem copiar campanhas ou marcas.
