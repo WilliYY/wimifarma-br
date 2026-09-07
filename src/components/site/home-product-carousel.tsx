@@ -132,7 +132,7 @@ export function HomeProductCarousel({
             <h2 className="mt-2 text-2xl font-black leading-tight text-ink sm:text-3xl">
               Medicamentos da Wimifarma
             </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
+            <p className="mt-2 max-w-[calc(100%-5rem)] text-sm leading-6 text-muted sm:max-w-2xl">
               Consulte detalhes, disponibilidade e as condicoes de cada produto.
             </p>
           </div>
