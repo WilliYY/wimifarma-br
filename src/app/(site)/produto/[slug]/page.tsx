@@ -237,7 +237,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                       {`${ratingSummary.average} (${ratingSummary.count} ${ratingSummary.count === 1 ? "avaliacao" : "avaliacoes"})`}
                     </a>
                   ) : (
-                    <a className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-800 transition hover:bg-amber-100" href="#avaliacoes">
+                    <a className="mr-16 inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-800 transition hover:bg-amber-100 sm:mr-0" href="#avaliacoes">
                       <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                       Novo no catalogo
                     </a>
