@@ -22,10 +22,11 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `public/brand/delivery-truck.png`
 - `public/brand/maps-pin-icon.svg`
 - `public/banners/faixa-home.webp`
+- `public/banners/hero-medicamentos.webp`
+- `public/banners/hero-perfumaria.webp`
+- `public/banners/hero-mae-bebe.webp`
 - `public/favicon.svg`
 - `src/app/icon.svg`
-- `public/videos/thiago-cansado.mp4`
-- `public/videos/thiago-poster.svg`
 
 ## Estado Atual
 
@@ -36,14 +37,14 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Quando ha sessao, o header troca `Login / Cadastrar` por foto/nome abreviado da conta e um botao `Sair`. Perfis internos usam os rotulos curtos `Admin`, `Gerente` ou `Equipe`; clientes exibem apenas o primeiro nome, mantendo o nome completo na dica e no rotulo acessivel. No desktop, localizacao, WhatsApp, carrinho, conta e saida permanecem centralizados verticalmente na mesma linha.
 - O nome da conta no header abre `/minha-conta`, que redireciona perfis internos para o painel administrativo.
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
-- Banner principal atual e video da Wimifarma em uma vitrine responsiva com acabamento claro, chamada para WhatsApp, texto comercial sobre medicamentos e Farmacia Popular, poster de carregamento e controles integrados de pausar e som. Em telas a partir de `lg`, o banner usa proporcao fixa `8:3`, chegando a `1280 x 480 px` no limite de largura do site; no celular, a composicao volta a ter altura fluida para preservar o video vertical e os controles sem cortes.
-- Para futuras artes do banner principal, usar preferencialmente `1920 x 720 px` em WebP, com ate 350 KB e area segura central de 1600 x 560 px. Se a campanha precisar de uma arte propria no celular, preparar tambem `1080 x 1350 px` em WebP, com ate 250 KB; textos e botoes comerciais devem continuar em HTML sempre que possivel.
-- Home esta temporariamente focada em anuncio: o primeiro bloco de conteudo ja e a vitrine com video; entre o video e a faixa de campanhas aparece a vitrine `Melhores ofertas`, com cabecalho direto, CTA para WhatsApp, chips de campanha e carrossel responsivo com 10 espacos de produto. Os cards seguem um unico padrao branco de e-commerce, com selo promocional, imagem centralizada, nome, avaliacao real ou estado `Novo`, marca, preco, economia e acao circular. O desktop exibe cinco cards por vez e avanca em grupos de cinco por seta ou arraste; telas menores adaptam a quantidade visivel e preservam o gesto de toque. O cabecalho nao exibe contadores de ofertas ativas ou vagas nem texto descritivo.
+- Banner principal atual e um carrossel com tres campanhas fotograficas proprias: medicamentos e cuidado diario, perfumaria e autocuidado, e mae e bebe. As imagens mostram pessoas, mantem area segura para texto em HTML e usam controles de anterior, proximo, pausa e indicadores; a troca automatica para durante interacao e respeita `prefers-reduced-motion`. Em telas a partir de `lg`, o banner usa proporcao fixa `8:3`, chegando a `1280 x 480 px`; no celular, ganha altura e recorte direcionado para preservar pessoa, texto, CTA e controles.
+- As artes do banner principal usam `1920 x 720 px` em WebP, area livre a esquerda e peso entre 50 e 70 KB. Futuras campanhas devem manter a area segura, evitar texto gravado na imagem e preparar `1080 x 1350 px` em WebP somente quando o recorte responsivo nao preservar o assunto.
+- Home esta temporariamente focada em anuncio: o primeiro bloco e o carrossel de campanhas; entre ele e a faixa de campanhas aparece a vitrine `Melhores ofertas`, com cabecalho direto, CTA para WhatsApp, chips de campanha e carrossel responsivo com 10 espacos de produto. Os cards seguem um unico padrao branco de e-commerce, com selo promocional, imagem centralizada, nome, avaliacao real ou estado `Novo`, marca, preco, economia e acao circular. O desktop exibe cinco cards por vez e avanca em grupos de cinco por seta ou arraste; telas menores adaptam a quantidade visivel e preservam o gesto de toque. O cabecalho nao exibe contadores de ofertas ativas ou vagas nem texto descritivo.
 - Categorias em bolinhas nao aparecem na home nesta fase; os 10 lugares da vitrine sao alimentados pelo banco e ordenados manualmente em `/admin/ofertas`.
 - Depois da vitrine, a home exibe um carrossel responsivo com ate 10 avaliacoes publicadas de compras verificadas. Cada depoimento mostra nota real, comentario, nome publico abreviado e link para o produto; quando nao ha registros, aparece somente o estado vazio transparente.
 - O link `Ofertas` nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.
-- A fonte Barlow e servida localmente pelo `next/font`, sem folha externa bloqueando a primeira pintura. O hero e a vitrine `Melhores ofertas` sao renderizados imediatamente, e o poster leve recebe prioridade por ocupar a maior area visivel antes do video.
+- A fonte Barlow e servida localmente pelo `next/font`, sem folha externa bloqueando a primeira pintura. O hero e a vitrine `Melhores ofertas` sao renderizados imediatamente; a primeira campanha recebe prioridade e as demais usam carregamento otimizado pelo `next/image`.
 - Botao flutuante de WhatsApp fica no canto inferior direito, com tamanho reduzido no celular, e nao aparece nas telas de login ou Minha Conta para nao cobrir formularios.
 - Miauby aparece acima do WhatsApp no desktop e no celular com avatar WebP transparente proprio. Ao clicar, abre um painel de conversa responsivo com perguntas rapidas, mensagens, carregamento, produtos relacionados e atalho para cada item, sem bloquear a rolagem da pagina.
 - Login/cadastro usa dois blocos: entrar e cadastrar.
@@ -86,8 +87,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - A vitrine `Melhores ofertas` segue padrao de e-commerce farmaceutico com selo promocional, imagem limpa, nome, marca, avaliacao real, preco e economia. A ordem vem de `Product.featuredPosition`; produtos elegiveis seguem para o carrinho e itens restritos continuam no atendimento pelo WhatsApp.
 - Depois das melhores ofertas, a home usa uma faixa Dove curta como divisor visual e um segundo carrossel com ate dez medicamentos publicados. Essa vitrine secundaria vem do catalogo real, aceita arraste e setas, mostra cinco cards no desktop e deixa parte do proximo card visivel no celular.
 - O cadastro de produtos oferece editor responsivo em modal para enquadramento quadrado, zoom e rotacao. No celular, a area de recorte preserva espaco para os controles e os botoes ocupam a largura disponivel.
-- Video fica em `public/videos/thiago-cansado.mp4`, roda em loop e usa `public/videos/thiago-poster.svg` para evitar tela escura antes do carregamento. O poster leve tambem compoe o fundo desfocado, evitando baixar o mesmo MP4 duas vezes; o video usa preload de metadados e recebe cache semanal com revalidacao em segundo plano.
-- O video principal foi recomprimido de forma conservadora, mantendo resolucao e audio, para reduzir peso sem alterar a composicao visual.
+- As tres imagens do hero sao WebP leves e servidas pelo `next/image`; a primeira recebe prioridade e as demais permanecem preparadas para a proxima troca sem baixar video ou audio.
 - A pagina individual usa composicao de e-commerce farmaceutico: breadcrumb, foto real ampliavel sem fabricar miniaturas, informacoes comerciais, seletor de quantidade, acoes `Adicionar ao carrinho` e `Comprar agora`, entrega/retirada, detalhes em secoes expansivas, avaliacoes verificadas e produtos relacionados.
 - O painel principal do produto usa selo de novidade quando ainda nao ha nota, hierarquia reforcada de preco e compra, faixa de retirada/confirmacao/atendimento e um estado de avaliacoes convidativo. Depoimentos e estrelas continuam exclusivos de compras concluidas; nenhum exemplo promocional aparece como opiniao real.
 - Os controles de quantidade e compra usam cursor de acao, resposta visual de `hover`/clique, foco visivel e movimentos curtos que respeitam `prefers-reduced-motion`; estados desabilitados preservam o cursor de bloqueio.
@@ -109,7 +109,6 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 - Ajustar dados reais de telefone e horarios.
 - Trocar o nome antigo do estabelecimento no Google Maps quando o perfil for atualizado.
-- Definir arte real do anuncio principal da home.
 - Definir imagens/fotos reais de produtos quando houver catalogo.
 - Testar visual em mobile real.
 - Criar fluxo visual final para paginas secundarias.

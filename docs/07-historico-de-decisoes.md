@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-07 - Hero com tres campanhas fotograficas
+
+- O video principal foi retirado da home e substituido por tres banners proprios para medicamentos, perfumaria e mae e bebe, inspirados na organizacao de categorias de grandes redes sem copiar campanhas ou marcas.
+- As artes mostram pessoas, nao contem texto ou produtos identificaveis e sao servidas em WebP `1920 x 720 px`, entre 50 e 70 KB; chamadas e botoes continuam em HTML para manter legibilidade, SEO e acessibilidade.
+- O carrossel troca a cada 6,5 segundos, oferece setas, indicadores, pausa e gesto horizontal, interrompe durante interacao e desativa o autoplay quando o usuario prefere movimento reduzido.
+- Os CTAs levam para as ofertas reais ou para consultas especificas no WhatsApp; nenhuma disponibilidade, indicacao clinica ou promocao foi inventada.
+
 ## 2026-09-07 - Faixa Dove e segunda vitrine de medicamentos
 
 - A home passa a separar ofertas e avaliacoes com uma faixa Dove compacta e clicavel para consulta no WhatsApp.

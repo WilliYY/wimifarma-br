@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
@@ -16,8 +16,6 @@ import {
   ShoppingBasket,
   Sparkles,
   Star,
-  Volume2,
-  VolumeX,
 } from "lucide-react";
 import {
   arrangeShowcaseProducts,
@@ -75,6 +73,43 @@ const currencyFormatter = new Intl.NumberFormat("pt-BR", {
 function formatProductPrice(value: string) {
   return currencyFormatter.format(Number(value));
 }
+
+const heroSlides = [
+  {
+    accent: "#c8102e",
+    cta: "Ver melhores ofertas",
+    description:
+      "Consulte medicamentos, disponibilidade e entrega com a equipe da Wimifarma.",
+    eyebrow: "Medicamentos e cuidado diario",
+    href: "#melhores-ofertas",
+    image: "/banners/hero-medicamentos.webp",
+    title: "Cuidado para a rotina, perto de voce.",
+  },
+  {
+    accent: "#d7496f",
+    cta: "Consultar perfumaria",
+    description:
+      "Perfumes, higiene e beleza para deixar seus momentos de autocuidado ainda melhores.",
+    eyebrow: "Perfumaria e autocuidado",
+    href: `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent(
+      "Ola, gostaria de consultar os produtos de perfumaria e autocuidado da Wimifarma.",
+    )}`,
+    image: "/banners/hero-perfumaria.webp",
+    title: "Seu cuidado tambem merece um momento.",
+  },
+  {
+    accent: "#138a45",
+    cta: "Consultar linha infantil",
+    description:
+      "Fraldas, higiene e cuidados infantis com atendimento proximo da nossa equipe.",
+    eyebrow: "Mae e bebe",
+    href: `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent(
+      "Ola, gostaria de consultar os produtos para mae e bebe da Wimifarma.",
+    )}`,
+    image: "/banners/hero-mae-bebe.webp",
+    title: "Carinho para cada fase da familia.",
+  },
+] as const;
 
 function buildBestOfferItems(products: PublicShowcaseProduct[]): BestOfferItem[] {
   return arrangeShowcaseProducts(products).map((product, index) => {
@@ -211,130 +246,175 @@ function MotionBlock({
   );
 }
 
-function HeroVideo() {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [isMuted, setIsMuted] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(true);
+function HeroCarousel() {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isInteracting, setIsInteracting] = useState(false);
+  const [isManuallyPaused, setIsManuallyPaused] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
+  const touchStartX = useRef<number | null>(null);
+  const slide = heroSlides[activeSlide];
 
-  const togglePlay = () => {
-    const video = videoRef.current;
+  const changeSlide = useCallback((direction: -1 | 1) => {
+    setActiveSlide((current) =>
+      (current + direction + heroSlides.length) % heroSlides.length,
+    );
+  }, []);
 
-    if (!video) {
-      return;
+  useEffect(() => {
+    if (isInteracting || isManuallyPaused || shouldReduceMotion) return;
+
+    const interval = window.setInterval(() => changeSlide(1), 6500);
+    return () => window.clearInterval(interval);
+  }, [activeSlide, changeSlide, isInteracting, isManuallyPaused, shouldReduceMotion]);
+
+  function finishTouch(event: React.TouchEvent<HTMLDivElement>) {
+    const startX = touchStartX.current;
+    const endX = event.changedTouches[0]?.clientX;
+
+    if (startX !== null && endX !== undefined) {
+      const distance = startX - endX;
+      if (Math.abs(distance) >= 40) changeSlide(distance > 0 ? 1 : -1);
     }
 
-    if (video.paused) {
-      void video.play().then(() => setIsPlaying(true));
-      return;
-    }
-
-    video.pause();
-    setIsPlaying(false);
-  };
-
-  const toggleMute = () => {
-    const video = videoRef.current;
-
-    if (!video) {
-      return;
-    }
-
-    const nextMuted = !video.muted;
-    video.muted = nextMuted;
-    setIsMuted(nextMuted);
-
-    if (!nextMuted && video.paused) {
-      void video.play().then(() => setIsPlaying(true));
-    }
-  };
+    touchStartX.current = null;
+    setIsInteracting(false);
+  }
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-white bg-white p-2 shadow-[0_26px_90px_rgba(17,24,39,0.12)]">
-      <div className="relative overflow-hidden rounded-md bg-[linear-gradient(135deg,#fff_0%,#fff4f6_34%,#eff8f3_68%,#f8fafc_100%)] lg:aspect-[8/3]">
+    <div
+      aria-label="Campanhas da Wimifarma"
+      aria-roledescription="carrossel"
+      className="relative isolate min-h-[540px] touch-pan-y overflow-hidden rounded-lg bg-white shadow-[0_26px_90px_rgba(17,24,39,0.14)] lg:aspect-[8/3] lg:min-h-0"
+      onBlurCapture={(event) => {
+        const nextTarget = event.relatedTarget;
+        if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
+          setIsInteracting(false);
+        }
+      }}
+      onFocusCapture={() => setIsInteracting(true)}
+      onMouseEnter={() => setIsInteracting(true)}
+      onMouseLeave={() => setIsInteracting(false)}
+      onTouchCancel={() => {
+        touchStartX.current = null;
+        setIsInteracting(false);
+      }}
+      onTouchEnd={finishTouch}
+      onTouchStart={(event) => {
+        touchStartX.current = event.touches[0]?.clientX ?? null;
+        setIsInteracting(true);
+      }}
+      role="region"
+    >
+      {heroSlides.map((item, index) => (
         <Image
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 h-full w-full scale-125 object-cover object-center opacity-20 blur-2xl saturate-[0.8]"
+          className={`absolute inset-0 -z-20 h-full w-full object-cover object-[72%_center] transition-opacity duration-700 motion-reduce:transition-none lg:object-center ${
+            activeSlide === index ? "opacity-100" : "opacity-0"
+          }`}
           fill
-          priority
-          sizes="100vw"
-          src="/videos/thiago-poster.svg"
-          unoptimized
+          key={item.image}
+          priority={index === 0}
+          quality={88}
+          sizes="(max-width: 1024px) 100vw, 1280px"
+          src={item.image}
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.92),rgba(255,255,255,0.42)_32%,rgba(255,255,255,0.42)_68%,rgba(255,255,255,0.92))]" />
-        <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#c8102e,#138a45,#064b8e)]" />
+      ))}
 
-        <div className="relative z-[1] grid min-h-[360px] items-center gap-5 p-4 sm:min-h-[430px] sm:p-5 lg:h-full lg:min-h-0 lg:grid-cols-[minmax(16rem,0.52fr)_minmax(16rem,0.48fr)] lg:gap-6 lg:p-7">
-          <div className="hidden max-w-lg lg:block">
-            <p className="text-xs font-black uppercase tracking-[0.26em] text-brand">
-              Wimifarma
-            </p>
-            <h1 className="mt-4 text-4xl font-black leading-[0.98] text-ink xl:text-5xl">
-              Melhores preços em medicamentos e temos Farmácia Popular.
-            </h1>
-            <p className="mt-5 max-w-xs text-base leading-7 text-muted">
-              Medicamentos, Farmacia Popular e entrega com atendimento humano.
-            </p>
-            <a
-              className="soft-breathe mt-7 inline-flex items-center gap-2 rounded-full bg-[#25d366] px-5 py-3 text-sm font-black text-white shadow-[0_16px_36px_rgba(37,211,102,0.25)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#1ebe57]"
-              href={siteConfig.whatsappUrl}
-              rel="noreferrer"
-              target="_blank"
-            >
-              Chamar no WhatsApp
-              <MessageCircle className="h-4 w-4" />
-            </a>
-          </div>
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,rgba(255,255,255,0.18)_34%,rgba(255,255,255,0.94)_62%,#fff_100%)] lg:bg-[linear-gradient(90deg,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.92)_35%,rgba(255,255,255,0.5)_55%,rgba(255,255,255,0)_78%)]" />
+      <div
+        className="absolute inset-x-0 top-0 h-1.5 transition-colors duration-500"
+        style={{ backgroundColor: slide.accent }}
+      />
 
-          <div className="flex min-h-0 items-center justify-center py-3 sm:py-5 lg:h-full lg:py-0">
-            <div className="relative aspect-[9/16] w-[min(68vw,250px)] overflow-hidden rounded-md bg-[#111827] shadow-[0_28px_60px_rgba(17,24,39,0.24)] ring-1 ring-black/10 sm:w-[min(44vw,280px)] lg:h-full lg:max-h-[432px] lg:min-h-0 lg:w-auto">
-              <video
-                aria-label="Video da Wimifarma"
-                autoPlay
-                className="h-full w-full object-cover object-center"
-                loop
-                muted
-                onPause={() => setIsPlaying(false)}
-                onPlay={() => setIsPlaying(true)}
-                onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
-                playsInline
-                poster="/videos/thiago-poster.svg"
-                preload="metadata"
-                ref={videoRef}
-              >
-                <source src="/videos/thiago-cansado.mp4" type="video/mp4" />
-              </video>
-            </div>
-          </div>
+      <div
+        aria-label={`${activeSlide + 1} de ${heroSlides.length}: ${slide.eyebrow}`}
+        aria-roledescription="slide"
+        className="flex min-h-[540px] items-end px-6 pb-24 pt-56 sm:px-8 lg:h-full lg:min-h-0 lg:items-center lg:px-12 lg:py-10 xl:px-16"
+        role="group"
+      >
+        <motion.div
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-xl"
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 14 }}
+          key={activeSlide}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: easeOut }}
+        >
+          <p className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/85 px-3 py-1.5 text-xs font-black uppercase text-ink shadow-sm backdrop-blur-sm">
+            <span
+              aria-hidden="true"
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: slide.accent }}
+            />
+            {slide.eyebrow}
+          </p>
+          <h1 className="mt-4 max-w-[15ch] text-3xl font-black leading-[1.02] text-ink sm:text-4xl lg:text-5xl">
+            {slide.title}
+          </h1>
+          <p className="mt-4 max-w-md text-sm font-semibold leading-6 text-muted sm:text-base sm:leading-7">
+            {slide.description}
+          </p>
+          <a
+            className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-full px-5 py-3 text-sm font-black text-white shadow-[0_14px_30px_rgba(17,24,39,0.2)] transition duration-300 hover:-translate-y-0.5 hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
+            href={slide.href}
+            rel={slide.href.startsWith("http") ? "noreferrer" : undefined}
+            style={{ backgroundColor: slide.accent }}
+            target={slide.href.startsWith("http") ? "_blank" : undefined}
+          >
+            {slide.cta}
+            <ChevronRight aria-hidden="true" className="h-4 w-4" />
+          </a>
+        </motion.div>
+      </div>
+
+      <div className="absolute bottom-4 left-4 right-4 z-10 flex items-center justify-between gap-3 lg:left-auto lg:right-6">
+        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/90 p-2 shadow-md backdrop-blur-md">
+          {heroSlides.map((item, index) => (
+            <button
+              aria-label={`Mostrar campanha ${index + 1}: ${item.eyebrow}`}
+              aria-pressed={activeSlide === index}
+              className={`h-2.5 cursor-pointer rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ${
+                activeSlide === index ? "w-7" : "w-2.5 bg-slate-300 hover:bg-slate-400"
+              }`}
+              key={item.image}
+              onClick={() => setActiveSlide(index)}
+              style={activeSlide === index ? { backgroundColor: item.accent } : undefined}
+              type="button"
+            />
+          ))}
         </div>
 
-        <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-ink/60 p-1.5 shadow-[0_12px_34px_rgba(0,0,0,0.22)] backdrop-blur-md lg:left-auto lg:right-4 lg:translate-x-0">
+        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/90 p-1.5 shadow-md backdrop-blur-md">
           <button
-            aria-label={isPlaying ? "Pausar video" : "Reproduzir video"}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-brand hover:text-white"
-            onClick={togglePlay}
-            title={isPlaying ? "Pausar video" : "Reproduzir video"}
+            aria-label="Campanha anterior"
+            className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-ink transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            onClick={() => changeSlide(-1)}
             type="button"
           >
-            {isPlaying ? (
-              <Pause className="h-4 w-4" />
+            <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+          </button>
+
+          <button
+            aria-label={isManuallyPaused ? "Retomar campanhas" : "Pausar campanhas"}
+            className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-ink transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-not-allowed disabled:opacity-45"
+            disabled={Boolean(shouldReduceMotion)}
+            onClick={() => setIsManuallyPaused((current) => !current)}
+            type="button"
+          >
+            {isManuallyPaused ? (
+              <Play aria-hidden="true" className="h-4 w-4 fill-current" />
             ) : (
-              <Play className="h-4 w-4 fill-current" />
+              <Pause aria-hidden="true" className="h-4 w-4" />
             )}
           </button>
 
           <button
-            aria-label={isMuted ? "Ativar som do video" : "Silenciar video"}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-brand hover:text-white"
-            onClick={toggleMute}
-            title={isMuted ? "Ativar som do video" : "Silenciar video"}
+            aria-label="Proxima campanha"
+            className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-ink transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            onClick={() => changeSlide(1)}
             type="button"
           >
-            {isMuted ? (
-              <VolumeX className="h-4 w-4" />
-            ) : (
-              <Volume2 className="h-4 w-4" />
-            )}
+            <ChevronRight aria-hidden="true" className="h-5 w-5" />
           </button>
         </div>
       </div>
@@ -460,7 +540,7 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
   }
 
   return (
-    <section className="pharma-clouds bg-white px-4 pb-12 pt-4 sm:px-6 lg:px-8">
+    <section id="melhores-ofertas" className="pharma-clouds scroll-mt-40 bg-white px-4 pb-12 pt-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div>
           <div className="mb-5 overflow-hidden rounded-lg border border-line/80 bg-white shadow-[0_22px_70px_rgba(17,24,39,0.08)]">
@@ -898,7 +978,7 @@ export function HomePage({
     <>
       <section className="pharma-clouds bg-white px-4 pb-8 pt-32 sm:px-6 sm:pt-36 lg:px-8 lg:pt-44">
         <div className="mx-auto max-w-7xl">
-          <HeroVideo />
+          <HeroCarousel />
         </div>
       </section>
 
