@@ -66,6 +66,14 @@ textarea {
   font: inherit;
 }
 
+.checkout-field:-webkit-autofill,
+.checkout-field:-webkit-autofill:hover,
+.checkout-field:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+  caret-color: var(--foreground);
+}
+
 ::selection {
   background: rgba(200, 16, 46, 0.16);
   color: var(--brand-strong);
