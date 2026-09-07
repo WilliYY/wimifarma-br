@@ -190,7 +190,7 @@ export default function Page() {
 
               <div className="mt-4 flex items-start gap-3 rounded-lg border border-line bg-surface-subtle p-4">
                 <Info className="mt-0.5 h-5 w-5 shrink-0 text-brand" />
-                <p className="text-sm leading-6 text-muted">
+                <p className="pr-14 text-sm leading-6 text-muted sm:pr-0">
                   A pagina orienta o atendimento. A separacao do pedido so
                   acontece apos a confirmacao da equipe.
                 </p>
