@@ -123,7 +123,7 @@ export function HomeProductCarousel({
   return (
     <section className="bg-[#f6f8fb] px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-5 flex items-end justify-between gap-4">
+        <div className="mb-5 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-brand">
               <Pill aria-hidden="true" className="h-4 w-4" />
@@ -137,7 +137,7 @@ export function HomeProductCarousel({
             </p>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2 sm:self-auto">
             <button
               aria-controls="home-products-carousel"
               aria-label="Ver medicamentos anteriores"
