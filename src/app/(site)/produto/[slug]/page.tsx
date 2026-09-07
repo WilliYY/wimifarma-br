@@ -5,9 +5,12 @@ import {
   BadgeCheck,
   ChevronRight,
   CreditCard,
+  Headphones,
+  MapPin,
   PackageCheck,
   Pill,
   ShieldCheck,
+  Sparkles,
   Star,
 } from "lucide-react";
 import type { Prisma } from "@/generated/prisma/client";
@@ -224,15 +227,21 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <ProductImageViewer imageUrl={product.imageUrl} name={product.name} />
 
             <div className="grid gap-4">
-              <article className="border border-line bg-white p-5 shadow-[0_18px_50px_rgba(17,24,39,0.07)] sm:p-7">
+              <article className="relative overflow-hidden rounded-lg border border-line bg-white p-5 shadow-[0_18px_50px_rgba(17,24,39,0.07)] sm:p-7">
+                <div className="absolute inset-x-0 top-0 h-1 bg-brand" />
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="text-sm font-black text-brand">{product.brand ?? "Wimifarma"}</span>
-                  <a className="inline-flex items-center gap-2 text-xs font-bold text-muted transition hover:text-brand" href="#avaliacoes">
-                    <RatingStars rating={ratingSummary.average} />
-                    {ratingSummary.count > 0
-                      ? `${ratingSummary.average} (${ratingSummary.count} ${ratingSummary.count === 1 ? "avaliacao" : "avaliacoes"})`
-                      : "Sem avaliacoes"}
-                  </a>
+                  {ratingSummary.count > 0 ? (
+                    <a className="inline-flex items-center gap-2 text-xs font-bold text-muted transition hover:text-brand" href="#avaliacoes">
+                      <RatingStars rating={ratingSummary.average} />
+                      {`${ratingSummary.average} (${ratingSummary.count} ${ratingSummary.count === 1 ? "avaliacao" : "avaliacoes"})`}
+                    </a>
+                  ) : (
+                    <a className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-800 transition hover:bg-amber-100" href="#avaliacoes">
+                      <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                      Novo no catalogo
+                    </a>
+                  )}
                 </div>
 
                 <h1 className="mt-4 text-2xl font-black leading-tight text-ink sm:text-3xl lg:text-4xl">{product.name}</h1>
@@ -253,20 +262,36 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                       <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-black text-emerald-700">{discountPercentage}% OFF</span>
                     </div>
                   ) : null}
+                  <span className="mt-2 block text-[0.68rem] font-black uppercase tracking-[0.12em] text-muted">Preco do catalogo</span>
                   <strong className="mt-1 block text-4xl font-black text-brand">{formatCurrency(currentPrice)}</strong>
                   {hasPromotion ? <p className="mt-1 text-xs font-bold text-pharma-green">Economize {formatCurrency(saving)}</p> : null}
                 </div>
 
                 <ProductPurchasePanel product={cartProduct} />
 
-                <div className="mt-6 grid gap-3 border-t border-line pt-5 text-xs font-semibold text-muted sm:grid-cols-3">
-                  <span className="flex items-start gap-2"><PackageCheck className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />Estoque conferido ao enviar</span>
-                  <span className="flex items-start gap-2"><CreditCard className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />Pagamento combinado no pedido</span>
-                  <span className="flex items-start gap-2"><ShieldCheck className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />Atendimento da equipe</span>
+                <div className="mt-6 grid gap-4 rounded-md bg-[#f7f8fa] p-4 text-xs text-muted sm:grid-cols-3">
+                  <span className="flex items-start gap-2.5"><PackageCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" /><span><strong className="block text-ink">Estoque revisado</strong><span className="mt-1 block font-semibold">Na conclusao do pedido</span></span></span>
+                  <span className="flex items-start gap-2.5"><CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" /><span><strong className="block text-ink">Sem dados bancarios</strong><span className="mt-1 block font-semibold">O site nao pede numero do cartao</span></span></span>
+                  <span className="flex items-start gap-2.5"><Headphones className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" /><span><strong className="block text-ink">Atendimento humano</strong><span className="mt-1 block font-semibold">Equipe da Wimifarma</span></span></span>
                 </div>
               </article>
 
               <DeliveryEstimator />
+            </div>
+          </div>
+
+          <div className="mt-6 grid overflow-hidden rounded-lg border border-line bg-white shadow-[0_12px_34px_rgba(17,24,39,0.05)] sm:grid-cols-3">
+            <div className="flex items-center gap-3 border-b border-line p-4 sm:border-b-0 sm:border-r">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-pharma-green"><MapPin className="h-5 w-5" aria-hidden="true" /></span>
+              <span><strong className="block text-sm text-ink">Retirada gratuita</strong><span className="mt-0.5 block text-xs font-semibold text-muted">Na loja em Ivate</span></span>
+            </div>
+            <div className="flex items-center gap-3 border-b border-line p-4 sm:border-b-0 sm:border-r">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand"><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
+              <span><strong className="block text-sm text-ink">Pedido acompanhado</strong><span className="mt-0.5 block text-xs font-semibold text-muted">Confirmacao pela equipe</span></span>
+            </div>
+            <div className="flex items-center gap-3 p-4">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-700"><Headphones className="h-5 w-5" aria-hidden="true" /></span>
+              <span><strong className="block text-sm text-ink">Duvidas pelo WhatsApp</strong><span className="mt-0.5 block text-xs font-semibold text-muted">Atendimento da farmacia</span></span>
             </div>
           </div>
         </div>
@@ -312,6 +337,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       <section className="border-y border-line bg-[#f7f8fa] px-4 py-14 sm:px-6 lg:px-8" id="avaliacoes">
         <div className="mx-auto max-w-7xl">
+          {reviews.length > 0 ? (
           <div className="grid gap-8 lg:grid-cols-[16rem_minmax(0,1fr)_22rem] lg:items-start">
             <div>
               <p className="text-xs font-black uppercase text-brand">Avaliacoes</p>
@@ -332,13 +358,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   </div>
                 </>
               ) : (
-                <div className="mt-6"><RatingStars rating={null} size="h-5 w-5" /><p className="mt-3 text-sm font-semibold leading-6 text-muted">Ainda nao ha avaliacoes publicadas. Nenhuma nota ficticia e exibida.</p></div>
+                <div className="mt-6"><RatingStars rating={null} size="h-5 w-5" /><p className="mt-3 text-sm font-semibold leading-6 text-muted">Este produto ainda nao recebeu avaliacoes.</p></div>
               )}
             </div>
 
-            <div className="divide-y divide-line border-y border-line">
-              {reviews.length > 0 ? reviews.map((review) => (
-                <article className="py-6" key={review.id}>
+            <div className="grid gap-3">
+              {reviews.map((review) => (
+                <article className="rounded-lg border border-line bg-white p-5 shadow-[0_10px_28px_rgba(17,24,39,0.05)]" key={review.id}>
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div><strong className="text-sm font-black text-ink">{publicReviewerName(review.customer.name)}</strong><span className="ml-2 inline-flex rounded-md bg-emerald-50 px-2 py-1 text-[0.68rem] font-black uppercase text-emerald-700">Compra verificada</span></div>
                     <time className="text-xs font-semibold text-muted" dateTime={review.createdAt.toISOString()}>{dateFormatter.format(review.createdAt)}</time>
@@ -346,7 +372,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   <div className="mt-3"><RatingStars rating={review.rating} /></div>
                   <p className="mt-3 text-sm leading-7 text-muted">{review.comment}</p>
                 </article>
-              )) : <div className="flex min-h-44 items-center justify-center px-4 py-8 text-center text-sm font-semibold leading-6 text-muted">A primeira avaliacao aparecera aqui depois de uma compra concluida.</div>}
+              ))}
             </div>
 
             <ProductReviewForm
@@ -357,6 +383,36 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               productId={product.id}
             />
           </div>
+          ) : (
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-stretch">
+              <div className="relative overflow-hidden rounded-lg border border-line bg-white p-6 shadow-[0_14px_38px_rgba(17,24,39,0.06)] sm:p-8">
+                <div className="absolute inset-y-0 left-0 w-1 bg-brand" />
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+                  <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-500">
+                    <Star className="h-7 w-7" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-brand">Avaliacoes verificadas</p>
+                    <h2 className="mt-2 text-2xl font-black leading-tight text-ink sm:text-3xl">Sua experiencia pode ser a primeira</h2>
+                    <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">Depois de uma compra concluida, conte como foi o produto e o atendimento. Sua opiniao ajuda outros clientes a decidir com mais seguranca.</p>
+                  </div>
+                </div>
+                <div className="mt-7 grid gap-3 border-t border-line pt-5 text-sm font-semibold text-muted sm:grid-cols-3">
+                  <span className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 shrink-0 text-pharma-green" aria-hidden="true" />Pedido concluido</span>
+                  <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 shrink-0 text-pharma-green" aria-hidden="true" />Cliente identificado</span>
+                  <span className="flex items-center gap-2"><Star className="h-4 w-4 shrink-0 text-amber-500" aria-hidden="true" />Nota de 1 a 5</span>
+                </div>
+              </div>
+
+              <ProductReviewForm
+                canReview={Boolean(completedOrder)}
+                existingReview={existingReview}
+                isCustomer={Boolean(customerId)}
+                loginHref={`/login?callbackUrl=${encodeURIComponent(`/produto/${product.slug}#avaliacoes`)}`}
+                productId={product.id}
+              />
+            </div>
+          )}
         </div>
       </section>
 

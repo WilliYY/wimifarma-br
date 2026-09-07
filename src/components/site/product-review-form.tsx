@@ -28,11 +28,14 @@ export function ProductReviewForm({
 
   if (!isCustomer) {
     return (
-      <div className="border border-line bg-surface-subtle p-5 sm:p-6">
-        <ShieldCheck className="h-6 w-6 text-brand" aria-hidden="true" />
-        <h3 className="mt-3 text-base font-black text-ink">Avaliacoes de compras verificadas</h3>
-        <p className="mt-2 text-sm leading-6 text-muted">Entre na sua conta para avaliar um produto depois que o pedido for concluido.</p>
-        <Link className="mt-4 inline-flex min-h-11 items-center justify-center rounded-md border border-brand px-4 text-sm font-black text-brand transition hover:bg-brand-soft" href={loginHref}>
+      <div className="rounded-lg border border-line bg-white p-5 shadow-[0_12px_34px_rgba(17,24,39,0.06)] sm:p-6">
+        <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-brand-soft text-brand">
+          <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <p className="mt-4 text-xs font-black uppercase tracking-[0.12em] text-pharma-green">Compra verificada</p>
+        <h3 className="mt-2 text-lg font-black text-ink">Conte sua experiencia</h3>
+        <p className="mt-2 text-sm leading-6 text-muted">Entre na sua conta para avaliar este produto depois que o pedido for concluido.</p>
+        <Link className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-md border border-brand px-4 text-sm font-black text-brand transition hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2" href={loginHref}>
           Entrar na conta
         </Link>
       </div>
@@ -41,9 +44,11 @@ export function ProductReviewForm({
 
   if (!canReview) {
     return (
-      <div className="border border-line bg-surface-subtle p-5 sm:p-6">
-        <ShieldCheck className="h-6 w-6 text-pharma-green" aria-hidden="true" />
-        <h3 className="mt-3 text-base font-black text-ink">Compra verificada</h3>
+      <div className="rounded-lg border border-line bg-white p-5 shadow-[0_12px_34px_rgba(17,24,39,0.06)] sm:p-6">
+        <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-pharma-green">
+          <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <h3 className="mt-4 text-lg font-black text-ink">Compra verificada</h3>
         <p className="mt-2 text-sm leading-6 text-muted">O formulario sera liberado quando um pedido concluido deste produto estiver na sua conta.</p>
       </div>
     );
@@ -75,7 +80,7 @@ export function ProductReviewForm({
   }
 
   return (
-    <form className="border border-line bg-surface-subtle p-5 sm:p-6" onSubmit={handleSubmit}>
+    <form className="rounded-lg border border-line bg-white p-5 shadow-[0_12px_34px_rgba(17,24,39,0.06)] sm:p-6" onSubmit={handleSubmit}>
       <h3 className="text-base font-black text-ink">{existingReview ? "Atualize sua avaliacao" : "Avalie sua compra"}</h3>
       <p className="mt-1 text-xs font-semibold text-pharma-green">Compra verificada</p>
       <fieldset className="mt-4">

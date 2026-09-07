@@ -14,7 +14,7 @@ import {
 export function ProductImageViewer({ imageUrl, name }: { imageUrl: string | null; name: string }) {
   if (!imageUrl) {
     return (
-      <div className="flex aspect-square max-h-[36rem] items-center justify-center border border-line bg-white text-muted">
+      <div className="flex aspect-square max-h-[36rem] items-center justify-center rounded-lg border border-line bg-[#f8f9fb] text-muted">
         <ImageIcon className="h-16 w-16" aria-hidden="true" />
         <span className="sr-only">Produto sem imagem cadastrada</span>
       </div>
@@ -25,14 +25,14 @@ export function ProductImageViewer({ imageUrl, name }: { imageUrl: string | null
     <Dialog>
       <div className="grid gap-3 sm:grid-cols-[5rem_minmax(0,1fr)]">
         <div className="order-2 hidden sm:order-1 sm:block">
-          <div className="flex aspect-square items-center justify-center border-2 border-brand bg-white p-2">
+          <div className="flex aspect-square items-center justify-center rounded-md border-2 border-brand bg-white p-2 shadow-sm">
             <Image alt="" className="h-full w-full object-contain" height={96} src={imageUrl} unoptimized width={96} />
           </div>
         </div>
         <DialogTrigger asChild>
           <button
             aria-label={`Ampliar imagem de ${name}`}
-            className="group relative order-1 flex aspect-square max-h-[36rem] w-full items-center justify-center overflow-hidden border border-line bg-white p-6 transition hover:border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:order-2 lg:p-10"
+            className="group relative order-1 flex aspect-square max-h-[36rem] w-full items-center justify-center overflow-hidden rounded-lg border border-line bg-[#fbfcfd] p-6 shadow-[0_18px_50px_rgba(17,24,39,0.06)] transition hover:border-brand/50 hover:shadow-[0_22px_60px_rgba(17,24,39,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:order-2 lg:p-10"
             type="button"
           >
             <Image
@@ -44,7 +44,7 @@ export function ProductImageViewer({ imageUrl, name }: { imageUrl: string | null
               unoptimized
               width={760}
             />
-            <span className="absolute bottom-4 right-4 inline-flex h-10 items-center gap-2 rounded-md border border-line bg-white px-3 text-xs font-black text-ink shadow-sm">
+            <span className="absolute bottom-4 right-4 inline-flex h-10 items-center gap-2 rounded-md border border-line bg-white/95 px-3 text-xs font-black text-ink shadow-sm backdrop-blur">
               <Expand className="h-4 w-4" aria-hidden="true" />
               Ampliar
             </span>
