@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-07 - Miauby conversacional com Gemini e catalogo real
+
+- Decisao: transformar a Miauby em assistente conversacional responsiva, usando Gemini no servidor, memoria curta da propria conversa e ate quatro produtos publicados relacionados como contexto e atalhos.
+- Motivo: permitir perguntas uteis no site e busca assistida sem inventar catalogo, preco, estoque ou orientacao clinica.
+- Impacto: novo avatar WebP transparente, painel flutuante, `/api/miauby`, logica testavel em `src/features/miauby`, politica de privacidade e documentacao de arquitetura, seguranca, ambiente, layout e fluxos.
+- Riscos/cuidados: conversa nao e persistida; pergunta e historico curto podem ser enviados ao Google. A interface proibe dados sensiveis, emergencias e dados financeiros evidentes usam resposta local, e qualquer orientacao clinica ou confirmacao comercial continua com a equipe.
+
 ## 2026-09-06 - Rolagem vertical nativa no site publico
 
 - Decisao: retirar a camada global do Lenis do layout publico e manter a rolagem vertical nativa do navegador.

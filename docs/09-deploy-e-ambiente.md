@@ -76,7 +76,7 @@ As imagens enviadas pelo admin ficam em `public/uploads/products` dentro do cont
 
 `REMOVE_BG_API_KEY` e opcional e funciona apenas como alternativa externa quando `BACKGROUND_REMOVAL_URL` estiver vazio. A chave deve permanecer somente no `.env` do servidor e nunca no Git. Sem nenhum provedor, upload, WebP, compressao, editor e biblioteca continuam funcionando, mas o controle `Remover fundo com IA` fica desabilitado.
 
-`GEMINI_API_KEY` ativa a Miauby e as sugestoes de cadastro de produtos. `GEMINI_MODEL` usa `gemini-2.5-flash` quando nao for informado. A sugestao envia ao Google somente nome, marca, EAN e nomes das categorias existentes, faz uma chamada com Google Search para conferir o produto e outra para estruturar o resultado. A pesquisa prioriza Anvisa e fabricante, compara fontes e usa raciocinio limitado; alta confianca exige fonte oficial. Preco, estoque, imagem, credenciais e dados de clientes nao sao enviados. A chave deve ficar apenas no `.env` do servidor; sem ela, a rota administrativa responde `503` e o cadastro manual continua funcionando.
+`GEMINI_API_KEY` ativa a Miauby e as sugestoes de cadastro de produtos. `GEMINI_MODEL` usa `gemini-2.5-flash` quando nao for informado. A sugestao de cadastro envia ao Google somente nome, marca, EAN e nomes das categorias existentes, faz uma chamada com Google Search para conferir o produto e outra para estruturar o resultado. A Miauby envia a pergunta, ate seis mensagens recentes e os dados publicos de ate quatro produtos relacionados; nao persiste a conversa no banco. Emergencias e dados financeiros evidentes nao seguem ao Gemini. A chave deve ficar apenas no `.env` do servidor; sem ela, a Miauby usa respostas locais e o cadastro manual continua funcionando.
 
 ## Nginx Proxy Manager
 

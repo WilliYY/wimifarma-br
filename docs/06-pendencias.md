@@ -108,9 +108,9 @@
 
 ### Ativar sugestoes de catalogo com Gemini
 
-- Status: aguardando configuracao externa.
-- Impacto: a interface, a rota protegida, a pesquisa fundamentada e os testes estao prontos, mas `GEMINI_API_KEY` ainda esta ausente no VPS. Sem a chave, o botao informa que a IA nao foi configurada e nenhum dado e enviado.
-- Caminho sugerido: criar uma chave restrita no Google AI Studio, salvar somente no `.env` do servidor e testar com um produto generico e um medicamento de marca comparando o resultado com a bula da Anvisa.
+- Status: resolvido em 2026-09-07; `GEMINI_API_KEY` esta configurada no VPS e ativa a sugestao de catalogo e a Miauby.
+- Resolucao: a Miauby ganhou conversa com historico curto, contexto de produtos publicados, fallback local e limites de seguranca; a sugestao administrativa continua com pesquisa fundamentada e revisao humana.
+- Cuidado aberto: como a chave inicial foi compartilhada em conversa, rotaciona-la no Google AI Studio e atualizar somente o `.env` do servidor.
 - Arquivos: `.env.example`, `src/app/api/produtos/sugestoes/route.ts`, `src/features/products/ai-suggestions.ts`, `docs/09-deploy-e-ambiente.md`.
 
 ### Roleta real

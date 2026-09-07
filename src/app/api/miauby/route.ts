@@ -1,6 +1,22 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@/generated/prisma/client";
+import {
+  buildMiaubySystemPrompt,
+  cleanMiaubyReply,
+  keepMiaubyQuestionLocal,
+  miaubyFallbackReply,
+  miaubyReplyProducts,
+  miaubyRequestSchema,
+  miaubySearchTokens,
+  rankMiaubyCatalogProducts,
+  sanitizeMiaubyHistory,
+  type MiaubyCatalogSource,
+} from "@/features/miauby/assistant";
 import { readJsonBody } from "@/lib/api";
-import { siteConfig } from "@/lib/site";
+import { getPrisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 type GeminiPart = {
   text?: string;
@@ -14,86 +30,119 @@ type GeminiResponse = {
   }>;
 };
 
-const fallbackMessages = [
-  "Hoje e um bom dia para conferir as campanhas da Wimifarma. Temos destaque para cuidados do bebe, genericos e atendimento pelo WhatsApp.",
-  "Posso te ajudar com ofertas, Farmacia Popular, delivery em Ivate e contato com a equipe da Wimifarma.",
-  "Recado da Miauby: se estiver procurando preco ou disponibilidade, chame a equipe no WhatsApp para confirmar rapidinho.",
-];
+const productSelect = {
+  activeIngredients: true,
+  brand: true,
+  category: true,
+  id: true,
+  imageUrl: true,
+  isPopularPharmacy: true,
+  name: true,
+  price: true,
+  promotionalPrice: true,
+  requiresPrescription: true,
+  searchTerms: true,
+  searchText: true,
+  slug: true,
+} as const;
 
-function fallbackReply(message: string) {
-  const normalized = message.toLowerCase();
+type CatalogProduct = Prisma.ProductGetPayload<{ select: typeof productSelect }>;
 
-  if (normalized.includes("bebe") || normalized.includes("bebê")) {
-    return "Hoje a Miauby esta de olho no Festival do Bebe: fraldas, higiene e cuidado com carinho. Para confirmar ofertas e disponibilidade, chama a Wimifarma no WhatsApp.";
-  }
-
-  if (normalized.includes("popular")) {
-    return "A Wimifarma ajuda com Farmacia Popular. Leve documento, receita quando necessario e confirme pelo WhatsApp antes de ir ate a loja.";
-  }
-
-  if (normalized.includes("delivery") || normalized.includes("entrega")) {
-    return `Tem delivery local em ${siteConfig.city}. Me diga o que voce precisa ou chame direto no WhatsApp da Wimifarma.`;
-  }
-
-  const index = Math.abs(message.length) % fallbackMessages.length;
-  return fallbackMessages[index];
+function serializeCatalogProduct(product: CatalogProduct): MiaubyCatalogSource {
+  return {
+    activeIngredients: product.activeIngredients,
+    brand: product.brand,
+    category: product.category,
+    id: product.id,
+    imageUrl: product.imageUrl,
+    isPopularPharmacy: product.isPopularPharmacy,
+    name: product.name,
+    price: product.price.toString(),
+    promotionalPrice: product.promotionalPrice?.toString() ?? null,
+    requiresPrescription: product.requiresPrescription,
+    searchTerms: product.searchTerms,
+    searchText: product.searchText,
+    slug: product.slug,
+  };
 }
 
-function cleanReply(text: string) {
-  return text
-    .replace(/\s+/g, " ")
-    .replace(/\*\*/g, "")
-    .trim()
-    .slice(0, 700);
+async function findRelatedCatalogProducts(message: string) {
+  const tokens = miaubySearchTokens(message);
+  if (!tokens.length) return [];
+
+  const products = await getPrisma().product.findMany({
+    orderBy: [{ featuredPosition: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+    select: productSelect,
+    take: 24,
+    where: {
+      OR: tokens.map((token) => ({ searchText: { contains: token } })),
+      status: "ACTIVE",
+    },
+  });
+
+  return rankMiaubyCatalogProducts(
+    message,
+    products.map(serializeCatalogProduct),
+  );
+}
+
+function json(data: Record<string, unknown>, status = 200) {
+  return NextResponse.json(data, {
+    headers: { "Cache-Control": "no-store" },
+    status,
+  });
 }
 
 export async function POST(request: Request) {
-  const body = await readJsonBody(request);
-  const message = String(body?.message ?? "").trim().slice(0, 500);
+  const parsed = miaubyRequestSchema.safeParse(await readJsonBody(request));
 
-  if (!message) {
-    return NextResponse.json(
-      { message: "Me manda uma pergunta rapidinha para eu ajudar." },
-      { status: 400 },
-    );
+  if (!parsed.success) {
+    return json({ error: "Envie uma pergunta de ate 500 caracteres." }, 422);
+  }
+
+  const { message } = parsed.data;
+  const history = sanitizeMiaubyHistory(parsed.data.history);
+  let products = [] as Awaited<ReturnType<typeof findRelatedCatalogProducts>>;
+
+  try {
+    products = await findRelatedCatalogProducts(message);
+  } catch (error) {
+    console.error("Erro ao consultar catalogo para Miauby", error);
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
   const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const replyProducts = miaubyReplyProducts(message, products);
 
-  if (!apiKey) {
-    return NextResponse.json({
-      message: fallbackReply(message),
+  if (!apiKey || keepMiaubyQuestionLocal(message)) {
+    return json({
+      message: miaubyFallbackReply(message, replyProducts),
+      products: replyProducts,
       source: "fallback",
     });
   }
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
       {
         body: JSON.stringify({
           contents: [
-            {
-              parts: [
-                {
-                  text: message,
-                },
-              ],
-              role: "user",
-            },
+            ...history.map((item) => ({
+              parts: [{ text: item.text }],
+              role: item.role === "assistant" ? "model" : "user",
+            })),
+            { parts: [{ text: message }], role: "user" },
           ],
           generationConfig: {
-            maxOutputTokens: 180,
-            temperature: 0.65,
+            maxOutputTokens: 320,
+            temperature: 0.3,
+            ...(model.startsWith("gemini-2.5-flash")
+              ? { thinkingConfig: { thinkingBudget: 0 } }
+              : {}),
           },
           systemInstruction: {
-            parts: [
-              {
-                text:
-                  "Voce e Miauby, assistente simpatico da Wimifarma em Ivate-PR. Responda em portugues do Brasil, curto, util e comercial. Ajude com ofertas, Farmacia Popular, delivery e atendimento pelo WhatsApp. Nao invente estoque, preco ou promessas medicas. Para disponibilidade, oriente confirmar com a equipe.",
-              },
-            ],
+            parts: [{ text: buildMiaubySystemPrompt(products) }],
           },
         }),
         headers: {
@@ -101,6 +150,7 @@ export async function POST(request: Request) {
           "x-goog-api-key": apiKey,
         },
         method: "POST",
+        signal: AbortSignal.timeout(15_000),
       },
     );
 
@@ -109,20 +159,23 @@ export async function POST(request: Request) {
     }
 
     const payload = (await response.json()) as GeminiResponse;
-    const text = payload.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text ?? "")
-      .join(" ");
-    const reply = cleanReply(text ?? "");
+    const reply = cleanMiaubyReply(
+      payload.candidates?.[0]?.content?.parts
+        ?.map((part) => part.text ?? "")
+        .join(" ") ?? "",
+    );
 
-    return NextResponse.json({
-      message: reply || fallbackReply(message),
+    return json({
+      message: reply || miaubyFallbackReply(message, replyProducts),
+      products: replyProducts,
       source: reply ? "gemini" : "fallback",
     });
   } catch (error) {
     console.error("Erro no Miauby Gemini", error);
 
-    return NextResponse.json({
-      message: fallbackReply(message),
+    return json({
+      message: miaubyFallbackReply(message, replyProducts),
+      products: replyProducts,
       source: "fallback",
     });
   }

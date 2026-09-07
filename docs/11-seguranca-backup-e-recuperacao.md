@@ -12,6 +12,7 @@ Registrar as protecoes ja aplicadas, o procedimento de backup e os controles que
 - As rotas administrativas e APIs reservadas validam sessao e role no servidor.
 - As entradas das APIs usam Zod e as consultas usam Prisma, sem SQL concatenado.
 - A sugestao de catalogo exige sessao `ADMIN` ou `MANAGER`, limita chamadas por IP, trata nome/categoria como dados nao confiaveis, valida a resposta do Gemini e nao envia dados de clientes, preco, estoque ou imagens ao provedor.
+- A Miauby limita pergunta, historico, tokens, tempo de resposta e requisicoes por IP. Trata conversa, catalogo e saida do Gemini como dados nao confiaveis, renderiza somente texto escapado, nao executa ferramentas e mantem emergencias ou dados financeiros evidentes no fallback local.
 - Cookies do Auth.js usam as protecoes seguras do framework em producao.
 - O site envia CSP, HSTS em producao, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` e `Permissions-Policy`.
 - A CSP permite `unsafe-eval` somente no servidor de desenvolvimento porque o compilador do Next depende disso; o build de producao nao recebe essa permissao.

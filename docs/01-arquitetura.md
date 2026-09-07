@@ -106,6 +106,7 @@ As APIs de negocio usam `requireAdminApi`. O cofre `API e Senhas` usa `requireAd
 - App Docker usa `output: standalone` do Next.
 - A IA de imagens recebe somente upload pela rede Docker interna; nao publica porta no host nem aceita URLs remotas ou escolha de modelo pelo cliente.
 - A sugestao de dados de produto usa Gemini somente no servidor, pesquisa identificacao, apresentacao, composicao e categoria antes da estruturacao, prioriza Anvisa e fabricante, compara fontes independentes, valida a resposta com Zod e nunca envia preco, estoque, imagem ou dados de cliente ao provedor.
+- A Miauby usa `/api/miauby` com Gemini somente no servidor. A rota valida pergunta e historico curto com Zod, limita requisicoes, busca ate quatro produtos publicados relacionados no PostgreSQL e envia ao modelo apenas a conversa informada e dados publicos desses itens. Emergencias e mensagens com dados financeiros evidentes permanecem no fallback local.
 
 ## Riscos ao Alterar
 

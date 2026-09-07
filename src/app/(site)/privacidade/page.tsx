@@ -31,6 +31,10 @@ const sections = [
     text: "Somente clientes autenticados com pedido concluido podem avaliar um produto comprado. Na pagina publica exibimos a nota, o comentario, a data e o primeiro nome com o sobrenome abreviado; o vinculo com a conta e o pedido permanece restrito a equipe autorizada.",
   },
   {
+    title: "Assistente virtual Miauby",
+    text: "Quando voce usa a Miauby, a pergunta e ate seis mensagens recentes da conversa sao enviadas ao Google Gemini para gerar a resposta, junto de dados publicos de produtos relacionados. O site nao grava esse historico no banco nesta fase. Nao envie CPF, cartao, senha, receita, laudo ou outros dados sensiveis no chat; o processamento pelo provedor segue os termos aplicaveis ao servico.",
+  },
+  {
     title: "Retencao e seguranca",
     text: "Mantemos os dados pelo tempo necessario ao atendimento e as obrigacoes legais, regulatorias e de defesa de direitos. Depois, os dados devem ser eliminados ou anonimizados quando aplicavel. Usamos controles de acesso, validacao, conexao protegida, backups e monitoramento, sem prometer risco zero.",
   },
@@ -48,7 +52,7 @@ export default function Page() {
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-md bg-brand-soft text-brand"><ShieldCheck className="h-5 w-5" /></span>
           <h1 className="mt-5 text-3xl font-black text-ink sm:text-4xl">Politica de Privacidade</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Transparencia sobre os dados usados pela Wimifarma no site, na conta e nos pedidos.</p>
-          <p className="mt-3 text-xs font-bold text-muted">Atualizada em 4 de setembro de 2026.</p>
+          <p className="mt-3 text-xs font-bold text-muted">Atualizada em 7 de setembro de 2026.</p>
         </div>
 
         <div className="grid gap-8 py-8">

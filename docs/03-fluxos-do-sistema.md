@@ -32,6 +32,22 @@ Arquivos:
 - `src/app/api/whatsapp/route.ts`
 - `src/features/whatsapp/schema.ts`
 
+## Fluxo da Miauby
+
+1. O visitante abre a Miauby pelo botao flutuante no desktop ou celular; a conversa nao bloqueia a rolagem da pagina.
+2. A interface oferece perguntas rapidas e envia a pergunta atual mais ate seis mensagens recentes para `/api/miauby`.
+3. A rota valida e limita o conteudo, pesquisa no PostgreSQL produtos `ACTIVE` relacionados ao nome, marca, categoria, principios ativos e termos cadastrados e seleciona ate quatro opcoes.
+4. Com `GEMINI_API_KEY`, o Gemini recebe a conversa e somente os dados publicos dos produtos selecionados. Sem chave, indisponibilidade externa, emergencia ou dado financeiro evidente, a resposta usa regras locais.
+5. A resposta nunca confirma diagnostico, dose, substituicao, estoque, receita, Farmacia Popular, frete ou pagamento. Os cards retornados abrem a pagina real do produto e os pontos comerciais continuam sob confirmacao humana.
+6. A conversa fica apenas no estado da pagina e nao e gravada no banco nesta fase. A interface alerta para nao enviar CPF, cartao, senha, receita ou laudo.
+
+Arquivos:
+
+- `src/components/site/floating-whatsapp.tsx`
+- `src/app/api/miauby/route.ts`
+- `src/features/miauby/assistant.ts`
+- `src/middleware.ts`
+
 ## Fluxo de Carrinho e Checkout
 
 1. Cliente clica em `Comprar` em um produto elegivel da vitrine ou pagina de produto.

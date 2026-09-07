@@ -28,6 +28,7 @@ O sistema possui carrinho e checkout para registrar pedidos pendentes, com entre
 
 - Site publico com home temporariamente focada em anuncio: inicia direto na vitrine responsiva com video principal, mostra a secao `Melhores ofertas` em carrossel com 10 posicoes administradas em `/admin/ofertas` e, abaixo, a faixa de campanhas.
 - `Produtos / Catalogo` possui assistente opcional com Gemini para pesquisar e sugerir categoria, descricao, principios ativos e termos de busca, sempre com fontes e revisao humana antes do cadastro.
+- A Miauby abre uma conversa responsiva no site, usa Gemini com historico curto e contexto do catalogo publicado, mostra produtos relacionados e encaminha confirmacoes comerciais ou clinicas para a equipe.
 - WhatsApp principal: `+55 44 98413-4971`, com mensagem padrao para medicamentos e Farmacia Popular.
 - Rotas publicas basicas criadas: `/`, `/ofertas`, `/farmacia-popular`, `/delivery`, `/sobre`, `/contato`, `/roleta`, `/login`.
 - A rota `/ofertas` continua existindo, mas nao aparece no menu principal enquanto a home estiver focada em anuncio.
@@ -164,6 +165,8 @@ Base em `.env.example`. Valores reais devem ficar apenas no `.env` local ou no s
 | `ADMIN_RESET_PASSWORD` | Permite resetar senha via seed quando `true`. |
 | `GOOGLE_CLIENT_ID` | OAuth Google para clientes. |
 | `GOOGLE_CLIENT_SECRET` | OAuth Google para clientes. |
+| `GEMINI_API_KEY` | Gemini server-side para Miauby e sugestoes do catalogo; nunca expor no cliente ou no Git. |
+| `GEMINI_MODEL` | Modelo Gemini usado no servidor; padrao `gemini-2.5-flash`. |
 
 Para Google OAuth de clientes em producao:
 

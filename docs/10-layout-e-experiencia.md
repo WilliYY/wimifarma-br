@@ -45,7 +45,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Fundo usa efeito suave tipo nuvens/farmacia para nao ficar totalmente branco.
 - A fonte Barlow e servida localmente pelo `next/font`, sem folha externa bloqueando a primeira pintura. O hero e a vitrine `Melhores ofertas` sao renderizados imediatamente, e o poster leve recebe prioridade por ocupar a maior area visivel antes do video.
 - Botao flutuante de WhatsApp fica no canto inferior direito, com tamanho reduzido no celular, e nao aparece nas telas de login ou Minha Conta para nao cobrir formularios.
-- Miauby aparece como bolinha informativa acima do WhatsApp em telas a partir de 640 px, mostrando recado de campanha sem abrir caixa de conversa ao clicar; no celular fica oculta para preservar a leitura.
+- Miauby aparece acima do WhatsApp no desktop e no celular com avatar WebP transparente proprio. Ao clicar, abre um painel de conversa responsivo com perguntas rapidas, mensagens, carregamento, produtos relacionados e atalho para cada item, sem bloquear a rolagem da pagina.
 - Login/cadastro usa dois blocos: entrar e cadastrar.
 - Botoes Google de login/cadastro redirecionam sem trocar o texto para estado de carregamento.
 - Cadastro comum inclui telefone e cria conta de cliente.
