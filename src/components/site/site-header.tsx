@@ -65,38 +65,49 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <div className="relative flex items-center gap-2 bg-[#121820] px-1 py-1.5 min-[360px]:px-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
-        <Link
-          aria-label="Wimifarma"
-          className="relative flex h-20 w-24 shrink-0 items-center justify-start overflow-hidden min-[360px]:w-28 sm:h-24 sm:w-64 xl:w-72"
-          href="/"
-        >
-          <Image
-            alt=""
-            aria-hidden="true"
-            className="object-contain object-left"
-            fill
-            priority
-            sizes="(min-width: 1280px) 288px, (min-width: 640px) 256px, (min-width: 360px) 112px, 96px"
-            src="/brand/logo-animada.svg"
-            unoptimized
-          />
-        </Link>
+      <div className="relative isolate flex items-center gap-2 overflow-hidden bg-[#f7fbf9] px-1 py-1.5 min-[360px]:px-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
+        <Image
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 object-cover object-right opacity-[0.18]"
+          fill
+          sizes="100vw"
+          src="/brand/header-botanico.webp"
+        />
 
-        <Link
-          aria-label="Farmacia Popular"
-          className="hidden h-[5.5rem] w-[5.5rem] shrink-0 items-center justify-center overflow-hidden xl:flex"
-          href="/farmacia-popular"
-        >
-          <Image
-            alt="Aqui tem Farmacia Popular"
-            className="h-full w-full object-contain"
-            height={320}
-            priority
-            src="/brand/farmacia-popular.webp"
-            width={320}
-          />
-        </Link>
+        <div className="relative z-10 -my-1.5 -ml-1 flex shrink-0 self-stretch items-center gap-2 rounded-r-[3.5rem] border-r-2 border-brand bg-[#121820] py-1.5 pl-1 pr-3 shadow-[14px_0_30px_rgba(17,24,39,0.12)] min-[360px]:-ml-2 min-[360px]:pl-2 sm:-ml-6 sm:pl-6 sm:pr-5 lg:-ml-8 lg:pl-8 xl:pr-7">
+          <Link
+            aria-label="Wimifarma"
+            className="relative flex h-20 w-24 shrink-0 items-center justify-start overflow-hidden min-[360px]:w-28 sm:h-24 sm:w-64 xl:w-72"
+            href="/"
+          >
+            <Image
+              alt=""
+              aria-hidden="true"
+              className="object-contain object-left"
+              fill
+              priority
+              sizes="(min-width: 1280px) 288px, (min-width: 640px) 256px, (min-width: 360px) 112px, 96px"
+              src="/brand/logo-animada.svg"
+              unoptimized
+            />
+          </Link>
+
+          <Link
+            aria-label="Farmacia Popular"
+            className="hidden h-[5.5rem] w-[5.5rem] shrink-0 items-center justify-center overflow-hidden xl:flex"
+            href="/farmacia-popular"
+          >
+            <Image
+              alt="Aqui tem Farmacia Popular"
+              className="h-full w-full object-contain"
+              height={320}
+              priority
+              src="/brand/farmacia-popular.webp"
+              width={320}
+            />
+          </Link>
+        </div>
 
         <div className="ml-auto flex items-center gap-1 md:hidden">
           <CartHeaderButton className="ml-0" />
@@ -181,7 +192,7 @@ export async function SiteHeader() {
           </a>
           <a
             aria-label="Falar com a Wimifarma pelo WhatsApp"
-            className="soft-breathe hidden h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#22d365_0%,#14b85a_52%,#0f9f4f_100%)] font-body text-sm font-black text-white shadow-[0_16px_36px_rgba(34,211,101,0.28),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-white/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(34,211,101,0.34),inset_0_1px_0_rgba(255,255,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9ff0be] focus-visible:ring-offset-2 focus-visible:ring-offset-[#121820] lg:inline-flex xl:w-auto xl:gap-3 xl:px-5"
+            className="soft-breathe hidden h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#22d365_0%,#14b85a_52%,#0f9f4f_100%)] font-body text-sm font-black text-white shadow-[0_16px_36px_rgba(34,211,101,0.28),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-white/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(34,211,101,0.34),inset_0_1px_0_rgba(255,255,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9ff0be] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7fbf9] lg:inline-flex xl:w-auto xl:gap-3 xl:px-5"
             href={siteConfig.whatsappUrl}
             rel="noreferrer"
             target="_blank"

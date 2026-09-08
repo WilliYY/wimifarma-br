@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-07 - Cabecalho claro com divisao curva
+
+- A faixa principal do header passa a manter o fundo escuro apenas atras da logo Wimifarma e do selo Farmacia Popular, encerrando em uma curva com contorno vermelho.
+- Busca, carrinho, conta e demais acoes ficam sobre fundo claro com arte botanica WebP de baixa opacidade, posicionada atras dos controles e sem interceptar cliques.
+- Alturas, pontos de quebra, alvos de toque e comportamento da busca foram preservados para evitar regressao no desktop e no celular.
+
 ## 2026-09-07 - Banner humano na Farmacia Popular
 
 - O painel de orientacao do hero da pagina `Farmacia Popular` passa a usar uma fotografia ilustrativa propria de atendimento em farmacia, sem marcas, textos gravados ou promessa de disponibilidade.
