@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-09 - Segunda vitrine com dez posicoes e arraste pelos cards
+
+- `HomeProductCarousel` passa a manter dez posicoes, usando `SHOWCASE_SLOT_COUNT`, independentemente da quantidade de medicamentos publicados. Vagas sao consultas comerciais explicitas, sem duplicar itens nem criar catalogo ficticio.
+- O mouse captura o ponteiro somente apos ultrapassar o limiar do arraste. Fotos e nomes aceitam o gesto; um clique simples continua abrindo o produto e botoes de compra nao iniciam arraste.
+- Durante o arraste, snap e rolagem suave ficam suspensos. Setas percorrem a quantidade visivel; o carrossel tambem aceita setas do teclado e respeita movimento reduzido. Eventos de toque continuam com rolagem nativa.
+- Verificacao local com 0, 1 e 12 produtos: dez posicoes, cinco visiveis em 1440 px, navegacao de ida e volta e arraste sobre link sem navegar. Sem transbordamento em 320 e 390 px. Fixture temporaria removida antes do commit; nenhum dado de banco alterado.
+
 ## 2026-09-08 - Sobre e Contato com fotografia e canais diretos
 
 - Duas fotografias distintas substituem os antigos paineis institucionais: atendimento presencial em Sobre e conversa por celular em Contato. Imagens ilustrativas, sem alegar que representam clientes ou funcionarios reais.

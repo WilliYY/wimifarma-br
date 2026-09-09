@@ -1,17 +1,51 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Pill } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageCircle, Pill } from "lucide-react";
 import {
   PublicProductCard,
   type RelatedProductCardItem,
 } from "@/components/site/public-product-card";
+import { SHOWCASE_SLOT_COUNT } from "@/features/offers/showcase";
+import { siteConfig } from "@/lib/site";
+
+function ProductConsultationCard() {
+  return (
+    <article className="flex h-full min-h-[22rem] flex-col overflow-hidden rounded-md border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)]">
+      <div className="flex h-40 items-center justify-center bg-white p-3">
+        <span className="flex h-24 w-24 items-center justify-center rounded-full bg-brand-soft">
+          <Pill aria-hidden="true" className="h-12 w-12 text-brand" />
+        </span>
+      </div>
+      <div className="flex flex-1 flex-col border-t border-line px-4 pb-4 pt-3">
+        <span className="text-[0.68rem] font-black uppercase text-brand">Atendimento</span>
+        <h3 className="mt-1 min-h-10 text-sm font-bold leading-5 text-ink">Consulte outros medicamentos</h3>
+        <p className="mt-2 text-xs leading-5 text-muted">Disponibilidade e valores com a equipe.</p>
+        <strong className="mt-3 text-xs uppercase text-ink">Wimifarma</strong>
+        <div className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-3">
+          <span className="text-xl font-black leading-none text-brand">Consulte</span>
+          <a
+            aria-label="Consultar medicamentos no WhatsApp"
+            className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-brand text-white shadow-sm transition hover:bg-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+            href={siteConfig.whatsappUrl}
+            rel="noreferrer"
+            target="_blank"
+            title="Consultar medicamentos no WhatsApp"
+          >
+            <MessageCircle aria-hidden="true" className="h-5 w-5" />
+          </a>
+        </div>
+      </div>
+    </article>
+  );
+}
 
 export function HomeProductCarousel({
   products,
 }: {
   products: RelatedProductCardItem[];
 }) {
+  const slots = Array.from({ length: SHOWCASE_SLOT_COUNT }, (_, index) => products[index] ?? null);
   const carouselRef = useRef<HTMLDivElement>(null);
   const dragState = useRef({
     moved: false,
@@ -60,16 +94,18 @@ export function HomeProductCarousel({
     );
 
     carousel.scrollBy({
-      behavior: "smooth",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
       left: direction * visibleCards * cardStep,
     });
   }
 
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (!event.isPrimary) return;
+    dragState.current.moved = false;
     if (event.pointerType !== "mouse" || event.button !== 0) return;
     if (
       event.target instanceof Element &&
-      event.target.closest("a, button, input, select, textarea, label")
+      event.target.closest("button, input, select, textarea, label")
     ) {
       return;
     }
@@ -80,15 +116,25 @@ export function HomeProductCarousel({
       scrollLeft: event.currentTarget.scrollLeft,
       startX: event.clientX,
     };
-    event.currentTarget.setPointerCapture(event.pointerId);
   }
 
   function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
     const drag = dragState.current;
     if (drag.pointerId !== event.pointerId) return;
+    if (event.buttons !== 1) {
+      finishPointerDrag(event);
+      return;
+    }
 
     const movement = event.clientX - drag.startX;
-    if (Math.abs(movement) > 4) drag.moved = true;
+    if (!drag.moved) {
+      if (Math.abs(movement) <= 6) return;
+      drag.moved = true;
+      // Capture only after dragging starts so ordinary product clicks still work.
+      event.currentTarget.dataset.dragging = "true";
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+    event.preventDefault();
     event.currentTarget.scrollLeft = drag.scrollLeft - movement;
   }
 
@@ -96,29 +142,29 @@ export function HomeProductCarousel({
     const drag = dragState.current;
     if (drag.pointerId !== event.pointerId) return;
 
+    drag.pointerId = null;
+    delete event.currentTarget.dataset.dragging;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    drag.pointerId = null;
-    window.setTimeout(() => {
-      drag.moved = false;
-    }, 0);
   }
 
   function cancelPointerDrag(event: React.PointerEvent<HTMLDivElement>) {
     if (dragState.current.pointerId !== event.pointerId) return;
-    dragState.current.pointerId = null;
+    finishPointerDrag(event);
     dragState.current.moved = false;
   }
 
   function preventClickAfterDrag(event: React.MouseEvent<HTMLDivElement>) {
     if (!dragState.current.moved) return;
+    if (event.detail === 0) {
+      dragState.current.moved = false;
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     dragState.current.moved = false;
   }
-
-  if (products.length === 0) return null;
 
   return (
     <section className="bg-[#f6f8fb] px-4 py-12 sm:px-6 lg:px-8">
@@ -141,7 +187,7 @@ export function HomeProductCarousel({
             <button
               aria-controls="home-products-carousel"
               aria-label="Ver medicamentos anteriores"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35"
+              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35"
               disabled={!controls.previous}
               onClick={() => scrollProducts(-1)}
               title="Medicamentos anteriores"
@@ -152,7 +198,7 @@ export function HomeProductCarousel({
             <button
               aria-controls="home-products-carousel"
               aria-label="Ver proximos medicamentos"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35"
+              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35"
               disabled={!controls.next}
               onClick={() => scrollProducts(1)}
               title="Proximos medicamentos"
@@ -166,9 +212,18 @@ export function HomeProductCarousel({
         <div
           aria-label="Medicamentos da Wimifarma"
           aria-roledescription="carrossel"
-          className="flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-3 select-none active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_img]:pointer-events-none"
+          className="flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-3 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand motion-safe:scroll-smooth data-[dragging=true]:cursor-grabbing data-[dragging=true]:snap-none data-[dragging=true]:scroll-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_img]:pointer-events-none data-[dragging=true]:[&_a]:cursor-grabbing"
           id="home-products-carousel"
           onClickCapture={preventClickAfterDrag}
+          onDragStart={(event) => event.preventDefault()}
+          onKeyDown={(event) => {
+            if (event.target !== event.currentTarget) return;
+            if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+              event.preventDefault();
+              scrollProducts(event.key === "ArrowLeft" ? -1 : 1);
+            }
+          }}
+          onLostPointerCapture={finishPointerDrag}
           onPointerCancel={cancelPointerDrag}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -176,17 +231,18 @@ export function HomeProductCarousel({
           onScroll={updateControls}
           ref={carouselRef}
           role="region"
+          tabIndex={0}
         >
-          {products.map((product, index) => (
+          {slots.map((product, index) => (
             <div
-              aria-label={`Medicamento ${index + 1} de ${products.length}`}
+              aria-label={`${product ? "Medicamento" : "Consulta"} ${index + 1} de ${slots.length}`}
               aria-roledescription="slide"
-              className="min-w-0 shrink-0 basis-[82%] snap-start sm:basis-[calc((100%_-_1rem)/2)] lg:basis-[calc((100%_-_2rem)/3)] xl:basis-[calc((100%_-_4rem)/5)]"
+              className="min-w-0 shrink-0 basis-[86%] snap-start sm:basis-[calc((100%_-_1rem)/2)] lg:basis-[calc((100%_-_2rem)/3)] xl:basis-[calc((100%_-_4rem)/5)]"
               data-home-product-card
-              key={product.id}
+              key={product?.id ?? `consultation-${index}`}
               role="group"
             >
-              <PublicProductCard product={product} />
+              {product ? <PublicProductCard product={product} /> : <ProductConsultationCard />}
             </div>
           ))}
         </div>
