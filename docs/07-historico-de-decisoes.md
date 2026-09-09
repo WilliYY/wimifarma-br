@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-08 - Sobre e Contato com fotografia e canais diretos
+
+- Duas fotografias distintas substituem os antigos paineis institucionais: atendimento presencial em Sobre e conversa por celular em Contato. Imagens ilustrativas, sem alegar que representam clientes ou funcionarios reais.
+- Componente compartilhado `InstitutionalHero` mantém textos acessiveis, carregamento prioritario da foto e enquadramento responsivo. Assets WebP locais evitam requisicoes a provedores de imagens durante a visita.
+- Contato preserva WhatsApp, Maps e e-mail como cartoes clicaveis e adiciona perguntas frequentes nativas. Sobre mantém links para ofertas, Farmacia Popular e entrega.
+- Sem novas dependencias, alteracoes de banco, APIs, autenticacao, checkout ou regras de entrega. Origem das imagens registrada em `docs/13-assets-institucionais.md`.
+
 ## 2026-09-07 - Cabecalho claro com divisao curva
 
 - A faixa principal do header passa a manter o fundo escuro apenas atras da logo Wimifarma e do selo Farmacia Popular, encerrando em uma curva com contorno vermelho.
