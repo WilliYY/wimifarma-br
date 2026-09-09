@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-09 - Foto de atendimento farmaceutico no Contato
+
+- A foto generica de conversa foi substituida por uma cena ilustrativa propria de farmaceutica atendendo pelo celular, com expressao natural, jaleco e ambiente de farmacia.
+- WebP local de 1920 x 720 px e 63452 bytes, sem textos gravados. O hero usa composicao panoramica e ponto focal explicito para preservar o rosto no recorte responsivo; Sobre e os canais de atendimento nao mudam.
+- Origem e direcao do prompt em `docs/13-assets-institucionais.md`. Sem banco, APIs, dependencias ou regras comerciais alteradas.
+
 ## 2026-09-09 - Segunda vitrine com dez posicoes e arraste pelos cards
 
 - `HomeProductCarousel` passa a manter dez posicoes, usando `SHOWCASE_SLOT_COUNT`, independentemente da quantidade de medicamentos publicados. Vagas sao consultas comerciais explicitas, sem duplicar itens nem criar catalogo ficticio.

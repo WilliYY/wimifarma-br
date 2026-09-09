@@ -31,9 +31,9 @@ export default function Page() {
         title="Contato Wimifarma"
         headline="Uma conversa faz toda a diferença."
         description="Para consultar um produto, combinar a retirada ou saber sobre entrega, fale diretamente com a nossa equipe."
-        image="/banners/contato-conversa.webp"
-        imageAlt="Foto ilustrativa de uma mulher sorrindo durante uma conversa pelo celular."
-        imageMode="portrait"
+        image="/banners/contato-farmaceutica.webp"
+        imageAlt="Imagem ilustrativa de uma farmacêutica de jaleco atendendo por telefone em uma farmácia."
+        imagePosition="82% top"
       >
         <Button asChild variant="success"><a href={siteConfig.whatsappUrl} target="_blank" rel="noreferrer"><MessageCircle aria-hidden="true" className="h-4 w-4" />Chamar no WhatsApp</a></Button>
         <Button asChild variant="secondary"><a href="#canais-contato">Outros contatos<ArrowRight aria-hidden="true" className="h-4 w-4" /></a></Button>

@@ -10,12 +10,12 @@
 
 ## Contato
 
-- Arquivo: `public/banners/contato-conversa.webp`.
-- Dimensoes: 1200 x 1600 px; 68502 bytes.
-- Autoria: cottonbro studio, Pexels.
-- Fonte: https://www.pexels.com/photo/smiling-woman-in-white-long-sleeve-shirt-holding-black-phone-5081391/
-- Licenca consultada em 2026-09-08: https://www.pexels.com/license/
-- Uso permitido em site comercial, com redimensionamento e conversao WebP. A foto nao representa depoimento, endosso ou cliente real da Wimifarma.
+- Arquivo atual: `public/banners/contato-farmaceutica.webp`.
+- Dimensoes: 1920 x 720 px; 63452 bytes; WebP qualidade 85.
+- Origem: imagem nova criada com a ferramenta ImageGen em 2026-09-09, modo nativo; sem uso de API externa ou chave do projeto.
+- Direcao do prompt: fotografia panoramica 8:3 em farmacia brasileira clara; farmaceutica adulta de jaleco branco e blusa verde suave atendendo pelo celular, expressao calma e natural, plano medio, prateleiras de medicamentos genericos; pessoa a direita e parede clara livre a esquerda para texto HTML; sem marcas, textos, estetoscopio ou alegacoes medicas.
+- Uso: cena ilustrativa, nao fotografia de funcionaria real da Wimifarma. Preservar legenda e texto alternativo.
+- A foto anterior `public/banners/contato-conversa.webp` deixou de ser exibida; preservada para reversao. Autoria: cottonbro studio, Pexels; fonte: https://www.pexels.com/photo/smiling-woman-in-white-long-sleeve-shirt-holding-black-phone-5081391/ ; licenca consultada em 2026-09-08: https://www.pexels.com/license/ .
 
 ## Exibicao
 
@@ -23,9 +23,15 @@
 - Titulos, botoes, endereco e demais textos ficam em HTML, separados da imagem.
 - Imagens locais com `next/image`, `sizes` responsivo e prioridade apenas no hero acima da dobra.
 - Preservar rostos ao ajustar enquadramento; validar desktop, tablet e celular antes de substituir os arquivos.
-- No tablet, Sobre separa a foto acima do texto; Contato reserva metade da faixa para o retrato. Em desktop compacto, a foto de Sobre permanece na lateral para nao comprometer o contraste da leitura.
+- No celular e tablet, a fotografia panoramica fica acima do texto. Em desktop compacto, fica na lateral para preservar o contraste; em telas amplas ocupa o fundo da faixa. Contato usa ponto focal `82% top` para preservar rosto e telefone; Sobre mantem o enquadramento anterior.
 
-## Validacao da entrega
+## Validacao da troca de imagem em 2026-09-09
+
+- Contato conferido visualmente em 320, 390, 768, 1024 e 1440 px: imagem carregada, rosto e telefone preservados, texto legivel e sem transbordamento horizontal.
+- `npm.cmd run lint`, `npm.cmd run typecheck` e `git diff --check`: aprovados. A primeira execucao conjunta excedeu o limite de tempo da ferramenta; TypeScript foi repetido isoladamente e concluiu com codigo zero.
+- Alteracao visual sem logica comercial ou dados novos; contatos e botoes preservados.
+
+## Validacao da entrega anterior em 2026-09-08
 
 - Conferencia visual em navegador nas larguras de 320, 390, 768, 1024 e 1440 px, incluindo recorte das fotos, leitura e ausencia de transbordamento horizontal nas paginas.
 - Ancora de canais, destinos WhatsApp/Maps/e-mail e abertura de perguntas frequentes por teclado conferidos, sem enviar mensagens.
