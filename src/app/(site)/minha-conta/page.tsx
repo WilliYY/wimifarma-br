@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { CustomerAccountPanel } from "@/components/site/customer-account-panel";
 import { auth } from "@/features/auth/auth";
+import { getCustomerCashback } from "@/features/cashback/service";
 import { getPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -23,44 +24,18 @@ export default async function MinhaContaPage() {
 
   const prisma = getPrisma();
   const customer = await prisma.customer.findUnique({
-    include: {
-      cashbackAccount: {
-        include: {
-          transactions: {
-            orderBy: { createdAt: "desc" },
-            take: 5,
-          },
-        },
-      },
-    },
-    where: { id: session.user.id },
+    where: { id: session.user.id, status: "ACTIVE" },
   });
 
   if (!customer) {
     redirect("/login");
   }
 
+  const cashback = await prisma.$transaction((tx) => getCustomerCashback(tx, customer.id), { isolationLevel: "RepeatableRead" });
+
   return (
     <CustomerAccountPanel
-      cashback={
-        customer.cashbackAccount
-          ? {
-              balance: customer.cashbackAccount.balance.toString(),
-              lifetimeEarned: customer.cashbackAccount.lifetimeEarned.toString(),
-              lifetimeRedeemed:
-                customer.cashbackAccount.lifetimeRedeemed.toString(),
-              transactions: customer.cashbackAccount.transactions.map(
-                (transaction) => ({
-                  amount: transaction.amount.toString(),
-                  createdAt: transaction.createdAt.toISOString(),
-                  description: transaction.description,
-                  id: transaction.id,
-                  type: transaction.type,
-                }),
-              ),
-            }
-          : null
-      }
+      cashback={cashback}
       customer={{
         address: customer.address,
         city: customer.city,

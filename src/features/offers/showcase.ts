@@ -3,6 +3,8 @@ import { z } from "zod";
 export const SHOWCASE_SLOT_COUNT = 10;
 
 export type PublicShowcaseProduct = {
+  cashbackEnabled?: boolean;
+  cashbackRateBps?: number;
   brand: string | null;
   category: string | null;
   description: string | null;

@@ -39,6 +39,7 @@ type CustomerAccount = {
 };
 
 type CashbackSummary = {
+  pendingCents: number;
   balance: string;
   lifetimeEarned: string;
   lifetimeRedeemed: string;
@@ -240,6 +241,7 @@ export function CustomerAccountPanel({
                 <p className="mt-2 text-2xl font-black text-ink">
                   {formatCurrency(balance)}
                 </p>
+                <p className="mt-1 text-xs text-muted">Pendente: {formatCurrency((cashback?.pendingCents ?? 0) / 100)}</p>
               </div>
               <div className="rounded-lg border border-line bg-white p-4 shadow-[0_12px_30px_rgba(17,24,39,0.06)]">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted">
@@ -471,14 +473,15 @@ export function CustomerAccountPanel({
               <div className="rounded-lg border border-line bg-brand-soft p-5">
                 <p className="flex items-center gap-2 text-sm font-black text-brand">
                   <Coins className="h-4 w-4" />
-                  Saldo cashback
+                  Cashback liberado
                 </p>
                 <p className="mt-3 text-4xl font-black text-ink">
                   {formatCurrency(balance)}
                 </p>
                 <div className="mt-5 grid gap-2 text-sm font-bold text-ink">
+                  <span>Pendente: {formatCurrency((cashback?.pendingCents ?? 0) / 100)}</span>
                   <span>
-                    Ganho total:{" "}
+                    Creditos apos estornos:{" "}
                     {formatCurrency(cashback?.lifetimeEarned ?? "0")}
                   </span>
                   <span>
@@ -486,6 +489,7 @@ export function CustomerAccountPanel({
                     {formatCurrency(cashback?.lifetimeRedeemed ?? "0")}
                   </span>
                 </div>
+                <p className="mt-4 text-xs leading-5 text-muted">O cashback de compras feitas com sua conta e liberado quando o pedido e concluido e o pagamento confirmado. Reembolsos estornam o beneficio. Resgate online ainda indisponivel.</p>
               </div>
 
               <div className="rounded-lg border border-line bg-white p-5">
@@ -505,12 +509,12 @@ export function CustomerAccountPanel({
                             {transaction.description}
                           </p>
                           <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-muted">
-                            {transaction.type} -{" "}
+                            {transaction.type === "CREDIT" ? "Credito" : transaction.type === "DEBIT" ? "Estorno / debito" : transaction.type} -{" "}
                             {formatDate(transaction.createdAt)}
                           </p>
                         </div>
                         <span className="shrink-0 text-sm font-black text-brand">
-                          {formatCurrency(transaction.amount)}
+                          {transaction.type === "DEBIT" || transaction.type === "EXPIRE" ? "- " : "+ "}{formatCurrency(transaction.amount)}
                         </span>
                       </div>
                     ))

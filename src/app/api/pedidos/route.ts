@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/features/auth/auth";
+import { productCashbackCents } from "@/features/cashback/rules";
 import {
   checkoutRequestSchema,
   createOrderNumber,
@@ -25,6 +26,8 @@ export async function POST(request: Request) {
   const prisma = getPrisma();
   const products = await prisma.product.findMany({
     select: {
+      cashbackEnabled: true,
+      cashbackRateBps: true,
       id: true,
       imageUrl: true,
       isPopularPharmacy: true,
@@ -66,14 +69,23 @@ export async function POST(request: Request) {
   const customer = sessionCustomerId
     ? await prisma.customer.findUnique({
         select: { id: true },
-        where: { id: sessionCustomerId },
+        where: { id: sessionCustomerId, status: "ACTIVE" },
       })
     : null;
   const address =
     parsed.data.fulfillmentMethod === "DELIVERY" ? parsed.data.address : undefined;
 
+  const cashbackItems = prepared.items.map((item) => {
+    const product = products.find((record) => record.id === item.productId)!;
+    const cashbackEarnedCents = customer ? productCashbackCents(product, item.unitPriceCents, item.quantity) : 0;
+    return { ...item, cashbackEarnedCents, cashbackRateBps: cashbackEarnedCents > 0 ? product.cashbackRateBps : 0 };
+  });
+  const cashbackEarnedCents = cashbackItems.reduce((sum, item) => sum + item.cashbackEarnedCents, 0);
+
   const order = await prisma.order.create({
     data: {
+      cashbackEarnedCents,
+      cashbackState: cashbackEarnedCents > 0 ? "PENDING" : "NONE",
       addressNumber: address?.number,
       city: address?.city,
       complement: address?.complement,
@@ -84,7 +96,9 @@ export async function POST(request: Request) {
       deliveryFeeCents: prepared.deliveryFeeCents,
       fulfillmentMethod: parsed.data.fulfillmentMethod,
       items: {
-        create: prepared.items.map((item) => ({
+        create: cashbackItems.map((item) => ({
+          cashbackEarnedCents: item.cashbackEarnedCents,
+          cashbackRateBps: item.cashbackRateBps,
           productId: item.productId,
           productImageUrl: item.productImageUrl,
           productName: item.productName,
@@ -106,6 +120,8 @@ export async function POST(request: Request) {
       totalCents: prepared.totalCents,
     },
     select: {
+      cashbackEarnedCents: true,
+      cashbackState: true,
       createdAt: true,
       fulfillmentMethod: true,
       number: true,

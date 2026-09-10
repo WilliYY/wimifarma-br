@@ -22,6 +22,8 @@ import {
   type PublicShowcaseProduct,
 } from "@/features/offers/showcase";
 import { AddToCartButton } from "@/components/site/add-to-cart-button";
+import { ProductCashback } from "@/components/site/product-cashback";
+import type { CashbackProduct } from "@/features/cashback/rules";
 import type { CartProduct } from "@/components/site/cart-provider";
 import { HomeProductCarousel } from "@/components/site/home-product-carousel";
 import { PerfumeryCarousel } from "@/components/site/perfumery-carousel";
@@ -50,7 +52,7 @@ type BestOfferItem = {
   soft: string;
   imageUrl?: string;
   isReserved: boolean;
-  product?: CartProduct;
+  product?: CartProduct & CashbackProduct;
   ratingAverage: number | null;
   ratingCount: number;
 };
@@ -150,6 +152,8 @@ function buildBestOfferItems(products: PublicShowcaseProduct[]): BestOfferItem[]
       ratingAverage: product.ratingAverage,
       ratingCount: product.ratingCount,
       product: {
+        cashbackEnabled: product.cashbackEnabled,
+        cashbackRateBps: product.cashbackRateBps,
         category: product.category,
         id: product.id,
         imageUrl: product.imageUrl,
@@ -758,6 +762,7 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
                         />
                       )}
                     </div>
+                    {item.product ? <ProductCashback product={item.product} unitPriceCents={item.product.unitPriceCents} /> : null}
                   </div>
                 </article>
               );

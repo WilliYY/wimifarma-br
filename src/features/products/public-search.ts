@@ -10,6 +10,8 @@ export type ProductSearchSource = {
 };
 
 export type PublicProductSearchItem = {
+  cashbackEnabled?: boolean;
+  cashbackRateBps?: number;
   activeIngredients: string[];
   brand: string | null;
   category: string | null;

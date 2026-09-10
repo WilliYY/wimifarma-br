@@ -10,6 +10,7 @@ import { auth, signOut } from "@/features/auth/auth";
 import { SiteNav } from "@/components/site/site-nav";
 import { SiteSearch } from "@/components/site/site-search";
 import { CartHeaderButton } from "@/components/site/cart-header-button";
+import { CustomerCashbackBalance } from "@/components/site/customer-cashback-balance";
 import { AnnouncementBar } from "@/components/site/announcement-bar";
 import { publicNavItems, siteConfig } from "@/lib/site";
 
@@ -98,11 +99,11 @@ export async function SiteHeader() {
             <>
               <Link
                 aria-label="Abrir minha conta"
-                className="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand"
+                className={`inline-flex h-11 ${session.user.role === "CUSTOMER" ? "max-w-28 flex-col px-2" : "w-11"} items-center justify-center overflow-hidden rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand`}
                 href="/minha-conta"
                 title={displayName}
               >
-                {userImage ? (
+                {session.user.role === "CUSTOMER" ? <><span className="text-xs font-bold">Minha conta</span><CustomerCashbackBalance /></> : userImage ? (
                   <Image
                     alt=""
                     className="h-8 w-8 rounded-full object-cover"
@@ -209,7 +210,7 @@ export async function SiteHeader() {
                     <UserRound className="h-4 w-4 text-brand" />
                   </span>
                 )}
-                <span className="min-w-0 truncate">{compactDisplayName}</span>
+                <span className="min-w-0"><span className="block truncate">{compactDisplayName}</span>{session.user.role === "CUSTOMER" ? <CustomerCashbackBalance /> : null}</span>
               </Link>
               <form
                 action={async () => {

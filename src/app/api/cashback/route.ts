@@ -1,54 +1,40 @@
 import { NextResponse } from "next/server";
-import { requireAdminApi } from "@/features/auth/permissions";
-import { cashbackTransactionCreateSchema } from "@/features/cashback/schema";
-import { readJsonBody } from "@/lib/api";
+import { requireAdminOnlyApi } from "@/features/auth/permissions";
 import { getPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const guard = await requireAdminApi();
+export async function GET(request: Request) {
+  const guard = await requireAdminOnlyApi();
   if (guard.response) return guard.response;
-
+  const params = new URL(request.url).searchParams;
+  const query = (params.get("q") ?? "").trim().slice(0, 120);
+  const page = Math.min(10000, Math.max(1, Number(params.get("page")) || 1));
+  if (!Number.isInteger(page)) return NextResponse.json({ error: "Pagina invalida." }, { status: 422 });
+  const enabled = params.get("enabled") === "true";
   const prisma = getPrisma();
-  const accounts = await prisma.cashbackAccount.findMany({
-    include: { customer: true },
-    orderBy: { updatedAt: "desc" },
-    take: 50,
-  });
-
-  return NextResponse.json({ data: accounts });
+  const where = {
+    ...(enabled ? { cashbackEnabled: true } : {}),
+    ...(query ? { OR: ["name", "brand", "sku", "ean"].map((field) => ({ [field]: { contains: query, mode: "insensitive" as const } })) } : {}),
+  };
+  const [products, total, active, pending] = await prisma.$transaction([
+    prisma.product.findMany({ where, orderBy: [{ name: "asc" }, { id: "asc" }], skip: (page - 1) * 24, take: 24,
+      select: { id: true, name: true, brand: true, imageUrl: true, status: true, price: true,
+        promotionalPrice: true, cashbackEnabled: true, cashbackRateBps: true, updatedAt: true,
+        isPopularPharmacy: true, requiresPrescription: true } }),
+    prisma.product.count({ where }),
+    prisma.product.count({ where: { cashbackEnabled: true, status: "ACTIVE", requiresPrescription: false, isPopularPharmacy: false } }),
+    prisma.order.aggregate({ where: { cashbackState: "PENDING" }, _sum: { cashbackEarnedCents: true } }),
+  ]);
+  return NextResponse.json({ data: products.map((p) => ({ ...p, price: p.price.toString(),
+    promotionalPrice: p.promotionalPrice?.toString() ?? null, updatedAt: p.updatedAt.toISOString() })),
+    total, page, pages: Math.max(1, Math.ceil(total / 24)), active, pendingCents: pending._sum.cashbackEarnedCents ?? 0,
+  }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
-export async function POST(request: Request) {
-  const guard = await requireAdminApi();
+export async function POST() {
+  const guard = await requireAdminOnlyApi();
   if (guard.response) return guard.response;
-
-  const body = await readJsonBody(request);
-  const parsed = cashbackTransactionCreateSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 });
-  }
-
-  const prisma = getPrisma();
-  const account = await prisma.cashbackAccount.upsert({
-    create: {
-      balance: 0,
-      customerId: parsed.data.customerId,
-    },
-    update: {},
-    where: { customerId: parsed.data.customerId },
-  });
-  const transaction = await prisma.cashbackTransaction.create({
-    data: {
-      accountId: account.id,
-      amount: parsed.data.amount,
-      description: parsed.data.description,
-      reference: parsed.data.reference,
-      type: parsed.data.type,
-    },
-  });
-
-  return NextResponse.json({ data: transaction }, { status: 201 });
+  return NextResponse.json({ error: "Creditos sao gerados pelos pedidos. Lancamentos manuais indisponiveis." },
+    { status: 405, headers: { Allow: "GET", "Cache-Control": "no-store" } });
 }

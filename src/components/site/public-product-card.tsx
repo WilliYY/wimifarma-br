@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ImageIcon } from "lucide-react";
 import { AddToCartButton } from "@/components/site/add-to-cart-button";
+import { ProductCashback } from "@/components/site/product-cashback";
 import type { CartProduct } from "@/components/site/cart-provider";
 import type { PublicProductSearchItem } from "@/features/products/public-search";
 import { formatCurrency } from "@/lib/utils";
@@ -94,6 +95,7 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
             product={cartProduct}
           />
         </div>
+        <ProductCashback product={product} unitPriceCents={cartProduct.unitPriceCents} />
       </div>
     </article>
   );

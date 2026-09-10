@@ -17,6 +17,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { DeliveryEstimator } from "@/components/site/delivery-estimator";
 import { ProductImageViewer } from "@/components/site/product-image-viewer";
 import { ProductPurchasePanel } from "@/components/site/product-purchase-panel";
+import { ProductCashback } from "@/components/site/product-cashback";
 import { ProductReviewForm } from "@/components/site/product-review-form";
 import { RelatedProductsCarousel } from "@/components/site/related-products-carousel";
 import type { RelatedProductCardItem } from "@/components/site/public-product-card";
@@ -38,6 +39,8 @@ import { formatCurrency } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 const productSelect = {
+  cashbackEnabled: true,
+  cashbackRateBps: true,
   activeIngredients: true,
   brand: true,
   category: true,
@@ -60,6 +63,8 @@ type ProductRecord = Prisma.ProductGetPayload<{ select: typeof productSelect }>;
 
 function serializeProduct(product: ProductRecord): RelatedProductCardItem {
   return {
+    cashbackEnabled: product.cashbackEnabled,
+    cashbackRateBps: product.cashbackRateBps,
     activeIngredients: product.activeIngredients,
     brand: product.brand,
     category: product.category,
@@ -267,6 +272,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   {hasPromotion ? <p className="mt-1 text-xs font-bold text-pharma-green">Economize {formatCurrency(saving)}</p> : null}
                 </div>
 
+                <ProductCashback product={product} unitPriceCents={Math.round(currentPrice * 100)} details />
                 <ProductPurchasePanel product={cartProduct} />
 
                 <div className="mt-6 grid gap-4 rounded-md bg-[#f7f8fa] p-4 text-xs text-muted sm:grid-cols-3">

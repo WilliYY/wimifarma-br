@@ -22,7 +22,7 @@ A roleta deve registrar campanha, premio, telefone, cliente quando existir, stat
 
 ## Cashback
 
-Cashback fica preparado como modulo futuro. Nao deve alterar saldos reais sem regras aprovadas.
+Cashback por produto usa percentual inicial de 2%, configuravel pelo ADMIN. Clientes autenticados acumulam pendencia no pedido e recebem credito somente apos conclusao e pagamento confirmado. Cancelamentos/reembolsos anulam ou estornam o beneficio, sem duplicacao. Produtos anteriores ficam desabilitados e pedidos anteriores nao recebem credito retroativo. Resgate online ainda nao implementado. Contrato e limites em `docs/15-cashback-produtos.md`.
 
 ## Dados reais
 

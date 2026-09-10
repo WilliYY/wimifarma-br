@@ -9,6 +9,8 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const productSelect = {
+  cashbackEnabled: true,
+  cashbackRateBps: true,
   activeIngredients: true,
   brand: true,
   category: true,
@@ -108,6 +110,12 @@ export async function POST(request: Request) {
 
   const prisma = getPrisma();
   const slug = await uniqueSlug(parsed.data.slug ?? parsed.data.name);
+  if ((parsed.data.cashbackEnabled !== undefined || parsed.data.cashbackRateBps !== undefined) && guard.session?.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Somente o administrador pode configurar cashback." }, { status: 403 });
+  }
+  if (parsed.data.cashbackEnabled && (parsed.data.requiresPrescription || parsed.data.isPopularPharmacy)) {
+    return NextResponse.json({ error: "Cashback nao disponivel para produtos com receita ou Farmacia Popular." }, { status: 422 });
+  }
   const imageAssetId = normalizeOptional(parsed.data.imageAssetId);
   const imageAsset = imageAssetId
     ? await prisma.productImage.findUnique({
@@ -144,6 +152,8 @@ export async function POST(request: Request) {
       entity: "Product",
       entityId: product.id,
       metadata: {
+        cashbackEnabled: product.cashbackEnabled,
+        cashbackRateBps: product.cashbackRateBps,
         hasImage: Boolean(product.imageUrl),
         featuredPosition: product.featuredPosition,
         name: product.name,

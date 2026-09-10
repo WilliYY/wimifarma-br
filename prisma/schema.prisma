@@ -106,6 +106,8 @@ model User {
 }
 
 model Product {
+  cashbackEnabled Boolean @default(false)
+  cashbackRateBps Int @default(200)
   id                   String        @id @default(cuid())
   name                 String
   slug                 String        @unique
@@ -254,6 +256,9 @@ model Customer {
 }
 
 model Order {
+  @@index([customerId, cashbackState])
+  cashbackEarnedCents Int @default(0)
+  cashbackState CashbackState @default(NONE)
   id                  String             @id @default(cuid())
   number              String             @unique
   customerId          String?
@@ -288,6 +293,8 @@ model Order {
 }
 
 model OrderItem {
+  cashbackRateBps Int @default(0)
+  cashbackEarnedCents Int @default(0)
   id              String   @id @default(cuid())
   orderId         String
   order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -400,6 +407,7 @@ model CashbackAccount {
 }
 
 model CashbackTransaction {
+  eventKey String? @unique
   id          String                  @id @default(cuid())
   accountId   String
   account     CashbackAccount         @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -413,6 +421,14 @@ model CashbackTransaction {
   @@index([accountId])
   @@index([type])
   @@index([expiresAt])
+}
+
+enum CashbackState {
+  NONE
+  PENDING
+  CREDITED
+  VOIDED
+  REVERSED
 }
 
 model WhatsAppContact {

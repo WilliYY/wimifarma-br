@@ -28,6 +28,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { CashbackProductFields } from "@/components/admin/cashback-product-fields";
 import {
   ProductImagePicker,
   type ProductImage,
@@ -72,6 +73,8 @@ import { cn, formatCurrency } from "@/lib/utils";
 type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 
 type ProductListItem = {
+  cashbackEnabled: boolean;
+  cashbackRateBps: number;
   activeIngredients: string[];
   brand: string | null;
   category: string | null;
@@ -132,6 +135,10 @@ function productPayload(
     clearEmptyFields ? fieldValue(formData, key) || null : optionalField(formData, key);
 
   return {
+    ...(formData.has("cashbackPercent") ? {
+      cashbackEnabled: formData.get("cashbackEnabled") === "on",
+      cashbackRateBps: Math.round(Number(formData.get("cashbackPercent")) * 100),
+    } : {}),
     activeIngredients: parseProductTerms(fieldValue(formData, "activeIngredients")),
     brand: optionalValue("brand"),
     category: optionalValue("category"),
@@ -152,11 +159,13 @@ function productPayload(
 }
 
 function ProductFormFields({
+  canManageCashback,
   categoryListId,
   categoryOptions,
   imagePickerRef,
   product,
 }: {
+  canManageCashback: boolean;
   categoryListId: string;
   categoryOptions: string[];
   imagePickerRef: RefObject<ProductImagePickerHandle | null>;
@@ -402,6 +411,8 @@ function ProductFormFields({
 
       <ProductImagePicker initialImageAssetId={product?.imageAssetId} ref={imagePickerRef} />
 
+      {canManageCashback ? <CashbackProductFields enabled={product?.cashbackEnabled} rateBps={product?.cashbackRateBps} /> : null}
+
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex items-center gap-3 rounded-md border border-line bg-surface-subtle px-3 py-3 text-sm font-bold text-ink">
           <input className="h-4 w-4 accent-brand" defaultChecked={product?.isPopularPharmacy} name="isPopularPharmacy" type="checkbox" />
@@ -416,7 +427,7 @@ function ProductFormFields({
   );
 }
 
-export function ProductsCatalogPanel() {
+export function ProductsCatalogPanel({ canManageCashback = false }: { canManageCashback?: boolean }) {
   const imagePickerRef = useRef<ProductImagePickerHandle>(null);
   const editImagePickerRef = useRef<ProductImagePickerHandle>(null);
   const [products, setProducts] = useState<ProductListItem[]>([]);
@@ -814,6 +825,7 @@ export function ProductsCatalogPanel() {
           </DialogHeader>
           <form className="grid gap-4" onSubmit={handleSubmit}>
             <ProductFormFields
+              canManageCashback={canManageCashback}
               categoryListId="new-product-categories"
               categoryOptions={categoryOptions}
               imagePickerRef={imagePickerRef}
@@ -845,6 +857,7 @@ export function ProductsCatalogPanel() {
           {editingProduct ? (
             <form className="grid gap-4" key={`${editingProduct.id}-${editingProduct.updatedAt}`} onSubmit={handleUpdate}>
               <ProductFormFields
+                canManageCashback={canManageCashback}
                 categoryListId="edit-product-categories"
                 categoryOptions={categoryOptions}
                 imagePickerRef={editImagePickerRef}

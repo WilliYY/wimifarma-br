@@ -129,9 +129,9 @@
 
 ### Cashback real
 
-- Status: aberto.
-- Impacto: modelos/API inicial e resumo na area do cliente existem, mas sem regra comercial aprovada.
-- Arquivos: `src/app/api/cashback/route.ts`, `src/features/cashback/schema.ts`, `src/components/site/customer-account-panel.tsx`.
+- Status: acumulo por produto implementado e testado; resgate online pendente.
+- Impacto: percentual inicial 2%, snapshot no pedido, credito somente concluido/pago, estorno e saldo por cliente. Nenhum credito retroativo. Ainda falta definir resgate, expiracao e devolucao parcial antes de habilitar tais operacoes.
+- Arquivos e validacao: `docs/15-cashback-produtos.md`, `scripts/cashback-audit.ts`.
 
 ### Testes automatizados
 

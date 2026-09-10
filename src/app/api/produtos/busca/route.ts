@@ -12,6 +12,8 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const productSelect = {
+  cashbackEnabled: true,
+  cashbackRateBps: true,
   activeIngredients: true,
   brand: true,
   category: true,
@@ -30,6 +32,8 @@ type SearchProduct = Prisma.ProductGetPayload<{ select: typeof productSelect }>;
 
 function serializeProduct(product: SearchProduct): PublicProductSearchItem {
   return {
+    cashbackEnabled: product.cashbackEnabled,
+    cashbackRateBps: product.cashbackRateBps,
     activeIngredients: product.activeIngredients,
     brand: product.brand,
     category: product.category,

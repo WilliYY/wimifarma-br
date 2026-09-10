@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-10 - Cashback por produto e saldo do cliente
+
+- Pedido do usuario: habilitacao por produto, padrao 2%, percentual editavel e valor em reais nos cards/header/perfil. ADMIN configura pelo modulo e pelo cadastro.
+- Decisao conservadora: snapshot por item, pendencia no checkout e credito somente COMPLETED + PAID. Estorno transacional em REFUNDED/CANCELED, eventKey unico e auditoria. Nenhuma cobranca online, regra de resgate ou credito retroativo.
+- Migration aditiva com defaults desabilitado/NONE/zero. API legada de lancamentos manuais desativada; listagem nao expoe cadastro pessoal completo. Detalhes em `docs/15-cashback-produtos.md`.
+
 ## 2026-09-10 - Gestao completa de cupons com historico protegido
 
 - Decisao: lista operacional com edicao em modal, calendario de inicio/fim, pausa e exclusao confirmada; manter o modelo Coupon sem migration.

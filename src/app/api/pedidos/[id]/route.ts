@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireApiRole } from "@/features/auth/permissions";
+import { settleOrderCashback } from "@/features/cashback/service";
 import {
   canTransitionStatus,
   orderStatusTransitions,
@@ -72,6 +73,8 @@ export async function PATCH(
     });
 
     if (updated.count !== 1) return null;
+
+    await settleOrderCashback(transaction, id);
 
     const saved = await transaction.order.findUniqueOrThrow({
       select: { id: true, paymentStatus: true, status: true, updatedAt: true },

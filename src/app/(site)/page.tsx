@@ -33,6 +33,8 @@ export default async function Page() {
         name: true,
         price: true,
         promotionalPrice: true,
+        cashbackEnabled: true,
+        cashbackRateBps: true,
         requiresPrescription: true,
         reviews: {
           select: { rating: true },
@@ -64,6 +66,8 @@ export default async function Page() {
         name: true,
         price: true,
         promotionalPrice: true,
+        cashbackEnabled: true,
+        cashbackRateBps: true,
         requiresPrescription: true,
         searchTerms: true,
         slug: true,

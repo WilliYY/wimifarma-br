@@ -1,6 +1,9 @@
 import { z } from "zod";
+import { cashbackRateSchema } from "@/features/cashback/rules";
 
 const productFieldsSchema = z.object({
+  cashbackEnabled: z.boolean().optional(),
+  cashbackRateBps: cashbackRateSchema.optional(),
   activeIngredients: z.array(z.string().trim().min(2).max(120)).max(20).default([]),
   brand: z.string().max(120).optional(),
   category: z.string().max(120).optional(),

@@ -1,14 +1,15 @@
 import { ProductsCatalogPanel } from "@/components/admin/products-catalog-panel";
 import { AdminShell } from "@/components/admin/admin-shell";
-import { adminRoutePermissions } from "@/features/auth/permissions";
+import { adminRoutePermissions, requireAdminPageRoute } from "@/features/auth/permissions";
 
-export default function Page() {
+export default async function Page() {
+  const { role } = await requireAdminPageRoute("/admin/catalogos");
   return (
     <AdminShell
       allowedRoles={adminRoutePermissions["/admin/catalogos"]}
       title="Produtos / Catálogo"
     >
-      <ProductsCatalogPanel />
+      <ProductsCatalogPanel canManageCashback={role === "ADMIN"} />
     </AdminShell>
   );
 }

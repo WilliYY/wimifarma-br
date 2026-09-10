@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Cashback por produto: configuracao ADMIN, percentual inicial de 2%, valores na vitrine e saldo/pendencias do cliente. Regras, migration e testes em [docs/15-cashback-produtos.md](docs/15-cashback-produtos.md). Resgate online ainda indisponivel.
+
 Plataforma comercial da Wimifarma, farmacia em Ivate-PR. O projeto nao e WordPress, nao depende de HostGator e nao deve ser misturado com Candy English.
 
 ## Objetivo
