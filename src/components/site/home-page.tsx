@@ -24,6 +24,7 @@ import {
 import { AddToCartButton } from "@/components/site/add-to-cart-button";
 import type { CartProduct } from "@/components/site/cart-provider";
 import { HomeProductCarousel } from "@/components/site/home-product-carousel";
+import { PerfumeryCarousel } from "@/components/site/perfumery-carousel";
 import type { RelatedProductCardItem } from "@/components/site/public-product-card";
 import { siteConfig } from "@/lib/site";
 
@@ -918,53 +919,6 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
   );
 }
 
-function DoveCampaignBanner() {
-  const doveWhatsappUrl = `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent(
-    "Ola, gostaria de consultar os produtos Dove disponiveis na Wimifarma.",
-  )}`;
-
-  return (
-    <section className="bg-white px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <MotionBlock>
-          <a
-            aria-label="Consultar produtos Dove pelo WhatsApp"
-            className="group relative block min-h-[17rem] overflow-hidden rounded-lg border border-[#d9e3f1] bg-[#eef4fb] shadow-[0_16px_46px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_58px_rgba(17,24,39,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4f91] focus-visible:ring-offset-2 sm:min-h-56"
-            href={doveWhatsappUrl}
-            rel="noreferrer"
-            target="_blank"
-          >
-            <Image
-              alt="Linha Dove Original para cuidados diarios"
-              className="object-cover object-[72%_center] transition duration-500 group-hover:scale-[1.015] sm:object-center"
-              fill
-              sizes="(min-width: 1280px) 1280px, 100vw"
-              src="/banners/dove-care.webp"
-            />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(247,250,254,0.99)_0%,rgba(247,250,254,0.96)_38%,rgba(247,250,254,0.72)_58%,rgba(247,250,254,0.08)_100%)] sm:bg-[linear-gradient(90deg,rgba(247,250,254,0.99)_0%,rgba(247,250,254,0.94)_34%,rgba(247,250,254,0.2)_61%,rgba(247,250,254,0)_100%)]" />
-
-            <div className="relative z-10 flex min-h-[17rem] max-w-[76%] flex-col justify-center p-6 sm:min-h-56 sm:max-w-md sm:p-8">
-              <span className="text-xs font-black uppercase tracking-[0.14em] text-[#b18a35]">
-                Cuidados pessoais
-              </span>
-              <h2 className="mt-2 text-4xl font-black leading-none text-[#123c73]">
-                Dove
-              </h2>
-              <p className="mt-3 max-w-sm text-sm font-semibold leading-6 text-[#344f70] sm:text-base">
-                Cuidado diario para pele e cabelos. Consulte as opcoes disponiveis com nossa equipe.
-              </p>
-              <span className="mt-5 inline-flex w-fit items-center gap-2 rounded-md bg-[#123c73] px-4 py-2.5 text-sm font-black text-white transition group-hover:bg-[#0b2d58]">
-                Consultar Dove
-                <ChevronRight aria-hidden="true" className="h-4 w-4" />
-              </span>
-            </div>
-          </a>
-        </MotionBlock>
-      </div>
-    </section>
-  );
-}
-
 export function HomePage({
   catalogProducts,
   customerReviews,
@@ -984,7 +938,7 @@ export function HomePage({
 
       <BestOfferCatalog products={featuredProducts} />
 
-      <DoveCampaignBanner />
+      <PerfumeryCarousel />
 
       <HomeProductCarousel products={catalogProducts} />
 

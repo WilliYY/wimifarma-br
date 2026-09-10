@@ -11,6 +11,9 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `src/components/site/announcement-bar.tsx`
 - `src/components/site/announcement-bar.module.css`
 - `scripts/announcement-bar-audit.mjs`
+- `src/components/site/perfumery-carousel.tsx`
+- `src/components/site/perfumery-carousel.module.css`
+- `scripts/perfumery-carousel-audit.mjs`
 - `src/components/site/site-search.tsx`
 - `src/components/site/site-nav.tsx`
 - `src/components/site/site-footer.tsx`
@@ -92,7 +95,8 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `lucide-react` usado para icones.
 - Produtos selecionados usam a imagem WebP real do catalogo com `object-contain`, centralizada sobre fundo branco neutro para que fotos ja tratadas nao formem um quadrado branco sobre a cor da oferta; apenas as posicoes ainda vazias mantem o visual CSS colorido reservado.
 - A vitrine `Melhores ofertas` segue padrao de e-commerce farmaceutico com selo promocional, imagem limpa, nome, marca, avaliacao real, preco e economia. A ordem vem de `Product.featuredPosition`; produtos elegiveis seguem para o carrinho e itens restritos continuam no atendimento pelo WhatsApp.
-- Depois das melhores ofertas, a home usa uma faixa Dove curta como divisor visual e um segundo carrossel com dez posicoes independentes. Os medicamentos publicados ocupam as primeiras posicoes; as restantes mostram cards explicitos de consulta pelo WhatsApp, sem produtos, precos ou estoque ficticios. A faixa mostra cinco cards no desktop e parte do proximo no celular. Setas avancam a quantidade visivel; o arraste funciona inclusive sobre foto e nome, com clique bloqueado apenas depois do gesto. O toque nativo, as setas do teclado e a preferencia por movimento reduzido sao preservados.
+- Depois das melhores ofertas, a home usa `PerfumeryCarousel` com campanhas Dove, Rexona e NIVEA, seguido pelo carrossel de medicamentos com dez posicoes independentes. A faixa de perfumaria tem setas, indicadores, pausa e arraste horizontal; alterna a cada sete segundos somente quando visivel. Foco e navegacao manual pausam ate nova acao no controle; ponteiro e aba oculta suspendem temporariamente; movimento reduzido desativa a rotacao. Imagens locais, textos HTML e consulta WhatsApp especifica por marca, sem precos ou disponibilidade presumidos. O gesto horizontal nao abre o link e a rolagem vertical continua liberada no toque.
+- No segundo carrossel de produtos, os medicamentos publicados ocupam as primeiras posicoes; as restantes mostram cards explicitos de consulta pelo WhatsApp, sem produtos, precos ou estoque ficticios. A faixa mostra cinco cards no desktop e parte do proximo no celular. Setas avancam a quantidade visivel; o arraste funciona inclusive sobre foto e nome, com clique bloqueado apenas depois do gesto. O toque nativo, as setas do teclado e a preferencia por movimento reduzido sao preservados.
 - O cadastro de produtos oferece editor responsivo em modal para enquadramento quadrado, zoom e rotacao. No celular, a area de recorte preserva espaco para os controles e os botoes ocupam a largura disponivel.
 - As tres imagens do hero sao WebP leves e servidas pelo `next/image`; a primeira recebe prioridade e as demais permanecem preparadas para a proxima troca sem baixar video ou audio.
 - A pagina individual usa composicao de e-commerce farmaceutico: breadcrumb, foto real ampliavel sem fabricar miniaturas, informacoes comerciais, seletor de quantidade, acoes `Adicionar ao carrinho` e `Comprar agora`, entrega/retirada, detalhes em secoes expansivas, avaliacoes verificadas e produtos relacionados.

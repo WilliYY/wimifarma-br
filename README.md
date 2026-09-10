@@ -26,7 +26,7 @@ O sistema possui carrinho e checkout para registrar pedidos pendentes, com entre
 
 ## Status Atual
 
-- Site publico com home temporariamente focada em anuncio: inicia com um carrossel responsivo de tres campanhas fotograficas, mostra `Melhores ofertas`, uma faixa compacta de campanha Dove, um segundo carrossel automatico de medicamentos publicados e, abaixo, avaliacoes verificadas e a faixa de campanhas.
+- Site publico com home temporariamente focada em anuncio: inicia com um carrossel responsivo de tres campanhas fotograficas, mostra `Melhores ofertas`, um carrossel compacto de perfumaria (Dove, Rexona e NIVEA), um segundo carrossel automatico de medicamentos publicados e, abaixo, avaliacoes verificadas e a faixa de campanhas.
 - `Produtos / Catalogo` possui assistente opcional com Gemini para pesquisar e sugerir categoria, descricao, principios ativos e termos de busca, sempre com fontes e revisao humana antes do cadastro.
 - A Miauby abre uma conversa responsiva no site, usa Gemini com historico curto e contexto do catalogo publicado, mostra produtos relacionados e encaminha confirmacoes comerciais ou clinicas para a equipe.
 - WhatsApp principal: `+55 44 98413-4971`, com mensagem padrao para medicamentos e Farmacia Popular.

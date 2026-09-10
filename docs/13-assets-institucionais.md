@@ -1,5 +1,14 @@
 # 13 - Assets institucionais
 
+## Perfumaria
+
+- `public/banners/dove-care.webp`: composicao existente preservada na primeira campanha.
+- `public/banners/rexona-care.webp`: Rexona Bamboo 150 ml, embalagem de referencia; WebP de 800 x 800 px. Fonte da imagem: https://coopsp.vtexassets.com/arquivos/ids/217112-800-auto?aspect=true&height=auto&v=637919537236000000&width=800 ; pagina: https://www.coopsupermercado.com.br/desodorante-aerosol-rexona-bamboo-150ml-s/p .
+- `public/banners/nivea-care.webp`: NIVEA Milk 400 ml; WebP de 800 x 800 px. Fonte: https://www.efacil.com.br/wcsstore/ExtendedSitesCatalogAssetStore/Imagens/1000/107107_01.jpg ; pagina: https://www.efacil.com.br/loja/produto/hidratante-corporal-nivea-milk-pele-extra-seca-400ml-p107107/ .
+- Referencias de categoria conferidas nos fabricantes em 2026-09-10: https://www.rexona.com/br/p/antitranspirante-rexona-feminino-aerosol-bamboo.html/07791293032498 e https://www.nivea.com.br/produtos/nivea-lo%C3%A7%C3%A3o-deo-hidratante-milk-400ml-40058083156970033.html . Nao foram reproduzidas promessas quantitativas no texto comercial da faixa.
+- Fotos publicas de embalagens, nao imagens geradas nem licenca aberta presumida. Marcas e direitos pertencem aos respectivos titulares; manter apenas no contexto de identificacao dos produtos e substituir por material do fornecedor se exigido. Nenhuma alegacao de parceria oficial.
+- Conversao local em WebP qualidade 85, sem alterar rotulos. Embalagens/versoes podem variar; os botoes consultam disponibilidade com a Wimifarma e nao criam produtos no catalogo.
+
 ## Sobre
 
 - Arquivo: `public/banners/sobre-atendimento.webp`.

@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-10 - Carrossel de marcas na faixa de perfumaria
+
+- A faixa Dove foi substituida por `PerfumeryCarousel`: Dove, Rexona e NIVEA com imagens locais, identidade visual por marca e consulta WhatsApp contextual. Mantida a posicao entre as duas vitrines.
+- Rotacao de sete segundos apenas enquanto a faixa esta visivel, com setas, indicadores e pausa. Foco e acao manual interrompem a rotacao; movimento reduzido desativa o automatico. Arraste horizontal e toque preservam o scroll vertical e bloqueiam cliques acidentais.
+- Nenhum preco, estoque, selo de parceria ou desconto foi criado. Embalagens sao referencias visuais da marca; versoes disponiveis devem ser confirmadas com a farmacia. Fontes em `docs/13-assets-institucionais.md`.
+- Auditoria: `node scripts/perfumery-carousel-audit.mjs`, configuravel por `AUDIT_BASE_URL` e `AUDIT_OUTPUT_DIR`. Cobre marcas, imagens, links, ciclo, pausa, teclado, arraste e quatro larguras. Sem banco, API ou dependencias novas.
+- Auditoria local aprovada em 320, 390, 768 e 1440 px (12 estados): imagens carregadas, sem transbordamento, navegacao por mouse/teclado/toque, pausa e bloqueio de abertura do WhatsApp apos arraste. Uma rota temporaria sem dados foi usada devido ao PostgreSQL local indisponivel e removida antes da publicacao.
+
 ## 2026-09-10 - Faixa superior com tres campanhas rotativas
 
 - `AnnouncementBar` substitui o anuncio unico por frete local, Farmacia Popular e cashback `Em breve`. Cores, icones e grafismos leves diferenciam as campanhas, sem imagens externas ou novas dependencias.

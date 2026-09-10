@@ -1,0 +1,79 @@
+.section { padding: 24px 32px; background: #fff; }
+.frame {
+  --accent: #163f75;
+  --tint: #f1f6fc;
+  --line: #d9e3f1;
+  max-width: 1280px;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--tint);
+  color: var(--accent);
+  letter-spacing: 0;
+  transition: background-color 400ms ease, border-color 400ms ease;
+}
+.frame[data-theme="rexona"] { --accent: #145d46; --tint: #eff8f1; --line: #cfe5d5; }
+.frame[data-theme="nivea"] { --accent: #143795; --tint: #eff5ff; --line: #d6e2fa; }
+.surface { position: relative; height: 232px; touch-action: pan-y; cursor: grab; user-select: none; }
+.surface:active { cursor: grabbing; }
+.art { position: absolute; inset: 0 0 0 45%; overflow: hidden; background: var(--tint); animation: appear 450ms ease both; }
+.art::before {
+  content: "";
+  position: absolute;
+  inset: -50px 8% -50px 45%;
+  border-inline: 20px double var(--accent);
+  opacity: 0.09;
+  transform: skewX(-24deg);
+}
+.image { object-fit: contain; mix-blend-mode: multiply; padding: 8px; }
+.frame[data-theme="dove"] .art { left: 0; }
+.frame[data-theme="dove"] .image { object-fit: cover; object-position: right center; padding: 0; mix-blend-mode: normal; }
+.frame[data-theme="dove"] .art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #f4f8fd 0%, #f4f8fdf5 31%, #f4f8fd00 69%); }
+.copy { position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; width: 53%; height: 100%; padding: 22px 38px; }
+.eyebrow { font-size: 11px; line-height: 15px; font-weight: 700; text-transform: uppercase; }
+.copy h2 { margin: 7px 0 8px; font-size: 38px; line-height: 40px; font-weight: 800; }
+.copy p { margin: 0; max-width: 360px; color: #3c5364; font-size: 14px; line-height: 21px; }
+.cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; margin-top: 16px; padding: 9px 16px; border-radius: 6px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; line-height: 18px; cursor: pointer; transition: transform 180ms ease, filter 180ms ease; }
+.cta:hover { filter: brightness(1.15); transform: translateY(-1px); }
+.cta:focus-visible, .footer button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.footer { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 48px; padding: 0 18px 0 38px; border-top: 1px solid var(--line); background: #ffffffbd; }
+.availability { font-size: 11px; color: #4a6170; }
+.indicators, .controls { display: flex; align-items: center; }
+.indicators { position: absolute; left: 50%; transform: translateX(-50%); }
+.footer button { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 4px; cursor: pointer; transition: background-color 160ms ease; }
+.footer button:hover { background: var(--line); }
+.footer button:disabled { cursor: default; opacity: 0.4; }
+.controls svg { width: 17px; height: 17px; }
+.controls button:last-child svg { width: 13px; height: 13px; }
+.indicators button { width: 26px; }
+.indicators span { width: 6px; height: 6px; border-radius: 3px; background: var(--accent); opacity: 0.3; transition: width 200ms ease; }
+.indicators button[aria-pressed="true"] span { width: 20px; opacity: 1; }
+@keyframes appear { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 1023px) {
+  .section { padding-inline: 24px; }
+  .copy { padding-inline: 26px; }
+  .footer { padding-left: 26px; }
+  .availability { max-width: 180px; }
+}
+@media (max-width: 639px) {
+  .section { padding: 18px 16px; }
+  .surface { height: 254px; }
+  .copy { width: 62%; padding: 18px 0 18px 18px; }
+  .copy h2 { font-size: 30px; line-height: 34px; }
+  .copy p { font-size: 12px; line-height: 18px; }
+  .eyebrow { max-width: 130px; font-size: 10px; line-height: 13px; }
+  .cta { gap: 5px; font-size: 12px; margin-top: 14px; padding: 9px 11px; }
+  .art { left: 57%; right: -8%; }
+  .image { padding: 0; }
+  .frame[data-theme="dove"] .image { object-position: 72% center; }
+  .frame[data-theme="dove"] .art::after { background: linear-gradient(90deg, #f4f8fdf7 0%, #f4f8fdf2 46%, #f4f8fd00 88%); }
+  .frame[data-theme="dove"] .art { right: 0; }
+  .footer { padding: 0 10px 0 12px; }
+  .availability { display: none; }
+  .indicators { position: static; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .frame, .cta, .footer button, .indicators span { transition: none; }
+  .art { animation: none; }
+}
