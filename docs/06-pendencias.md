@@ -2,6 +2,13 @@
 
 ## Pendencias Criticas
 
+### Atualizar dependencias de ferramentas do Prisma
+
+- Status: aberto em 2026-09-10, identificado durante QA de cupons.
+- `npm.cmd audit --json` reportou 3 entradas altas na mesma cadeia: `prisma` -> `@prisma/config` -> `deepmerge-ts` (<8.0.0), GHSA-ggr8-5vv4-36mx (recursao excessiva ao mesclar grafos de objetos ciclicos).
+- Dependencias e lockfile nao foram alterados nesta entrega. A correcao automatica sugeriu Prisma 6.12.0, um downgrade de major incompativel com a stack Prisma 7 atual; nao executar `npm audit fix --force`.
+- Proxima acao: avaliar atualizacao compativel da ferramenta/configuracao e validar generate, migrations e Docker antes de mudar versoes. Referencia: https://github.com/advisories/GHSA-ggr8-5vv4-36mx.
+
 ### Remover ou proteger login temporario `adm / adm`
 
 - Status: resolvido em 2026-09-01.

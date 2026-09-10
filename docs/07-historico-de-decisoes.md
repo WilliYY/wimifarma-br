@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-10 - Gestao completa de cupons com historico protegido
+
+- Decisao: lista operacional com edicao em modal, calendario de inicio/fim, pausa e exclusao confirmada; manter o modelo Coupon sem migration.
+- Integridade: revisao obrigatoria em PATCH/DELETE, transacoes com auditoria atomica e isolamento Serializable. Cupons usados preservam condicoes; exclusao bloqueada para usos ou premios vinculados.
+- Compatibilidade: duracao em dias continua aceita no POST legado. Datas explicitas incluem todo o ultimo dia em UTC-03. Contador rotulado como usos, nao pessoas unicas.
+- Escopo: nao ativa descontos no checkout nem regras da roleta. Detalhes e testes em `docs/14-cupons-admin.md`.
+
 ## 2026-09-10 - Carrossel de marcas na faixa de perfumaria
 
 - A faixa Dove foi substituida por `PerfumeryCarousel`: Dove, Rexona e NIVEA com imagens locais, identidade visual por marca e consulta WhatsApp contextual. Mantida a posicao entre as duas vitrines.

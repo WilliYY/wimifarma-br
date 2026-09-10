@@ -117,7 +117,7 @@ Arquivos:
 4. Links aparecem conforme role (`ADMIN`, `MANAGER`, `STAFF`) usando o mesmo mapa de permissao das paginas.
 5. `ADMIN` ve tambem modulos sensiveis como `API e Senhas`, temas, configuracoes, cashback e clube.
 6. `Criar ADM` e `Criar colaborador` permitem criar acessos reais com email, senha temporaria, role, listagem e bloqueio/reativacao.
-7. `Cupons` permite criar cupons reais com nome/codigo, tipo de desconto, validade por duracao em dias, limite de uso e contador de pessoas/usos registrados.
+7. `Cupons` permite criar e editar campanhas com calendario de inicio/fim, desconto e limite de usos; buscar, filtrar e pausar cupons; excluir com confirmacao somente cupons sem usos ou premios vinculados. Edicao preserva o contador e verifica a revisao do registro. Contrato em `docs/14-cupons-admin.md`.
 8. Muitas telas ainda sao placeholders com descricao de futuro modulo.
 
 Arquivos:

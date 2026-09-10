@@ -40,7 +40,7 @@ O sistema possui carrinho e checkout para registrar pedidos pendentes, com entre
 - Cadastro comum por email, telefone e senha cria `Customer` e entra no painel do cliente.
 - Login administrativo usa Auth.js Credentials e direciona para `/admin/dashboard`.
 - Painel admin existe como estrutura modular; criacao de ADM/colaborador ja cria acessos reais com email e senha, e outros modulos seguem em evolucao.
-- O modulo admin de cupons ja cria cupons reais com nome/codigo, validade por dias ativos, limite de uso e contador de pessoas/usos registrados.
+- O modulo admin de cupons permite criar, editar, pausar e excluir registros elegiveis, com datas de inicio/fim, limite de uso, busca e filtros. Usos e vinculos com premios sao preservados. Veja `docs/14-cupons-admin.md`.
 - `Produtos / Catalogo` permite cadastrar em modal, buscar, classificar, editar e adicionar ou remover produtos de `Melhores ofertas`; fotos enviadas sao convertidas automaticamente para WebP e persistidas no volume Docker `wimifarma-br-uploads`.
 - A busca publica consulta produtos publicados no PostgreSQL por nome, marca, categoria, SKU, EAN, principios ativos e termos de busca; o autocomplete mostra foto e preco, abre `/produto/[slug]` no Enter e apresenta correlatos para consulta, sem tratar correlacao como substituicao automatica.
 - Produtos elegiveis podem ser adicionados ao carrinho e enviados pelo checkout em `/checkout`; o servidor recalcula preco, confere estoque e cria um pedido pendente para a equipe acompanhar em `/admin/pedidos`.
