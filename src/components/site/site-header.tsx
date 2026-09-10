@@ -65,15 +65,16 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <div className="relative isolate flex items-center gap-2 overflow-hidden bg-[#f7fbf9] px-1 py-1.5 min-[360px]:px-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
-        <Image
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 object-cover object-right opacity-[0.18]"
-          fill
-          sizes="100vw"
-          src="/brand/header-botanico.webp"
-        />
+      <div className="relative isolate z-20 flex items-center gap-2 bg-[#f7fbf9] px-1 py-1.5 min-[360px]:px-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <Image
+            alt=""
+            className="object-cover object-right opacity-[0.18]"
+            fill
+            sizes="100vw"
+            src="/brand/header-botanico.webp"
+          />
+        </div>
 
         <div className="relative z-10 -my-1.5 -ml-1 flex shrink-0 self-stretch items-center gap-2 rounded-r-[3.5rem] border-r-2 border-brand bg-[#121820] py-1.5 pl-1 pr-3 shadow-[14px_0_30px_rgba(17,24,39,0.12)] min-[360px]:-ml-2 min-[360px]:pl-2 sm:-ml-6 sm:pl-6 sm:pr-5 lg:-ml-8 lg:pl-8 xl:pr-7">
           <Link

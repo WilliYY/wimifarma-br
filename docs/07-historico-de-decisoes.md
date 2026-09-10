@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-10 - Sobreposicao da busca publica corrigida
+
+- Causa reproduzida: `overflow-hidden` na faixa principal recortava o autocomplete, e o `backdrop-filter` do header limitava o dialogo mobile a 132 px de altura.
+- Recorte transferido para a decoracao, com camadas explicitas na faixa de controles e no formulario. Busca mobile renderizada em portal no `body`, fora do contexto do header.
+- Ao mudar para desktop, o dialogo mobile fecha e libera a rolagem. Foco, Escape, sugestoes e destinos comerciais preservados; sem mudanca de API ou banco.
+- Validacao local: pontos superior, central e inferior do autocomplete sem obstrucao em 1024 e 1440 px; dialogo com altura total de 844 px no mobile de 390 px, Escape restaurando foco e rolagem, e fechamento automatico ao passar para desktop. `lint`, `typecheck`, `git diff --check` e 53 testes aprovados. Busca no banco conferida separadamente em producao, pois o PostgreSQL local nao esta disponivel.
+
 ## 2026-09-09 - Foto de atendimento farmaceutico no Contato
 
 - A foto generica de conversa foi substituida por uma cena ilustrativa propria de farmaceutica atendendo pelo celular, com expressao natural, jaleco e ambiente de farmacia.
