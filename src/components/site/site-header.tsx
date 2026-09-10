@@ -10,6 +10,7 @@ import { auth, signOut } from "@/features/auth/auth";
 import { SiteNav } from "@/components/site/site-nav";
 import { SiteSearch } from "@/components/site/site-search";
 import { CartHeaderButton } from "@/components/site/cart-header-button";
+import { AnnouncementBar } from "@/components/site/announcement-bar";
 import { publicNavItems, siteConfig } from "@/lib/site";
 
 function getCompactAccountName(displayName: string, role?: string) {
@@ -44,26 +45,7 @@ export async function SiteHeader() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white/96 shadow-[0_10px_30px_rgba(17,24,39,0.08)] backdrop-blur-md">
-      <div className="bg-brand px-4 py-1.5 font-body text-xs font-semibold text-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 overflow-hidden">
-          <span aria-hidden="true" className="delivery-truck-lane">
-            <Image
-              alt=""
-              className="delivery-truck-run h-7 w-9 object-contain"
-              height={28}
-              src="/brand/delivery-truck.gif"
-              unoptimized
-              width={36}
-            />
-          </span>
-          <span className="delivery-pull-copy inline-block whitespace-nowrap sm:hidden">
-            Frete grátis em Ivaté-PR
-          </span>
-          <span className="delivery-pull-copy hidden whitespace-nowrap sm:inline-block">
-            Frete grátis em Ivaté-PR / Frete grátis acima de 99,90 em todo Brasil
-          </span>
-        </div>
-      </div>
+      <AnnouncementBar />
 
       <div className="relative isolate z-20 flex items-center gap-2 bg-[#f7fbf9] px-1 py-1.5 min-[360px]:px-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">

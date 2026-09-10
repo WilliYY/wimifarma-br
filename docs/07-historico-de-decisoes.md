@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-10 - Faixa superior com tres campanhas rotativas
+
+- `AnnouncementBar` substitui o anuncio unico por frete local, Farmacia Popular e cashback `Em breve`. Cores, icones e grafismos leves diferenciam as campanhas, sem imagens externas ou novas dependencias.
+- Altura preservada em 40 px. Rotacao a cada seis segundos com setas e controle de pausa; foco interrompe a rotacao ate acao explicita. Ponteiro e aba oculta pausam temporariamente; movimento reduzido desativa a troca automatica.
+- Removida desta faixa a promessa de frete nacional acima de R$ 99,90: o checkout vigente permite apenas entrega em Ivate-PR ou retirada. Nenhuma regra comercial, API ou banco foi alterada.
+- Auditoria reproduzivel: `node scripts/announcement-bar-audit.mjs`, usando `AUDIT_BASE_URL` e, opcionalmente, `AUDIT_OUTPUT_DIR`. Verifica tres avisos, destinos, ciclo, pausa, teclado, movimento reduzido e geometria em 320, 390, 768 e 1440 px.
+- Validacao local: auditoria aprovada nos 12 estados responsivos, sem erros de pagina; `lint`, `typecheck`, 53 testes e `git diff --check` aprovados. O primeiro clique na pausa tem teste proprio, cobrindo a ordem entre foco e evento de ponteiro.
+
 ## 2026-09-10 - Sobreposicao da busca publica corrigida
 
 - Causa reproduzida: `overflow-hidden` na faixa principal recortava o autocomplete, e o `backdrop-filter` do header limitava o dialogo mobile a 132 px de altura.

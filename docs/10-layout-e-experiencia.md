@@ -8,6 +8,9 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 - `src/components/site/home-page.tsx`
 - `src/components/site/site-header.tsx`
+- `src/components/site/announcement-bar.tsx`
+- `src/components/site/announcement-bar.module.css`
+- `scripts/announcement-bar-audit.mjs`
 - `src/components/site/site-search.tsx`
 - `src/components/site/site-nav.tsx`
 - `src/components/site/site-footer.tsx`
@@ -30,7 +33,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 ## Estado Atual
 
-- Header fixo com faixa vermelha de frete gratis e caminhaozinho animado. A faixa principal e dividida: logo animada e selo Farmacia Popular ficam no bloco escuro com termino curvo vermelho, enquanto busca e acoes ficam sobre fundo claro com decoracao botanica discreta, sem bloquear leitura ou cliques.
+- Header fixo com faixa de avisos de 40 px: frete gratis em Ivate-PR, Farmacia Popular e cashback explicitamente `Em breve`. `AnnouncementBar` alterna a cada seis segundos, com temas vermelho, verde e petroleo, icones decorativos, setas, pausa e links para entrega, programa e contato. Pausa por foco, ponteiro, aba oculta ou movimento reduzido; navegacao manual continua disponivel. A faixa principal e dividida: logo animada e selo Farmacia Popular ficam no bloco escuro com termino curvo vermelho, enquanto busca e acoes ficam sobre fundo claro com decoracao botanica discreta, sem bloquear leitura ou cliques.
 - A busca do header consulta produtos publicados do banco com atraso curto durante a digitacao. O autocomplete mostra foto, nome, preco normal/promocional, principio ativo e correlatos; setas mudam a selecao e Enter abre `/produto/[slug]`. Sem resultado, Enter mantem a consulta pelo WhatsApp.
 - Sugestoes da busca ficam acima da navegacao e do conteudo. Apenas a decoracao botanica possui recorte; a faixa de controles permite transbordamento. O dialogo mobile usa portal no `body` para nao ficar limitado pelo `backdrop-filter` do header e fecha ao passar para o breakpoint desktop, restaurando a rolagem.
 - No celular, um botao de busca abre um dialogo de tela cheia com campo e resultados. Em larguras pequenas, a logo reduz de forma responsiva e os quatro controles de carrinho, conta, saida e busca permanecem visiveis com alvo de toque de 44 px.
@@ -79,7 +82,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Paginas internas precisam iniciar abaixo do header fixo para evitar conteudo cortado no primeiro viewport.
 - Animacoes devem ser leves e nao prejudicar performance.
 - A rolagem vertical do site publico usa o comportamento nativo do navegador. Animacoes visuais nao podem interceptar roda do mouse, trackpad, teclas ou gesto de toque.
-- O caminhaozinho da faixa superior deve manter fundo transparente, andar em uma pista curta e nao aumentar demais a altura do header.
+- A faixa superior deve manter 40 px em todos os breakpoints, sem deslocar o conteudo nem interferir no autocomplete. Texto complementar fica reservado ao desktop; no celular, titulo e aviso `Em breve` permanecem legiveis. Frete nacional e valores de cashback nao sao anunciados enquanto nao houver operacao e regras aprovadas.
 - Para o anuncio principal da home, dimensao recomendada em desktop: 1920x840 px, proporcao 16:7. Se houver arte mobile separada, usar 1080x1350 px, proporcao 4:5.
 - Manter informacoes importantes do anuncio no centro da arte para evitar cortes em telas menores.
 
