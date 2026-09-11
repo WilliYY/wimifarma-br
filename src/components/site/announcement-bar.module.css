@@ -1,131 +1,111 @@
 .bar {
-  --announcement-color: #c90932;
+  --announcement-color: #c70930;
+  --accent: #ffe49b;
   position: relative;
   height: 40px;
   color: #fff;
   background: var(--announcement-color);
   font-family: var(--font-body), sans-serif;
   letter-spacing: 0;
-  transition: background-color 350ms ease;
+  isolation: isolate;
+  transition: background-color 450ms ease;
 }
 
-.bar[data-theme="popular"] { --announcement-color: #086343; }
-.bar[data-theme="cashback"] { --announcement-color: #075e69; }
+.bar[data-theme="popular"] { --announcement-color: #096144; --accent: #e6f5b8; }
+.bar[data-theme="cashback"] { --announcement-color: #065c68; --accent: #ffdf92; }
 
-.decoration {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  opacity: 0.18;
-}
-
-.decoration::before,
-.decoration::after {
+.decoration { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
+.decoration::before, .decoration::after {
   content: "";
   position: absolute;
-  top: -30px;
-  width: 140px;
-  height: 100px;
-  border: 12px double #fff;
-  transform: skewX(-28deg);
+  top: -45px;
+  width: 160px;
+  height: 130px;
+  background: #ffffff0a;
+  border-inline: 10px double #ffffff28;
+  transform: skewX(-32deg);
 }
+.decoration::before { left: -110px; }
+.decoration::after { right: -110px; }
+.decoration svg { position: absolute; width: 28px; height: 28px; color: #ffffff22; }
+.pill { left: 11%; top: 18px; transform: rotate(-24deg); }
+.cross { left: 22%; top: -11px; }
+.heart { right: 12%; top: 16px; transform: rotate(12deg); }
+.sparkle { right: 23%; top: -10px; }
 
-.decoration::before { left: -90px; }
-.decoration::after { right: -90px; }
-.decoration svg { position: absolute; width: 32px; height: 32px; }
-.pill { left: 6%; top: 11px; transform: rotate(-24deg); }
-.cross { left: 16%; top: -16px; }
-.heart { right: 6%; top: 14px; transform: rotate(12deg); }
-
-.inner {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  max-width: 1180px;
-  height: 100%;
-  margin: 0 auto;
-  padding: 0 8px;
-}
-
-.control {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 28px;
-  height: 32px;
-  border-radius: 4px;
-  color: inherit;
-  cursor: pointer;
-  transition: background-color 150ms ease;
-}
-
-.control svg { width: 16px; height: 16px; }
-.control:hover { background: #ffffff24; }
-.control:disabled { opacity: 0.5; cursor: default; }
-.control:focus-visible,
-.slide:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
-.rotation { order: 2; }
-.rotation svg { width: 13px; height: 13px; }
-
-.viewport { flex: 1; min-width: 0; }
+.inner { display: flex; align-items: center; justify-content: center; height: 100%; padding: 0 12px; }
 .slide {
   display: flex;
-  height: 36px;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  border-radius: 4px;
-  animation: enter 300ms ease both;
+  gap: 16px;
+  min-width: 0;
+  max-width: 100%;
+  height: 100%;
+  cursor: pointer;
 }
-
-.icon {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid #ffffff40;
-  border-radius: 8px;
-  background: #ffffff14;
-}
-.icon svg { width: 19px; height: 19px; }
-.copy { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.copy strong { font-size: 14px; font-weight: 700; line-height: 18px; }
-.detail { font-size: 12px; line-height: 16px; color: #ffffffed; }
-.badge { padding: 2px 6px; background: #e2f6b4; color: #184630; border-radius: 3px; font-size: 10px; font-weight: 700; line-height: 14px; white-space: nowrap; }
-.action { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-.action svg { width: 13px; height: 13px; transition: transform 150ms ease; }
+.slide:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 4px; }
+.copy { display: flex; align-items: center; gap: 16px; min-width: 0; animation: enter 400ms ease both; }
+.copy strong { font-size: 14px; font-weight: 800; line-height: 18px; }
+.offer { display: flex; align-items: center; gap: 8px; }
+.detail { font-size: 12px; line-height: 16px; color: #fffffff2; }
+.highlight { font-size: 12px; font-weight: 800; line-height: 16px; color: var(--accent); white-space: nowrap; }
+.bar[data-theme="delivery"] .highlight { font-size: 17px; line-height: 24px; }
+.action { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding-left: 20px; border-left: 1px solid #ffffff38; font-size: 11px; line-height: 16px; font-weight: 700; white-space: nowrap; }
+.action svg { width: 12px; height: 12px; transition: transform 180ms ease; }
 .slide:hover .action { text-decoration: underline; text-underline-offset: 3px; }
-.slide:hover .action svg { transform: translate(1px, -1px); }
-.dots { display: flex; gap: 4px; padding: 0 8px; order: 1; }
-.dots span { width: 4px; height: 4px; border-radius: 50%; background: #ffffff60; transition: width 250ms ease; }
-.dots span[data-active="true"] { width: 16px; border-radius: 2px; background: #fff; }
+.slide:hover .action svg { transform: translate(2px, -2px); }
 
-@keyframes enter {
-  from { opacity: 0; transform: translateY(2px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+.scene { position: relative; flex: 0 0 70px; height: 36px; overflow: hidden; }
+.truck { position: absolute; left: 21px; top: 2px; width: 39px; height: 30px; animation: drive 850ms ease-in-out infinite; }
+.truck svg { width: 39px; height: 30px; fill: #ffffff16; }
+.truck svg circle { fill: var(--announcement-color); stroke: var(--accent); }
+.truckCross { position: absolute; left: 31px; top: 9px; width: 10px; height: 10px; color: var(--accent); animation: drive 850ms ease-in-out infinite; }
+.speedLines { position: absolute; inset: 0; }
+.speedLines i { position: absolute; left: 1px; width: 16px; height: 2px; border-radius: 1px; background: var(--accent); animation: speed 900ms linear infinite; }
+.speedLines i:nth-child(1) { top: 12px; }
+.speedLines i:nth-child(2) { top: 17px; width: 11px; animation-delay: -300ms; }
+.speedLines i:nth-child(3) { top: 22px; animation-delay: -600ms; }
+.road { position: absolute; left: 6px; right: 0; bottom: 3px; height: 1px; background: repeating-linear-gradient(90deg, #ffffff70 0 7px, transparent 7px 13px); animation: road 700ms linear infinite; }
+.healthIcon, .gift { position: absolute; left: 23px; top: 5px; width: 28px; height: 28px; }
+.healthIcon svg, .gift svg { width: 100%; height: 100%; }
+.healthIcon { animation: heartbeat 2.3s ease-in-out infinite; }
+.healthCross { position: absolute; left: 10px; top: 7px; width: 12px; height: 12px; color: var(--accent); animation: float 2.8s ease-in-out infinite; }
+.twinkle { position: absolute; right: 2px; top: 5px; width: 13px; height: 13px; color: var(--accent); animation: float 2.6s ease-in-out infinite; }
+.gift { animation: sway 2.6s ease-in-out infinite; }
+.coins { position: absolute; left: 5px; top: 15px; width: 18px; height: 18px; color: var(--accent); animation: float 2.6s ease-in-out infinite reverse; }
+.progress { position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: #ffffff70; transform-origin: left; animation: progress 7s linear infinite; pointer-events: none; }
+.bar[data-motion="paused"] .scene *, .bar[data-motion="paused"] .progress { animation-play-state: paused; }
+
+@keyframes enter { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes drive { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(1px, -1px); } 50% { transform: translate(2px, 0); } 75% { transform: translate(1px, -1px); } }
+@keyframes speed { from { transform: translateX(7px); opacity: 0; } 25% { opacity: 0.8; } to { transform: translateX(-10px); opacity: 0; } }
+@keyframes road { to { background-position-x: -13px; } }
+@keyframes heartbeat { 0%, 30%, 65%, 100% { transform: scale(1); } 15% { transform: scale(1.09); } 45% { transform: scale(1.05); } }
+@keyframes float { 0%, 100% { transform: translateY(1px); } 50% { transform: translateY(-3px); } }
+@keyframes sway { 0%, 55%, 100% { transform: rotate(0); } 15% { transform: rotate(-6deg); } 30% { transform: rotate(5deg); } }
+@keyframes progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 @media (max-width: 1023px) {
-  .detail, .action { display: none; }
+  .action { display: none; }
+  .copy { gap: 12px; }
 }
 
 @media (max-width: 639px) {
-  .inner { padding: 0 4px; gap: 0; }
-  .control { flex-basis: 26px; }
-  .dots, .cross, .heart { display: none; }
-  .slide { gap: 7px; }
-  .icon { width: 26px; height: 26px; border-radius: 6px; }
-  .icon svg { width: 17px; height: 17px; }
+  .inner { padding: 0 8px; }
+  .slide { gap: 8px; }
+  .scene { flex-basis: 62px; }
   .copy { flex-direction: column; align-items: flex-start; gap: 0; }
   .copy strong { font-size: 12px; line-height: 16px; }
-  .badge { padding: 0 4px; font-size: 9px; line-height: 12px; }
+  .offer { gap: 5px; }
+  .detail, .highlight { font-size: 10px; line-height: 14px; }
+  .bar[data-theme="delivery"] .highlight { font-size: 13px; line-height: 16px; }
+  .bar:not([data-theme="delivery"]) .highlight { display: none; }
+  .cross, .sparkle { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bar, .control, .dots span, .action svg { transition: none; }
-  .slide { animation: none; }
+  .bar, .action svg { transition: none; }
+  .bar *, .bar *::before, .bar *::after { animation: none !important; }
+  .progress { display: none; }
 }

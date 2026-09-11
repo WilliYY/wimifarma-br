@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-11 - Faixa superior automatica com animacoes por campanha
+
+- Pedido: remover setas/pausa, trocar os avisos automaticamente e destacar R$ 99,90 com caminhao em movimento. Mantidos tres avisos, 40 px e links acessiveis; sem novas dependencias, APIs ou banco.
+- Ciclo de sete segundos com caminhao/estrada, pulso de saude e presente/moedas. Foco, ponteiro e aba oculta suspendem movimento e troca; a retomada e automatica. Movimento reduzido desativa animacoes e rotacao. A entrada do texto nao congela ao pausar.
+- Oferta de frete restrita a Ivate-PR, unica cobertura atual do checkout. O valor aparece no anuncio sem alterar a taxa local existente nem cobrar pedidos abaixo dele. Cashback agora aponta para Minha Conta e produtos selecionados, sem promessa de resgate ou percentual geral.
+- Auditoria `node scripts/announcement-bar-audit.mjs`, com `AUDIT_BASE_URL`, `AUDIT_PATH` opcional e `AUDIT_OUTPUT_DIR`: ausencia de controles, tres destinos, ciclo automatico, movimento real do caminhao, foco/hover, movimento reduzido e 12 estados responsivos em 320/390/768/1440 px. A versao anterior falhou como esperado no teste de ausencia de botoes; a nova passou localmente, sem cortes ou erros de JavaScript.
+- Validacao local: `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd test` (73/73), `npm.cmd run build` e `git diff --check` aprovados. Rota temporaria de auditoria removida antes do build; sem alteracao de dados.
+
 ## 2026-09-10 - Cashback por produto e saldo do cliente
 
 - Pedido do usuario: habilitacao por produto, padrao 2%, percentual editavel e valor em reais nos cards/header/perfil. ADMIN configura pelo modulo e pelo cadastro.

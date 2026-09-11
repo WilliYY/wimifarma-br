@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { chromium, expect } from "@playwright/test";
 
 const baseUrl = process.env.AUDIT_BASE_URL || "http://127.0.0.1:3010";
+const route = process.env.AUDIT_PATH || "/contato";
 const outputDir = process.env.AUDIT_OUTPUT_DIR;
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
@@ -11,75 +12,84 @@ page.on("pageerror", (error) => errors.push(error.message));
 
 try {
   await page.clock.install();
-  await page.goto(`${baseUrl}/contato`, { waitUntil: "networkidle", timeout: 90_000 });
+  await page.goto(`${baseUrl}${route}`, { waitUntil: "networkidle", timeout: 90_000 });
   const bar = page.getByRole("region", { name: "Destaques da Wimifarma" });
-  await bar.waitFor({ timeout: 5_000 });
-  const next = bar.getByRole("button", { name: "Próximo aviso" });
-  const previous = bar.getByRole("button", { name: "Aviso anterior" });
   const link = bar.getByRole("link");
-
-  await bar.getByRole("button", { name: "Pausar rotação dos avisos" }).click();
-  await page.mouse.move(5, 500);
-  await page.clock.fastForward(6_500);
-  assert.match(await link.innerText(), /Frete grátis em Ivaté-PR/);
-  await expect(bar.getByRole("button", { name: "Iniciar rotação dos avisos" })).toBeVisible();
-
-  await bar.hover();
-  await next.click();
-  assert.match(await link.innerText(), /Farmácia Popular/);
-  assert.equal(await link.getAttribute("href"), "/farmacia-popular");
-  await next.click();
-  assert.match(await link.innerText(), /Cashback Wimifarma/);
-  assert.match(await link.innerText(), /Em breve/);
-  await next.click();
-  assert.match(await link.innerText(), /Frete grátis em Ivaté-PR/);
+  await expect(bar).toBeVisible();
+  await expect(bar.getByRole("button")).toHaveCount(0);
+  await expect(bar).toHaveAttribute("data-theme", "delivery");
   assert.equal(await link.getAttribute("href"), "/delivery");
-  await previous.click();
-  assert.match(await link.innerText(), /Cashback Wimifarma/);
+  assert.match(await link.innerText(), /Frete grátis/);
+  assert.match(await link.innerText(), /R\$ 99,90/);
+  assert.match(await link.innerText(), /Ivaté-PR/);
+  const truck = bar.locator('[data-animation="truck"]');
+  await expect(truck).toBeVisible();
+  assert.ok(await truck.evaluate((node) => node.getAnimations({ subtree: true }).some((animation) => animation.playState === "running")));
+  const before = await truck.evaluate((node) => getComputedStyle(node).transform);
+  await page.waitForTimeout(360);
+  assert.notEqual(await truck.evaluate((node) => getComputedStyle(node).transform), before, "truck moves");
 
-  // Focus pauses rotation; an explicit play action resumes it after hover ends.
-  await page.clock.fastForward(6_500);
-  assert.match(await link.innerText(), /Cashback Wimifarma/);
-  await bar.getByRole("button", { name: "Iniciar rotação dos avisos" }).click();
-  await page.mouse.move(5, 500);
-  await page.clock.fastForward(6_100);
-  assert.match(await link.innerText(), /Frete grátis em Ivaté-PR/);
+  async function advance() {
+    await page.mouse.move(5, 500);
+    await page.clock.fastForward(7_100);
+  }
+
+  await advance();
+  await expect(bar).toHaveAttribute("data-theme", "popular");
+  assert.equal(await link.getAttribute("href"), "/farmacia-popular");
+  await advance();
+  await expect(bar).toHaveAttribute("data-theme", "cashback");
+  assert.equal(await link.getAttribute("href"), "/minha-conta");
+  assert.doesNotMatch(await link.innerText(), /Em breve/);
+  await advance();
+  await expect(bar).toHaveAttribute("data-theme", "delivery");
+
+  await link.focus();
+  await page.clock.fastForward(21_500);
+  await expect(bar).toHaveAttribute("data-theme", "delivery");
+  assert.equal(await link.evaluate((node) => node === document.activeElement), true);
+  await page.keyboard.press("Tab");
+  await advance();
+  await expect(bar).toHaveAttribute("data-theme", "popular");
   await bar.hover();
-  await page.clock.fastForward(6_500);
-  assert.match(await link.innerText(), /Frete grátis em Ivaté-PR/);
+  await page.waitForTimeout(550);
+  assert.equal(await bar.locator("[data-copy]").evaluate((node) => getComputedStyle(node).opacity), "1", "pausing motion must not freeze text mid-transition");
+  await page.clock.fastForward(14_500);
+  await expect(bar).toHaveAttribute("data-theme", "popular");
+  await advance();
+  await expect(bar).toHaveAttribute("data-theme", "cashback");
 
   if (outputDir) await mkdir(outputDir, { recursive: true });
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     for (let slide = 0; slide < 3; slide += 1) {
+      await page.waitForTimeout(550);
       const geometry = await bar.evaluate((element) => {
         const bounds = element.getBoundingClientRect();
         return {
           height: bounds.height,
           overflow: element.scrollWidth > element.clientWidth,
-          clipped: [...element.querySelectorAll("a, button, strong")].some((child) => {
+          clipped: [...element.querySelectorAll("a, strong, [data-copy], [data-amount]")].some((child) => {
             const box = child.getBoundingClientRect();
-            return box.width > 0 && (box.left < bounds.left || box.right > bounds.right || box.top < bounds.top || box.bottom > bounds.bottom || child.scrollWidth > child.clientWidth + 1);
+            return box.width > 0 && (box.left < bounds.left - 1 || box.right > bounds.right + 1 || box.top < bounds.top - 1 || box.bottom > bounds.bottom + 1 || child.scrollWidth > child.clientWidth + 1);
           }),
         };
       });
       assert.deepEqual(geometry, { height: 40, overflow: false, clipped: false }, `${width}px / slide ${slide}`);
-      if (outputDir) await page.screenshot({ path: `${outputDir}/${width}-${slide}.png`, animations: "disabled", clip: { x: 0, y: 0, width, height: 220 } });
-      await next.click();
+      const theme = await bar.getAttribute("data-theme");
+      if (outputDir) await page.screenshot({ path: `${outputDir}/${width}-${theme}.png`, clip: { x: 0, y: 0, width, height: 220 } });
+      await advance();
     }
   }
 
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect(bar.getByRole("button", { name: "Iniciar rotação dos avisos" })).toBeDisabled();
-  await page.mouse.move(5, 500);
+  await expect(bar).toHaveAttribute("data-motion", "paused");
   const stationary = await link.innerText();
-  await page.clock.fastForward(12_500);
+  await page.clock.fastForward(21_500);
   assert.equal(await link.innerText(), stationary);
-  await next.focus();
-  await page.keyboard.press("Enter");
-  assert.notEqual(await link.innerText(), stationary);
+  assert.equal(await bar.evaluate((node) => node.getAnimations({ subtree: true }).filter((animation) => animation.playState === "running").length), 0);
   assert.deepEqual(errors, []);
-  console.log("PASS: 3 announcements, links, wraparound, autoplay, pause, reduced motion, keyboard and 12 responsive states (40px, no clipping). No page errors.");
+  console.log("PASS: no controls, automatic 3-slide loop, animated truck, links, focus/hover pause with automatic resume, reduced motion, 12 responsive states at 40px, no clipping or JS errors.");
 } finally {
   await browser.close();
 }
