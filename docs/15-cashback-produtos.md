@@ -46,3 +46,11 @@ Antes de publicar: confirmar regras, backup PostgreSQL com permissoes restritas,
 - Auditoria integrada aprovada com login real de teste para ADMIN/MANAGER/STAFF/CUSTOMER, visitantes, concorrencia, estorno unico, rollback transacional e isolamento entre clientes.
 - Playwright: configuracao de 2,5% persistida, campo de novo produto iniciado em 2%, R$ 0,50 exibido em produto de R$ 20 e saldo real do fixture no header/perfil. Sem overflow do documento em 320/390/768/1440 px e sem erros de pagina.
 - `npm audit`: permanecem 3 alertas altos na cadeia dev `prisma -> @prisma/config -> deepmerge-ts`; nenhum novo pacote. Nao executado downgrade automatico. Pendencia ja registrada em `docs/06-pendencias.md`.
+
+## Publicacao em 2026-09-11
+
+- Codigo `bd557db` enviado ao GitHub e recebido via fast-forward no servidor. Imagens Docker app e migrate construidas com saida 0.
+- Backup pre-migration validado por `pg_restore --list`: `/home/ubuntu/backups/wimifarma-br/pre-cashback-20260910T230913Z.dump`, SHA-256 `dc9bc91989f5690a649d499307e5285df79cb6c8ae6fe58844d682bce016e56f`.
+- Migration aplicada e app recriado. Antes/depois: 2 produtos, 0 pedidos, 0 contas, saldo agregado zero; 0 produtos ativados automaticamente.
+- Smoke publicado: home, saude e busca HTTP 200; APIs administrativas e carteira sem login HTTP 401; container healthy, zero reinicializacoes. Busca do produto existente retornou `cashbackEnabled=false` e `cashbackRateBps=200`.
+- Banco PostgreSQL descartavel, tunel SSH, servidor local e capturas temporarias encerrados/removidos. Nenhum cliente ou pedido ficticio foi criado em producao.
