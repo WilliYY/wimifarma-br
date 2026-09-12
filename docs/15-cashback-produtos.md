@@ -40,6 +40,7 @@ Solicitado em 2026-09-10: percentual inicial de 2%, editavel por produto, exibic
 - Auditoria integrada aprovada em PostgreSQL 17 descartavel: ADMIN altera 2,5% e checkbox; demais perfis bloqueados; revisoes concorrentes retornam 200/409; credito, estorno e rollback preservados. Loja e perfil conferidos por Playwright.
 - Testes nao ativaram cashback nem criaram clientes/pedidos em producao. Banco descartavel, tunel e servidor de desenvolvimento encerrados apos a auditoria.
 - Em 2026-09-12, build otimizado e `prisma:validate` concluidos com saida 0; `git diff --check` aprovado. `npm audit --audit-level=moderate` continua com os tres alertas altos preexistentes em `prisma`, `@prisma/config` e `deepmerge-ts`; nenhuma dependencia nova ou atualizada.
+- Publicacao em 2026-09-12: codigo `77374b4` recebido no servidor, imagem app construida e container recriado sem migration. Health/home HTTP 200, APIs GET/PATCH sem sessao HTTP 401 com JSON; app healthy, zero reinicios e zero erros nos logs apos a troca. Persistencia autenticada foi validada no ambiente descartavel, sem gravacoes de teste em producao.
 
 ## Banco e publicacao
 
