@@ -4,10 +4,11 @@
 
 ### Atualizar dependencias de ferramentas do Prisma
 
-- Status: corrigido localmente em 2026-09-12; validacao Docker e publicacao em andamento.
+- Status: resolvido e publicado em 2026-09-12, codigo `c0e844d`.
 - `npm.cmd audit --json` reportou 3 entradas altas na mesma cadeia: `prisma` -> `@prisma/config` -> `deepmerge-ts` (<8.0.0), GHSA-ggr8-5vv4-36mx (recursao excessiva ao mesclar grafos de objetos ciclicos).
 - Correcao: override limitado a `@prisma/config@7.10.0` fixa `deepmerge-ts` em `8.0.2`. Prisma CLI, client e adapter-pg permanecem em 7.10.0; apenas um pacote mudou no lockfile. Nao usar `npm audit fix --force`, que sugeriu downgrade para Prisma 6.12.0.
 - Evidencia local: reproducao da falha antiga, cinco testes de regressao aprovados, 80 testes totais, lint, TypeScript, generate e schema validos. `npm audit` zerado; 581 assinaturas de registry e 152 attestations verificadas. Detalhes em `docs/07-historico-de-decisoes.md`.
+- Docker: builds de tools/app aprovados; 11 migrations aplicadas e segunda execucao sem pendencias em PostgreSQL 17 descartavel e sem rede externa. App publicado healthy, zero reinicios, health/home/assets HTTP 200 e cashback sem sessao HTTP 401 JSON; zero erros nos logs apos a troca. Banco de producao nao alterado; recursos temporarios removidos.
 - Revisar o override na proxima atualizacao estavel do Prisma ou ate 2026-10-12; remove-lo somente quando a dependencia oficial estiver corrigida e as mesmas validacoes passarem. Referencia: https://github.com/advisories/GHSA-ggr8-5vv4-36mx.
 
 ### Remover ou proteger login temporario `adm / adm`
