@@ -6,7 +6,7 @@
     "dev": "prisma generate && next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "test": "tsx --test src/features/auth/customer-redirect.test.ts src/features/cashback/cashback.test.ts src/features/cashback/client.test.ts src/features/coupons/schema.test.ts src/features/coupons/service.test.ts src/features/miauby/assistant.test.ts src/features/offers/showcase.test.ts src/features/orders/checkout.test.ts src/features/product-images/service.test.ts src/features/products/ai-suggestions.test.ts src/features/products/catalog.test.ts src/features/products/product-detail.test.ts src/features/products/public-search.test.ts src/lib/metadata.test.ts",
+    "test": "tsx --test scripts/prisma-config.test.mjs src/features/auth/customer-redirect.test.ts src/features/cashback/cashback.test.ts src/features/cashback/client.test.ts src/features/coupons/schema.test.ts src/features/coupons/service.test.ts src/features/miauby/assistant.test.ts src/features/offers/showcase.test.ts src/features/orders/checkout.test.ts src/features/product-images/service.test.ts src/features/products/ai-suggestions.test.ts src/features/products/catalog.test.ts src/features/products/product-detail.test.ts src/features/products/public-search.test.ts src/lib/metadata.test.ts",
     "audit:cashback": "tsx scripts/cashback-audit.ts",
     "audit:browser": "node scripts/browser-audit.mjs",
     "lint": "prisma generate && eslint .",
@@ -50,6 +50,9 @@
   },
   "overrides": {
     "@hono/node-server": "1.19.13",
+    "@prisma/config@7.10.0": {
+      "deepmerge-ts": "8.0.2"
+    },
     "mysql2": "3.24.2",
     "postcss": "8.5.26"
   },

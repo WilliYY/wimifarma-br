@@ -4,10 +4,11 @@
 
 ### Atualizar dependencias de ferramentas do Prisma
 
-- Status: aberto em 2026-09-10, identificado durante QA de cupons.
+- Status: corrigido localmente em 2026-09-12; validacao Docker e publicacao em andamento.
 - `npm.cmd audit --json` reportou 3 entradas altas na mesma cadeia: `prisma` -> `@prisma/config` -> `deepmerge-ts` (<8.0.0), GHSA-ggr8-5vv4-36mx (recursao excessiva ao mesclar grafos de objetos ciclicos).
-- Dependencias e lockfile nao foram alterados nesta entrega. A correcao automatica sugeriu Prisma 6.12.0, um downgrade de major incompativel com a stack Prisma 7 atual; nao executar `npm audit fix --force`.
-- Proxima acao: avaliar atualizacao compativel da ferramenta/configuracao e validar generate, migrations e Docker antes de mudar versoes. Referencia: https://github.com/advisories/GHSA-ggr8-5vv4-36mx.
+- Correcao: override limitado a `@prisma/config@7.10.0` fixa `deepmerge-ts` em `8.0.2`. Prisma CLI, client e adapter-pg permanecem em 7.10.0; apenas um pacote mudou no lockfile. Nao usar `npm audit fix --force`, que sugeriu downgrade para Prisma 6.12.0.
+- Evidencia local: reproducao da falha antiga, cinco testes de regressao aprovados, 80 testes totais, lint, TypeScript, generate e schema validos. `npm audit` zerado; 581 assinaturas de registry e 152 attestations verificadas. Detalhes em `docs/07-historico-de-decisoes.md`.
+- Revisar o override na proxima atualizacao estavel do Prisma ou ate 2026-10-12; remove-lo somente quando a dependencia oficial estiver corrigida e as mesmas validacoes passarem. Referencia: https://github.com/advisories/GHSA-ggr8-5vv4-36mx.
 
 ### Remover ou proteger login temporario `adm / adm`
 
@@ -34,10 +35,10 @@
 
 ### Atualizar dependencias com alertas do `npm audit`
 
-- Status: monitorado; ultima revisao em 2026-09-01.
+- Status: monitorado; ultima revisao em 2026-09-12.
 - Impacto: alertas de runtime corrigiveis foram atualizados sem trocar versoes principais.
 - Arquivos: `package.json`, `package-lock.json`.
-- Situacao atual: zero alertas criticos; 3 alertas altos permanecem no Prisma de desenvolvimento por falta de correcao compativel com Prisma 7. Nao aplicar o downgrade forçado para Prisma 6.
+- Situacao atual: zero vulnerabilidades conhecidas no `npm audit --audit-level=moderate` apos correcao pontual de `deepmerge-ts`; sem downgrade do Prisma nem versoes pre-release. Auditoria nao substitui revisao de seguranca e deve ser repetida a cada atualizacao de dependencias.
 
 ### WAF, DDoS e MFA administrativo
 

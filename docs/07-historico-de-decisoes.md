@@ -1,5 +1,14 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-12 - Correcao isolada da dependencia de configuracao do Prisma
+
+- Os tres alertas altos do npm vinham de uma unica dependencia, `deepmerge-ts@7.1.5`, usada por `@prisma/config@7.10.0` no carregamento da configuracao via c12. O advisory GHSA-ggr8-5vv4-36mx exige grafos ciclicos; JSON comum nao cria essa condicao. Nao foi constatada exploracao no site nem ligacao com o erro anterior de resposta vazia do cashback.
+- Decisao: override exato `@prisma/config@7.10.0 -> deepmerge-ts@8.0.2`, mantendo CLI, client e adapter-pg em 7.10.0. Apenas essa entrada do lockfile mudou. A versao 8 do merger suporta ciclos, preserva exports ESM/CommonJS e requer Node >=16.9.0, atendido pelo Node 24 usado aqui. Nao instalar Prisma 8 RC nem aplicar o downgrade automatico para Prisma 6.
+- Fonte e compatibilidade: [advisory](https://github.com/advisories/GHSA-ggr8-5vv4-36mx), [changelog oficial](https://github.com/RebeccaStevens/deepmerge-ts/blob/v8.0.2/CHANGELOG.md). Integridade SHA-512 fixada no lockfile e pacote com assinatura/attestation no registry. Instalar com `npm.cmd ci --ignore-scripts --no-fund --no-audit` antes dos comandos explicitos de generate/build; a atualizacao nao executa scripts novos de instalacao.
+- Regressao permanente em `scripts/prisma-config.test.mjs`, incluida em `npm test`: merge de configuracao comum sem mutacao, dois casos ciclicos do advisory, protecao de prototipo e carregamento do `prisma.config.ts` real com URL sintetica, sem conectar ao banco. Antes do override, os dois casos ciclicos falharam com `RangeError: Maximum call stack size exceeded`; apos a correcao, cinco de cinco passaram.
+- Validacao local: instalacao limpa, `npm.cmd run prisma:validate`, `npm.cmd test` (80/80), `npm.cmd run typecheck`, `npm.cmd run lint`, `npm.cmd run build` (32 paginas estaticas) e `npm.cmd audit --json --audit-level=moderate`, todos com saida 0. `npm.cmd audit signatures` verificou 581 assinaturas de registry e 152 attestations. Auditoria com zero vulnerabilidades conhecidas; nao e garantia de ausencia de falhas desconhecidas.
+- Sem mudanca em schema, migrations, dados, APIs, checkout ou cashback. Reavaliar o override na proxima versao estavel do Prisma ou ate 2026-10-12, com generate, testes, build Docker e migrations em PostgreSQL descartavel antes de remove-lo.
+
 ## 2026-09-11 - Cashback com edicao direta e respostas protegidas
 
 - Modal substituido por cards operacionais em duas colunas no desktop, checkbox e seletor de percentual com opcao personalizada. Padrao de 2% e elegibilidade preservados; sem novas regras de credito, resgate ou migration.
