@@ -147,13 +147,19 @@ async function main() {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(`${base}/admin/cashback`, { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("button", { name: new RegExp(product.name) })).toBeVisible({ timeout: 60000 });
-    await page.getByRole("button", { name: new RegExp(product.name) }).click();
-    const dialog = page.getByRole("dialog");
-    await dialog.getByLabel("Percentual (%)", { exact: true }).fill("2.5");
-    await dialog.getByRole("button", { name: "Salvar cashback" }).click();
-    await expect(dialog).not.toBeVisible();
-    await expect(page.getByRole("button", { name: new RegExp(product.name) })).toBeVisible();
+    const card = page.getByRole("article", { name: product.name, exact: true });
+    await expect(card).toBeVisible({ timeout: 60000 });
+    await card.getByRole("combobox").selectOption("custom");
+    await card.getByRole("spinbutton").fill("2.5");
+    await card.getByRole("button", { name: `Aplicar percentual em ${product.name}` }).click();
+    await expect(card.getByRole("combobox")).toHaveValue("250");
+    await card.getByRole("checkbox").click();
+    await expect(card.getByRole("checkbox")).not.toBeChecked();
+    await expect(card.getByRole("combobox")).toBeDisabled();
+    await expect(card.getByRole("checkbox")).toBeEnabled();
+    await card.getByRole("checkbox").click();
+    await expect(card.getByRole("checkbox")).toBeChecked();
+    await expect(card.getByRole("combobox")).toBeEnabled();
     assert.equal((await db.product.findUniqueOrThrow({ where: { id: product.id } })).cashbackRateBps, 250);
     for (const width of [1440, 768, 390, 320]) {
       await page.setViewportSize({ width, height: 1000 });
@@ -164,7 +170,7 @@ async function main() {
     await page.getByRole("button", { name: "Novo produto", exact: true }).click();
     await expect(page.getByRole("dialog").getByLabel("Oferecer cashback neste produto")).toBeVisible();
     await expect(page.getByRole("dialog").getByLabel("Percentual (%)", { exact: true })).toHaveValue("2");
-    checks.push("Browser admin: row edit persisted 2.5%, product form default 2%, no overflow 1440/768/390/320");
+    checks.push("Browser admin: inline 2.5% and checkbox persisted, product form default 2%, no overflow 1440/768/390/320");
 
     const publicPage = await customer.newPage();
     await publicPage.bringToFront();

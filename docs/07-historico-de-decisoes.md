@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-11 - Cashback com edicao direta e respostas protegidas
+
+- Modal substituido por cards operacionais em duas colunas no desktop, checkbox e seletor de percentual com opcao personalizada. Padrao de 2% e elegibilidade preservados; sem novas regras de credito, resgate ou migration.
+- O painel valida o contrato de resposta antes de confirmar sucesso e busca a revisao atual apos erro ou resposta incerta. Trava de salvamento previne requisicoes simultaneas; falhas inesperadas de GET/PATCH devolvem JSON 503 com log tecnico reduzido.
+- Regressao coberta para resposta vazia, JSON incompleto, sessao expirada, conflito e resposta perdida apos escrita. Detalhes em `docs/15-cashback-produtos.md`.
+
 ## 2026-09-11 - Faixa superior automatica com animacoes por campanha
 
 - Pedido: remover setas/pausa, trocar os avisos automaticamente e destacar R$ 99,90 com caminhao em movimento. Mantidos tres avisos, 40 px e links acessiveis; sem novas dependencias, APIs ou banco.

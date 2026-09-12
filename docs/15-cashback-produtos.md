@@ -25,6 +25,22 @@ Solicitado em 2026-09-10: percentual inicial de 2%, editavel por produto, exibic
 - `GET /api/minha-conta/cashback`: CUSTOMER ativo, somente sessao atual, saldo, pendente e ultimos 20 lancamentos, snapshot RepeatableRead e cache privado/no-store.
 - `POST /api/cashback` legado retorna 405 apos autenticacao; o antigo endpoint criava lancamentos sem atualizar saldo. Nenhum consumidor foi encontrado. GET nao retorna mais `customer: true`, evitando exposicao desnecessaria de dados e hash de senha.
 
+## Configuracao rapida no painel (2026-09-11)
+
+- Lista com duas colunas a partir de 1280 px e uma coluna nas telas menores, 24 itens por pagina, busca e filtro de habilitados preservados.
+- Cada produto tem checkbox para ativar/desativar, seletor de 2%, 3%, 5%, 10% e percentual personalizado entre 0,01% e 100%. Sao atalhos de edicao, nao novas campanhas. O valor em reais por unidade aparece junto do seletor.
+- Alteracoes salvam diretamente, sem modal, mantendo somente uma gravacao em andamento. Checkbox, percentual e revisao so mudam apos confirmacao valida do servidor; conflitos e respostas incertas recarregam a lista antes de permitir nova gravacao. Nenhuma repeticao automatica de PATCH.
+- Respostas vazias, HTML, JSON invalido ou incompleto nao exibem sucesso nem o erro tecnico `Unexpected end of JSON input`. Sessao expirada, limite de requisicoes e indisponibilidade recebem mensagens proprias. GET/PATCH capturam falhas inesperadas e devolvem JSON 503, com codigo de erro nos logs sem corpo da requisicao ou credenciais.
+- A captura reportada identifica falha de leitura de JSON; a causa original da resposta vazia nao foi confirmada nos logs disponiveis. Testes reproduzem retorno vazio 500, conflito 409 e retorno vazio 200 apos gravacao para cobrir a recuperacao sem duplicar alteracoes.
+- Auditoria isolada de interface: `node scripts/cashback-panel-audit.mjs` com rota temporaria `/qa-cashback` renderizando `CashbackPanel` (removida antes do build). Fixtures interceptadas pelo Playwright, sem dados reais; cobre controles, revisoes, falhas, filtros, paginas e 320/390/768/1440/1920 px. `scripts/cashback-audit.ts` valida a persistencia dos controles com banco descartavel e autenticacao real de teste.
+
+### Evidencias da correcao
+
+- 75 testes unitarios, ESLint e TypeScript aprovados. Auditoria mock aprovada com nove tentativas de alteracao e cinco larguras, sem transbordamento ou erros de JavaScript.
+- Auditoria integrada aprovada em PostgreSQL 17 descartavel: ADMIN altera 2,5% e checkbox; demais perfis bloqueados; revisoes concorrentes retornam 200/409; credito, estorno e rollback preservados. Loja e perfil conferidos por Playwright.
+- Testes nao ativaram cashback nem criaram clientes/pedidos em producao. Banco descartavel, tunel e servidor de desenvolvimento encerrados apos a auditoria.
+- Em 2026-09-12, build otimizado e `prisma:validate` concluidos com saida 0; `git diff --check` aprovado. `npm audit --audit-level=moderate` continua com os tres alertas altos preexistentes em `prisma`, `@prisma/config` e `deepmerge-ts`; nenhuma dependencia nova ou atualizada.
+
 ## Banco e publicacao
 
 Migration aditiva `20260910193000_product_cashback`: campos Product/Order/OrderItem, enum de estado, chave unica nullable de evento e indice cliente/estado. Constraints SQL protegem faixa e valores nao negativos. Valores antigos permanecem desabilitados/NONE/zero, lancamentos antigos preservados.
