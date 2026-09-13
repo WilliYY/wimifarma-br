@@ -6,6 +6,7 @@
 - Alteracao restrita ao texto do banner. Caminhao animado, rotacao, acessibilidade e layout preservados. Nao amplia a cobertura por CEP, nao altera taxas nem habilita entrega nacional no checkout; a disponibilidade continua sendo consultada no fluxo existente.
 - Auditoria `scripts/announcement-bar-audit.mjs` atualizada para exigir o novo titulo exato, mantendo os testes de animacao, rotacao, links e 12 estados responsivos.
 - Validacao local aprovada em 320/390/768/1440 px, sem cortes ou erros de JavaScript, com inspecao visual no desktop e celular. Lint, TypeScript, build, 80 testes e `git diff --check` aprovados. Rota temporaria removida antes do build e servidor de teste encerrado; sem alteracoes no banco.
+- Publicado no codigo `a1f6569`: build Docker e recriacao apenas do app concluidos. A mesma auditoria de navegador passou em `https://wimifarma.com.br/contato`, nos 12 estados responsivos; container healthy, zero reinicios e health publico HTTP 200. Capturas de QA permanecem somente na pasta local ignorada `artifacts/announcement-copy-20260913` devido a bloqueio da limpeza automatica pelo ambiente; nao foram versionadas ou enviadas ao servidor.
 
 ## 2026-09-12 - Correcao isolada da dependencia de configuracao do Prisma
 
