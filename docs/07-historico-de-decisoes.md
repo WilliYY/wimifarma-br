@@ -10,6 +10,7 @@
 - Bateria final: 85 testes, lint, build, TypeScript, Prisma validate e `npm audit --audit-level=moderate` aprovados (zero vulnerabilidades). Build regenerou tipos depois da retirada da fixture; rota de teste ausente do build e processo local de QA encerrado. Sem migracoes.
 - Publicacao inicial `44c244d` aprovada no navegador real: cesta, imagens, Comprar, CEP, cobertura, historico e recarga; 8 capturas adicionais, zero erros JavaScript, escritas de API bloqueadas, health 200 e app healthy sem reinicios.
 - Inspecao das capturas identificou `body.scrollLeft=37` depois de redimensionar com campo focado: `overflow-x:hidden` permitia rolagem horizontal interna. `body` passa a usar `clip`, como `html`, mantendo rolagem vertical e impedindo deslocamento invisivel. Auditorias passam a exigir `body.scrollLeft=0`.
+- Correcao final publicada em `c66abc8`: build Docker aprovado, app recriado isoladamente, auditoria local completa e `scripts/cart-live-audit.mjs` aprovadas novamente. Em producao, 8 estados responsivos sem deslocamento horizontal, zero erros JavaScript, health 200 e container `running healthy restarts=0`. Rotas temporarias e processos de QA removidos; capturas conservadas somente em `artifacts`, ignorada no Git. Gateway e expansao de entrega nacional continuam pendentes.
 
 ## 2026-09-13 - Texto geral de frete gratis na faixa superior
 
