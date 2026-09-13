@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-13 - Texto geral de frete gratis na faixa superior
+
+- Por pedido explicito, o titulo da campanha passou de `Frete gratis em Ivate-PR` para `Frete gratis`, mantendo `Em compras a partir de R$ 99,90` e o link `Confira a entrega` para `/delivery`.
+- Alteracao restrita ao texto do banner. Caminhao animado, rotacao, acessibilidade e layout preservados. Nao amplia a cobertura por CEP, nao altera taxas nem habilita entrega nacional no checkout; a disponibilidade continua sendo consultada no fluxo existente.
+- Auditoria `scripts/announcement-bar-audit.mjs` atualizada para exigir o novo titulo exato, mantendo os testes de animacao, rotacao, links e 12 estados responsivos.
+- Validacao local aprovada em 320/390/768/1440 px, sem cortes ou erros de JavaScript, com inspecao visual no desktop e celular. Lint, TypeScript, build, 80 testes e `git diff --check` aprovados. Rota temporaria removida antes do build e servidor de teste encerrado; sem alteracoes no banco.
+
 ## 2026-09-12 - Correcao isolada da dependencia de configuracao do Prisma
 
 - Os tres alertas altos do npm vinham de uma unica dependencia, `deepmerge-ts@7.1.5`, usada por `@prisma/config@7.10.0` no carregamento da configuracao via c12. O advisory GHSA-ggr8-5vv4-36mx exige grafos ciclicos; JSON comum nao cria essa condicao. Nao foi constatada exploracao no site nem ligacao com o erro anterior de resposta vazia do cashback.

@@ -21,7 +21,7 @@ try {
   assert.equal(await link.getAttribute("href"), "/delivery");
   assert.match(await link.innerText(), /Frete grátis/);
   assert.match(await link.innerText(), /R\$ 99,90/);
-  assert.match(await link.innerText(), /Ivaté-PR/);
+  await expect(link.locator("strong")).toHaveText("Frete grátis");
   const truck = bar.locator('[data-animation="truck"]');
   await expect(truck).toBeVisible();
   assert.ok(await truck.evaluate((node) => node.getAnimations({ subtree: true }).some((animation) => animation.playState === "running")));

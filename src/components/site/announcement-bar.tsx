@@ -8,7 +8,7 @@ import styles from "./announcement-bar.module.css";
 const announcements = [
   {
     theme: "delivery",
-    title: "Frete grátis em Ivaté-PR",
+    title: "Frete grátis",
     detail: "Em compras a partir de",
     highlight: "R$ 99,90",
     action: "Confira a entrega",
