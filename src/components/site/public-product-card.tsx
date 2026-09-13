@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ImageIcon } from "lucide-react";
-import { AddToCartButton } from "@/components/site/add-to-cart-button";
+import { ProductCardActions } from "@/components/site/product-card-actions";
+import { ProductShippingBadge } from "@/components/site/product-shipping-badge";
 import { ProductCashback } from "@/components/site/product-cashback";
 import type { CartProduct } from "@/components/site/cart-provider";
 import type { PublicProductSearchItem } from "@/features/products/public-search";
@@ -36,12 +37,11 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
 
   return (
     <article
-      className="group flex h-full min-h-[22rem] flex-col overflow-hidden rounded-md border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_18px_40px_rgba(17,24,39,0.11)]"
+      className="group relative flex h-full min-h-[22rem] min-w-0 flex-col overflow-hidden rounded-md border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_18px_40px_rgba(17,24,39,0.11)] motion-reduce:transform-none"
     >
-      <Link
-        aria-label={`Ver ${product.name}`}
+      <ProductShippingBadge />
+      <div
         className="relative flex h-40 items-center justify-center overflow-hidden bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
-        href={`/produto/${product.slug}`}
       >
         {product.imageUrl ? (
           <Image
@@ -59,14 +59,15 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
             {discount}% OFF
           </span>
         ) : null}
-      </Link>
+      </div>
 
       <div className="flex flex-1 flex-col border-t border-line px-4 pb-4 pt-3">
         <span className="text-[0.68rem] font-black uppercase text-brand">
           {product.category || product.brand || "Produto"}
         </span>
         <Link
-          className="mt-1 line-clamp-2 min-h-10 text-sm font-bold leading-5 text-ink transition hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          aria-label={`Ver ${product.name}`}
+          className="mt-1 line-clamp-2 min-h-10 text-sm font-bold leading-5 text-ink after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand"
           href={`/produto/${product.slug}`}
         >
           {product.name}
@@ -89,13 +90,9 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
               {formatCurrency(currentPrice)}
             </strong>
           </div>
-          <AddToCartButton
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-[0_10px_22px_rgba(200,16,46,0.2)] transition hover:-translate-y-0.5 hover:bg-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-            iconOnly
-            product={cartProduct}
-          />
         </div>
         <ProductCashback product={product} unitPriceCents={cartProduct.unitPriceCents} />
+        <ProductCardActions product={cartProduct} />
       </div>
     </article>
   );

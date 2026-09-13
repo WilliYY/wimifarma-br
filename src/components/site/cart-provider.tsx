@@ -53,19 +53,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch {
-      localStorage.removeItem(STORAGE_KEY);
+      try { localStorage.removeItem(STORAGE_KEY); } catch { /* Storage is optional. */ }
     } finally {
       setHydrated(true);
     }
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    if (hydrated) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch { /* Keep the cart usable in memory. */ }
+    }
   }, [hydrated, items]);
 
   const addProduct = useCallback((product: CartProduct, quantity = 1) => {
     if (
-      product.stock < 1 ||
+      !Number.isFinite(quantity) || product.stock < 1 ||
       product.requiresPrescription ||
       product.isPopularPharmacy
     ) {
@@ -76,7 +78,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     setItems((current) => {
       const existing = current.find((item) => item.id === product.id);
-      if (!existing) return [...current, { ...product, quantity: safeQuantity }];
+      if (!existing) return current.length >= 30 ? current : [...current, { ...product, quantity: safeQuantity }];
       return current.map((item) =>
         item.id === product.id
           ? {
@@ -90,6 +92,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateQuantity = useCallback((productId: string, quantity: number) => {
+    if (!Number.isFinite(quantity)) return;
     setItems((current) =>
       current
         .map((item) =>

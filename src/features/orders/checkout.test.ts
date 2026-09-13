@@ -65,6 +65,12 @@ test("calcula o pedido com o preco promocional atual", () => {
   assert.equal(result.totalCents, 1998);
 });
 
+test("confere CEP e cidade juntos sem ampliar a cobertura", () => {
+  const request = { ...baseRequest, fulfillmentMethod: "DELIVERY", address: { postalCode: "87525-000", street: "Rua Teste", number: "10", neighborhood: "Centro", city: "Ivate", state: "PR" } };
+  assert.equal(checkoutRequestSchema.safeParse(request).success, true);
+  assert.equal(checkoutRequestSchema.safeParse({ ...request, address: { ...request.address, postalCode: "87501-070" } }).success, false);
+});
+
 test("recusa preco alterado, falta de estoque e produto restrito", () => {
   assert.deepEqual(prepareCheckoutOrder([product], [{ ...baseRequest.items[0], expectedUnitPriceCents: 998 }]), {
     ok: false,

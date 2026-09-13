@@ -1,5 +1,14 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-13 - Cesta lateral, cards e continuidade do checkout
+
+- Cesta do cabecalho abre painel lateral acessivel usando Radix ja instalado; reutiliza estado do carrinho, sem navegar ate comando explicito.
+- Cards reais recebem link expandido, Adicionar, contador sincronizado e Comprar; selo de frete condicionado e arraste preservado. Receita, Popular, estoque, cashback e pedido pendente mantidos.
+- Endereco consultado via API propria com ViaCEP, validacao, timeout e rate limit. Corrigido preenchimento fixo de cidade/UF. CEP e cidade sao conferidos juntos no checkout e no servidor, sem ampliar entrega.
+- Rascunho temporario por identidade e historico nativo preservam preenchimento e etapas; consentimento nao e restaurado. Pagamento continua combinado apos confirmacao humana, sem gateway.
+- Auditoria local passou com 13 capturas em 320/390/768/1440 px, cesta longa no celular, teclado, CEP simulado e real, respostas atrasadas, storage bloqueado e pedido simulado; zero erros JavaScript e nenhuma gravacao de teste em producao. Contrato e reproducao em `docs/12-carrinho-checkout-pedidos.md`.
+- Bateria final: 85 testes, lint, build, TypeScript, Prisma validate e `npm audit --audit-level=moderate` aprovados (zero vulnerabilidades). Build regenerou tipos depois da retirada da fixture; rota de teste ausente do build e processo local de QA encerrado. Sem migracoes.
+
 ## 2026-09-13 - Texto geral de frete gratis na faixa superior
 
 - Por pedido explicito, o titulo da campanha passou de `Frete gratis em Ivate-PR` para `Frete gratis`, mantendo `Em compras a partir de R$ 99,90` e o link `Confira a entrega` para `/delivery`.

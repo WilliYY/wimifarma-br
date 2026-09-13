@@ -21,6 +21,7 @@ export default async function Page() {
 
   return (
     <CheckoutPage
+      draftOwner={session?.user?.id ? `${session.user.role}:${session.user.id}` : "guest"}
       initialCustomer={{
         email: customer?.email ?? session?.user?.email ?? "",
         name: customer?.name ?? session?.user?.name ?? "",

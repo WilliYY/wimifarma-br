@@ -21,7 +21,8 @@ import {
   arrangeShowcaseProducts,
   type PublicShowcaseProduct,
 } from "@/features/offers/showcase";
-import { AddToCartButton } from "@/components/site/add-to-cart-button";
+import { ProductCardActions } from "@/components/site/product-card-actions";
+import { ProductShippingBadge } from "@/components/site/product-shipping-badge";
 import { ProductCashback } from "@/components/site/product-cashback";
 import type { CashbackProduct } from "@/features/cashback/rules";
 import type { CartProduct } from "@/components/site/cart-provider";
@@ -492,10 +493,12 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
   }
 
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (!event.isPrimary) return;
+    dragState.current.moved = false;
     if (event.pointerType !== "mouse" || event.button !== 0) return;
     if (
       event.target instanceof Element &&
-      event.target.closest("a, button, input, select, textarea, label")
+      event.target.closest("button, input, select, textarea, label, [data-product-controls]")
     ) {
       return;
     }
@@ -506,15 +509,21 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
       scrollLeft: event.currentTarget.scrollLeft,
       startX: event.clientX,
     };
-    event.currentTarget.setPointerCapture(event.pointerId);
   }
 
   function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
     const drag = dragState.current;
     if (drag.pointerId !== event.pointerId) return;
+    if (event.buttons !== 1) { finishPointerDrag(event); return; }
 
     const movement = event.clientX - drag.startX;
-    if (Math.abs(movement) > 4) drag.moved = true;
+    if (Math.abs(movement) > 6 && !drag.moved) {
+      drag.moved = true;
+      event.currentTarget.dataset.dragging = "true";
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+    if (!drag.moved) return;
+    event.preventDefault();
     event.currentTarget.scrollLeft = drag.scrollLeft - movement;
   }
 
@@ -522,23 +531,20 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
     const drag = dragState.current;
     if (drag.pointerId !== event.pointerId) return;
 
+    drag.pointerId = null;
+    delete event.currentTarget.dataset.dragging;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    drag.pointerId = null;
-    window.setTimeout(() => {
-      drag.moved = false;
-    }, 0);
   }
 
   function cancelPointerDrag(event: React.PointerEvent<HTMLDivElement>) {
-    if (dragState.current.pointerId !== event.pointerId) return;
-    dragState.current.pointerId = null;
+    finishPointerDrag(event);
     dragState.current.moved = false;
   }
 
   function preventClickAfterDrag(event: React.MouseEvent<HTMLDivElement>) {
-    if (!dragState.current.moved) return;
+    if (!dragState.current.moved || event.detail === 0) return;
     event.preventDefault();
     event.stopPropagation();
     dragState.current.moved = false;
@@ -617,10 +623,12 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
           <div
             aria-label="Melhores ofertas"
             aria-roledescription="carrossel"
-            className="flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-3 select-none active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_img]:pointer-events-none"
+            className="flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-3 select-none motion-safe:scroll-smooth data-[dragging=true]:cursor-grabbing data-[dragging=true]:snap-none data-[dragging=true]:scroll-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_img]:pointer-events-none data-[dragging=true]:[&_a]:cursor-grabbing"
             id="best-offers-carousel"
             onClickCapture={preventClickAfterDrag}
+            onDragStart={(event) => event.preventDefault()}
             onPointerCancel={cancelPointerDrag}
+            onLostPointerCapture={finishPointerDrag}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={finishPointerDrag}
@@ -651,21 +659,19 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
                     } as CSSProperties
                   }
                 >
-                  <div className="flex min-h-9 items-start px-3 pt-3">
+                  {item.product ? <ProductShippingBadge /> : <div className="flex min-h-9 items-start px-3 pt-3">
                     <span className="inline-flex min-h-7 max-w-full items-center rounded-sm bg-brand-soft px-2.5 text-[0.68rem] font-bold leading-none text-brand">
                       {item.label}
                     </span>
-                  </div>
+                  </div>}
 
                   {productHref ? (
-                    <Link
-                      aria-label={`Ver ${item.name}`}
+                    <div
                       className={`relative mx-3 mt-2 grid h-40 place-items-center overflow-hidden rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
                       item.imageUrl
                         ? "bg-white"
                         : "bg-surface-subtle"
                     }`}
-                      href={productHref}
                     >
                       <Image
                         alt={item.name}
@@ -679,7 +685,7 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
                           {discountLabel}
                         </span>
                       ) : null}
-                    </Link>
+                    </div>
                   ) : (
                     <div className="relative mx-3 mt-2 grid h-40 place-items-center overflow-hidden rounded-sm bg-surface-subtle">
                       <div className="relative flex aspect-[0.78] w-24 items-center justify-center rounded-[1rem_1rem_0.5rem_0.5rem] border-2 border-white bg-[linear-gradient(180deg,#fff_0_34%,var(--offer-soft)_34%_56%,var(--offer-accent)_56%_100%)] shadow-[0_20px_34px_rgba(17,24,39,0.18)] ring-1 ring-black/10 transition duration-300 group-hover:rotate-[-2deg] group-hover:scale-105">
@@ -697,7 +703,8 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
                     <h3 className="min-h-10 text-sm font-bold leading-5 text-ink">
                       {productHref ? (
                         <Link
-                          className="line-clamp-2 transition hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                          aria-label={`Ver ${item.name}`}
+                          className="line-clamp-2 after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand"
                           href={productHref}
                         >
                           {item.name}
@@ -754,15 +761,10 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
                         >
                           <MessageCircle className="h-4 w-4" />
                         </a>
-                      ) : (
-                        <AddToCartButton
-                          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-[0_10px_22px_rgba(200,16,46,0.2)] transition hover:-translate-y-0.5 hover:bg-[#a80d27] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-                          iconOnly
-                          product={item.product}
-                        />
-                      )}
+                      ) : null}
                     </div>
                     {item.product ? <ProductCashback product={item.product} unitPriceCents={item.product.unitPriceCents} /> : null}
+                    {item.product ? <ProductCardActions product={item.product} /> : null}
                   </div>
                 </article>
               );

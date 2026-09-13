@@ -26,6 +26,7 @@ const rateLimitRules: RateLimitRule[] = [
     windowMs: 15 * 60 * 1000,
   },
   { limit: 20, pathname: /^\/api\/miauby$/, windowMs: 60 * 1000 },
+  { limit: 30, pathname: /^\/api\/cep\//, windowMs: 60 * 1000 },
   { limit: 10, pathname: /^\/api\/pedidos$/, windowMs: 15 * 60 * 1000 },
   { limit: 5, pathname: /^\/api\/produtos\/[^/]+\/avaliacoes$/, windowMs: 15 * 60 * 1000 },
   { limit: 8, pathname: /^\/api\/produtos\/sugestoes$/, windowMs: 60 * 1000 },
@@ -110,7 +111,8 @@ function enforceRateLimit(request: NextRequest) {
   const now = Date.now();
   pruneExpiredEntries(now);
 
-  const key = `${request.nextUrl.pathname}:${clientIp(request)}`;
+  const rateLimitPath = request.nextUrl.pathname.startsWith("/api/cep/") ? "/api/cep/" : request.nextUrl.pathname;
+  const key = `${rateLimitPath}:${clientIp(request)}`;
   const current = rateLimitStore.get(key);
   const entry =
     !current || current.resetAt <= now

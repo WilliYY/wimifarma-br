@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getDeliveryAvailability } from "@/features/products/product-detail";
 
 const requiredText = (label: string, max: number) =>
   z.string().trim().min(1, `${label} e obrigatorio.`).max(max);
@@ -61,7 +62,8 @@ export const checkoutRequestSchema = z
         });
       } else if (
         normalizeText(data.address.city) !== "ivate" ||
-        data.address.state !== "PR"
+        data.address.state !== "PR" ||
+        !getDeliveryAvailability(data.address.postalCode).available
       ) {
         context.addIssue({
           code: "custom",
