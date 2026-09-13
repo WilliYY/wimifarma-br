@@ -13,7 +13,8 @@ await page.route("**/api/**", (route) => ["POST", "PATCH", "PUT", "DELETE"].incl
 
 try {
   await page.goto(base, { waitUntil: "networkidle", timeout: 90_000 });
-  const card = page.locator("#best-offers-carousel article").filter({ has: page.getByRole("button", { name: "Adicionar", exact: true }) }).first();
+  const candidate = page.locator("#best-offers-carousel article").filter({ has: page.getByRole("button", { name: "Adicionar", exact: true }) }).first();
+  const card = page.getByRole("group", { name: await candidate.getAttribute("aria-label"), exact: true });
   await card.getByRole("button", { name: "Adicionar", exact: true }).click();
   await expect(card.locator("output")).toHaveText("1");
   const productLink = card.getByRole("link").first();
@@ -51,6 +52,7 @@ try {
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     await page.getByRole("heading", { name: "Como deseja receber?" }).scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
+    assert.equal(await page.evaluate(() => document.body.scrollLeft), 0, "Viewport changes must not shift the page horizontally");
     await page.screenshot({ path: `${outputDir}/address-${width}.png` });
   }
   await page.getByRole("button", { name: "Escolher retirada" }).click();

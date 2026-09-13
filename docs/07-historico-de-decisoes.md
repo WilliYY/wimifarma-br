@@ -8,6 +8,8 @@
 - Rascunho temporario por identidade e historico nativo preservam preenchimento e etapas; consentimento nao e restaurado. Pagamento continua combinado apos confirmacao humana, sem gateway.
 - Auditoria local passou com 13 capturas em 320/390/768/1440 px, cesta longa no celular, teclado, CEP simulado e real, respostas atrasadas, storage bloqueado e pedido simulado; zero erros JavaScript e nenhuma gravacao de teste em producao. Contrato e reproducao em `docs/12-carrinho-checkout-pedidos.md`.
 - Bateria final: 85 testes, lint, build, TypeScript, Prisma validate e `npm audit --audit-level=moderate` aprovados (zero vulnerabilidades). Build regenerou tipos depois da retirada da fixture; rota de teste ausente do build e processo local de QA encerrado. Sem migracoes.
+- Publicacao inicial `44c244d` aprovada no navegador real: cesta, imagens, Comprar, CEP, cobertura, historico e recarga; 8 capturas adicionais, zero erros JavaScript, escritas de API bloqueadas, health 200 e app healthy sem reinicios.
+- Inspecao das capturas identificou `body.scrollLeft=37` depois de redimensionar com campo focado: `overflow-x:hidden` permitia rolagem horizontal interna. `body` passa a usar `clip`, como `html`, mantendo rolagem vertical e impedindo deslocamento invisivel. Auditorias passam a exigir `body.scrollLeft=0`.
 
 ## 2026-09-13 - Texto geral de frete gratis na faixa superior
 

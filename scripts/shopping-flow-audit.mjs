@@ -52,7 +52,9 @@ try {
   await mkdir(fixtureDirectory, { recursive: true });
   await copyFile(new URL("./fixtures/qa-shopping-page.tsx", import.meta.url), fixturePath, constants.COPYFILE_EXCL);
   fixtureCreated = true;
-  await expect.poll(async () => (await page.request.get(`${base}/qa-shopping`)).status(), { timeout: 60_000 }).toBe(200);
+  await expect.poll(async () => {
+    try { return (await page.request.get(`${base}/qa-shopping`)).status(); } catch { return 0; }
+  }, { timeout: 60_000 }).toBe(200);
   await page.goto(`${base}/qa-shopping`, { waitUntil: "networkidle", timeout: 90_000 });
   const card = page.locator("article").first();
   await card.getByRole("button", { name: "Adicionar", exact: true }).click();
@@ -180,7 +182,7 @@ try {
   await page.getByRole("button", { name: "Escolher retirada" }).click();
   await next();
   await expect(page.getByText(/na retirada, na maquininha/)).toBeVisible();
-  for (const width of [320, 390, 768, 1440]) { await page.setViewportSize({ width, height: 900 }); await noOverflow(); await page.screenshot({ path: `${outputDir}/payment-${width}.png` }); }
+  for (const width of [320, 390, 768, 1440]) { await page.setViewportSize({ width, height: 900 }); await noOverflow(); await page.waitForTimeout(300); assert.equal(await page.evaluate(() => document.body.scrollLeft), 0); await page.screenshot({ path: `${outputDir}/payment-${width}.png` }); }
   await next();
   await page.getByRole("checkbox").check();
   await page.reload({ waitUntil: "networkidle" });
