@@ -7,6 +7,7 @@
 - Abaixo de 640 px, painel ocupa 70dvh na parte inferior, com acoes compactas; em telas maiores, permanece na lateral em altura completa. Sem mudancas em APIs, dados, pagamento, cashback ou cobertura de entrega.
 - Regressao reproduzida antes da correcao: o clique em Aumentar no card era bloqueado com a cesta aberta. Depois, auditoria local completa aprovada em 320/390/768/1440 px, com 13 capturas, Tab/Shift+Tab, Escape, cliques e rolagem externos; zero erros JavaScript e nenhuma gravacao real. Capturas conferidas apos a animacao, exigindo painel inteiro dentro do viewport.
 - Validacoes locais: 85 testes, lint, build e typecheck aprovados. Fixture temporaria removida antes do build; contrato atualizado em `docs/12-carrinho-checkout-pedidos.md` e auditoria de producao ampliada para cesta nao modal.
+- Publicado em `d9a888f`: push, pull fast-forward no VPS, build Docker e recriacao isolada do app concluidos. Auditoria real aprovada em 320/390/768/1440 px (8 capturas): alteracao de quantidade, rolagem e navegacao ate produto mantendo a cesta aberta, checkout, CEP e historico; zero erros JavaScript. Mutacoes de API bloqueadas durante o teste, health HTTP 200 e container `running healthy restarts=0`. Capturas conferidas, processos locais de QA encerrados e logs temporarios removidos.
 
 ## 2026-09-13 - Cesta lateral, cards e continuidade do checkout
 
