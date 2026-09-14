@@ -49,6 +49,8 @@ Solicitado em 2026-09-10: percentual inicial de 2%, editavel por produto, exibic
 - Painel identifica 401 como sessao expirada/revogada, oculta dados antigos, bloqueia controles e oferece `Entrar novamente`. Ha botao `Atualizar lista`; erros transitorios permitem nova consulta manual. Nao repete PATCH automaticamente.
 - `scripts/cashback-panel-audit.mjs` passou com 10 alteracoes simuladas, falhas GET/PATCH, cinco larguras e sem erros JavaScript. Monta fixture exclusiva em `/qa-cashback` e remove em finally; nenhum fixture entra no build.
 - `scripts/cashback-audit.ts` passou com autenticacao real e PostgreSQL descartavel: tokens legados/excluidos/desativados 401, alteracao de role imediata, persistencia ADMIN, concorrencia 200/409, snapshot, credito/estorno unico, rollback e interfaces de loja/perfil. Nenhuma gravacao de teste em producao.
+- Publicado em `21ee388`: push e pull fast-forward concluidos, imagem Docker construida e somente app recriado, sem migration. Home/health HTTP 200, API de cashback anonima HTTP 401 JSON e admin anonimo HTTP 307 para `/login`. Container `running healthy restarts=0`, sem erros nos logs desde a inicializacao em 2026-09-14 17:07:02 UTC.
+- Chrome do lojista confirmou redirecionamento de `/admin/cashback` para `/login`; pagina deixada aberta para novo acesso com administrador persistido. Gravacao autenticada validada apenas no banco isolado, sem testar alteracoes comerciais em producao. Bateria final: 91 testes, lint, build, typecheck, Prisma validate e npm audit aprovados, zero vulnerabilidades. Banco descartavel, tunel, servidor e rota temporaria de QA removidos/encerrados.
 
 ## Banco e publicacao
 

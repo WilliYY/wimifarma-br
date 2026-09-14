@@ -8,6 +8,7 @@
 - Regressao unitaria falhou antes da correcao em quatro cenarios e passou depois. Auditorias mock e integrada aprovadas: 10 alteracoes simuladas, cinco larguras; banco isolado com usuarios sinteticos, permissoes/role, concorrencia, credito/estorno unico e rollback. Zero erro JavaScript; nenhum produto, pedido, saldo ou usuario real alterado.
 - Contratos atualizados em `docs/15-cashback-produtos.md` e `docs/11-seguranca-backup-e-recuperacao.md`. Sem migration de producao, dependencia nova ou alteracao de regras financeiras.
 - Bateria local: 91 testes, lint, build, TypeScript e Prisma validate aprovados; npm audit sem vulnerabilidades. Fixture removida antes do build e servidor local encerrado.
+- Publicacao `21ee388` verificada: imagem Docker construida e app recriado, home/health 200, API sem sessao 401 JSON, admin redirecionado ao login. Chrome do lojista confirmou `/login`; novo acesso exige administrador persistido. App healthy, zero reinicios e erros desde 17:07:02 UTC. Sem migration ou gravacao de teste em producao; banco isolado e tunel encerrados.
 
 ## 2026-09-14 - Cesta aberta sem bloquear a loja
 
