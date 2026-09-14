@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, CircleDollarSign, Loader2, Search, Wallet } from "lucide-react";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight, CircleDollarSign, Loader2, LogIn, RefreshCw, Search, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CashbackProductCard } from "./cashback-product-card";
-import { cashbackListingSchema, cashbackSavedSchema, readCashbackResponse, type CashbackListing, type CashbackListProduct } from "@/features/cashback/client";
+import { CashbackSessionError, cashbackListingSchema, cashbackSavedSchema, readCashbackResponse, type CashbackListing, type CashbackListProduct } from "@/features/cashback/client";
 import { cashbackRateSchema } from "@/features/cashback/rules";
 import { formatCurrency } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ export function CashbackPanel() {
   const [revision, setRevision] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const saveLock = useRef(false);
 
@@ -31,11 +33,15 @@ export function CashbackPanel() {
         const response = await fetch(`/api/cashback?${params}`, { cache: "no-store", signal: controller.signal });
         const data = await readCashbackResponse(response, cashbackListingSchema);
         if (!controller.signal.aborted) {
+          setSessionExpired(false);
           setListing(data);
           if (page > data.pages) setPage(data.pages);
         }
       } catch (reason) {
-        if (!controller.signal.aborted) setError(reason instanceof Error && !(reason instanceof TypeError) ? reason.message : "Falha de conexao. Tente carregar a lista novamente.");
+        if (!controller.signal.aborted) {
+          setError(reason instanceof Error && !(reason instanceof TypeError) ? reason.message : "Falha de conexao. Tente carregar a lista novamente.");
+          if (reason instanceof CashbackSessionError) { setSessionExpired(true); setListing(null); }
+        }
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
@@ -46,7 +52,7 @@ export function CashbackPanel() {
   function refresh() { setLoading(true); setRevision((value) => value + 1); }
 
   async function save(product: CashbackListProduct, cashbackEnabled: boolean, cashbackRateBps: number) {
-    if (saveLock.current || loading) return false;
+    if (saveLock.current || loading || sessionExpired || error) return false;
     if (!cashbackRateSchema.safeParse(cashbackRateBps).success) {
       toast.error("Informe um percentual entre 0,01% e 100%.");
       return false;
@@ -72,6 +78,12 @@ export function CashbackPanel() {
       return true;
     } catch (reason) {
       toast.error(reason instanceof Error && !(reason instanceof TypeError) ? reason.message : "Falha de conexao. Confira a lista antes de tentar novamente.");
+      if (reason instanceof CashbackSessionError) {
+        setSessionExpired(true);
+        setListing(null);
+        setError(reason.message);
+        return false;
+      }
       // A missing response can follow a committed write; reconcile before another mutation.
       refresh();
       return false;
@@ -81,7 +93,7 @@ export function CashbackPanel() {
     }
   }
 
-  const busy = loading || Boolean(savingId);
+  const busy = loading || Boolean(savingId) || sessionExpired;
   return (
     <div className="space-y-6">
       <div className="grid gap-4 border-b border-line pb-6 sm:grid-cols-3">
@@ -96,11 +108,11 @@ export function CashbackPanel() {
       </div>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-xl font-bold text-ink">Cashback por produto</h2>
-        <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-semibold"><input checked={enabled} disabled={Boolean(savingId)} className="h-4 w-4 accent-emerald-700" type="checkbox" onChange={(e) => { setLoading(true); setEnabled(e.target.checked); setPage(1); }} /> Apenas com cashback</label>
+        <div className="flex flex-wrap items-center gap-3"><label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-semibold"><input checked={enabled} disabled={Boolean(savingId) || sessionExpired} className="h-4 w-4 accent-emerald-700" type="checkbox" onChange={(e) => { setLoading(true); setEnabled(e.target.checked); setPage(1); }} /> Apenas com cashback</label><Button aria-label="Atualizar lista" title="Atualizar lista" variant="secondary" disabled={busy} onClick={refresh}><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /></Button></div>
       </div>
-      <label className="relative block"><span className="sr-only">Buscar produto</span><Search className="absolute left-3 top-3 h-5 w-5 text-muted" /><Input className="pl-10" disabled={Boolean(savingId)} placeholder="Nome, marca, SKU ou EAN" value={query} onChange={(e) => { setLoading(true); setQuery(e.target.value); setPage(1); }} /></label>
+      <label className="relative block"><span className="sr-only">Buscar produto</span><Search className="absolute left-3 top-3 h-5 w-5 text-muted" /><Input className="pl-10" disabled={Boolean(savingId) || sessionExpired} placeholder="Nome, marca, SKU ou EAN" value={query} onChange={(e) => { setLoading(true); setQuery(e.target.value); setPage(1); }} /></label>
       <div aria-busy={loading} className="min-h-48">
-        {error ? <div role="alert" className="space-y-3 py-8 text-center"><p>{error}</p><Button variant="secondary" onClick={refresh}>Tentar novamente</Button></div> : !listing && loading ? <div role="status" className="flex justify-center p-12"><Loader2 aria-label="Carregando produtos" className="h-6 w-6 animate-spin text-brand" /></div> : listing?.data.length ? (
+        {error ? <div role="alert" className="space-y-3 rounded-md border border-line bg-white px-4 py-8 text-center"><p>{error}</p>{sessionExpired ? <Link className="inline-flex min-h-11 items-center gap-2 rounded-md bg-brand px-4 text-sm font-bold text-white hover:bg-brand-dark focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2" href="/admin/login"><LogIn className="h-4 w-4" />Entrar novamente</Link> : <Button variant="secondary" onClick={refresh}><RefreshCw className="mr-2 h-4 w-4" />Tentar novamente</Button>}</div> : !listing && loading ? <div role="status" className="flex justify-center p-12"><Loader2 aria-label="Carregando produtos" className="h-6 w-6 animate-spin text-brand" /></div> : listing?.data.length ? (
           <div className="grid grid-cols-1 gap-3 xl:grid-cols-2" data-cashback-grid>
             {listing.data.map((product) => <CashbackProductCard product={product} key={product.id} disabled={busy} saving={savingId === product.id} onSave={(active, rate) => save(product, active, rate)} />)}
           </div>

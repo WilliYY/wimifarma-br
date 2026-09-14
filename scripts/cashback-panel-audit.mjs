@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
-import { mkdir } from "node:fs/promises";
+import { copyFile, mkdir, rmdir, unlink } from "node:fs/promises";
+import { constants } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { chromium, expect } from "@playwright/test";
 
 const base = process.env.CASHBACK_AUDIT_URL || "http://127.0.0.1:3010";
@@ -16,12 +18,23 @@ const products = Array.from({ length: 26 }, (_, i) => ({
 let mode = "success";
 let mutations = 0;
 let version = 0;
+const fixtureDirectory = fileURLToPath(new URL("../src/app/qa-cashback/", import.meta.url));
+const fixturePath = `${fixtureDirectory}page.tsx`;
+let fixtureCreated = false;
 
 try {
+  await mkdir(fixtureDirectory, { recursive: true });
+  await copyFile(new URL("./fixtures/qa-cashback-page.tsx", import.meta.url), fixturePath, constants.COPYFILE_EXCL);
+  fixtureCreated = true;
+  await expect.poll(async () => {
+    try { return (await page.request.get(`${base}/qa-cashback`)).status(); } catch { return 0; }
+  }, { timeout: 60000 }).toBe(200);
   await page.route("**/api/cashback**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
     if (request.method() === "GET") {
+      if (mode === "get401") return route.fulfill({ status: 401, json: { error: "Nao autorizado." } });
+      if (mode === "get503") return route.fulfill({ status: 503, body: "" });
       const q = (url.searchParams.get("q") || "").toLowerCase();
       const filtered = products.filter((p) => p.name.toLowerCase().includes(q) && (url.searchParams.get("enabled") !== "true" || p.cashbackEnabled));
       const n = Number(url.searchParams.get("page") || 1);
@@ -32,6 +45,7 @@ try {
     const product = products.find((p) => p.id === url.pathname.split("/").at(-1));
     assert.ok(product);
     assert.equal(data.expectedUpdatedAt, product.updatedAt, "uses newest revision for every save");
+    if (mode === "save401") return route.fulfill({ status: 401, json: { error: "Nao autorizado." } });
     if (mode === "empty500") return route.fulfill({ status: 500, body: "" });
     if (mode === "conflict") {
       product.updatedAt = new Date(Date.UTC(2026, 8, 11, 12, 1, ++version)).toISOString();
@@ -99,6 +113,28 @@ try {
     const columns = await page.locator("[data-cashback-grid]").evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length);
     assert.equal(columns, width >= 1280 ? 2 : 1, `columns ${width}`);
   }
+  mode = "get503";
+  await page.getByRole("button", { name: "Atualizar lista" }).click();
+  await expect(page.getByRole("button", { name: "Tentar novamente" })).toBeVisible();
+  mode = "success";
+  await page.getByRole("button", { name: "Tentar novamente" }).click();
+  await expect(toggle).toBeEnabled();
+  mode = "save401";
+  await toggle.click();
+  await expect(page.getByRole("link", { name: "Entrar novamente" })).toHaveAttribute("href", "/admin/login");
+  await expect(page.getByRole("article")).toHaveCount(0);
+  await expect(page.getByLabel("Buscar produto")).toBeDisabled();
+  const attempts = mutations;
+  await page.waitForTimeout(700);
+  assert.equal(mutations, attempts, "Never retries an unauthorized write");
+  mode = "get401";
+  await page.reload({ waitUntil: "networkidle" });
+  await expect(page.getByRole("link", { name: "Entrar novamente" })).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(0);
+  await page.screenshot({ path: "artifacts/cashback-panel-audit/session-expired.png" });
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ ok: true, mutations, checks: "inline checkbox, presets/custom, updated revisions, empty500/conflict/empty200 reconciliation, restrictions, pagination/filter, 5 viewports, 2 desktop columns, zero JS errors" }));
-} finally { await browser.close(); }
+  console.log(JSON.stringify({ ok: true, mutations, checks: "inline checkbox, presets/custom, revisions, reconciliation, revoked session GET/PATCH, manual refresh, restrictions, pagination/filter, 5 viewports, 2 desktop columns, zero JS errors" }));
+} finally {
+  await browser.close();
+  if (fixtureCreated) { await unlink(fixturePath); await rmdir(fixtureDirectory); }
+}

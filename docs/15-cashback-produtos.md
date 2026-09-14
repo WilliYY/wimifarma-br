@@ -42,6 +42,14 @@ Solicitado em 2026-09-10: percentual inicial de 2%, editavel por produto, exibic
 - Em 2026-09-12, build otimizado e `prisma:validate` concluidos com saida 0; `git diff --check` aprovado. `npm audit --audit-level=moderate` continua com os tres alertas altos preexistentes em `prisma`, `@prisma/config` e `deepmerge-ts`; nenhuma dependencia nova ou atualizada.
 - Publicacao em 2026-09-12: codigo `77374b4` recebido no servidor, imagem app construida e container recriado sem migration. Health/home HTTP 200, APIs GET/PATCH sem sessao HTTP 401 com JSON; app healthy, zero reinicios e zero erros nos logs apos a troca. Persistencia autenticada foi validada no ambiente descartavel, sem gravacoes de teste em producao.
 
+## Sessao antiga e recuperacao (2026-09-14)
+
+- Causa confirmada da captura: PATCH retornou 503 em 2026-09-14 11:41:09 UTC; PostgreSQL registrou violacao de `AuditLog_userId_fkey` porque o identificador da sessao administrativa nao existia em `User`. A transacao reverteu o produto; GET continuava retornando 200, dando a impressao de erro exclusivo do cashback.
+- O callback JWT agora confere existencia, status ativo e perfil atual de ADMIN/MANAGER/STAFF no banco antes de liberar a sessao. Token legado ou usuario excluido/desativado perde acesso; mudanca de perfil usa o valor atual. Sem associar por email, recriar usuario temporario ou remover autoria da auditoria. Fluxo CUSTOMER/Google permanece separado.
+- Painel identifica 401 como sessao expirada/revogada, oculta dados antigos, bloqueia controles e oferece `Entrar novamente`. Ha botao `Atualizar lista`; erros transitorios permitem nova consulta manual. Nao repete PATCH automaticamente.
+- `scripts/cashback-panel-audit.mjs` passou com 10 alteracoes simuladas, falhas GET/PATCH, cinco larguras e sem erros JavaScript. Monta fixture exclusiva em `/qa-cashback` e remove em finally; nenhum fixture entra no build.
+- `scripts/cashback-audit.ts` passou com autenticacao real e PostgreSQL descartavel: tokens legados/excluidos/desativados 401, alteracao de role imediata, persistencia ADMIN, concorrencia 200/409, snapshot, credito/estorno unico, rollback e interfaces de loja/perfil. Nenhuma gravacao de teste em producao.
+
 ## Banco e publicacao
 
 Migration aditiva `20260910193000_product_cashback`: campos Product/Order/OrderItem, enum de estado, chave unica nullable de evento e indice cliente/estado. Constraints SQL protegem faixa e valores nao negativos. Valores antigos permanecem desabilitados/NONE/zero, lancamentos antigos preservados.

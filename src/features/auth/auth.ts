@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { getPrisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations/auth";
+import { refreshStaffToken } from "@/features/auth/staff-session";
 
 const LOGIN_WINDOW_MINUTES = 15;
 const LOGIN_MAX_FAILURES = 8;
@@ -257,7 +258,10 @@ export const authConfig = {
         token.role = isAppRole(user.role) ? user.role : "CUSTOMER";
       }
 
-      return token;
+      return refreshStaffToken(token, (id) => getPrisma().user.findUnique({
+        where: { id },
+        select: { id: true, role: true, isActive: true },
+      }));
     },
     async session({ session, token }) {
       if (session.user) {

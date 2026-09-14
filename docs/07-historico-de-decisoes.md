@@ -1,5 +1,14 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-14 - Cashback e sessao administrativa revogada
+
+- Investigacao somente de leitura em producao correlacionou PATCH 503 as 11:41:09 UTC com `AuditLog_userId_fkey`: usuario da sessao ausente em `User`. GET 200 nao validava existencia do autor, apenas role do JWT. Ha administrador ativo persistido; nenhuma conta ou senha foi criada/alterada.
+- Correcao na origem, no callback JWT: validar existencia, ativo e perfil atual do usuario administrativo; tokens antigos nao persistidos recebem sessao nula. Auditoria atomica preservada, sem gravacao anonima ou reaproveitamento por email. Cliente e Google mantidos.
+- Cashback recebe estado persistente de sessao revogada com `Entrar novamente`, dados antigos ocultos e controles bloqueados; atualizacao manual da lista disponivel para falhas transitorias. Sem retry automatico de gravacao.
+- Regressao unitaria falhou antes da correcao em quatro cenarios e passou depois. Auditorias mock e integrada aprovadas: 10 alteracoes simuladas, cinco larguras; banco isolado com usuarios sinteticos, permissoes/role, concorrencia, credito/estorno unico e rollback. Zero erro JavaScript; nenhum produto, pedido, saldo ou usuario real alterado.
+- Contratos atualizados em `docs/15-cashback-produtos.md` e `docs/11-seguranca-backup-e-recuperacao.md`. Sem migration de producao, dependencia nova ou alteracao de regras financeiras.
+- Bateria local: 91 testes, lint, build, TypeScript e Prisma validate aprovados; npm audit sem vulnerabilidades. Fixture removida antes do build e servidor local encerrado.
+
 ## 2026-09-14 - Cesta aberta sem bloquear a loja
 
 - Por pedido do lojista, a cesta passa a usar `Dialog.Root modal={false}` sem overlay. Interacoes externas nao descartam o painel: permite clicar, navegar, alterar produtos e rolar a loja mantendo a cesta aberta e sincronizada.

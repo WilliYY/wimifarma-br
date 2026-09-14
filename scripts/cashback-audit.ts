@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import { chromium, expect, type BrowserContext } from "@playwright/test";
 import { hash } from "bcryptjs";
+import { encode } from "next-auth/jwt";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
@@ -58,6 +59,28 @@ async function main() {
     }
     assert.equal((await admin.request.post(`${base}/api/cashback`, { data: { customerId: user.id, amount: 9999, type: "CREDIT", description: "forged" } })).status(), 405);
     checks.push("Auth: anonymous/STAFF/MANAGER/customer denied admin cashback; manual credits disabled");
+
+    const legacy = await browser.newContext();
+    contexts.push(legacy);
+    const cookieName = "authjs.session-token";
+    const legacyToken = await encode({
+      token: { id: "demo-admin", sub: "demo-admin", role: "ADMIN", email: "legacy@example.test" },
+      secret: process.env.AUTH_SECRET ?? "wimifarma-local-dev-secret", salt: cookieName, maxAge: 3600,
+    });
+    await legacy.addCookies([{ name: cookieName, value: legacyToken, url: base, httpOnly: true, sameSite: "Lax" }]);
+    assert.equal((await legacy.request.get(`${base}/api/cashback`)).status(), 401);
+    assert.equal((await legacy.request.patch(`${base}/api/cashback/produtos/missing`, { data: {} })).status(), 401);
+    assert.equal((await (await legacy.request.get(`${base}/api/auth/session`)).json())?.user, undefined);
+    const revoked = await login("ADMIN", "-revoked");
+    await db.user.update({ where: { id: revoked.user.id }, data: { role: "STAFF" } });
+    assert.equal((await revoked.context.request.get(`${base}/api/cashback`)).status(), 401);
+    assert.equal((await (await revoked.context.request.get(`${base}/api/auth/session`)).json()).user.role, "STAFF");
+    await db.user.update({ where: { id: revoked.user.id }, data: { isActive: false } });
+    assert.equal((await revoked.context.request.get(`${base}/api/cashback`)).status(), 401);
+    const deleted = await login("ADMIN", "-deleted");
+    await db.user.delete({ where: { id: deleted.user.id } });
+    assert.equal((await deleted.context.request.get(`${base}/api/cashback`)).status(), 401);
+    checks.push("Session regression: legacy/deleted/disabled staff rejected with 401; persisted role changes apply immediately");
 
     const created = await admin.request.post(`${base}/api/produtos`, { data: {
       name: `${prefix} Produto de cuidados`, category: "Medicamentos", price: 20, stock: 50, status: "ACTIVE",

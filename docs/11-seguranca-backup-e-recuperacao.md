@@ -10,6 +10,7 @@ Registrar as protecoes ja aplicadas, o procedimento de backup e os controles que
 - Falhas de login por credencial sao registradas em `LoginAttempt` e bloqueadas apos 8 tentativas em 15 minutos.
 - `src/middleware.ts` rejeita mutacoes cross-site fora do Auth.js e aplica limites por IP nas APIs.
 - As rotas administrativas e APIs reservadas validam sessao e role no servidor.
+- Desde 2026-09-14, o callback JWT tambem consulta `User` por id a cada resolucao de sessao administrativa: inexistente/inativo invalida o token; perfil vem do registro atual. Uma sessao antiga nao pode manter permissoes removidas nem usar o antigo identificador temporario para gravar auditoria. Falha na consulta nao libera acesso. CUSTOMER/Google mantem seu fluxo existente.
 - As entradas das APIs usam Zod e as consultas usam Prisma, sem SQL concatenado.
 - A sugestao de catalogo exige sessao `ADMIN` ou `MANAGER`, limita chamadas por IP, trata nome/categoria como dados nao confiaveis, valida a resposta do Gemini e nao envia dados de clientes, preco, estoque ou imagens ao provedor.
 - A Miauby limita pergunta, historico, tokens, tempo de resposta e requisicoes por IP. Trata conversa, catalogo e saida do Gemini como dados nao confiaveis, renderiza somente texto escapado, nao executa ferramentas e mantem emergencias ou dados financeiros evidentes no fallback local.

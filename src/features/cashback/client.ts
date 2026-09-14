@@ -17,8 +17,15 @@ export const cashbackListingSchema = z.object({
 export type CashbackListing = z.infer<typeof cashbackListingSchema>;
 export type CashbackListProduct = CashbackListing["data"][number];
 
+export class CashbackSessionError extends Error {
+  constructor() {
+    super("Sua sessao expirou ou nao possui mais acesso. Entre novamente para continuar.");
+    this.name = "CashbackSessionError";
+  }
+}
+
 export async function readCashbackResponse<T>(response: Response, schema: z.ZodType<T>): Promise<T> {
-  if (response.redirected || response.status === 401) throw new Error("Sua sessao expirou. Entre novamente para continuar.");
+  if (response.redirected || response.status === 401) throw new CashbackSessionError();
   if (response.status === 429) throw new Error("Muitas solicitacoes. Aguarde um pouco e tente novamente.");
   if (response.status >= 500) throw new Error("Cashback temporariamente indisponivel. Atualize a lista e tente novamente.");
   const payload: unknown = await response.json().catch(() => null);
