@@ -13,7 +13,7 @@ export function CartHeaderButton({ className }: Readonly<{ className?: string }>
   const label = itemCount === 1 ? "1 item no carrinho" : `${itemCount} itens no carrinho`;
 
   return (
-    <Dialog.Root onOpenChange={setOpen} open={open}>
+    <Dialog.Root modal={false} onOpenChange={setOpen} open={open}>
     <Dialog.Trigger asChild><button
       aria-label={hydrated ? `Abrir cesta: ${label}` : "Abrir cesta"}
       className={cn(

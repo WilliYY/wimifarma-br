@@ -14,7 +14,8 @@
 
 ### Cesta Lateral e Cards (2026-09-13)
 
-- O botao de cesta no cabecalho abre um painel lateral Radix Dialog sem navegar. Fecha por Escape, fundo, X e Continuar comprando; foco retorna ao gatilho e a rolagem da pagina e restaurada.
+- O botao de cesta no cabecalho abre um painel Radix Dialog nao modal, sem navegar. Desde 2026-09-14, nao ha overlay, bloqueio de cliques, trava de rolagem ou ciclo de Tab: a loja continua acessivel com a cesta aberta. Clicar ou focar fora nao fecha o painel. Fecha por Escape, X, gatilho e Continuar comprando; o foco retorna ao gatilho.
+- Em telas a partir de 640 px, a cesta fica na lateral direita em altura completa. Em telas menores, ocupa os 70% inferiores da altura visivel, com acoes compactas e rolagem propria, deixando a parte superior da loja acessivel. Quantidades sincronizam mesmo quando alteradas nos cards com o painel aberto.
 - Quantidade, remocao, subtotal e limite de estoque usam o mesmo CartProvider dos cards. Limpar tudo exige confirmacao. Lista possui rolagem propria; rodape oferece checkout e cesta completa.
 - Cards reais da vitrine, catalogo e relacionados sao clicaveis em toda a area, exceto controles. Adicionar inclui uma unidade sem navegar; o contador altera o carrinho. Comprar preserva a quantidade ja escolhida ou adiciona uma unidade e solicita `/checkout`.
 - Receita e Farmacia Popular continuam somente por atendimento. Produtos sem estoque nao podem ser adicionados. O carrinho limita 30 produtos diferentes e 20 unidades por produto, sujeito ao estoque.
@@ -34,7 +35,8 @@
 
 - `npm run test` inclui casos de rascunho, CEP, limites e cobertura no servidor.
 - Com `npm run dev -- -p 3010`, executar `node scripts/shopping-flow-audit.mjs`. A auditoria aceita apenas localhost/127.0.0.1, monta sua fixture temporaria com criacao exclusiva e a remove no finally.
-- Valida cesta, teclado, rolagem, estoque, cards, arraste, requisicao de navegacao para checkout, CEP, historico, recarga, consentimento e storage bloqueado em 320/390/768/1440 px. Submissao de pedido e simulada; nao grava no banco. Capturas ficam em `artifacts/shopping-flow`, ignorada pelo Git.
+- Valida cesta nao modal, cliques e rolagem na loja com o painel aberto, saida por Tab/Shift+Tab, estoque, cards, arraste, requisicao de navegacao para checkout, CEP, historico, recarga, consentimento e storage bloqueado em 320/390/768/1440 px. Submissao de pedido e simulada; nao grava no banco. Capturas ficam em `artifacts/shopping-flow`, ignorada pelo Git.
+- `node scripts/cart-live-audit.mjs` repete navegacao e interacao externa com a cesta aberta no site publicado, bloqueando todas as mutacoes de API; nao cria pedidos reais.
 
 ### Pagamento Online Pendente
 

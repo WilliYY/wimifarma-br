@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-14 - Cesta aberta sem bloquear a loja
+
+- Por pedido do lojista, a cesta passa a usar `Dialog.Root modal={false}` sem overlay. Interacoes externas nao descartam o painel: permite clicar, navegar, alterar produtos e rolar a loja mantendo a cesta aberta e sincronizada.
+- Removido o ciclo de Tab do Dialog, preservando a ordem nativa do teclado e Escape. A lista continua com rolagem independente; fechar, limpar com confirmacao, estoque e checkout permanecem iguais.
+- Abaixo de 640 px, painel ocupa 70dvh na parte inferior, com acoes compactas; em telas maiores, permanece na lateral em altura completa. Sem mudancas em APIs, dados, pagamento, cashback ou cobertura de entrega.
+- Regressao reproduzida antes da correcao: o clique em Aumentar no card era bloqueado com a cesta aberta. Depois, auditoria local completa aprovada em 320/390/768/1440 px, com 13 capturas, Tab/Shift+Tab, Escape, cliques e rolagem externos; zero erros JavaScript e nenhuma gravacao real. Capturas conferidas apos a animacao, exigindo painel inteiro dentro do viewport.
+- Validacoes locais: 85 testes, lint, build e typecheck aprovados. Fixture temporaria removida antes do build; contrato atualizado em `docs/12-carrinho-checkout-pedidos.md` e auditoria de producao ampliada para cesta nao modal.
+
 ## 2026-09-13 - Cesta lateral, cards e continuidade do checkout
 
 - Cesta do cabecalho abre painel lateral acessivel usando Radix ja instalado; reutiliza estado do carrinho, sem navegar ate comando explicito.

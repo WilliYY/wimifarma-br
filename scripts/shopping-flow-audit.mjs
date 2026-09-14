@@ -72,12 +72,32 @@ try {
   await drawer.getByRole("button", { name: `Diminuir ${name}`, exact: true }).click();
   await expect(drawer.locator("output")).toHaveText("2");
   assert.match(await drawer.locator("footer").innerText(), /36,00/);
-  for (let index = 0; index < 14; index++) { await page.keyboard.press("Tab"); assert.equal(await drawer.evaluate((node) => node.contains(document.activeElement)), true, "focus stays inside drawer"); }
+  assert.notEqual(await drawer.getAttribute("aria-modal"), "true", "Basket must not make the store modal");
+  await card.getByRole("button", { name: `Aumentar ${name}`, exact: true }).click();
+  await expect(drawer).toBeVisible();
+  await expect(drawer.locator("output")).toHaveText("3");
+  await card.getByRole("button", { name: `Diminuir ${name}`, exact: true }).click();
+  await expect(drawer.locator("output")).toHaveText("2");
+  await expect(card.getByRole("button", { name: `Diminuir ${name}`, exact: true })).toBeFocused();
+  await page.keyboard.press("Tab");
+  assert.equal(await drawer.evaluate((node) => node.contains(document.activeElement)), false, "Keyboard can navigate the store while basket remains open");
+  await expect(drawer).toBeVisible();
+  await drawer.getByRole("button", { name: "Continuar comprando", exact: true }).focus();
+  await page.keyboard.press("Tab");
+  assert.equal(await drawer.evaluate((node) => node.contains(document.activeElement)), false, "Tab can leave the last basket control");
+  await drawer.getByRole("button", { name: "Fechar cesta", exact: true }).focus();
+  await page.keyboard.press("Shift+Tab");
+  assert.equal(await drawer.evaluate((node) => node.contains(document.activeElement)), false, "Shift+Tab can leave the first basket control");
+  const initialScroll = await page.evaluate(() => scrollY);
+  await page.mouse.move(50, 350);
+  await page.mouse.wheel(0, 450);
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(initialScroll);
+  await expect(drawer).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(drawer).not.toBeVisible();
   await expect(page.getByRole("button", { name: /^Abrir cesta/ })).toBeFocused();
   await expect(card.locator("output")).toHaveText("2");
-  console.log("PASS drawer opens without navigation, quantity sync, stock, subtotal, focus trap and Escape");
+  console.log("PASS non-modal basket, outside clicks, store keyboard navigation/scrolling, quantity sync, stock, subtotal and Escape");
 
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: width < 500 ? 740 : 900 });
@@ -86,6 +106,20 @@ try {
     await page.screenshot({ path: `${outputDir}/cards-${width}.png` });
     await page.getByRole("button", { name: /^Abrir cesta/ }).click();
     await expect(drawer.getByRole("link", { name: "Finalizar pedido" })).toBeInViewport();
+    await expect.poll(async () => {
+      const box = await drawer.boundingBox();
+      return box.x >= -1 && box.x + box.width <= width + 1 && box.y + box.height <= page.viewportSize().height + 1;
+    }).toBe(true);
+    if (width < 500) {
+      assert.ok((await drawer.boundingBox()).y >= 740 * 0.25, "Mobile basket leaves the store accessible above it");
+      await page.mouse.move(40, 180);
+      await page.mouse.wheel(0, 300);
+      await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
+      await expect(drawer).toBeVisible();
+    }
+    await noOverflow();
+    assert.equal(await page.evaluate(() => document.body.scrollLeft), 0);
+    await page.waitForTimeout(350);
     await page.screenshot({ path: `${outputDir}/drawer-${width}.png` });
     await page.keyboard.press("Escape");
     await expect(drawer).not.toBeVisible();

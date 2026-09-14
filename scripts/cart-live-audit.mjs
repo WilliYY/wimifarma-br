@@ -24,17 +24,33 @@ try {
   const drawer = page.getByRole("dialog", { name: "Minha cesta" });
   await expect(drawer).toBeVisible();
   assert.equal(new URL(page.url()).pathname, "/");
+  await card.getByRole("button", { name: /^Aumentar / }).click();
+  await expect(drawer.locator("output")).toHaveText("2");
+  await card.getByRole("button", { name: /^Diminuir / }).click();
+  await expect(drawer.locator("output")).toHaveText("1");
+  await expect(drawer).toBeVisible();
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: width < 500 ? 740 : 1000 });
     await expect(drawer.getByRole("link", { name: "Finalizar pedido" })).toBeInViewport();
     assert.ok(await drawer.evaluate((node) => node.scrollWidth <= node.clientWidth + 1));
-    await page.waitForTimeout(300);
+    await expect.poll(async () => {
+      const box = await drawer.boundingBox();
+      return box.x >= -1 && box.x + box.width <= width + 1 && box.y + box.height <= page.viewportSize().height + 1;
+    }).toBe(true);
+    if (width < 500) assert.ok((await drawer.boundingBox()).y >= 740 * 0.25, "Mobile basket leaves part of the store visible");
+    const before = await page.evaluate(() => scrollY);
+    await page.mouse.move(20, 180);
+    await page.mouse.wheel(0, before > 300 ? -200 : 200);
+    await expect.poll(() => page.evaluate(() => scrollY)).not.toBe(before);
+    await expect(drawer).toBeVisible();
+    await page.waitForTimeout(350);
     await page.screenshot({ path: `${outputDir}/drawer-${width}.png` });
   }
-  await drawer.getByRole("button", { name: "Continuar comprando", exact: true }).click();
-  await expect(drawer).not.toBeVisible();
   await productLink.click();
   await expect(page).toHaveURL(new URL(productHref, base).href);
+  await expect(drawer).toBeVisible();
+  await drawer.getByRole("button", { name: "Continuar comprando", exact: true }).click();
+  await expect(drawer).not.toBeVisible();
   await page.goto(base, { waitUntil: "networkidle" });
   const existing = page.locator("#best-offers-carousel article").filter({ has: page.locator("output") }).first();
   await existing.getByRole("button", { name: "Comprar", exact: true }).click();
@@ -65,5 +81,5 @@ try {
   const health = await page.request.get(`${base}/api/health`);
   assert.equal(health.status(), 200);
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ result: "PASS", screenshots: 8, widths: [320, 390, 768, 1440], pageErrors: 0, writes: "all API mutations blocked", checks: "drawer, real product images, product navigation, buy checkout, live CEP, coverage, history, draft reload, health" }));
+  console.log(JSON.stringify({ result: "PASS", screenshots: 8, widths: [320, 390, 768, 1440], pageErrors: 0, writes: "all API mutations blocked", checks: "non-modal basket, outside quantity controls, store scrolling/navigation with basket open, real product images, buy checkout, live CEP, coverage, history, draft reload, health" }));
 } finally { await browser.close(); }
