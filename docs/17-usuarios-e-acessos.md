@@ -29,6 +29,14 @@ Migration aditiva `20260916120000_user_customer_access`. Fazer backup verificado
 - `ops/grant-google-admin.sql` testado com rollback: identidade errada rejeitada, repeticao idempotente e vinculo Google-only unico.
 - QA usa banco descartavel em `127.0.0.1:55439/cashback_test`, servidor `127.0.0.1:3010` e o mesmo `AUTH_SECRET` sintetico nos dois processos. Nunca copiar a chave de producao para o teste.
 - O retorno `void` de `pg_advisory_xact_lock` precisou de cast para `text` para ser desserializado pelo Prisma; a transacao e o lock foram preservados.
-- Backup anterior a publicacao validado em `/home/ubuntu/backups/wimifarma-br/pre-users-release/20260916T175014Z`. Snapshot financeiro anterior: zero pedidos, avaliacoes e carteiras.
+- Backup anterior a publicacao validado em `/home/ubuntu/backups/wimifarma-br/pre-users-release/20260917T013857Z`. Snapshot financeiro anterior: zero pedidos, avaliacoes e carteiras.
 
-Publicacao em producao e promocao real ainda pendentes de verificacao.
+## Evidencias de producao
+
+- Publicado o commit `49cff39` em 2026-09-16 (2026-09-17 UTC), com build app/tools, aplicacao das duas migrations aditivas e recriacao do app. Nova execucao confirmou 13 migrations sem pendencias.
+- Container `wimifarma-br-app` saudavel e `/api/health` com HTTP 200. Sem sessao, `/admin/usuarios` redireciona para `/login` (307) e `/api/admin/pessoas` retorna 401.
+- Cadastro Google do proprietario conferido e promovido em transacao auditada (`OWNER_GOOGLE_ADMIN_GRANTED`). Leitura posterior confirmou ADMIN ativo, vinculo com o cliente original e acesso Google-only. Nenhuma senha publica foi criada.
+- A sessao antiga nao ganha privilegios automaticamente: o proprietario deve sair e entrar novamente pelo Google. O login interativo real permanece a conferir pelo titular; o fluxo de sessao Google foi validado com identidades sinteticas no ambiente isolado.
+- Playwright anonimo em producao, nas larguras 390/1440, confirmou abertura da cesta e fechamento por clique fora, sem overflow horizontal ou erros JavaScript. Testes locais tambem cobrem Escape, rolagem, navegacao e movimento reduzido.
+- Banco de QA sem fixtures ao encerrar; servidor local, tunel SSH e container descartavel encerrados. Nenhum dado financeiro real foi alterado para validacao.
+- Cuidado operacional: manter verificacao em duas etapas na conta Google; MFA proprio da aplicacao continua pendente.
