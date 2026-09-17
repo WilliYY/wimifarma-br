@@ -6,12 +6,15 @@ import { getPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+const customerSelect = { id: true, name: true, email: true, phone: true, city: true, status: true, createdAt: true, updatedAt: true } as const;
+
 export async function GET() {
   const guard = await requireAdminApi();
   if (guard.response) return guard.response;
 
   const prisma = getPrisma();
   const customers = await prisma.customer.findMany({
+    select: customerSelect,
     orderBy: { createdAt: "desc" },
     take: 50,
   });
@@ -31,7 +34,7 @@ export async function POST(request: Request) {
   }
 
   const prisma = getPrisma();
-  const customer = await prisma.customer.create({ data: parsed.data });
+  const customer = await prisma.customer.create({ data: parsed.data, select: customerSelect });
 
   return NextResponse.json({ data: customer }, { status: 201 });
 }

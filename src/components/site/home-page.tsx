@@ -65,6 +65,7 @@ export type HomeReview = {
   productSlug: string;
   rating: number;
   reviewerName: string;
+  incentivized?: boolean;
 };
 
 const offerPalette = { accent: "#c8102e", soft: "#fff1f2" };
@@ -80,14 +81,14 @@ function formatProductPrice(value: string) {
 
 const heroSlides = [
   {
-    accent: "#c8102e",
-    cta: "Ver melhores ofertas",
+    accent: "#138a45",
+    cta: "Avaliar minhas compras",
     description:
-      "Consulte medicamentos, disponibilidade e entrega com a equipe da Wimifarma.",
-    eyebrow: "Medicamentos e cuidado diario",
-    href: "#melhores-ofertas",
+      "Sua opiniao vale mais cuidado. Avalie um produto de uma compra concluida e paga e use o bonus na proxima compra. Confira as regras.",
+    eyebrow: "Wimifarma · Sua opiniao tem valor",
+    href: "/minha-conta/avaliacoes",
     image: "/banners/hero-medicamentos.webp",
-    title: "Cuidado para a rotina, perto de voce.",
+    title: "1% de cashback por avaliacao",
   },
   {
     accent: "#d7496f",
@@ -342,7 +343,7 @@ function HeroCarousel() {
         <motion.div
           animate={{ opacity: 1, y: 0 }}
           className="max-w-xl"
-          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 14 }}
+          initial={false}
           key={activeSlide}
           transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: easeOut }}
         >
@@ -913,6 +914,7 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
                     {review.productName}
                   </Link>
                 </div>
+                {review.incentivized ? <p className="mt-3 text-xs leading-5 text-muted">Avaliacao com incentivo de cashback, independente da nota.</p> : null}
               </article>
             ))}
           </div>
@@ -937,7 +939,7 @@ export function HomePage({
 }) {
   return (
     <>
-      <section className="pharma-clouds bg-white px-4 pb-8 pt-32 sm:px-6 sm:pt-36 lg:px-8 lg:pt-44">
+      <section className="pharma-clouds bg-white px-4 pb-8 pt-36 sm:px-6 sm:pt-40 lg:px-8 lg:pt-56">
         <div className="mx-auto max-w-7xl">
           <HeroCarousel />
         </div>

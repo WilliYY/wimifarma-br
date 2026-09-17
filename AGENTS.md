@@ -55,7 +55,7 @@ Preservar os padroes ja existentes no projeto, salvo quando houver motivo tecnic
 - Carrinho e checkout registram pedidos para confirmacao humana da farmacia.
 - WhatsApp continua como apoio ao atendimento e e obrigatorio para itens com receita ou Farmacia Popular.
 - Nao coletar dados de cartao nem marcar pagamento como aprovado sem gateway homologado.
-- Roleta e clube seguem preparados, sem regras comerciais reais ate aprovacao. Cashback por produto tem contrato em `docs/15-cashback-produtos.md`: saldo somente apos pedido concluido e pago, sem resgate online nesta fase.
+- Roleta e clube seguem preparados, sem regras comerciais reais ate aprovacao. Cashback por produto tem contrato em `docs/15-cashback-produtos.md`: saldo somente apos pedido concluido e pago. Bonus de avaliacao de 1% e resgate como desconto no checkout aprovados pelo lojista; contrato em `docs/16-cashback-avaliacoes-resgate.md`. Nao habilitar saque ou transferencia.
 - Farmacia Popular nao deve prometer disponibilidade automatica.
 
 ## Regra 7: Atualizacao Obrigatoria da Documentacao

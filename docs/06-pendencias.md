@@ -131,9 +131,9 @@
 
 ### Cashback real
 
-- Status: acumulo por produto implementado e testado; resgate online pendente.
-- Impacto: percentual inicial 2%, snapshot no pedido, credito somente concluido/pago, estorno e saldo por cliente. Nenhum credito retroativo. Ainda falta definir resgate, expiracao e devolucao parcial antes de habilitar tais operacoes.
-- Arquivos e validacao: `docs/15-cashback-produtos.md`, `scripts/cashback-audit.ts`.
+- Status: acumulo por produto, bonus de avaliacao de 1% e resgate como desconto implementados; publicacao e evidencias em `docs/16-cashback-avaliacoes-resgate.md`.
+- Impacto: percentual inicial 2%, snapshot no pedido, credito somente concluido/pago, estorno e saldo por cliente. Nenhum credito retroativo. Resgate reserva saldo ate confirmacao e devolve em cancelamento/reembolso. Expiracao, devolucao parcial, saque e transferencia continuam pendentes de definicao.
+- Arquivos e validacao: `docs/15-cashback-produtos.md`, `docs/16-cashback-avaliacoes-resgate.md`, `scripts/cashback-audit.ts`, `scripts/review-cashback-audit.ts`.
 
 ### Testes automatizados
 

@@ -24,10 +24,10 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - Auth.js/NextAuth v5 esta configurado com JWT session.
 - Provider Credentials autentica usuarios do modelo `User`.
 - Google Provider so entra se `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` existirem.
-- Google OAuth e reservado para clientes: sessoes Google recebem role `CUSTOMER` e nao acessam `/admin`.
+- Google OAuth exige email verificado. Por padrao recebe CUSTOMER; somente um vinculo `User.customerId` explicitamente autorizado pode conceder permissoes administrativas. Ver `17-usuarios-e-acessos.md`.
 - Login Google cria ou atualiza `Customer` no banco com e-mail, nome, foto, `googleSubject` e `lastLoginAt`.
 - Cadastro por email/telefone/senha cria `Customer` com `passwordHash`; login de cliente por Credentials recebe role `CUSTOMER`.
-- `/minha-conta` e area autenticada de cliente e nao aceita roles administrativas.
+- `/minha-conta` aceita a identidade de cliente vinculada ao administrador sem misturar IDs, pedidos e saldo.
 - No site publico, sessoes de cliente exibem foto/nome da conta Google no header e botao `Sair`.
 - `LoginAttempt` registra falhas/sucessos para limitar tentativas.
 - `/login` serve como tela de login/cadastro visual.
@@ -49,7 +49,7 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 - Admin pode controlar tudo.
 - Colaborador deve ter acesso limitado.
 - Cliente nao deve acessar painel admin.
-- Login Google nao deve conceder role administrativa.
+- Google nunca concede role administrativa por simples coincidencia de email; exige vinculo persistido e autorizado.
 - Criacao de ADM, temas, cashback e clube devem ser restritos a `ADMIN`.
 - Apenas `ADMIN` pode criar, bloquear ou reativar usuarios administrativos.
 - Configuracoes comerciais e cofre `API e Senhas` ficam restritos a `ADMIN`.
@@ -61,7 +61,7 @@ Controla login, sessao e permissao de acesso a APIs e painel administrativo.
 
 - Usar JWT strategy do NextAuth.
 - Armazenar `id` e `role` no token/sessao.
-- Para Google OAuth, `id` no token/sessao e o `Customer.id`, nao um `User.id` administrativo.
+- Para Google OAuth comum, `id` e `Customer.id`; quando vinculado a acesso administrativo ativo, `id` e `User.id` e `customerId` preserva a identidade comercial. Sessao relida do banco a cada resolucao.
 - Para cliente por email/senha, `id` no token/sessao tambem e o `Customer.id`.
 - Sem role administrativa explicita, a sessao recebe `CUSTOMER`.
 - Fotos de perfil Google sao renderizadas no header publico a partir de `lh3.googleusercontent.com`.

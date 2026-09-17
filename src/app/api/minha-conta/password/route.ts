@@ -1,6 +1,7 @@
 import { compare, hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { auth } from "@/features/auth/auth";
+import { sessionCustomerId } from "@/features/auth/customer-session";
 import { customerPasswordSchema } from "@/features/customers/schema";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
@@ -10,7 +11,8 @@ export const dynamic = "force-dynamic";
 export async function PATCH(request: Request) {
   const session = await auth();
 
-  if (!session?.user?.id || session.user.role !== "CUSTOMER") {
+  const customerId = sessionCustomerId(session);
+  if (!customerId) {
     return NextResponse.json({ message: "Nao autorizado." }, { status: 401 });
   }
 
@@ -24,7 +26,7 @@ export async function PATCH(request: Request) {
   const prisma = getPrisma();
   const customer = await prisma.customer.findUnique({
     select: { id: true, passwordHash: true },
-    where: { id: session.user.id },
+    where: { id: customerId, status: "ACTIVE" },
   });
 
   if (!customer) {
@@ -52,12 +54,11 @@ export async function PATCH(request: Request) {
     }
   }
 
-  await prisma.customer.update({
-    data: {
-      passwordHash: await hash(parsed.data.password, 12),
-      passwordSetAt: new Date(),
-    },
-    where: { id: customer.id },
+  const passwordHash = await hash(parsed.data.password, 12);
+  await prisma.$transaction(async tx => {
+    await tx.customer.update({ data: { passwordHash, passwordSetAt: new Date() }, where: { id: customer.id } });
+    // Google administrative access must never be unlocked by a customer password.
+    await tx.user.updateMany({ where: { customerId: customer.id, passwordHash: { not: "!GOOGLE_ONLY" } }, data: { passwordHash } });
   });
 
   return NextResponse.json({ ok: true });

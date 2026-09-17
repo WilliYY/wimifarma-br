@@ -22,6 +22,7 @@ import { ProductReviewForm } from "@/components/site/product-review-form";
 import { RelatedProductsCarousel } from "@/components/site/related-products-carousel";
 import type { RelatedProductCardItem } from "@/components/site/public-product-card";
 import { auth } from "@/features/auth/auth";
+import { sessionCustomerId } from "@/features/auth/customer-session";
 import {
   buildProductMetaDescription,
   buildProductStructuredData,
@@ -141,7 +142,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (product.category) relationFilters.push({ category: { equals: product.category, mode: "insensitive" } });
 
   const session = await auth();
-  const customerId = session?.user?.role === "CUSTOMER" ? session.user.id : null;
+  const customerId = sessionCustomerId(session) ?? null;
   const [relatedCandidates, reviews, reviewRatings, existingReview, completedOrder] = await Promise.all([
     relationFilters.length
       ? prisma.product.findMany({
@@ -153,7 +154,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       : Promise.resolve([]),
     prisma.productReview.findMany({
       orderBy: { createdAt: "desc" },
-      select: { comment: true, createdAt: true, customer: { select: { name: true } }, id: true, rating: true },
+      select: { comment: true, createdAt: true, customer: { select: { name: true } }, id: true, rating: true, cashbackRewardCents: true },
       take: 8,
       where: { isPublished: true, order: { status: "COMPLETED" }, productId: product.id },
     }),
@@ -170,7 +171,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     customerId
       ? prisma.order.findFirst({
           select: { id: true },
-          where: { customerId, items: { some: { productId: product.id } }, status: "COMPLETED" },
+          where: { customerId, items: { some: { productId: product.id } }, status: "COMPLETED", paymentStatus: "PAID" },
         })
       : Promise.resolve(null),
   ]);
@@ -377,6 +378,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   </div>
                   <div className="mt-3"><RatingStars rating={review.rating} /></div>
                   <p className="mt-3 text-sm leading-7 text-muted">{review.comment}</p>
+                  {review.cashbackRewardCents > 0 ? <p className="mt-3 text-xs text-muted">Avaliacao com incentivo de cashback, independente da nota.</p> : null}
                 </article>
               ))}
             </div>
@@ -387,6 +389,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               isCustomer={Boolean(customerId)}
               loginHref={`/login?callbackUrl=${encodeURIComponent(`/produto/${product.slug}#avaliacoes`)}`}
               productId={product.id}
+              rewardAvailable={!existingReview && !product.requiresPrescription && !product.isPopularPharmacy}
             />
           </div>
           ) : (
@@ -416,6 +419,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 isCustomer={Boolean(customerId)}
                 loginHref={`/login?callbackUrl=${encodeURIComponent(`/produto/${product.slug}#avaliacoes`)}`}
                 productId={product.id}
+                rewardAvailable={!existingReview && !product.requiresPrescription && !product.isPopularPharmacy}
               />
             </div>
           )}

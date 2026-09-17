@@ -41,6 +41,8 @@ Observacao: `/roleta` publica redireciona para `/ofertas` nesta fase.
 
 ## Rotas Admin
 
+- `/admin/usuarios`: diretorio, hierarquia e ranking reservado a ADMIN; contrato em `17-usuarios-e-acessos.md`.
+
 - `/admin`
 - `/admin/login`
 - `/admin/dashboard`

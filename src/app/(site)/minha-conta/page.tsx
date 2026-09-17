@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { CustomerAccountPanel } from "@/components/site/customer-account-panel";
 import { auth } from "@/features/auth/auth";
+import { sessionCustomerId } from "@/features/auth/customer-session";
 import { getCustomerCashback } from "@/features/cashback/service";
 import { getPrisma } from "@/lib/prisma";
 
@@ -18,13 +19,14 @@ export default async function MinhaContaPage() {
     redirect("/login");
   }
 
-  if (session.user.role !== "CUSTOMER") {
+  const customerId = sessionCustomerId(session);
+  if (!customerId) {
     redirect("/admin/dashboard");
   }
 
   const prisma = getPrisma();
   const customer = await prisma.customer.findUnique({
-    where: { id: session.user.id, status: "ACTIVE" },
+    where: { id: customerId, status: "ACTIVE" },
   });
 
   if (!customer) {
@@ -35,6 +37,7 @@ export default async function MinhaContaPage() {
 
   return (
     <CustomerAccountPanel
+      adminAccess={session.user.role === "ADMIN"}
       cashback={cashback}
       customer={{
         address: customer.address,

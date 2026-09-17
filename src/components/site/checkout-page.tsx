@@ -8,6 +8,7 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { useCheckoutSession } from "@/hooks/use-checkout-session";
 import { checkoutStepError, type CheckoutDraft } from "@/features/orders/checkout-draft";
 import { CheckoutDeliveryStep } from "@/components/site/checkout-delivery-step";
+import { CheckoutCashback } from "@/components/site/checkout-cashback";
 import { getDeliveryAvailability, normalizePostalCode } from "@/features/products/product-detail";
 
 type Step = 0 | 1 | 2 | 3;
@@ -18,7 +19,7 @@ type OrderResult = { number: string; totalCents: number };
 const currency = new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" });
 const steps = ["Identificacao", "Entrega", "Pagamento", "Revisao"];
 
-export function CheckoutPage({ initialCustomer, draftOwner = "guest" }: { initialCustomer: { name: string; phone: string; email: string; street: string; neighborhood: string }; draftOwner?: string }) {
+export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer = false }: { initialCustomer: { name: string; phone: string; email: string; street: string; neighborhood: string }; draftOwner?: string; isCustomer?: boolean }) {
   const { clearCart, hydrated, items, subtotalCents } = useCart();
   const { draft, setDraft, step, goToStep, back, ready, clearDraft } = useCheckoutSession({
     customer: { name: initialCustomer.name, phone: initialCustomer.phone, email: initialCustomer.email },
@@ -33,6 +34,9 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest" }: { initia
   const [submitting, setSubmitting] = useState(false);
   const [order, setOrder] = useState<OrderResult | null>(null);
   const sending = useRef(false);
+  const [cashbackRedeemCents, setCashbackRedeemCents] = useState(0);
+  const requestAttempt = useRef<{ signature: string; id: string } | null>(null);
+  const discountCents = Math.min(cashbackRedeemCents, subtotalCents);
 
   if (!hydrated || !ready) return <CheckoutShell><div className="h-72 animate-pulse rounded-lg border border-line bg-white" /></CheckoutShell>;
   if (order) return <CheckoutSuccess order={order} />;
@@ -60,23 +64,34 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest" }: { initia
     setSubmitting(true);
     setError("");
     try {
+      const requestBody = {
+        address: fulfillmentMethod === "DELIVERY" ? address : undefined, customer,
+        fulfillmentMethod, items: items.map((item) => ({ productId: item.id, quantity: item.quantity, expectedUnitPriceCents: item.unitPriceCents })),
+        notes, paymentMethod, privacyConsent, cashbackRedeemCents: discountCents,
+      };
+      if (isCustomer) {
+        const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(requestBody)));
+        const signature = Array.from(new Uint8Array(bytes), (n) => n.toString(16).padStart(2, "0")).join("");
+        const storageKey = `wimifarma-checkout-attempt:${draftOwner}`;
+        try {
+          const saved = JSON.parse(sessionStorage.getItem(storageKey) ?? "null");
+          if (saved?.signature === signature && typeof saved.id === "string") requestAttempt.current = saved;
+        } catch { /* O ref preserva repeticoes mesmo sem armazenamento. */ }
+        if (requestAttempt.current?.signature !== signature) requestAttempt.current = { signature, id: crypto.randomUUID() };
+        try { sessionStorage.setItem(storageKey, JSON.stringify(requestAttempt.current)); } catch { /* Armazenamento opcional. */ }
+      }
       const response = await fetch("/api/pedidos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          address: fulfillmentMethod === "DELIVERY" ? address : undefined,
-          customer,
-          fulfillmentMethod,
-          items: items.map((item) => ({ productId: item.id, quantity: item.quantity, expectedUnitPriceCents: item.unitPriceCents })),
-          notes,
-          paymentMethod,
-          privacyConsent,
-        }),
+        body: JSON.stringify({ ...requestBody, checkoutRequestId: isCustomer ? requestAttempt.current?.id : undefined }),
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(typeof payload?.error === "string" ? payload.error : "Nao foi possivel confirmar o envio. Consulte a equipe antes de tentar novamente.");
       if (typeof payload?.data?.number !== "string" || !Number.isSafeInteger(payload?.data?.totalCents)) throw new Error("Nao foi possivel confirmar o envio. Consulte a equipe antes de tentar novamente.");
       setOrder({ number: payload.data.number, totalCents: payload.data.totalCents });
+      requestAttempt.current = null;
+      try { sessionStorage.removeItem(`wimifarma-checkout-attempt:${draftOwner}`); } catch { /* Armazenamento opcional. */ }
+      window.dispatchEvent(new Event("wimifarma:cashback-updated"));
       clearDraft();
       clearCart();
     } catch (caught) {
@@ -106,6 +121,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest" }: { initia
               {step === 0 ? <IdentificationStep customer={customer} onChange={(value) => setPart("customer", value)} /> : null}
               {step === 1 ? <CheckoutDeliveryStep address={address} fulfillmentMethod={fulfillmentMethod} onAddress={setAddress} onMethod={(value) => setPart("fulfillmentMethod", value)} /> : null}
               {step === 2 ? <PaymentStep fulfillmentMethod={fulfillmentMethod} method={paymentMethod} onChange={(value) => setPart("paymentMethod", value)} /> : null}
+              {step === 2 && isCustomer ? <CheckoutCashback subtotalCents={subtotalCents} selectedCents={discountCents} onSelect={setCashbackRedeemCents} /> : null}
               {step === 3 ? <ReviewStep address={address} customer={customer} fulfillmentMethod={fulfillmentMethod} items={items} notes={notes} onNotes={(value) => setPart("notes", value)} onPrivacy={setPrivacyConsent} paymentMethod={paymentMethod} privacyConsent={privacyConsent} /> : null}
               {error ? <p className="mt-5 rounded-md border border-brand/20 bg-brand-soft px-4 py-3 text-sm font-bold text-brand" role="alert">{error}</p> : null}
               <div className="mt-7 flex justify-end">
@@ -123,7 +139,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest" }: { initia
             </div>
           </div>
         </section>
-        <OrderSummary postalCode={address.postalCode} fulfillmentMethod={fulfillmentMethod} itemCount={items.reduce((total, item) => total + item.quantity, 0)} subtotalCents={subtotalCents} />
+        <OrderSummary postalCode={address.postalCode} fulfillmentMethod={fulfillmentMethod} itemCount={items.reduce((total, item) => total + item.quantity, 0)} subtotalCents={subtotalCents} discountCents={discountCents} />
       </div>
     </CheckoutShell>
   );
@@ -172,6 +188,16 @@ function ReviewStep({ address, customer, fulfillmentMethod, items, notes, onNote
 
 function ReviewBlock({ children, label }: { children: React.ReactNode; label: string }) { return <div className="border-b border-line pb-4"><p className="mb-2 text-xs font-black uppercase text-brand">{label}</p><div className="grid gap-1 text-sm font-semibold leading-5 text-ink">{children}</div></div>; }
 
-function OrderSummary({ postalCode, fulfillmentMethod, itemCount, subtotalCents }: { postalCode: string; fulfillmentMethod: FulfillmentMethod; itemCount: number; subtotalCents: number }) { const deliveryLabel = fulfillmentMethod === "PICKUP" ? "Gratis" : normalizePostalCode(postalCode).length < 8 ? "Consultar CEP" : getDeliveryAvailability(postalCode).available ? "Gratis" : "Indisponivel"; return <aside className="overflow-hidden rounded-lg border border-line bg-white shadow-[0_18px_50px_rgba(17,24,39,0.08)] lg:sticky lg:top-52"><div className="h-1 bg-brand" /><div className="p-5 sm:p-6"><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-soft text-brand"><PackageCheck className="h-5 w-5" aria-hidden="true" /></span><div><p className="text-xs font-black uppercase text-brand">Seu carrinho</p><h2 className="text-lg font-black text-ink">Resumo do pedido</h2></div></div><span className="rounded-full bg-[#f4f6f8] px-3 py-1 text-xs font-black text-muted">{itemCount} {itemCount === 1 ? "item" : "itens"}</span></div><div className="mt-5 grid gap-3 rounded-md bg-[#f7f8fa] p-4 text-sm"><div className="flex justify-between gap-4 text-muted"><span>Produtos</span><span className="font-bold text-ink">{currency.format(subtotalCents / 100)}</span></div><div className="flex justify-between gap-4 text-muted"><span>{fulfillmentMethod === "DELIVERY" ? "Entrega" : "Retirada na loja"}</span><span className="font-black text-pharma-green">{deliveryLabel}</span></div></div><div className="mt-5 flex items-end justify-between border-t border-line pt-5"><span className="font-black text-ink">Total</span><strong className="text-3xl font-black text-brand">{currency.format(subtotalCents / 100)}</strong></div><div className="mt-5 flex items-start gap-3 rounded-md border border-emerald-100 bg-emerald-50/70 p-3"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-pharma-green" aria-hidden="true" /><p className="text-xs font-semibold leading-5 text-muted"><strong className="block text-pharma-green">Sem cobranca no site</strong>Preco e estoque sao conferidos antes da confirmacao.</p></div></div></aside>; }
+function OrderSummary({ postalCode, fulfillmentMethod, itemCount, subtotalCents, discountCents }: { postalCode: string; fulfillmentMethod: FulfillmentMethod; itemCount: number; subtotalCents: number; discountCents: number }) {
+  const deliveryLabel = fulfillmentMethod === "PICKUP" ? "Gratis" : normalizePostalCode(postalCode).length < 8 ? "Consultar CEP" : getDeliveryAvailability(postalCode).available ? "Gratis" : "Indisponivel";
+  return <aside className="overflow-hidden rounded-lg border border-line bg-white shadow-[0_18px_50px_rgba(17,24,39,0.08)] lg:sticky lg:top-52"><div className="h-1 bg-brand" /><div className="p-5 sm:p-6">
+    <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-black text-ink">Resumo do pedido</h2><span className="text-xs font-bold text-muted">{itemCount} {itemCount === 1 ? "item" : "itens"}</span></div>
+    <dl className="mt-5 grid gap-3 text-sm"><div className="flex justify-between gap-4"><dt className="text-muted">Produtos</dt><dd className="font-bold text-ink">{currency.format(subtotalCents / 100)}</dd></div><div className="flex justify-between gap-4"><dt className="text-muted">{fulfillmentMethod === "DELIVERY" ? "Entrega" : "Retirada na loja"}</dt><dd className="font-bold text-pharma-green">{deliveryLabel}</dd></div>
+      {discountCents > 0 ? <div className="flex justify-between gap-4 text-pharma-green"><dt>Desconto de cashback</dt><dd className="font-black">- {currency.format(discountCents / 100)}</dd></div> : null}
+    </dl>
+    <div className="mt-5 flex flex-wrap items-end justify-between gap-2 border-t border-line pt-5"><span className="font-black text-ink">Total a pagar</span><strong className="text-3xl font-black text-brand">{currency.format((subtotalCents - discountCents) / 100)}</strong></div>
+    <div className="mt-5 flex items-start gap-3 rounded-md border border-emerald-100 bg-emerald-50/70 p-3"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-pharma-green" aria-hidden="true" /><p className="text-xs leading-5 text-muted"><strong className="block text-pharma-green">Confirmacao pela farmacia</strong>{discountCents > 0 ? "Cashback reservado ao enviar. O pagamento restante sera combinado com a equipe." : "Preco e estoque sao conferidos antes da confirmacao. Sem cobranca online."}</p></div>
+  </div></aside>;
+}
 
 function CheckoutSuccess({ order }: { order: OrderResult }) { const whatsapp = buildWhatsAppUrl(`Ola, acabei de enviar o pedido ${order.number} pelo site.`); return <CheckoutShell><div className="mx-auto flex max-w-2xl flex-col items-center rounded-lg border border-line bg-white px-5 py-12 text-center shadow-sm"><span className="grid h-16 w-16 place-items-center rounded-full bg-[#e9f9ef] text-pharma-green"><Check className="h-8 w-8" /></span><p className="mt-6 text-xs font-black uppercase text-pharma-green">Pedido recebido</p><h1 className="mt-2 text-3xl font-black text-ink">Aguardando confirmacao</h1><p className="mt-3 text-sm leading-6 text-muted">A farmacia vai conferir estoque, valores e os detalhes do atendimento.</p><div className="mt-6 rounded-md bg-surface-subtle px-5 py-4"><span className="block text-xs font-black uppercase text-muted">Numero do pedido</span><strong className="mt-1 block text-xl font-black text-brand">{order.number}</strong><span className="mt-2 block text-sm font-bold text-ink">{currency.format(order.totalCents / 100)}</span></div><div className="mt-7 flex w-full flex-col gap-3 sm:w-auto sm:flex-row"><Link className="inline-flex min-h-11 items-center justify-center rounded-md border border-line px-5 py-3 text-sm font-black text-ink" href="/">Voltar ao inicio</Link><a className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#20c864] px-5 py-3 text-sm font-black text-white" href={whatsapp} rel="noreferrer" target="_blank">Falar sobre o pedido</a></div></div></CheckoutShell>; }

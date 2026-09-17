@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireApiRole } from "@/features/auth/permissions";
 import { settleOrderCashback } from "@/features/cashback/service";
+import { settleOrderBenefits } from "@/features/cashback/redemption";
 import {
   canTransitionStatus,
   orderStatusTransitions,
@@ -75,9 +76,10 @@ export async function PATCH(
     if (updated.count !== 1) return null;
 
     await settleOrderCashback(transaction, id);
+    await settleOrderBenefits(transaction, id);
 
     const saved = await transaction.order.findUniqueOrThrow({
-      select: { id: true, paymentStatus: true, status: true, updatedAt: true },
+      select: { id: true, paymentStatus: true, status: true, updatedAt: true, cashbackRedeemedCents: true, cashbackRedemptionState: true },
       where: { id },
     });
 

@@ -6,6 +6,8 @@ Solicitado em 2026-09-10: percentual inicial de 2%, editavel por produto, exibic
 
 ## Regra implementada
 
+Atualizacao aprovada em 2026-09-14: bonus por avaliacao e resgate no checkout em `docs/16-cashback-avaliacoes-resgate.md`. Esse contrato substitui apenas a antiga restricao de resgate online abaixo; registros historicos preservam o contexto da entrega original.
+
 - ADMIN habilita e altera cashback pelo modulo Cashback ou pelo formulario de produto. MANAGER e STAFF nao alteram percentuais. Mudancas de restricao do produto podem desabilitar a elegibilidade.
 - Percentuais entre 0,01% e 100%, armazenados em pontos-base inteiros (2% = 200). Nao existem campanhas adicionais, vencimentos ou faixas de percentual nesta etapa.
 - Cashback incide no preco unitario vigente, promocional quando houver, sem frete. Arredondamento por unidade ao centavo mais proximo, multiplicado pela quantidade. R$ 20,00 x 2% = R$ 0,40; tres unidades de R$ 9,99 x 2% = R$ 0,60.

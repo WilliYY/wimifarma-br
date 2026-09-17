@@ -83,6 +83,7 @@ export default async function Page() {
     prisma.productReview.findMany({
       orderBy: { createdAt: "desc" },
       select: {
+        cashbackRewardCents: true,
         comment: true,
         customer: { select: { name: true } },
         id: true,
@@ -113,6 +114,7 @@ export default async function Page() {
     };
   }) satisfies PublicShowcaseProduct[];
   const customerReviews = reviews.map((review) => ({
+    incentivized: review.cashbackRewardCents > 0,
     comment: review.comment,
     id: review.id,
     productName: review.product.name,

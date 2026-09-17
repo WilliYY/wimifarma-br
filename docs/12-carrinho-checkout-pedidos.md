@@ -62,10 +62,17 @@ As transicoes permitidas ficam em `src/features/orders/checkout.ts`; saltos e al
 
 ## Avaliacoes Verificadas
 
-- Somente uma sessao de cliente com pedido `COMPLETED` pode avaliar um produto presente naquele pedido.
+- Somente uma sessao de cliente ativo com pedido `COMPLETED` e pagamento `PAID` pode avaliar um produto presente naquele pedido.
 - Cada cliente possui no maximo uma avaliacao por produto e pode atualizar nota e comentario.
 - A pagina publica mostra apenas avaliacoes publicadas, com nome abreviado e sem numero do pedido ou outros dados pessoais.
 - A API limita nota, tamanho do comentario e frequencia de envios. Moderacao administrativa e denuncia de conteudo ficam para uma proxima fase se o volume justificar.
+
+## Cashback no Pedido
+
+- Bonus de avaliacao de 1% sobre uma unidade liquida paga, uma vez por cliente/produto e sem condicionar a nota. Regras completas em `docs/16-cashback-avaliacoes-resgate.md`.
+- Cliente pode selecionar o saldo na etapa Pagamento. O desconto reduz o total; servidor reserva saldo e distribui centavos pelos itens na mesma transacao do pedido.
+- UUID da tentativa impede pedido/resgate duplicado em reenvio autenticado. A chave e limpa apos sucesso para permitir nova compra identica.
+- Painel de pedidos mostra desconto e estados Reservado, Utilizado e Devolvido. Cancelamento ou reembolso retorna saldo uma vez; nenhuma cobranca de cartao/Pix ocorre no site.
 
 ## Proxima Fase
 

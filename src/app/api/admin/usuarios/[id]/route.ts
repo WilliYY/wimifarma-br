@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminUserStatusSchema } from "@/features/admin-users/schema";
+import { AccessError, changeAccess, lockUserAccess } from "@/features/admin-users/directory";
 import { requireAdminOnlyApi } from "@/features/auth/permissions";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
@@ -7,91 +8,22 @@ import { getPrisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const userSelect = {
-  createdAt: true,
-  email: true,
-  id: true,
-  isActive: true,
-  lastLoginAt: true,
-  name: true,
-  role: true,
-  updatedAt: true,
-} as const;
-
-function persistedUserId(userId?: string) {
-  return userId && userId !== "demo-admin" ? userId : undefined;
-}
-
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const guard = await requireAdminOnlyApi();
   if (guard.response) return guard.response;
-
-  const { id } = await params;
-  const body = await readJsonBody(request);
-  const parsed = adminUserStatusSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 });
-  }
-
-  if (guard.session?.user.id === id && !parsed.data.isActive) {
-    return NextResponse.json(
-      { error: "Voce nao pode bloquear o proprio acesso." },
-      { status: 400 },
-    );
-  }
-
-  const prisma = getPrisma();
-  const existing = await prisma.user.findUnique({
-    select: { id: true, role: true },
-    where: { id },
-  });
-
-  if (!existing) {
-    return NextResponse.json(
-      { error: "Usuario administrativo nao encontrado." },
-      { status: 404 },
-    );
-  }
-
-  if (existing.role === "ADMIN" && !parsed.data.isActive) {
-    const activeAdmins = await prisma.user.count({
-      where: {
-        id: { not: id },
-        isActive: true,
-        role: "ADMIN",
-      },
+  const parsed = adminUserStatusSchema.safeParse(await readJsonBody(request));
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 });
+  try {
+    const { id } = await params;
+    const user = await getPrisma().$transaction(async tx => {
+      await lockUserAccess(tx, guard.session!.user.id);
+      const existing = await tx.user.findUnique({ where: { id } });
+      if (!existing) throw new AccessError("Usuario nao encontrado.", 404);
+      await changeAccess(tx, guard.session!.user.id, id, { kind: "staff", role: existing.role, isActive: parsed.data.isActive, version: existing.updatedAt.toISOString() });
+      return tx.user.findUnique({ where: { id }, select: { id: true, name: true, email: true, role: true, isActive: true, createdAt: true, updatedAt: true, lastLoginAt: true } });
     });
-
-    if (activeAdmins === 0) {
-      return NextResponse.json(
-        { error: "Mantenha pelo menos um ADM ativo." },
-        { status: 400 },
-      );
-    }
+    return NextResponse.json({ data: user });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof AccessError ? error.message : "Nao foi possivel alterar o acesso." }, { status: error instanceof AccessError ? error.status : 503 });
   }
-
-  const user = await prisma.user.update({
-    data: { isActive: parsed.data.isActive },
-    select: userSelect,
-    where: { id },
-  });
-
-  await prisma.auditLog.create({
-    data: {
-      action: parsed.data.isActive ? "ADMIN_USER_ACTIVATED" : "ADMIN_USER_BLOCKED",
-      entity: "User",
-      entityId: user.id,
-      metadata: {
-        email: user.email,
-        role: user.role,
-      },
-      userId: persistedUserId(guard.session?.user.id),
-    },
-  });
-
-  return NextResponse.json({ data: user });
 }

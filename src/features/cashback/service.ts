@@ -58,7 +58,9 @@ export async function getCustomerCashback(tx: Prisma.TransactionClient, customer
   const pending = await tx.order.aggregate({
     where: { customerId, cashbackState: "PENDING" }, _sum: { cashbackEarnedCents: true },
   });
+  const reserved = await tx.order.aggregate({ where: { customerId, cashbackRedemptionState: "RESERVED" }, _sum: { cashbackRedeemedCents: true } });
   return {
+    reservedCents: reserved._sum.cashbackRedeemedCents ?? 0,
     balance: account?.balance.toString() ?? "0",
     pendingCents: pending._sum.cashbackEarnedCents ?? 0,
     lifetimeEarned: account?.lifetimeEarned.toString() ?? "0",

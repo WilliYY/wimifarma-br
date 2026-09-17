@@ -1,6 +1,6 @@
 # Wimifarma BR
 
-Cashback por produto: configuracao ADMIN, percentual inicial de 2%, valores na vitrine e saldo/pendencias do cliente. Regras, migration e testes em [docs/15-cashback-produtos.md](docs/15-cashback-produtos.md). Resgate online ainda indisponivel.
+Cashback por produto: configuracao ADMIN, percentual inicial de 2%, valores na vitrine e saldo/pendencias do cliente. Regras em [docs/15-cashback-produtos.md](docs/15-cashback-produtos.md). Bonus de 1% pela primeira avaliacao de cada produto e uso do saldo como desconto: [docs/16-cashback-avaliacoes-resgate.md](docs/16-cashback-avaliacoes-resgate.md).
 
 Plataforma comercial da Wimifarma, farmacia em Ivate-PR. O projeto nao e WordPress, nao depende de HostGator e nao deve ser misturado com Candy English.
 
@@ -35,9 +35,10 @@ O sistema possui carrinho e checkout para registrar pedidos pendentes, com entre
 - Rotas publicas basicas criadas: `/`, `/ofertas`, `/farmacia-popular`, `/delivery`, `/sobre`, `/contato`, `/roleta`, `/login`.
 - A rota `/ofertas` continua existindo, mas nao aparece no menu principal enquanto a home estiver focada em anuncio.
 - `/roleta` publica redireciona para `/ofertas`; a roleta real fica pendente para fase futura.
-- Login/cadastro visual existe em `/login`; Google OAuth e destinado apenas a clientes.
+- Login/cadastro visual existe em `/login`; Google OAuth identifica clientes e permite acesso administrativo somente com vinculo explicito autorizado, conforme `docs/17-usuarios-e-acessos.md`.
 - Quando o cliente esta logado pelo Google, o header publico mostra o nome da conta e o botao `Sair`.
 - Login Google cria ou atualiza um registro em `Customer` usando e-mail, nome, foto e identificador Google.
+- `Usuarios Wimifarma` em `/admin/usuarios` centraliza hierarquia, ultimo login, bloqueio, perfis e ranking por pedidos concluidos e pagos. Somente ADMIN pode consultar ou alterar acessos.
 - `/minha-conta` existe como painel do cliente com dados de usuario e entrega juntos, senha e resumo de cashback.
 - Cadastro comum por email, telefone e senha cria `Customer` e entra no painel do cliente.
 - Login administrativo usa Auth.js Credentials e direciona para `/admin/dashboard`.

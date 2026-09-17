@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useRouter } from "next/navigation";
 import { FormEvent, type ReactNode, useMemo, useState } from "react";
 import {
@@ -39,6 +41,7 @@ type CustomerAccount = {
 };
 
 type CashbackSummary = {
+  reservedCents?: number;
   pendingCents: number;
   balance: string;
   lifetimeEarned: string;
@@ -108,9 +111,11 @@ function Field({
 export function CustomerAccountPanel({
   cashback,
   customer,
+  adminAccess = false,
 }: {
   cashback: CashbackSummary;
   customer: CustomerAccount;
+  adminAccess?: boolean;
 }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("perfil");
@@ -219,6 +224,7 @@ export function CustomerAccountPanel({
                 <p className="mt-3 text-sm text-muted">
                   {customer.email ?? "Email nao informado"}
                 </p>
+                {adminAccess && <Link className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-md bg-brand px-4 text-sm font-bold text-white hover:bg-brand-dark" href="/admin/usuarios"><BadgeCheck className="h-4 w-4" />Abrir painel administrativo</Link>}
                 <div className="mt-4 flex flex-wrap gap-2">
                   {accountBadges.map((badge) => (
                     <span
@@ -480,6 +486,7 @@ export function CustomerAccountPanel({
                 </p>
                 <div className="mt-5 grid gap-2 text-sm font-bold text-ink">
                   <span>Pendente: {formatCurrency((cashback?.pendingCents ?? 0) / 100)}</span>
+                  <span>Reservado em pedidos: {formatCurrency((cashback?.reservedCents ?? 0) / 100)}</span>
                   <span>
                     Creditos apos estornos:{" "}
                     {formatCurrency(cashback?.lifetimeEarned ?? "0")}
@@ -489,7 +496,9 @@ export function CustomerAccountPanel({
                     {formatCurrency(cashback?.lifetimeRedeemed ?? "0")}
                   </span>
                 </div>
-                <p className="mt-4 text-xs leading-5 text-muted">O cashback de compras feitas com sua conta e liberado quando o pedido e concluido e o pagamento confirmado. Reembolsos estornam o beneficio. Resgate online ainda indisponivel.</p>
+                <p className="mt-4 text-xs leading-5 text-muted">Use o saldo disponivel como desconto no checkout. Ganhe tambem 1% na primeira avaliacao de cada produto elegivel, independente da nota. Compras devem estar concluidas e pagas; reembolsos estornam os beneficios.</p>
+                <a className="mt-4 inline-flex min-h-11 items-center text-sm font-bold text-brand underline" href="/minha-conta/avaliacoes">Avaliar minhas compras</a>
+                <a className="mt-2 block text-xs font-bold text-muted underline" href="/cashback">Regras do cashback</a>
               </div>
 
               <div className="rounded-lg border border-line bg-white p-5">

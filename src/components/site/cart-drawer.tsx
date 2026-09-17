@@ -14,9 +14,9 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
   const iconButton = "inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted transition hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-not-allowed disabled:opacity-35";
   return <Dialog.Portal>
     <Dialog.Content
-      className="fixed bottom-0 right-0 z-[151] flex h-[70dvh] w-full max-w-[28rem] flex-col rounded-t-lg border border-line bg-white shadow-2xl outline-none sm:inset-y-0 sm:h-dvh sm:rounded-none sm:border-y-0 sm:border-r-0 data-[state=open]:animate-in data-[state=open]:slide-in-from-right data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right motion-reduce:animate-none"
+      className="fixed bottom-0 right-0 z-[151] flex h-[70dvh] w-full max-w-[28rem] flex-col rounded-t-lg border border-line bg-white shadow-2xl outline-none sm:inset-y-0 sm:h-dvh sm:rounded-none sm:border-y-0 sm:border-r-0 data-[state=open]:animate-in data-[state=open]:slide-in-from-right data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right duration-300 ease-out motion-reduce:animate-none"
       data-lenis-prevent
-      onInteractOutside={(event) => event.preventDefault()}
+      onFocusOutside={(event) => event.preventDefault()}
       onKeyDownCapture={(event) => {
         // Radix loops Tab even without a modal; preserve the browser's page-wide tab order.
         if (event.key === "Tab") event.stopPropagation();

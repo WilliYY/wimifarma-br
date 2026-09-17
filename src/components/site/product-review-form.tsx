@@ -14,12 +14,14 @@ export function ProductReviewForm({
   isCustomer,
   loginHref,
   productId,
+  rewardAvailable = false,
 }: {
   canReview: boolean;
   existingReview: ExistingReview;
   isCustomer: boolean;
   loginHref: string;
   productId: string;
+  rewardAvailable?: boolean;
 }) {
   const router = useRouter();
   const [comment, setComment] = useState(existingReview?.comment ?? "");
@@ -34,7 +36,7 @@ export function ProductReviewForm({
         </span>
         <p className="mt-4 text-xs font-black uppercase tracking-[0.12em] text-pharma-green">Compra verificada</p>
         <h3 className="mt-2 text-lg font-black text-ink">Conte sua experiencia</h3>
-        <p className="mt-2 text-sm leading-6 text-muted">Entre na sua conta para avaliar este produto depois que o pedido for concluido.</p>
+        <p className="mt-2 text-sm leading-6 text-muted">Entre na sua conta para avaliar este produto depois que o pedido estiver concluido e pago.</p>
         <Link className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-md border border-brand px-4 text-sm font-black text-brand transition hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2" href={loginHref}>
           Entrar na conta
         </Link>
@@ -49,7 +51,7 @@ export function ProductReviewForm({
           <ShieldCheck className="h-5 w-5" aria-hidden="true" />
         </span>
         <h3 className="mt-4 text-lg font-black text-ink">Compra verificada</h3>
-        <p className="mt-2 text-sm leading-6 text-muted">O formulario sera liberado quando um pedido concluido deste produto estiver na sua conta.</p>
+        <p className="mt-2 text-sm leading-6 text-muted">O formulario sera liberado quando um pedido concluido e pago deste produto estiver na sua conta.</p>
       </div>
     );
   }
@@ -68,9 +70,11 @@ export function ProductReviewForm({
         headers: { "Content-Type": "application/json" },
         method: "POST",
       });
-      const payload = (await response.json()) as { message?: string };
+      const payload = (await response.json()) as { message?: string; data?: { awardedCents?: number } };
       if (!response.ok) throw new Error(payload.message ?? "Nao foi possivel salvar a avaliacao.");
-      toast.success(existingReview ? "Avaliacao atualizada." : "Obrigado pela avaliacao.");
+      const awarded = payload.data?.awardedCents ?? 0;
+      toast.success(awarded > 0 ? `Avaliacao publicada! Voce ganhou ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(awarded / 100)} de cashback.` : existingReview ? "Avaliacao atualizada. O bonus nao se repete." : "Obrigado pela avaliacao.");
+      window.dispatchEvent(new Event("wimifarma:cashback-updated"));
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel salvar a avaliacao.");
@@ -83,6 +87,7 @@ export function ProductReviewForm({
     <form className="rounded-lg border border-line bg-white p-5 shadow-[0_12px_34px_rgba(17,24,39,0.06)] sm:p-6" onSubmit={handleSubmit}>
       <h3 className="text-base font-black text-ink">{existingReview ? "Atualize sua avaliacao" : "Avalie sua compra"}</h3>
       <p className="mt-1 text-xs font-semibold text-pharma-green">Compra verificada</p>
+      {rewardAvailable ? <div className="mt-4 border-l-4 border-pharma-green bg-emerald-50 p-3 text-sm leading-6 text-ink"><strong>Ganhe 1% de cashback</strong><p className="text-xs leading-5">Na primeira avaliacao deste produto, sobre uma unidade paga. Qualquer nota vale. A avaliacao sera identificada como incentivada.</p><Link className="text-xs font-bold text-pharma-green underline" href="/cashback" target="_blank">Consultar regras</Link></div> : null}
       <fieldset className="mt-4">
         <legend className="text-sm font-bold text-ink">Sua nota</legend>
         <div className="mt-2 flex gap-1">
@@ -106,7 +111,7 @@ export function ProductReviewForm({
         maxLength={600}
         minLength={10}
         onChange={(event) => setComment(event.target.value)}
-        placeholder="Ex.: produto bem embalado e atendimento cuidadoso."
+        placeholder="O que achou do produto? Conte sua experiencia com sinceridade."
         required
         value={comment}
       />

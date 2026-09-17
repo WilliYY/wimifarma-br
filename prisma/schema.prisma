@@ -11,6 +11,7 @@ enum UserRole {
   ADMIN
   MANAGER
   STAFF
+  CUSTOMER
 }
 
 enum ProductStatus {
@@ -95,6 +96,8 @@ model User {
   role                  UserRole       @default(STAFF)
   isActive              Boolean        @default(true)
   lastLoginAt           DateTime?
+  customerId            String?        @unique
+  customer              Customer?      @relation(fields: [customerId], references: [id], onDelete: Restrict)
   createdOffers         Offer[]        @relation("OfferCreator")
   uploadedProductImages ProductImage[] @relation("ProductImageUploader")
   auditLogs             AuditLog[]
@@ -247,6 +250,7 @@ model Customer {
   whatsappContacts  WhatsAppContact[]
   orders            Order[]
   productReviews    ProductReview[]
+  staffAccess       User?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 
@@ -256,6 +260,10 @@ model Customer {
 }
 
 model Order {
+  cashbackRedeemedCents Int @default(0)
+  cashbackRedemptionState CashbackRedemptionState @default(NONE)
+  checkoutRequestId String? @unique
+  checkoutRequestHash String?
   @@index([customerId, cashbackState])
   cashbackEarnedCents Int @default(0)
   cashbackState CashbackState @default(NONE)
@@ -293,6 +301,7 @@ model Order {
 }
 
 model OrderItem {
+  cashbackDiscountCents Int @default(0)
   cashbackRateBps Int @default(0)
   cashbackEarnedCents Int @default(0)
   id              String   @id @default(cuid())
@@ -313,6 +322,8 @@ model OrderItem {
 }
 
 model ProductReview {
+  cashbackRewardCents Int @default(0)
+  cashbackRewardState CashbackState @default(NONE)
   id          String   @id @default(cuid())
   productId   String
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -429,6 +440,13 @@ enum CashbackState {
   CREDITED
   VOIDED
   REVERSED
+}
+
+enum CashbackRedemptionState {
+  NONE
+  RESERVED
+  REDEEMED
+  RETURNED
 }
 
 model WhatsAppContact {

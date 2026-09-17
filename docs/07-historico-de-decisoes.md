@@ -1,5 +1,18 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-16 - Usuarios unificados e Google administrativo autorizado
+
+- Vincular User a Customer de forma explicita, sem apagar compras ou carteira. Google exige email verificado e novo login para assumir permissao atribuida; nenhum email recebe privilegio automaticamente.
+- Novo diretorio ADMIN com filtros, ultimo login, ranking por pedidos concluidos/pagos e edicao auditada de perfis. Lock transacional comum protege concorrencia, auto-bloqueio e ultimo administrador.
+- Carrinho nao modal fecha ao clicar fora com animacao lateral, sem impedir rolagem ou o clique no site. Contrato completo: `17-usuarios-e-acessos.md`.
+
+## 2026-09-15 - Bonus de avaliacao e desconto com saldo
+
+- Aprovacao explicita do lojista: 1% extra sobre uma unidade paga, uma unica vez por cliente/produto, independentemente da nota, utilizavel na proxima compra pelo site. Substitui a restricao anterior de resgate online, sem habilitar gateway ou saque.
+- Avaliacao, credito e auditoria transacionais; nota negativa recebe o mesmo bonus e o incentivo e identificado publicamente. Sem avaliacoes ficticias ou creditos retroativos.
+- Checkout reserva saldo, distribui o desconto em centavos e usa chave/hash de idempotencia. Liquidacao depende de COMPLETED + PAID; cancelamento/reembolso devolve reserva e estorna bonus uma vez. Carteira serializa concorrencia por bloqueio no PostgreSQL.
+- Migration aditiva com defaults neutros. Banner principal, lista de compras para avaliar, regras publicas, extrato, saldo do cabecalho e painel de pedidos integram o fluxo. Contrato e evidencias de publicacao em `docs/16-cashback-avaliacoes-resgate.md`.
+
 ## 2026-09-14 - Cashback e sessao administrativa revogada
 
 - Investigacao somente de leitura em producao correlacionou PATCH 503 as 11:41:09 UTC com `AuditLog_userId_fkey`: usuario da sessao ausente em `User`. GET 200 nao validava existencia do autor, apenas role do JWT. Ha administrador ativo persistido; nenhuma conta ou senha foi criada/alterada.

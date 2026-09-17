@@ -5,6 +5,7 @@ import Google from "next-auth/providers/google";
 import { getPrisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations/auth";
 import { refreshStaffToken } from "@/features/auth/staff-session";
+import { isVerifiedGoogleProfile, refreshCustomerToken } from "@/features/auth/customer-session";
 
 const LOGIN_WINDOW_MINUTES = 15;
 const LOGIN_MAX_FAILURES = 8;
@@ -16,6 +17,7 @@ const authSecret =
 const appRoles = ["ADMIN", "MANAGER", "STAFF", "CUSTOMER"] as const;
 
 type GoogleCustomerProfile = {
+  email_verified?: unknown;
   email?: unknown;
   name?: unknown;
   picture?: unknown;
@@ -74,6 +76,8 @@ async function persistGoogleCustomer(input: {
     lastLoginAt: new Date(),
     name: input.name ?? existing?.name ?? fallbackNameFromEmail(email),
   };
+
+  if (existing && (existing.status !== "ACTIVE" || (existing.googleSubject && existing.googleSubject !== input.googleSubject))) return null;
 
   if (existing) {
     return prisma.customer.update({
@@ -158,8 +162,9 @@ export const authConfig = {
           where: { email },
         });
 
-        if (user) {
-          if (!user.isActive) {
+        if (user && user.role !== "CUSTOMER" && user.passwordHash !== "!GOOGLE_ONLY") {
+          const linkedCustomer = user.customerId ? await prisma.customer.findUnique({ where: { id: user.customerId }, select: { status: true } }) : null;
+          if (!user.isActive || (user.customerId && linkedCustomer?.status !== "ACTIVE")) {
             await recordLoginAttempt(email, false);
             return null;
           }
@@ -182,6 +187,7 @@ export const authConfig = {
             id: user.id,
             name: user.name,
             role: user.role,
+            customerId: user.customerId ?? undefined,
           };
         }
 
@@ -190,7 +196,7 @@ export const authConfig = {
         });
 
         if (
-          !customer ||
+          !customer || user?.isActive === false ||
           customer.status !== "ACTIVE" ||
           !customer.passwordHash
         ) {
@@ -222,9 +228,15 @@ export const authConfig = {
     }),
   ],
   callbacks: {
+    async signIn({ account, profile }) {
+      if (account?.provider !== "google") return true;
+      const google = profile as GoogleCustomerProfile | undefined;
+      return isVerifiedGoogleProfile(google, account.providerAccountId);
+    },
     async jwt({ token, user, account, profile }) {
       if (account?.provider === "google") {
         const googleProfile = profile as GoogleCustomerProfile | undefined;
+        if (!isVerifiedGoogleProfile(googleProfile, account.providerAccountId)) return null;
         const customer = await persistGoogleCustomer({
           email:
             normalizeEmail(stringOrUndefined(user?.email)) ??
@@ -249,13 +261,28 @@ export const authConfig = {
           token.name = customer.name;
           token.picture = customer.imageUrl;
           token.role = "CUSTOMER";
-          return token;
+          token.customerId = customer.id;
+          token.googleSubject = customer.googleSubject ?? undefined;
+          await recordLoginAttempt(customer.email!, true);
+          const staff = await getPrisma().user.findUnique({ where: { customerId: customer.id }, select: { id: true, isActive: true } });
+          if (staff?.isActive) await getPrisma().user.update({ where: { id: staff.id }, data: { lastLoginAt: new Date() } });
+        } else {
+          return null;
         }
       }
 
-      if (user) {
+      if (user && account?.provider !== "google") {
         token.id = user.id;
         token.role = isAppRole(user.role) ? user.role : "CUSTOMER";
+        token.customerId = user.customerId;
+        delete token.googleSubject;
+      }
+
+      if (token.role === "CUSTOMER" || token.googleSubject) {
+        return refreshCustomerToken(token, (id) => getPrisma().customer.findUnique({ where: { id }, select: {
+          id: true, status: true, googleSubject: true,
+          staffAccess: { select: { id: true, role: true, isActive: true } },
+        } }));
       }
 
       return refreshStaffToken(token, (id) => getPrisma().user.findUnique({
@@ -267,6 +294,7 @@ export const authConfig = {
       if (session.user) {
         session.user.id = typeof token.id === "string" ? token.id : "";
         session.user.role = isAppRole(token.role) ? token.role : "CUSTOMER";
+        session.user.customerId = typeof token.customerId === "string" ? token.customerId : undefined;
 
         if (session.user.role === "CUSTOMER" && session.user.id) {
           const prisma = getPrisma();

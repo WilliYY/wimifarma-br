@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/features/auth/auth";
-import { productCashbackCents } from "@/features/cashback/rules";
-import {
-  checkoutRequestSchema,
-  createOrderNumber,
-  prepareCheckoutOrder,
-} from "@/features/orders/checkout";
+import { sessionCustomerId } from "@/features/auth/customer-session";
+import { CashbackRuleError } from "@/features/cashback/wallet";
+import { checkoutRequestSchema } from "@/features/orders/checkout";
+import { createCheckout } from "@/features/orders/create-checkout";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
 
@@ -13,133 +11,17 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const body = await readJsonBody(request);
-  const parsed = checkoutRequestSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Revise os dados do checkout.", fields: parsed.error.flatten() },
-      { headers: { "Cache-Control": "no-store" }, status: 422 },
-    );
-  }
-
-  const prisma = getPrisma();
-  const products = await prisma.product.findMany({
-    select: {
-      cashbackEnabled: true,
-      cashbackRateBps: true,
-      id: true,
-      imageUrl: true,
-      isPopularPharmacy: true,
-      name: true,
-      price: true,
-      promotionalPrice: true,
-      requiresPrescription: true,
-      slug: true,
-      status: true,
-      stock: true,
-    },
-    where: { id: { in: parsed.data.items.map((item) => item.productId) } },
-  });
-
-  const prepared = prepareCheckoutOrder(
-    products.map((product) => ({
-      ...product,
-      price: product.price.toString(),
-      promotionalPrice: product.promotionalPrice?.toString() ?? null,
-    })),
-    parsed.data.items,
-  );
-
-  if (!prepared.ok) {
-    return NextResponse.json(
-      { code: prepared.code, error: prepared.message },
-      {
-        headers: { "Cache-Control": "no-store" },
-        status: prepared.code === "NOT_FOUND" ? 404 : 409,
-      },
-    );
-  }
-
+  const headers = { "Cache-Control": "private, no-store" };
+  const parsed = checkoutRequestSchema.safeParse(await readJsonBody(request));
+  if (!parsed.success) return NextResponse.json({ error: "Revise os dados do checkout.", fields: parsed.error.flatten() }, { status: 422, headers });
   const session = await auth();
-  const sessionCustomerId =
-    session?.user?.role === "CUSTOMER" && session.user.id
-      ? session.user.id
-      : undefined;
-  const customer = sessionCustomerId
-    ? await prisma.customer.findUnique({
-        select: { id: true },
-        where: { id: sessionCustomerId, status: "ACTIVE" },
-      })
-    : null;
-  const address =
-    parsed.data.fulfillmentMethod === "DELIVERY" ? parsed.data.address : undefined;
-
-  const cashbackItems = prepared.items.map((item) => {
-    const product = products.find((record) => record.id === item.productId)!;
-    const cashbackEarnedCents = customer ? productCashbackCents(product, item.unitPriceCents, item.quantity) : 0;
-    return { ...item, cashbackEarnedCents, cashbackRateBps: cashbackEarnedCents > 0 ? product.cashbackRateBps : 0 };
-  });
-  const cashbackEarnedCents = cashbackItems.reduce((sum, item) => sum + item.cashbackEarnedCents, 0);
-
-  const order = await prisma.order.create({
-    data: {
-      cashbackEarnedCents,
-      cashbackState: cashbackEarnedCents > 0 ? "PENDING" : "NONE",
-      addressNumber: address?.number,
-      city: address?.city,
-      complement: address?.complement,
-      customerEmail: parsed.data.customer.email,
-      customerId: customer?.id,
-      customerName: parsed.data.customer.name,
-      customerPhone: parsed.data.customer.phone,
-      deliveryFeeCents: prepared.deliveryFeeCents,
-      fulfillmentMethod: parsed.data.fulfillmentMethod,
-      items: {
-        create: cashbackItems.map((item) => ({
-          cashbackEarnedCents: item.cashbackEarnedCents,
-          cashbackRateBps: item.cashbackRateBps,
-          productId: item.productId,
-          productImageUrl: item.productImageUrl,
-          productName: item.productName,
-          productSlug: item.productSlug,
-          quantity: item.quantity,
-          totalCents: item.totalCents,
-          unitPriceCents: item.unitPriceCents,
-        })),
-      },
-      neighborhood: address?.neighborhood,
-      notes: parsed.data.notes,
-      number: createOrderNumber(),
-      paymentMethod: parsed.data.paymentMethod,
-      postalCode: address?.postalCode,
-      privacyConsentAt: new Date(),
-      state: address?.state,
-      street: address?.street,
-      subtotalCents: prepared.subtotalCents,
-      totalCents: prepared.totalCents,
-    },
-    select: {
-      cashbackEarnedCents: true,
-      cashbackState: true,
-      createdAt: true,
-      fulfillmentMethod: true,
-      number: true,
-      paymentMethod: true,
-      paymentStatus: true,
-      status: true,
-      totalCents: true,
-    },
-  });
-
-  return NextResponse.json(
-    {
-      data: {
-        ...order,
-        createdAt: order.createdAt.toISOString(),
-      },
-      message: "Pedido recebido e aguardando confirmacao da farmacia.",
-    },
-    { headers: { "Cache-Control": "no-store" }, status: 201 },
-  );
+  const customerId = sessionCustomerId(session);
+  try {
+    const order = await getPrisma().$transaction((tx) => createCheckout(tx, parsed.data, customerId));
+    return NextResponse.json({ data: { ...order, createdAt: order.createdAt.toISOString() }, message: "Pedido recebido e aguardando confirmacao da farmacia." }, { status: 201, headers });
+  } catch (error) {
+    if (error instanceof CashbackRuleError) return NextResponse.json({ error: error.message, code: error.code }, { status: error.status, headers });
+    console.error("CHECKOUT_SAVE_FAILED", error && typeof error === "object" && "code" in error ? error.code : "UNKNOWN");
+    return NextResponse.json({ error: "Nao foi possivel confirmar o envio. Consulte a equipe antes de tentar novamente." }, { status: 503, headers });
+  }
 }

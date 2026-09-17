@@ -31,6 +31,17 @@ const baseRequest = {
   items: [{ productId: product.id, quantity: 2, expectedUnitPriceCents: 999 }],
 };
 
+test("cashback exige centavos inteiros e chave de tentativa valida sem quebrar checkout antigo", () => {
+  assert.equal(checkoutRequestSchema.parse(baseRequest).cashbackRedeemCents, 0);
+  const valid = { ...baseRequest, cashbackRedeemCents: 20, checkoutRequestId: "30b9edec-ea67-4e0f-bde2-a14289771a22" };
+  assert.equal(checkoutRequestSchema.parse(valid).cashbackRedeemCents, 20);
+  for (const cashbackRedeemCents of [-1, 0.5, 600000001]) {
+    assert.equal(checkoutRequestSchema.safeParse({ ...valid, cashbackRedeemCents }).success, false);
+  }
+  assert.equal(checkoutRequestSchema.safeParse({ ...valid, checkoutRequestId: undefined }).success, false);
+  assert.equal(checkoutRequestSchema.safeParse({ ...valid, checkoutRequestId: "invalid" }).success, false);
+});
+
 test("aceita retirada e normaliza os dados de contato", () => {
   const parsed = checkoutRequestSchema.parse(baseRequest);
   assert.equal(parsed.customer.phone, "44999999999");

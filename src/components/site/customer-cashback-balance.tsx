@@ -22,8 +22,9 @@ export function CustomerCashbackBalance() {
     void refresh();
     const timer = setInterval(refresh, 60_000);
     window.addEventListener("focus", refresh);
+    window.addEventListener("wimifarma:cashback-updated", refresh);
     document.addEventListener("visibilitychange", refresh);
-    return () => { controller.abort(); clearInterval(timer); window.removeEventListener("focus", refresh); document.removeEventListener("visibilitychange", refresh); };
+    return () => { controller.abort(); clearInterval(timer); window.removeEventListener("focus", refresh); window.removeEventListener("wimifarma:cashback-updated", refresh); document.removeEventListener("visibilitychange", refresh); };
   }, []);
   return <span className="block truncate text-[11px] font-bold leading-4 text-emerald-800" title="Cashback liberado">Cashback {balance === null ? "..." : formatCurrency(Number(balance))}</span>;
 }

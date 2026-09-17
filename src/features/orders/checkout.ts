@@ -41,6 +41,8 @@ export const checkoutRequestSchema = z
     address: addressSchema.optional(),
     notes: optionalText(500),
     privacyConsent: z.literal(true),
+    cashbackRedeemCents: z.number().int().min(0).max(600_000_000).default(0),
+    checkoutRequestId: z.string().uuid().optional(),
     items: z
       .array(
         z.object({
@@ -53,6 +55,9 @@ export const checkoutRequestSchema = z
       .max(30, "O carrinho aceita ate 30 produtos diferentes."),
   })
   .superRefine((data, context) => {
+    if (data.cashbackRedeemCents > 0 && !data.checkoutRequestId) {
+      context.addIssue({ code: "custom", path: ["checkoutRequestId"], message: "Atualize o checkout antes de usar cashback." });
+    }
     if (data.fulfillmentMethod === "DELIVERY") {
       if (!data.address) {
         context.addIssue({

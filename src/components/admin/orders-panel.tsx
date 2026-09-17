@@ -20,6 +20,8 @@ type FulfillmentMethod = "DELIVERY" | "PICKUP";
 type PaymentMethod = "PIX" | "CARD_ON_DELIVERY" | "CASH";
 
 export type AdminOrderRecord = {
+  cashbackRedeemedCents?: number;
+  cashbackRedemptionState?: string;
   id: string;
   number: string;
   customerId: string | null;
@@ -121,7 +123,13 @@ export function OrdersPanel({ initialOrders }: { initialOrders: AdminOrderRecord
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(typeof payload.error === "string" ? payload.error : "Nao foi possivel atualizar o pedido.");
-      setOrders((current) => current.map((order) => order.id === orderId ? { ...order, [field]: payload.data[field], updatedAt: payload.data.updatedAt } : order));
+      setOrders((current) => current.map((order) => order.id === orderId ? {
+        ...order,
+        [field]: payload.data[field],
+        cashbackRedeemedCents: payload.data.cashbackRedeemedCents,
+        cashbackRedemptionState: payload.data.cashbackRedemptionState,
+        updatedAt: payload.data.updatedAt,
+      } : order));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Nao foi possivel atualizar o pedido.");
     } finally {
@@ -158,6 +166,7 @@ function OrderCard({ order, onUpdate, updating }: { order: AdminOrderRecord; onU
   const PaymentIcon = payment.icon;
   return <article className="overflow-hidden rounded-lg border border-line bg-white shadow-sm">
     <header className="flex flex-col gap-4 border-b border-line bg-surface-subtle p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"><div><div className="flex flex-wrap items-center gap-2"><h2 className="text-base font-black text-ink">{order.number}</h2><span className={`rounded-full px-2.5 py-1 text-[0.68rem] font-black uppercase ${order.status === "PENDING" ? "bg-brand-soft text-brand" : order.status === "COMPLETED" ? "bg-[#e9f9ef] text-pharma-green" : order.status === "CANCELED" ? "bg-slate-200 text-slate-600" : "bg-amber-50 text-amber-700"}`}>{statusLabels[order.status]}</span></div><p className="mt-1 text-xs font-semibold text-muted">{dateTime.format(new Date(order.createdAt))}</p></div><strong className="text-xl font-black text-brand">{currency.format(order.totalCents / 100)}</strong></header>
+    {(order.cashbackRedeemedCents ?? 0) > 0 ? <p className="border-b border-line bg-emerald-50 px-5 py-3 text-sm text-emerald-900">Desconto de cashback: <strong>{currency.format((order.cashbackRedeemedCents ?? 0) / 100)}</strong> · {order.cashbackRedemptionState === "RETURNED" ? "Devolvido ao cliente" : order.cashbackRedemptionState === "REDEEMED" ? "Utilizado" : "Reservado"}. O total ja considera o desconto.</p> : null}
     <div className="grid gap-6 p-4 sm:p-5 xl:grid-cols-[1fr_1fr_1.3fr]">
       <div><p className="text-xs font-black uppercase text-muted">Cliente</p><p className="mt-2 font-black text-ink">{order.customerName}</p><a className="mt-1 block text-sm font-semibold text-brand" href={`tel:${order.customerPhone}`}>{order.customerPhone}</a>{order.customerEmail ? <p className="mt-1 break-all text-xs font-semibold text-muted">{order.customerEmail}</p> : null}</div>
       <div><p className="text-xs font-black uppercase text-muted">Atendimento</p><p className="mt-2 flex items-center gap-2 text-sm font-bold text-ink"><MethodIcon className="h-4 w-4 text-pharma-green" />{order.fulfillmentMethod === "DELIVERY" ? "Entrega" : "Retirada"}</p>{order.fulfillmentMethod === "DELIVERY" ? <p className="mt-2 flex items-start gap-2 text-xs font-semibold leading-5 text-muted"><MapPin className="mt-0.5 h-4 w-4 shrink-0" />{order.street}, {order.addressNumber}{order.complement ? ` - ${order.complement}` : ""}<br />{order.neighborhood}, {order.city}-{order.state}<br />CEP {order.postalCode}</p> : null}<p className="mt-3 flex items-center gap-2 text-sm font-bold text-ink"><PaymentIcon className="h-4 w-4 text-brand" />{payment.label} · {paymentStatusLabels[order.paymentStatus]}</p></div>

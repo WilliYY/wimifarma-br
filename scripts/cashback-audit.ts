@@ -201,13 +201,13 @@ async function main() {
     for (const width of [1440, 390, 320]) {
       await publicPage.setViewportSize({ width, height: 1000 });
       await publicPage.goto(`${base}/produto/${product.slug}`, { waitUntil: "domcontentloaded" });
-      await expect(publicPage.getByText(/R\$\s*0,50 de cashback por unidade/)).toBeVisible({ timeout: 60000 });
+      await expect(publicPage.getByText(/R\$\s*0,50 de cashback/)).toBeVisible({ timeout: 60000 });
       await expect(publicPage.getByText(/Cashback R\$\s*2,00/).filter({ visible: true })).toBeVisible({ timeout: 30000 });
       assert.equal(await publicPage.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `product overflow ${width}`);
       await publicPage.screenshot({ path: `artifacts/cashback-audit/product-${width}.png`, fullPage: true });
     }
     await publicPage.goto(base);
-    await expect(publicPage.getByText(/R\$\s*0,50 de cashback por unidade/).first()).toBeVisible({ timeout: 60000 });
+    await expect(publicPage.getByText(/R\$\s*0,50 de cashback/).first()).toBeVisible({ timeout: 60000 });
     await publicPage.goto(`${base}/minha-conta`);
     await publicPage.getByRole("button", { name: "Cashback", exact: true }).click();
     await expect(publicPage.getByText("Cashback liberado", { exact: true })).toBeVisible();

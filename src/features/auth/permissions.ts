@@ -5,6 +5,7 @@ import { auth } from "@/features/auth/auth";
 export type AdminRole = "ADMIN" | "MANAGER" | "STAFF";
 
 export const adminRoutePermissions = {
+  "/admin/usuarios": ["ADMIN"],
   "/admin/dashboard": ["ADMIN", "MANAGER", "STAFF"],
   "/admin/api-senhas": ["ADMIN"],
   "/admin/cashback": ["ADMIN"],

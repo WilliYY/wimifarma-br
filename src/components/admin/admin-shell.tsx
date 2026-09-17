@@ -14,6 +14,7 @@ import {
   ShieldPlus,
   TicketPercent,
   UserPlus,
+  Users,
   WalletCards,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import {
 import { siteConfig } from "@/lib/site";
 
 const adminNav = [
+  { href: "/admin/usuarios", icon: Users, label: "Usuarios Wimifarma", roles: adminRoutePermissions["/admin/usuarios"] },
   {
     href: "/admin/criar-adm",
     icon: ShieldPlus,
@@ -119,7 +121,7 @@ export async function AdminShell({
 
   return (
     <div className="min-h-screen bg-surface-subtle">
-      <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-line bg-white p-4 lg:block">
+      <aside className="fixed inset-y-0 left-0 hidden w-72 overflow-y-auto border-r border-line bg-white p-4 lg:block">
         <Link className="flex items-center gap-3 px-2 py-3" href="/admin/dashboard">
           <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand text-lg font-black text-white">
             W
@@ -149,7 +151,7 @@ export async function AdminShell({
           })}
         </nav>
 
-        <div className="absolute inset-x-4 bottom-4 rounded-lg border border-line bg-surface-subtle p-4">
+        <div className="mt-8 rounded-lg border border-line bg-surface-subtle p-4">
           <ChartNoAxesCombined className="h-5 w-5 text-brand" />
           <p className="mt-3 text-sm font-bold text-ink">Permissoes por perfil</p>
           <p className="mt-1 text-xs leading-5 text-muted">
@@ -197,6 +199,7 @@ export async function AdminShell({
             </div>
           </div>
         </header>
+        <nav aria-label="Modulos administrativos" className="flex gap-2 overflow-x-auto border-b border-line bg-white p-3 lg:hidden">{visibleNav.map(item => <Link key={item.href} href={item.href} className="shrink-0 rounded-md px-3 py-2 text-sm font-semibold text-muted hover:bg-brand-soft hover:text-brand">{item.label}</Link>)}</nav>
         <main className="px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>

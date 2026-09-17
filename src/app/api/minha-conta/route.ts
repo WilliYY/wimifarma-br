@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/features/auth/auth";
+import { sessionCustomerId } from "@/features/auth/customer-session";
 import { customerProfileUpdateSchema } from "@/features/customers/schema";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
@@ -18,7 +19,8 @@ function isUniqueConstraintError(error: unknown) {
 export async function PATCH(request: Request) {
   const session = await auth();
 
-  if (!session?.user?.id || session.user.role !== "CUSTOMER") {
+  const customerId = sessionCustomerId(session);
+  if (!customerId) {
     return NextResponse.json({ message: "Nao autorizado." }, { status: 401 });
   }
 
@@ -43,7 +45,7 @@ export async function PATCH(request: Request) {
         notes: true,
         phone: true,
       },
-      where: { id: session.user.id },
+      where: { id: customerId, status: "ACTIVE" },
     });
 
     return NextResponse.json({ data: customer });
