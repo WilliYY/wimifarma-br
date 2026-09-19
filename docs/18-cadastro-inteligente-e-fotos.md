@@ -42,3 +42,12 @@
 - Limitacao: iniciar o servidor HTTP local foi bloqueado pelo ambiente. O modo `--in-process` nao valida middleware, SSR, proxy ou rewrite HTTP completo; estes exigem conferencia externa apos deploy. A auditoria sem essa flag continua disponivel para uma homologacao local em `127.0.0.1:3010` com o mesmo banco descartavel.
 
 Pre-requisitos da auditoria: build recente, banco `cashback_test` descartavel em `127.0.0.1:55439` com migrations aplicadas, `DATABASE_URL` apontando exclusivamente para ele, `AUTH_SECRET` sintetico e `AUTH_URL`/`NEXTAUTH_URL` em `http://127.0.0.1:3010`. Nao copiar credenciais de producao. O teste limpa seus registros e uploads; encerrar banco/tunel ao terminar.
+
+## Publicacao verificada em 2026-09-19
+
+- Commits funcionais: `9a24580` e `04e7471`, enviados ao GitHub e recebidos via `git pull --ff-only` no servidor.
+- Backup anterior: `/home/ubuntu/backups/wimifarma-br/pre-catalog-release/20260919T123048Z`.
+- Build Docker e `docker compose up -d --no-deps --wait --wait-timeout 180 app background-removal` concluidos. Aplicacao e remocao de fundo saudaveis, sem reinicio inesperado. PostgreSQL nao foi recriado; nenhuma migration nova.
+- `node scripts/catalog-live-audit.mjs`: leitura externa da loja real com Chromium. As tres fotos retornaram 200 WebP e 304 por ETag, inclusive os dois arquivos que retornavam 404. Imagens renderizadas, home sem transbordamento em 390/1440 px, pagina de produto com canonical/JSON-LD, API administrativa 401 e painel redirecionando visitante sem sessao. Zero erros JavaScript.
+- Banco/container e tunel descartaveis encerrados; uploads locais de QA removidos. Cadastros comerciais, precos, saldos e identidade dos produtos existentes preservados.
+- Pendencia operacional: conferir embalagem/EAN nos cadastros antigos sinalizados; a atualizacao nao corrige automaticamente dados comerciais nem garante qualidade de recorte em toda fotografia.

@@ -7,6 +7,7 @@
 - Fotos existentes retornavam 404 apesar de estarem no volume. Rota dinamica publica preserva URLs, valida WebP/UUID e elimina dependencia do indice estatico inicial. Nova foto abre seletor, retirada nao reanexa a foto anterior e upload concluido e reutilizado.
 - Imagens novas ate 1600 px/350 KB; rembg local recebe entrada reduzida, trata uma foto por vez e refina bordas, preservando o original quando a mascara e inutil. Sem alteracao do modelo ou contratacao de outro provedor.
 - Menu reordenado conforme operacao: Usuarios, Catalogo, Ofertas, Pedidos, Cupons, Cashback e demais modulos. Validacao e limites documentados em `docs/18-cadastro-inteligente-e-fotos.md`.
+- Publicacao dos commits `9a24580`/`04e7471` confirmada apos backup. 108 testes, auditoria de cadastro isolada, build/lint/tipos/Prisma e auditoria sem vulnerabilidades. Conferencia externa confirmou as tres fotos visiveis, cache condicional, SSR/SEO e protecao administrativa; banco e fotos comerciais preservados.
 
 ## 2026-09-16 - Usuarios unificados e Google administrativo autorizado
 
