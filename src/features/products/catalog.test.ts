@@ -5,7 +5,7 @@ import {
   getProductCategories,
   type ProductCatalogItem,
 } from "./catalog";
-import { productUpdateSchema } from "./schema";
+import { productCreateSchema, productUpdateSchema } from "./schema";
 
 const products: ProductCatalogItem[] = [
   {
@@ -33,6 +33,19 @@ const products: ProductCatalogItem[] = [
     stock: 5,
   },
 ];
+
+test("new products default to published and accept an explicit showcase choice", () => {
+  const parsed = productCreateSchema.parse({ name: "Produto teste", price: 20, featured: true });
+  assert.equal(parsed.status, "ACTIVE");
+  assert.equal(parsed.featured, true);
+});
+
+test("editing can explicitly detach a photo without deleting the library asset", () => {
+  const parsed = productUpdateSchema.parse({ name: "Produto teste", price: 20, status: "ACTIVE", expectedUpdatedAt: "2026-09-17T00:00:00.000Z", imageAssetId: null, imageUrl: null, featured: false });
+  assert.equal(parsed.imageAssetId, null);
+  assert.equal(parsed.imageUrl, null);
+  assert.equal(parsed.featured, false);
+});
 
 test("filtra produtos por busca, status e categoria", () => {
   const result = filterAndSortProducts(products, {

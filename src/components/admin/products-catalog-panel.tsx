@@ -68,6 +68,8 @@ import type {
   ProductSuggestionSource,
 } from "@/features/products/ai-suggestions";
 import { parseProductTerms } from "@/features/products/public-search";
+import { isValidGtin, productIdentityKey } from "@/features/products/identity";
+import { buildProductMetaDescription } from "@/features/products/product-detail";
 import { cn, formatCurrency } from "@/lib/utils";
 
 type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
@@ -144,8 +146,9 @@ function productPayload(
     category: optionalValue("category"),
     description: optionalValue("description"),
     ean: optionalValue("ean"),
-    imageAssetId: imageAsset?.id,
-    imageUrl: imageAsset?.url,
+    imageAssetId: imageAsset === null && clearEmptyFields ? null : imageAsset?.id,
+    imageUrl: imageAsset === null && clearEmptyFields ? null : imageAsset?.url,
+    featured: formData.get("featured") === "on" && fieldValue(formData, "status") === "ACTIVE" && imageAsset !== null,
     isPopularPharmacy: formData.get("isPopularPharmacy") === "on",
     name: fieldValue(formData, "name"),
     price: fieldValue(formData, "price"),
@@ -164,18 +167,30 @@ function ProductFormFields({
   categoryOptions,
   imagePickerRef,
   product,
+  disabled = false,
 }: {
   canManageCashback: boolean;
   categoryListId: string;
   categoryOptions: string[];
   imagePickerRef: RefObject<ProductImagePickerHandle | null>;
   product?: ProductListItem;
+  disabled?: boolean;
 }) {
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const pendingResearch = useRef<AbortController | null>(null);
+  const researchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastResearchKey = useRef(product ? productIdentityKey({ name: product.name, brand: product.brand ?? "", ean: product.ean ?? "" }) : "");
+  const [automatic, setAutomatic] = useState(true);
+  const [seo, setSeo] = useState({ name: product?.name ?? "", brand: product?.brand ?? "", description: product?.description ?? "" });
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestion, setSuggestion] = useState<
     (ProductSuggestion & { sources: ProductSuggestionSource[] }) | null
   >(null);
+
+  useEffect(() => () => {
+    pendingResearch.current?.abort();
+    if (researchTimer.current) clearTimeout(researchTimer.current);
+  }, []);
 
   function formValue(name: string) {
     const form = nameInputRef.current?.form;
@@ -183,6 +198,39 @@ function ProductFormFields({
     return field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement
       ? field.value.trim()
       : "";
+  }
+
+  function currentIdentity() {
+    return { name: formValue("name"), brand: formValue("brand"), ean: formValue("ean") };
+  }
+
+  function refreshSeo() {
+    setSeo({ name: formValue("name"), brand: formValue("brand"), description: formValue("description") });
+  }
+
+  function identityChanged() {
+    pendingResearch.current?.abort();
+    if (researchTimer.current) clearTimeout(researchTimer.current);
+    setIsSuggesting(false);
+    setSuggestion(null);
+    refreshSeo();
+  }
+
+  function scheduleResearch() {
+    if (!automatic) return;
+    const identity = currentIdentity();
+    if ((identity.name.length < 8 && !isValidGtin(identity.ean)) || (identity.ean && !isValidGtin(identity.ean))) return;
+    if (researchTimer.current) clearTimeout(researchTimer.current);
+    researchTimer.current = setTimeout(() => void requestSuggestions(false), 800);
+  }
+
+  function changeAutomatic(enabled: boolean) {
+    setAutomatic(enabled);
+    if (enabled) return;
+    if (researchTimer.current) clearTimeout(researchTimer.current);
+    pendingResearch.current?.abort();
+    lastResearchKey.current = "";
+    setIsSuggesting(false);
   }
 
   function applySuggestion(
@@ -193,6 +241,9 @@ function ProductFormFields({
     if (!form) return 0;
 
     const values = {
+      name: data.name ?? "",
+      brand: data.brand ?? "",
+      ean: data.ean ?? "",
       activeIngredients: data.activeIngredients.join(", "),
       category: data.category ?? "",
       description: data.description ?? "",
@@ -211,35 +262,46 @@ function ProductFormFields({
       field.dispatchEvent(new Event("input", { bubbles: true }));
       appliedFields += 1;
     }
-
+    refreshSeo();
     return appliedFields;
   }
 
-  async function requestSuggestions() {
-    const name = formValue("name");
-    if (name.length < 3) {
-      toast.error("Informe pelo menos 3 caracteres do nome do produto.");
+  async function requestSuggestions(manual = true) {
+    if (researchTimer.current) clearTimeout(researchTimer.current);
+    const identity = currentIdentity();
+    const key = productIdentityKey(identity);
+    if (!manual && lastResearchKey.current === key) return;
+    if (identity.name.length < 3 && !isValidGtin(identity.ean)) {
+      toast.error("Informe o nome ou um EAN valido do produto.");
       nameInputRef.current?.focus();
       return;
     }
+    if (identity.ean && !isValidGtin(identity.ean)) {
+      toast.error("EAN/GTIN invalido. Confira os numeros da embalagem.");
+      return;
+    }
+    pendingResearch.current?.abort();
+    const controller = new AbortController();
+    pendingResearch.current = controller;
+    lastResearchKey.current = key;
 
     try {
       setIsSuggesting(true);
       setSuggestion(null);
       const response = await fetch("/api/produtos/sugestoes", {
         body: JSON.stringify({
-          brand: formValue("brand"),
-          ean: formValue("ean"),
+          ...identity,
           knownCategories: categoryOptions.slice(0, 40),
-          name,
         }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
+        signal: controller.signal,
       });
-      const payload = (await response.json()) as {
+      const payload = (await response.json().catch(() => ({}))) as {
         data?: ProductSuggestion & { sources: ProductSuggestionSource[] };
         error?: unknown;
       };
+      if (controller.signal.aborted || productIdentityKey(currentIdentity()) !== key) return;
 
       if (!response.ok || !payload.data) {
         throw new Error(errorMessage(payload.error, "Nao foi possivel pesquisar este produto."));
@@ -248,18 +310,20 @@ function ProductFormFields({
       setSuggestion(payload.data);
       if (payload.data.confidence === "high") {
         const appliedFields = applySuggestion(payload.data, { overwrite: false });
+        lastResearchKey.current = productIdentityKey(currentIdentity());
         toast.success(
           appliedFields > 0
-            ? "Dados confirmados foram preenchidos nos campos vazios."
+            ? "Dados pesquisados preenchidos. Confira antes de publicar."
             : "Sugestao pronta para revisao.",
         );
       } else {
         toast.warning("A identificacao precisa de revisao antes de preencher os campos.");
       }
     } catch (error) {
+      if (controller.signal.aborted) return;
       toast.error(error instanceof Error ? error.message : "Nao foi possivel pesquisar este produto.");
     } finally {
-      setIsSuggesting(false);
+      if (pendingResearch.current === controller) setIsSuggesting(false);
     }
   }
 
@@ -272,10 +336,10 @@ function ProductFormFields({
     : null;
 
   return (
-    <>
+    <fieldset className="grid min-w-0 gap-4" disabled={disabled}>
       <label className="grid gap-2 text-sm font-semibold text-ink">
         Nome do produto
-        <Input defaultValue={product?.name} maxLength={160} name="name" placeholder="Ex.: Dipirona 500 mg" ref={nameInputRef} required />
+        <Input defaultValue={product?.name} maxLength={160} name="name" onBlur={scheduleResearch} onChange={identityChanged} placeholder="Nome, concentracao e quantidade" ref={nameInputRef} required />
       </label>
       <div className="overflow-hidden rounded-md border border-brand/20 bg-surface-subtle">
         <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
@@ -285,12 +349,12 @@ function ProductFormFields({
             </span>
             <div className="min-w-0">
               <p className="text-sm font-black text-ink">Assistente de cadastro</p>
-              <p className="text-xs font-medium leading-5 text-muted">Pesquisa fontes publicas e preserva seus campos preenchidos.</p>
+              <label className="mt-1 flex cursor-pointer items-center gap-2 text-xs font-semibold text-muted"><input checked={automatic} className="h-4 w-4 accent-brand" onChange={event => changeAutomatic(event.target.checked)} type="checkbox" />Preenchimento automatico com IA</label>
             </div>
           </div>
           <Button disabled={isSuggesting} onClick={() => void requestSuggestions()} size="sm" type="button" variant="secondary">
             {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {isSuggesting ? "Pesquisando" : "Sugerir dados"}
+            {isSuggesting ? "Conferindo fontes..." : "Pesquisar agora"}
           </Button>
         </div>
 
@@ -300,7 +364,8 @@ function ProductFormFields({
               <span className={cn("rounded-md px-2.5 py-1 text-xs font-black", confidenceInfo.className)}>
                 {confidenceInfo.label}
               </span>
-              <Button onClick={() => {
+              <Button disabled={suggestion.identityMatch === "conflict" || suggestion.sources.length === 0 || !suggestion.name} onClick={() => {
+                if (!window.confirm("Substituir os campos pelos dados pesquisados? Confira embalagem e fontes antes de publicar.")) return;
                 const appliedFields = applySuggestion(suggestion, { overwrite: true });
                 toast.success(appliedFields > 0 ? "Sugestoes aplicadas. Revise antes de salvar." : "Nao ha dados confirmados para aplicar.");
               }} size="sm" type="button" variant="secondary">
@@ -334,7 +399,7 @@ function ProductFormFields({
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-2 text-sm font-semibold text-ink">
           Marca
-          <Input defaultValue={product?.brand ?? ""} maxLength={120} name="brand" placeholder="Opcional" />
+          <Input defaultValue={product?.brand ?? ""} maxLength={120} name="brand" onBlur={scheduleResearch} onChange={identityChanged} placeholder="Opcional" />
         </label>
         <label className="grid gap-2 text-sm font-semibold text-ink">
           Categoria
@@ -387,7 +452,7 @@ function ProductFormFields({
         </label>
         <label className="grid gap-2 text-sm font-semibold text-ink">
           Status
-          <select className="h-11 rounded-md border border-line bg-white px-3 text-sm text-ink shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15" defaultValue={product?.status ?? "DRAFT"} name="status">
+          <select className="h-11 rounded-md border border-line bg-white px-3 text-sm text-ink shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15" defaultValue={product?.status ?? "ACTIVE"} name="status">
             <option value="DRAFT">Rascunho</option>
             <option value="ACTIVE">Publicado</option>
             <option value="ARCHIVED">Arquivado</option>
@@ -401,15 +466,19 @@ function ProductFormFields({
         </label>
         <label className="grid gap-2 text-sm font-semibold text-ink">
           Codigo EAN
-          <Input defaultValue={product?.ean ?? ""} maxLength={32} name="ean" placeholder="Opcional" />
+          <Input defaultValue={product?.ean ?? ""} inputMode="numeric" maxLength={32} name="ean" onBlur={scheduleResearch} onChange={identityChanged} placeholder="Codigo da embalagem" />
         </label>
       </div>
       <label className="grid gap-2 text-sm font-semibold text-ink">
         Descricao
-        <Textarea defaultValue={product?.description ?? ""} maxLength={800} name="description" placeholder="Apresentacao, quantidade ou observacao importante." />
+        <Textarea defaultValue={product?.description ?? ""} maxLength={800} name="description" onChange={refreshSeo} placeholder="Apresentacao, quantidade ou observacao importante." />
       </label>
 
-      <ProductImagePicker initialImageAssetId={product?.imageAssetId} ref={imagePickerRef} />
+      {seo.name && <div className="min-w-0 border-l-2 border-pharma-green pl-3"><p className="text-xs font-semibold text-muted">Previa na busca</p><p className="mt-1 break-words text-sm font-bold text-ink">{seo.name} | Wimifarma</p><p className="mt-1 break-words text-xs leading-5 text-muted">{buildProductMetaDescription(seo)}</p></div>}
+
+      <ProductImagePicker initialImageAssetId={product?.imageAssetId} initialImageUrl={product?.imageUrl} key={product?.id ?? "new"} ref={imagePickerRef} />
+
+      <label className="flex cursor-pointer items-center gap-3 border-y border-line py-3 text-sm font-bold text-ink"><input className="h-4 w-4 accent-brand" defaultChecked={isShowcasePosition(product?.featuredPosition ?? null)} name="featured" type="checkbox" /><Star className="h-4 w-4 text-brand" />Destacar em Melhores ofertas</label>
 
       {canManageCashback ? <CashbackProductFields enabled={product?.cashbackEnabled} rateBps={product?.cashbackRateBps} /> : null}
 
@@ -423,7 +492,7 @@ function ProductFormFields({
           Exige receita
         </label>
       </div>
-    </>
+    </fieldset>
   );
 }
 
@@ -820,7 +889,7 @@ export function ProductsCatalogPanel({ canManageCashback = false }: { canManageC
             </div>
             <DialogTitle>Cadastrar produto</DialogTitle>
             <DialogDescription>
-              A imagem sera otimizada em WebP com ate 2000 px antes de ser salva.
+              Dados, foto e publicacao na loja.
             </DialogDescription>
           </DialogHeader>
           <form className="grid gap-4" onSubmit={handleSubmit}>
@@ -829,6 +898,7 @@ export function ProductsCatalogPanel({ canManageCashback = false }: { canManageC
               categoryListId="new-product-categories"
               categoryOptions={categoryOptions}
               imagePickerRef={imagePickerRef}
+              disabled={isSubmitting}
             />
             <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
               <Button disabled={isSubmitting} onClick={() => setIsCreateOpen(false)} type="button" variant="secondary">
@@ -861,6 +931,7 @@ export function ProductsCatalogPanel({ canManageCashback = false }: { canManageC
                 categoryListId="edit-product-categories"
                 categoryOptions={categoryOptions}
                 imagePickerRef={editImagePickerRef}
+                disabled={isUpdating}
                 product={editingProduct}
               />
               <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">

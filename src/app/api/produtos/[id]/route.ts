@@ -5,6 +5,7 @@ import { productUpdateSchema } from "@/features/products/schema";
 import { buildProductSearchText } from "@/features/products/public-search";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
+import { lockProductCatalog, ProductMutationError, resolveFeaturedPosition } from "@/features/products/mutations";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -122,9 +123,16 @@ export async function PATCH(
     stock: parsed.data.stock,
   };
   const normalizedImageUrl = normalizeOptional(parsed.data.imageUrl);
+  const clearImage = parsed.data.imageAssetId === null || parsed.data.imageUrl === null;
 
   try {
     const product = await prisma.$transaction(async (transaction) => {
+      await lockProductCatalog(transaction);
+      if (imageAsset && !await transaction.productImage.findUnique({ where: { id: imageAsset.id }, select: { id: true } })) throw new ProductMutationError("A foto foi removida da biblioteca. Selecione outra foto.", 409);
+      const current = await transaction.product.findUnique({ where: { id }, select: { imageUrl: true, featuredPosition: true } });
+      if (!current) return null;
+      const imageUrl = imageAsset?.url ?? (clearImage ? null : normalizedImageUrl ?? current.imageUrl);
+      const featuredPosition = await resolveFeaturedPosition(transaction, { featured: parsed.data.featured, currentPosition: current.featuredPosition, status: productData.status, imageUrl });
       const updated = await transaction.product.updateMany({
         data: {
           ...productData,
@@ -132,13 +140,13 @@ export async function PATCH(
           category: normalizeOptional(productData.category) ?? null,
           description: normalizeOptional(productData.description) ?? null,
           ean: normalizeOptional(productData.ean) ?? null,
-          featuredPosition: productData.status === "ACTIVE" ? undefined : null,
+          featuredPosition,
           imageAssetId: imageAsset
             ? imageAsset.id
-            : normalizedImageUrl
+            : clearImage || normalizedImageUrl
               ? null
               : undefined,
-          imageUrl: imageAsset?.url ?? normalizedImageUrl,
+          imageUrl,
           promotionalPrice: productData.promotionalPrice ?? null,
           searchText: buildProductSearchText(productData),
           sku: normalizeOptional(productData.sku) ?? null,
@@ -194,12 +202,14 @@ export async function PATCH(
 
     return NextResponse.json({ data: serializeProduct(product) });
   } catch (error) {
+    if (error instanceof ProductMutationError) return NextResponse.json({ error: error.message }, { status: error.status });
     if (isUniqueConstraintError(error)) {
       return NextResponse.json(
         { error: "Ja existe outro produto com este SKU." },
         { status: 409 },
       );
     }
-    throw error;
+    console.error("Falha ao editar produto", error instanceof Error ? error.name : "unknown");
+    return NextResponse.json({ error: "Nao foi possivel salvar o produto. Reabra a edicao e tente novamente." }, { status: 503 });
   }
 }

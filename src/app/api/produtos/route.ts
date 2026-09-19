@@ -4,6 +4,7 @@ import { productCreateSchema } from "@/features/products/schema";
 import { buildProductSearchText } from "@/features/products/public-search";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
+import { lockProductCatalog, ProductMutationError, resolveFeaturedPosition } from "@/features/products/mutations";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -131,38 +132,55 @@ export async function POST(request: Request) {
     );
   }
 
-  const product = await prisma.product.create({
-    data: {
-      ...parsed.data,
-      brand: normalizeOptional(parsed.data.brand),
-      category: normalizeOptional(parsed.data.category),
-      ean: normalizeOptional(parsed.data.ean),
-      imageAssetId: imageAsset?.id,
-      imageUrl: imageAsset?.url ?? normalizeOptional(parsed.data.imageUrl),
-      searchText: buildProductSearchText(parsed.data),
-      sku: normalizeOptional(parsed.data.sku),
-      slug,
-    },
-    select: productSelect,
-  });
+  const { featured, ...fields } = parsed.data;
+  try {
+    const product = await prisma.$transaction(async transaction => {
+      await lockProductCatalog(transaction);
+      if (imageAsset && !await transaction.productImage.findUnique({ where: { id: imageAsset.id }, select: { id: true } })) {
+        throw new ProductMutationError("A foto foi removida da biblioteca. Selecione outra foto.", 409);
+      }
+      const featuredPosition = await resolveFeaturedPosition(transaction, { featured, status: fields.status, imageUrl: imageAsset?.url ?? fields.imageUrl });
+      const product = await transaction.product.create({
+        data: {
+          ...fields,
+          featuredPosition,
+          brand: normalizeOptional(parsed.data.brand),
+          category: normalizeOptional(parsed.data.category),
+          ean: normalizeOptional(parsed.data.ean),
+          imageAssetId: imageAsset?.id,
+          imageUrl: imageAsset?.url ?? normalizeOptional(parsed.data.imageUrl),
+          searchText: buildProductSearchText(parsed.data),
+          sku: normalizeOptional(parsed.data.sku),
+          slug,
+        },
+        select: productSelect,
+      });
 
-  await prisma.auditLog.create({
-    data: {
-      action: "PRODUCT_CREATED",
-      entity: "Product",
-      entityId: product.id,
-      metadata: {
-        cashbackEnabled: product.cashbackEnabled,
-        cashbackRateBps: product.cashbackRateBps,
-        hasImage: Boolean(product.imageUrl),
-        featuredPosition: product.featuredPosition,
-        name: product.name,
-        slug: product.slug,
-        status: product.status,
-      },
-      userId: persistedUserId(guard.session?.user.id),
-    },
-  });
+      await transaction.auditLog.create({
+        data: {
+          action: "PRODUCT_CREATED",
+          entity: "Product",
+          entityId: product.id,
+          metadata: {
+            cashbackEnabled: product.cashbackEnabled,
+            cashbackRateBps: product.cashbackRateBps,
+            hasImage: Boolean(product.imageUrl),
+            featuredPosition: product.featuredPosition,
+            name: product.name,
+            slug: product.slug,
+            status: product.status,
+          },
+          userId: persistedUserId(guard.session?.user.id),
+        },
+      });
+      return product;
+    });
 
-  return NextResponse.json({ data: serializeProduct(product) }, { status: 201 });
+    return NextResponse.json({ data: serializeProduct(product) }, { status: 201 });
+  } catch (error) {
+    if (error instanceof ProductMutationError) return NextResponse.json({ error: error.message }, { status: error.status });
+    if (typeof error === "object" && error && "code" in error && error.code === "P2002") return NextResponse.json({ error: "Ja existe um produto com este SKU ou endereco. Confira o cadastro e tente novamente." }, { status: 409 });
+    console.error("Falha ao cadastrar produto", error instanceof Error ? error.name : "unknown");
+    return NextResponse.json({ error: "Nao foi possivel cadastrar o produto. Tente novamente." }, { status: 503 });
+  }
 }

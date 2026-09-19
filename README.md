@@ -29,7 +29,7 @@ O sistema possui carrinho e checkout para registrar pedidos pendentes, com entre
 ## Status Atual
 
 - Site publico com home temporariamente focada em anuncio: inicia com um carrossel responsivo de tres campanhas fotograficas, mostra `Melhores ofertas`, um carrossel compacto de perfumaria (Dove, Rexona e NIVEA), um segundo carrossel automatico de medicamentos publicados e, abaixo, avaliacoes verificadas e a faixa de campanhas.
-- `Produtos / Catalogo` possui assistente opcional com Gemini para pesquisar e sugerir categoria, descricao, principios ativos e termos de busca, sempre com fontes e revisao humana antes do cadastro.
+- `Produtos / Catalogo` pesquisa nome/EAN com Gemini e preenche campos vazios apenas com identidade e fonte oficial confirmadas. Dados divergentes exigem revisao; ha previa de SEO, status Publicado por padrao e destaque opcional. Contrato e testes em [docs/18-cadastro-inteligente-e-fotos.md](docs/18-cadastro-inteligente-e-fotos.md).
 - A Miauby abre uma conversa responsiva no site, usa Gemini com historico curto e contexto do catalogo publicado, mostra produtos relacionados e encaminha confirmacoes comerciais ou clinicas para a equipe.
 - WhatsApp principal: `+55 44 98413-4971`, com mensagem padrao para medicamentos e Farmacia Popular.
 - Rotas publicas basicas criadas: `/`, `/ofertas`, `/farmacia-popular`, `/delivery`, `/sobre`, `/contato`, `/roleta`, `/login`.
@@ -44,7 +44,7 @@ O sistema possui carrinho e checkout para registrar pedidos pendentes, com entre
 - Login administrativo usa Auth.js Credentials e direciona para `/admin/dashboard`.
 - Painel admin existe como estrutura modular; criacao de ADM/colaborador ja cria acessos reais com email e senha, e outros modulos seguem em evolucao.
 - O modulo admin de cupons permite criar, editar, pausar e excluir registros elegiveis, com datas de inicio/fim, limite de uso, busca e filtros. Usos e vinculos com premios sao preservados. Veja `docs/14-cupons-admin.md`.
-- `Produtos / Catalogo` permite cadastrar em modal, buscar, classificar, editar e adicionar ou remover produtos de `Melhores ofertas`; fotos enviadas sao convertidas automaticamente para WebP e persistidas no volume Docker `wimifarma-br-uploads`.
+- `Produtos / Catalogo` permite cadastrar em modal, buscar, classificar, editar e adicionar ou remover produtos de `Melhores ofertas`; fotos podem ser retiradas/trocadas e tratadas antes de salvar. Novos WebP tem ate 1600 px/350 KB e ficam no volume `wimifarma-br-uploads`, servidos dinamicamente para evitar 404 apos upload.
 - A busca publica consulta produtos publicados no PostgreSQL por nome, marca, categoria, SKU, EAN, principios ativos e termos de busca; o autocomplete mostra foto e preco, abre `/produto/[slug]` no Enter e apresenta correlatos para consulta, sem tratar correlacao como substituicao automatica.
 - Produtos elegiveis podem ser adicionados ao carrinho e enviados pelo checkout em `/checkout`; o servidor recalcula preco, confere estoque e cria um pedido pendente para a equipe acompanhar em `/admin/pedidos`.
 - Itens com receita ou Farmacia Popular continuam no atendimento pelo WhatsApp. Pix, cartao e dinheiro sao apenas preferencias; nenhum dado de cartao e coletado e nenhum pagamento e aprovado pelo site.

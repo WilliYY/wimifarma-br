@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { isValidGtin } from "./identity";
 import {
   buildProductResearchPrompt,
   buildProductStructuringPrompt,
@@ -11,7 +12,7 @@ import {
 test("valida e limita os dados usados na pesquisa do produto", () => {
   const parsed = productSuggestionRequestSchema.safeParse({
     brand: "  Medley  ",
-    ean: " 7890000000000 ",
+    ean: " 4005808808281 ",
     knownCategories: ["Medicamentos", "Dor e febre"],
     name: "  Dipirona 500 mg  ",
   });
@@ -171,7 +172,55 @@ test("pesquisa com Google antes de estruturar e preserva as fontes", async () =>
     "application/json",
   );
   assert.equal(result.sources[0]?.title, "anvisa.gov.br");
+  assert.notEqual(result.confidence, "high");
+});
+
+test("EAN alone starts research; invalid check digits do not", () => {
+  assert.equal(isValidGtin("4005808808281"), true);
+  assert.equal(isValidGtin("4005808808282"), false);
+  assert.equal(isValidGtin("0000000000000"), false);
+  assert.equal(productSuggestionRequestSchema.safeParse({ ean: "4005808808281" }).success, true);
+  assert.equal(productSuggestionRequestSchema.safeParse({ name: "Produto", ean: "4005808808282" }).success, false);
+});
+
+test("official source alone never overrides a conflicting EAN or presentation", async () => {
+  let call = 0;
+  const fakeFetch = async () => new Response(JSON.stringify(++call === 1 ? {
+    candidates: [{ content: { parts: [{ text: "Pagina do fabricante para outra apresentacao." }] }, groundingMetadata: { groundingChunks: [{ web: { title: "dove.com", uri: "https://www.dove.com/br/produto" } }] } }],
+  } : { candidates: [{ content: { parts: [{ text: JSON.stringify({
+    name: "Dove 500ml", brand: "Dove", ean: "4005808808282", identityMatch: "conflict", evidenceSourceIndexes: [0],
+    activeIngredients: [], category: "Higiene", confidence: "high", description: "Produto da marca Dove, em embalagem de 500 ml para higiene pessoal conforme a apresentacao consultada.", searchTerms: ["Dove"], warnings: [],
+  }) }] } }] }));
+  const result = await suggestProductData({ name: "Dove 240ml", brand: "Dove", ean: "4005808808281", knownCategories: [] }, { apiKey: "test", model: "gemini-test", fetchImplementation: fakeFetch });
+  assert.equal(result.confidence, "low");
+  assert.equal(result.description, null);
+  assert.equal(result.name, null);
+  assert.deepEqual(result.searchTerms, []);
+});
+
+test("does not classify a domain containing the brand as an official manufacturer", async () => {
+  let call = 0;
+  const fakeFetch = async () => new Response(JSON.stringify(++call === 1 ? {
+    candidates: [{ content: { parts: [{ text: "Uma loja independente." }] }, groundingMetadata: { groundingChunks: [{ web: { title: "Dove", uri: "https://comprardove.example/produto" } }] } }],
+  } : { candidates: [{ content: { parts: [{ text: JSON.stringify({
+    name: "Dove 240ml", brand: "Dove", ean: null, identityMatch: "exact", evidenceSourceIndexes: [0],
+    activeIngredients: [], category: "Higiene", confidence: "high", description: "Produto de higiene pessoal Dove em embalagem de 240 ml, conforme os dados pesquisados para esta apresentacao.", searchTerms: ["Dove"], warnings: [],
+  }) }] } }] }));
+  const result = await suggestProductData({ name: "Dove 240ml", brand: "Dove", ean: "", knownCategories: [] }, { apiKey: "test", model: "gemini-test", fetchImplementation: fakeFetch });
+  assert.notEqual(result.confidence, "high");
+});
+
+test("exact identity with manufacturer evidence allows automatic fill without optional EAN", async () => {
+  let call = 0;
+  const fakeFetch = async () => new Response(JSON.stringify(++call === 1 ? {
+    candidates: [{ content: { parts: [{ text: "Fabricante confirma Sabonete Dove Original 90 g." }] }, groundingMetadata: { groundingChunks: [{ web: { title: "dove.com", uri: "https://www.dove.com/br/original" } }] } }],
+  } : { candidates: [{ content: { parts: [{ text: JSON.stringify({
+    name: "Sabonete Dove Original 90 g", brand: "Dove", ean: null, identityMatch: "exact", evidenceSourceIndexes: [0],
+    activeIngredients: [], category: "Higiene", confidence: "high", description: "Sabonete Dove Original em barra de 90 g. Produto de higiene pessoal, conforme a apresentacao confirmada pelo fabricante.", searchTerms: ["Dove", "Sabonete"], warnings: ["EAN nao informado."],
+  }) }] } }] }));
+  const result = await suggestProductData({ name: "Sabonete Dove Original 90 g", brand: "Dove", ean: "", knownCategories: [] }, { apiKey: "test", model: "gemini-test", fetchImplementation: fakeFetch });
   assert.equal(result.confidence, "high");
+  assert.equal(result.name, "Sabonete Dove Original 90 g");
 });
 
 test("rebaixa a confianca quando o Gemini nao devolve fonte", async () => {

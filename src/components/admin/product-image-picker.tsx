@@ -21,6 +21,7 @@ import {
   Sparkles,
   Trash2,
   Upload,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ProductImageEditor } from "@/components/admin/product-image-editor";
@@ -46,11 +47,13 @@ export type ProductImage = {
 export type ProductImagePickerHandle = {
   refresh: () => Promise<void>;
   reset: () => void;
-  resolveImage: (options?: { optional?: boolean }) => Promise<ProductImage | null>;
+  resolveImage: (options?: { optional?: boolean }) => Promise<ProductImage | null | undefined>;
 };
 
 type ProductImagePickerProps = {
   initialImageAssetId?: string | null;
+  initialImageUrl?: string | null;
+  disabled?: boolean;
 };
 
 function errorMessage(error: unknown, fallback: string) {
@@ -65,8 +68,12 @@ function formatFileSize(bytes: number) {
 }
 
 export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductImagePickerProps>(
-  function ProductImagePicker({ initialImageAssetId }: ProductImagePickerProps, ref) {
+  function ProductImagePicker({ initialImageAssetId, initialImageUrl, disabled = false }: ProductImagePickerProps, ref) {
     const imageInputRef = useRef<HTMLInputElement>(null);
+    const uploadPromise = useRef<Promise<ProductImage> | null>(null);
+    const [hasChosenImage, setHasChosenImage] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [failedImages, setFailedImages] = useState<string[]>([]);
     const [images, setImages] = useState<ProductImage[]>([]);
     const [imageMode, setImageMode] = useState<ImageMode>("upload");
     const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -85,7 +92,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
       try {
         setIsLibraryLoading(true);
         const response = await fetch("/api/admin/imagens-produtos", { cache: "no-store" });
-        const payload = (await response.json()) as {
+        const payload = (await response.json().catch(() => ({}))) as {
           data?: ProductImage[];
           error?: unknown;
           meta?: { backgroundRemovalAvailable?: boolean };
@@ -109,14 +116,14 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
     }, [loadImages]);
 
     useEffect(() => {
-      if (!initialImageAssetId || selectedFile || selectedImage) return;
+      if (!initialImageAssetId || hasChosenImage || selectedFile || selectedImage) return;
 
       const initialImage = images.find((image) => image.id === initialImageAssetId);
       if (initialImage) {
         setSelectedImage(initialImage);
         setImageMode("library");
       }
-    }, [images, initialImageAssetId, selectedFile, selectedImage]);
+    }, [images, initialImageAssetId, selectedFile, selectedImage, hasChosenImage]);
 
     useEffect(() => {
       return () => {
@@ -144,6 +151,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
       setRemoveBackground(false);
       setImageMode("upload");
       setImageSearch("");
+      setHasChosenImage(true);
     }, [clearPreview]);
 
     const uploadImage = useCallback(async (file: File) => {
@@ -155,7 +163,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
         body: formData,
         method: "POST",
       });
-      const payload = (await response.json()) as { data?: ProductImage; error?: unknown };
+      const payload = (await response.json().catch(() => ({}))) as { data?: ProductImage; error?: unknown };
 
       if (!response.ok || !payload.data?.url) {
         throw new Error(errorMessage(payload.error, "Nao foi possivel otimizar a imagem."));
@@ -163,19 +171,33 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
 
       const uploaded = { ...payload.data, usageCount: 0 };
       setImages((current) => [uploaded, ...current]);
+      clearPreview();
+      setSelectedImage(uploaded);
+      setHasChosenImage(true);
+      setImageMode("library");
+      setRemoveBackground(false);
       return uploaded;
-    }, [removeBackground]);
+    }, [removeBackground, clearPreview]);
+
+    const processSelection = useCallback(async () => {
+      if (uploadPromise.current) return uploadPromise.current;
+      if (!selectedFile) return selectedImage;
+      setIsProcessing(true);
+      uploadPromise.current = uploadImage(selectedFile);
+      try { return await uploadPromise.current; }
+      finally { uploadPromise.current = null; setIsProcessing(false); }
+    }, [selectedFile, selectedImage, uploadImage]);
 
     useImperativeHandle(ref, () => ({
       refresh: loadImages,
       reset,
       resolveImage: async (options) => {
-        if (selectedFile) return uploadImage(selectedFile);
+        if (selectedFile || uploadPromise.current) return processSelection();
         if (selectedImage) return selectedImage;
-        if (options?.optional) return null;
+        if (options?.optional) return hasChosenImage ? null : undefined;
         throw new Error("Envie uma foto ou escolha uma imagem da biblioteca.");
       },
-    }), [loadImages, reset, selectedFile, selectedImage, uploadImage]);
+    }), [loadImages, reset, selectedFile, selectedImage, processSelection, hasChosenImage]);
 
     const filteredImages = useMemo(() => {
       const query = imageSearch.trim().toLocaleLowerCase("pt-BR");
@@ -186,6 +208,12 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
     }, [imageSearch, images]);
 
     function prepareFile(file: File, openEditor = false) {
+      if (!['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type) || file.size > 10 * 1024 * 1024 || !file.size) {
+        toast.error("Use JPG, PNG, WebP ou AVIF de ate 10 MB.");
+        return;
+      }
+      setHasChosenImage(true);
+      setImageMode("upload");
       setSelectedImage(null);
       setSelectedFile(file);
       setImagePreview(URL.createObjectURL(file));
@@ -195,16 +223,16 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
 
     function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
       const file = event.target.files?.[0] ?? null;
+      event.target.value = "";
       if (file) {
         prepareFile(file);
-      } else {
-        clearPreview();
       }
     }
 
     function selectLibraryImage(image: ProductImage) {
       clearPreview();
       setSelectedImage(image);
+      setHasChosenImage(true);
     }
 
     async function adjustLibraryImage() {
@@ -239,7 +267,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
         const response = await fetch(`/api/admin/imagens-produtos/${image.id}`, {
           method: "DELETE",
         });
-        const payload = (await response.json()) as { error?: unknown };
+        const payload = (await response.json().catch(() => ({}))) as { error?: unknown };
         if (!response.ok) {
           throw new Error(errorMessage(payload.error, "Nao foi possivel excluir a imagem."));
         }
@@ -255,17 +283,18 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
     }
 
     return (
-      <div className="grid gap-3">
-        <div className="flex items-center justify-between gap-3">
+      <fieldset className="grid min-w-0 grid-cols-1 gap-3" disabled={disabled || isProcessing}>
+        <input accept="image/jpeg,image/png,image/webp,image/avif" aria-label="Arquivo da foto do produto" className="sr-only" onChange={handleImageChange} ref={imageInputRef} tabIndex={-1} type="file" />
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="text-sm font-semibold text-ink">Imagem do produto</span>
-          <Badge variant="muted">{images.length} na biblioteca</Badge>
+          <div className="flex items-center gap-2"><Badge variant="muted">{images.length} na biblioteca</Badge>
+          {(selectedFile || selectedImage || (!hasChosenImage && initialImageUrl)) && <Button aria-label="Retirar foto do produto" onClick={reset} size="icon" title="Retirar foto do produto (preserva a biblioteca)" type="button" variant="ghost"><X className="h-4 w-4" /></Button>}</div>
         </div>
         <div className="grid grid-cols-2 gap-1 rounded-md bg-surface-subtle p-1">
           <Button
             className="w-full"
             onClick={() => {
-              setImageMode("upload");
-              setSelectedImage(null);
+              imageInputRef.current?.click();
             }}
             size="sm"
             type="button"
@@ -278,7 +307,6 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
             className="w-full"
             onClick={() => {
               setImageMode("library");
-              clearPreview();
             }}
             size="sm"
             type="button"
@@ -290,14 +318,8 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
         </div>
 
         {imageMode === "upload" ? (
-          <div className="grid gap-3">
-            <input
-              accept="image/jpeg,image/png,image/webp,image/avif"
-              className="block w-full cursor-pointer rounded-md border border-dashed border-line bg-surface-subtle px-3 py-3 text-sm text-muted file:mr-3 file:rounded-md file:border-0 file:bg-brand file:px-3 file:py-2 file:text-sm file:font-bold file:text-white"
-              onChange={handleImageChange}
-              ref={imageInputRef}
-              type="file"
-            />
+          <div className="grid min-w-0 grid-cols-1 gap-3">
+            <Button className="justify-start border-dashed" onClick={() => imageInputRef.current?.click()} type="button" variant="secondary"><Upload className="h-4 w-4" />Escolher arquivo<span className="min-w-0 truncate text-xs font-normal text-muted">{selectedFile?.name ?? "JPG, PNG, WebP ou AVIF"}</span></Button>
             <label
               className={cn(
                 "flex min-h-12 items-center gap-3 rounded-md border px-3 py-3 text-sm font-bold",
@@ -320,17 +342,18 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
                 {backgroundRemovalAvailable ? "Fundo branco" : "Configurar"}
               </Badge>
             </label>
-            {imagePreview ? (
+            {imagePreview || (!hasChosenImage && initialImageUrl) ? (
               <div className="flex flex-wrap items-center gap-3 rounded-md border border-line bg-surface-subtle p-3">
-                <Image alt="Previa da imagem do produto" className="h-24 w-24 shrink-0 rounded-md border border-line bg-white object-contain" height={96} src={imagePreview} unoptimized width={96} />
+                <Image alt="Previa da imagem do produto" className="h-24 w-24 shrink-0 rounded-md border border-line bg-white object-contain" height={96} src={imagePreview || initialImageUrl!} unoptimized width={96} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-ink">Pronta para otimizar</p>
                   <p className="mt-1 text-xs font-semibold text-muted">WebP com compressao inteligente</p>
                 </div>
-                <Button onClick={() => setIsEditorOpen(true)} size="sm" type="button" variant="secondary">
+                <Button disabled={!selectedFile || isProcessing} onClick={() => setIsEditorOpen(true)} size="sm" type="button" variant="secondary">
                   <SlidersHorizontal className="h-4 w-4" />
                   Ajustar foto
                 </Button>
+                {selectedFile && <Button disabled={isProcessing} onClick={() => void processSelection().catch(error => toast.error(error instanceof Error ? error.message : "Nao foi possivel tratar a foto."))} size="sm" type="button"><Sparkles className="h-4 w-4" />{removeBackground ? "Tratar fundo" : "Otimizar foto"}</Button>}
               </div>
             ) : (
               <div className="flex min-h-20 items-center gap-3 rounded-md border border-dashed border-line px-3 py-4 text-sm font-semibold text-muted">
@@ -340,7 +363,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
             )}
           </div>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid min-w-0 grid-cols-1 gap-3">
             <label className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <Input className="pl-9" onChange={(event) => setImageSearch(event.target.value)} placeholder="Buscar pelo nome" value={imageSearch} />
@@ -357,17 +380,17 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
                 {filteredImages.map((image) => {
                   const isSelected = selectedImage?.id === image.id;
                   return (
-                    <div className="relative" key={image.id}>
+                    <div className="relative min-w-0" key={image.id}>
                       <button
                         className={cn(
-                          "grid w-full overflow-hidden rounded-md border bg-white text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+                          "grid w-full cursor-pointer overflow-hidden rounded-md border bg-white text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
                           isSelected ? "border-brand ring-2 ring-brand/15" : "border-line hover:border-brand/50",
                         )}
                         onClick={() => selectLibraryImage(image)}
                         type="button"
                       >
                         <span className="relative flex aspect-square items-center justify-center bg-surface-subtle p-2">
-                          <Image alt={image.originalName} className="h-full w-full object-contain" height={150} src={image.url} unoptimized width={150} />
+                          {failedImages.includes(image.id) ? <span className="px-2 text-center text-xs text-muted">Foto indisponivel</span> : <Image alt={image.originalName} className="h-full w-full object-contain" height={150} onError={() => setFailedImages(current => [...current, image.id])} src={image.url} unoptimized width={150} />}
                           {isSelected ? (
                             <span className="absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand text-white"><Check className="h-4 w-4" /></span>
                           ) : null}
@@ -423,7 +446,8 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
           originalName={selectedFile?.name ?? "produto.webp"}
           source={editorSource}
         />
-      </div>
+        {isProcessing && <p className="flex items-center gap-2 text-sm font-semibold text-brand" role="status"><Loader2 className="h-4 w-4 animate-spin" />{removeBackground ? "Tratando fundo e otimizando..." : "Otimizando foto..."}</p>}
+      </fieldset>
     );
   },
 );

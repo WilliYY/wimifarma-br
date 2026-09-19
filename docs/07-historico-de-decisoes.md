@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-19 - Cadastro assistido, fotos persistentes e destaque transacional
+
+- Pesquisa Gemini ao sair do nome/EAN, sem chamada por tecla. Preenchimento somente de campos vazios com identidade exata e fonte oficial; conflito bloqueia aplicacao. Conferencia humana continua obrigatoria, sem promessa de 100% ou posicionamento SEO.
+- Novos produtos iniciam como Publicado e podem ocupar uma das dez vagas de destaque. Lock de catalogo compartilhado com Ofertas e exclusao de fotos; produto e auditoria gravados juntos. Sem migration e sem alterar cadastros existentes.
+- Fotos existentes retornavam 404 apesar de estarem no volume. Rota dinamica publica preserva URLs, valida WebP/UUID e elimina dependencia do indice estatico inicial. Nova foto abre seletor, retirada nao reanexa a foto anterior e upload concluido e reutilizado.
+- Imagens novas ate 1600 px/350 KB; rembg local recebe entrada reduzida, trata uma foto por vez e refina bordas, preservando o original quando a mascara e inutil. Sem alteracao do modelo ou contratacao de outro provedor.
+- Menu reordenado conforme operacao: Usuarios, Catalogo, Ofertas, Pedidos, Cupons, Cashback e demais modulos. Validacao e limites documentados em `docs/18-cadastro-inteligente-e-fotos.md`.
+
 ## 2026-09-16 - Usuarios unificados e Google administrativo autorizado
 
 - Vincular User a Customer de forma explicita, sem apagar compras ou carteira. Google exige email verificado e novo login para assumir permissao atribuida; nenhum email recebe privilegio automaticamente.

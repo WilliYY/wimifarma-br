@@ -27,25 +27,7 @@ import {
 import { siteConfig } from "@/lib/site";
 
 const adminNav = [
-  { href: "/admin/usuarios", icon: Users, label: "Usuarios Wimifarma", roles: adminRoutePermissions["/admin/usuarios"] },
-  {
-    href: "/admin/criar-adm",
-    icon: ShieldPlus,
-    label: "Criar ADM",
-    roles: adminRoutePermissions["/admin/criar-adm"],
-  },
-  {
-    href: "/admin/criar-colaborador",
-    icon: UserPlus,
-    label: "Criar colaborador",
-    roles: adminRoutePermissions["/admin/criar-colaborador"],
-  },
-  {
-    href: "/admin/api-senhas",
-    icon: KeyRound,
-    label: "API e Senhas",
-    roles: adminRoutePermissions["/admin/api-senhas"],
-  },
+  { href: "/admin/usuarios", icon: Users, label: "Usuarios", roles: adminRoutePermissions["/admin/usuarios"] },
   {
     href: "/admin/catalogos",
     icon: Boxes,
@@ -65,12 +47,6 @@ const adminNav = [
     roles: adminRoutePermissions["/admin/pedidos"],
   },
   {
-    href: "/admin/temas",
-    icon: Palette,
-    label: "Temas",
-    roles: adminRoutePermissions["/admin/temas"],
-  },
-  {
     href: "/admin/cupons",
     icon: TicketPercent,
     label: "Cupons",
@@ -79,9 +55,13 @@ const adminNav = [
   {
     href: "/admin/cashback",
     icon: WalletCards,
-    label: "Cash Back",
+    label: "Cashback",
     roles: adminRoutePermissions["/admin/cashback"],
   },
+  { href: "/admin/criar-adm", icon: ShieldPlus, label: "Criar ADM", roles: adminRoutePermissions["/admin/criar-adm"] },
+  { href: "/admin/criar-colaborador", icon: UserPlus, label: "Criar colaborador", roles: adminRoutePermissions["/admin/criar-colaborador"] },
+  { href: "/admin/api-senhas", icon: KeyRound, label: "API e Senhas", roles: adminRoutePermissions["/admin/api-senhas"] },
+  { href: "/admin/temas", icon: Palette, label: "Temas", roles: adminRoutePermissions["/admin/temas"] },
   {
     href: "/admin/club-wimifarma",
     icon: Crown,

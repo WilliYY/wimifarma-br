@@ -2,6 +2,7 @@ import { z } from "zod";
 import { cashbackRateSchema } from "@/features/cashback/rules";
 
 const productFieldsSchema = z.object({
+  featured: z.boolean().optional(),
   cashbackEnabled: z.boolean().optional(),
   cashbackRateBps: cashbackRateSchema.optional(),
   activeIngredients: z.array(z.string().trim().min(2).max(120)).max(20).default([]),
@@ -31,7 +32,7 @@ const promotionalPriceError = {
   path: ["promotionalPrice"],
 };
 
-export const productCreateSchema = productFieldsSchema.refine(
+export const productCreateSchema = productFieldsSchema.extend({ status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).default("ACTIVE") }).refine(
   validPromotionalPrice,
   promotionalPriceError,
 );
@@ -44,6 +45,8 @@ export const productUpdateSchema = productFieldsSchema
     description: z.string().max(800).nullable().optional(),
     ean: z.string().max(32).nullable().optional(),
     expectedUpdatedAt: z.iso.datetime(),
+    imageAssetId: z.string().max(40).nullable().optional(),
+    imageUrl: z.string().max(300).nullable().optional(),
     promotionalPrice: z.coerce.number().positive().nullable().optional(),
     sku: z.string().max(80).nullable().optional(),
   })

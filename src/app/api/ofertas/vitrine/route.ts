@@ -3,6 +3,7 @@ import { adminRoutePermissions, requireApiRole } from "@/features/auth/permissio
 import { showcaseSelectionSchema } from "@/features/offers/showcase";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
+import { lockProductCatalog } from "@/features/products/mutations";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -99,6 +100,7 @@ export async function PUT(request: Request) {
   }
 
   await prisma.$transaction(async (transaction) => {
+    await lockProductCatalog(transaction);
     await transaction.product.updateMany({
       data: { featuredPosition: null },
       where: { featuredPosition: { not: null } },
