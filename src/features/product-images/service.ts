@@ -2,9 +2,9 @@ import sharp from "sharp";
 
 export const MAX_PRODUCT_IMAGE_BYTES = 10 * 1024 * 1024;
 export const MAX_PRODUCT_IMAGE_PIXELS = 40_000_000;
-export const MAX_PRODUCT_IMAGE_DIMENSION = 2000;
-export const TARGET_PRODUCT_IMAGE_BYTES = 1_200_000;
-const MAX_REMOVED_IMAGE_BYTES = 50 * 1024 * 1024;
+export const MAX_PRODUCT_IMAGE_DIMENSION = 1600;
+export const TARGET_PRODUCT_IMAGE_BYTES = 350_000;
+const MAX_REMOVED_IMAGE_BYTES = 16 * 1024 * 1024;
 
 export const ACCEPTED_PRODUCT_IMAGE_TYPES = new Set([
   "image/avif",
@@ -73,11 +73,23 @@ async function readBackgroundRemovalResponse(response: Response) {
     throw new ProductImageError("A imagem processada ficou grande demais.", 502);
   }
 
-  const result = Buffer.from(await response.arrayBuffer());
-  if (result.byteLength > MAX_REMOVED_IMAGE_BYTES) {
-    throw new ProductImageError("A imagem processada ficou grande demais.", 502);
-  }
-  return result;
+  const reader = response.body?.getReader();
+  if (!reader) throw new ProductImageError("A IA retornou uma imagem vazia.", 502);
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_REMOVED_IMAGE_BYTES) {
+        await reader.cancel();
+        throw new ProductImageError("A imagem processada ficou grande demais.", 502);
+      }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  return Buffer.concat(chunks);
 }
 
 async function removeBackground(buffer: Buffer, fileName: string, mimeType: string) {
@@ -87,9 +99,6 @@ async function removeBackground(buffer: Buffer, fileName: string, mimeType: stri
     const imageBytes = new ArrayBuffer(buffer.byteLength);
     new Uint8Array(imageBytes).set(buffer);
     formData.set("file", new Blob([imageBytes], { type: mimeType }), fileName);
-    formData.set("model", "u2net");
-    formData.set("ppm", "true");
-    formData.set("dc", "true");
 
     const response = await fetch(localUrl, {
       body: formData,
@@ -179,19 +188,33 @@ export async function processProductImage(input: {
   if (!metadata.width || !metadata.height) {
     throw new ProductImageError("A imagem nao possui dimensoes validas.");
   }
+  if ((metadata.pages ?? 1) > 1) throw new ProductImageError("Escolha uma foto estatica, sem animacao.");
 
   let source = input.buffer;
   if (input.removeBackground) {
-    source = await removeBackground(input.buffer, input.fileName, input.mimeType);
+    const workingImage = await sharp(source, { limitInputPixels: MAX_PRODUCT_IMAGE_PIXELS })
+      .rotate().resize({ width: MAX_PRODUCT_IMAGE_DIMENSION, height: MAX_PRODUCT_IMAGE_DIMENSION, fit: "inside", withoutEnlargement: true })
+      .png({ compressionLevel: 3 }).toBuffer();
+    source = await removeBackground(workingImage, "produto.png", "image/png");
+    const preview = await sharp(source, { limitInputPixels: MAX_PRODUCT_IMAGE_PIXELS })
+      .resize({ width: 128, height: 128, fit: "inside", withoutEnlargement: true }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    let foreground = 0;
+    for (let i = preview.info.channels - 1; i < preview.data.length; i += preview.info.channels) {
+      if (preview.data[i] > 32) foreground++;
+    }
+    const coverage = foreground / (preview.info.width * preview.info.height);
+    if (coverage < 0.005 || coverage > 0.999) {
+      throw new ProductImageError("Nao foi possivel separar o produto com seguranca. A foto original foi preservada; ajuste o recorte ou use sem remover o fundo.");
+    }
   }
 
   const attempts = [
     { dimension: MAX_PRODUCT_IMAGE_DIMENSION, quality: 88 },
-    { dimension: 1800, quality: 84 },
-    { dimension: 1600, quality: 80 },
-    { dimension: 1400, quality: 76 },
-    { dimension: 1200, quality: 72 },
-    { dimension: 1000, quality: 68 },
+    { dimension: 1400, quality: 84 },
+    { dimension: 1200, quality: 80 },
+    { dimension: 1100, quality: 76 },
+    { dimension: 1000, quality: 72 },
+    { dimension: 800, quality: 68 },
   ];
 
   let result = await encodeWebp(
@@ -208,6 +231,10 @@ export async function processProductImage(input: {
       attempt.quality,
       input.removeBackground,
     );
+  }
+
+  if (result.info.size > TARGET_PRODUCT_IMAGE_BYTES) {
+    throw new ProductImageError("A foto continua muito pesada. Recorte a area do produto e tente novamente.");
   }
 
   return {

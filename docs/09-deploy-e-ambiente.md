@@ -72,6 +72,8 @@ Postgres nao expoe porta no host.
 
 As imagens enviadas pelo admin ficam em `public/uploads/products` dentro do container e sao preservadas no volume `wimifarma-br-uploads`. Esse volume deve entrar na rotina de backup junto com o banco; atualizar ou reconstruir o container nao deve apagar as fotos.
 
+Desde 2026-09-19, um rewrite `beforeFiles` encaminha `/uploads/products/:fileName` para `/api/imagens/produtos/[fileName]`. A rota le o volume dinamicamente, valida nome/assinatura WebP e usa ETag/cache imutavel. Isso evita depender do indice de arquivos publicos montado no inicio do Next. Nao criar regra no proxy que ignore essa rota nem armazenar respostas 404 em cache. Fotos antigas conservam URLs e bytes.
+
 `BACKGROUND_REMOVAL_URL` aponta por padrao para `http://background-removal:7000`. O servico usa `rembg` com o modelo aberto `u2net`, fica somente na rede Docker interna, inicia com um worker e tem limite padrao de 2 GB de memoria. Nao publicar a porta `7000` no host.
 
 `REMOVE_BG_API_KEY` e opcional e funciona apenas como alternativa externa quando `BACKGROUND_REMOVAL_URL` estiver vazio. A chave deve permanecer somente no `.env` do servidor e nunca no Git. Sem nenhum provedor, upload, WebP, compressao, editor e biblioteca continuam funcionando, mas o controle `Remover fundo com IA` fica desabilitado.

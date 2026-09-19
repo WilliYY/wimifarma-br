@@ -43,6 +43,13 @@ if (process.env.NODE_ENV === "production") {
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  async rewrites() {
+    return {
+      beforeFiles: [{ source: "/uploads/products/:fileName", destination: "/api/imagens/produtos/:fileName" }],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
   async headers() {
     return [
       {

@@ -41,7 +41,6 @@ test("uses the local u2net service and flattens the result on white", async () =
     assert.equal(String(input), "http://background-removal:7000/api/remove");
     assert.equal(init?.method, "POST");
     assert.ok(init?.body instanceof FormData);
-    assert.equal(init.body.get("model"), "u2net");
     assert.ok(init.body.get("file") instanceof Blob);
     return new Response(removedBackground, {
       headers: { "content-type": "image/png" },
@@ -102,4 +101,34 @@ test("does not advertise an invalid local provider URL", () => {
   delete process.env.REMOVE_BG_API_KEY;
 
   assert.equal(isBackgroundRemovalAvailable(), false);
+});
+
+test("bounds working resolution before sending an image to the local AI", async () => {
+  process.env.BACKGROUND_REMOVAL_URL = "http://background-removal:7000";
+  const input = await sharp({ create: { width: 3400, height: 2400, channels: 3, background: "blue" } }).jpeg().toBuffer();
+  globalThis.fetch = async (_url, init) => {
+    const file = (init?.body as FormData).get("file") as Blob;
+    const meta = await sharp(Buffer.from(await file.arrayBuffer())).metadata();
+    assert.ok((meta.width ?? 0) <= 1600);
+    assert.ok((meta.height ?? 0) <= 1600);
+    const output = await sharp({ create: { width: 30, height: 30, channels: 4, background: { r: 0, g: 0, b: 200, alpha: 1 } } }).extend({ top: 5, bottom: 5, left: 5, right: 5, background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+    return new Response(output, { headers: { "content-type": "image/png" } });
+  };
+  await processProductImage({ buffer: input, fileName: "large.jpg", mimeType: "image/jpeg", removeBackground: true });
+});
+
+test("rejects an empty AI mask instead of silently saving a blank product", async () => {
+  process.env.BACKGROUND_REMOVAL_URL = "http://background-removal:7000";
+  const input = await sharp({ create: { width: 32, height: 32, channels: 3, background: "blue" } }).png().toBuffer();
+  const blank = await sharp({ create: { width: 32, height: 32, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).png().toBuffer();
+  globalThis.fetch = async () => new Response(blank, { headers: { "content-type": "image/png" } });
+  await assert.rejects(processProductImage({ buffer: input, fileName: "test.png", mimeType: "image/png", removeBackground: true }), ProductImageError);
+});
+
+test("optimizes large photos without enlarging small originals or keeping metadata", async () => {
+  const input = await sharp({ create: { width: 2600, height: 2400, channels: 3, background: "green" } }).jpeg().toBuffer();
+  const result = await processProductImage({ buffer: input, fileName: "big.jpg", mimeType: "image/jpeg", removeBackground: false });
+  assert.ok(result.width <= 1600);
+  assert.ok(result.sizeBytes <= 350_000);
+  assert.equal((await sharp(result.buffer).metadata()).exif, undefined);
 });
