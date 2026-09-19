@@ -27,10 +27,9 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `public/brand/delivery-truck.gif`
 - `public/brand/delivery-truck.png`
 - `public/brand/maps-pin-icon.svg`
-- `public/banners/faixa-home.webp`
-- `public/banners/hero-medicamentos.webp`
-- `public/banners/hero-perfumaria.webp`
-- `public/banners/hero-mae-bebe.webp`
+- `public/banners/hero-cuidados-v2.webp`
+- `public/banners/hero-perfumaria-v2.webp`
+- `public/banners/hero-infantil-v2.webp`
 - `public/favicon.svg`
 - `src/app/icon.svg`
 
@@ -44,8 +43,8 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Quando ha sessao, o header troca `Login / Cadastrar` por foto/nome abreviado da conta e um botao `Sair`. Perfis internos usam os rotulos curtos `Admin`, `Gerente` ou `Equipe`; clientes exibem apenas o primeiro nome, mantendo o nome completo na dica e no rotulo acessivel. No desktop, localizacao, WhatsApp, carrinho, conta e saida permanecem centralizados verticalmente na mesma linha.
 - O nome da conta no header abre `/minha-conta`, que redireciona perfis internos para o painel administrativo.
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
-- Banner principal atual e um carrossel com tres campanhas fotograficas proprias: medicamentos e cuidado diario, perfumaria e autocuidado, e mae e bebe. As imagens mostram pessoas, mantem area segura para texto em HTML e usam controles de anterior, proximo, pausa e indicadores; a troca automatica para durante interacao e respeita `prefers-reduced-motion`. Em telas a partir de `lg`, o banner usa proporcao fixa `8:3`, chegando a `1280 x 480 px`; no celular, ganha altura e recorte direcionado para preservar pessoa, texto, CTA e controles.
-- As artes do banner principal usam `1920 x 720 px` em WebP, area livre a esquerda e peso entre 50 e 70 KB. Futuras campanhas devem manter a area segura, evitar texto gravado na imagem e preparar `1080 x 1350 px` em WebP somente quando o recorte responsivo nao preservar o assunto.
+- Banner principal: tres campanhas com composicoes ilustrativas de 7 a 9 itens de cuidados, perfumaria e linha infantil. No desktop, texto e foto ocupam colunas; no celular, a foto inteira aparece acima do texto, em proporcao `3:2` com `object-contain`. Controles de anterior, proximo, pausa e indicadores permanecem; swipe horizontal nao captura rolagem vertical. Foco, ponteiro, movimento reduzido, aba oculta e saida da area visivel interrompem a rotacao automatica.
+- As novas artes usam `1536 x 1024 px` em WebP qualidade 84, entre 75.194 e 111.112 bytes. Apenas a imagem ativa e montada; a primeira recebe prioridade e `sizes` acompanha a largura real de exibicao. Nao voltar a montar todas as imagens transparentes sobrepostas nem esticar panoramas para preencher alturas de celular. Origem e prompts em `13-assets-institucionais.md`.
 - Home esta temporariamente focada em anuncio: o primeiro bloco e o carrossel de campanhas; entre ele e a faixa de campanhas aparece a vitrine `Melhores ofertas`, com cabecalho direto, CTA para WhatsApp, chips de campanha e carrossel responsivo com 10 espacos de produto. Os cards seguem um unico padrao branco de e-commerce, com selo promocional, imagem centralizada, nome, avaliacao real ou estado `Novo`, marca, preco, economia e acao circular. O desktop exibe cinco cards por vez e avanca em grupos de cinco por seta ou arraste; telas menores adaptam a quantidade visivel e preservam o gesto de toque. O cabecalho nao exibe contadores de ofertas ativas ou vagas nem texto descritivo.
 - Categorias em bolinhas nao aparecem na home nesta fase; os 10 lugares da vitrine sao alimentados pelo banco e ordenados manualmente em `/admin/ofertas`.
 - Depois da vitrine, a home exibe um carrossel responsivo com ate 10 avaliacoes publicadas de compras verificadas. Cada depoimento mostra nota real, comentario, nome publico abreviado e link para o produto; quando nao ha registros, aparece somente o estado vazio transparente.
@@ -86,7 +85,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Animacoes devem ser leves e nao prejudicar performance.
 - A rolagem vertical do site publico usa o comportamento nativo do navegador. Animacoes visuais nao podem interceptar roda do mouse, trackpad, teclas ou gesto de toque.
 - A faixa superior deve manter 40 px em todos os breakpoints, sem deslocar o conteudo nem interferir no autocomplete. No celular, duas linhas preservam titulo, condicao e valor da oferta. Grafismos sao decorativos e nao interceptam cliques; a entrada do texto termina mesmo durante pausa do movimento. O anuncio de R$ 99,90 esta limitado a Ivate-PR: nao configura frete nacional nem cria cobranca abaixo desse valor, e o checkout local continua com a regra existente. Cashback remete aos produtos habilitados, sem prometer percentual universal ou resgate online.
-- Para o anuncio principal da home, dimensao recomendada em desktop: 1920x840 px, proporcao 16:7. Se houver arte mobile separada, usar 1080x1350 px, proporcao 4:5.
+- Para as composicoes atuais do anuncio principal, usar fotos `3:2` de pelo menos `1536 x 1024 px`; manter textos e controles fora da imagem e conferir densidades de tela 1x e 3x.
 - Manter informacoes importantes do anuncio no centro da arte para evitar cortes em telas menores.
 
 ## Decisoes Tecnicas
@@ -100,7 +99,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - O cadastro de produtos oferece editor responsivo em modal para enquadramento quadrado, zoom e rotacao. No celular, a area de recorte preserva espaco para os controles e os botoes ocupam a largura disponivel.
 - As tres imagens do hero sao WebP leves e servidas pelo `next/image`; a primeira recebe prioridade e as demais permanecem preparadas para a proxima troca sem baixar video ou audio.
 - A pagina individual usa composicao de e-commerce farmaceutico: breadcrumb, foto real ampliavel sem fabricar miniaturas, informacoes comerciais, seletor de quantidade, acoes `Adicionar ao carrinho` e `Comprar agora`, entrega/retirada, detalhes em secoes expansivas, avaliacoes verificadas e produtos relacionados.
-- O painel principal do produto usa selo de novidade quando ainda nao ha nota, hierarquia reforcada de preco e compra, faixa de retirada/confirmacao/atendimento e um estado de avaliacoes convidativo. Depoimentos e estrelas continuam exclusivos de compras concluidas; nenhum exemplo promocional aparece como opiniao real.
+- O painel do produto usa preco por unidade, economia, cashback estimado e total atualizado por quantidade. A galeria tem ampliacao de 100% a 200%, rolagem centralizada, suporte a teclado e estado para imagem ausente/quebrada. Compartilhamento usa o recurso nativo ou copia a URL sem parametros; cada produto reinicia seus controles. Ausencia de nota aparece como `Sem avaliacoes`, sem inferir novidade. Atalhos para detalhes, entrega, avaliacoes e relacionados respeitam o header fixo.
 - Os controles de quantidade e compra usam cursor de acao, resposta visual de `hover`/clique, foco visivel e movimentos curtos que respeitam `prefers-reduced-motion`; estados desabilitados preservam o cursor de bloqueio.
 - `Comprar agora` adiciona a quantidade selecionada ao carrinho e segue ao checkout somente para produtos comuns elegiveis. Receita, Farmacia Popular e falta de estoque continuam no atendimento por WhatsApp.
 - O checkout usa progresso conectado em quatro etapas, cartoes de entrega/pagamento com selecao clara, formulario de endereco responsivo com autofill controlado e resumo contextual fixo no desktop. As transicoes sao curtas, os controles mantem foco visivel e nenhuma etapa sugere cobranca online.
@@ -109,6 +108,10 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Estrelas so representam avaliacoes reais vinculadas a compras concluidas. A home e a pagina de produto nao usam depoimentos inventados, seeds promocionais nem notas demonstrativas; sem registros, exibem o estado vazio correspondente.
 
 ## Riscos ao Alterar
+
+- A faixa inferior de campanhas usa tres cartoes HTML responsivos, com os temas Dia do Generico Barato, Dia do Idoso e Dia do Bebe; nao renderiza mais o texto reduzido da imagem `faixa-home.webp`. Os contatos continuam consultivos, sem datas ou descontos novos.
+- A perfumaria usa foto acima do texto no celular. `sizes` da composicao Dove considera a largura total no desktop e o recorte no celular; Rexona/NIVEA seguem embalagens existentes, sem gerar rotulos ou produtos de marca.
+- Evidencias da revisao de 2026-09-19 em `19-produtos-e-campanhas.md`.
 
 - O header fixo pode cobrir conteudo se paddings forem alterados.
 - Video vertical pode criar laterais vazias; usar composicao visual sem cortar conteudo importante.

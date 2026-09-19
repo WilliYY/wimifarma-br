@@ -1,5 +1,25 @@
 # 13 - Assets institucionais
 
+## Campanhas principais — 2026-09-19
+
+Geradas com a ferramenta nativa ImageGen, sem chave/API externa do projeto. Fotografias ilustrativas, sem marcas, preços, texto incorporado ou alegações clínicas; não representam estoque cadastrado. Legenda visível em todos os tamanhos. PNGs originais permanecem fora do repositório; conversão com Sharp para WebP qualidade 84, esforço 6, sem ampliar resolução.
+
+| Asset | Dimensões | Bytes | Origem ImageGen |
+| --- | --- | --- | --- |
+| `public/banners/hero-cuidados-v2.webp` | 1536 × 1024 | 75194 | `exec-5095a66a-c995-4e0d-bd0b-48dcf1f642f1.png` |
+| `public/banners/hero-perfumaria-v2.webp` | 1536 × 1024 | 85068 | `exec-e4e76029-93ab-41cc-9187-8c8a844b86d0.png` |
+| `public/banners/hero-infantil-v2.webp` | 1536 × 1024 | 111112 | `exec-ac1c8686-1468-4ecb-be85-cfb4db8150ee.png` |
+
+### Prompts de produção
+
+- **Cuidados:** premium photorealistic product still life for a Brazilian neighborhood pharmacy homepage, landscape 3:2, highest available resolution; seven unbranded everyday care packages centrally grouped: white/emerald carton without claims, white cylindrical bottle, boxed adhesive bandages, digital thermometer, cotton pad bag, clear hand gel and white pump bottle. Low ivory plinths, pale sage backdrop, diffuse daylight, natural contact shadows, all objects sharply focused, entire group inside the central 80% with 8% margins for mobile. No people, readable text, logos, medicine names, prices, loose pills, clinical claims, watermark or captions. Illustrative companion to HTML cashback campaign, not a specific medicine advertisement.
+- **Perfumaria:** premium photorealistic commercial still life, landscape 3:2; nine unbranded products: blush perfume with gold cap, ivory lotion pump, rose shampoo, peach conditioner tube, white sunscreen-style tube with no SPF writing, navy deodorant aerosol, mint soap pump, cream jar and wrapped ivory soap. Blush/ivory risers, pale pink studio backdrop, small green leaf, crisp materials and edges, realistic contact shadows, entire product family within central 80%, 8% margins, no cropped caps. No people, legible text, logos, prices, claims, watermark or collage.
+- **Infantil:** premium pharmacy mother-and-baby hygiene still life, landscape 3:2; eight product types: sage shampoo, cream lotion pump, yellow wash tube, white/mint diaper pack, mint baby wipes, white diaper cream tube, cotton swabs and folded white diapers. Ivory/butter-yellow risers, pale mint washcloth, calm sage/cream nursery background, soft botanical shadows, sharp seams and textures, packages inside central 80%, 8% margin. No people, feeding bottles, infant formula, food, breastmilk substitutes, legible text, logos, prices, clinical claims or watermarks.
+
+A foto inteira usa `object-contain` em área `3:2`. Desktop reserva uma coluna para texto HTML; mobile coloca a imagem acima. O carrossel monta só a imagem ativa com `sizes` adequado, prioridade inicial e qualidade 84. A faixa inferior usa texto HTML e ícones, eliminando a redução de letras da antiga imagem `faixa-home.webp`. Arquivos antigos preservados para reversão e usos em metadados.
+
+As embalagens Dove, Rexona e NIVEA continuam sendo as imagens existentes abaixo: não foram redesenhadas por IA. O banner Dove agora solicita largura suficiente para sua composição, e a perfumaria mobile separa imagem e texto.
+
 ## Perfumaria
 
 - `public/banners/dove-care.webp`: composicao existente preservada na primeira campanha.

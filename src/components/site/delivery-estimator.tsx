@@ -19,26 +19,28 @@ export function DeliveryEstimator() {
   }
 
   return (
-    <section aria-labelledby="delivery-estimator-title" className="border border-line bg-white p-5 sm:p-6">
+    <section aria-labelledby="delivery-estimator-title" className="rounded-3xl border border-line bg-white p-5 sm:p-6">
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-brand-soft text-brand">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
           <Truck className="h-5 w-5" aria-hidden="true" />
         </span>
         <div>
-          <h2 className="text-lg font-black text-ink" id="delivery-estimator-title">Consulte entrega e retirada</h2>
-          <p className="mt-1 text-sm leading-6 text-muted">Informe o CEP para verificar a cobertura atual.</p>
+          <h2 className="text-lg font-bold text-ink" id="delivery-estimator-title">Como você quer receber?</h2>
+          <p className="mt-1 text-sm leading-6 text-muted">Consulte a entrega ou retire na farmácia.</p>
         </div>
       </div>
 
-      <form className="mt-5 flex flex-col gap-2 sm:flex-row" onSubmit={handleSubmit}>
+      <form className="mt-5 flex gap-2" onSubmit={handleSubmit}>
         <label className="sr-only" htmlFor="product-postal-code">CEP</label>
-        <div className="relative flex-1">
+        <div className="relative min-w-0 flex-1">
           <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
           <input
             autoComplete="postal-code"
-            className="h-12 w-full rounded-md border border-line bg-white pl-10 pr-3 text-sm font-bold text-ink outline-none transition placeholder:text-muted focus:border-brand focus:ring-2 focus:ring-brand/15"
+            className="h-12 w-full rounded-xl border border-line bg-surface-subtle pl-10 pr-3 text-base font-semibold text-ink outline-none transition placeholder:text-muted focus:border-brand focus:ring-2 focus:ring-brand/15"
             id="product-postal-code"
             inputMode="numeric"
+            aria-describedby={result ? "delivery-result" : undefined}
+            aria-invalid={result ? result.normalizedPostalCode.length !== 8 : undefined}
             maxLength={9}
             onChange={(event) => {
               setPostalCode(formatPostalCode(event.target.value));
@@ -48,13 +50,13 @@ export function DeliveryEstimator() {
             value={postalCode}
           />
         </div>
-        <button className="h-12 rounded-md border border-brand px-5 text-sm font-black text-brand transition hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2" type="submit">
-          Calcular
+        <button className="h-12 shrink-0 rounded-xl bg-ink px-4 text-sm font-bold text-white transition hover:bg-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2" type="submit">
+          Consultar
         </button>
       </form>
 
       {result ? (
-        <div aria-live="polite" className={`mt-4 flex items-start gap-3 rounded-md border p-4 ${result.available ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+        <div role="status" id="delivery-result" className={`mt-4 flex items-start gap-3 rounded-xl border p-4 ${result.available ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
           {result.available ? (
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-pharma-green" aria-hidden="true" />
           ) : (
@@ -82,8 +84,8 @@ export function DeliveryEstimator() {
       <div className="mt-4 flex items-start gap-3 border-t border-line pt-4">
         <Store className="mt-0.5 h-5 w-5 shrink-0 text-brand" aria-hidden="true" />
         <div>
-          <strong className="block text-sm font-black text-ink">Retirada gratis na Wimifarma</strong>
-          <p className="mt-1 text-xs font-semibold leading-5 text-muted">Av. Minas Gerais, 2263. Aguarde a confirmacao antes de ir buscar.</p>
+          <strong className="block text-sm font-bold text-ink">Retirada na loja <span className="ml-1 rounded-full bg-emerald-50 px-2 py-1 text-xs text-emerald-800">Grátis</span></strong>
+          <p className="mt-2 text-xs leading-5 text-muted">Av. Minas Gerais, 2263. Aguarde a confirmação antes de ir buscar.</p>
         </div>
       </div>
     </section>

@@ -4,12 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
+  Baby,
+  HeartHandshake,
   MessageCircle,
   Pause,
+  Pill,
   Play,
   Quote,
   ShieldCheck,
@@ -81,17 +84,21 @@ function formatProductPrice(value: string) {
 
 const heroSlides = [
   {
-    accent: "#138a45",
+    accent: "#126a3a",
+    background: "#f1f6ef",
     cta: "Avaliar minhas compras",
     description:
-      "Sua opiniao vale mais cuidado. Avalie um produto de uma compra concluida e paga e use o bonus na proxima compra. Confira as regras.",
-    eyebrow: "Wimifarma · Sua opiniao tem valor",
+      "Avalie um produto de uma compra concluída e paga. Seu bônus vira desconto na próxima compra. Confira as regras.",
+    eyebrow: "Sua opinião tem valor",
     href: "/minha-conta/avaliacoes",
-    image: "/banners/hero-medicamentos.webp",
-    title: "1% de cashback por avaliacao",
+    image: "/banners/hero-cuidados-v2.webp",
+    imageAlt: "Composição ilustrativa com sete itens de higiene e cuidados, incluindo curativos, algodão e termômetro.",
+    categories: "Higiene · Cuidados · Bem-estar",
+    title: "1% de cashback por avaliação",
   },
   {
-    accent: "#d7496f",
+    accent: "#a82e52",
+    background: "#fdf2ee",
     cta: "Consultar perfumaria",
     description:
       "Perfumes, higiene e beleza para deixar seus momentos de autocuidado ainda melhores.",
@@ -99,20 +106,25 @@ const heroSlides = [
     href: `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent(
       "Ola, gostaria de consultar os produtos de perfumaria e autocuidado da Wimifarma.",
     )}`,
-    image: "/banners/hero-perfumaria.webp",
-    title: "Seu cuidado tambem merece um momento.",
+    image: "/banners/hero-perfumaria-v2.webp",
+    imageAlt: "Composição ilustrativa de perfumaria com perfume, hidratante, shampoo, sabonete e outros itens de autocuidado.",
+    categories: "Perfumaria · Higiene · Beleza",
+    title: "Seu cuidado merece um momento.",
   },
   {
-    accent: "#138a45",
+    accent: "#126a3a",
+    background: "#f6f5e9",
     cta: "Consultar linha infantil",
     description:
-      "Fraldas, higiene e cuidados infantis com atendimento proximo da nossa equipe.",
-    eyebrow: "Mae e bebe",
+      "Fraldas, higiene e cuidados infantis. Encontre o que sua família precisa com a ajuda da nossa equipe.",
+    eyebrow: "Mãe e bebê",
     href: `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent(
       "Ola, gostaria de consultar os produtos para mae e bebe da Wimifarma.",
     )}`,
-    image: "/banners/hero-mae-bebe.webp",
-    title: "Carinho para cada fase da familia.",
+    image: "/banners/hero-infantil-v2.webp",
+    imageAlt: "Composição ilustrativa de cuidados infantis com fraldas, lenços, shampoo, loção e algodão.",
+    categories: "Fraldas · Higiene · Cuidado infantil",
+    title: "Carinho em cada fase da família.",
   },
 ] as const;
 
@@ -256,10 +268,27 @@ function MotionBlock({
 function HeroCarousel() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [isInteracting, setIsInteracting] = useState(false);
+  const [hasFocus, setHasFocus] = useState(false);
+  const [isInView, setIsInView] = useState(false);
   const [isManuallyPaused, setIsManuallyPaused] = useState(false);
-  const shouldReduceMotion = useReducedMotion();
-  const touchStartX = useRef<number | null>(null);
+  const [shouldReduceMotion, setShouldReduceMotion] = useState(true);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
   const slide = heroSlides[activeSlide];
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMotion = () => setShouldReduceMotion(media.matches);
+    updateMotion();
+    media.addEventListener("change", updateMotion);
+    return () => media.removeEventListener("change", updateMotion);
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => setIsInView(entry.isIntersecting), { threshold: 0.2 });
+    if (carouselRef.current) observer.observe(carouselRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   const changeSlide = useCallback((direction: -1 | 1) => {
     setActiveSlide((current) =>
@@ -268,22 +297,26 @@ function HeroCarousel() {
   }, []);
 
   useEffect(() => {
-    if (isInteracting || isManuallyPaused || shouldReduceMotion) return;
+    if (!isInView || isInteracting || hasFocus || isManuallyPaused || shouldReduceMotion) return;
 
-    const interval = window.setInterval(() => changeSlide(1), 6500);
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") changeSlide(1);
+    }, 6500);
     return () => window.clearInterval(interval);
-  }, [activeSlide, changeSlide, isInteracting, isManuallyPaused, shouldReduceMotion]);
+  }, [activeSlide, changeSlide, hasFocus, isInView, isInteracting, isManuallyPaused, shouldReduceMotion]);
 
   function finishTouch(event: React.TouchEvent<HTMLDivElement>) {
-    const startX = touchStartX.current;
-    const endX = event.changedTouches[0]?.clientX;
+    const start = touchStart.current;
+    const end = event.changedTouches[0];
 
-    if (startX !== null && endX !== undefined) {
-      const distance = startX - endX;
-      if (Math.abs(distance) >= 40) changeSlide(distance > 0 ? 1 : -1);
+    if (start && end) {
+      const distance = start.x - end.clientX;
+      if (Math.abs(distance) >= 40 && Math.abs(distance) > Math.abs(start.y - end.clientY) * 1.25) {
+        changeSlide(distance > 0 ? 1 : -1);
+      }
     }
 
-    touchStartX.current = null;
+    touchStart.current = null;
     setIsInteracting(false);
   }
 
@@ -291,63 +324,60 @@ function HeroCarousel() {
     <div
       aria-label="Campanhas da Wimifarma"
       aria-roledescription="carrossel"
-      className="relative isolate min-h-[540px] touch-pan-y overflow-hidden rounded-lg bg-white shadow-[0_26px_90px_rgba(17,24,39,0.14)] lg:aspect-[8/3] lg:min-h-0"
+      className="relative isolate touch-pan-y overflow-hidden rounded-3xl border border-line shadow-[0_16px_48px_rgba(17,24,39,0.08)]"
+      style={{ backgroundColor: slide.background }}
+      ref={carouselRef}
       onBlurCapture={(event) => {
         const nextTarget = event.relatedTarget;
         if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
-          setIsInteracting(false);
+          setHasFocus(false);
         }
       }}
-      onFocusCapture={() => setIsInteracting(true)}
+      onFocusCapture={() => setHasFocus(true)}
       onMouseEnter={() => setIsInteracting(true)}
       onMouseLeave={() => setIsInteracting(false)}
       onTouchCancel={() => {
-        touchStartX.current = null;
+        touchStart.current = null;
         setIsInteracting(false);
       }}
       onTouchEnd={finishTouch}
       onTouchStart={(event) => {
-        touchStartX.current = event.touches[0]?.clientX ?? null;
+        const touch = event.touches[0];
+        touchStart.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
         setIsInteracting(true);
       }}
       role="region"
     >
-      {heroSlides.map((item, index) => (
-        <Image
-          alt=""
-          aria-hidden="true"
-          className={`absolute inset-0 -z-20 h-full w-full object-cover object-[72%_center] transition-opacity duration-700 motion-reduce:transition-none lg:object-center ${
-            activeSlide === index ? "opacity-100" : "opacity-0"
-          }`}
-          fill
-          key={item.image}
-          priority={index === 0}
-          quality={88}
-          sizes="(max-width: 1024px) 100vw, 1280px"
-          src={item.image}
-        />
-      ))}
-
-      <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,rgba(255,255,255,0.18)_34%,rgba(255,255,255,0.94)_62%,#fff_100%)] lg:bg-[linear-gradient(90deg,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.92)_35%,rgba(255,255,255,0.5)_55%,rgba(255,255,255,0)_78%)]" />
-      <div
-        className="absolute inset-x-0 top-0 h-1.5 transition-colors duration-500"
-        style={{ backgroundColor: slide.accent }}
-      />
-
+      <div className="grid lg:min-h-[460px] lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="relative aspect-[3/2] self-center overflow-hidden lg:order-2">
+          <Image
+            alt={slide.imageAlt}
+            className="object-contain"
+            fill
+            key={slide.image}
+            loading={activeSlide === 0 ? undefined : "eager"}
+            priority={activeSlide === 0}
+            quality={84}
+            sizes="(max-width: 639px) calc(100vw - 32px), (max-width: 1023px) calc(100vw - 48px), (max-width: 1359px) 55vw, 704px"
+            src={slide.image}
+          />
+          <span className="absolute bottom-3 right-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-medium text-muted">Imagem ilustrativa</span>
+        </div>
       <div
         aria-label={`${activeSlide + 1} de ${heroSlides.length}: ${slide.eyebrow}`}
         aria-roledescription="slide"
-        className="flex min-h-[540px] items-end px-6 pb-24 pt-56 sm:px-8 lg:h-full lg:min-h-0 lg:items-center lg:px-12 lg:py-10 xl:px-16"
+        aria-live={hasFocus || isInteracting || isManuallyPaused || shouldReduceMotion ? "polite" : "off"}
+        className="flex items-center px-5 pb-5 pt-6 sm:px-8 lg:order-1 lg:px-10 lg:py-10 xl:px-12"
         role="group"
       >
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-xl"
+          className="w-full"
           initial={false}
           key={activeSlide}
           transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: easeOut }}
         >
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/85 px-3 py-1.5 text-xs font-black uppercase text-ink shadow-sm backdrop-blur-sm">
+          <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-ink">
             <span
               aria-hidden="true"
               className="h-2 w-2 rounded-full"
@@ -355,14 +385,15 @@ function HeroCarousel() {
             />
             {slide.eyebrow}
           </p>
-          <h1 className="mt-4 max-w-[15ch] text-3xl font-black leading-[1.02] text-ink sm:text-4xl lg:text-5xl">
+          <h1 className="mt-3 max-w-[16ch] text-[2rem] font-bold leading-[1.06] tracking-tight text-ink sm:text-4xl xl:text-5xl">
             {slide.title}
           </h1>
-          <p className="mt-4 max-w-md text-sm font-semibold leading-6 text-muted sm:text-base sm:leading-7">
+          <p className="mt-4 max-w-md text-sm leading-6 text-muted sm:text-base sm:leading-7">
             {slide.description}
           </p>
+          <p className="mt-3 text-xs font-semibold" style={{ color: slide.accent }}>{slide.categories}</p>
           <a
-            className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-full px-5 py-3 text-sm font-black text-white shadow-[0_14px_30px_rgba(17,24,39,0.2)] transition duration-300 hover:-translate-y-0.5 hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
+            className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-white transition-colors hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
             href={slide.href}
             rel={slide.href.startsWith("http") ? "noreferrer" : undefined}
             style={{ backgroundColor: slide.accent }}
@@ -373,25 +404,23 @@ function HeroCarousel() {
           </a>
         </motion.div>
       </div>
+      </div>
 
-      <div className="absolute bottom-4 left-4 right-4 z-10 flex items-center justify-between gap-3 lg:left-auto lg:right-6">
-        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/90 p-2 shadow-md backdrop-blur-md">
+      <div className="flex items-center justify-between gap-3 border-t border-black/5 px-4 py-2 sm:px-7">
+        <div className="flex items-center">
           {heroSlides.map((item, index) => (
             <button
               aria-label={`Mostrar campanha ${index + 1}: ${item.eyebrow}`}
               aria-pressed={activeSlide === index}
-              className={`h-2.5 cursor-pointer rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ${
-                activeSlide === index ? "w-7" : "w-2.5 bg-slate-300 hover:bg-slate-400"
-              }`}
+              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
               key={item.image}
               onClick={() => setActiveSlide(index)}
-              style={activeSlide === index ? { backgroundColor: item.accent } : undefined}
               type="button"
-            />
+            ><span aria-hidden="true" className={`h-2 rounded-full transition-all duration-200 motion-reduce:transition-none ${activeSlide === index ? "w-6" : "w-2 bg-slate-400"}`} style={activeSlide === index ? { backgroundColor: item.accent } : undefined} /></button>
           ))}
         </div>
 
-        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/90 p-1.5 shadow-md backdrop-blur-md">
+        <div className="flex items-center gap-1 rounded-full bg-white/70 p-1">
           <button
             aria-label="Campanha anterior"
             className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-ink transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
@@ -956,22 +985,24 @@ export function HomePage({
       <section className="pharma-clouds bg-white px-4 pb-20 pt-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <MotionBlock>
-            <a
-              aria-label="Chamar a Wimifarma no WhatsApp pela faixa de campanhas"
-              className="soft-breathe block overflow-hidden rounded-lg bg-white shadow-[0_18px_70px_rgba(17,24,39,0.08)] ring-1 ring-line/70 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_80px_rgba(17,24,39,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-              href={siteConfig.whatsappUrl}
-              rel="noreferrer"
-              target="_blank"
-            >
-              <Image
-                alt="Faixas de campanha Wimifarma: generico barato, dia do idoso e dia do bebe"
-                className="h-auto w-full"
-                height={1024}
-                sizes="(min-width: 1280px) 1280px, 100vw"
-                src="/banners/faixa-home.webp"
-                width={1536}
-              />
-            </a>
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+              <div><p className="text-xs font-bold uppercase tracking-wider text-brand">Perto de você</p><h2 className="mt-2 text-3xl font-bold tracking-tight text-ink">Cuidado para cada fase.</h2></div>
+              <p className="max-w-sm text-sm leading-6 text-muted">Consulte as campanhas e as condições com a nossa equipe.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {[
+                { title: "Dia do Genérico Barato", description: "Consulte as opções de genéricos com a orientação da nossa equipe.", icon: Pill, color: "bg-[#edf7ef] text-emerald-800" },
+                { title: "Dia do Idoso", description: "Respeito, atenção e cuidado para quem já cuidou tanto de nós.", icon: HeartHandshake, color: "bg-[#f3f0fa] text-violet-800" },
+                { title: "Dia do Bebê", description: "Fraldas, higiene e carinho para acompanhar cada descoberta.", icon: Baby, color: "bg-[#fff1ee] text-rose-800" },
+              ].map((campaign) => (
+                <a className={`group rounded-2xl border border-black/5 p-6 transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${campaign.color}`} href={siteConfig.whatsappUrl} key={campaign.title} rel="noreferrer" target="_blank">
+                  <campaign.icon className="h-7 w-7" aria-hidden="true" />
+                  <h3 className="mt-5 text-xl font-bold text-ink">{campaign.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted">{campaign.description}</p>
+                  <span className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-bold">Consultar campanha<ChevronRight className="h-4 w-4" aria-hidden="true" /></span>
+                </a>
+              ))}
+            </div>
           </MotionBlock>
         </div>
       </section>

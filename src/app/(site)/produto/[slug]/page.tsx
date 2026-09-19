@@ -10,12 +10,13 @@ import {
   PackageCheck,
   Pill,
   ShieldCheck,
-  Sparkles,
+  Truck,
   Star,
 } from "lucide-react";
 import type { Prisma } from "@/generated/prisma/client";
 import { DeliveryEstimator } from "@/components/site/delivery-estimator";
 import { ProductImageViewer } from "@/components/site/product-image-viewer";
+import { ProductShareButton } from "@/components/site/product-share-button";
 import { ProductPurchasePanel } from "@/components/site/product-purchase-panel";
 import { ProductCashback } from "@/components/site/product-cashback";
 import { ProductReviewForm } from "@/components/site/product-review-form";
@@ -215,8 +216,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         dangerouslySetInnerHTML={{ __html: serializeProductStructuredData(productStructuredData) }}
         type="application/ld+json"
       />
-      <section className="border-b border-line bg-[#f5f6f8]">
-        <div className="mx-auto w-full max-w-7xl px-4 pb-12 pt-36 sm:px-6 sm:pt-40 lg:px-8 lg:pb-16 lg:pt-56">
+      <section className="border-b border-line bg-[#f7f8fa]">
+        <div className="mx-auto w-full max-w-7xl px-4 pb-10 pt-36 sm:px-6 sm:pt-40 lg:px-8 lg:pb-12 lg:pt-56">
           <nav aria-label="Navegacao estrutural" className="flex items-center gap-1 overflow-hidden text-xs font-bold text-muted sm:text-sm">
             <Link className="shrink-0 transition hover:text-brand" href="/">Home</Link>
             <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -229,65 +230,73 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <span aria-current="page" className="truncate text-ink">{product.name}</span>
           </nav>
 
-          <div className="mt-6 grid gap-7 lg:grid-cols-[minmax(0,1.08fr)_minmax(24rem,0.92fr)] lg:items-start">
-            <ProductImageViewer imageUrl={product.imageUrl} name={product.name} />
+          <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-start lg:gap-10">
+            <div className="grid min-w-0 gap-4 lg:sticky lg:top-52">
+              <ProductImageViewer imageUrl={product.imageUrl} key={product.id} name={product.name} />
+              <div className="flex items-center gap-3 px-2 text-sm text-muted">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-brand"><Headphones className="h-5 w-5" aria-hidden="true" /></span>
+                <p><strong className="block font-bold text-ink">Cuidado de perto, também online.</strong><span className="text-xs">Atendimento pela equipe da Wimifarma em Ivaté.</span></p>
+              </div>
+            </div>
 
             <div className="grid gap-4">
-              <article className="relative overflow-hidden rounded-lg border border-line bg-white p-5 shadow-[0_18px_50px_rgba(17,24,39,0.07)] sm:p-7">
-                <div className="absolute inset-x-0 top-0 h-1 bg-brand" />
+              <article className="min-w-0 rounded-3xl border border-line bg-white p-5 shadow-[0_12px_40px_rgba(17,24,39,0.04)] sm:p-7">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-sm font-black text-brand">{product.brand ?? "Wimifarma"}</span>
+                  <span className="text-xs font-bold uppercase tracking-[0.12em] text-brand">{product.brand ?? "Wimifarma"}</span>
+                  <ProductShareButton key={product.id} name={product.name} />
+                </div>
+
+                <h1 className="mt-4 text-[1.65rem] font-bold leading-[1.15] tracking-tight text-ink sm:text-3xl lg:text-[2.15rem]">{product.name}</h1>
+                <p className="mt-3 flex items-center gap-1.5 text-xs text-muted"><BadgeCheck className="h-4 w-4 text-brand" aria-hidden="true" />Vendido e atendido por <strong className="font-bold text-ink">Wimifarma</strong></p>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
                   {ratingSummary.count > 0 ? (
-                    <a className="inline-flex items-center gap-2 text-xs font-bold text-muted transition hover:text-brand" href="#avaliacoes">
+                    <a className="inline-flex min-h-8 items-center gap-2 text-xs font-bold text-muted transition hover:text-brand focus-visible:outline-brand" href="#avaliacoes">
                       <RatingStars rating={ratingSummary.average} />
                       {`${ratingSummary.average} (${ratingSummary.count} ${ratingSummary.count === 1 ? "avaliacao" : "avaliacoes"})`}
                     </a>
                   ) : (
-                    <a className="mr-16 inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-800 transition hover:bg-amber-100 sm:mr-0" href="#avaliacoes">
-                      <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                      Novo no catalogo
+                    <a className="inline-flex min-h-8 items-center gap-2 text-xs font-semibold text-muted underline-offset-4 transition hover:text-brand hover:underline focus-visible:outline-brand" href="#avaliacoes">
+                      <Star className="h-4 w-4" aria-hidden="true" />
+                      Sem avaliações · Seja o primeiro a avaliar
                     </a>
                   )}
                 </div>
 
-                <h1 className="mt-4 text-2xl font-black leading-tight text-ink sm:text-3xl lg:text-4xl">{product.name}</h1>
-                <p className="mt-2 text-xs font-semibold text-muted">
-                  Vendido e atendido por <strong className="text-ink">Wimifarma</strong>{product.sku ? ` · cod. ${product.sku}` : ""}
-                </p>
-
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {product.category ? <span className="rounded-md bg-brand-soft px-3 py-1.5 text-xs font-black uppercase text-brand">{product.category}</span> : null}
-                  {product.isPopularPharmacy ? <span className="rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-black uppercase text-emerald-700">Farmacia Popular</span> : null}
-                  {product.requiresPrescription ? <span className="rounded-md bg-amber-50 px-3 py-1.5 text-xs font-black uppercase text-amber-700">Exige receita</span> : null}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {product.category ? <span className="rounded-full bg-surface-subtle px-3 py-1.5 text-xs font-semibold text-muted">{product.category}</span> : null}
+                  {product.isPopularPharmacy ? <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800">Farmácia Popular</span> : null}
+                  {product.requiresPrescription ? <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800">Exige receita</span> : null}
+                  {product.sku ? <span className="self-center text-xs text-muted">Cód. {product.sku}</span> : null}
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-5 rounded-2xl bg-brand-soft/70 p-5">
                   {hasPromotion ? (
                     <div className="flex flex-wrap items-center gap-2 text-sm">
-                      <span className="font-semibold text-muted line-through">{formatCurrency(normalPrice)}</span>
-                      <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-black text-emerald-700">{discountPercentage}% OFF</span>
+                      <span className="text-muted">De <del>{formatCurrency(normalPrice)}</del></span>
+                      <span className="rounded-full bg-brand px-2.5 py-1 text-xs font-bold text-white">−{discountPercentage}%</span>
                     </div>
                   ) : null}
-                  <span className="mt-2 block text-[0.68rem] font-black uppercase tracking-[0.12em] text-muted">Preco do catalogo</span>
-                  <strong className="mt-1 block text-4xl font-black text-brand">{formatCurrency(currentPrice)}</strong>
-                  {hasPromotion ? <p className="mt-1 text-xs font-bold text-pharma-green">Economize {formatCurrency(saving)}</p> : null}
+                  <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
+                    <strong className="text-5xl font-bold tracking-tight text-brand tabular-nums">{formatCurrency(currentPrice)}</strong>
+                    <span className="text-xs text-muted">por unidade</span>
+                  </div>
+                  {hasPromotion ? <p className="mt-2 text-xs font-semibold text-emerald-800">Você economiza {formatCurrency(saving)} por unidade</p> : null}
                 </div>
 
                 <ProductCashback product={product} unitPriceCents={Math.round(currentPrice * 100)} details />
-                <ProductPurchasePanel product={cartProduct} />
+                <ProductPurchasePanel key={product.id} product={cartProduct} />
 
-                <div className="mt-6 grid gap-4 rounded-md bg-[#f7f8fa] p-4 text-xs text-muted sm:grid-cols-3">
-                  <span className="flex items-start gap-2.5"><PackageCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" /><span><strong className="block text-ink">Estoque revisado</strong><span className="mt-1 block font-semibold">Na conclusao do pedido</span></span></span>
-                  <span className="flex items-start gap-2.5"><CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" /><span><strong className="block text-ink">Sem dados bancarios</strong><span className="mt-1 block font-semibold">O site nao pede numero do cartao</span></span></span>
-                  <span className="flex items-start gap-2.5"><Headphones className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" /><span><strong className="block text-ink">Atendimento humano</strong><span className="mt-1 block font-semibold">Equipe da Wimifarma</span></span></span>
+                <div className="mt-4 flex items-start gap-2 text-xs leading-5 text-muted">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />
+                  <p>Pedido confirmado pela equipe. O pagamento é combinado no atendimento, sem informar dados de cartão no site.</p>
                 </div>
               </article>
 
-              <DeliveryEstimator />
+              <div className="scroll-mt-56" id="entrega"><DeliveryEstimator /></div>
             </div>
           </div>
 
-          <div className="mt-6 grid overflow-hidden rounded-lg border border-line bg-white shadow-[0_12px_34px_rgba(17,24,39,0.05)] sm:grid-cols-3">
+          <div className="mt-8 grid overflow-hidden rounded-2xl border border-line bg-white sm:grid-cols-3">
             <div className="flex items-center gap-3 border-b border-line p-4 sm:border-b-0 sm:border-r">
               <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-pharma-green"><MapPin className="h-5 w-5" aria-hidden="true" /></span>
               <span><strong className="block text-sm text-ink">Retirada gratuita</strong><span className="mt-0.5 block text-xs font-semibold text-muted">Na loja em Ivate</span></span>
@@ -304,19 +313,28 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       </section>
 
-      <section className="bg-white px-4 py-14 sm:px-6 lg:px-8 lg:py-18">
+      <nav aria-label="Explore este produto" className="border-b border-line bg-white px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-wrap gap-x-6 gap-y-1 py-2 text-sm font-semibold text-muted sm:gap-x-10">
+          <a className="inline-flex min-h-12 items-center gap-2 transition-colors hover:text-brand focus-visible:outline-brand" href="#informacoes"><PackageCheck className="h-4 w-4" aria-hidden="true" />Detalhes do produto</a>
+          <a className="inline-flex min-h-12 items-center gap-2 transition-colors hover:text-brand focus-visible:outline-brand" href="#entrega"><Truck className="h-4 w-4" aria-hidden="true" />Entrega e retirada</a>
+          <a className="inline-flex min-h-12 items-center gap-2 transition-colors hover:text-brand focus-visible:outline-brand" href="#avaliacoes"><Star className="h-4 w-4" aria-hidden="true" />Avaliações <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-xs">{ratingSummary.count}</span></a>
+          <a className="inline-flex min-h-12 items-center gap-2 transition-colors hover:text-brand focus-visible:outline-brand" href="#relacionados">Produtos relacionados<ChevronRight className="h-4 w-4" aria-hidden="true" /></a>
+        </div>
+      </nav>
+
+      <section className="scroll-mt-52 bg-white px-4 py-12 sm:px-6 lg:px-8 lg:py-16" id="informacoes">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div>
               <p className="text-xs font-black uppercase text-brand">Informacoes do produto</p>
-              <h2 className="mt-2 text-3xl font-black text-ink">Conheca antes de comprar</h2>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight text-ink">Conheça antes de comprar</h2>
               <div className="mt-7 divide-y divide-line border-y border-line">
                 <details className="group py-5" open>
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-base font-black text-ink">Descricao<ChevronRight className="h-5 w-5 text-brand transition group-open:rotate-90" aria-hidden="true" /></summary>
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-base font-bold text-ink focus-visible:outline-brand">Descrição<ChevronRight className="h-5 w-5 text-brand transition-transform group-open:rotate-90 motion-reduce:transition-none" aria-hidden="true" /></summary>
                   <p className="mt-4 whitespace-pre-line text-sm leading-7 text-muted">{product.description ?? "A descricao detalhada ainda nao foi cadastrada. Consulte a embalagem e confirme as informacoes com a equipe da farmacia."}</p>
                 </details>
                 <details className="group py-5">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-base font-black text-ink">Principios ativos e identificacao<ChevronRight className="h-5 w-5 text-brand transition group-open:rotate-90" aria-hidden="true" /></summary>
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-base font-bold text-ink focus-visible:outline-brand">Princípios ativos e identificação<ChevronRight className="h-5 w-5 text-brand transition-transform group-open:rotate-90 motion-reduce:transition-none" aria-hidden="true" /></summary>
                   <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
                     <div><dt className="font-bold text-muted">Principios ativos</dt><dd className="mt-1 font-black text-ink">{product.activeIngredients.join(", ") || "Nao informado"}</dd></div>
                     <div><dt className="font-bold text-muted">Marca</dt><dd className="mt-1 font-black text-ink">{product.brand ?? "Nao informada"}</dd></div>
@@ -326,15 +344,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   </dl>
                 </details>
                 <details className="group py-5">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-base font-black text-ink">Formas de pagamento<ChevronRight className="h-5 w-5 text-brand transition group-open:rotate-90" aria-hidden="true" /></summary>
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-base font-bold text-ink focus-visible:outline-brand"><span className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-muted" aria-hidden="true" />Formas de pagamento</span><ChevronRight className="h-5 w-5 text-brand transition-transform group-open:rotate-90 motion-reduce:transition-none" aria-hidden="true" /></summary>
                   <p className="mt-4 text-sm leading-7 text-muted">Pix apos confirmacao da equipe, dinheiro ou cartao no atendimento. O site nao solicita numero do cartao ou CVV.</p>
                 </details>
               </div>
             </div>
 
-            <aside className="h-fit border-l-4 border-brand bg-surface-subtle p-5 sm:p-6">
+            <aside className="h-fit rounded-2xl border border-emerald-100 bg-[#f2f8f5] p-5 sm:p-6">
               <Pill className="h-6 w-6 text-brand" aria-hidden="true" />
-              <h3 className="mt-3 text-lg font-black text-ink">Uso responsavel</h3>
+              <h3 className="mt-3 text-lg font-bold text-ink">Cuidado em cada escolha</h3>
               <p className="mt-3 text-sm leading-7 text-muted">Leia a embalagem e a bula. Em caso de duvida, fale com o farmaceutico. Nao use medicamentos sem orientacao adequada.</p>
               <p className="mt-3 text-xs font-semibold leading-5 text-muted">A imagem pode ter pequena variacao de embalagem conforme o lote do fabricante.</p>
             </aside>
@@ -342,7 +360,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       </section>
 
-      <section className="border-y border-line bg-[#f7f8fa] px-4 py-14 sm:px-6 lg:px-8" id="avaliacoes">
+      <section className="scroll-mt-52 border-y border-line bg-[#f7f8fa] px-4 py-14 sm:px-6 lg:px-8" id="avaliacoes">
         <div className="mx-auto max-w-7xl">
           {reviews.length > 0 ? (
           <div className="grid gap-8 lg:grid-cols-[16rem_minmax(0,1fr)_22rem] lg:items-start">
@@ -426,7 +444,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       </section>
 
-      <section className="bg-white px-4 py-14 sm:px-6 lg:px-8">
+      <section className="scroll-mt-52 bg-white px-4 pb-28 pt-14 sm:px-6 lg:px-8" id="relacionados">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-4 border-b border-line pb-7 md:grid-cols-[1fr_auto] md:items-end">
             <div>

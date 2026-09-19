@@ -129,7 +129,10 @@ export function PerfumeryCarousel() {
               className={styles.image}
               draggable={false}
               fill
-              sizes="(max-width: 639px) 210px, (max-width: 1023px) 50vw, 650px"
+              quality={84}
+              sizes={campaign.theme === "dove"
+                ? "(max-width: 639px) 640px, (max-width: 1359px) 100vw, 1280px"
+                : "(max-width: 639px) calc(100vw - 32px), (max-width: 1023px) 50vw, 650px"}
               src={campaign.image}
             />
           </div>

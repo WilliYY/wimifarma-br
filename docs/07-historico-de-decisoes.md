@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-19 - Produto interativo e campanhas responsivas leves
+
+- Decisao: reorganizar a pagina de produto com galeria ampliavel, compartilhamento, total por quantidade e atalhos; substituir inferencia de novidade por ausencia explicita de avaliacoes. Preservar regras de pedido, estoque, receita, Farmacia Popular e cashback.
+- Campanhas: fotos ilustrativas `3:2` com grupos de produtos, texto HTML separado no celular e somente a campanha ativa carregada. Corrigir `sizes` do banner Dove e converter a faixa inferior rasterizada em cartoes HTML. Sem novas dependencias, banco ou APIs.
+- Motivo: evitar fotos ampliadas/recortadas no celular, reduzir carregamentos invisiveis e tornar preco, compra e leitura mais claros.
+- Validacao e peso: `19-produtos-e-campanhas.md`; proveniencia e prompts: `13-assets-institucionais.md`. Fotografias nao prometem marcas ou estoque. Nenhum teste cria pedidos reais.
+
 ## 2026-09-19 - Cadastro assistido, fotos persistentes e destaque transacional
 
 - Pesquisa Gemini ao sair do nome/EAN, sem chamada por tecla. Preenchimento somente de campos vazios com identidade exata e fonte oficial; conflito bloqueia aplicacao. Conferencia humana continua obrigatoria, sem promessa de 100% ou posicionamento SEO.
