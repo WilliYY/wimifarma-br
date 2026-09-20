@@ -7,6 +7,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 ## Arquivos Envolvidos
 
 - `src/components/site/home-page.tsx`
+- `src/components/site/hero-product-stage.tsx` e `.module.css`
 - `src/components/site/site-header.tsx`
 - `src/components/site/announcement-bar.tsx`
 - `src/components/site/announcement-bar.module.css`
@@ -27,9 +28,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `public/brand/delivery-truck.gif`
 - `public/brand/delivery-truck.png`
 - `public/brand/maps-pin-icon.svg`
-- `public/banners/hero-cuidados-v2.webp`
-- `public/banners/hero-perfumaria-v2.webp`
-- `public/banners/hero-infantil-v2.webp`
+- `public/banners/products/*.webp`, `nivea-care.webp` e `rexona-care.webp`
 - `public/favicon.svg`
 - `src/app/icon.svg`
 
@@ -43,8 +42,9 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - Quando ha sessao, o header troca `Login / Cadastrar` por foto/nome abreviado da conta e um botao `Sair`. Perfis internos usam os rotulos curtos `Admin`, `Gerente` ou `Equipe`; clientes exibem apenas o primeiro nome, mantendo o nome completo na dica e no rotulo acessivel. No desktop, localizacao, WhatsApp, carrinho, conta e saida permanecem centralizados verticalmente na mesma linha.
 - O nome da conta no header abre `/minha-conta`, que redireciona perfis internos para o painel administrativo.
 - `/minha-conta` usa abas para usuario, senha e cashback; dados de entrega ficam junto com usuario em um unico formulario.
-- Banner principal: tres campanhas com composicoes ilustrativas de 7 a 9 itens de cuidados, perfumaria e linha infantil. No desktop, texto e foto ocupam colunas; no celular, a foto inteira aparece acima do texto, em proporcao `3:2` com `object-contain`. Controles de anterior, proximo, pausa e indicadores permanecem; swipe horizontal nao captura rolagem vertical. Foco, ponteiro, movimento reduzido, aba oculta e saida da area visivel interrompem a rotacao automatica.
-- As novas artes usam `1536 x 1024 px` em WebP qualidade 84, entre 75.194 e 111.112 bytes. Apenas a imagem ativa e montada; a primeira recebe prioridade e `sizes` acompanha a largura real de exibicao. Nao voltar a montar todas as imagens transparentes sobrepostas nem esticar panoramas para preencher alturas de celular. Origem e prompts em `13-assets-institucionais.md`.
+- Banner principal: tres campanhas com quatro embalagens reais por composicao. Dove, NIVEA e Rexona em cuidados/perfumaria; Huggies e Johnson’s na linha infantil. `HeroProductStage` monta fotos independentes em HTML/CSS, preserva rotulos e recorta apenas margens vazias dos frascos. No desktop, texto e fotos ocupam colunas; no celular, as embalagens aparecem acima do texto. Controles de anterior, proximo, pausa e indicadores permanecem; swipe horizontal nao captura rolagem vertical. Foco, ponteiro, movimento reduzido, aba oculta e saida da area visivel interrompem a rotacao automatica.
+- Campanha de avaliacao usa `Sua opinião vale mais.` e CTA `Compartilhar minha experiência`. O 1% aparece como beneficio secundario, com compra concluida/paga, primeira avaliacao por produto elegivel, base de uma unidade, qualquer nota e link `Como funciona`. `/cashback` segue a mesma comunicacao; contrato financeiro preservado.
+- As oito fotos distintas somam 159.488 bytes em WebP. Somente as quatro da campanha ativa sao montadas; a primeira recebe prioridade. As duas primeiras campanhas compartilham as mesmas URLs e cache. `sizes` responsivo e qualidade 84 no Next Image; sem ampliar fontes pequenas nem gerar marcas por IA. Proveniencia em `13-assets-institucionais.md`. As artes sem marca `hero-*-v2.webp` ficam apenas como historico, fora da renderizacao.
 - Home esta temporariamente focada em anuncio: o primeiro bloco e o carrossel de campanhas; entre ele e a faixa de campanhas aparece a vitrine `Melhores ofertas`, com cabecalho direto, CTA para WhatsApp, chips de campanha e carrossel responsivo com 10 espacos de produto. Os cards seguem um unico padrao branco de e-commerce, com selo promocional, imagem centralizada, nome, avaliacao real ou estado `Novo`, marca, preco, economia e acao circular. O desktop exibe cinco cards por vez e avanca em grupos de cinco por seta ou arraste; telas menores adaptam a quantidade visivel e preservam o gesto de toque. O cabecalho nao exibe contadores de ofertas ativas ou vagas nem texto descritivo.
 - Categorias em bolinhas nao aparecem na home nesta fase; os 10 lugares da vitrine sao alimentados pelo banco e ordenados manualmente em `/admin/ofertas`.
 - Depois da vitrine, a home exibe um carrossel responsivo com ate 10 avaliacoes publicadas de compras verificadas. Cada depoimento mostra nota real, comentario, nome publico abreviado e link para o produto; quando nao ha registros, aparece somente o estado vazio transparente.
@@ -64,7 +64,7 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 - `Farmacia Popular` usa hero proprio com fotografia ilustrativa de atendimento, selo oficial, orientacoes, checklist e CTA para WhatsApp sem prometer disponibilidade automatica; a arte `public/banners/farmacia-popular-atendimento.webp` tem `1200 x 720 px`, 42 KB e texto comercial separado em HTML.
 - Rodape usa a logo, navegacao, dados de atendimento e WhatsApp, com texto branco de alto contraste sobre o vermelho, sem texto de plataforma em construcao nem nome repetido ao lado da logo.
 - Endereco exibido no site vem de `src/lib/site.ts`: Avenida Minas Gerais, 2263 - Ivate, Parana. O link de Maps usa URL curta do Google Maps, abre em nova aba sem mapa embutido e usa o icone transparente `public/brand/maps-pin-icon.svg`.
-- Faixa de campanhas da home usa `public/banners/faixa-home.webp` e o clique abre o WhatsApp principal.
+- Faixa inferior de campanhas usa cartoes HTML com icones e links de consulta ao WhatsApp principal; `public/banners/faixa-home.webp` permanece somente nos metadados de compartilhamento.
 - Metadata global inclui Open Graph e Twitter Card usando a faixa de campanhas como imagem de compartilhamento.
 - Favicon e `src/app/icon.svg` usam SVG vetorial compacto do simbolo vermelho/branco da Wimifarma, sem imagem base64 embutida.
 - O topo do painel administrativo possui botao `Home` para voltar ao site publico, alem de WhatsApp e sair; no celular, titulo e acoes ocupam linhas separadas para evitar cortes. O endpoint tecnico `/api/health` permanece disponivel sem aparecer como acao principal.

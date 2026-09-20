@@ -1,4 +1,19 @@
-# Produtos e campanhas — revisão de 2026-09-19
+# Produtos e campanhas
+
+## Revisao de 2026-09-20: marcas e marketing de avaliacao
+
+- Banner e `/cashback`: `Sua opinião vale mais.` convida a compartilhar experiencias. O 1% extra e secundario, com condicoes e link para as regras; qualquer nota recebe o mesmo tratamento. Nenhuma regra de cashback ou dado comercial mudou.
+- Quatro embalagens reais em cada campanha. Dove, NIVEA e Rexona em cuidados/perfumaria; Huggies e Johnson’s na linha infantil. Fotos individuais em `HeroProductStage`, CSS responsivo, fontes locais e sem marcas sintetizadas por IA. Fontes em `13-assets-institucionais.md`.
+- Arquivos: `home-page.tsx`, `hero-product-stage.tsx`, `hero-product-stage.module.css`, `src/app/(site)/cashback/page.tsx`, seis WebP em `public/banners/products/`; README e docs 07, 10, 13, 16 e este documento.
+- Oito fontes distintas (incluindo dois WebP existentes) somam **159.488 bytes**, reducao de **41,2%** frente aos 271.374 bytes da revisao anterior. As duas primeiras campanhas compartilham imagens; as infantis so carregam quando exibidas.
+- Playwright local: tres campanhas em 320, 390, 768, 1024 e 1440 px; quatro imagens carregadas por campanha, sem overflow horizontal, erro JavaScript ou HTTP >= 400. Conferidos links, toque real via CDP, setas, movimento reduzido e consistencia de `/cashback`.
+- Primeira campanha: **18.629 bytes** de imagens no desktop 1440/DPR 1 e **35.567 bytes** no celular 390/DPR 3. A segunda campanha nao repetiu downloads; imagens infantis ausentes das requisicoes iniciais. Sao bytes dos corpos das imagens otimizadas, nao peso total da pagina. O primeiro banner tem mais bytes que a arte unica anterior, mas o conjunto completo e menor e as marcas sao reais.
+- Nenhuma dependencia, migration, API, pedido ou saldo novo. Preview e scripts locais removidos antes da entrega; capturas de QA nao versionadas.
+- Gates desta revisao: `node node_modules/eslint/bin/eslint.js .`, `node node_modules/typescript/bin/tsc --noEmit`, `npm.cmd run build` e `git diff --check` passaram. Build final sem rota de preview. Testes de dominio, Prisma validate e audit ja haviam passado na entrega anterior desta mesma tarefa; esta revisao nao altera dominio, schema ou dependencias.
+
+## Registro da revisao anterior — 2026-09-19
+
+Os resultados abaixo descrevem a entrega anterior. As composicoes sem marca foram substituidas em 2026-09-20, conforme a revisao acima.
 
 ## Resultado
 

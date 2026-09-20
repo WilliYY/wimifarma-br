@@ -31,6 +31,7 @@ import type { CashbackProduct } from "@/features/cashback/rules";
 import type { CartProduct } from "@/components/site/cart-provider";
 import { HomeProductCarousel } from "@/components/site/home-product-carousel";
 import { PerfumeryCarousel } from "@/components/site/perfumery-carousel";
+import { HeroProductStage } from "@/components/site/hero-product-stage";
 import type { RelatedProductCardItem } from "@/components/site/public-product-card";
 import { siteConfig } from "@/lib/site";
 
@@ -86,15 +87,14 @@ const heroSlides = [
   {
     accent: "#126a3a",
     background: "#f1f6ef",
-    cta: "Avaliar minhas compras",
+    cta: "Compartilhar minha experiência",
     description:
-      "Avalie um produto de uma compra concluída e paga. Seu bônus vira desconto na próxima compra. Confira as regras.",
-    eyebrow: "Sua opinião tem valor",
+      "Conte como foi usar os produtos da sua compra e ajude outras pessoas a escolher com mais confiança.",
+    eyebrow: "Quem compra, compartilha",
     href: "/minha-conta/avaliacoes",
-    image: "/banners/hero-cuidados-v2.webp",
-    imageAlt: "Composição ilustrativa com sete itens de higiene e cuidados, incluindo curativos, algodão e termômetro.",
-    categories: "Higiene · Cuidados · Bem-estar",
-    title: "1% de cashback por avaliação",
+    art: "care",
+    categories: "Opiniões sinceras fazem a diferença.",
+    title: "Sua opinião vale mais.",
   },
   {
     accent: "#a82e52",
@@ -106,8 +106,7 @@ const heroSlides = [
     href: `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent(
       "Ola, gostaria de consultar os produtos de perfumaria e autocuidado da Wimifarma.",
     )}`,
-    image: "/banners/hero-perfumaria-v2.webp",
-    imageAlt: "Composição ilustrativa de perfumaria com perfume, hidratante, shampoo, sabonete e outros itens de autocuidado.",
+    art: "beauty",
     categories: "Perfumaria · Higiene · Beleza",
     title: "Seu cuidado merece um momento.",
   },
@@ -121,8 +120,7 @@ const heroSlides = [
     href: `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent(
       "Ola, gostaria de consultar os produtos para mae e bebe da Wimifarma.",
     )}`,
-    image: "/banners/hero-infantil-v2.webp",
-    imageAlt: "Composição ilustrativa de cuidados infantis com fraldas, lenços, shampoo, loção e algodão.",
+    art: "baby",
     categories: "Fraldas · Higiene · Cuidado infantil",
     title: "Carinho em cada fase da família.",
   },
@@ -349,19 +347,8 @@ function HeroCarousel() {
       role="region"
     >
       <div className="grid lg:min-h-[460px] lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="relative aspect-[3/2] self-center overflow-hidden lg:order-2">
-          <Image
-            alt={slide.imageAlt}
-            className="object-contain"
-            fill
-            key={slide.image}
-            loading={activeSlide === 0 ? undefined : "eager"}
-            priority={activeSlide === 0}
-            quality={84}
-            sizes="(max-width: 639px) calc(100vw - 32px), (max-width: 1023px) calc(100vw - 48px), (max-width: 1359px) 55vw, 704px"
-            src={slide.image}
-          />
-          <span className="absolute bottom-3 right-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-medium text-muted">Imagem ilustrativa</span>
+        <div className="self-center lg:order-2">
+          <HeroProductStage priority={activeSlide === 0} variant={slide.art} />
         </div>
       <div
         aria-label={`${activeSlide + 1} de ${heroSlides.length}: ${slide.eyebrow}`}
@@ -391,9 +378,22 @@ function HeroCarousel() {
           <p className="mt-4 max-w-md text-sm leading-6 text-muted sm:text-base sm:leading-7">
             {slide.description}
           </p>
-          <p className="mt-3 text-xs font-semibold" style={{ color: slide.accent }}>{slide.categories}</p>
+          {activeSlide === 0 ? (
+            <div className="mt-4 max-w-md rounded-2xl border border-emerald-900/10 bg-white/75 px-4 py-3">
+              <p className="flex items-center gap-2 text-sm font-bold text-emerald-900">
+                <span className="rounded-lg bg-emerald-100 px-2 py-1 text-base">1%</span>
+                de cashback extra para sua próxima compra
+              </p>
+              <p className="mt-2 text-xs leading-5 text-muted">
+                Sobre uma unidade, na primeira avaliação de cada produto elegível de uma compra concluída e paga. Vale para qualquer nota.
+              </p>
+            </div>
+          ) : (
+            <p className="mt-3 text-xs font-semibold" style={{ color: slide.accent }}>{slide.categories}</p>
+          )}
+          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
           <a
-            className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-white transition-colors hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
+            className="inline-flex min-h-12 items-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-white transition-colors hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
             href={slide.href}
             rel={slide.href.startsWith("http") ? "noreferrer" : undefined}
             style={{ backgroundColor: slide.accent }}
@@ -402,6 +402,12 @@ function HeroCarousel() {
             {slide.cta}
             <ChevronRight aria-hidden="true" className="h-4 w-4" />
           </a>
+          {activeSlide === 0 && (
+            <Link className="inline-flex min-h-11 items-center text-sm font-semibold text-emerald-900 underline decoration-emerald-900/30 underline-offset-4 hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-4" href="/cashback">
+              Como funciona
+            </Link>
+          )}
+          </div>
         </motion.div>
       </div>
       </div>
@@ -413,7 +419,7 @@ function HeroCarousel() {
               aria-label={`Mostrar campanha ${index + 1}: ${item.eyebrow}`}
               aria-pressed={activeSlide === index}
               className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
-              key={item.image}
+              key={item.art}
               onClick={() => setActiveSlide(index)}
               type="button"
             ><span aria-hidden="true" className={`h-2 rounded-full transition-all duration-200 motion-reduce:transition-none ${activeSlide === index ? "w-6" : "w-2 bg-slate-400"}`} style={activeSlide === index ? { backgroundColor: item.accent } : undefined} /></button>

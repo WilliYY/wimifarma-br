@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-20 - Marcas reais e convite a compartilhar experiencias
+
+- Decisao: substituir as composicoes sem marca dos heroes por quatro fotos reais por campanha, montadas em HTML/CSS. Dove, NIVEA, Rexona, Huggies e Johnson’s identificam os produtos; marcas/rotulos nao sao redesenhados por IA. Imagens locais otimizadas e fontes registradas em `13-assets-institucionais.md`.
+- Marketing: `Sua opinião vale mais.` coloca a experiencia do cliente em primeiro plano. Cashback extra de 1% aparece com as condicoes, qualquer nota e link `Como funciona`; pagina de regras usa a mesma linguagem. Nenhuma regra financeira, cadastro, estoque ou pagamento foi alterado.
+- Peso: oito fotos distintas somam 159.488 bytes, 41,2% menos que as tres composicoes anteriores. Somente a campanha ativa monta imagens; cuidados/perfumaria compartilham cache. Nao confundir tamanho dos arquivos com transferencia total da pagina.
+- Validacao: cinco larguras, quatro fotos por campanha, toque, links, movimento reduzido, imagens carregadas e ausencia de overflow/erros. Medidas e gates em `19-produtos-e-campanhas.md`.
+
 ## 2026-09-19 - Produto interativo e campanhas responsivas leves
 
 - Decisao: reorganizar a pagina de produto com galeria ampliavel, compartilhamento, total por quantidade e atalhos; substituir inferencia de novidade por ausencia explicita de avaliacoes. Preservar regras de pedido, estoque, receita, Farmacia Popular e cashback.

@@ -35,7 +35,7 @@ Migration aditiva `20260914180000_review_cashback_redemption` adiciona snapshots
 
 ## Interface e APIs
 
-- Banner principal anuncia 1%, mantem fotografia e carrossel existentes e leva a `/minha-conta/avaliacoes`.
+- Banner principal e pagina `/cashback` usam a campanha `Sua opinião vale mais.` desde 2026-09-20. O convite e compartilhar uma experiencia sincera; 1% extra aparece como beneficio secundario, independente da nota, com condicoes e link para as regras. CTA leva a `/minha-conta/avaliacoes`. Apenas comunicacao visual; percentual, elegibilidade, calculo e lancamentos permanecem iguais.
 - `/cashback` publica regras; lista privada de compras para avaliar em paginas de 24 produtos, apenas compras concluidas/pagas da conta.
 - POST `/api/produtos/[id]/avaliacoes` retorna `data.awardedCents`; exige identidade de cliente ativa (inclusive vinculada a administrador) e compra concluida/paga. Status 401/403/404/409/422 e falha temporaria 503 JSON.
 - POST `/api/pedidos` aceita `cashbackRedeemCents` (default zero) e `checkoutRequestId` (UUID obrigatorio para resgate). Continua registrando pedido pendente, sem cobranca online.

@@ -28,7 +28,7 @@ O sistema possui carrinho e checkout para registrar pedidos pendentes, com entre
 
 ## Status Atual
 
-- Site publico com home focada em anuncio: tres composicoes fotograficas com mais produtos e carregamento apenas da campanha ativa, `Melhores ofertas`, perfumaria (Dove, Rexona e NIVEA), medicamentos publicados, avaliacoes verificadas e campanhas em texto HTML. Fotos e textos ficam separados no celular. Pagina do produto com zoom, compartilhamento e total por quantidade; validacao em [docs/19-produtos-e-campanhas.md](docs/19-produtos-e-campanhas.md).
+- Site publico com campanhas de quatro produtos reais por banner (Dove, NIVEA, Rexona, Huggies e Johnson’s), carregamento apenas da campanha ativa e campanha de avaliacao `Sua opinião vale mais`, com bonus explicado separadamente. `Melhores ofertas`, perfumaria, medicamentos publicados e avaliacoes verificadas preservados. Fotos e textos ficam separados no celular. Pagina do produto com zoom, compartilhamento e total por quantidade; validacao em [docs/19-produtos-e-campanhas.md](docs/19-produtos-e-campanhas.md).
 - `Produtos / Catalogo` pesquisa nome/EAN com Gemini e preenche campos vazios apenas com identidade e fonte oficial confirmadas. Dados divergentes exigem revisao; ha previa de SEO, status Publicado por padrao e destaque opcional. Contrato e testes em [docs/18-cadastro-inteligente-e-fotos.md](docs/18-cadastro-inteligente-e-fotos.md).
 - A Miauby abre uma conversa responsiva no site, usa Gemini com historico curto e contexto do catalogo publicado, mostra produtos relacionados e encaminha confirmacoes comerciais ou clinicas para a equipe.
 - WhatsApp principal: `+55 44 98413-4971`, com mensagem padrao para medicamentos e Farmacia Popular.

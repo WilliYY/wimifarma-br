@@ -1,0 +1,59 @@
+.stage {
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: 3 / 2;
+  width: calc(100% - 32px);
+  margin: 16px;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 12px 36px -24px #263e3830;
+}
+
+.beauty { box-shadow: 0 12px 36px -24px #a82e5230; }
+.care, .baby { border: 1px solid #e4ede6; }
+
+.brands {
+  position: absolute;
+  z-index: 2;
+  top: 6%;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: #33443b;
+  font-size: clamp(12px, 1.3vw, 17px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.product {
+  position: absolute;
+  overflow: hidden;
+}
+
+.packshot { object-fit: cover; }
+.oil { left: 9%; top: 24%; width: 25%; height: 52%; }
+.lotion { left: 38%; top: 17%; width: 32%; height: 66%; }
+.deodorant { left: 73%; top: 28%; width: 20%; height: 55%; }
+.soap { z-index: 1; left: 16%; top: 70%; width: 30%; height: 24%; }
+.soap .packshot { object-fit: contain; }
+
+.diapers { left: 40%; top: 22%; width: 34%; height: 56%; }
+.diapers .packshot { object-fit: contain; }
+.shampoo { left: 78%; top: 34%; width: 21%; height: 48%; }
+.wash { left: 4%; top: 34%; width: 21%; height: 50%; }
+.conditioner { left: 25%; top: 48%; width: 16%; height: 36%; }
+
+.caption {
+  position: absolute;
+  bottom: 3%;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 11px;
+  color: #526256;
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .stage { max-width: 640px; margin-inline: auto; }
+}

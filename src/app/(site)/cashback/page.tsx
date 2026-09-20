@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { MessageSquareText, ShoppingBag, Wallet } from "lucide-react";
 
-export const metadata: Metadata = { title: "Cashback e bonus por avaliacao", alternates: { canonical: "/cashback" } };
+export const metadata: Metadata = { title: "Sua opinião vale mais | Cashback", alternates: { canonical: "/cashback" } };
 
 export default function Page() {
   return <section className="bg-white px-4 pb-16 pt-40 sm:px-6 lg:pt-52"><div className="mx-auto max-w-5xl">
     <p className="text-sm font-bold text-pharma-green">Beneficios Wimifarma</p>
-    <h1 className="mt-3 text-3xl font-black text-ink sm:text-4xl">1% de cashback por avaliacao</h1>
-    <p className="mt-4 max-w-2xl text-base leading-7 text-muted">Sua opiniao sincera rende um bonus para a proxima compra. Notas de 1 a 5 estrelas recebem o mesmo percentual.</p>
-    <Link className="mt-6 inline-flex min-h-12 items-center rounded-md bg-pharma-green px-6 text-sm font-black text-white hover:brightness-95" href="/minha-conta/avaliacoes">Avaliar minhas compras</Link>
+    <h1 className="mt-3 text-3xl font-bold tracking-tight text-ink sm:text-4xl">Sua opinião vale mais.</h1>
+    <p className="mt-4 max-w-2xl text-base leading-7 text-muted">Compartilhe sua experiência com os produtos que comprou e ajude outras pessoas a escolher. Na primeira avaliação de cada produto elegível, você recebe <strong className="font-semibold text-ink">1% de cashback extra sobre uma unidade paga</strong> para usar na próxima compra. Todas as notas recebem o mesmo percentual.</p>
+    <Link className="mt-6 inline-flex min-h-12 items-center rounded-full bg-pharma-green px-6 text-sm font-bold text-white hover:brightness-95" href="/minha-conta/avaliacoes">Compartilhar minha experiência</Link>
     <div className="mt-12 grid gap-8 border-y border-line py-8 sm:grid-cols-3">
       {[{ Icon: ShoppingBag, title: "Compra concluida e paga", text: "Compre com sua conta de cliente e aguarde a confirmacao da farmacia." }, { Icon: MessageSquareText, title: "Uma opiniao, um bonus", text: "Na primeira avaliacao de cada produto elegivel, ganhe 1% sobre uma unidade paga." }, { Icon: Wallet, title: "Desconto no proximo pedido", text: "Na etapa Pagamento, selecione o saldo disponivel que deseja usar." }].map(({ Icon, title, text }) => <div key={title}><Icon className="h-7 w-7 text-pharma-green" aria-hidden="true" /><h2 className="mt-4 text-base font-black text-ink">{title}</h2><p className="mt-2 text-sm leading-6 text-muted">{text}</p></div>)}
     </div>

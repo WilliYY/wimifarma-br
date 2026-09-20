@@ -1,6 +1,32 @@
 # 13 - Assets institucionais
 
-## Campanhas principais — 2026-09-19
+## Campanhas principais com marcas — 2026-09-20
+
+`HeroProductStage` substitui as composicoes sem marca abaixo. Sao quatro fotos reais por campanha, com rotulos originais, em composicao HTML/CSS sobre fundo branco. Sem sintese de logotipos ou promessa de parceria. Oito fotos distintas totalizam **159.488 bytes**, incluindo NIVEA/Rexona ja existentes. Apenas a campanha ativa carrega; cuidados e perfumaria reutilizam URLs/cache.
+
+Novas fotos em `public/banners/products/`: conversao Sharp WebP qualidade 88, esforco 6, maximo 800 px e `withoutEnlargement`. Next Image entrega tamanhos responsivos em qualidade 84. Nao usar uma foto pequena como fonte de uma arte grande; texto e nomes de marcas permanecem HTML.
+
+| Arquivo | Dimensoes | Bytes | Fonte |
+| --- | --- | --- | --- |
+| `dove-oleo.webp` | 800 x 800 | 18518 | Foto do produto publicado no catalogo Wimifarma, oleo de banho 240 ml |
+| `dove-original.webp` | 800 x 800 | 39262 | Dove/Unilever, sabonete Original 90 g |
+| `johnsons-shampoo.webp` | 413 x 413 | 8804 | Johnson’s, shampoo Cabelos Claros 200 ml |
+| `huggies-fraldas.webp` | 546 x 546 | 19320 | Huggies, fralda Natural Care |
+| `huggies-banho.webp` | 546 x 546 | 15802 | Huggies, sabonete liquido Extra Suave |
+| `huggies-condicionador.webp` | 546 x 546 | 16856 | Huggies, condicionador Extra Suave |
+
+Fontes conferidas em 2026-09-20:
+
+- Dove oleo: [produto da loja](https://wimifarma.com.br/produto/oleo-de-banho-dove-glicerinado-240ml); imagem `/uploads/products/product-7a8bc125-65af-4dc2-af19-3386bc432726.webp`. Copia estatica para evitar dependencia do cadastro ao exibir a campanha; nao altera o produto.
+- Dove sabonete: [fabricante](https://www.dove.com/br/p/sabonete-original.html/07898422746759); imagem `https://assets.unileversolutions.com/v1/118664812.png`.
+- Johnson’s: [fabricante](https://www.johnsonsbaby.com.br/produtos/shampoo/johnsons-baby-shampoo-para-cabelos-claros); imagem `https://images.ctfassets.net/j62l7jj24jl8/400jMBA5zgkhf0oswaj8jd/7f0d91ceb748b424fe73595fa08fa608/js_baby_shapoo_cabelos_claros_frente_200ml_0-pt-br?fm=png&w=800` (fonte real limitada a 413 px, sem ampliacao).
+- Huggies fraldas: [fabricante](https://www.huggies.com.br/fraldas/huggies-fralda-descartavel-premium-natural-care); imagem `https://www.huggies.com.br/-/media/feature/huggies/lao/br/media/product/huggiesbr/20250205_natural-care-od_hero_g66_546x546.jpg?h=546&w=546&rev=-1&hash=E0C36345B9EE95E5DEBB083E45CB4D0C`.
+- Huggies banho: [fabricante](https://www.huggies.com.br/linha-banho-baby/sabonete-liquido-huggies-extra-suave); imagem `https://www.huggies.com.br/-/media/feature/huggies/lao/br/media/product/productimages/projet_2_sabo.png?h=546&w=546&rev=-1&hash=948830E51D995F07CB4B1EA0D4211523`.
+- Huggies condicionador: [fabricante](https://www.huggies.com.br/linha-banho-baby/condicionador-huggies-extra-suave-hipoalergenico); imagem `https://www.huggies.com.br/-/media/feature/huggies/lao/br/media/product/productimages/projet_1_condi.png?h=546&w=546&rev=-1&hash=CA78558BD40D9122AFD5FAC4774FE500`.
+
+NIVEA Milk e Rexona Bamboo reaproveitam as fontes registradas na secao Perfumaria. Fotos publicas de embalagens, sem presumir licenca aberta; direitos dos titulares preservados, sem alegacao de parceria oficial. Uso contextual de identificacao; substituir por material de fornecedor se necessario. Os links comerciais consultam versoes e disponibilidade, sem cadastrar produto ou afirmar estoque. Fotos com promocao impressa e fonte insuficiente foram descartadas antes da entrega.
+
+## Historico: campanhas sem marca — 2026-09-19 (fora da renderizacao)
 
 Geradas com a ferramenta nativa ImageGen, sem chave/API externa do projeto. Fotografias ilustrativas, sem marcas, preços, texto incorporado ou alegações clínicas; não representam estoque cadastrado. Legenda visível em todos os tamanhos. PNGs originais permanecem fora do repositório; conversão com Sharp para WebP qualidade 84, esforço 6, sem ampliar resolução.
 
