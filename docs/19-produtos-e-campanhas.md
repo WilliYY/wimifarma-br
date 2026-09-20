@@ -10,6 +10,7 @@
 - Primeira campanha: **18.629 bytes** de imagens no desktop 1440/DPR 1 e **35.567 bytes** no celular 390/DPR 3. A segunda campanha nao repetiu downloads; imagens infantis ausentes das requisicoes iniciais. Sao bytes dos corpos das imagens otimizadas, nao peso total da pagina. O primeiro banner tem mais bytes que a arte unica anterior, mas o conjunto completo e menor e as marcas sao reais.
 - Nenhuma dependencia, migration, API, pedido ou saldo novo. Preview e scripts locais removidos antes da entrega; capturas de QA nao versionadas.
 - Gates desta revisao: `node node_modules/eslint/bin/eslint.js .`, `node node_modules/typescript/bin/tsc --noEmit`, `npm.cmd run build` e `git diff --check` passaram. Build final sem rota de preview. Testes de dominio, Prisma validate e audit ja haviam passado na entrega anterior desta mesma tarefa; esta revisao nao altera dominio, schema ou dependencias.
+- Publicacao de `00403c2` em 2026-09-20: push, `git pull --ff-only`, `docker compose build app` e `docker compose up -d --no-deps app`. Imagem anterior preservada como `wimifarma-br-app:pre-brand-fb12679`. Playwright repetiu as tres campanhas nas cinco larguras no site publico, sem erros ou overflow; `/cashback` respondeu 200 e manteve a mesma comunicacao. No servidor, as imagens iniciais transferiram 18.095 bytes em 1440/DPR 1 e 34.728 bytes em 390/DPR 3. Nenhum pedido ou avaliacao foi enviado.
 
 ## Registro da revisao anterior — 2026-09-19
 
