@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
 import sharp from "sharp";
+import { imageProvenanceXmp } from "./provenance";
 import {
   isBackgroundRemovalAvailable,
   processProductImage,
@@ -10,6 +11,15 @@ import {
 const originalFetch = globalThis.fetch;
 const originalLocalUrl = process.env.BACKGROUND_REMOVAL_URL;
 const originalRemoveBgKey = process.env.REMOVE_BG_API_KEY;
+
+test("otimizacao preserva origem de IA sem preservar metadados privados", async () => {
+  const base = await sharp({ create: { width: 800, height: 800, channels: 3, background: "white" } }).withXmp(imageProvenanceXmp(undefined, true)!).webp().toBuffer();
+  const result = await processProductImage({ buffer: base, fileName: "imagem.webp", mimeType: "image/webp", removeBackground: false });
+  const meta = await sharp(result.buffer).metadata();
+  assert.match(meta.xmp?.toString() ?? "", /trainedAlgorithmicMedia/);
+  assert.equal(meta.exif, undefined);
+  assert.ok(result.sizeBytes <= 350_000);
+});
 
 afterEach(() => {
   globalThis.fetch = originalFetch;

@@ -13,6 +13,7 @@ export function ProductPhotoSuggestions({ source, identity, disabled, onChoose }
   source: PhotoSource; identity: PhotoIdentity; disabled: boolean; onChoose: (file: File) => void;
 }) {
   const [automatic, setAutomatic] = useState(true);
+  const [references, setReferences] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [result, setResult] = useState<PhotoSuggestions | null>(null);
   const [artworks, setArtworks] = useState<ImageCandidate[]>([]);
@@ -22,7 +23,7 @@ export function ProductPhotoSuggestions({ source, identity, disabled, onChoose }
   const requestRef = useRef<AbortController | null>(null);
   const automaticallyAnalyzed = useRef<PhotoSource | null>(null);
   const runRef = useRef<(action: "analyze" | "studio" | "editorial") => Promise<void>>(null);
-  const identityKey = JSON.stringify(identity);
+  const identityKey = JSON.stringify({ identity, references });
   const current = useRef({ source, identityKey });
   current.current = { source, identityKey };
 
@@ -57,6 +58,7 @@ export function ProductPhotoSuggestions({ source, identity, disabled, onChoose }
       const form = new FormData();
       form.set("image", file); form.set("action", action);
       for (const [key, value] of Object.entries(identity)) form.set(key, value);
+      form.set("referenceUrls", JSON.stringify(references.split(/\s+/).filter(Boolean)));
       const response = await fetch("/api/admin/imagens-produtos/sugestoes", { method: "POST", body: form, signal: controller.signal });
       const payload = await response.json();
       if (!isCurrent()) return;
@@ -87,6 +89,7 @@ export function ProductPhotoSuggestions({ source, identity, disabled, onChoose }
         <label className="flex min-h-11 items-center gap-2 text-xs font-semibold"><input checked={automatic} disabled={disabled} onChange={event => { setAutomatic(event.target.checked); if (!event.target.checked) { requestRef.current?.abort(); setBusy(null); } }} type="checkbox" />Analisar ao enviar foto</label>
       </div>
       <p className="mt-1 text-xs leading-5 text-muted">Sua foto é enviada ao assistente de IA. Artes são geradas somente ao clicar, conforme o uso da conta configurada.</p>
+      <details className="mt-3 text-xs text-muted"><summary className="min-h-11 cursor-pointer py-3 font-semibold text-ink">Indicar páginas de referência</summary><label className="grid gap-2">Links do fabricante ou de lojas com fotos deste produto (até 3)<textarea className="min-h-24 w-full min-w-0 rounded-md border border-line p-3 text-sm" disabled={disabled} maxLength={6144} onChange={event => setReferences(event.target.value)} placeholder="https://fabricante.com.br/produto — um link por linha" value={references} /></label><p className="mt-2 leading-5">Use páginas com a mesma versão e embalagem. Depois clique em Buscar fotos reais. Os links passam pela mesma verificação de identidade.</p></details>
       <div className="mt-3 flex flex-wrap gap-2">
         <Button disabled={Boolean(busy) || disabled} onClick={() => void (async () => {
           const snapshot = current.current;

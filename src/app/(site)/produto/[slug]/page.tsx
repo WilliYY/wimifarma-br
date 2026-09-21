@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { breadcrumbData, categoryPath } from "@/lib/seo";
 import {
   BadgeCheck,
   ChevronRight,
@@ -186,6 +187,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const discountPercentage = hasPromotion ? Math.round((saving / normalPrice) * 100) : 0;
   const dateFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" });
   const productStructuredData = buildProductStructuredData({
+    category: product.category,
     brand: product.brand,
     description: product.description,
     ean: product.ean,
@@ -213,7 +215,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   return (
     <>
       <script
-        dangerouslySetInnerHTML={{ __html: serializeProductStructuredData(productStructuredData) }}
+        dangerouslySetInnerHTML={{ __html: serializeProductStructuredData([productStructuredData, breadcrumbData([{ name: "Início", path: "/" }, { name: "Catálogo", path: "/catalogo" }, ...(product.category ? [{ name: product.category, path: categoryPath(product.category) }] : []), { name: product.name, path: `/produto/${encodeURIComponent(product.slug)}` }])]) }}
         type="application/ld+json"
       />
       <section className="border-b border-line bg-[#f7f8fa]">
@@ -223,7 +225,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
             {product.category ? (
               <>
-                <span className="shrink-0">{product.category}</span>
+                <Link className="shrink-0 hover:text-brand" href={categoryPath(product.category)}>{product.category}</Link>
                 <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
               </>
             ) : null}

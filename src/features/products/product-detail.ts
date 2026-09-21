@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { isValidGtin } from "./identity";
+import { SITE_URL, STORE_ID } from "@/lib/seo";
 
 const IVATE_POSTAL_CODE_START = 87_525_000;
 const IVATE_POSTAL_CODE_END = 87_527_999;
-const SITE_URL = "https://wimifarma.com.br";
 const META_DESCRIPTION_MAX_LENGTH = 160;
 
 export const productReviewInputSchema = z.object({
@@ -23,6 +24,7 @@ type ProductMetaDescriptionInput = {
 };
 
 type ProductStructuredDataInput = ProductMetaDescriptionInput & {
+  category?: string | null;
   ean: string | null;
   imageUrl: string | null;
   price: number;
@@ -41,7 +43,7 @@ function normalizeInlineText(value: string) {
 
 function finishMetaDescription(value: string) {
   const normalized = normalizeInlineText(value);
-  if (normalized.length <= META_DESCRIPTION_MAX_LENGTH) {
+  if (normalized.length < META_DESCRIPTION_MAX_LENGTH || (normalized.length === META_DESCRIPTION_MAX_LENGTH && /[.!?]$/.test(normalized))) {
     return /[.!?]$/.test(normalized) ? normalized : `${normalized}.`;
   }
 
@@ -64,7 +66,7 @@ export function buildProductMetaDescription({ brand, description, name }: Produc
     return finishMetaDescription(includesName ? productDescription : `${productName}. ${productDescription}`);
   }
 
-  const brandedName = productBrand ? `${productName} da ${productBrand}` : productName;
+  const brandedName = productBrand && !productName.toLocaleLowerCase("pt-BR").includes(productBrand.toLocaleLowerCase("pt-BR")) ? `${productName} da ${productBrand}` : productName;
   return finishMetaDescription(
     `${brandedName} na Wimifarma em Ivate-PR. Consulte preco, disponibilidade e opcoes de entrega ou retirada.`,
   );
@@ -84,11 +86,14 @@ function absoluteProductImageUrl(imageUrl: string | null) {
 export function buildProductStructuredData(input: ProductStructuredDataInput) {
   const productUrl = `${SITE_URL}/produto/${encodeURIComponent(input.slug)}`;
   const imageUrl = absoluteProductImageUrl(input.imageUrl);
-  const normalizedEan = input.ean?.replace(/\D/g, "") ?? "";
+  const normalizedEan = input.ean?.trim() ?? "";
+  const validGtin = isValidGtin(normalizedEan);
 
   return {
     "@context": "https://schema.org",
     "@type": "Product",
+    "@id": `${productUrl}#product`,
+    category: input.category || undefined,
     aggregateRating:
       input.rating.average !== null && input.rating.count > 0
         ? {
@@ -103,8 +108,11 @@ export function buildProductStructuredData(input: ProductStructuredDataInput) {
           name: normalizeInlineText(input.brand),
         }
       : undefined,
-    description: buildProductMetaDescription(input),
-    gtin13: normalizedEan.length === 13 ? normalizedEan : undefined,
+    description: input.description ? normalizeInlineText(input.description) : buildProductMetaDescription(input),
+    gtin8: validGtin && normalizedEan.length === 8 ? normalizedEan : undefined,
+    gtin12: validGtin && normalizedEan.length === 12 ? normalizedEan : undefined,
+    gtin13: validGtin && normalizedEan.length === 13 ? normalizedEan : undefined,
+    gtin14: validGtin && normalizedEan.length === 14 ? normalizedEan : undefined,
     image: imageUrl ? [imageUrl] : undefined,
     name: normalizeInlineText(input.name),
     offers: {
@@ -114,7 +122,8 @@ export function buildProductStructuredData(input: ProductStructuredDataInput) {
       price: input.price.toFixed(2),
       priceCurrency: "BRL",
       seller: {
-        "@type": "Organization",
+        "@id": STORE_ID,
+        "@type": "Pharmacy",
         name: "Wimifarma",
       },
       url: productUrl,

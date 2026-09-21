@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CashbackProductFields } from "@/components/admin/cashback-product-fields";
+import { ProductMarketingTools } from "@/components/admin/product-marketing-tools";
 import {
   ProductImagePicker,
   type ProductImage,
@@ -850,6 +851,7 @@ export function ProductsCatalogPanel({ canManageCashback = false }: { canManageC
                             </span>
                           </button>
                           <div className="grid w-full gap-2 sm:w-auto sm:min-w-40">
+                            <ProductMarketingTools product={product} />
                             <Button
                               aria-label={isFeatured ? `Remover ${product.name} dos destaques` : `Destacar ${product.name}`}
                               disabled={featuredProductId !== null || (!isFeatured && (product.status !== "ACTIVE" || !product.imageUrl))}

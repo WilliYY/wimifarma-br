@@ -15,3 +15,12 @@ test("extrai fotos do produto sem executar HTML, scripts ou instrucoes", () => {
   const html = `<script type="application/ld+json">{"@type":"Product","image":["/frente.jpg",{"url":"https://cdn.example.com/verso.png"}]}</script><meta property="og:image" content="/frente.jpg"><img src="/logo.png" alt="Logo"><img src="/lateral.webp" alt="KitKat lateral"><img src="http://127.0.0.1/a" alt="Produto">`;
   assert.deepEqual(extractProductImageUrls(html, "https://example.com/produto"), ["https://example.com/frente.jpg", "https://cdn.example.com/verso.png", "https://example.com/lateral.webp"]);
 });
+test("le galerias JSON, zoom e maior srcset sem limitar a primeira foto", () => {
+  const html = '<script type="application/json">{"product":{"images":[{"url":"https://example.com/back.webp"},{"imageUrl":"https://example.com/side.webp"}]}}</script><img alt="produto" data-zoom-image="https://example.com/zoom.webp" srcset="https://example.com/small.webp 120w, https://example.com/large.webp 1200w">';
+  const urls = extractProductImageUrls(html, "https://example.com/product");
+  assert.ok(urls.includes("https://example.com/back.webp"));
+  assert.ok(urls.includes("https://example.com/side.webp"));
+  assert.ok(urls.includes("https://example.com/zoom.webp"));
+  assert.ok(urls.includes("https://example.com/large.webp"));
+  assert.ok(!urls.includes("https://example.com/small.webp"));
+});

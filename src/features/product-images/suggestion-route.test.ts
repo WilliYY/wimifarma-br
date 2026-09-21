@@ -61,6 +61,13 @@ test("API retorna previa sem cache e limita consumo por administrador", async ()
   assert.equal(fixture.calls(), 4);
 });
 
+test("API recusa links internos e quantidade excessiva de referencias", async () => {
+  const fixture = await routeHarness();
+  assert.equal((await fixture.post(request({ referenceUrls: '["https://127.0.0.1/a"]' }))).status, 422);
+  assert.equal((await fixture.post(request({ referenceUrls: JSON.stringify(Array(4).fill("https://example.com/item")) }))).status, 422);
+  assert.equal(fixture.calls(), 0);
+});
+
 test("API bloqueia requisicoes simultaneas do mesmo administrador", async () => {
   let release!: () => void;
   const blocked = new Promise<void>(resolve => { release = resolve; });

@@ -4,6 +4,7 @@ import { requireAdminApi } from "@/features/auth/permissions";
 import { analyzeProductPhoto, generateProductArtwork } from "@/features/product-images/suggestions";
 import { ACCEPTED_PRODUCT_IMAGE_TYPES, MAX_PRODUCT_IMAGE_BYTES, ProductImageError } from "@/features/product-images/service";
 import { isValidGtin } from "@/features/products/identity";
+import { validateRemoteUrl } from "@/features/product-images/remote-images";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -14,6 +15,7 @@ const inputSchema = z.object({
   name: z.string().trim().max(160), brand: z.string().trim().max(120),
   ean: z.string().trim().max(32).refine(value => !value || isValidGtin(value)),
   action: z.enum(["analyze", "studio", "editorial"]),
+  referenceUrls: z.array(z.string().max(2048).refine(value => { try { validateRemoteUrl(value); return true; } catch { return false; } })).max(3).default([]),
 });
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
 
@@ -45,12 +47,14 @@ export async function POST(request: Request) {
       }
     } finally { reader.releaseLock(); }
     const form = await new Response(Buffer.concat(chunks), { headers: { "Content-Type": request.headers.get("content-type") ?? "" } }).formData();
-    const parsed = inputSchema.safeParse(Object.fromEntries(["name", "brand", "ean", "action"].map(key => [key, form.get(key) ?? ""])));
+    let referenceUrls: unknown = [];
+    try { referenceUrls = JSON.parse(String(form.get("referenceUrls") || "[]")); } catch { return json({ error: "Confira os links de referencia." }, 422); }
+    const parsed = inputSchema.safeParse({ ...Object.fromEntries(["name", "brand", "ean", "action"].map(key => [key, form.get(key) ?? ""])), referenceUrls });
     const image = form.get("image");
     if (!parsed.success || !(image instanceof File) || !ACCEPTED_PRODUCT_IMAGE_TYPES.has(image.type) || !image.size || image.size > MAX_PRODUCT_IMAGE_BYTES) return json({ error: "Confira nome/EAN e envie JPG, PNG, WebP ou AVIF de ate 10 MB." }, 422);
     const bytes = Buffer.from(await image.arrayBuffer());
-    const { action, ...identity } = parsed.data;
-    const options = { apiKey: process.env.GEMINI_API_KEY, model: action === "analyze" ? process.env.GEMINI_MODEL || "gemini-2.5-flash" : process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image" };
+    const { action, referenceUrls: references, ...identity } = parsed.data;
+    const options = { referenceUrls: references, apiKey: process.env.GEMINI_API_KEY, model: action === "analyze" ? process.env.GEMINI_MODEL || "gemini-2.5-flash" : process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image" };
     if (action === "analyze") return json({ data: await analyzeProductPhoto(bytes, identity, options) });
     return json({ data: await generateProductArtwork(bytes, identity, action, options) });
   } catch (error) {

@@ -1,68 +1,13 @@
-import { BadgePercent, MessageCircle, Tags } from "lucide-react";
-import { PageHero } from "@/components/site/page-hero";
-import { Card, CardContent } from "@/components/ui/card";
-import { siteConfig } from "@/lib/site";
-import { formatCurrency } from "@/lib/utils";
+import { CatalogPage } from "@/components/site/catalog-page";
+import { catalogPageNumber } from "@/features/products/storefront";
 import { createPublicPageMetadata } from "@/lib/metadata";
-
-export const metadata = createPublicPageMetadata({
-  description:
-    "Confira ofertas de medicamentos, higiene, beleza e bem-estar da Wimifarma em Ivaté-PR.",
-  path: "/ofertas",
-  title: "Ofertas de farmácia em Ivaté-PR",
-});
-
-const offers = [
-  ["Cuidado diario", "Produtos essenciais com preco de campanha.", 19.9],
-  ["Bem-estar", "Vitaminas e suplementos para demanda recorrente.", 29.9],
-  ["Beleza e pele", "Vitrine preparada para dermocosmeticos.", 39.9],
-];
-
-export default function Page() {
-  return (
-    <>
-      <PageHero
-        description="Vitrine inicial para ofertas comerciais. Depois ela sera alimentada pelo admin e pelas APIs de produtos e campanhas."
-        title="Ofertas Wimifarma"
-      >
-        <div className="flex items-start gap-4">
-          <BadgePercent className="h-8 w-8 text-brand" />
-          <div>
-            <p className="font-bold text-ink">Campanhas estruturadas</p>
-            <p className="mt-2 text-sm leading-6 text-muted">
-              Preco, validade, destaque, produto relacionado e chamada pronta
-              para WhatsApp.
-            </p>
-          </div>
-        </div>
-      </PageHero>
-      <section className="bg-white py-16">
-        <div className="mx-auto grid w-full max-w-7xl gap-4 px-4 sm:px-6 md:grid-cols-3 lg:px-8">
-          {offers.map(([title, description, price]) => (
-            <Card key={title}>
-              <CardContent className="p-5">
-                <Tags className="h-6 w-6 text-brand" />
-                <h2 className="mt-5 text-xl font-bold text-ink">{title}</h2>
-                <p className="mt-3 text-sm leading-6 text-muted">
-                  {description}
-                </p>
-                <p className="mt-5 text-3xl font-black text-brand">
-                  {formatCurrency(Number(price))}
-                </p>
-                <a
-                  className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-pharma-green"
-                  href={siteConfig.whatsappUrl}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  Conferir disponibilidade
-                </a>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-    </>
-  );
+export const dynamic = "force-dynamic";
+type Props = { searchParams: Promise<{ pagina?: string | string[] }> };
+const description = "Confira os produtos com preço promocional da Wimifarma em Ivaté-PR. Consulte os detalhes e a disponibilidade para entrega local ou retirada.";
+export async function generateMetadata({ searchParams }: Props) {
+  const page = catalogPageNumber((await searchParams).pagina);
+  return createPublicPageMetadata({ title: `Ofertas em Ivaté-PR${page > 1 ? ` - Página ${page}` : ""}`, description, path: `/ofertas${page > 1 ? `?pagina=${page}` : ""}` });
+}
+export default async function Page({ searchParams }: Props) {
+  return <CatalogPage title="Ofertas Wimifarma" description={description} path="/ofertas" page={catalogPageNumber((await searchParams).pagina)} offers />;
 }

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState, type FormEvent } from "react";
 import { Check, ImageIcon, Loader2, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { CashbackPercentageInput } from "./cashback-percentage-input";
 import type { CashbackListProduct } from "@/features/cashback/client";
 import { productCashbackCents } from "@/features/cashback/rules";
 import { formatCurrency } from "@/lib/utils";
@@ -70,9 +70,7 @@ export function CashbackProductCard({ product, disabled, saving, onSave }: {
         </div>
       </div>
       {custom && product.cashbackEnabled && !restricted ? <form className="mt-3 flex min-w-0 items-end gap-2" onSubmit={saveCustom}>
-        <label className="grid min-w-0 flex-1 gap-1 text-xs font-semibold text-muted">Percentual personalizado (%)
-          <Input aria-label={`Percentual personalizado de ${product.name}`} defaultValue={product.cashbackRateBps / 100} disabled={disabled} type="number" name="percent" min="0.01" max="100" step="0.01" required />
-        </label>
+        <div className="min-w-0 flex-1"><CashbackPercentageInput defaultValue={product.cashbackRateBps / 100} disabled={disabled} label={`Percentual personalizado de ${product.name}`} name="percent" /></div>
         <Button className="h-11 w-11 shrink-0 cursor-pointer" aria-label={`Aplicar percentual em ${product.name}`} title="Aplicar percentual" disabled={disabled} size="icon" variant="success" type="submit"><Check className="h-4 w-4" /></Button>
       </form> : null}
       {restricted ? <p className="mt-3 text-xs text-muted">Indisponivel para receita ou Farmacia Popular.</p> : null}

@@ -13,7 +13,7 @@ async function main() {
   await fs.mkdir("artifacts/assistant-qa", { recursive: true });
   try {
     for (const width of [320, 390, 768, 1440]) {
-      const context = await browser.newContext({ viewport: { width, height: 900 }, deviceScaleFactor: 1 });
+      const context = await browser.newContext({ viewport: { width, height: 900 }, deviceScaleFactor: 1, permissions: ["clipboard-read", "clipboard-write"] });
       const page = await context.newPage();
       const errors: string[] = [];
       page.on("pageerror", error => errors.push(error.message));
@@ -35,12 +35,23 @@ async function main() {
         }
         if (url.pathname === "/api/produtos/sugestoes") return json({ data: { name: "KitKat ao leite 41,5g", brand: "KitKat", ean: "7891000248768", category: "Chocolates", productType: "food", confidence: "high", identityMatch: "exact", activeIngredients: [], searchTerms: ["chocolate", "wafer"], description: "Chocolate para teste isolado.", warnings: [], sources: [{ title: "Nestle", url: "https://www.nestle.com.br/" }] } });
         if (req.method() !== "GET") { errors.push(`Unexpected write ${url.pathname}`); return route.abort(); }
-        if (url.pathname === "/api/produtos" || url.pathname === "/api/admin/imagens-produtos") return json({ data: [], backgroundRemovalAvailable: false });
+        if (url.pathname === "/api/produtos") return json({ data: [{ id: "fixture", slug: "dove-fixture", name: "Dove Original - teste", brand: "Dove", category: "Higiene", description: "Sabonete em barra para teste isolado de marketing, sem criar produto comercial.", ean: "7891000248768", imageUrl: null, imageAssetId: null, price: "5.90", promotionalPrice: null, stock: 10, status: "ACTIVE", requiresPrescription: false, isPopularPharmacy: false, activeIngredients: [], searchTerms: [], cashbackEnabled: false, cashbackRateBps: 200, featuredPosition: null, createdAt: "2026-09-21T10:00:00.000Z", updatedAt: "2026-09-21T10:00:00.000Z", sku: null }] });
+        if (url.pathname === "/api/admin/imagens-produtos") return json({ data: [], backgroundRemovalAvailable: false });
+        if (url.pathname === "/api/admin/marketing/google-feed") return route.fulfill({ headers: { "Content-Type": "application/xml", "X-Feed-Included": "1", "X-Feed-Excluded": "0" }, body: '<rss version="2.0"><channel><title>Fixture</title></channel></rss>' });
         return route.fulfill({ status: 404, body: "" });
       });
       await page.goto("http://127.0.0.1:3010/admin/catalogos");
       await page.getByRole("button", { name: "Novo produto" }).click();
       const dialog = page.getByRole("dialog");
+      const percent = dialog.locator('[name="cashbackPercent"]');
+      await percent.fill("2.35");
+      await percent.press("ArrowUp");
+      await expect(percent).toHaveValue("3.35");
+      await dialog.getByRole("button", { name: "Aumentar cashback em 1 ponto percentual" }).click();
+      await expect(percent).toHaveValue("4.35");
+      await dialog.getByRole("button", { name: "Diminuir cashback em 1 ponto percentual" }).click();
+      await expect(percent).toHaveValue("3.35");
+      assert.ok(await percent.evaluate(element => (element as HTMLInputElement).validity.valid));
       await dialog.getByRole("checkbox", { name: "Preenchimento automatico com IA" }).uncheck();
       await dialog.locator('[name="name"]').fill("Kit Kat - Chocolate");
       await dialog.locator('[name="ean"]').fill("7891000248768");
@@ -91,6 +102,20 @@ async function main() {
       await expect(suggestions.getByRole("status")).toHaveCount(0);
       await page.waitForTimeout(1700);
       await expect(suggestions.getByText("Embalagem analisada para teste isolado.")).toHaveCount(0);
+      await page.keyboard.press("Escape");
+      await page.getByRole("button", { name: "SEO e marketing" }).click();
+      const marketing = page.getByRole("dialog");
+      await marketing.getByLabel("Nome da campanha").fill("Verão 2026");
+      await marketing.getByRole("combobox").selectOption("instagram");
+      await marketing.getByRole("button", { name: "Copiar link" }).click();
+      const copied = await page.evaluate(() => navigator.clipboard.readText());
+      assert.equal(new URL(copied).searchParams.get("utm_source"), "instagram");
+      assert.equal(new URL(copied).searchParams.get("utm_campaign"), "Verão 2026");
+      const [download] = await Promise.all([page.waitForEvent("download"), marketing.getByRole("button", { name: "Exportar catálogo para revisão" }).click()]);
+      assert.equal(download.suggestedFilename(), "wimifarma-google-revisao.xml");
+      await download.cancel();
+      assert.ok(await marketing.evaluate(element => element.scrollWidth <= element.clientWidth + 1));
+      await page.screenshot({ path: `artifacts/assistant-qa/marketing-${width}.png` });
       assert.deepEqual(errors, []);
       console.log(JSON.stringify({ width, overflow: false, photoSelection: true, artwork: true, originalPreserved: true, staleResponseIgnored: true, cancel: true, commercialWrites: 0 }));
       await context.close();

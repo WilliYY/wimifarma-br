@@ -69,7 +69,7 @@ export const productSuggestionSchema = z.object({
   activeIngredients: suggestionList(120, 20),
   category: nullableSuggestionText(2, 120),
   confidence: z.enum(["high", "medium", "low"]),
-  description: nullableSuggestionText(60, 240),
+  description: nullableSuggestionText(60, 800),
   searchTerms: suggestionList(80, 12),
   warnings: suggestionList(220, 6),
 });
@@ -126,8 +126,8 @@ const productSuggestionJsonSchema = {
       type: "string",
     },
     description: {
-      description: "Descricao unica, factual e natural do produto, idealmente entre 140 e 220 caracteres, sem dose, posologia, lista de palavras-chave ou promessa terapeutica.",
-      maxLength: 240,
+      description: "Descricao original de 2 a 4 frases, idealmente 300 a 600 caracteres, ate 800. Identificacao, apresentacao e caracteristicas confirmadas; sem copiar o fabricante, inventar dados ou prometer resultados.",
+      maxLength: 800,
       minLength: 60,
       nullable: true,
       type: "string",
@@ -197,12 +197,13 @@ export function buildProductStructuringPrompt(
     "Nao exigir registro de medicamento para alimento, chocolate, higiene ou perfume; ausencia de bula ou categoria previa nao e conflito de identidade. knownCategories nao e lista de produtos permitidos.",
     "Identifique nome e marca separados da categoria. Verifique identityMatch e informe evidenceSourceIndexes (indices das FONTES FORNECIDAS, comecando em zero). Sem comprovacao exata, use uncertain. EAN ou apresentacao divergente exige conflict e campos factuais null ou listas vazias.",
     "Warnings devem indicar somente duvidas relevantes para os dados sugeridos. Nao exija EAN quando nao informado, nem registro MS de cosmetico isento; nao reduza confianca por identificadores opcionais ausentes.",
-    "A descricao deve ser uma frase unica, natural e especifica, idealmente entre 140 e 220 caracteres. Inclua nome exato, marca, apresentacao e o principal contexto factual confirmado.",
+    "A descricao completa deve ter 2 a 4 frases naturais, idealmente 300 a 600 caracteres e no maximo 800. A primeira frase identifica nome, marca e apresentacao. Depois explique caracteristicas e contexto de uso estritamente confirmados, adequados ao tipo do produto. Escreva texto original, sem copiar paragrafos das fontes. Nao alongue quando faltarem fatos; o resumo de SEO sera gerado separadamente.",
+    "Exemplos de detalhes uteis somente com evidencia: alimento = tipo, sabor, textura e peso; perfumaria = linha, fragrancia, tipo de produto e volume; higiene = material/forma/quantidade; medicamento = principio ativo, concentracao, forma e embalagem, sem instrucao de uso. Nao repetir a mesma informacao com sinonimos.",
     "Nao repita palavras-chave, nao escreva uma lista, nao use superlativos e nao inclua preco, estoque, dose, posologia, diagnostico, substituicao ou promessa de resultado.",
     "Se nao houver fatos suficientes para uma descricao util com pelo menos 60 caracteres, retorne description null em vez de texto generico.",
     "Os termos de busca devem ser 6 a 12 expressoes distintas e naturais quando houver base factual: nome, marca, tipo, sabor/fragrancia e apresentacao; para medicamentos, principio ativo, classe e sintomas explicitamente relacionados nas notas. Nao inventar sintomas para alimentos ou perfumaria.",
     "Nao inclua nomes de concorrentes, erros ortograficos artificiais, alegacoes promocionais ou termos sem suporte nas fontes.",
-    "Prefira uma categoria existente quando ela for adequada.",
+    "Escolha uma categoria principal especifica: por exemplo Chocolates, Balas e gomas, Biscoitos e snacks, Higiene bucal, Desodorantes, Fraldas, Cuidados com os cabelos, Protecao solar, Dermocosmeticos, Nutricao infantil. Prefira uma categoria existente equivalente, sem forcar produto diferente nela. Categorias nao limitam o catalogo.",
     "Considere apenas evidencias vinculadas as URLs fornecidas; qualquer afirmacao sem apoio deve ficar de fora ou virar warning.",
     "--- DADOS INFORMADOS ---",
     JSON.stringify(input),
@@ -303,6 +304,16 @@ function rankSources(sources: ProductSuggestionSource[], brand: string) {
     .slice(0, 8);
 }
 
+export function presentationNumbers(name: string) {
+  const measurements: string[] = [];
+  const rest = name.toLowerCase().replace(/(\d+(?:[.,]\d+)?)\s*(mcg|mg|kg|ml|g|l)\b/g, (_match, value: string, unit: string) => {
+    const factors: Record<string, number> = { mcg: 0.001, mg: 1, g: 1000, kg: 1_000_000, ml: 1, l: 1000 };
+    measurements.push(`${unit === "ml" || unit === "l" ? "volume" : "mass"}:${Math.round(Number(value.replace(",", ".")) * factors[unit] * 1000) / 1000}`);
+    return " ";
+  });
+  return [...measurements, ...(rest.match(/\d+(?:[.,]\d+)?/g) ?? []).map(value => `quantity:${Number(value.replace(",", "."))}`)];
+}
+
 function qualifySuggestion(
   input: ProductSuggestionRequest,
   suggestion: ProductSuggestion,
@@ -328,8 +339,8 @@ function qualifySuggestion(
   }
 
   const eanConflict = Boolean(input.ean && suggestion.ean && input.ean !== suggestion.ean);
-  const requestedNumbers = (input.name.match(/\d+(?:[.,]\d+)?/g) ?? []).map(value => Number(value.replace(",", ".")));
-  const foundNumbers = (suggestion.name?.match(/\d+(?:[.,]\d+)?/g) ?? []).map(value => Number(value.replace(",", ".")));
+  const requestedNumbers = presentationNumbers(input.name);
+  const foundNumbers = presentationNumbers(suggestion.name ?? "");
   const presentationConflict = Boolean(suggestion.name && requestedNumbers.some(number => !foundNumbers.includes(number)));
   if (suggestion.identityMatch === "conflict" || eanConflict || presentationConflict) {
     return { ...suggestion, name: null, brand: null, ean: null, category: null, description: null, activeIngredients: [], searchTerms: [], confidence: "low" as const, sources,

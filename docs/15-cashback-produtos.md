@@ -78,6 +78,8 @@ Antes de publicar: confirmar regras, backup PostgreSQL com permissoes restritas,
 
 ## Publicacao em 2026-09-11
 
+Atualizacao de interface em 2026-09-21: botoes e setas do percentual avancam 1 ponto percentual. Digitacao aceita centesimos (ex.: 2,35%). Persistencia em basis points, limites e regras financeiras permanecem os mesmos. Detalhes em `docs/21-seo-marketing-e-referencias.md`.
+
 - Codigo `bd557db` enviado ao GitHub e recebido via fast-forward no servidor. Imagens Docker app e migrate construidas com saida 0.
 - Backup pre-migration validado por `pg_restore --list`: `/home/ubuntu/backups/wimifarma-br/pre-cashback-20260910T230913Z.dump`, SHA-256 `dc9bc91989f5690a649d499307e5285df79cb6c8ae6fe58844d682bce016e56f`.
 - Migration aplicada e app recriado. Antes/depois: 2 produtos, 0 pedidos, 0 contas, saldo agregado zero; 0 produtos ativados automaticamente.

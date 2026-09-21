@@ -28,6 +28,7 @@ export const siteConfig = {
 };
 
 export const publicNavItems = [
+  { href: "/catalogo", label: "Produtos" },
   { href: "/farmacia-popular", label: "Farmacia Popular" },
   { href: "/sobre", label: "Sobre" },
   { href: "/contato", label: "Contato" },

@@ -18,7 +18,9 @@ export const metadata: Metadata = {
     template: "%s | Wimifarma",
   },
   description:
-    "Plataforma comercial da Wimifarma em Ivate-PR: delivery, Farmacia Popular e atendimento pelo WhatsApp.",
+    "Farmácia Wimifarma em Ivaté-PR. Medicamentos, higiene, beleza e cuidados para o dia a dia. Consulte produtos, entrega local e atendimento pelo WhatsApp.",
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
+  verification: { google: process.env.GOOGLE_SITE_VERIFICATION || undefined },
   icons: {
     apple: "/favicon.svg",
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],

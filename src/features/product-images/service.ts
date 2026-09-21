@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { imageProvenanceXmp } from "./provenance";
 
 export const MAX_PRODUCT_IMAGE_BYTES = 10 * 1024 * 1024;
 export const MAX_PRODUCT_IMAGE_PIXELS = 40_000_000;
@@ -153,8 +154,10 @@ async function encodeWebp(
   dimension: number,
   quality: number,
   flattenOnWhite: boolean,
+  provenance?: string,
 ) {
   let pipeline = sharp(buffer, { limitInputPixels: MAX_PRODUCT_IMAGE_PIXELS }).rotate();
+  if (provenance) pipeline = pipeline.withXmp(provenance);
   if (flattenOnWhite) pipeline = pipeline.flatten({ background: "#ffffff" });
 
   return pipeline
@@ -191,6 +194,7 @@ export async function processProductImage(input: {
   if ((metadata.pages ?? 1) > 1) throw new ProductImageError("Escolha uma foto estatica, sem animacao.");
 
   let source = input.buffer;
+  const provenance = imageProvenanceXmp(metadata.xmp, /arte-ilustrativa|arte-gerada/i.test(input.fileName));
   if (input.removeBackground) {
     const workingImage = await sharp(source, { limitInputPixels: MAX_PRODUCT_IMAGE_PIXELS })
       .rotate().resize({ width: MAX_PRODUCT_IMAGE_DIMENSION, height: MAX_PRODUCT_IMAGE_DIMENSION, fit: "inside", withoutEnlargement: true })
@@ -222,6 +226,7 @@ export async function processProductImage(input: {
     attempts[0].dimension,
     attempts[0].quality,
     input.removeBackground,
+    provenance,
   );
   for (const attempt of attempts.slice(1)) {
     if (result.info.size <= TARGET_PRODUCT_IMAGE_BYTES) break;
@@ -230,6 +235,7 @@ export async function processProductImage(input: {
       attempt.dimension,
       attempt.quality,
       input.removeBackground,
+      provenance,
     );
   }
 

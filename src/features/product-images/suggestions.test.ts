@@ -41,6 +41,7 @@ test("produto divergente na foto interrompe busca sem depender de EAN visivel", 
 test("somente foto real confirmada entra nas opcoes, com fonte e preview limitado", async () => {
   let calls = 0;
   const asset = await sharp({ create: { width: 800, height: 800, channels: 3, background: "red" } }).png().toBuffer();
+  const side = await sharp({ create: { width: 800, height: 800, channels: 3, background: "blue" } }).png().toBuffer();
   const result = await analyzeProductPhoto(await photo(), input, {
     apiKey: "test", model: "test", fetchImplementation: async () => {
       calls++;
@@ -48,7 +49,7 @@ test("somente foto real confirmada entra nas opcoes, com fonte e preview limitad
       if (calls === 2) return new Response(JSON.stringify({ candidates: [{ groundingMetadata: { groundingChunks: [{ web: { uri: "https://www.nestle.com.br/kitkat" } }] } }] }));
       return response({ matches: [{ index: 0, sameProduct: false, view: "front" }, { index: 1, sameProduct: true, view: "back" }, { index: 1, sameProduct: true, view: "back" }] });
     },
-    download: async url => ({ url, contentType: url.endsWith(".png") ? "image/png" : "text/html", bytes: url.endsWith(".png") ? asset : Buffer.from('<script type="application/ld+json">{"@type":"Product","image":["https://www.nestle.com.br/a.png","https://www.nestle.com.br/b.png"]}</script>') }),
+    download: async url => ({ url, contentType: url.endsWith(".png") ? "image/png" : "text/html", bytes: url.endsWith("b.png") ? side : url.endsWith(".png") ? asset : Buffer.from('<script type="application/ld+json">{"@type":"Product","image":["https://www.nestle.com.br/a.png","https://www.nestle.com.br/b.png"]}</script>') }),
   });
   assert.equal(result.candidates.length, 1);
   assert.equal(result.candidates[0].view, "back");
@@ -63,6 +64,22 @@ test("arquivo invalido e rejeitado antes de enviar para a IA", async () => {
   }), /ler esta foto/);
 });
 
+test("referencia manual funciona sem busca e prioriza verso e lateral sem duplicatas", async () => {
+  const assets = await Promise.all(["red", "blue", "green"].map(background => sharp({ create: { width: 800, height: 800, channels: 3, background } }).png().toBuffer()));
+  let calls = 0;
+  const result = await analyzeProductPhoto(await photo(), input, {
+    apiKey: "test", model: "test", referenceUrls: ["https://www.nestle.com.br/kitkat"],
+    fetchImplementation: async () => {
+      if (++calls === 1) return response(analysis);
+      if (calls === 2) return new Response("", { status: 503 });
+      return response({ matches: [{ index: 0, sameProduct: true, view: "front" }, { index: 1, sameProduct: true, view: "back" }, { index: 2, sameProduct: true, view: "side" }] });
+    },
+    download: async url => ({ url, contentType: url.endsWith(".png") ? "image/png" : "text/html", bytes: url.endsWith(".png") ? assets[Number(url.match(/(\d)\.png$/)?.[1]) % 3] : Buffer.from('<script type="application/ld+json">{"@type":"Product","image":["https://www.nestle.com.br/0.png","https://www.nestle.com.br/1.png","https://www.nestle.com.br/2.png","https://www.nestle.com.br/3.png"]}</script>') }),
+  });
+  assert.equal(calls, 3);
+  assert.deepEqual(result.candidates.map(candidate => candidate.view), ["back", "side", "front"]);
+});
+
 test("arte gerada e normalizada para WebP e marcada como gerada", async () => {
   const bytes = await photo();
   const result = await generateProductArtwork(bytes, input, "editorial", {
@@ -71,6 +88,8 @@ test("arte gerada e normalizada para WebP e marcada como gerada", async () => {
   assert.equal(result.kind, "generated");
   assert.match(result.previewDataUrl, /^data:image\/webp;base64,/);
   assert.equal(result.sourceUrl, undefined);
+  const meta = await sharp(Buffer.from(result.previewDataUrl.split(",")[1], "base64")).metadata();
+  assert.match(meta.xmp?.toString() ?? "", /trainedAlgorithmicMedia/);
 });
 
 test("analise nao cria um verso nem persiste arquivo quando nao ha fotos reais", async () => {

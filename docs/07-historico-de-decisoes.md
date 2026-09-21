@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-21 - Referencias visuais, catalogo indexavel e marketing revisavel
+
+- Decisao: ampliar classificacao e descricoes da IA, permitir paginas de referencia e priorizar fotos reais de angulos diferentes; controles de cashback avancam 1 ponto percentual preservando entrada decimal.
+- SEO: catalogo, categorias e ofertas reais renderizados no servidor, metadados e dados estruturados locais/produtos, GTIN validado e sitemap com imagens. Ferramentas administrativas para copia de campanhas e exportacao privada de itens nao regulados para revisao no Google.
+- Limites: sem migration, cadastro do KitKat, mudanca de precos, estoque, saldos ou pagamento. Google exige configuracao externa e analise de elegibilidade; nenhuma listagem e garantida. Artes preservam identificacao de origem de IA. Contratos e referencias: `docs/21-seo-marketing-e-referencias.md`.
+
 ## 2026-09-21 - Catalogo multissetor e sugestoes visuais revisaveis
 
 - Decisao: classificar medicamentos, suplementos, perfumaria, higiene, alimentos/chocolates e outros itens com criterios especificos. Categorias existentes sao sugestoes, sem restringir os tipos aceitos. Principios ativos automaticos somente para medicamentos; marca e apresentacao precisam de evidencia propria.

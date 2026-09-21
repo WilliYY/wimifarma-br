@@ -42,7 +42,7 @@ try {
   await page.goto(`${base}${productUrl}`, { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   const structured = await page.locator('script[type="application/ld+json"]').evaluateAll(elements => elements.map(element => JSON.parse(element.textContent || "{}")));
-  assert.ok(structured.some(value => value["@type"] === "Product" || value["@graph"]?.some(item => item["@type"] === "Product")));
+  assert.ok(structured.flat().some(value => value["@type"] === "Product" || value["@graph"]?.some(item => item["@type"] === "Product")));
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", `${base}${productUrl}`);
   checks.push("Public product SSR, canonical and Product JSON-LD valid; admin remains protected");
   for (const width of [390, 1440]) {

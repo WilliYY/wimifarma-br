@@ -2,6 +2,8 @@
 
 ## Escopo de 2026-09-21
 
+Evolucao complementar de categorias, descricoes, referencias de galeria, preservacao de origem de artes e SEO: `docs/21-seo-marketing-e-referencias.md`.
+
 Atender medicamentos, suplementos, higiene, perfumaria, alimentos/chocolates, dispositivos e outros itens comerciais. Nome/EAN/foto sao evidencias de identidade; categoria existente nao e uma lista de permissoes. Preenchimento automatico continua limitado a campos vazios e identidade confirmada. Nao cadastrar o KitKat usado como exemplo pelo lojista.
 
 Fotos: analisar a embalagem enviada, pesquisar outras fotos reais e oferecer artes publicitarias opcionais. O administrador escolhe uma capa; nenhuma sugestao substitui a foto automaticamente. Verso/lateral precisam de foto real; nao gerar rotulos, ingredientes, EAN ou informacoes nao visiveis. Artes geradas devem ser identificadas como ilustrativas e revisadas antes da escolha.

@@ -98,8 +98,8 @@ test("orienta uma descricao factual e util para busca sem repetir palavras-chave
     [{ title: "Fabricante", url: "https://www.cimedremedios.com.br/produto" }],
   );
 
-  assert.match(prompt, /entre 140 e 220 caracteres/i);
-  assert.match(prompt, /nome exato.*marca.*apresentacao/i);
+  assert.match(prompt, /300 a 600 caracteres/i);
+  assert.match(prompt, /nome, marca e apresentacao/i);
   assert.match(prompt, /nao repita palavras-chave/i);
   assert.match(prompt, /urls fornecidas/i);
 });
@@ -132,7 +132,8 @@ test("limita textos excessivos do Gemini sem descartar a sugestao", () => {
 
   assert.ok((suggestion.activeIngredients[0]?.length ?? 0) <= 120);
   assert.ok((suggestion.category?.length ?? 0) <= 120);
-  assert.ok((suggestion.description?.length ?? 0) <= 240);
+  assert.ok((suggestion.description?.length ?? 0) <= 800);
+  assert.ok((suggestion.description?.length ?? 0) > 240);
   assert.equal(suggestion.searchTerms.length, 12);
   assert.ok((suggestion.searchTerms[0]?.length ?? 0) <= 80);
   assert.ok((suggestion.warnings[0]?.length ?? 0) <= 220);
