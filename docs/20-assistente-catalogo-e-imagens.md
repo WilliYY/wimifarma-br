@@ -56,3 +56,12 @@ Artes nao sao geradas em segundo plano. A foto vai para a conta Gemini configura
 - [Gemini: analise e geracao de imagens](https://ai.google.dev/gemini-api/docs/image-generation).
 - [Gemini: pesquisa fundamentada com Google Search](https://ai.google.dev/gemini-api/docs/google-search).
 - [Nestle: marca KitKat](https://www.nestle.com.br/marcas/chocolates/kitkat). Relacao de marca/fabricante; a pagina geral nao confirma o EAN ou apresentacao exatos.
+
+## Publicacao verificada em 2026-09-21
+
+- Codigo `3a128a8` enviado ao GitHub e recebido via `git pull --ff-only` no VPS. Build Docker concluido com lint/tipos; `docker compose up -d --no-deps --wait --wait-timeout 120 app` ativou a aplicacao saudavel. Postgres e remocao de fundo permaneceram saudaveis, sem recriacao ou migration.
+- Imagem anterior preservada como `wimifarma-br-app:pre-assistant-20bd859` para reversao. Nenhuma credencial, upload ou registro comercial alterado.
+- `node scripts/catalog-live-audit.mjs`: home responsiva, pagina de produto/SEO, tres fotos com HTTP 200 WebP/304 ETag e zero erros JavaScript em Chromium. Admin continua protegido.
+- Nova API em producao: POST sem sessao retornou 401; GET nao permitido retornou 405. Configuracao conferida sem expor segredo: Gemini habilitado, analise `gemini-2.5-flash` e arte `gemini-2.5-flash-image`.
+- Limite da verificacao: o fluxo administrativo completo foi exercitado com componentes reais e HTTP sintetico, e a integracao Gemini com chamadas reais separadas; nao foi criado produto nem usada sessao de cliente em producao. Fotos alternativas dependem de disponibilidade/compatibilidade nas fontes.
+- Scripts e respostas temporarios da integracao removidos; capturas de QA permanecem somente em `artifacts/`, ignorado pelo Git. Nenhum processo de teste mantido.
