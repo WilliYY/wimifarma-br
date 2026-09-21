@@ -9,6 +9,50 @@ import {
   suggestProductData,
 } from "./ai-suggestions";
 
+test("pesquisa alimentos e perfumaria sem exigir criterios exclusivos de medicamentos", () => {
+  const input = productSuggestionRequestSchema.parse({ name: "Kit Kat - Chocolate", ean: "7891000248768", knownCategories: ["Medicamentos"] });
+  const research = buildProductResearchPrompt(input);
+  const structure = buildProductStructuringPrompt(input, "Chocolate identificado.", []);
+  assert.match(research, /alimentos.*chocolates/i);
+  assert.match(research, /nao.*lista.*permitid/i);
+  assert.match(structure, /alimentos.*activeIngredients.*vazi/i);
+  assert.match(structure, /registro.*medicamento.*alimento/i);
+});
+
+function structuredFetch(suggestion: Record<string, unknown>, source: string) {
+  let count = 0;
+  return (async () => new Response(JSON.stringify(++count === 1 ? {
+    candidates: [{ content: { parts: [{ text: "Fonte confirma o produto e sua apresentacao." }] }, groundingMetadata: { groundingChunks: [{ web: { title: new URL(source).hostname, uri: source } }] } }],
+  } : { candidates: [{ content: { parts: [{ text: JSON.stringify(suggestion) }] } }] }))) as typeof fetch;
+}
+
+const chocolate = {
+  name: "Chocolate KitKat ao Leite 41.5 g", brand: "KitKat", ean: "7891000248768",
+  productType: "food", identityMatch: "exact", evidenceSourceIndexes: [0],
+  category: "Chocolates", confidence: "high", activeIngredients: ["Cacau"],
+  description: "Chocolate KitKat ao leite, com wafer e embalagem individual de 41,5 g, conforme a apresentacao identificada nas fontes do fabricante.",
+  searchTerms: ["KitKat", "chocolate", "wafer"], warnings: [],
+};
+
+test("KitKat aceita fabricante Nestle e nao transforma ingredientes de chocolate em principios ativos", async () => {
+  const result = await suggestProductData(productSuggestionRequestSchema.parse({ name: "Kit Kat Chocolate 41,5g", ean: chocolate.ean }), {
+    apiKey: "test", model: "gemini-test", fetchImplementation: structuredFetch(chocolate, "https://www.nestle.com.br/produtos/kitkat-41-5g"),
+  });
+  assert.equal(result.confidence, "high");
+  assert.equal(result.category, "Chocolates");
+  assert.equal(result.productType, "food");
+  assert.deepEqual(result.activeIngredients, []);
+});
+
+test("um alimento nao recebe alta confianca so por citar a Anvisa ou um dominio parecido", async () => {
+  for (const url of ["https://www.gov.br/anvisa/alimentos", "https://nestle.com.br.example/kitkat"]) {
+    const result = await suggestProductData(productSuggestionRequestSchema.parse({ name: chocolate.name, ean: chocolate.ean }), {
+      apiKey: "test", model: "gemini-test", fetchImplementation: structuredFetch(chocolate, url),
+    });
+    assert.notEqual(result.confidence, "high");
+  }
+});
+
 test("valida e limita os dados usados na pesquisa do produto", () => {
   const parsed = productSuggestionRequestSchema.safeParse({
     brand: "  Medley  ",

@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-21 - Catalogo multissetor e sugestoes visuais revisaveis
+
+- Decisao: classificar medicamentos, suplementos, perfumaria, higiene, alimentos/chocolates e outros itens com criterios especificos. Categorias existentes sao sugestoes, sem restringir os tipos aceitos. Principios ativos automaticos somente para medicamentos; marca e apresentacao precisam de evidencia propria.
+- Motivo: o assistente rejeitava chocolate por exigir criterios de medicamento. Kit Kat/KitKat e Nestle passam a ter relacao explicita de marca/fabricante; peso decimal com virgula ou ponto nao gera falso conflito.
+- Imagens: ler a foto com Gemini, pesquisar fotos reais e verificar compatibilidade visual antes de oferecer frente/verso/lateral. Artes opcionais usam modelo de imagem separado e preservam o angulo visivel. Escolha explicita de uma capa pelo administrador, sem migration e sem cadastro automatico de produto.
+- Controles: foto original preservada, resposta antiga descartada, conflito de identidade bloqueia pesquisa, fontes HTTPS com DNS publico fixado, downloads limitados, previews WebP ate 350 KB, API administrativa sem cache com limites por usuario e concorrencia. Conta Gemini pode cobrar analise/pesquisa e geracao; criacao de arte exige clique.
+- Validacao e limitacoes: [20-assistente-catalogo-e-imagens.md](20-assistente-catalogo-e-imagens.md). O KitKat do exemplo nao foi cadastrado; alteracoes nao mudam preco, estoque, cashback, receita ou Farmacia Popular.
+
 ## 2026-09-20 - Marcas reais e convite a compartilhar experiencias
 
 - Decisao: substituir as composicoes sem marca dos heroes por quatro fotos reais por campanha, montadas em HTML/CSS. Dove, NIVEA, Rexona, Huggies e Johnson’s identificam os produtos; marcas/rotulos nao sao redesenhados por IA. Imagens locais otimizadas e fontes registradas em `13-assets-institucionais.md`.

@@ -27,6 +27,8 @@
 
 ## Fontes tecnicas
 
+A evolucao de 2026-09-21 para alimentos/perfumaria, analise visual e escolha de fotos reais/artes esta documentada em [20-assistente-catalogo-e-imagens.md](20-assistente-catalogo-e-imagens.md). As verificacoes abaixo registram a entrega anterior.
+
 - [Next.js: arquivos publicos](https://nextjs.org/docs/pages/api-reference/file-conventions/public-folder).
 - [Gemini: grounding com Google Search](https://ai.google.dev/gemini-api/docs/google-search).
 - [rembg 2.0.81: matting e processamento](https://github.com/danielgatis/rembg/blob/v2.0.81/rembg/bg.py).

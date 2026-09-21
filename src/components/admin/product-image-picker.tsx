@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { ProductImageEditor } from "@/components/admin/product-image-editor";
+import { ProductPhotoSuggestions, type PhotoSource } from "@/components/admin/product-photo-suggestions";
+import type { PhotoIdentity } from "@/features/product-images/suggestion-types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +53,7 @@ export type ProductImagePickerHandle = {
 };
 
 type ProductImagePickerProps = {
+  identity?: PhotoIdentity;
   initialImageAssetId?: string | null;
   initialImageUrl?: string | null;
   disabled?: boolean;
@@ -68,7 +71,7 @@ function formatFileSize(bytes: number) {
 }
 
 export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductImagePickerProps>(
-  function ProductImagePicker({ initialImageAssetId, initialImageUrl, disabled = false }: ProductImagePickerProps, ref) {
+  function ProductImagePicker({ initialImageAssetId, initialImageUrl, identity, disabled = false }: ProductImagePickerProps, ref) {
     const imageInputRef = useRef<HTMLInputElement>(null);
     const uploadPromise = useRef<Promise<ProductImage> | null>(null);
     const [hasChosenImage, setHasChosenImage] = useState(false);
@@ -79,6 +82,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [editorSource, setEditorSource] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [suggestionSource, setSuggestionSource] = useState<PhotoSource | null>(null);
     const [selectedImage, setSelectedImage] = useState<ProductImage | null>(null);
     const [imageSearch, setImageSearch] = useState("");
     const [removeBackground, setRemoveBackground] = useState(false);
@@ -152,6 +156,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
       setImageMode("upload");
       setImageSearch("");
       setHasChosenImage(true);
+      setSuggestionSource(null);
     }, [clearPreview]);
 
     const uploadImage = useCallback(async (file: File) => {
@@ -216,6 +221,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
       setImageMode("upload");
       setSelectedImage(null);
       setSelectedFile(file);
+      setSuggestionSource({ file });
       setImagePreview(URL.createObjectURL(file));
       setEditorSource(URL.createObjectURL(file));
       setIsEditorOpen(openEditor);
@@ -233,6 +239,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
       clearPreview();
       setSelectedImage(image);
       setHasChosenImage(true);
+      setSuggestionSource({ url: image.url, name: image.originalName });
     }
 
     async function adjustLibraryImage() {
@@ -436,6 +443,10 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
             ) : null}
           </div>
         )}
+        {suggestionSource && identity && <ProductPhotoSuggestions disabled={disabled || isProcessing} identity={identity} onChoose={(file) => {
+          setHasChosenImage(true); setSelectedImage(null); setSelectedFile(file); setImageMode("upload"); setRemoveBackground(false);
+          setImagePreview(URL.createObjectURL(file)); setEditorSource(URL.createObjectURL(file));
+        }} source={suggestionSource} />}
         <ProductImageEditor
           onApply={(file) => {
             setSelectedFile(file);

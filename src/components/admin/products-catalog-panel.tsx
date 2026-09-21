@@ -34,6 +34,7 @@ import {
   type ProductImage,
   type ProductImagePickerHandle,
 } from "@/components/admin/product-image-picker";
+import { catalogCategorySuggestions, productTypeHint, productTypeLabels } from "@/features/products/product-types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -182,6 +183,8 @@ function ProductFormFields({
   const lastResearchKey = useRef(product ? productIdentityKey({ name: product.name, brand: product.brand ?? "", ean: product.ean ?? "" }) : "");
   const [automatic, setAutomatic] = useState(true);
   const [seo, setSeo] = useState({ name: product?.name ?? "", brand: product?.brand ?? "", description: product?.description ?? "" });
+  const [photoIdentity, setPhotoIdentity] = useState({ name: product?.name ?? "", brand: product?.brand ?? "", ean: product?.ean ?? "" });
+  const [categoryHint, setCategoryHint] = useState(product?.category ?? "");
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestion, setSuggestion] = useState<
     (ProductSuggestion & { sources: ProductSuggestionSource[] }) | null
@@ -206,6 +209,8 @@ function ProductFormFields({
 
   function refreshSeo() {
     setSeo({ name: formValue("name"), brand: formValue("brand"), description: formValue("description") });
+    setPhotoIdentity(currentIdentity());
+    setCategoryHint(formValue("category"));
   }
 
   function identityChanged() {
@@ -334,12 +339,14 @@ function ProductFormFields({
         medium: { className: "bg-amber-50 text-amber-700", label: "Revisar" },
       }[suggestion.confidence]
     : null;
+  const typeHint = suggestion?.productType && suggestion.productType !== "unknown" ? suggestion.productType : productTypeHint(`${categoryHint} ${seo.name}`);
+  const nonMedicine = ["food", "beauty", "hygiene", "device", "other"].includes(typeHint);
 
   return (
     <fieldset className="grid min-w-0 gap-4" disabled={disabled}>
       <label className="grid gap-2 text-sm font-semibold text-ink">
         Nome do produto
-        <Input defaultValue={product?.name} maxLength={160} name="name" onBlur={scheduleResearch} onChange={identityChanged} placeholder="Nome, concentracao e quantidade" ref={nameInputRef} required />
+        <Input defaultValue={product?.name} maxLength={160} name="name" onBlur={scheduleResearch} onChange={identityChanged} placeholder="Nome, marca, versão e quantidade" ref={nameInputRef} required />
       </label>
       <div className="overflow-hidden rounded-md border border-brand/20 bg-surface-subtle">
         <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
@@ -375,7 +382,8 @@ function ProductFormFields({
             </div>
             <div className="grid gap-2 text-xs leading-5 text-muted sm:grid-cols-2">
               <p><strong className="text-ink">Categoria:</strong> {suggestion.category ?? "Nao confirmada"}</p>
-              <p><strong className="text-ink">Principios:</strong> {suggestion.activeIngredients.join(", ") || "Nao confirmados"}</p>
+              <p><strong className="text-ink">Tipo:</strong> {productTypeLabels[typeHint]}</p>
+              {!nonMedicine && <p className="sm:col-span-2"><strong className="text-ink">Principios:</strong> {suggestion.activeIngredients.join(", ") || "Nao confirmados"}</p>}
               <p className="sm:col-span-2"><strong className="text-ink">Termos:</strong> {suggestion.searchTerms.join(", ") || "Nenhum termo confirmado"}</p>
               {suggestion.description ? <p className="sm:col-span-2"><strong className="text-ink">Descricao:</strong> {suggestion.description}</p> : null}
             </div>
@@ -403,32 +411,32 @@ function ProductFormFields({
         </label>
         <label className="grid gap-2 text-sm font-semibold text-ink">
           Categoria
-          <Input defaultValue={product?.category ?? ""} list={categoryListId} maxLength={120} name="category" placeholder="Medicamentos" />
+          <Input defaultValue={product?.category ?? ""} list={categoryListId} maxLength={120} name="category" onChange={refreshSeo} placeholder="Ex.: Chocolates, Perfumaria, Medicamentos" />
           <datalist id={categoryListId}>
-            {categoryOptions.map((category) => <option key={category} value={category} />)}
+            {[...new Set([...categoryOptions, ...catalogCategorySuggestions])].map((category) => <option key={category} value={category} />)}
           </datalist>
         </label>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-2 text-sm font-semibold text-ink">
-          Principios ativos
+          Principios ativos (somente medicamentos)
           <Input
             defaultValue={product?.activeIngredients.join(", ") ?? ""}
             maxLength={1200}
             name="activeIngredients"
-            placeholder="Ex.: paracetamol, fenilefrina"
+            placeholder={nonMedicine ? "Não se aplica a este tipo de produto" : "Ex.: paracetamol, fenilefrina"}
           />
           <span className="text-xs font-medium leading-5 text-muted">
-            Separe por virgula. Eles ajudam a encontrar correlatos.
+            {nonMedicine ? "Deixe vazio para alimentos, perfumaria e higiene. Ingredientes comuns não são princípios ativos." : "Separe por virgula. Preencha somente quando aplicavel; ajuda a encontrar correlatos."}
           </span>
         </label>
         <label className="grid gap-2 text-sm font-semibold text-ink">
-          Termos de busca e indicacao
+          Termos de busca
           <Input
             defaultValue={product?.searchTerms.join(", ") ?? ""}
             maxLength={1000}
             name="searchTerms"
-            placeholder="Ex.: gripe, resfriado, congestao"
+            placeholder={typeHint === "food" ? "Ex.: chocolate, wafer, ao leite, marca" : "Nome, marca, tipo e características"}
           />
           <span className="text-xs font-medium leading-5 text-muted">
             Use termos objetivos do cadastro, sem orientacao medica.
@@ -476,7 +484,7 @@ function ProductFormFields({
 
       {seo.name && <div className="min-w-0 border-l-2 border-pharma-green pl-3"><p className="text-xs font-semibold text-muted">Previa na busca</p><p className="mt-1 break-words text-sm font-bold text-ink">{seo.name} | Wimifarma</p><p className="mt-1 break-words text-xs leading-5 text-muted">{buildProductMetaDescription(seo)}</p></div>}
 
-      <ProductImagePicker initialImageAssetId={product?.imageAssetId} initialImageUrl={product?.imageUrl} key={product?.id ?? "new"} ref={imagePickerRef} />
+      <ProductImagePicker identity={photoIdentity} initialImageAssetId={product?.imageAssetId} initialImageUrl={product?.imageUrl} key={product?.id ?? "new"} ref={imagePickerRef} />
 
       <label className="flex cursor-pointer items-center gap-3 border-y border-line py-3 text-sm font-bold text-ink"><input className="h-4 w-4 accent-brand" defaultChecked={isShowcasePosition(product?.featuredPosition ?? null)} name="featured" type="checkbox" /><Star className="h-4 w-4 text-brand" />Destacar em Melhores ofertas</label>
 
