@@ -23,3 +23,9 @@ Renovar `/delivery` com cena de pessoas em contexto residencial, hierarquia clar
 `scripts/delivery-ui-audit.mjs` usa Chromium com movimento reduzido e bloqueia escritas de APIs: verifica 320/390/768/1440 px, imagem carregada, overflow, canonical/social, links, CEP invalido/local/externo e FAQ por teclado. `AUDIT_BASE_URL` permite repetir a verificacao no site publicado. Capturas ficam em `artifacts/delivery-qa/`, fora do Git.
 
 Validacao local aprovada: 137 testes da suite, lint e typecheck; 9 testes de detalhes/CEP repetidos apos ajuste de texto. Build final aprovado (`/delivery`: 4,3 kB de rota). Auditoria Chromium passou nas quatro larguras, incluindo distancia do cabecalho fixo e ancora sem sobreposicao. Servidor temporario encerrado e porta 3017 liberada. Sem gravacao de pedidos, clientes ou dados comerciais.
+
+## Publicacao
+
+Codigo `7d70758` enviado ao GitHub e publicado no VPS via fast-forward, build Docker e recriacao apenas do app. Container `healthy`; imagem anterior preservada como `wimifarma-br-app:pre-delivery-4f076ec`. Sem migration.
+
+`AUDIT_BASE_URL=https://wimifarma.com.br node scripts/delivery-ui-audit.mjs` aprovado em 320/390/768/1440 px: hero com imagem carregada, cabecalho/ancora sem sobreposicao, zero overflow/erros de navegador, CEP invalido/local/externo, FAQ por teclado, canonical e imagem social. Auditoria externa sem escritas comerciais. Nenhuma pendencia tecnica identificada nesta entrega.
