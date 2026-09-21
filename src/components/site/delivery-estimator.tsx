@@ -66,7 +66,7 @@ export function DeliveryEstimator() {
             <strong className="block text-sm font-black text-ink">{result.title}</strong>
             <p className="mt-1 text-xs font-semibold leading-5 text-muted">
               {result.available
-                ? "O prazo e o estoque serao confirmados pela equipe ao receber o pedido."
+                ? "Frete grátis a partir de R$ 99,90 na área atendida. A equipe confirma prazo, estoque e condições do pedido."
                 : result.normalizedPostalCode.length === 8
                   ? "Consulte a equipe para verificar outra forma de atendimento."
                   : "Use somente os numeros do seu CEP."}

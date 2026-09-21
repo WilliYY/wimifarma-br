@@ -1,5 +1,9 @@
 # 13 - Assets institucionais
 
+## Delivery residencial com pessoas - 2026-09-21
+
+`public/banners/delivery-em-casa.webp`: cena ilustrativa de entregador e cliente, gerada com `image_gen`, 1280 x 960 e 122.176 bytes. Exibida com Next Image em `/delivery`, com legenda ilustrativa e origem de IA no arquivo. Conversao, prompt completo e limites: `docs/22-delivery-visual.md`.
+
 ## Campanhas principais com marcas — 2026-09-20
 
 `HeroProductStage` substitui as composicoes sem marca abaixo. Sao quatro fotos reais por campanha, com rotulos originais, em composicao HTML/CSS sobre fundo branco. Sem sintese de logotipos ou promessa de parceria. Oito fotos distintas totalizam **159.488 bytes**, incluindo NIVEA/Rexona ja existentes. Apenas a campanha ativa carrega; cuidados e perfumaria reutilizam URLs/cache.

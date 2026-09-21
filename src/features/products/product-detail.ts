@@ -170,7 +170,7 @@ export function getDeliveryAvailability(value: string): DeliveryAvailability {
     available,
     normalizedPostalCode,
     title: available
-      ? "Entrega gratis em Ivate"
+      ? "Entrega disponível em Ivaté"
       : "Entrega pelo site ainda nao disponivel para este CEP",
   };
 }

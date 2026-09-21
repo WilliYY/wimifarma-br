@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Delivery com pessoas e consulta de CEP - 2026-09-21
+
+`/delivery` recebe cena residencial ilustrativa, catalogo/WhatsApp em destaque, consulta de CEP reutilizada, etapas do pedido e FAQ acessivel. Sem placeholders administrativos ou horarios inventados. Imagem WebP de 122.176 bytes; contrato, prompt e verificacao em `docs/22-delivery-visual.md`.
+
 ## O Que Esta Parte Faz
 
 Documenta a experiencia visual atual do site publico e os cuidados ao alterar layout principal.

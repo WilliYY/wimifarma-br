@@ -14,7 +14,7 @@ test("reconhece a faixa de CEP atendida em Ivate", () => {
   assert.deepEqual(getDeliveryAvailability("87525-000"), {
     available: true,
     normalizedPostalCode: "87525000",
-    title: "Entrega gratis em Ivate",
+    title: "Entrega disponível em Ivaté",
   });
   assert.equal(getDeliveryAvailability("87527-999").available, true);
   assert.equal(getDeliveryAvailability("87528-000").available, false);

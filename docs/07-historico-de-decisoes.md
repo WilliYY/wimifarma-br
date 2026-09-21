@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-21 - Delivery com cenario humano e orientacao pratica
+
+- Trocar o hero generico por cena ilustrativa de entrega na residencia, conforme preferencia explicita por pessoas e cenario. Reutilizar consulta de CEP, deixar condicao de frete clara e explicar o fluxo com confirmacao humana.
+- Sem mudanca de cobertura, calculo financeiro, estoque ou pagamento. FAQ nativo e uma imagem WebP responsiva, sem bibliotecas novas. Detalhes em `docs/22-delivery-visual.md`.
+
 ## 2026-09-21 - Referencias visuais, catalogo indexavel e marketing revisavel
 
 - Decisao: ampliar classificacao e descricoes da IA, permitir paginas de referencia e priorizar fotos reais de angulos diferentes; controles de cashback avancam 1 ponto percentual preservando entrada decimal.
