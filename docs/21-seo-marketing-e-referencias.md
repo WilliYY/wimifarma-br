@@ -44,3 +44,11 @@ Melhorar descoberta e apresentacao dos produtos sem alterar registros comerciais
 137 testes passaram: percentual decimal, descricoes, classificacao, galerias e seguranca de URLs, metadados/GTIN, feed/escape XML/exclusoes. `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run build`, `npm.cmd run prisma:validate` e `npm.cmd audit --audit-level=moderate` passaram; auditoria sem vulnerabilidades. Scripts reproduziveis: `node --import tsx scripts/assistant-ui-audit.ts`, `node --import tsx scripts/seo-storefront-audit.ts` e `node scripts/seo-live-audit.mjs`. Os dois primeiros usam fixtures sem banco; o ultimo verifica producao somente por leitura.
 
 Referencias adicionais: [imagens e origem de IA](https://support.google.com/merchants/answer/6324350?hl=en), [outras fotos](https://support.google.com/merchants/answer/6324370?hl=en), [textos assistidos por IA](https://support.google.com/merchants/answer/14784710?hl=en-IE).
+
+## Publicacao e verificacao externa
+
+- Codigo `7652b90` enviado ao GitHub, recebido por fast-forward no VPS e imagem Docker app construida e publicada. Imagem anterior preservada como `wimifarma-br-app:pre-seo-2c1a57a`; sem migration.
+- `node scripts/seo-live-audit.mjs`: catalogo, ofertas e categoria publicada responderam 200 em 320/390/1440 px, sem overflow ou erros no navegador. Canonical, CollectionPage, Pharmacy, Product, BreadcrumbList, sitemap com imagens e login noindex conferidos. Exportacao privada sem login respondeu 401.
+- `node scripts/catalog-live-audit.mjs`: quatro fotos publicas responderam WebP 200, ETag 304 e renderizaram no Chromium. Home e pagina de produto sem erros; admin protegido.
+- Container `healthy`, zero reinicializacoes; nenhum erro nos logs recentes durante a verificacao. Nenhuma escrita comercial executada nos testes externos.
+- Pendencias externas: configurar/verificar Search Console e Merchant Center, revisar os itens exportados e adequacao de checkout/frete/devolucoes antes de ativar listagens. Nao houve envio de feed ou anuncios ao Google; aprovacao e exibicao nao foram testadas nem garantidas.
