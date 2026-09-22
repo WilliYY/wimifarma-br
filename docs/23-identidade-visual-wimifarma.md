@@ -2,7 +2,7 @@
 
 ## Diretriz do lojista - 2026-09-21
 
-Usar sempre a logo oficial completa, inclusive em banners. A farmacia nao deve ser identificada somente por uma cruz generica. Aplicar tambem a sacolas, uniformes e veiculos de cenas ilustrativas. A regra foi adicionada ao `AGENTS.md` do projeto; memoria pessoal externa nao foi alterada.
+Usar sempre a logo oficial completa, inclusive em banners. A farmacia nao deve ser identificada somente por uma cruz generica. Aplicar tambem a sacolas, uniformes e veiculos de cenas ilustrativas. A regra foi adicionada ao `AGENTS.md` do projeto.
 
 ## Arquivos e aplicacoes
 
@@ -24,3 +24,9 @@ Prompt final: "Edit ONLY branding in the FIRST image, the existing residential p
 `node scripts/brand-ui-audit.mjs`: cinco paginas, quatro larguras (320/390/768/1440), marca do cabecalho carregada mesmo com movimento reduzido, seis campanhas com logo, imagens e ausencia de overflow. `AUDIT_BASE_URL` permite repetir em producao. Scripts bloqueiam escritas de APIs durante a auditoria. Capturas ficam em `artifacts/brand-qa/`, sem versionamento. Repetir `scripts/delivery-ui-audit.mjs` para conferir CEP, FAQ e imagem social apos a troca de URL.
 
 Validacao local aprovada: ambas as auditorias Chromium nas quatro larguras, 137 testes, lint, typecheck e build. A home local usa o componente real com catalogo vazio em memoria, pois o PostgreSQL do Docker nao e acessivel pelo processo Windows; as outras quatro paginas usam o Next local. Nenhuma fixture foi criada no banco. O servidor temporario foi encerrado apos a verificacao.
+
+## Publicacao e conferencia externa
+
+Codigo `5e1e475` enviado ao GitHub, recebido por fast-forward no VPS e publicado por build/recriacao do app. Container `healthy`. Imagem anterior preservada em `wimifarma-br-app:pre-brand-3115506`; sem migration ou nova dependencia.
+
+Ambas as auditorias passaram com `AUDIT_BASE_URL=https://wimifarma.com.br`: Home, Delivery, Sobre, Contato e Farmacia Popular em 320/390/768/1440 px; seis campanhas com assinatura oficial, cabecalho com logo completa, imagem nova/social de delivery, CEP/FAQ e zero overflow ou erros de navegador. Em producao a home foi verificada com o catalogo real, somente por leitura. Nenhuma pendencia tecnica identificada.
