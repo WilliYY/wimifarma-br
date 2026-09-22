@@ -90,6 +90,7 @@ type ProductListItem = {
   featuredPosition: number | null;
   id: string;
   imageAssetId: string | null;
+  imageAsset?: { width: number; height: number; originalName: string } | null;
   imageUrl: string | null;
   isPopularPharmacy: boolean;
   name: string;
@@ -719,7 +720,7 @@ export function ProductsCatalogPanel({ canManageCashback = false }: { canManageC
         </div>
       </section>
 
-      <CatalogSeoOverview />
+      <CatalogSeoOverview products={products} loading={isLoading} />
       <div className="grid gap-5">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Card className="border-brand/15">

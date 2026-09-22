@@ -33,7 +33,11 @@ Testes de calendário, concorrência, permissões, lixeira, restauração, prazo
 - 153 testes passaram; lint, typecheck, build e validação Prisma aprovados. `npm audit --audit-level=moderate` com zero vulnerabilidades.
 - Lixeira: cancelamento sem escrita, recuperação de erro e restauração como rascunho em 320/390/768/1440 px, sem overflow ou erro de JavaScript. Somente fixtures.
 - Marca: cinco páginas × quatro larguras, seis campanhas com assinatura oficial, animação ativa no modo normal e estática com movimento reduzido. Nenhuma escrita comercial.
-- Migration e publicação ainda dependem da conferência isolada no PostgreSQL e do backup operacional.
+- PostgreSQL descartável: todas as migrations aplicadas; CHECK, restauração, purga idempotente e preservação de pedidos/cashback aprovados. Container e rede de QA removidos.
+- Backup `/home/ubuntu/backups/wimifarma-br/daily/20260922T175348Z` validado antes da migration. Primeira implantação `aace806` saudável; worker iniciou e concluiu com zero exclusões.
+- Conferência pública: cinco produtos no sitemap (17 URLs), catálogo XML válido e rota da lixeira retornando 401 sem sessão. Contagens comerciais antes/depois iguais: 5 produtos, 1 oferta, 0 pedidos e 0 lançamentos de cashback; nenhum produto na lixeira.
+- O feed comercial inicialmente tem zero itens aptos: Kit Kat sem EAN, Dove sem marca, medicamentos regulados e cadastro demonstrativo incompleto. Nada foi preenchido por suposição. Painel mostra contagem da lista carregada e pendências individuais para distinguir descoberta orgânica de elegibilidade Shopping.
+- Auditoria da marca repetida no domínio público: cinco páginas × quatro larguras, animação normal/reduzida, seis campanhas, sem overflow, erros de JavaScript ou mutações. Indicadores de elegibilidade e lixeira novamente aprovados no QA responsivo, lint e typecheck.
 
 ## Referências oficiais
 

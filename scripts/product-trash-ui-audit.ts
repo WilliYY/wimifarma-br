@@ -38,6 +38,7 @@ async function main() {
       });
       await page.goto("http://127.0.0.1:3010/admin/catalogos");
       await expect(page.getByText("Seus produtos preparados para o Google")).toBeVisible();
+      await expect(page.getByText("Nesta lista: 1 publicados no site · 0 aptos para o catálogo Shopping")).toBeVisible();
       await page.getByRole("button", { name: "Excluir produto" }).click();
       const dialog = page.getByRole("dialog");
       await dialog.getByRole("button", { name: "Cancelar" }).click(); assert.equal(writes.length, 0);

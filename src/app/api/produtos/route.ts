@@ -21,6 +21,7 @@ const productSelect = {
   featuredPosition: true,
   id: true,
   imageAssetId: true,
+  imageAsset: { select: { width: true, height: true, originalName: true } },
   imageUrl: true,
   isPopularPharmacy: true,
   name: true,
