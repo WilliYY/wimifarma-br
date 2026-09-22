@@ -138,6 +138,10 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 ## Evolucao
 
+### Minha conta
+
+Painel privado renovado com identidade oficial, menu lateral no desktop e navegação horizontal no celular. Visão geral reúne cashback, pedidos em andamento e atalhos. Histórico mostra os itens e valores da compra, detalhes expansíveis e etapas reais de entrega/retirada. Contrato, API e validação em `docs/24-minha-conta-pedidos.md`.
+
 Quando o admin de temas existir, documentar:
 
 - quais textos podem ser alterados;

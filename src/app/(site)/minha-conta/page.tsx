@@ -5,6 +5,7 @@ import { auth } from "@/features/auth/auth";
 import { sessionCustomerId } from "@/features/auth/customer-session";
 import { getCustomerCashback } from "@/features/cashback/service";
 import { getPrisma } from "@/lib/prisma";
+import { getCustomerOrders } from "@/features/orders/customer-orders-service";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -34,11 +35,13 @@ export default async function MinhaContaPage() {
   }
 
   const cashback = await prisma.$transaction((tx) => getCustomerCashback(tx, customer.id), { isolationLevel: "RepeatableRead" });
+  const orders = await getCustomerOrders(prisma, customer.id, { page: 1, filter: "all" });
 
   return (
     <CustomerAccountPanel
       adminAccess={session.user.role === "ADMIN"}
       cashback={cashback}
+      initialOrders={orders}
       customer={{
         address: customer.address,
         city: customer.city,

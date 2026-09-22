@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-22 - Painel do cliente e acompanhamento de pedidos
+
+- Decisão: modernizar a conta com visão geral, histórico paginado, fotos dos itens, acompanhamento por status, dados, segurança e cashback. Reaproveitar pedidos e autenticação existentes, sem migração.
+- Privacidade: consultar apenas o `customerId` da sessão ativa, com seleção explícita e respostas privadas sem cache. Não associar compras por telefone/email nem expor notas internas.
+- Acompanhamento: representar os estados registrados pela equipe, diferenciando entrega e retirada. Sem inventar GPS, previsão ou datas de cada etapa. Atualização manual com recuperação de falhas.
+- Validação e limites: `docs/24-minha-conta-pedidos.md`; testes com fixtures sintéticas e nenhuma alteração comercial em produção.
+
 ## 2026-09-21 - Marca oficial completa como padrao visual
 
 - Pedido do lojista: usar sempre a logo completa da Wimifarma, inclusive em banners e cenas de delivery. Documentar em AGENTS e compartilhar a assinatura entre campanhas sem redesenhar letras.
