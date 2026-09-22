@@ -83,6 +83,7 @@ async function getProducts() {
   const prisma = getPrisma();
 
   return prisma.product.findMany({
+    where: { deletedAt: null },
     orderBy: { createdAt: "desc" },
     select: productSelect,
     take: 100,

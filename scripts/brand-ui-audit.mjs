@@ -31,6 +31,11 @@ try {
       if (!local || path !== "/") {
         await expect(header).toHaveCount(1);
         await expect.poll(() => header.evaluate(image => image.complete && image.naturalWidth === 640)).toBe(true);
+        assert.equal(await header.evaluate(image => getComputedStyle(image).animationName), "none");
+        await page.emulateMedia({ reducedMotion: "no-preference" });
+        assert.equal(await header.evaluate(image => getComputedStyle(image).animationName), "wimifarma-logo-float");
+        await expect(header).toBeVisible();
+        await page.emulateMedia({ reducedMotion: "reduce" });
       }
       assert.equal(await page.locator('img[src*="logo-animada"]').count(), 0);
       const signatures = page.locator("main [data-brand-signature] img");

@@ -64,7 +64,7 @@ export async function SiteHeader() {
         <div className="relative z-10 -my-1.5 -ml-1 flex shrink-0 self-stretch items-center gap-2 rounded-r-[3.5rem] border-r-2 border-brand bg-[#121820] py-1.5 pl-1 pr-3 shadow-[14px_0_30px_rgba(17,24,39,0.12)] min-[360px]:-ml-2 min-[360px]:pl-2 sm:-ml-6 sm:pl-6 sm:pr-5 lg:-ml-8 lg:pl-8 xl:pr-7">
           <Link
             aria-label="Wimifarma"
-            className="relative flex h-20 w-24 shrink-0 items-center justify-start overflow-hidden min-[360px]:w-28 sm:h-24 sm:w-64 xl:w-72"
+            className="wimifarma-logo-motion relative flex h-20 w-24 shrink-0 items-center justify-start overflow-hidden min-[360px]:w-28 sm:h-24 sm:w-64 xl:w-72"
             href="/"
           >
             <Image

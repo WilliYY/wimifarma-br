@@ -130,6 +130,8 @@ model Product {
   isPopularPharmacy    Boolean       @default(false)
   requiresPrescription Boolean       @default(false)
   status               ProductStatus @default(DRAFT)
+  deletedAt            DateTime?
+  purgeAt              DateTime?
   stock                Int           @default(0)
   sortOrder            Int           @default(0)
   featuredPosition     Int?          @unique
@@ -143,6 +145,7 @@ model Product {
   @@index([imageAssetId])
   @@index([status])
   @@index([status, featuredPosition])
+  @@index([purgeAt])
   @@index([isPopularPharmacy])
 }
 

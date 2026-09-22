@@ -8,7 +8,7 @@ Usar sempre a logo oficial completa, inclusive em banners. A farmacia nao deve s
 
 - Original preservado: `public/brand/logo-wimifarma.svg` (214.158 bytes). Derivacao leve: `public/brand/logo-wimifarma-compact.webp`, 640 x 151, **18.980 bytes**. Letras e contorno vieram diretamente do original, sem redesenho por IA. `node scripts/prepare-official-logo.mjs` reproduz a conversao.
 - `src/components/site/brand-signature.tsx` oferece assinatura reutilizavel com logo completa, contraste e proporcao preservados. Um mesmo arquivo/cache e usado nas campanhas.
-- Cabecalho e rodape usam o arquivo oficial compacto. A animacao do cabecalho foi substituida pela marca estatica completa para evitar fases em que somente a cruz aparecia, inclusive com movimento reduzido.
+- Cabecalho e rodape usam o arquivo oficial compacto. Em 2026-09-22, por solicitação do lojista, o cabeçalho voltou a ter animação CSS leve (flutuação e brilho) mantendo a marca completa continuamente. Movimento reduzido mantém a logo estática. Sem GIF adicional; contrato em `docs/25-seo-automatico-e-lixeira.md`.
 - Assinatura nos tres banners principais e nas tres campanhas de perfumaria; marcas e embalagens dos fabricantes preservadas. Perfumaria reserva uma faixa propria para a logo, sem encobrir produtos.
 - Banners institucionais de Sobre e Contato, Farmacia Popular e Delivery recebem a assinatura oficial. O selo do programa Farmacia Popular continua separado da identidade da loja.
 - `public/banners/delivery-wimifarma.webp` substitui `delivery-em-casa.webp`, que foi retirado dos assets ativos. A nova cena usa a logo completa na sacola, camisa e bau. 1280 x 960, **118.154 bytes**, WebP qualidade 82, IPTC DigitalSourceType de IA. URL nova evita manter imagem antiga no cache.

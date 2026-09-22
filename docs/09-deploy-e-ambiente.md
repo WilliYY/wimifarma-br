@@ -99,6 +99,10 @@ docker network connect wimifarma-br-network nginx-proxy-manager-app-1
 O App Router gera `robots.txt` e `sitemap.xml` em `src/app/robots.ts` e `src/app/sitemap.ts`.
 As rotas administrativas, APIs e `/minha-conta` ficam bloqueadas para robos; as rotas publicas basicas entram no sitemap.
 
+`/google-products.xml` é uma fonte pública, paginada internamente, apenas com dados comerciais públicos elegíveis. Produtos novos/alterados entram a cada consulta, sem exportação manual. Falha inicial no banco retorna 503; sitemap também falha em vez de fornecer mapa parcial com sucesso.
+
+A migration `20260922140000_product_trash` adiciona retenção de produtos. Fazer backup verificado e reconstruir `app` e `migrate` antes de aplicá-la. `PRODUCT_MAINTENANCE_ENABLED` é `true` por padrão no Docker. O hook `instrumentation.ts` inicia limpeza somente em Node de produção com essa variável ativa, após 30 segundos e a cada hora. Logs: `[products:retention] started`, `completed` ou `failed`. Desativar/recriar app interrompe novas execuções; não reverte exclusões já feitas. Contrato e QA isolado em `docs/25-seo-automatico-e-lixeira.md`.
+
 ## Auditoria Visual e Console
 
 `npm.cmd run audit:browser` executa `scripts/browser-audit.mjs` com Playwright.

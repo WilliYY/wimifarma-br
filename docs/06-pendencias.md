@@ -1,5 +1,11 @@
 # 06 - Pendencias
 
+## Google: configuração externa única
+
+- Confirmar propriedade no Search Console e envio de `https://wimifarma.com.br/sitemap.xml`; o mapa e o SEO acompanham os produtos publicados automaticamente.
+- Vincular `https://wimifarma.com.br/google-products.xml` como fonte programada no Merchant Center, se a conta estiver habilitada. Conferir diagnósticos e políticas; não foi confirmada conexão das contas nesta implementação.
+- Indexação, posição e aprovação comercial dependem do Google. Não requer criar links de campanha para cada produto. Contrato: `docs/25-seo-automatico-e-lixeira.md`.
+
 ## Pendencias Criticas
 
 ### Atualizar dependencias de ferramentas do Prisma

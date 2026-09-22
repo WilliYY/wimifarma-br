@@ -6,6 +6,8 @@ import { buildProductSearchText } from "@/features/products/public-search";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
 import { lockProductCatalog, ProductMutationError, resolveFeaturedPosition } from "@/features/products/mutations";
+import { productTrashMutationSchema } from "@/features/products/trash-policy";
+import { moveProductToTrash } from "@/features/products/trash-service";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -129,7 +131,7 @@ export async function PATCH(
     const product = await prisma.$transaction(async (transaction) => {
       await lockProductCatalog(transaction);
       if (imageAsset && !await transaction.productImage.findUnique({ where: { id: imageAsset.id }, select: { id: true } })) throw new ProductMutationError("A foto foi removida da biblioteca. Selecione outra foto.", 409);
-      const current = await transaction.product.findUnique({ where: { id }, select: { imageUrl: true, featuredPosition: true } });
+      const current = await transaction.product.findUnique({ where: { id, deletedAt: null }, select: { imageUrl: true, featuredPosition: true } });
       if (!current) return null;
       const imageUrl = imageAsset?.url ?? (clearImage ? null : normalizedImageUrl ?? current.imageUrl);
       const featuredPosition = await resolveFeaturedPosition(transaction, { featured: parsed.data.featured, currentPosition: current.featuredPosition, status: productData.status, imageUrl });
@@ -153,6 +155,7 @@ export async function PATCH(
         },
         where: {
           id,
+          deletedAt: null,
           updatedAt: new Date(expectedUpdatedAt),
         },
       });
@@ -211,5 +214,21 @@ export async function PATCH(
     }
     console.error("Falha ao editar produto", error instanceof Error ? error.name : "unknown");
     return NextResponse.json({ error: "Nao foi possivel salvar o produto. Reabra a edicao e tente novamente." }, { status: 503 });
+  }
+}
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const guard = await requireAdminApi();
+  if (guard.response) return guard.response;
+  if (!guard.session?.user) return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+  const parsed = productTrashMutationSchema.safeParse(await readJsonBody(request));
+  if (!parsed.success) return NextResponse.json({ error: "Atualize o catálogo antes de excluir o produto." }, { status: 422 });
+  const { id } = await params;
+  const userId = guard.session.user.id;
+  try {
+    const data = await getPrisma().$transaction(tx => moveProductToTrash(tx, id, new Date(parsed.data.expectedUpdatedAt), userId), { timeout: 10000 });
+    return NextResponse.json({ data }, { headers: { "Cache-Control": "private, no-store" } });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof ProductMutationError ? error.message : "Não foi possível excluir o produto." }, { status: error instanceof ProductMutationError ? error.status : 503 });
   }
 }

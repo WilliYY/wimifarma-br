@@ -30,6 +30,8 @@ import {
 import { toast } from "sonner";
 import { CashbackProductFields } from "@/components/admin/cashback-product-fields";
 import { ProductMarketingTools } from "@/components/admin/product-marketing-tools";
+import { ProductDeleteButton, ProductTrashDialog } from "@/components/admin/product-trash";
+import { CatalogSeoOverview } from "@/components/admin/catalog-seo-overview";
 import {
   ProductImagePicker,
   type ProductImage,
@@ -703,6 +705,7 @@ export function ProductsCatalogPanel({ canManageCashback = false }: { canManageC
           </div>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
+          <ProductTrashDialog onChanged={loadProducts} />
           <Button asChild variant="secondary">
             <Link href="/admin/ofertas">
               <LayoutGrid className="h-4 w-4" />
@@ -716,6 +719,7 @@ export function ProductsCatalogPanel({ canManageCashback = false }: { canManageC
         </div>
       </section>
 
+      <CatalogSeoOverview />
       <div className="grid gap-5">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Card className="border-brand/15">
@@ -872,6 +876,7 @@ export function ProductsCatalogPanel({ canManageCashback = false }: { canManageC
                               <Pencil className="h-4 w-4" />
                               Editar produto
                             </Button>
+                            <ProductDeleteButton product={product} onChanged={loadProducts} />
                           </div>
                         </div>
                       );

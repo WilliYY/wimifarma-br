@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-22 - SEO automático, lixeira e animação da marca
+
+- Decisão: oferecer `/google-products.xml` atualizado, tornar explícito no admin o SEO automático dos produtos atuais/futuros e restaurar movimento leve da logo oficial completa.
+- Exclusão: `deletedAt`/`purgeAt` com CHECK no banco, retenção por dois meses de calendário e restauração como rascunho. Ofertas são arquivadas; purga periódica preserva pedidos e livro financeiro. Autorização ADMIN/MANAGER, versão otimista, trava transacional e auditoria.
+- Operação: worker Node habilitado pelo Docker, primeira verificação após 30 segundos e depois a cada hora; até 10 lotes de 100 por execução. Migration aditiva sem alterar produtos existentes. Desativar com `PRODUCT_MAINTENANCE_ENABLED=false` e recriar o app.
+- Limites: site não garante indexação/posição nem conecta automaticamente contas externas do Google. Merchant Center conserva filtro conservador de elegibilidade; busca orgânica mantém todos os publicados. Contrato e validação em `docs/25-seo-automatico-e-lixeira.md`.
+
 ## 2026-09-22 - Painel do cliente e acompanhamento de pedidos
 
 - Decisão: modernizar a conta com visão geral, histórico paginado, fotos dos itens, acompanhamento por status, dados, segurança e cashback. Reaproveitar pedidos e autenticação existentes, sem migração.

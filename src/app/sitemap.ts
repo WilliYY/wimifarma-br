@@ -28,7 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const products = await getPrisma().product.findMany({
       orderBy: { updatedAt: "desc" },
       select: { slug: true, updatedAt: true, category: true, imageUrl: true },
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", deletedAt: null },
     });
 
     const categories = new Map<string, Date>();
@@ -47,11 +47,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         images: product.imageUrl ? [new URL(product.imageUrl, baseUrl).href] : undefined,
       })),
     ];
-  } catch (error) {
-    console.error(
-      "Nao foi possivel incluir os produtos no sitemap.",
-      error instanceof Error ? error.message : "Erro desconhecido.",
-    );
-    return staticEntries;
+  } catch {
+    // Do not publish a successful but incomplete sitemap during a database outage.
+    throw new Error("Sitemap temporariamente indisponível.");
   }
 }
