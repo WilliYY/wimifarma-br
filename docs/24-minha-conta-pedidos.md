@@ -34,3 +34,10 @@ Não associa compras antigas ou anônimas automaticamente. Não oferece localiza
 - `npm.cmd audit --audit-level=moderate` com `NODE_OPTIONS=--use-system-ca`: zero vulnerabilidades.
 - `npm.cmd run audit:account`: 320, 390, 768 e 1440 px; histórico, etapas, filtros, paginação, detalhes por teclado, formulários, conta vazia e recuperação de falhas aprovados, sem overflow ou escritas comerciais.
 - Build local: API sem sessão retorna 401 com `private, no-store`; `/minha-conta` redireciona para `/login` (307). O teste visual privado usa fixtures; não acessa histórico de clientes reais.
+
+## Publicação verificada — 2026-09-22
+
+- Código `f43f323` enviado ao GitHub, sincronizado no servidor e publicado com rebuild/recriação somente do serviço `app`. Sem migração nova. Imagem anterior preservada como `wimifarma-br-app:pre-account-d1121c2`.
+- App, PostgreSQL e remoção de fundo permaneceram `healthy`.
+- Produção: `/api/minha-conta/pedidos` sem sessão retorna 401, `private, no-store` e `noindex, nofollow`; `/minha-conta` retorna 307 para `/login`; `/delivery` e `/catalogo` retornam 200.
+- Auditoria privada realizada com fixtures locais, sem abrir dados pessoais de clientes em produção. Servidor local encerrado e log temporário do build remoto removido.
