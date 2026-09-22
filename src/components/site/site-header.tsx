@@ -70,11 +70,11 @@ export async function SiteHeader() {
             <Image
               alt=""
               aria-hidden="true"
-              className="object-contain object-left"
+              className="object-contain object-left brightness-0 invert"
               fill
               priority
               sizes="(min-width: 1280px) 288px, (min-width: 640px) 256px, (min-width: 360px) 112px, 96px"
-              src="/brand/logo-animada.svg"
+              src="/brand/logo-wimifarma-compact.webp"
               unoptimized
             />
           </Link>

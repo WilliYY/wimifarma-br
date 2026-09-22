@@ -1,5 +1,7 @@
 # Delivery: experiencia visual e consulta de entrega
 
+Atualizacao de marca: a cena inicial foi substituida por `public/banners/delivery-wimifarma.webp`, com a logo completa na sacola, uniforme e bau, conforme pedido do lojista. Abaixo permanece o registro historico da criacao; estado atual e validacao em `docs/23-identidade-visual-wimifarma.md`.
+
 ## Escopo - 2026-09-21
 
 Renovar `/delivery` com cena de pessoas em contexto residencial, hierarquia clara, chamadas para catalogo/WhatsApp, consulta de CEP existente, passos do pedido e perguntas expansiveis. Remover textos de planejamento interno da pagina publica. Sem nova dependencia, migration ou mudanca financeira.

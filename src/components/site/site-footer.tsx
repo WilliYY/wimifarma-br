@@ -40,7 +40,8 @@ export function SiteFooter() {
                 alt="Wimifarma"
                 className="h-auto w-full object-contain object-left brightness-0 invert"
                 height={48}
-                src="/brand/logo-wimifarma.svg"
+                src="/brand/logo-wimifarma-compact.webp"
+                unoptimized
                 width={176}
               />
             </span>

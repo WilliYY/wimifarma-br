@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowDown, ArrowRight, ArrowUpRight, Bike, MapPin, MessageCircle, Plus, Store, Truck } from "lucide-react";
 import { DeliveryEstimator } from "@/components/site/delivery-estimator";
+import { BrandSignature } from "@/components/site/brand-signature";
 import { Button } from "@/components/ui/button";
 import { createPublicPageMetadata } from "@/lib/metadata";
 import { siteConfig } from "@/lib/site";
@@ -9,7 +10,7 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { breadcrumbData } from "@/lib/seo";
 import { serializeProductStructuredData } from "@/features/products/product-detail";
 
-const imageUrl = "/banners/delivery-em-casa.webp";
+const imageUrl = "/banners/delivery-wimifarma.webp";
 const pageMetadata = createPublicPageMetadata({
   description: "Peça seus produtos na Wimifarma e consulte a entrega em Ivaté-PR. Confira seu CEP, escolha entrega ou retirada e acompanhe a confirmação com a equipe.",
   path: "/delivery",
@@ -45,6 +46,7 @@ export default function Page() {
           </nav>
           <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
             <div className="min-w-0">
+              <div className="mb-4"><BrandSignature /></div>
               <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand"><Bike className="h-5 w-5" aria-hidden="true" />Delivery Wimifarma · Ivaté</p>
               <h1 className="mt-5 max-w-xl text-4xl font-black leading-tight tracking-tight text-ink sm:text-5xl xl:text-6xl">O cuidado de sempre.<br /><span className="text-brand">Na sua porta.</span></h1>
               <p className="mt-5 max-w-lg text-base leading-7 text-muted sm:text-lg sm:leading-8">Seus medicamentos, produtos de higiene e cuidados do dia a dia, sem precisar sair de casa. Peça pelo site e conte com a nossa equipe.</p>
@@ -56,7 +58,7 @@ export default function Page() {
             </div>
             <figure className="min-w-0">
               <div className="overflow-hidden rounded-3xl bg-surface-subtle">
-                <Image alt="Cena ilustrativa: entregador entrega uma sacola de farmácia a uma cliente na porta de casa" className="aspect-[4/3] w-full object-cover" height={960} priority sizes="(min-width: 1280px) 584px, (min-width: 1024px) 48vw, 100vw" src={imageUrl} width={1280} />
+                <Image alt="Cena ilustrativa: entregador com a marca Wimifarma entrega uma sacola personalizada a uma cliente na porta de casa" className="aspect-[4/3] w-full object-cover" height={960} priority sizes="(min-width: 1280px) 584px, (min-width: 1024px) 48vw, 100vw" src={imageUrl} width={1280} />
                 <div className="flex items-center justify-between gap-3 bg-brand px-5 py-4 text-white sm:px-6">
                   <span className="flex items-center gap-3"><Truck className="h-6 w-6 shrink-0" aria-hidden="true" /><span className="text-sm font-bold">Da nossa farmácia<br /><span className="font-normal text-white/90">para a sua casa.</span></span></span>
                   <span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold"><MapPin className="h-4 w-4" aria-hidden="true" />Ivaté · PR</span>

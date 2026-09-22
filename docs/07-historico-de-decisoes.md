@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-21 - Marca oficial completa como padrao visual
+
+- Pedido do lojista: usar sempre a logo completa da Wimifarma, inclusive em banners e cenas de delivery. Documentar em AGENTS e compartilhar a assinatura entre campanhas sem redesenhar letras.
+- Cabecalho estatico evita mostrar somente o simbolo; logo compacta derivada do SVG original reduz transferencia. Nova cena de delivery tem sacola, camisa e bau personalizados. Marcas de produtos e regras comerciais preservadas. Registro em `docs/23-identidade-visual-wimifarma.md`.
+
 ## 2026-09-21 - Delivery com cenario humano e orientacao pratica
 
 - Trocar o hero generico por cena ilustrativa de entrega na residencia, conforme preferencia explicita por pessoas e cenario. Reutilizar consulta de CEP, deixar condicao de frete clara e explicar o fluxo com confirmacao humana.

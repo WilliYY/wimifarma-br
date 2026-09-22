@@ -2,6 +2,7 @@ import Image from "next/image";
 import { MapPin } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { BrandSignature } from "@/components/site/brand-signature";
 import styles from "./institutional-hero.module.css";
 
 type InstitutionalHeroProps = {
@@ -25,6 +26,7 @@ export function InstitutionalHero({ title, headline, description, image, imageAl
         </div>
         <div className={styles.inner}>
           <div className={styles.copy}>
+            <div className="mb-4"><BrandSignature /></div>
             <p className="flex items-center gap-2 text-sm font-semibold text-brand"><MapPin aria-hidden="true" className="h-4 w-4" />Sua farmácia em Ivaté-PR</p>
             <h1 className={styles.title}>{title}</h1>
             <p className={styles.headline}>{headline}</p>

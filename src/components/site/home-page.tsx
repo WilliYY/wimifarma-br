@@ -32,6 +32,7 @@ import type { CartProduct } from "@/components/site/cart-provider";
 import { HomeProductCarousel } from "@/components/site/home-product-carousel";
 import { PerfumeryCarousel } from "@/components/site/perfumery-carousel";
 import { HeroProductStage } from "@/components/site/hero-product-stage";
+import { BrandSignature } from "@/components/site/brand-signature";
 import type { RelatedProductCardItem } from "@/components/site/public-product-card";
 import { siteConfig } from "@/lib/site";
 
@@ -364,6 +365,7 @@ function HeroCarousel() {
           key={activeSlide}
           transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: easeOut }}
         >
+          <div className="mb-4"><BrandSignature /></div>
           <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-ink">
             <span
               aria-hidden="true"

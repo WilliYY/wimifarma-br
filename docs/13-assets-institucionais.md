@@ -1,5 +1,9 @@
 # 13 - Assets institucionais
 
+## Logo oficial em todas as campanhas - 2026-09-21
+
+Usar a marca completa da Wimifarma, sem substituir por cruz generica. Original em `public/brand/logo-wimifarma.svg`; versao leve de 18.980 bytes em `logo-wimifarma-compact.webp`. `BrandSignature` aplicado aos banners ativos. Delivery atualizado para `public/banners/delivery-wimifarma.webp`, 118.154 bytes, com sacola/uniforme/bau personalizados. A cena anterior `delivery-em-casa.webp` foi substituida. Regra, arquivos, prompt e verificacoes: `docs/23-identidade-visual-wimifarma.md`.
+
 ## Delivery residencial com pessoas - 2026-09-21
 
 `public/banners/delivery-em-casa.webp`: cena ilustrativa de entregador e cliente, gerada com `image_gen`, 1280 x 960 e 122.176 bytes. Exibida com Next Image em `/delivery`, com legenda ilustrativa e origem de IA no arquivo. Conversao, prompt completo e limites: `docs/22-delivery-visual.md`.

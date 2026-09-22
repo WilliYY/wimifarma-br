@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { ArrowUpRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { siteConfig } from "@/lib/site";
+import { BrandSignature } from "@/components/site/brand-signature";
 import styles from "./perfumery-carousel.module.css";
 
 const campaigns = [
@@ -100,6 +101,7 @@ export function PerfumeryCarousel() {
         ref={frame}
         role="region"
       >
+        <div className="border-b border-black/5 px-5 py-3"><BrandSignature /></div>
         <div
           className={styles.surface}
           onDragStart={(event) => event.preventDefault()}

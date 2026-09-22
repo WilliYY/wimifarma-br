@@ -15,7 +15,7 @@ try {
     assert.equal((await page.goto(`${base}/delivery`, { waitUntil: "networkidle" })).status(), 200);
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://wimifarma.com.br/delivery");
-    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /delivery-em-casa.webp$/);
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /delivery-wimifarma.webp$/);
     const hero = page.locator('figure img');
     await expect.poll(() => hero.evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
     assert.ok(await hero.evaluate(image => image.getBoundingClientRect().width / image.getBoundingClientRect().height > 1.3));

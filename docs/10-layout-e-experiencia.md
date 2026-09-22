@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Assinatura oficial dos banners - 2026-09-21
+
+Home, perfumaria, paginas institucionais, Farmacia Popular e Delivery usam `BrandSignature`. Cabecalho exibe permanentemente a logo completa, substituindo fases de animacao com cruz isolada. Rodape reutiliza o mesmo asset leve. Regra e evidencia: `docs/23-identidade-visual-wimifarma.md`.
+
 ## Delivery com pessoas e consulta de CEP - 2026-09-21
 
 `/delivery` recebe cena residencial ilustrativa, catalogo/WhatsApp em destaque, consulta de CEP reutilizada, etapas do pedido e FAQ acessivel. Sem placeholders administrativos ou horarios inventados. Imagem WebP de 122.176 bytes; contrato, prompt e verificacao em `docs/22-delivery-visual.md`.

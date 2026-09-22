@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BrandSignature } from "@/components/site/brand-signature";
 import { createPublicPageMetadata } from "@/lib/metadata";
 import { siteConfig } from "@/lib/site";
 
@@ -147,6 +148,7 @@ export default function Page() {
               />
 
               <div className="absolute inset-0 flex flex-col justify-between p-4 sm:p-5">
+                <BrandSignature className="absolute right-4 top-4 sm:right-5 sm:top-5" />
                 <div className="grid h-14 w-14 place-items-center rounded-md bg-ink p-1.5 shadow-lg ring-1 ring-white/80 sm:h-16 sm:w-16">
                   <Image
                     alt="Aqui tem Farmacia Popular"
