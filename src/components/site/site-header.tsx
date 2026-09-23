@@ -1,12 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
+  LayoutDashboard,
   LogIn,
   LogOut,
   MessageCircle,
   UserRound,
 } from "lucide-react";
 import { auth, signOut } from "@/features/auth/auth";
+import { adminRoutePermissions, canAccessAdminRole } from "@/features/auth/permissions";
 import { SiteNav } from "@/components/site/site-nav";
 import { SiteSearch } from "@/components/site/site-search";
 import { CartHeaderButton } from "@/components/site/cart-header-button";
@@ -14,6 +16,18 @@ import { CustomerCashbackBalance } from "@/components/site/customer-cashback-bal
 import { sessionCustomerId } from "@/features/auth/customer-session";
 import { AnnouncementBar } from "@/components/site/announcement-bar";
 import { publicNavItems, siteConfig } from "@/lib/site";
+
+function AdminPanelShortcut() {
+  return (
+    <Link
+      className="inline-flex h-8 items-center justify-center gap-1.5 rounded-full bg-brand px-3 font-body text-xs font-bold text-white shadow-sm transition-colors hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+      href="/admin/dashboard"
+    >
+      <LayoutDashboard aria-hidden="true" className="h-3.5 w-3.5" />
+      Painel admin
+    </Link>
+  );
+}
 
 function getCompactAccountName(displayName: string, role?: string) {
   const roleLabels: Record<string, string> = {
@@ -37,6 +51,10 @@ function getCompactAccountName(displayName: string, role?: string) {
 
 export async function SiteHeader() {
   const session = await auth();
+  const hasAdminAccess = canAccessAdminRole(
+    session?.user?.role,
+    adminRoutePermissions["/admin/dashboard"],
+  );
   const hasCustomer = Boolean(sessionCustomerId(session));
   const displayName =
     session?.user?.name || session?.user?.email?.split("@")[0] || "Cliente";
@@ -64,7 +82,7 @@ export async function SiteHeader() {
         <div className="relative z-10 -my-1.5 -ml-1 flex shrink-0 self-stretch items-center gap-2 rounded-r-[3.5rem] border-r-2 border-brand bg-[#121820] py-1.5 pl-1 pr-3 shadow-[14px_0_30px_rgba(17,24,39,0.12)] min-[360px]:-ml-2 min-[360px]:pl-2 sm:-ml-6 sm:pl-6 sm:pr-5 lg:-ml-8 lg:pl-8 xl:pr-7">
           <Link
             aria-label="Wimifarma"
-            className="relative flex h-20 w-24 shrink-0 items-center justify-start overflow-hidden min-[360px]:w-28 sm:h-24 sm:w-64 xl:w-72"
+            className="relative flex h-20 w-24 shrink-0 items-center justify-start overflow-hidden min-[360px]:w-28 sm:h-24 sm:w-64 md:w-32 lg:w-64 xl:w-72"
             href="/"
           >
             <picture data-animated-brand>
@@ -76,7 +94,7 @@ export async function SiteHeader() {
                 fill
                 loading="eager"
                 fetchPriority="high"
-                sizes="(min-width: 1280px) 288px, (min-width: 640px) 256px, (min-width: 360px) 112px, 96px"
+                sizes="(min-width: 1280px) 288px, (min-width: 1024px) 256px, (min-width: 768px) 128px, (min-width: 640px) 256px, (min-width: 360px) 112px, 96px"
                 src="/brand/logo-wimifarma-animated.svg"
                 unoptimized
               />
@@ -99,55 +117,61 @@ export async function SiteHeader() {
           </Link>
         </div>
 
-        <div className="ml-auto flex items-center gap-1 md:hidden">
-          <CartHeaderButton className="ml-0" />
-          {session?.user ? (
-            <>
-              <Link
-                aria-label="Abrir minha conta"
-                className={`inline-flex h-11 ${hasCustomer ? "max-w-28 flex-col px-2" : "w-11"} items-center justify-center overflow-hidden rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand`}
-                href="/minha-conta"
-                title={displayName}
-              >
-                {hasCustomer ? <><span className="text-xs font-bold">Minha conta</span><CustomerCashbackBalance /></> : userImage ? (
-                  <Image
-                    alt=""
-                    className="h-8 w-8 rounded-full object-cover"
-                    height={32}
-                    referrerPolicy="no-referrer"
-                    src={userImage}
-                    unoptimized
-                    width={32}
-                  />
-                ) : (
-                  <UserRound className="h-4 w-4 text-brand" />
-                )}
-              </Link>
-              <form
-                className="shrink-0"
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/" });
-                }}
-              >
-                <button
-                  aria-label="Sair"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand"
-                  type="submit"
+        <div className="ml-auto flex shrink-0 flex-col items-end gap-1 md:hidden">
+          {hasAdminAccess && <AdminPanelShortcut />}
+          <div className="flex items-center gap-1">
+            <CartHeaderButton className="ml-0" />
+            {session?.user ? (
+              <>
+                <Link
+                  aria-label="Abrir minha conta"
+                  className={`inline-flex h-11 w-11 ${hasCustomer ? "flex-col min-[390px]:w-auto min-[390px]:max-w-28 min-[390px]:px-2" : ""} items-center justify-center overflow-hidden rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand`}
+                  href="/minha-conta"
+                  title={displayName}
                 >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </form>
-            </>
-          ) : (
-            <Link
-              aria-label="Login ou cadastro"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand"
-              href="/login"
-            >
-              <LogIn className="h-4 w-4" />
-            </Link>
-          )}
+                  {hasCustomer ? <>
+                    <UserRound aria-hidden="true" className="h-4 w-4 text-brand min-[390px]:hidden" />
+                    <span className="hidden min-[390px]:contents"><span className="text-xs font-bold">Minha conta</span><CustomerCashbackBalance /></span>
+                  </> : userImage ? (
+                    <Image
+                      alt=""
+                      className="h-8 w-8 rounded-full object-cover"
+                      height={32}
+                      referrerPolicy="no-referrer"
+                      src={userImage}
+                      unoptimized
+                      width={32}
+                    />
+                  ) : (
+                    <UserRound className="h-4 w-4 text-brand" />
+                  )}
+                </Link>
+                <form
+                  className="shrink-0"
+                  action={async () => {
+                    "use server";
+                    await signOut({ redirectTo: "/" });
+                  }}
+                >
+                  <button
+                    aria-label="Sair"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand"
+                    type="submit"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </form>
+              </>
+            ) : (
+              <Link
+                aria-label="Login ou cadastro"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand"
+                href="/login"
+              >
+                <LogIn className="h-4 w-4" />
+              </Link>
+            )}
+          </div>
         </div>
 
         <SiteSearch />
@@ -194,45 +218,48 @@ export async function SiteHeader() {
           </a>
           <CartHeaderButton />
           {session?.user ? (
-            <div className="ml-2 flex min-w-0 items-center gap-2">
-              <Link
-                aria-label={`Abrir conta de ${displayName}`}
-                className="inline-flex h-11 min-w-0 max-w-[9rem] items-center justify-start gap-2 rounded-full border border-line bg-white py-2 pl-2 pr-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:max-w-[11rem] xl:pr-4"
-                href="/minha-conta"
-                title={displayName}
-              >
-                {userImage ? (
-                  <Image
-                    alt=""
-                    className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-brand/12"
-                    height={32}
-                    referrerPolicy="no-referrer"
-                    src={userImage}
-                    unoptimized
-                    width={32}
-                  />
-                ) : (
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft">
-                    <UserRound className="h-4 w-4 text-brand" />
-                  </span>
-                )}
-                <span className="min-w-0"><span className="block truncate">{compactDisplayName}</span>{hasCustomer ? <CustomerCashbackBalance /> : null}</span>
-              </Link>
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/" });
-                }}
-              >
-                <button
-                  aria-label="Sair"
-                  className="inline-flex h-11 w-11 items-center justify-center whitespace-nowrap rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:w-auto xl:gap-2 xl:px-5"
-                  type="submit"
+            <div className="ml-2 flex min-w-0 flex-col items-end gap-1">
+              {hasAdminAccess && <AdminPanelShortcut />}
+              <div className="flex min-w-0 items-center gap-2">
+                <Link
+                  aria-label={`Abrir conta de ${displayName}`}
+                  className="inline-flex h-11 min-w-0 max-w-[9rem] items-center justify-start gap-2 rounded-full border border-line bg-white py-2 pl-2 pr-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:max-w-[11rem] xl:pr-4"
+                  href="/minha-conta"
+                  title={displayName}
                 >
-                  <span className="hidden xl:inline">Sair</span>
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </form>
+                  {userImage ? (
+                    <Image
+                      alt=""
+                      className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-brand/12"
+                      height={32}
+                      referrerPolicy="no-referrer"
+                      src={userImage}
+                      unoptimized
+                      width={32}
+                    />
+                  ) : (
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft">
+                      <UserRound className="h-4 w-4 text-brand" />
+                    </span>
+                  )}
+                  <span className="min-w-0"><span className="block truncate">{compactDisplayName}</span>{hasCustomer ? <CustomerCashbackBalance /> : null}</span>
+                </Link>
+                <form
+                  action={async () => {
+                    "use server";
+                    await signOut({ redirectTo: "/" });
+                  }}
+                >
+                  <button
+                    aria-label="Sair"
+                    className="inline-flex h-11 w-11 items-center justify-center whitespace-nowrap rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:w-auto xl:gap-2 xl:px-5"
+                    type="submit"
+                  >
+                    <span className="hidden xl:inline">Sair</span>
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </form>
+              </div>
             </div>
           ) : (
             <Link

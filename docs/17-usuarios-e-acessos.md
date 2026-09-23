@@ -1,5 +1,21 @@
 # Usuarios Wimifarma
 
+## Padrao de acesso rapido ao painel (2026-09-23)
+
+- O cabecalho publico exibe o atalho textual **Painel admin** para `/admin/dashboard` no celular, tablet e desktop, acima dos controles da conta.
+- A visibilidade e calculada no servidor com `canAccessAdminRole` e `adminRoutePermissions["/admin/dashboard"]`: ADMIN, MANAGER e STAFF. Visitantes, CUSTOMER e perfis desconhecidos nao recebem o atalho.
+- Reutilizar sempre a permissao da rota de destino; nao criar uma lista paralela de perfis nem conceder acesso pela simples exibicao do botao. As rotas administrativas continuam validando a sessao e suas permissoes no servidor.
+- Preservar os acessos a Minha conta, carrinho e Sair, a logo oficial e a altura do cabecalho. O atalho tem texto visivel, icone decorativo e foco por teclado, sem menu adicional ou JavaScript novo.
+- Implementacao: `src/components/site/site-header.tsx`. Ao alterar o cabecalho, conferir contas internas com e sem cadastro de cliente vinculado, alem de clientes comuns e visitantes.
+- Em telas abaixo de 390px, Minha conta usa um icone com nome acessivel para manter todos os controles dentro da tela; nome/saldo permanecem na pagina da conta e reaparecem no cabecalho a partir de 390px. Entre 768px e 1023px a logo ocupa 128px e o formulario de busca pode encolher (`min-w-0`), preservando espaco para digitar e para os controles.
+
+### Validacao do atalho
+
+- `node scripts/header-access-audit.mjs` apos o build: 49 cenarios aprovados (visitante, CUSTOMER, ADMIN, ADMIN com cliente vinculado, MANAGER, STAFF e perfil desconhecido; larguras 320, 360, 390, 640, 768, 1024 e 1440px).
+- A auditoria renderiza o componente real com sessoes sinteticas: verifica visibilidade, destino, foco de teclado, Minha conta/Sair, altura constante, controles dentro da tela e largura util da busca. Nao acessa banco ou envia requisicoes externas.
+- `node node_modules/tsx/dist/cli.mjs --test src/features/auth/customer-session.test.ts`: 3 testes aprovados, incluindo rebaixamento e bloqueio de acesso. `node node_modules/eslint/bin/eslint.js .`, `npm.cmd run build` (incluindo tipos) e `git diff --check` aprovados; JavaScript inicial da home permanece 206 kB.
+- Arquivos: cabecalho, ajuste de largura em `site-search.tsx`, auditoria acima, este contrato, `docs/10-layout-e-experiencia.md`, `docs/07-historico-de-decisoes.md` e lembrete em `AGENTS.md`. Sem migration ou alteracao de contas/permissoes/dados comerciais.
+
 ## Contrato aprovado em 2026-09-16
 
 - `/admin/usuarios` e `GET/PATCH /api/admin/pessoas` exigem ADMIN; nunca enviam senha, hash, documento, subject Google ou token.

@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-23 - Atalho administrativo no cabecalho publico
+
+- Contas com permissao para `/admin/dashboard` recebem **Painel admin** acima dos controles da conta, em todas as larguras. Cliente comum e visitante nao recebem o atalho.
+- O componente servidor reutiliza `canAccessAdminRole` e a matriz `adminRoutePermissions`. Nenhuma nova permissao, consulta adicional, dependencia ou JavaScript cliente; Minha conta, carrinho e Sair permanecem disponiveis.
+- Padrao permanente e criterios de manutencao em `docs/17-usuarios-e-acessos.md`; auditoria reproduzivel com sessoes sinteticas em `scripts/header-access-audit.mjs`.
+
 ## 2026-09-23 - Animação original da marca sem fundo azul
 
 - O lojista corrigiu a referência: usar `LOGO ANIMADA WIMIFARMA - FUNDO AZUL.svg`, removendo somente o fundo e otimizando sem perder qualidade. O ciclo original de montagem substitui a flutuação/brilho de 2026-09-22.

@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Atalho administrativo - 2026-09-23
+
+O cabecalho publico inclui **Painel admin** para perfis autorizados, acima de Minha conta/Sair, no celular e no desktop. A regra usa a permissao de `/admin/dashboard` no servidor e esta documentada em `docs/17-usuarios-e-acessos.md`. Preservar esse acesso visivel em futuras alteracoes do layout.
+
 ## Assinatura oficial dos banners - 2026-09-21
 
 Home, perfumaria, paginas institucionais, Farmacia Popular e Delivery usam `BrandSignature`. Cabecalho exibe permanentemente a logo completa, substituindo fases de animacao com cruz isolada. Rodape reutiliza o mesmo asset leve. Regra e evidencia: `docs/23-identidade-visual-wimifarma.md`.

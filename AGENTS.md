@@ -175,6 +175,8 @@ npm.cmd audit --audit-level=moderate
 
 ## Areas Sensiveis
 
+- Cabecalho publico: preservar o atalho **Painel admin** para sessoes autorizadas pela matriz de permissoes de `/admin/dashboard`, no celular e desktop; contrato em `docs/17-usuarios-e-acessos.md`.
+
 - `src/features/auth/auth.ts`: autenticacao, login temporario e NextAuth.
 - `src/features/auth/permissions.ts`: permissoes de APIs.
 - `src/components/admin/admin-shell.tsx`: shell e navegacao admin.

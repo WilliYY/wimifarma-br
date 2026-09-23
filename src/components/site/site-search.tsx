@@ -227,7 +227,7 @@ export function SiteSearch() {
   return (
     <>
       <form
-        className="group/search relative z-20 mx-auto hidden h-14 w-full max-w-[42rem] flex-1 items-center gap-2 rounded-full border border-white/80 bg-white/98 py-1.5 pl-2 pr-1.5 shadow-[0_14px_36px_rgba(0,0,0,0.16),inset_0_1px_0_rgba(255,255,255,0.95)] transition duration-300 focus-within:border-brand/60 focus-within:shadow-[0_18px_44px_rgba(200,16,46,0.18),inset_0_1px_0_rgba(255,255,255,0.95)] focus-within:ring-4 focus-within:ring-brand/15 md:flex"
+        className="group/search relative z-20 mx-auto hidden min-w-0 h-14 w-full max-w-[42rem] flex-1 items-center gap-2 rounded-full border border-white/80 bg-white/98 py-1.5 pl-2 pr-1.5 shadow-[0_14px_36px_rgba(0,0,0,0.16),inset_0_1px_0_rgba(255,255,255,0.95)] transition duration-300 focus-within:border-brand/60 focus-within:shadow-[0_18px_44px_rgba(200,16,46,0.18),inset_0_1px_0_rgba(255,255,255,0.95)] focus-within:ring-4 focus-within:ring-brand/15 md:flex"
         onBlur={handleDesktopBlur}
         onFocus={() => setIsDesktopOpen(true)}
         onSubmit={handleSubmit}
