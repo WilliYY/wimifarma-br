@@ -187,7 +187,7 @@ npm.cmd audit --audit-level=moderate
 - Usar sempre a logo oficial completa da Wimifarma em banners, campanhas e imagens institucionais; nunca representar a farmacia apenas por cruz ou simbolo generico.
 - Arte original: `public/brand/logo-wimifarma.svg`. Versao leve derivada, sem redesenhar: `public/brand/logo-wimifarma-compact.webp`. Assinatura reutilizavel: `BrandSignature`.
 - Preservar letras, proporcoes e contorno. Em cenas geradas, fornecer a logo como referencia e conferir sacolas, uniformes e veiculos. Manter as marcas reais dos produtos.
-- Cabecalho deve exibir a marca completa continuamente, inclusive com movimento reduzido. Icones de apoio nao substituem a identidade da loja.
+- Cabeçalho usa a animação original aprovada em 2026-09-23 (`logo-wimifarma-animated.svg`), com seu ciclo de montagem, sem fundo azul. Não substituir por flutuação/brilho genéricos. Com movimento reduzido, mostrar a marca completa estática. Ícones de apoio não substituem a identidade da loja.
 
 ## Nao Fazer
 

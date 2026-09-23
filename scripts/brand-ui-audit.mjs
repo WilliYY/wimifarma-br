@@ -27,13 +27,15 @@ try {
     }
     for (const path of ["/delivery", "/sobre", "/contato", "/farmacia-popular", "/"]) {
       assert.equal((await page.goto(`${base}${path}`, { waitUntil: "networkidle" })).status(), 200);
-      const header = page.locator('header img[src*="logo-wimifarma-compact.webp"]');
+      const header = page.locator('header picture[data-animated-brand] img');
       if (!local || path !== "/") {
         await expect(header).toHaveCount(1);
         await expect.poll(() => header.evaluate(image => image.complete && image.naturalWidth === 640)).toBe(true);
+        assert.ok(await header.evaluate(image => image.currentSrc.includes("logo-wimifarma-compact.webp")));
         assert.equal(await header.evaluate(image => getComputedStyle(image).animationName), "none");
         await page.emulateMedia({ reducedMotion: "no-preference" });
-        assert.equal(await header.evaluate(image => getComputedStyle(image).animationName), "wimifarma-logo-float");
+        await expect.poll(() => header.evaluate(image => image.complete && image.naturalWidth === 1024 && image.currentSrc.includes("logo-wimifarma-animated.svg"))).toBe(true);
+        assert.equal(await header.evaluate(image => getComputedStyle(image).animationName), "none");
         await expect(header).toBeVisible();
         await page.emulateMedia({ reducedMotion: "reduce" });
       }
@@ -62,7 +64,7 @@ try {
       await page.evaluate(() => window.scrollTo(0, 0));
       if (width === 390 || width === 1440) await page.screenshot({ path: `artifacts/brand-qa/${base.includes("127.0.0.1") ? "local" : "live"}-${path.replaceAll("/", "") || "home"}-${width}.png` });
     }
-    console.log(JSON.stringify({ width, pages: 5, headerLogoAlwaysVisible: true, officialBannerSignatures: true, campaigns: 6, overflow: false, writes: 0 }));
+    console.log(JSON.stringify({ width, pages: 5, reducedMotionFullLogo: true, originalAnimationSelected: true, officialBannerSignatures: true, campaigns: 6, overflow: false, writes: 0 }));
     await page.close();
   }
   assert.deepEqual(errors, []);

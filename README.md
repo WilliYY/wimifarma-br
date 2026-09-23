@@ -270,6 +270,7 @@ A pasta `docs/` e a memoria longa do projeto. Comece por:
 - `docs/12-carrinho-checkout-pedidos.md`
 - `docs/21-seo-marketing-e-referencias.md`: catalogo indexavel, referencias visuais, cashback decimal e exportacao revisavel para Google.
 - `docs/25-seo-automatico-e-lixeira.md`: descoberta automática, feed público, exclusão com restauração por dois meses e animação da marca.
+- `docs/26-logo-animada-original.md`: animação original aprovada, transparente e otimizada sem alterar os pixels.
 
 ## Cuidados
 

@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-23 - Animação original da marca sem fundo azul
+
+- O lojista corrigiu a referência: usar `LOGO ANIMADA WIMIFARMA - FUNDO AZUL.svg`, removendo somente o fundo e otimizando sem perder qualidade. O ciclo original de montagem substitui a flutuação/brilho de 2026-09-22.
+- `public/brand/logo-wimifarma-animated.svg`: cinco animações CSS originais de 4 segundos; raster interno em WebP lossless, mesma resolução e pixels; SVG independente sem JavaScript. Fundo e definições sem uso removidos.
+- Cabeçalho escolhe o SVG normal ou a imagem estática leve para movimento reduzido por `<picture>`, sem preload duplicado. Banner/rodapé conservam a assinatura completa. Detalhes e evidências em `docs/26-logo-animada-original.md`.
+
 ## 2026-09-22 - SEO automático, lixeira e animação da marca
 
 - Decisão: oferecer `/google-products.xml` atualizado, tornar explícito no admin o SEO automático dos produtos atuais/futuros e restaurar movimento leve da logo oficial completa.

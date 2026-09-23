@@ -337,34 +337,7 @@ textarea {
   pointer-events: none;
 }
 
-.wimifarma-logo-motion img {
-  animation: wimifarma-logo-float 5s ease-in-out infinite;
-  transform-origin: center;
-}
-
-.wimifarma-logo-motion::after {
-  content: "";
-  position: absolute;
-  inset: 15% -45%;
-  pointer-events: none;
-  background: linear-gradient(110deg, transparent 43%, rgb(255 255 255 / 0.13) 50%, transparent 57%);
-  animation: wimifarma-logo-shine 7s ease-in-out infinite;
-}
-
-@keyframes wimifarma-logo-float {
-  0%, 100% { transform: translateY(0) scale(0.97); }
-  50% { transform: translateY(-2px) scale(1); }
-}
-
-@keyframes wimifarma-logo-shine {
-  0%, 15% { transform: translateX(-80%); opacity: 0; }
-  25%, 45% { opacity: 1; }
-  60%, 100% { transform: translateX(80%); opacity: 0; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .wimifarma-logo-motion img { animation: none !important; transform: none; }
-  .wimifarma-logo-motion::after { display: none; }
   *,
   *::before,
   *::after {
