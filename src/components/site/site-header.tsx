@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
+  ArrowUpRight,
   LayoutDashboard,
   LogIn,
   LogOut,
@@ -20,11 +21,12 @@ import { publicNavItems, siteConfig } from "@/lib/site";
 function AdminPanelShortcut() {
   return (
     <Link
-      className="inline-flex h-8 items-center justify-center gap-1.5 rounded-full bg-brand px-3 font-body text-xs font-bold text-white shadow-sm transition-colors hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+      className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-xl bg-brand px-2 font-body text-xs font-bold text-white transition-colors hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       href="/admin/dashboard"
     >
       <LayoutDashboard aria-hidden="true" className="h-3.5 w-3.5" />
       Painel admin
+      <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />
     </Link>
   );
 }
@@ -218,12 +220,14 @@ export async function SiteHeader() {
           </a>
           <CartHeaderButton />
           {session?.user ? (
-            <div className="ml-2 flex min-w-0 flex-col items-end gap-1">
-              {hasAdminAccess && <AdminPanelShortcut />}
+            <div className="ml-2 flex min-w-0 items-center">
               <div className="flex min-w-0 items-center gap-2">
+                <div className={hasAdminAccess ? "flex w-40 shrink-0 flex-col gap-1 rounded-2xl border border-brand/10 bg-white p-1 shadow-[0_6px_20px_rgba(17,24,39,0.06)]" : "contents"}>
                 <Link
                   aria-label={`Abrir conta de ${displayName}`}
-                  className="inline-flex h-11 min-w-0 max-w-[9rem] items-center justify-start gap-2 rounded-full border border-line bg-white py-2 pl-2 pr-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:max-w-[11rem] xl:pr-4"
+                  className={hasAdminAccess
+                    ? "inline-flex h-10 min-w-0 items-center gap-2 rounded-xl px-1 font-body text-sm font-bold text-ink transition-colors hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    : "inline-flex h-11 min-w-0 max-w-[9rem] items-center justify-start gap-2 rounded-full border border-line bg-white py-2 pl-2 pr-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:max-w-[11rem] xl:pr-4"}
                   href="/minha-conta"
                   title={displayName}
                 >
@@ -244,6 +248,8 @@ export async function SiteHeader() {
                   )}
                   <span className="min-w-0"><span className="block truncate">{compactDisplayName}</span>{hasCustomer ? <CustomerCashbackBalance /> : null}</span>
                 </Link>
+                {hasAdminAccess && <AdminPanelShortcut />}
+                </div>
                 <form
                   action={async () => {
                     "use server";
@@ -252,10 +258,13 @@ export async function SiteHeader() {
                 >
                   <button
                     aria-label="Sair"
-                    className="inline-flex h-11 w-11 items-center justify-center whitespace-nowrap rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:w-auto xl:gap-2 xl:px-5"
+                    className={hasAdminAccess
+                      ? "inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-[0_6px_20px_rgba(17,24,39,0.06)] transition-colors hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                      : "inline-flex h-11 w-11 items-center justify-center whitespace-nowrap rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:w-auto xl:gap-2 xl:px-5"}
+                    title="Sair"
                     type="submit"
                   >
-                    <span className="hidden xl:inline">Sair</span>
+                    {!hasAdminAccess && <span className="hidden xl:inline">Sair</span>}
                     <LogOut className="h-4 w-4" />
                   </button>
                 </form>

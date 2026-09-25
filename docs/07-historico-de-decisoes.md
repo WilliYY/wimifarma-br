@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-25 - Alinhamento dos controles para contas internas
+
+- O atalho administrativo passa a integrar o cartao de foto/nome/saldo no desktop, com carrinho e saida centralizados ao lado. No celular, o botao ocupa a largura do grupo de controles. A mudanca corrige o aspecto de botao solto acima de Sair.
+- O acabamento e aplicado somente a ADMIN, MANAGER e STAFF, conforme a permissao existente de `/admin/dashboard`. A conta comum conserva seu visual e nao recebe o atalho. Sem alteracao de autenticacao, permissoes, dados, logo ou dependencias.
+- Arquivos: `site-header.tsx`, `scripts/header-access-audit.mjs` e contratos de layout/acesso em `docs/10-layout-e-experiencia.md` e `docs/17-usuarios-e-acessos.md`.
+
 ## 2026-09-23 - Atalho administrativo no cabecalho publico
 
 - Contas com permissao para `/admin/dashboard` recebem **Painel admin** acima dos controles da conta, em todas as larguras. Cliente comum e visitante nao recebem o atalho.

@@ -40,7 +40,7 @@ try {
     const allowed = ["ADMIN", "ADMIN_CUSTOMER", "MANAGER", "STAFF"].includes(role);
     const session = role ? { user: { id: "audit-user", name: "Conta de teste", role: role === "ADMIN_CUSTOMER" ? "ADMIN" : role, ...(role === "ADMIN_CUSTOMER" ? { customerId: "audit-customer" } : {}) } } : null;
     const html = await mod.exports.render(session);
-    for (const width of [320, 360, 390, 640, 768, 1024, 1440]) {
+    for (const width of [320, 360, 390, 640, 768, 1024, 1280, 1440, 1536, 1920]) {
       const page = await browser.newPage({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
       await page.route("**/*", route => route.abort());
       await page.setContent(`<html><head><style>${css}</style></head><body>${html}</body></html>`);
@@ -62,6 +62,17 @@ try {
       if (width >= 768) {
         const inputWidth = await page.locator('input[aria-label="Buscar produtos"]').first().evaluate(el => el.getBoundingClientRect().width);
         assert.ok(inputWidth >= 48, `${role}/${width}: search input too narrow (${inputWidth}px)`);
+        if (allowed) {
+          const account = page.locator('a[href="/minha-conta"]').locator("visible=true");
+          const card = await account.locator("..").boundingBox();
+          const cart = await page.getByRole("button", { name: "Abrir cesta", exact: true }).locator("visible=true").boundingBox();
+          const logout = await page.getByRole("button", { name: "Sair", exact: true }).locator("visible=true").boundingBox();
+          assert.ok(card && cart && logout);
+          const center = box => box.y + box.height / 2;
+          assert.ok(Math.abs(center(card) - center(cart)) <= 1, `${role}/${width}: cart alignment`);
+          assert.ok(Math.abs(center(card) - center(logout)) <= 1, `${role}/${width}: logout alignment`);
+          assert.ok(logout.x >= card.x + card.width + 7, `${role}/${width}: overlapping account/logout`);
+        }
       }
       const layout = await page.locator("header").evaluate(header => {
         const controls = [...header.querySelectorAll("a,button,input")].filter(el => el.getClientRects().length && el.getBoundingClientRect().width);
@@ -77,5 +88,5 @@ try {
       checks++;
     }
   }
-  console.log(`PASS: ${checks} header scenarios; role visibility, focus, account/logout, responsive bounds.`);
+  console.log(`PASS: ${checks} header scenarios; role visibility, focus, account/logout, responsive bounds and staff control alignment.`);
 } finally { await browser.close(); }

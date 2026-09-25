@@ -2,15 +2,17 @@
 
 ## Padrao de acesso rapido ao painel (2026-09-23)
 
-- O cabecalho publico exibe o atalho textual **Painel admin** para `/admin/dashboard` no celular, tablet e desktop, acima dos controles da conta.
+- O cabecalho publico exibe o atalho textual **Painel admin** para `/admin/dashboard` no celular, tablet e desktop. Desde 2026-09-25, no desktop ele integra o cartao da conta, abaixo do nome/saldo; no celular ocupa a largura do grupo de controles.
 - A visibilidade e calculada no servidor com `canAccessAdminRole` e `adminRoutePermissions["/admin/dashboard"]`: ADMIN, MANAGER e STAFF. Visitantes, CUSTOMER e perfis desconhecidos nao recebem o atalho.
 - Reutilizar sempre a permissao da rota de destino; nao criar uma lista paralela de perfis nem conceder acesso pela simples exibicao do botao. As rotas administrativas continuam validando a sessao e suas permissoes no servidor.
 - Preservar os acessos a Minha conta, carrinho e Sair, a logo oficial e a altura do cabecalho. O atalho tem texto visivel, icone decorativo e foco por teclado, sem menu adicional ou JavaScript novo.
 - Implementacao: `src/components/site/site-header.tsx`. Ao alterar o cabecalho, conferir contas internas com e sem cadastro de cliente vinculado, alem de clientes comuns e visitantes.
 - Em telas abaixo de 390px, Minha conta usa um icone com nome acessivel para manter todos os controles dentro da tela; nome/saldo permanecem na pagina da conta e reaparecem no cabecalho a partir de 390px. Entre 768px e 1023px a logo ocupa 128px e o formulario de busca pode encolher (`min-w-0`), preservando espaco para digitar e para os controles.
+- Padrao visual dos perfis internos (2026-09-25): cartao branco com borda discreta, foto/nome/saldo e atalho vermelho integrado. Carrinho e Sair ficam centralizados verticalmente com o cartao; Sair usa icone com nome acessivel e tooltip. O layout da conta comum permanece igual e nao recebe o cartao administrativo nem o atalho.
 
 ### Validacao do atalho
 
+- Ajuste de 2026-09-25: `node scripts/header-access-audit.mjs` aprovado em 70 cenarios, acrescentando 1280, 1536 e 1920px e verificacoes geometricas do alinhamento entre cartao, carrinho e Sair. Inclui ausencia do atalho no HTML de visitantes, CUSTOMER e perfil desconhecido. `npm.cmd run typecheck`, ESLint dos arquivos alterados e `git diff --check` aprovados.
 - `node scripts/header-access-audit.mjs` apos o build: 49 cenarios aprovados (visitante, CUSTOMER, ADMIN, ADMIN com cliente vinculado, MANAGER, STAFF e perfil desconhecido; larguras 320, 360, 390, 640, 768, 1024 e 1440px).
 - A auditoria renderiza o componente real com sessoes sinteticas: verifica visibilidade, destino, foco de teclado, Minha conta/Sair, altura constante, controles dentro da tela e largura util da busca. Nao acessa banco ou envia requisicoes externas.
 - `node node_modules/tsx/dist/cli.mjs --test src/features/auth/customer-session.test.ts`: 3 testes aprovados, incluindo rebaixamento e bloqueio de acesso. `node node_modules/eslint/bin/eslint.js .`, `npm.cmd run build` (incluindo tipos) e `git diff --check` aprovados; JavaScript inicial da home permanece 206 kB.
