@@ -23,7 +23,7 @@ test("historico do checkout impede pular dados obrigatorios e cobertura", () => 
   assert.equal(allowedCheckoutStep(3, { ...draft, customer: { ...draft.customer, name: "" } }), 0);
   assert.equal(allowedCheckoutStep(3, { ...draft, address: { ...draft.address, number: "" } }), 1);
   const outside = { ...draft, address: { ...draft.address, postalCode: "87501-070", city: "Umuarama" } };
-  assert.match(checkoutStepError(1, outside)!, /Ainda nao entregamos/);
+  assert.match(checkoutStepError(1, outside)!, /Calcule e escolha o frete/);
   assert.equal(allowedCheckoutStep(3, { ...outside, fulfillmentMethod: "PICKUP" }), 3);
 });
 

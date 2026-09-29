@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-28 - Cotação Melhor Envio com ativação controlada
+
+- Origem confirmada pelo lojista: farmácia na Av. Minas Gerais, 2263, Ivaté/PR, CEP 87525-000. Loja e integração separadas de outras atividades da conta.
+- Novo módulo ADMIN em `/admin/fretes`, OAuth com credenciais cifradas, simulação, serviços permitidos e embalagens medidas. Sem SDK adicional.
+- Checkout associa cotação assinada ao CEP/carrinho e inclui o frete no total validado no servidor. Preserva confirmação humana, retirada, entrega local e cashback somente sobre produtos.
+- A integração inicia desligada e produtos sem liberação. Sem compra automática de etiquetas, emissão fiscal ou pagamento online. Mercado Pago/Bricks permanece trabalho separado.
+- Contrato, limites, permissões e operação em `27-melhor-envio.md`.
+
 ## 2026-09-25 - Alinhamento dos controles para contas internas
 
 - O atalho administrativo passa a integrar o cartao de foto/nome/saldo no desktop, com carrinho e saida centralizados ao lado. No celular, o botao ocupa a largura do grupo de controles. A mudanca corrige o aspecto de botao solto acima de Sair.

@@ -5,11 +5,13 @@ import { Check, Loader2, MapPin, RotateCw, Store } from "lucide-react";
 import type { CheckoutDraft } from "@/features/orders/checkout-draft";
 import { postalAddressSchema } from "@/features/orders/postal-code";
 import { formatPostalCode, getDeliveryAvailability, normalizePostalCode } from "@/features/products/product-detail";
+import { CheckoutShippingOptions } from "./checkout-shipping-options";
+import type { ShippingSelection } from "@/features/shipping/schema";
 
 type Address = CheckoutDraft["address"];
-type Props = { address: Address; fulfillmentMethod: CheckoutDraft["fulfillmentMethod"]; onAddress: Dispatch<SetStateAction<Address>>; onMethod: (method: CheckoutDraft["fulfillmentMethod"]) => void };
+type Props = { address: Address; fulfillmentMethod: CheckoutDraft["fulfillmentMethod"]; onAddress: Dispatch<SetStateAction<Address>>; onMethod: (method: CheckoutDraft["fulfillmentMethod"]) => void; shippingSelection?: ShippingSelection; onShipping: (option?: ShippingSelection) => void };
 
-export function CheckoutDeliveryStep({ address, fulfillmentMethod, onAddress, onMethod }: Props) {
+export function CheckoutDeliveryStep({ address, fulfillmentMethod, onAddress, onMethod, shippingSelection, onShipping }: Props) {
   const [status, setStatus] = useState({ loading: false, message: "", failed: false });
   const [retry, setRetry] = useState(0);
   const code = normalizePostalCode(address.postalCode);
@@ -65,7 +67,7 @@ export function CheckoutDeliveryStep({ address, fulfillmentMethod, onAddress, on
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_4.5rem] gap-3 lg:col-span-4">{field("Cidade", "city", 80, "address-level2")}{field("UF", "state", 2, "address-level1")}</div>
       </div>
       <div aria-live="polite" className="mt-3 flex min-h-6 flex-wrap items-center gap-2 text-xs text-muted">{status.loading && <Loader2 className="h-4 w-4 animate-spin" />}<span>{status.message}</span>{status.failed && <button className="inline-flex min-h-9 cursor-pointer items-center gap-1 rounded px-2 font-bold text-brand focus-visible:ring-2 focus-visible:ring-brand" onClick={() => setRetry((value) => value + 1)} type="button"><RotateCw className="h-3 w-3" />Tentar novamente</button>}</div>
-      {outsideCoverage && <div className="mt-4 border-l-4 border-amber-500 bg-amber-50 p-4 text-sm text-amber-950" role="status"><strong>Entrega pelo site indisponivel para este CEP</strong><p className="mt-1">Seu endereco foi mantido. Voce pode retirar na farmacia ou consultar a equipe.</p><button className="mt-2 min-h-10 cursor-pointer font-bold underline" onClick={() => onMethod("PICKUP")} type="button">Escolher retirada</button></div>}
+      {outsideCoverage && <CheckoutShippingOptions key={code} postalCode={code} selected={shippingSelection} onSelect={onShipping} />}
     </> : <div className="mt-6 border-l-4 border-pharma-green bg-emerald-50 p-5"><p className="font-bold text-ink">Retirada gratuita na Wimifarma</p><p className="mt-1 text-sm text-muted">Av. Minas Gerais, 2263, Ivate-PR</p><p className="mt-2 text-xs text-pharma-green">Aguarde a equipe confirmar que o pedido esta pronto.</p></div>}
   </div>;
 }

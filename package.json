@@ -13,6 +13,7 @@
     "audit:assistant": "tsx scripts/assistant-ui-audit.ts",
     "audit:cashback": "tsx scripts/cashback-audit.ts",
     "test:users": "tsx --test src/features/auth/customer-session.test.ts",
+    "test:shipping": "tsx --test src/features/shipping/*.test.ts",
     "audit:users": "tsx scripts/users-access-audit.ts",
     "audit:catalog": "tsx scripts/catalog-audit.ts",
     "audit:browser": "node scripts/browser-audit.mjs",

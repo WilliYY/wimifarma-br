@@ -43,6 +43,7 @@ export const checkoutRequestSchema = z
     privacyConsent: z.literal(true),
     cashbackRedeemCents: z.number().int().min(0).max(600_000_000).default(0),
     checkoutRequestId: z.string().uuid().optional(),
+    shippingToken: z.string().min(1).max(8000).optional(),
     items: z
       .array(
         z.object({
@@ -65,17 +66,21 @@ export const checkoutRequestSchema = z
           path: ["address"],
           message: "Informe o endereco para entrega.",
         });
-      } else if (
+      } else if (!data.shippingToken && (
         normalizeText(data.address.city) !== "ivate" ||
         data.address.state !== "PR" ||
         !getDeliveryAvailability(data.address.postalCode).available
-      ) {
+      )) {
         context.addIssue({
           code: "custom",
           path: ["address", "city"],
           message: "Nesta etapa, a entrega esta disponivel somente em Ivate-PR.",
         });
       }
+    }
+
+    if (data.shippingToken && (data.fulfillmentMethod !== "DELIVERY" || data.paymentMethod !== "PIX")) {
+      context.addIssue({ code: "custom", path: ["paymentMethod"], message: "Envio por transportadora requer entrega e pagamento combinado por Pix." });
     }
 
     const productIds = new Set<string>();

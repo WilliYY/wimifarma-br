@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { OrderShippingSummary } from "./order-shipping-summary";
 import {
   Banknote,
   Bike,
@@ -20,6 +21,7 @@ type FulfillmentMethod = "DELIVERY" | "PICKUP";
 type PaymentMethod = "PIX" | "CARD_ON_DELIVERY" | "CASH";
 
 export type AdminOrderRecord = {
+  shippingQuote?: unknown;
   cashbackRedeemedCents?: number;
   cashbackRedemptionState?: string;
   id: string;
@@ -165,6 +167,7 @@ function OrderCard({ order, onUpdate, updating }: { order: AdminOrderRecord; onU
   const MethodIcon = order.fulfillmentMethod === "DELIVERY" ? Bike : Store;
   const PaymentIcon = payment.icon;
   return <article className="overflow-hidden rounded-lg border border-line bg-white shadow-sm">
+    <OrderShippingSummary quote={order.shippingQuote} />
     <header className="flex flex-col gap-4 border-b border-line bg-surface-subtle p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"><div><div className="flex flex-wrap items-center gap-2"><h2 className="text-base font-black text-ink">{order.number}</h2><span className={`rounded-full px-2.5 py-1 text-[0.68rem] font-black uppercase ${order.status === "PENDING" ? "bg-brand-soft text-brand" : order.status === "COMPLETED" ? "bg-[#e9f9ef] text-pharma-green" : order.status === "CANCELED" ? "bg-slate-200 text-slate-600" : "bg-amber-50 text-amber-700"}`}>{statusLabels[order.status]}</span></div><p className="mt-1 text-xs font-semibold text-muted">{dateTime.format(new Date(order.createdAt))}</p></div><strong className="text-xl font-black text-brand">{currency.format(order.totalCents / 100)}</strong></header>
     {(order.cashbackRedeemedCents ?? 0) > 0 ? <p className="border-b border-line bg-emerald-50 px-5 py-3 text-sm text-emerald-900">Desconto de cashback: <strong>{currency.format((order.cashbackRedeemedCents ?? 0) / 100)}</strong> · {order.cashbackRedemptionState === "RETURNED" ? "Devolvido ao cliente" : order.cashbackRedemptionState === "REDEEMED" ? "Utilizado" : "Reservado"}. O total ja considera o desconto.</p> : null}
     <div className="grid gap-6 p-4 sm:p-5 xl:grid-cols-[1fr_1fr_1.3fr]">

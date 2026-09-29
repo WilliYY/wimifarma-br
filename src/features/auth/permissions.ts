@@ -8,6 +8,7 @@ export const adminRoutePermissions = {
   "/admin/usuarios": ["ADMIN"],
   "/admin/dashboard": ["ADMIN", "MANAGER", "STAFF"],
   "/admin/api-senhas": ["ADMIN"],
+  "/admin/fretes": ["ADMIN"],
   "/admin/cashback": ["ADMIN"],
   "/admin/catalogos": ["ADMIN", "MANAGER", "STAFF"],
   "/admin/clientes": ["ADMIN", "MANAGER", "STAFF"],

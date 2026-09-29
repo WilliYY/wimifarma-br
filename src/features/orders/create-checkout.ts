@@ -4,6 +4,7 @@ import { productCashbackCents } from "@/features/cashback/rules";
 import { allocateCashbackDiscount } from "@/features/cashback/review-rewards";
 import { CashbackRuleError, lockCashbackAccount } from "@/features/cashback/wallet";
 import { createOrderNumber, prepareCheckoutOrder, type CheckoutRequest } from "./checkout";
+import { validateOrderShipping } from "@/features/shipping/service";
 
 const orderResultSelect = {
   cashbackEarnedCents: true, cashbackState: true, cashbackRedeemedCents: true,
@@ -30,6 +31,8 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   });
   const prepared = prepareCheckoutOrder(products.map((p) => ({ ...p, price: p.price.toString(), promotionalPrice: p.promotionalPrice?.toString() ?? null })), input.items);
   if (!prepared.ok) throw new CashbackRuleError(prepared.message, prepared.code === "NOT_FOUND" ? 404 : 409, prepared.code);
+  const shippingQuote = await validateOrderShipping(tx, input);
+  const deliveryFeeCents = shippingQuote?.priceCents ?? prepared.deliveryFeeCents;
   const redeem = input.cashbackRedeemCents;
   if (redeem > prepared.subtotalCents || (redeem > 0 && (!account || account.balance.lessThan((redeem / 100).toFixed(2))))) {
     throw new CashbackRuleError("Saldo de cashback alterado ou insuficiente. Atualize o saldo e revise o desconto.");
@@ -49,11 +52,12 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
     checkoutRequestId: requestId, checkoutRequestHash: hash,
     addressNumber: address?.number, city: address?.city, complement: address?.complement,
     customerEmail: input.customer.email, customerId: customer?.id, customerName: input.customer.name, customerPhone: input.customer.phone,
-    deliveryFeeCents: prepared.deliveryFeeCents, fulfillmentMethod: input.fulfillmentMethod,
+    deliveryFeeCents, fulfillmentMethod: input.fulfillmentMethod,
+    ...(shippingQuote ? { shippingQuote } : {}),
     items: { create: items }, neighborhood: address?.neighborhood, notes: input.notes,
     number: createOrderNumber(), paymentMethod: input.paymentMethod, postalCode: address?.postalCode,
     privacyConsentAt: new Date(), state: address?.state, street: address?.street,
-    subtotalCents: prepared.subtotalCents, totalCents: prepared.totalCents - redeem,
+    subtotalCents: prepared.subtotalCents, totalCents: prepared.subtotalCents + deliveryFeeCents - redeem,
   } });
   if (redeem > 0 && account) {
     const amount = (redeem / 100).toFixed(2);

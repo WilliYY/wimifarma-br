@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getDeliveryAvailability } from "@/features/products/product-detail";
+import { shippingSelectionSchema } from "@/features/shipping/schema";
 
 export const CHECKOUT_DRAFT_KEY = "wimifarma-checkout-draft-v1";
 export const CHECKOUT_DRAFT_TTL = 2 * 60 * 60 * 1000;
@@ -12,6 +13,7 @@ export const draftSchema = z.object({
   fulfillmentMethod: z.enum(["DELIVERY", "PICKUP"]),
   paymentMethod: z.enum(["PIX", "CARD_ON_DELIVERY", "CASH"]),
   notes: z.string().max(500),
+  shippingSelection: shippingSelectionSchema.optional(),
 });
 export type CheckoutDraft = z.infer<typeof draftSchema>;
 
@@ -33,7 +35,7 @@ export function checkoutStepError(step: CheckoutStep, draft: CheckoutDraft): str
     const address = draft.address;
     if (address.postalCode.replace(/\D/g, "").length !== 8 || !address.street.trim() || !address.number.trim() || !address.neighborhood.trim() || !address.city.trim() || !/^[A-Z]{2}$/.test(address.state)) return "Preencha CEP, endereco, numero, bairro, cidade e UF.";
     const city = address.city.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
-    if (!getDeliveryAvailability(address.postalCode).available || city !== "ivate" || address.state !== "PR") return "Ainda nao entregamos neste endereco pelo site. Escolha retirar na farmacia ou consulte a equipe.";
+    if (!draft.shippingSelection && (!getDeliveryAvailability(address.postalCode).available || city !== "ivate" || address.state !== "PR")) return "Calcule e escolha o frete para este CEP, ou selecione retirada na farmácia.";
   }
   return null;
 }

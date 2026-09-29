@@ -28,6 +28,8 @@ O sistema possui carrinho e checkout para registrar pedidos pendentes, com entre
 
 ## Status Atual
 
+- Fretes Melhor Envio: módulo ADMIN `/admin/fretes` com conexão OAuth, simulação e embalagens. Ativação depende de conta autorizada e homologação dos serviços/produtos; não compra etiquetas nem processa pagamentos. Contrato em [docs/27-melhor-envio.md](docs/27-melhor-envio.md).
+
 - Site publico com campanhas de quatro produtos reais por banner (Dove, NIVEA, Rexona, Huggies e Johnson’s), carregamento apenas da campanha ativa e campanha de avaliacao `Sua opinião vale mais`, com bonus explicado separadamente. `Melhores ofertas`, perfumaria, medicamentos publicados e avaliacoes verificadas preservados. Fotos e textos ficam separados no celular. Pagina do produto com zoom, compartilhamento e total por quantidade; validacao em [docs/19-produtos-e-campanhas.md](docs/19-produtos-e-campanhas.md).
 - `Produtos / Catalogo` pesquisa nome/EAN com Gemini e preenche campos vazios apenas com identidade e fonte oficial confirmadas. Dados divergentes exigem revisao; ha previa de SEO, status Publicado por padrao e destaque opcional. Contrato e testes em [docs/18-cadastro-inteligente-e-fotos.md](docs/18-cadastro-inteligente-e-fotos.md).
 - Assistente atende tambem perfumaria, higiene e alimentos/chocolates. Ao enviar foto, analisa a embalagem, busca fotos reais e permite criar artes de estudio/editoriais para escolher uma capa, sem publicacao automatica. Fluxo, limites e testes em [docs/20-assistente-catalogo-e-imagens.md](docs/20-assistente-catalogo-e-imagens.md).

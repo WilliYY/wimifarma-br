@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, type SetStateAction } from "react";
+import { useEffect, useRef, useState, type SetStateAction } from "react";
 import { ArrowLeft, ArrowRight, Banknote, Check, CreditCard, Loader2, PackageCheck, QrCode, ShieldCheck } from "lucide-react";
 import { useCart } from "@/components/site/cart-provider";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
@@ -26,9 +26,9 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
     address: { postalCode: "", street: initialCustomer.street, number: "", complement: "", neighborhood: initialCustomer.neighborhood, city: "", state: "" },
     fulfillmentMethod: "DELIVERY", paymentMethod: "PIX", notes: "",
   }, draftOwner);
-  const { customer, fulfillmentMethod, address, paymentMethod, notes } = draft;
+  const { customer, fulfillmentMethod, address, paymentMethod, notes, shippingSelection } = draft;
   function setPart<K extends keyof CheckoutDraft>(key: K, value: CheckoutDraft[K]) { setDraft((current) => ({ ...current, [key]: value })); }
-  function setAddress(value: SetStateAction<CheckoutDraft["address"]>) { setDraft((current) => ({ ...current, address: typeof value === "function" ? value(current.address) : value })); }
+  function setAddress(value: SetStateAction<CheckoutDraft["address"]>) { setDraft((current) => { const next = typeof value === "function" ? value(current.address) : value; return { ...current, address: next, shippingSelection: normalizePostalCode(next.postalCode) === normalizePostalCode(current.address.postalCode) ? current.shippingSelection : undefined }; }); }
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -37,6 +37,14 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   const [cashbackRedeemCents, setCashbackRedeemCents] = useState(0);
   const requestAttempt = useRef<{ signature: string; id: string } | null>(null);
   const discountCents = Math.min(cashbackRedeemCents, subtotalCents);
+  const cartKey = JSON.stringify(items.map((item) => [item.id, item.quantity, item.unitPriceCents]));
+  const previousCart = useRef(cartKey);
+  useEffect(() => {
+    if (previousCart.current !== cartKey) {
+      previousCart.current = cartKey;
+      setDraft((current) => ({ ...current, shippingSelection: undefined }));
+    }
+  }, [cartKey, setDraft]);
 
   if (!hydrated || !ready) return <CheckoutShell><div className="h-72 animate-pulse rounded-lg border border-line bg-white" /></CheckoutShell>;
   if (order) return <CheckoutSuccess order={order} />;
@@ -68,6 +76,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
         address: fulfillmentMethod === "DELIVERY" ? address : undefined, customer,
         fulfillmentMethod, items: items.map((item) => ({ productId: item.id, quantity: item.quantity, expectedUnitPriceCents: item.unitPriceCents })),
         notes, paymentMethod, privacyConsent, cashbackRedeemCents: discountCents,
+        shippingToken: fulfillmentMethod === "DELIVERY" ? shippingSelection?.token : undefined,
       };
       if (isCustomer) {
         const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(requestBody)));
@@ -119,8 +128,8 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
           <div className="p-5 sm:p-7">
             <div className="animate-in fade-in slide-in-from-right-2 duration-300 motion-reduce:animate-none" key={step}>
               {step === 0 ? <IdentificationStep customer={customer} onChange={(value) => setPart("customer", value)} /> : null}
-              {step === 1 ? <CheckoutDeliveryStep address={address} fulfillmentMethod={fulfillmentMethod} onAddress={setAddress} onMethod={(value) => setPart("fulfillmentMethod", value)} /> : null}
-              {step === 2 ? <PaymentStep fulfillmentMethod={fulfillmentMethod} method={paymentMethod} onChange={(value) => setPart("paymentMethod", value)} /> : null}
+              {step === 1 ? <CheckoutDeliveryStep address={address} fulfillmentMethod={fulfillmentMethod} onAddress={setAddress} onMethod={(value) => setDraft((current) => ({ ...current, fulfillmentMethod: value, shippingSelection: undefined }))} shippingSelection={shippingSelection} onShipping={(option) => setDraft((current) => ({ ...current, shippingSelection: option, ...(option ? { paymentMethod: "PIX" } : {}) }))} /> : null}
+              {step === 2 && shippingSelection ? <div><h1 className="text-2xl font-black text-ink">Pagamento após confirmação</h1><p className="mt-3 text-sm leading-6 text-muted">Para envio por transportadora, a equipe confirma o pedido e combina o pagamento por Pix antes de despachar. Nenhum valor é cobrado agora.</p></div> : step === 2 ? <PaymentStep fulfillmentMethod={fulfillmentMethod} method={paymentMethod} onChange={(value) => setPart("paymentMethod", value)} /> : null}
               {step === 2 && isCustomer ? <CheckoutCashback subtotalCents={subtotalCents} selectedCents={discountCents} onSelect={setCashbackRedeemCents} /> : null}
               {step === 3 ? <ReviewStep address={address} customer={customer} fulfillmentMethod={fulfillmentMethod} items={items} notes={notes} onNotes={(value) => setPart("notes", value)} onPrivacy={setPrivacyConsent} paymentMethod={paymentMethod} privacyConsent={privacyConsent} /> : null}
               {error ? <p className="mt-5 rounded-md border border-brand/20 bg-brand-soft px-4 py-3 text-sm font-bold text-brand" role="alert">{error}</p> : null}
@@ -139,7 +148,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
             </div>
           </div>
         </section>
-        <OrderSummary postalCode={address.postalCode} fulfillmentMethod={fulfillmentMethod} itemCount={items.reduce((total, item) => total + item.quantity, 0)} subtotalCents={subtotalCents} discountCents={discountCents} />
+        <OrderSummary postalCode={address.postalCode} fulfillmentMethod={fulfillmentMethod} itemCount={items.reduce((total, item) => total + item.quantity, 0)} subtotalCents={subtotalCents} discountCents={discountCents} shippingFeeCents={shippingSelection?.priceCents} />
       </div>
     </CheckoutShell>
   );
@@ -188,14 +197,15 @@ function ReviewStep({ address, customer, fulfillmentMethod, items, notes, onNote
 
 function ReviewBlock({ children, label }: { children: React.ReactNode; label: string }) { return <div className="border-b border-line pb-4"><p className="mb-2 text-xs font-black uppercase text-brand">{label}</p><div className="grid gap-1 text-sm font-semibold leading-5 text-ink">{children}</div></div>; }
 
-function OrderSummary({ postalCode, fulfillmentMethod, itemCount, subtotalCents, discountCents }: { postalCode: string; fulfillmentMethod: FulfillmentMethod; itemCount: number; subtotalCents: number; discountCents: number }) {
-  const deliveryLabel = fulfillmentMethod === "PICKUP" ? "Gratis" : normalizePostalCode(postalCode).length < 8 ? "Consultar CEP" : getDeliveryAvailability(postalCode).available ? "Gratis" : "Indisponivel";
+function OrderSummary({ postalCode, fulfillmentMethod, itemCount, subtotalCents, discountCents, shippingFeeCents }: { postalCode: string; fulfillmentMethod: FulfillmentMethod; itemCount: number; subtotalCents: number; discountCents: number; shippingFeeCents?: number }) {
+  const fee = fulfillmentMethod === "DELIVERY" ? shippingFeeCents ?? 0 : 0;
+  const deliveryLabel = fulfillmentMethod === "PICKUP" ? "Gratis" : shippingFeeCents !== undefined ? currency.format(fee / 100) : normalizePostalCode(postalCode).length < 8 ? "Consultar CEP" : getDeliveryAvailability(postalCode).available ? "Gratis" : "Calcular frete";
   return <aside className="overflow-hidden rounded-lg border border-line bg-white shadow-[0_18px_50px_rgba(17,24,39,0.08)] lg:sticky lg:top-52"><div className="h-1 bg-brand" /><div className="p-5 sm:p-6">
     <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-black text-ink">Resumo do pedido</h2><span className="text-xs font-bold text-muted">{itemCount} {itemCount === 1 ? "item" : "itens"}</span></div>
     <dl className="mt-5 grid gap-3 text-sm"><div className="flex justify-between gap-4"><dt className="text-muted">Produtos</dt><dd className="font-bold text-ink">{currency.format(subtotalCents / 100)}</dd></div><div className="flex justify-between gap-4"><dt className="text-muted">{fulfillmentMethod === "DELIVERY" ? "Entrega" : "Retirada na loja"}</dt><dd className="font-bold text-pharma-green">{deliveryLabel}</dd></div>
       {discountCents > 0 ? <div className="flex justify-between gap-4 text-pharma-green"><dt>Desconto de cashback</dt><dd className="font-black">- {currency.format(discountCents / 100)}</dd></div> : null}
     </dl>
-    <div className="mt-5 flex flex-wrap items-end justify-between gap-2 border-t border-line pt-5"><span className="font-black text-ink">Total a pagar</span><strong className="text-3xl font-black text-brand">{currency.format((subtotalCents - discountCents) / 100)}</strong></div>
+    <div className="mt-5 flex flex-wrap items-end justify-between gap-2 border-t border-line pt-5"><span className="font-black text-ink">Total a pagar</span><strong className="text-3xl font-black text-brand">{currency.format((subtotalCents + fee - discountCents) / 100)}</strong></div>
     <div className="mt-5 flex items-start gap-3 rounded-md border border-emerald-100 bg-emerald-50/70 p-3"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-pharma-green" aria-hidden="true" /><p className="text-xs leading-5 text-muted"><strong className="block text-pharma-green">Confirmacao pela farmacia</strong>{discountCents > 0 ? "Cashback reservado ao enviar. O pagamento restante sera combinado com a equipe." : "Preco e estoque sao conferidos antes da confirmacao. Sem cobranca online."}</p></div>
   </div></aside>;
 }

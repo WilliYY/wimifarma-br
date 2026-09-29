@@ -20,7 +20,7 @@ const sections = [
   },
   {
     title: "Compartilhamento",
-    text: "O acesso e limitado a equipe autorizada e fornecedores tecnicos necessarios para hospedagem, banco de dados e autenticacao. Dados de clientes nao sao enviados ao assistente de cadastro de produtos. Nao vendemos dados pessoais.",
+    text: "O acesso é limitado à equipe autorizada e aos fornecedores necessários para hospedagem, banco de dados e autenticação. Ao calcular frete, enviamos ao Melhor Envio os CEPs de origem e destino, medidas, peso e valor da encomenda. Na contratação do transporte, a equipe compartilha com os responsáveis pela entrega os dados necessários do remetente, destinatário e documento fiscal. Dados de clientes não são enviados ao assistente de cadastro de produtos. Não vendemos dados pessoais.",
   },
   {
     title: "Armazenamento local e cookies",
@@ -52,7 +52,7 @@ export default function Page() {
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-md bg-brand-soft text-brand"><ShieldCheck className="h-5 w-5" /></span>
           <h1 className="mt-5 text-3xl font-black text-ink sm:text-4xl">Politica de Privacidade</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Transparencia sobre os dados usados pela Wimifarma no site, na conta e nos pedidos.</p>
-          <p className="mt-3 text-xs font-bold text-muted">Atualizada em 7 de setembro de 2026.</p>
+          <p className="mt-3 text-xs font-bold text-muted">Atualizada em 28 de setembro de 2026.</p>
         </div>
 
         <div className="grid gap-8 py-8">

@@ -109,6 +109,7 @@ model User {
 }
 
 model Product {
+  shippingProfile Json?
   cashbackEnabled Boolean @default(false)
   cashbackRateBps Int @default(200)
   id                   String        @id @default(cuid())
@@ -263,6 +264,7 @@ model Customer {
 }
 
 model Order {
+  shippingQuote Json?
   cashbackRedeemedCents Int @default(0)
   cashbackRedemptionState CashbackRedemptionState @default(NONE)
   checkoutRequestId String? @unique
@@ -531,4 +533,14 @@ model LoginAttempt {
 
   @@index([email, createdAt])
   @@index([success, createdAt])
+}
+
+model ShippingIntegration {
+  id         String   @id
+  settings   Json
+  ciphertext String?
+  iv         String?
+  tag        String?
+  revision   Int      @default(1)
+  updatedAt  DateTime @updatedAt
 }

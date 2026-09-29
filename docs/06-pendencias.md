@@ -1,5 +1,13 @@
 # 06 - Pendencias
 
+## Melhor Envio - ativação operacional
+
+- Autorizar aplicativo próprio, validar simulação real e serviços com postagem/coleta em Ivaté.
+- Conferir cadastro fiscal da loja e emissão de NF-e no sistema da farmácia.
+- Cadastrar peso e medidas reais de cada unidade embalada e liberar somente mercadorias aceitas pelos serviços selecionados.
+- Cotações iniciam desativadas. Compra de etiquetas e emissão fiscal permanecem no fluxo operacional externo; não há cobrança online.
+- Futuro: consolidar caixas de vários produtos, emissão de etiqueta pelo admin após conferência, rastreio automático e outros provedores. Contrato em `27-melhor-envio.md`.
+
 ## Google: configuração externa única
 
 - Confirmar propriedade no Search Console e envio de `https://wimifarma.com.br/sitemap.xml`; o mapa e o SEO acompanham os produtos publicados automaticamente.

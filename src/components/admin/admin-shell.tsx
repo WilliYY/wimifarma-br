@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   ShieldPlus,
   TicketPercent,
+  Truck,
   UserPlus,
   Users,
   WalletCards,
@@ -61,6 +62,7 @@ const adminNav = [
   { href: "/admin/criar-adm", icon: ShieldPlus, label: "Criar ADM", roles: adminRoutePermissions["/admin/criar-adm"] },
   { href: "/admin/criar-colaborador", icon: UserPlus, label: "Criar colaborador", roles: adminRoutePermissions["/admin/criar-colaborador"] },
   { href: "/admin/api-senhas", icon: KeyRound, label: "API e Senhas", roles: adminRoutePermissions["/admin/api-senhas"] },
+  { href: "/admin/fretes", icon: Truck, label: "Fretes e entregas", roles: adminRoutePermissions["/admin/fretes"] },
   { href: "/admin/temas", icon: Palette, label: "Temas", roles: adminRoutePermissions["/admin/temas"] },
   {
     href: "/admin/club-wimifarma",
