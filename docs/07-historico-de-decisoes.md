@@ -6,6 +6,7 @@
 - Nova tentativa financeira por pedido, idempotência, reserva atômica de estoque, credenciais cifradas, webhook assinado e consulta autenticada do estado. Nenhum número de cartão/CVV passa pelos formulários da loja.
 - Homologação somente ADMIN, sem estoque/cashback reais. Administração exibe estado e referência, impede aprovação manual e bloqueia pedidos de teste/reembolso parcial para preparação.
 - Contrato, operação, limites e referências: `28-mercado-pago.md`. Sem dependência nova. Migration aditiva e testes isolados obrigatórios antes da publicação.
+- Publicado em 30/09 após backup verificado, testes de concorrência em PostgreSQL descartável e build aprovado. Health confirmado e rotas privadas protegidas; cobrança pública continua desativada até homologação do provedor. Corrigido também o lock de renovação de frete para o adapter Prisma, preservando a exclusão mútua transacional.
 
 
 ## 2026-09-28 - Cotação Melhor Envio com ativação controlada

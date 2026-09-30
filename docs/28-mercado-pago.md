@@ -47,9 +47,15 @@ Comandos: `npm.cmd test`, `npm.cmd run test:shipping`, `npm.cmd run test:payment
 
 Validação local em 30/09/2026: 153 testes existentes, 10 de frete e 9 de pagamentos aprovados; lint, build e Prisma validate aprovados. Auditoria npm aponta dois alertas altos preexistentes nas cadeias `fast-uri` e `brace-expansion`; nenhuma dependência/lockfile foi alterada nesta integração. O segundo alerta foi publicado após a revisão logística. Não aplicar `audit fix` indiscriminadamente nesta tarefa.
 
-Estado de entrega: testes com o provedor, publicação e ativação real precisam de evidência separada. Não interpretar credenciais criadas como pagamento homologado.
+Publicação em 30/09/2026: commits `b4f7e0b`, `5b61880` e `ec2385b` enviados ao GitHub e publicados no VPS. Backup de banco, uploads e configuração verificado antes da migration; 16 migrations aplicadas, app e PostgreSQL saudáveis. `/api/health` confirmou `ok: true`; acesso anônimo à configuração de pagamentos e webhook sem assinatura retornaram 401. O painel administrativo foi aberto com a sessão autorizada. Pagamento público permanece desativado.
+
+Ensaio de banco aprovado em PostgreSQL 17 descartável, sem rede externa e sem volumes de produção: checkout idempotente, disputa pelo último item, eventos repetidos/antigos, reembolso, liberação única de estoque, retomada incerta e cancelamento. O provedor nesse ensaio é simulado; não substitui a homologação no Mercado Pago.
+
+Aplicação e webhook de teste configurados no Mercado Pago com o evento **Order (Mercado Pago)**. O formulário da loja foi preparado em modo teste; a conexão depende de concluir o preenchimento do Access Token pelo titular e obter validação do servidor. A ferramenta de navegador não consegue ler/copiar esse campo privado, portanto não há credencial em documentação, screenshot ou Git. Testes de Pix/cartão com o provedor e ativação de produção continuam pendentes. Não interpretar credenciais criadas como pagamento homologado.
 
 O ensaio em PostgreSQL isolado detectou incompatibilidade do adapter Prisma com retorno `void` de `pg_advisory_xact_lock` via `$queryRaw`. Os locks de checkout, configuração de pagamento e renovação do frete usam `$executeRaw`, mantendo o lock transacional sem desserializar esse retorno. A falha foi encontrada antes de aplicar a migration na base real.
+
+3DS não foi habilitado nesta entrega. A API Orders documenta `config.online.transaction_security.validation = never` como padrão quando omitido. Habilitar `on_fraud_risk` exige implementar e testar a autenticação adicional, inclusive `action_required/pending_challenge`, antes de ativar essa opção; não tratar esse estado como aprovação.
 
 ## Referências oficiais
 
@@ -57,6 +63,7 @@ O ensaio em PostgreSQL isolado detectou incompatibilidade do adapter Prisma com 
 - https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-integration/pix
 - https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/notifications
 - https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-management/status/order-status
+- https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-management/integrate-3ds
 - https://github.com/mercadopago/sdk-js/blob/main/docs/bricks/card-payment.md
 
 Comparação: Payment Brick com Payments API foi considerado, mas a aplicação cadastrada e documentação atual usam Orders com Card Payment Brick. O SDK oficial hospedado v2 cuida dos campos de cartão; servidor usa `fetch`, Zod e criptografia já existentes. Nenhum pacote adicional ou biblioteca de pagamento comunitária foi instalado. Falha do gateway mantém o pedido pendente; o atendimento manual continua disponível para novas compras.
