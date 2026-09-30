@@ -7,6 +7,7 @@
 - Homologação somente ADMIN, sem estoque/cashback reais. Administração exibe estado e referência, impede aprovação manual e bloqueia pedidos de teste/reembolso parcial para preparação.
 - Contrato, operação, limites e referências: `28-mercado-pago.md`. Sem dependência nova. Migration aditiva e testes isolados obrigatórios antes da publicação.
 - Publicado em 30/09 após backup verificado, testes de concorrência em PostgreSQL descartável e build aprovado. Health confirmado e rotas privadas protegidas; cobrança pública continua desativada até homologação do provedor. Corrigido também o lock de renovação de frete para o adapter Prisma, preservando a exclusão mútua transacional.
+- Homologação no navegador identificou requisições prévias do Secure Fields: permitir os hosts oficiais `secure-fields.mercadopago.com` e `api-static.mercadopago.com` em conexão/iframe somente na página de pagamento. Sem curingas ou alteração da política das demais rotas; regressão automatizada e credenciais de teste verificadas pelo gateway.
 
 
 ## 2026-09-28 - Cotação Melhor Envio com ativação controlada

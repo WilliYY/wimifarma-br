@@ -36,9 +36,11 @@ const securityHeaders = [
 // Only the payment document loads the provider's hosted PCI fields and SDK.
 const paymentSecurityPolicy = contentSecurityPolicy
   .replace(`script-src ${scriptSources}`, `script-src ${scriptSources} https://sdk.mercadopago.com https://http2.mlstatic.com`)
-  .replace("connect-src 'self'", "connect-src 'self' https://api.mercadopago.com https://api.mercadolibre.com https://http2.mlstatic.com")
+  // Secure Fields fetches its cache URL before assigning the iframe src;
+  // api-static is its official fallback, so both need connect-src as well.
+  .replace("connect-src 'self'", "connect-src 'self' https://api.mercadopago.com https://api.mercadolibre.com https://http2.mlstatic.com https://secure-fields.mercadopago.com https://api-static.mercadopago.com")
   .replace("img-src 'self' data: blob: https://lh3.googleusercontent.com", "img-src 'self' data: blob: https://lh3.googleusercontent.com https://http2.mlstatic.com")
-  + "; frame-src https://api-static.mercadopago.com";
+  + "; frame-src https://secure-fields.mercadopago.com https://api-static.mercadopago.com";
 
 if (process.env.NODE_ENV === "production") {
   securityHeaders.push({
