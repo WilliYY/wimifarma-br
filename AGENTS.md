@@ -12,7 +12,7 @@ Este projeto:
 - Nao depende de HostGator.
 - Nao deve ser misturado com Candy English.
 - Nao deve ser misturado com o projeto local antigo `wimifarma-com`.
-- Possui carrinho e checkout para registrar pedidos pendentes; nao processa pagamento online nesta fase.
+- Possui carrinho e checkout; Mercado Pago / Orders e Bricks foi autorizado pelo lojista para pagamento na finalizacao. A cobranca publica depende de homologacao e ativacao explicita, conforme `docs/28-mercado-pago.md`.
 
 ## Regra 1: Leitura Obrigatoria Antes de Alterar Arquivos
 
@@ -52,7 +52,7 @@ Preservar os padroes ja existentes no projeto, salvo quando houver motivo tecnic
 
 ## Regra 6: Escopo Comercial
 
-- Carrinho e checkout registram pedidos para confirmacao humana da farmacia.
+- Carrinho e checkout registram pedidos; pagamento online habilitado e confirmado exclusivamente pelo gateway. Preparacao e atendimento continuam humanos.
 - WhatsApp continua como apoio ao atendimento e e obrigatorio para itens com receita ou Farmacia Popular.
 - Nao coletar dados de cartao nem marcar pagamento como aprovado sem gateway homologado.
 - Roleta e clube seguem preparados, sem regras comerciais reais ate aprovacao. Cashback por produto tem contrato em `docs/15-cashback-produtos.md`: saldo somente apos pedido concluido e pago. Bonus de avaliacao de 1% e resgate como desconto no checkout aprovados pelo lojista; contrato em `docs/16-cashback-avaliacoes-resgate.md`. Nao habilitar saque ou transferencia.

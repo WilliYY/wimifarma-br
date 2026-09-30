@@ -34,7 +34,7 @@ export async function quoteCart(postalCode: string, items: CheckoutRequest["item
 
 export async function validateOrderShipping(tx: Prisma.TransactionClient, input: CheckoutRequest) {
   if (!input.shippingToken) return null;
-  if (input.fulfillmentMethod !== "DELIVERY" || !input.address || input.paymentMethod !== "PIX") throw new ShippingError("Envio por transportadora requer endereço e pagamento combinado por Pix.");
+  if (input.fulfillmentMethod !== "DELIVERY" || !input.address || !["PIX", "ONLINE"].includes(input.paymentMethod)) throw new ShippingError("Envio por transportadora requer endereço e pagamento por Pix ou pelo Mercado Pago.");
   const payload = verifyShippingQuote(input.shippingToken, signingKey());
   const integration = await tx.shippingIntegration.findUnique({ where: { id: SHIPPING_INTEGRATION_ID } });
   const settings = integration ? shippingSettingsSchema.parse(integration.settings) : null;

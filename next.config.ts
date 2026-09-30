@@ -33,6 +33,13 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
 ];
 
+// Only the payment document loads the provider's hosted PCI fields and SDK.
+const paymentSecurityPolicy = contentSecurityPolicy
+  .replace(`script-src ${scriptSources}`, `script-src ${scriptSources} https://sdk.mercadopago.com https://http2.mlstatic.com`)
+  .replace("connect-src 'self'", "connect-src 'self' https://api.mercadopago.com https://api.mercadolibre.com https://http2.mlstatic.com")
+  .replace("img-src 'self' data: blob: https://lh3.googleusercontent.com", "img-src 'self' data: blob: https://lh3.googleusercontent.com https://http2.mlstatic.com")
+  + "; frame-src https://api-static.mercadopago.com";
+
 if (process.env.NODE_ENV === "production") {
   securityHeaders.push({
     key: "Strict-Transport-Security",
@@ -64,6 +71,10 @@ const nextConfig: NextConfig = {
       {
         headers: securityHeaders,
         source: "/:path*",
+      },
+      {
+        headers: [{ key: "Content-Security-Policy", value: paymentSecurityPolicy }, { key: "Referrer-Policy", value: "no-referrer" }],
+        source: "/checkout/pagamento/:path*",
       },
     ];
   },

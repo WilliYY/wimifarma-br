@@ -3,6 +3,7 @@ import { CheckoutPage } from "@/components/site/checkout-page";
 import { auth } from "@/features/auth/auth";
 import { sessionCustomerId } from "@/features/auth/customer-session";
 import { getPrisma } from "@/lib/prisma";
+import { paymentAvailability } from "@/features/payments/integration";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -23,6 +24,7 @@ export default async function Page() {
 
   return (
     <CheckoutPage
+      onlineEnabled={await paymentAvailability(session?.user?.role === "ADMIN")}
       isCustomer={Boolean(customer)}
       draftOwner={session?.user?.id ? `${session.user.role}:${session.user.id}` : "guest"}
       initialCustomer={{

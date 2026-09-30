@@ -8,7 +8,7 @@ Plataforma comercial da Wimifarma, farmacia em Ivate-PR. O projeto nao e WordPre
 
 Criar uma base moderna e evolutiva para site publico, ofertas, catalogo, atendimento via WhatsApp, login, painel administrativo, APIs internas, banco de dados e modulos futuros como cupons, roleta promocional controlada e cashback.
 
-O sistema possui carrinho e checkout para registrar pedidos pendentes, com entrega local ou retirada e confirmacao humana. O WhatsApp continua como apoio; ainda nao existe cobranca online nem coleta de dados de cartao.
+O sistema possui carrinho e checkout, entrega local ou retirada e atendimento humano. Mercado Pago / Orders e Bricks permite Pix e cartão na finalização após homologação e ativação; inicia desativado. Dados de cartão ficam nos campos seguros do provedor. Contrato em [docs/28-mercado-pago.md](docs/28-mercado-pago.md).
 
 ## Stack
 
@@ -50,7 +50,7 @@ O sistema possui carrinho e checkout para registrar pedidos pendentes, com entre
 - `Produtos / Catalogo` permite cadastrar em modal, buscar, classificar, editar e adicionar ou remover produtos de `Melhores ofertas`; fotos podem ser retiradas/trocadas e tratadas antes de salvar. Novos WebP tem ate 1600 px/350 KB e ficam no volume `wimifarma-br-uploads`, servidos dinamicamente para evitar 404 apos upload.
 - A busca publica consulta produtos publicados no PostgreSQL por nome, marca, categoria, SKU, EAN, principios ativos e termos de busca; o autocomplete mostra foto e preco, abre `/produto/[slug]` no Enter e apresenta correlatos para consulta, sem tratar correlacao como substituicao automatica.
 - Produtos elegiveis podem ser adicionados ao carrinho e enviados pelo checkout em `/checkout`; o servidor recalcula preco, confere estoque e cria um pedido pendente para a equipe acompanhar em `/admin/pedidos`.
-- Itens com receita ou Farmacia Popular continuam no atendimento pelo WhatsApp. Pix, cartao e dinheiro sao apenas preferencias; nenhum dado de cartao e coletado e nenhum pagamento e aprovado pelo site.
+- Itens com receita ou Farmacia Popular continuam no atendimento pelo WhatsApp. Pix combinado, cartão na entrega e dinheiro continuam preferências do atendimento. Quando habilitado, Mercado Pago oferece pagamento online e confirma o resultado por consulta autenticada; o site não armazena número de cartão ou CVV.
 - A politica publica em `/privacidade` descreve dados de conta, pedido, armazenamento local do carrinho e direitos do titular.
 - Admin possui o modulo `API e Senhas` para guardar credenciais sensiveis cifradas no banco, restrito a `ADMIN`.
 - APIs reservadas existem e exigem sessao `ADMIN` ou `MANAGER`.

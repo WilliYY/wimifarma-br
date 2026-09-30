@@ -13,6 +13,7 @@ export default async function Page() {
   await requireAdminPageRoute("/admin/pedidos");
   const orders = await getPrisma().order.findMany({
     include: {
+      onlinePayment: { select: { environment: true, status: true, statusDetail: true, providerOrderId: true } },
       items: {
         orderBy: { createdAt: "asc" },
       },

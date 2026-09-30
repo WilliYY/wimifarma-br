@@ -2,10 +2,10 @@
 
 ## Melhor Envio - ativação operacional
 
-- Autorizar aplicativo próprio, validar simulação real e serviços com postagem/coleta em Ivaté.
+- OAuth e cotação real concluídos em 29/09/2026: PAC/SEDEX e agência Correios AC IVATE. Conferência de produtos/embalagens e liberação pública continuam pendentes.
 - Conferir cadastro fiscal da loja e emissão de NF-e no sistema da farmácia.
 - Cadastrar peso e medidas reais de cada unidade embalada e liberar somente mercadorias aceitas pelos serviços selecionados.
-- Cotações iniciam desativadas. Compra de etiquetas e emissão fiscal permanecem no fluxo operacional externo; não há cobrança online.
+- Cotações iniciam desativadas. Compra de etiquetas e emissão fiscal permanecem no fluxo operacional externo; pagamento online tem homologação separada em `28-mercado-pago.md`.
 - Futuro: consolidar caixas de vários produtos, emissão de etiqueta pelo admin após conferência, rastreio automático e outros provedores. Contrato em `27-melhor-envio.md`.
 
 ## Google: configuração externa única
@@ -43,8 +43,8 @@
 
 ### Homologar pagamento online e regras comerciais do checkout
 
-- Definir: adquirente/gateway, contrato, antifraude, Pix dinamico, conciliacao, estorno, fiscal, frete fora de Ivate e reserva/baixa de estoque.
-- Ate a homologacao: checkout cria somente pedido pendente; nao coleta cartao e nao confirma pagamento automaticamente.
+- Mercado Pago / Orders e Bricks escolhido: Pix/cartão no checkout, reserva atômica e conciliação autenticada. Concluir testes no provedor, credenciais/webhook de produção e ativação controlada; documentação em `28-mercado-pago.md`.
+- Até a homologação, cobrança pública desativada; testes somente ADMIN e dados fictícios. Fiscal, restrições logísticas e reembolso parcial exigem conferência operacional.
 - Itens com receita e Farmacia Popular permanecem bloqueados no checkout ate existir fluxo juridico e farmaceutico aprovado.
 - Revisar a Politica de Privacidade com responsavel juridico e completar razao social, CNPJ, encarregado/canal LGPD e prazos formais de retencao.
 

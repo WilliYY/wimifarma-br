@@ -13,13 +13,13 @@ import { getDeliveryAvailability, normalizePostalCode } from "@/features/product
 
 type Step = 0 | 1 | 2 | 3;
 type FulfillmentMethod = "DELIVERY" | "PICKUP";
-type PaymentMethod = "PIX" | "CARD_ON_DELIVERY" | "CASH";
+type PaymentMethod = "PIX" | "CARD_ON_DELIVERY" | "CASH" | "ONLINE";
 type OrderResult = { number: string; totalCents: number };
 
 const currency = new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" });
 const steps = ["Identificacao", "Entrega", "Pagamento", "Revisao"];
 
-export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer = false }: { initialCustomer: { name: string; phone: string; email: string; street: string; neighborhood: string }; draftOwner?: string; isCustomer?: boolean }) {
+export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer = false, onlineEnabled = false }: { initialCustomer: { name: string; phone: string; email: string; street: string; neighborhood: string }; draftOwner?: string; isCustomer?: boolean; onlineEnabled?: boolean }) {
   const { clearCart, hydrated, items, subtotalCents } = useCart();
   const { draft, setDraft, step, goToStep, back, ready, clearDraft } = useCheckoutSession({
     customer: { name: initialCustomer.name, phone: initialCustomer.phone, email: initialCustomer.email },
@@ -64,6 +64,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
     if (sending.current) return;
     const invalid = checkoutStepError(0, draft) || checkoutStepError(1, draft);
     if (invalid) { setError(invalid); return; }
+    if (paymentMethod === "ONLINE" && (!onlineEnabled || !customer.email)) { setError("Informe seu e-mail na identificação e confira a disponibilidade do pagamento online."); return; }
     if (!privacyConsent) {
       setError("Confirme a politica de privacidade para enviar o pedido.");
       return;
@@ -78,7 +79,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
         notes, paymentMethod, privacyConsent, cashbackRedeemCents: discountCents,
         shippingToken: fulfillmentMethod === "DELIVERY" ? shippingSelection?.token : undefined,
       };
-      if (isCustomer) {
+      if (isCustomer || paymentMethod === "ONLINE") {
         const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(requestBody)));
         const signature = Array.from(new Uint8Array(bytes), (n) => n.toString(16).padStart(2, "0")).join("");
         const storageKey = `wimifarma-checkout-attempt:${draftOwner}`;
@@ -92,11 +93,18 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
       const response = await fetch("/api/pedidos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...requestBody, checkoutRequestId: isCustomer ? requestAttempt.current?.id : undefined }),
+        body: JSON.stringify({ ...requestBody, checkoutRequestId: isCustomer || paymentMethod === "ONLINE" ? requestAttempt.current?.id : undefined }),
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(typeof payload?.error === "string" ? payload.error : "Nao foi possivel confirmar o envio. Consulte a equipe antes de tentar novamente.");
       if (typeof payload?.data?.number !== "string" || !Number.isSafeInteger(payload?.data?.totalCents)) throw new Error("Nao foi possivel confirmar o envio. Consulte a equipe antes de tentar novamente.");
+      if (payload.data.paymentMethod === "ONLINE") {
+        try {
+          sessionStorage.setItem(`wimifarma-payment-cart:${payload.data.id}`, cartKey);
+          sessionStorage.setItem(`wimifarma-payment-attempt:${payload.data.id}`, `wimifarma-checkout-attempt:${draftOwner}`);
+        } catch { /* O cookie seguro mantém o acesso ao pagamento. */ }
+        window.location.assign(`/checkout/pagamento/${payload.data.id}`); return;
+      }
       setOrder({ number: payload.data.number, totalCents: payload.data.totalCents });
       requestAttempt.current = null;
       try { sessionStorage.removeItem(`wimifarma-checkout-attempt:${draftOwner}`); } catch { /* Armazenamento opcional. */ }
@@ -129,7 +137,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
             <div className="animate-in fade-in slide-in-from-right-2 duration-300 motion-reduce:animate-none" key={step}>
               {step === 0 ? <IdentificationStep customer={customer} onChange={(value) => setPart("customer", value)} /> : null}
               {step === 1 ? <CheckoutDeliveryStep address={address} fulfillmentMethod={fulfillmentMethod} onAddress={setAddress} onMethod={(value) => setDraft((current) => ({ ...current, fulfillmentMethod: value, shippingSelection: undefined }))} shippingSelection={shippingSelection} onShipping={(option) => setDraft((current) => ({ ...current, shippingSelection: option, ...(option ? { paymentMethod: "PIX" } : {}) }))} /> : null}
-              {step === 2 && shippingSelection ? <div><h1 className="text-2xl font-black text-ink">Pagamento após confirmação</h1><p className="mt-3 text-sm leading-6 text-muted">Para envio por transportadora, a equipe confirma o pedido e combina o pagamento por Pix antes de despachar. Nenhum valor é cobrado agora.</p></div> : step === 2 ? <PaymentStep fulfillmentMethod={fulfillmentMethod} method={paymentMethod} onChange={(value) => setPart("paymentMethod", value)} /> : null}
+              {step === 2 ? <PaymentStep onlineEnabled={onlineEnabled} national={Boolean(shippingSelection)} fulfillmentMethod={fulfillmentMethod} method={paymentMethod} onChange={(value) => setPart("paymentMethod", value)} /> : null}
               {step === 2 && isCustomer ? <CheckoutCashback subtotalCents={subtotalCents} selectedCents={discountCents} onSelect={setCashbackRedeemCents} /> : null}
               {step === 3 ? <ReviewStep address={address} customer={customer} fulfillmentMethod={fulfillmentMethod} items={items} notes={notes} onNotes={(value) => setPart("notes", value)} onPrivacy={setPrivacyConsent} paymentMethod={paymentMethod} privacyConsent={privacyConsent} /> : null}
               {error ? <p className="mt-5 rounded-md border border-brand/20 bg-brand-soft px-4 py-3 text-sm font-bold text-brand" role="alert">{error}</p> : null}
@@ -141,14 +149,14 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
                 ) : (
                   <button className="group inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-brand px-6 py-3 text-sm font-black text-white shadow-[0_12px_26px_rgba(200,16,46,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-dark disabled:cursor-wait disabled:opacity-60 sm:w-auto sm:min-w-48" disabled={submitting} onClick={submitOrder} type="button">
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Check className="h-4 w-4" aria-hidden="true" />}
-                    {submitting ? "Enviando pedido..." : "Enviar pedido"}
+                    {submitting ? "Enviando pedido..." : paymentMethod === "ONLINE" ? "Continuar para pagamento" : "Enviar pedido"}
                   </button>
                 )}
               </div>
             </div>
           </div>
         </section>
-        <OrderSummary postalCode={address.postalCode} fulfillmentMethod={fulfillmentMethod} itemCount={items.reduce((total, item) => total + item.quantity, 0)} subtotalCents={subtotalCents} discountCents={discountCents} shippingFeeCents={shippingSelection?.priceCents} />
+        <OrderSummary online={paymentMethod === "ONLINE"} postalCode={address.postalCode} fulfillmentMethod={fulfillmentMethod} itemCount={items.reduce((total, item) => total + item.quantity, 0)} subtotalCents={subtotalCents} discountCents={discountCents} shippingFeeCents={shippingSelection?.priceCents} />
       </div>
     </CheckoutShell>
   );
@@ -175,29 +183,30 @@ function Field({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> 
 function IdentificationStep({ customer, onChange }: { customer: { name: string; phone: string; email: string }; onChange: (value: { name: string; phone: string; email: string }) => void }) { return <div><h1 className="text-2xl font-black text-ink">Quem esta comprando?</h1><p className="mt-2 text-sm text-muted">Usaremos estes dados para confirmar o pedido.</p><div className="mt-6 grid gap-4 sm:grid-cols-2"><div className="sm:col-span-2"><Field autoComplete="name" label="Nome completo" maxLength={120} onChange={(event) => onChange({ ...customer, name: event.target.value })} required value={customer.name} /></div><Field autoComplete="tel" inputMode="tel" label="WhatsApp / telefone" maxLength={20} onChange={(event) => onChange({ ...customer, phone: event.target.value })} required value={customer.phone} /><Field autoComplete="email" label="E-mail (opcional)" maxLength={160} onChange={(event) => onChange({ ...customer, email: event.target.value })} type="email" value={customer.email} /></div></div>; }
 
 
-function PaymentStep({ method, onChange, fulfillmentMethod }: { method: PaymentMethod; onChange: (value: PaymentMethod) => void; fulfillmentMethod: FulfillmentMethod }) {
+function PaymentStep({ method, onChange, fulfillmentMethod, onlineEnabled, national }: { method: PaymentMethod; onChange: (value: PaymentMethod) => void; fulfillmentMethod: FulfillmentMethod; onlineEnabled: boolean; national: boolean }) {
   const when = fulfillmentMethod === "PICKUP" ? "na retirada" : "na entrega";
   const choices = [
+    ...(onlineEnabled ? [{ value: "ONLINE" as const, label: "Pix ou cartão online", description: "Pague agora com Mercado Pago, sem sair do site.", Icon: ShieldCheck }] : []),
     { value: "PIX", label: "Pix", description: "A equipe envia os dados depois de confirmar o pedido.", Icon: QrCode },
     { value: "CARD_ON_DELIVERY", label: "Cartao", description: `Credito ou debito ${when}, na maquininha.`, Icon: CreditCard },
     { value: "CASH", label: "Dinheiro", description: `Pagamento ${when}. Informe o troco na revisao.`, Icon: Banknote },
   ] as const;
-  return <div><h1 className="text-2xl font-black text-ink">Como prefere pagar?</h1><p className="mt-2 text-sm leading-6 text-muted">Escolha a forma de pagamento. Nenhum valor sera cobrado agora.</p>
-    <fieldset className="mt-6 grid gap-3"><legend className="sr-only">Forma de pagamento</legend>{choices.map(({ value, label, description, Icon }) => <label className={`flex min-h-24 cursor-pointer items-center gap-4 rounded-md border p-4 transition focus-within:ring-2 focus-within:ring-brand ${method === value ? "border-brand bg-brand-soft" : "border-line hover:border-brand/40"}`} key={value}>
+  return <div><h1 className="text-2xl font-black text-ink">Como prefere pagar?</h1><p className="mt-2 text-sm leading-6 text-muted">{onlineEnabled ? "Escolha pagamento online ou atendimento da farmácia." : "Escolha a forma de pagamento. Nenhum valor será cobrado agora."}</p>
+    <fieldset className="mt-6 grid gap-3"><legend className="sr-only">Forma de pagamento</legend>{choices.filter(choice => !national || ["PIX", "ONLINE"].includes(choice.value)).map(({ value, label, description, Icon }) => <label className={`flex min-h-24 cursor-pointer items-center gap-4 rounded-md border p-4 transition focus-within:ring-2 focus-within:ring-brand ${method === value ? "border-brand bg-brand-soft" : "border-line hover:border-brand/40"}`} key={value}>
       <input checked={method === value} className="sr-only" name="paymentMethod" onChange={() => onChange(value)} type="radio" value={value} />
       <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${method === value ? "bg-brand text-white" : "bg-surface-subtle text-muted"}`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
       <span className="min-w-0"><strong className="block text-sm text-ink">{label}</strong><span className="mt-1 block text-xs leading-5 text-muted">{description}</span></span><span className="ml-auto w-5 shrink-0 text-brand">{method === value && <Check className="h-5 w-5" aria-hidden="true" />}</span>
     </label>)}</fieldset>
-    <p className="mt-5 flex items-start gap-2 border-l-4 border-pharma-green bg-emerald-50 p-4 text-xs leading-5 text-ink"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-pharma-green" aria-hidden="true" /><span><strong className="block">Pagamento apos confirmacao</strong>A farmacia confere o pedido antes de combinar o pagamento. Nao pedimos dados do cartao neste site.</span></p>
+    <p className="mt-5 flex items-start gap-2 border-l-4 border-pharma-green bg-emerald-50 p-4 text-xs leading-5 text-ink"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-pharma-green" aria-hidden="true" /><span><strong className="block">{method === "ONLINE" ? "Pagamento protegido pelo Mercado Pago" : "Pagamento após confirmação"}</strong>{method === "ONLINE" ? "Após revisar o pedido, escolha Pix ou preencha o cartão no formulário seguro do Mercado Pago." : "A farmácia confere o pedido antes de combinar o pagamento."}</span></p>
   </div>;
 }
 
 
-function ReviewStep({ address, customer, fulfillmentMethod, items, notes, onNotes, onPrivacy, paymentMethod, privacyConsent }: { address: CheckoutDraft["address"]; customer: { name: string; phone: string; email: string }; fulfillmentMethod: FulfillmentMethod; items: Array<{ id: string; name: string; quantity: number; unitPriceCents: number }>; notes: string; onNotes: (value: string) => void; onPrivacy: (value: boolean) => void; paymentMethod: PaymentMethod; privacyConsent: boolean }) { const paymentLabels = { PIX: "Pix", CARD_ON_DELIVERY: "Cartao na entrega ou retirada", CASH: "Dinheiro" }; return <div><h1 className="text-2xl font-black text-ink">Revise seu pedido</h1><div className="mt-6 grid gap-5"><ReviewBlock label="Contato"><p>{customer.name}</p><p>{customer.phone}{customer.email ? ` · ${customer.email}` : ""}</p></ReviewBlock><ReviewBlock label={fulfillmentMethod === "DELIVERY" ? "Entrega" : "Retirada"}><p>{fulfillmentMethod === "DELIVERY" ? `${address.street}, ${address.number} - ${address.neighborhood}, ${address.city}-${address.state}${address.complement ? ` - ${address.complement}` : ""}` : "Wimifarma - Av. Minas Gerais, 2263, Ivate-PR"}</p></ReviewBlock><ReviewBlock label="Pagamento"><p>{paymentLabels[paymentMethod]}</p></ReviewBlock><ReviewBlock label="Produtos">{items.map((item) => <p className="flex justify-between gap-3" key={item.id}><span>{item.quantity}x {item.name}</span><strong>{currency.format(item.quantity * item.unitPriceCents / 100)}</strong></p>)}</ReviewBlock><label className="grid gap-2 text-sm font-black text-ink"><span>Observacao (opcional)</span><textarea className="min-h-24 resize-y rounded-md border border-line p-3 font-body text-sm font-semibold outline-none focus:border-brand focus:ring-2 focus:ring-brand/10" maxLength={500} onChange={(event) => onNotes(event.target.value)} placeholder="Ex.: ponto de referencia ou troco necessario" value={notes} /></label><label className="flex items-start gap-3 rounded-md border border-line bg-surface-subtle p-4 text-sm font-semibold leading-5 text-muted"><input checked={privacyConsent} className="mt-1 h-4 w-4 accent-brand" onChange={(event) => onPrivacy(event.target.checked)} type="checkbox" /><span>Confirmo que revisei os dados e li a <Link className="font-black text-brand underline" href="/privacidade" target="_blank">Politica de Privacidade</Link>.</span></label></div></div>; }
+function ReviewStep({ address, customer, fulfillmentMethod, items, notes, onNotes, onPrivacy, paymentMethod, privacyConsent }: { address: CheckoutDraft["address"]; customer: { name: string; phone: string; email: string }; fulfillmentMethod: FulfillmentMethod; items: Array<{ id: string; name: string; quantity: number; unitPriceCents: number }>; notes: string; onNotes: (value: string) => void; onPrivacy: (value: boolean) => void; paymentMethod: PaymentMethod; privacyConsent: boolean }) { const paymentLabels = { ONLINE: "Mercado Pago · Pix ou cartão online", PIX: "Pix", CARD_ON_DELIVERY: "Cartao na entrega ou retirada", CASH: "Dinheiro" }; return <div><h1 className="text-2xl font-black text-ink">Revise seu pedido</h1><div className="mt-6 grid gap-5"><ReviewBlock label="Contato"><p>{customer.name}</p><p>{customer.phone}{customer.email ? ` · ${customer.email}` : ""}</p></ReviewBlock><ReviewBlock label={fulfillmentMethod === "DELIVERY" ? "Entrega" : "Retirada"}><p>{fulfillmentMethod === "DELIVERY" ? `${address.street}, ${address.number} - ${address.neighborhood}, ${address.city}-${address.state}${address.complement ? ` - ${address.complement}` : ""}` : "Wimifarma - Av. Minas Gerais, 2263, Ivate-PR"}</p></ReviewBlock><ReviewBlock label="Pagamento"><p>{paymentLabels[paymentMethod]}</p></ReviewBlock><ReviewBlock label="Produtos">{items.map((item) => <p className="flex justify-between gap-3" key={item.id}><span>{item.quantity}x {item.name}</span><strong>{currency.format(item.quantity * item.unitPriceCents / 100)}</strong></p>)}</ReviewBlock><label className="grid gap-2 text-sm font-black text-ink"><span>Observacao (opcional)</span><textarea className="min-h-24 resize-y rounded-md border border-line p-3 font-body text-sm font-semibold outline-none focus:border-brand focus:ring-2 focus:ring-brand/10" maxLength={500} onChange={(event) => onNotes(event.target.value)} placeholder="Ex.: ponto de referencia ou troco necessario" value={notes} /></label><label className="flex items-start gap-3 rounded-md border border-line bg-surface-subtle p-4 text-sm font-semibold leading-5 text-muted"><input checked={privacyConsent} className="mt-1 h-4 w-4 accent-brand" onChange={(event) => onPrivacy(event.target.checked)} type="checkbox" /><span>Confirmo que revisei os dados e li a <Link className="font-black text-brand underline" href="/privacidade" target="_blank">Politica de Privacidade</Link>.</span></label></div></div>; }
 
 function ReviewBlock({ children, label }: { children: React.ReactNode; label: string }) { return <div className="border-b border-line pb-4"><p className="mb-2 text-xs font-black uppercase text-brand">{label}</p><div className="grid gap-1 text-sm font-semibold leading-5 text-ink">{children}</div></div>; }
 
-function OrderSummary({ postalCode, fulfillmentMethod, itemCount, subtotalCents, discountCents, shippingFeeCents }: { postalCode: string; fulfillmentMethod: FulfillmentMethod; itemCount: number; subtotalCents: number; discountCents: number; shippingFeeCents?: number }) {
+function OrderSummary({ postalCode, fulfillmentMethod, itemCount, subtotalCents, discountCents, shippingFeeCents, online }: { postalCode: string; fulfillmentMethod: FulfillmentMethod; itemCount: number; subtotalCents: number; discountCents: number; shippingFeeCents?: number; online: boolean }) {
   const fee = fulfillmentMethod === "DELIVERY" ? shippingFeeCents ?? 0 : 0;
   const deliveryLabel = fulfillmentMethod === "PICKUP" ? "Gratis" : shippingFeeCents !== undefined ? currency.format(fee / 100) : normalizePostalCode(postalCode).length < 8 ? "Consultar CEP" : getDeliveryAvailability(postalCode).available ? "Gratis" : "Calcular frete";
   return <aside className="overflow-hidden rounded-lg border border-line bg-white shadow-[0_18px_50px_rgba(17,24,39,0.08)] lg:sticky lg:top-52"><div className="h-1 bg-brand" /><div className="p-5 sm:p-6">
@@ -206,7 +215,7 @@ function OrderSummary({ postalCode, fulfillmentMethod, itemCount, subtotalCents,
       {discountCents > 0 ? <div className="flex justify-between gap-4 text-pharma-green"><dt>Desconto de cashback</dt><dd className="font-black">- {currency.format(discountCents / 100)}</dd></div> : null}
     </dl>
     <div className="mt-5 flex flex-wrap items-end justify-between gap-2 border-t border-line pt-5"><span className="font-black text-ink">Total a pagar</span><strong className="text-3xl font-black text-brand">{currency.format((subtotalCents + fee - discountCents) / 100)}</strong></div>
-    <div className="mt-5 flex items-start gap-3 rounded-md border border-emerald-100 bg-emerald-50/70 p-3"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-pharma-green" aria-hidden="true" /><p className="text-xs leading-5 text-muted"><strong className="block text-pharma-green">Confirmacao pela farmacia</strong>{discountCents > 0 ? "Cashback reservado ao enviar. O pagamento restante sera combinado com a equipe." : "Preco e estoque sao conferidos antes da confirmacao. Sem cobranca online."}</p></div>
+    <div className="mt-5 flex items-start gap-3 rounded-md border border-emerald-100 bg-emerald-50/70 p-3"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-pharma-green" aria-hidden="true" /><p className="text-xs leading-5 text-muted"><strong className="block text-pharma-green">{online ? "Pagamento no checkout" : "Confirmação pela farmácia"}</strong>{online ? "Preço e estoque conferidos antes de pagar. O Mercado Pago confirma o recebimento." : discountCents > 0 ? "Cashback reservado ao enviar. O pagamento restante será combinado com a equipe." : "Preço e estoque são conferidos antes da confirmação. Sem cobrança nesta opção."}</p></div>
   </div></aside>;
 }
 

@@ -37,7 +37,7 @@ export const checkoutRequestSchema = z
         .transform((value) => value || undefined),
     }),
     fulfillmentMethod: z.enum(["DELIVERY", "PICKUP"]),
-    paymentMethod: z.enum(["PIX", "CARD_ON_DELIVERY", "CASH"]),
+    paymentMethod: z.enum(["PIX", "CARD_ON_DELIVERY", "CASH", "ONLINE"]),
     address: addressSchema.optional(),
     notes: optionalText(500),
     privacyConsent: z.literal(true),
@@ -56,6 +56,9 @@ export const checkoutRequestSchema = z
       .max(30, "O carrinho aceita ate 30 produtos diferentes."),
   })
   .superRefine((data, context) => {
+    if (data.paymentMethod === "ONLINE" && (!data.checkoutRequestId || !data.customer.email)) {
+      context.addIssue({ code: "custom", path: ["customer", "email"], message: "Informe seu e-mail e atualize o checkout para pagar online." });
+    }
     if (data.cashbackRedeemCents > 0 && !data.checkoutRequestId) {
       context.addIssue({ code: "custom", path: ["checkoutRequestId"], message: "Atualize o checkout antes de usar cashback." });
     }
@@ -79,7 +82,7 @@ export const checkoutRequestSchema = z
       }
     }
 
-    if (data.shippingToken && (data.fulfillmentMethod !== "DELIVERY" || data.paymentMethod !== "PIX")) {
+    if (data.shippingToken && (data.fulfillmentMethod !== "DELIVERY" || !["PIX", "ONLINE"].includes(data.paymentMethod))) {
       context.addIssue({ code: "custom", path: ["paymentMethod"], message: "Envio por transportadora requer entrega e pagamento combinado por Pix." });
     }
 

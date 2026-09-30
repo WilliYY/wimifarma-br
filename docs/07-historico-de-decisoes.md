@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-09-30 - Pagamento no checkout com Mercado Pago / Orders
+
+- Escolha explícita do lojista: cobrar na finalização via Pix/cartão usando Bricks. Gateway inicia desativado e exige homologação separada; não muda o atendimento de itens restritos.
+- Nova tentativa financeira por pedido, idempotência, reserva atômica de estoque, credenciais cifradas, webhook assinado e consulta autenticada do estado. Nenhum número de cartão/CVV passa pelos formulários da loja.
+- Homologação somente ADMIN, sem estoque/cashback reais. Administração exibe estado e referência, impede aprovação manual e bloqueia pedidos de teste/reembolso parcial para preparação.
+- Contrato, operação, limites e referências: `28-mercado-pago.md`. Sem dependência nova. Migration aditiva e testes isolados obrigatórios antes da publicação.
+
+
 ## 2026-09-28 - Cotação Melhor Envio com ativação controlada
 
 - Origem confirmada pelo lojista: farmácia na Av. Minas Gerais, 2263, Ivaté/PR, CEP 87525-000. Loja e integração separadas de outras atividades da conta.

@@ -78,7 +78,7 @@ export function CustomerOrderCard({ order, featured = false }: { order: Customer
         </ul>
         <div className="grid gap-4 rounded-xl bg-slate-50 p-4 sm:grid-cols-2">
           <div><p className="flex items-center gap-2 text-sm font-bold"><MapPin className="h-4 w-4 text-brand" />{pickup ? "Retirada" : "Endereço da compra"}</p><p className="mt-2 break-words text-sm leading-6 text-muted">{pickup ? `Wimifarma · ${siteConfig.address}` : address || "Confirme o endereço com a equipe."}</p></div>
-          <div><p className="text-sm font-bold">{orderPaymentLabels[order.paymentStatus]}</p><p className="mt-2 text-sm text-muted">{order.paymentMethod === "PIX" ? "Pix" : order.paymentMethod === "CASH" ? "Dinheiro" : "Cartão na entrega / retirada"}</p></div>
+          <div><p className="text-sm font-bold">{orderPaymentLabels[order.paymentStatus]}</p><p className="mt-2 text-sm text-muted">{order.paymentMethod === "ONLINE" ? "Mercado Pago" : order.paymentMethod === "PIX" ? "Pix" : order.paymentMethod === "CASH" ? "Dinheiro" : "Cartão na entrega / retirada"}</p></div>
         </div>
         <dl className="ml-auto grid max-w-sm gap-2 text-sm">
           <div className="flex justify-between gap-3"><dt className="text-muted">Produtos</dt><dd>{accountMoney(order.subtotalCents)}</dd></div>
@@ -88,6 +88,7 @@ export function CustomerOrderCard({ order, featured = false }: { order: Customer
         </dl>
         <div className="flex flex-wrap gap-2">
           <a className={cn(actionClass, "border border-line bg-white text-ink hover:bg-slate-50")} href={helpUrl} target="_blank" rel="noopener noreferrer"><CircleHelp className="h-4 w-4" />Ajuda com este pedido</a>
+          {order.paymentMethod === "ONLINE" && order.paymentStatus === "PENDING" && order.status === "PENDING" && <a className={cn(actionClass, "bg-brand text-white")} href={`/checkout/pagamento/${order.id}`}>Retomar pagamento <ArrowRight className="h-4 w-4" /></a>}
           {order.status === "COMPLETED" && order.paymentStatus === "PAID" && <Link className={cn(actionClass, "bg-brand-soft text-brand hover:bg-brand/10")} href="/minha-conta/avaliacoes">Avaliar produtos <ArrowRight className="h-4 w-4" /></Link>}
         </div>
       </div>

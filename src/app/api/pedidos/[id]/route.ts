@@ -30,12 +30,17 @@ export async function PATCH(
   const { id } = await params;
   const prisma = getPrisma();
   const current = await prisma.order.findUnique({
-    select: { paymentStatus: true, status: true },
+    select: { paymentStatus: true, status: true, paymentMethod: true, onlinePayment: { select: { environment: true, status: true, statusDetail: true } } },
     where: { id },
   });
 
   if (!current) {
     return NextResponse.json({ error: "Pedido nao encontrado." }, { status: 404 });
+  }
+
+  if (current.paymentMethod === "ONLINE" && (parsed.data.paymentStatus || current.onlinePayment?.environment === "test" || current.onlinePayment?.statusDetail === "partially_refunded"
+    || (parsed.data.status && parsed.data.status !== current.status && current.paymentStatus !== "PAID") || parsed.data.status === "CANCELED")) {
+    return NextResponse.json({ error: "Pagamento online é atualizado pelo Mercado Pago. Para cancelar ou reembolsar, use o painel do provedor e aguarde a sincronização. Pedidos de teste ou com reembolso parcial não podem ser preparados." }, { status: 409 });
   }
 
   if (
@@ -64,6 +69,11 @@ export async function PATCH(
 
   const userId = guard.session?.user?.id;
   const order = await prisma.$transaction(async (transaction) => {
+    await transaction.$queryRaw`SELECT id FROM "Order" WHERE id = ${id} FOR UPDATE`;
+    if (current.paymentMethod === "ONLINE") {
+      const online = await transaction.onlinePayment.findUnique({ where: { orderId: id } });
+      if (!online || online.status !== "PAID" || online.environment === "test") return null;
+    }
     const updated = await transaction.order.updateMany({
       data: parsed.data,
       where: {

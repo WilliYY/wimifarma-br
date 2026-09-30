@@ -41,6 +41,11 @@ Observacao: `/roleta` publica redireciona para `/ofertas` nesta fase.
 
 ## Rotas Admin
 
+## Pagamentos online (2026-09-30)
+
+`PaymentIntegration` guarda conexão cifrada; `OnlinePayment` vincula uma tentativa idempotente a `Order`. API Orders do Mercado Pago é a fonte de estado financeiro. Card Payment Brick protege os campos de cartão; Pix recebe QR Code local. Webhook autenticado e recuperação periódica conciliam pendências com lock de pedido/estoque. Ativação pública depende de homologação. Contrato completo: `28-mercado-pago.md`.
+
+
 - `/admin/usuarios`: diretorio, hierarquia e ranking reservado a ADMIN; contrato em `17-usuarios-e-acessos.md`.
 
 - `/admin`

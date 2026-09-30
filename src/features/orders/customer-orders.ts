@@ -8,7 +8,7 @@ export type CustomerOrder = {
   number: string;
   status: CustomerOrderStatus;
   fulfillmentMethod: "DELIVERY" | "PICKUP";
-  paymentMethod: "PIX" | "CARD_ON_DELIVERY" | "CASH";
+  paymentMethod: "PIX" | "CARD_ON_DELIVERY" | "CASH" | "ONLINE";
   paymentStatus: "PENDING" | "PAID" | "CANCELED" | "REFUNDED";
   subtotalCents: number;
   deliveryFeeCents: number;

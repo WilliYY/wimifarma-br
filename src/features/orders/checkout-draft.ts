@@ -11,7 +11,7 @@ export const draftSchema = z.object({
   customer: z.object({ name: z.string().max(120), phone: z.string().max(20), email: z.string().max(160) }),
   address: z.object({ postalCode: z.string().max(9), street: z.string().max(120), number: z.string().max(20), complement: z.string().max(80), neighborhood: z.string().max(80), city: z.string().max(80), state: z.string().max(2) }),
   fulfillmentMethod: z.enum(["DELIVERY", "PICKUP"]),
-  paymentMethod: z.enum(["PIX", "CARD_ON_DELIVERY", "CASH"]),
+  paymentMethod: z.enum(["PIX", "CARD_ON_DELIVERY", "CASH", "ONLINE"]),
   notes: z.string().max(500),
   shippingSelection: shippingSelectionSchema.optional(),
 });

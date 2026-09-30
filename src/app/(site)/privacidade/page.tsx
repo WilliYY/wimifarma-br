@@ -12,7 +12,11 @@ export const metadata = createPublicPageMetadata({
 const sections = [
   {
     title: "Dados que usamos",
-    text: "Podemos tratar nome, telefone, e-mail, dados de conta e endereco. Nos pedidos, tambem registramos produtos, quantidades, valores, entrega ou retirada e a preferencia de pagamento. Nao solicitamos numero de cartao, CVV, senha bancaria ou chave Pix do cliente neste site.",
+    text: "Podemos tratar nome, telefone, e-mail, dados de conta e endereço. Nos pedidos, registramos produtos, quantidades, valores e entrega ou retirada. Ao pagar online, o formulário seguro do Mercado Pago coleta os dados do cartão; a Wimifarma recebe um token, sem armazenar número completo nem CVV. E-mail e, quando necessário, CPF/CNPJ do pagador são usados para processar a cobrança. Nunca solicitamos senha bancária.",
+  },
+  {
+    title: "Pagamentos online",
+    text: "Compartilhamos com o Mercado Pago valor, referência do pedido, e-mail e documento informado pelo pagador, além do token seguro do cartão quando aplicável. O provedor processa o pagamento e controles de prevenção a fraude. Guardamos identificadores, valores e status para conciliação; uma tentativa ainda sem resposta pode ser mantida cifrada para evitar cobrança duplicada. Um cookie necessário permite consultar o pagamento no mesmo navegador por até 24 horas. A preparação e entrega do pedido seguem sob responsabilidade da farmácia.",
   },
   {
     title: "Finalidades",
@@ -52,7 +56,7 @@ export default function Page() {
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-md bg-brand-soft text-brand"><ShieldCheck className="h-5 w-5" /></span>
           <h1 className="mt-5 text-3xl font-black text-ink sm:text-4xl">Politica de Privacidade</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Transparencia sobre os dados usados pela Wimifarma no site, na conta e nos pedidos.</p>
-          <p className="mt-3 text-xs font-bold text-muted">Atualizada em 28 de setembro de 2026.</p>
+          <p className="mt-3 text-xs font-bold text-muted">Atualizada em 29 de setembro de 2026.</p>
         </div>
 
         <div className="grid gap-8 py-8">

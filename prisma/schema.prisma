@@ -76,6 +76,7 @@ enum FulfillmentMethod {
 }
 
 enum OrderPaymentMethod {
+  ONLINE
   PIX
   CARD_ON_DELIVERY
   CASH
@@ -264,6 +265,7 @@ model Customer {
 }
 
 model Order {
+  onlinePayment OnlinePayment?
   shippingQuote Json?
   cashbackRedeemedCents Int @default(0)
   cashbackRedemptionState CashbackRedemptionState @default(NONE)
@@ -303,6 +305,44 @@ model Order {
   @@index([status, createdAt])
   @@index([customerId, createdAt])
   @@index([paymentStatus])
+}
+
+model PaymentIntegration {
+  id String @id
+  enabled Boolean @default(false)
+  environment String @default("test")
+  publicKey String
+  accountId String
+  ciphertext String
+  iv String
+  tag String
+  revision Int @default(1)
+  updatedAt DateTime @updatedAt
+}
+
+model OnlinePayment {
+  id String @id @default(cuid())
+  orderId String @unique
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  providerOrderId String? @unique
+  idempotencyKey String @unique
+  environment String
+  integrationRevision Int
+  accountId String
+  amountCents Int
+  status String @default("NEW")
+  statusDetail String?
+  stockReserved Boolean @default(false)
+  requestCiphertext String?
+  requestIv String?
+  requestTag String?
+  pixCode String?
+  providerUpdatedAt DateTime?
+  lastCheckedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, updatedAt])
 }
 
 model OrderItem {

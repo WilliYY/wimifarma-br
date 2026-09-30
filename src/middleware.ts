@@ -52,6 +52,8 @@ function requestHost(request: NextRequest) {
 }
 
 function isAllowedOrigin(request: NextRequest) {
+  // This exact endpoint authenticates server notifications with HMAC, not browser cookies.
+  if (request.nextUrl.pathname === "/api/pagamentos/mercado-pago/webhook") return true;
   if (!MUTATION_METHODS.has(request.method)) {
     return true;
   }
