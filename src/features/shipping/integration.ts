@@ -50,7 +50,7 @@ export async function shippingAccessToken() {
   refreshInFlight = (async () => {
     // A database advisory lock also serializes refreshes across app instances.
     return getPrisma().$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(728239144)`;
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(728239144)`;
       const row = await tx.shippingIntegration.findUniqueOrThrow({ where: { id: SHIPPING_INTEGRATION_ID } });
       if (!row.ciphertext || !row.iv || !row.tag) throw new ShippingError("Reconecte o Melhor Envio.", 503);
       const latest = credentialsSchema.parse(JSON.parse(decryptValue({ ciphertext: row.ciphertext, iv: row.iv, tag: row.tag })));

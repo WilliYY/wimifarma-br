@@ -49,6 +49,8 @@ Validação local em 30/09/2026: 153 testes existentes, 10 de frete e 9 de pagam
 
 Estado de entrega: testes com o provedor, publicação e ativação real precisam de evidência separada. Não interpretar credenciais criadas como pagamento homologado.
 
+O ensaio em PostgreSQL isolado detectou incompatibilidade do adapter Prisma com retorno `void` de `pg_advisory_xact_lock` via `$queryRaw`. Os locks de checkout, configuração de pagamento e renovação do frete usam `$executeRaw`, mantendo o lock transacional sem desserializar esse retorno. A falha foi encontrada antes de aplicar a migration na base real.
+
 ## Referências oficiais
 
 - https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-integration/cards
