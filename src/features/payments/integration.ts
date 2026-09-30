@@ -27,7 +27,7 @@ export async function savePaymentIntegration(input: z.infer<typeof paymentSettin
   const account = z.object({ id: z.union([z.string(), z.number()]).transform(String), site_id: z.literal("MLB"), tags: z.array(z.string()).default([]) }).parse(await mercadoPagoRequest("/users/me", secrets.data.accessToken));
   if ((input.environment === "test") !== account.tags.includes("test_user")) throw new PaymentError("A conta não corresponde ao ambiente selecionado. Use as credenciais do vendedor de teste para homologação.");
   return getPrisma().$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT pg_advisory_xact_lock(728239145)`;
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(728239145)`;
     if (changed && await tx.onlinePayment.count({ where: { OR: [
       { environment: "production", status: { notIn: ["FAILED", "CANCELED"] } },
       { status: { in: ["NEW", "SUBMITTING", "UNKNOWN", "PENDING"] } },

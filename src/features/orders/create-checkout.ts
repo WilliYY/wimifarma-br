@@ -23,7 +23,7 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   if (input.cashbackRedeemCents > 0 && !customer) throw new CashbackRuleError("Entre na sua conta de cliente para usar cashback.", 401);
   const account = customer && input.checkoutRequestId ? await lockCashbackAccount(tx, customer.id) : null;
   const requestId = customer || integration ? input.checkoutRequestId : undefined;
-  if (requestId) await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${requestId}, 0))`;
+  if (requestId) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${requestId}, 0))`;
   const hash = requestId ? createHash("sha256").update(JSON.stringify({ ...input, checkoutRequestId: undefined })).digest("hex") : undefined;
   if (requestId) {
     const previous = await tx.order.findUnique({ where: { checkoutRequestId: requestId } });
