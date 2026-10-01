@@ -61,6 +61,8 @@ O ensaio em PostgreSQL isolado detectou incompatibilidade do adapter Prisma com 
 
 Homologação no navegador em 30/09: cartão oficial `APRO` aprovado, resultado persistido após recarregamento, sem reserva de estoque real e com requisição cifrada removida após conciliação. O ensaio `OTHE` revelou o envelope HTTP 402 da Orders API: a ordem foi criada e a transação recusada, mas a resposta canônica está em `data`. O adaptador passa a aceitar esse envelope exclusivamente no POST de criação e após validação estrutural; continuam obrigatórias as conferências de conta, referência, valor e identificador antes de alterar o pedido. Respostas incompletas, moeda diferente de BRL ou outros erros permanecem incertos, sem liberar estoque indevidamente. O campo atual `currency` também é validado, preservando compatibilidade com `currency_id`.
 
+Em 01/10, a versão `4a8567b` foi publicada e o health confirmado. O simulador oficial retornou 401 mesmo após reconferir a assinatura de teste. Rejeições passam a registrar somente um código fixo de motivo (`PAYMENT_WEBHOOK_REJECTED`), sem URL, cabeçalhos, assinatura, corpo ou credenciais. Isso permite distinguir ausência/formato, expiração e divergência do HMAC sem enfraquecer a validação; resposta externa continua genérica.
+
 ## Referências oficiais
 
 - https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-api/create-order/post

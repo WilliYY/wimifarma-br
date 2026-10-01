@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createHmac } from "node:crypto";
-import { paymentBody, providerState, assertPaymentBinding, validWebhookSignature, paymentAccessToken, validPaymentAccess } from "./rules";
+import { paymentBody, providerState, assertPaymentBinding, validWebhookSignature, webhookSignatureFailure, paymentAccessToken, validPaymentAccess } from "./rules";
 import { paymentInputSchema, providerOrderSchema } from "./schema";
 import { mercadoPagoRequest } from "./provider";
 import { paymentJson } from "./http";
@@ -46,6 +46,12 @@ test("webhook HMAC rejects unsigned, altered resource, replay and cross-request 
   assert.equal(validWebhookSignature(request(undefined, "other"), secret, now), false);
   assert.equal(validWebhookSignature(request(undefined, undefined, ""), secret, now), false);
   assert.equal(validWebhookSignature(request(), secret, now + 11 * 60_000), false);
+  assert.equal(webhookSignatureFailure(request(), secret, now), null);
+  assert.equal(webhookSignatureFailure(request("invalid"), secret, now), "invalid_resource");
+  assert.equal(webhookSignatureFailure(request(undefined, ""), secret, now), "invalid_request_id");
+  assert.equal(webhookSignatureFailure(request(undefined, undefined, ""), secret, now), "invalid_signature_format");
+  assert.equal(webhookSignatureFailure(request(), secret, now + 11 * 60_000), "expired_signature");
+  assert.equal(webhookSignatureFailure(request(), "other-secret", now), "signature_mismatch");
 });
 test("guest access token is bound to order and checkout attempt", () => {
   const previous = process.env.AUTH_SECRET; process.env.AUTH_SECRET = "synthetic-auth-secret-for-tests";

@@ -30,17 +30,22 @@ export function assertPaymentBinding(remote: ProviderOrder, expected: { id: stri
     throw new PaymentError("O pagamento recebido não corresponde ao pedido. A equipe precisa conferir.", 502);
   }
 }
-export function validWebhookSignature(request: Request, secret: string, now = Date.now()) {
+export function webhookSignatureFailure(request: Request, secret: string, now = Date.now()) {
   const id = new URL(request.url).searchParams.get("data.id");
   const requestId = request.headers.get("x-request-id");
   const signature = request.headers.get("x-signature") ?? "";
   const ts = signature.match(/(?:^|,)\s*ts=(\d+)(?:,|$)/)?.[1];
   const digest = signature.match(/(?:^|,)\s*v1=([a-f0-9]{64})(?:,|$)/i)?.[1];
-  if (!id || !/^ORD[A-Z0-9]+$/i.test(id) || !requestId || requestId.length > 200 || !ts || !digest) return false;
+  if (!id || !/^ORD[A-Z0-9]+$/i.test(id)) return "invalid_resource";
+  if (!requestId || requestId.length > 200) return "invalid_request_id";
+  if (!ts || !digest) return "invalid_signature_format";
   const millis = ts.length <= 10 ? Number(ts) * 1000 : Number(ts);
-  if (Math.abs(now - millis) > 10 * 60_000) return false;
+  if (!Number.isFinite(millis) || Math.abs(now - millis) > 10 * 60_000) return "expired_signature";
   const expected = createHmac("sha256", secret).update(`id:${id.toLowerCase()};request-id:${requestId};ts:${ts};`).digest();
-  return timingSafeEqual(expected, Buffer.from(digest, "hex"));
+  return timingSafeEqual(expected, Buffer.from(digest, "hex")) ? null : "signature_mismatch";
+}
+export function validWebhookSignature(request: Request, secret: string, now = Date.now()) {
+  return webhookSignatureFailure(request, secret, now) === null;
 }
 export function paymentAccessToken(orderId: string, requestId: string) {
   if (!process.env.AUTH_SECRET) throw new Error("AUTH_SECRET ausente");
