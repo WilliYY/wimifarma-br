@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { shippingReferenceSchema } from "./product-reference";
 
 export const shippingSettingsSchema = z.object({
   enabled: z.boolean().default(false),
@@ -14,6 +15,7 @@ export const defaultShippingSettings = {
 };
 export type ShippingSettings = z.infer<typeof shippingSettingsSchema>;
 export const shippingProfileSchema = z.object({
+  reference: shippingReferenceSchema.nullable().optional(),
   enabled: z.boolean(),
   weightGrams: z.number().int().min(1).max(30000),
   widthCm: z.number().positive().max(200),

@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CashbackProductFields } from "@/components/admin/cashback-product-fields";
+import { ProductShippingFields } from "@/components/admin/product-shipping-fields";
 import { ProductMarketingTools } from "@/components/admin/product-marketing-tools";
 import { ProductDeleteButton, ProductTrashDialog } from "@/components/admin/product-trash";
 import { CatalogSeoOverview } from "@/components/admin/catalog-seo-overview";
@@ -79,6 +80,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 
 type ProductListItem = {
+  shippingProfile?: unknown;
   cashbackEnabled: boolean;
   cashbackRateBps: number;
   activeIngredients: string[];
@@ -142,6 +144,7 @@ function productPayload(
     clearEmptyFields ? fieldValue(formData, key) || null : optionalField(formData, key);
 
   return {
+    ...(formData.has("shippingDraft") ? { shippingProfile: JSON.parse(fieldValue(formData, "shippingDraft")) as unknown } : {}),
     ...(formData.has("cashbackPercent") ? {
       cashbackEnabled: formData.get("cashbackEnabled") === "on",
       cashbackRateBps: Math.round(Number(formData.get("cashbackPercent")) * 100),
@@ -168,6 +171,7 @@ function productPayload(
 
 function ProductFormFields({
   canManageCashback,
+  canManageShipping,
   categoryListId,
   categoryOptions,
   imagePickerRef,
@@ -175,6 +179,7 @@ function ProductFormFields({
   disabled = false,
 }: {
   canManageCashback: boolean;
+  canManageShipping: boolean;
   categoryListId: string;
   categoryOptions: string[];
   imagePickerRef: RefObject<ProductImagePickerHandle | null>;
@@ -486,6 +491,8 @@ function ProductFormFields({
         <Textarea defaultValue={product?.description ?? ""} maxLength={800} name="description" onChange={refreshSeo} placeholder="Apresentacao, quantidade ou observacao importante." />
       </label>
 
+      <ProductShippingFields initialProfile={product?.shippingProfile} identityKey={productIdentityKey(photoIdentity)} suggestion={suggestion?.shipping} researched={Boolean(suggestion)} canEdit={canManageShipping} busy={isSuggesting} onResearch={() => void requestSuggestions(true)} medicine={typeHint === "medicine"} />
+
       {seo.name && <div className="min-w-0 border-l-2 border-pharma-green pl-3"><p className="text-xs font-semibold text-muted">Previa na busca</p><p className="mt-1 break-words text-sm font-bold text-ink">{seo.name} | Wimifarma</p><p className="mt-1 break-words text-xs leading-5 text-muted">{buildProductMetaDescription(seo)}</p></div>}
 
       <ProductImagePicker identity={photoIdentity} initialImageAssetId={product?.imageAssetId} initialImageUrl={product?.imageUrl} key={product?.id ?? "new"} ref={imagePickerRef} />
@@ -508,7 +515,7 @@ function ProductFormFields({
   );
 }
 
-export function ProductsCatalogPanel({ canManageCashback = false }: { canManageCashback?: boolean }) {
+export function ProductsCatalogPanel({ canManageCashback = false, canManageShipping = false }: { canManageCashback?: boolean; canManageShipping?: boolean }) {
   const imagePickerRef = useRef<ProductImagePickerHandle>(null);
   const editImagePickerRef = useRef<ProductImagePickerHandle>(null);
   const [products, setProducts] = useState<ProductListItem[]>([]);
@@ -911,6 +918,7 @@ export function ProductsCatalogPanel({ canManageCashback = false }: { canManageC
           <form className="grid gap-4" onSubmit={handleSubmit}>
             <ProductFormFields
               canManageCashback={canManageCashback}
+              canManageShipping={canManageShipping}
               categoryListId="new-product-categories"
               categoryOptions={categoryOptions}
               imagePickerRef={imagePickerRef}
@@ -944,6 +952,7 @@ export function ProductsCatalogPanel({ canManageCashback = false }: { canManageC
             <form className="grid gap-4" key={`${editingProduct.id}-${editingProduct.updatedAt}`} onSubmit={handleUpdate}>
               <ProductFormFields
                 canManageCashback={canManageCashback}
+                canManageShipping={canManageShipping}
                 categoryListId="edit-product-categories"
                 categoryOptions={categoryOptions}
                 imagePickerRef={editImagePickerRef}

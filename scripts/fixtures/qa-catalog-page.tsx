@@ -4,7 +4,7 @@ import { ProductsCatalogPanel } from "../../src/components/admin/products-catalo
 
 createRoot(document.getElementById("root")!).render(
   <main className="min-h-screen bg-surface-subtle p-4 sm:p-8">
-    <ProductsCatalogPanel canManageCashback />
+    <ProductsCatalogPanel canManageCashback canManageShipping />
     <Toaster />
   </main>,
 );

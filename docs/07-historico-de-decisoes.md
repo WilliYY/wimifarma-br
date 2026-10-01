@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-01 - Referências logísticas no cadastro assistido
+
+- A pesquisa multissetor passa a procurar peso bruto e dimensões da apresentação exata, com evidência por fonte e conversão determinística de unidades; fotos, conteúdo líquido, dosagem e caixa master não são medidas de frete.
+- ADMIN pode copiar referências para campos vazios e salvar rascunho em `Product.shippingProfile`, sem migration. Aprovação continua no módulo de fretes; alteração de medidas ou identidade exige nova revisão e nunca libera medicamentos automaticamente.
+- UI preserva campos manuais e descarta valores copiados quando muda a identidade. APIs impedem aprovação de frete pelo cadastro e gravação de medidas por colaborador. Detalhes, validação e limites em `29-cadastro-logistica-ia.md`.
+
 ## 2026-10-01 - Ativação pública do Mercado Pago
 
 - Conexão de produção verificada e salva desativada antes de uma segunda gravação para liberar Pix/cartão no checkout, conforme autorização do lojista. Webhook produtivo cadastrado exclusivamente para o evento Order (Mercado Pago).

@@ -9,7 +9,7 @@ export default async function Page() {
       allowedRoles={adminRoutePermissions["/admin/catalogos"]}
       title="Produtos / Catálogo"
     >
-      <ProductsCatalogPanel canManageCashback={role === "ADMIN"} />
+      <ProductsCatalogPanel canManageCashback={role === "ADMIN"} canManageShipping={role === "ADMIN"} />
     </AdminShell>
   );
 }

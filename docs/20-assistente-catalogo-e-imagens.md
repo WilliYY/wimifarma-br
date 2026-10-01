@@ -44,6 +44,10 @@ Artes nao sao geradas em segundo plano. A foto vai para a conta Gemini configura
 - Arte editorial real gerada em 9,3 s, 1024x1024, WebP de 29.286 bytes. Inspecao visual manteve a embalagem e marca; geracao pode alterar detalhes pequenos, por isso a conferencia humana continua necessaria. Tempos medidos em uma amostra, sem garantia de latencia.
 - Lint, TypeScript e build Next passaram. `prisma:validate` passou; `npm.cmd audit --audit-level=moderate` retornou zero vulnerabilidades. Sem migration, mudanca de dependencias ou registros de teste na loja.
 
+## Peso e medidas para frete
+
+A evolução de 01/10 adiciona pesquisa logística à mesma consulta de nome/EAN, referências por medida e campos de embalagem no cadastro. A IA não mede a foto nem estima dados ausentes; somente ADMIN salva rascunhos e a aprovação permanece em Fretes e entregas. Contrato e casos por categoria: [29-cadastro-logistica-ia.md](29-cadastro-logistica-ia.md).
+
 ## Arquivos principais
 
 - `src/features/products/ai-suggestions.ts`, `product-types.ts` e testes: classificacao, pesquisa e criterios por tipo.

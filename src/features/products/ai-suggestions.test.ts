@@ -9,6 +9,22 @@ import {
   suggestProductData,
 } from "./ai-suggestions";
 
+test("shipping references follow sourced identity and reject a different diaper size or EAN", async () => {
+  const evidence = "Peso bruto do pacote: 0,8 kg com embalagem comercial.";
+  const answer = { name: "Fralda Sintética M 40 unidades", brand: "Sintética", ean: "7891000248768", productType: "hygiene", identityMatch: "exact", evidenceSourceIndexes: [0], activeIngredients: [], category: "Fraldas", confidence: "medium", description: null, searchTerms: [], warnings: [], shipping: { identityMatch: "exact", packageLevel: "retail_unit", weight: { value: 0.8, unit: "kg", kind: "gross", sourceIndex: 0, evidence }, dimensions: null, warnings: [] } };
+  const input = productSuggestionRequestSchema.parse({ name: answer.name, brand: answer.brand, ean: answer.ean });
+  const options = () => ({ apiKey: "synthetic", model: "gemini-test", fetchImplementation: structuredFetch(answer, "https://example.com/fralda", evidence) });
+  const exact = await suggestProductData(input, options());
+  assert.equal(exact.shipping?.weightGrams, 800);
+  assert.equal(exact.shipping?.widthCm, null);
+  const sizeConflict = await suggestProductData({ ...input, name: "Fralda Sintética G 40 unidades" }, options());
+  assert.equal(sizeConflict.shipping?.weightGrams, null);
+  const eanConflict = await suggestProductData({ ...input, ean: "4005808808281" }, options());
+  assert.equal(eanConflict.shipping, null);
+  const noEvidence = await suggestProductData(input, { ...options(), fetchImplementation: structuredFetch(answer, "https://example.com/fralda") });
+  assert.equal(noEvidence.shipping?.weightGrams, null);
+});
+
 test("pesquisa alimentos e perfumaria sem exigir criterios exclusivos de medicamentos", () => {
   const input = productSuggestionRequestSchema.parse({ name: "Kit Kat - Chocolate", ean: "7891000248768", knownCategories: ["Medicamentos"] });
   const research = buildProductResearchPrompt(input);
@@ -19,10 +35,10 @@ test("pesquisa alimentos e perfumaria sem exigir criterios exclusivos de medicam
   assert.match(structure, /registro.*medicamento.*alimento/i);
 });
 
-function structuredFetch(suggestion: Record<string, unknown>, source: string) {
+function structuredFetch(suggestion: Record<string, unknown>, source: string, research = "Fonte confirma o produto e sua apresentacao.") {
   let count = 0;
   return (async () => new Response(JSON.stringify(++count === 1 ? {
-    candidates: [{ content: { parts: [{ text: "Fonte confirma o produto e sua apresentacao." }] }, groundingMetadata: { groundingChunks: [{ web: { title: new URL(source).hostname, uri: source } }] } }],
+    candidates: [{ content: { parts: [{ text: research }] }, groundingMetadata: { groundingChunks: [{ web: { title: new URL(source).hostname, uri: source } }] } }],
   } : { candidates: [{ content: { parts: [{ text: JSON.stringify(suggestion) }] } }] }))) as typeof fetch;
 }
 

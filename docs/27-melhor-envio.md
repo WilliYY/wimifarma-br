@@ -21,6 +21,8 @@ O novo módulo começa desativado. Nenhum produto ganha medidas ou permissão de
 
 ## Contratos e segurança
 
+- Desde 01/10, peso e dimensões podem ser pesquisados/salvos como rascunho no cadastro de produtos, com fontes e revisão obrigatória. `shippingProfile` em rascunho nunca passa pela validação da cotação. Alterar a identidade ou medidas invalida a liberação anterior. Contrato: `29-cadastro-logistica-ia.md`.
+
 - `ShippingIntegration`: configuração, revisão otimista e credenciais AES-256-GCM com o cofre existente. API pública/admin nunca devolve segredos. `AUTH_SECRET` assina cotações e `SECRET_VAULT_KEY` protege credenciais; não trocar essas chaves sem planejamento.
 - `Product.shippingProfile`: liberação explícita, peso/medidas e confirmação de revisão de transporte. Só ADMIN altera pelo módulo de frete; usuários comuns, STAFF e MANAGER não administram conexão nem embalagens.
 - `Order.shippingQuote`: snapshot da cotação selecionada. O servidor acrescenta frete ao total; cashback continua incidindo sobre os produtos e não desconta frete.

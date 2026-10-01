@@ -8,11 +8,14 @@ import { getPrisma } from "@/lib/prisma";
 import { lockProductCatalog, ProductMutationError, resolveFeaturedPosition } from "@/features/products/mutations";
 import { productTrashMutationSchema } from "@/features/products/trash-policy";
 import { moveProductToTrash } from "@/features/products/trash-service";
+import { productIdentityKey } from "@/features/products/identity";
+import { invalidateShippingProfile } from "@/features/shipping/product-draft";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const productSelect = {
+  shippingProfile: true,
   cashbackEnabled: true,
   cashbackRateBps: true,
   activeIngredients: true,
@@ -83,6 +86,9 @@ export async function PATCH(
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 });
   }
 
+  if (parsed.data.shippingProfile !== undefined && guard.session?.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Somente o administrador pode configurar a embalagem de frete." }, { status: 403 });
+  }
   const prisma = getPrisma();
   if ((parsed.data.cashbackEnabled !== undefined || parsed.data.cashbackRateBps !== undefined) && guard.session?.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Somente o administrador pode configurar cashback." }, { status: 403 });
@@ -107,6 +113,7 @@ export async function PATCH(
 
   const { expectedUpdatedAt } = parsed.data;
   const productData = {
+    shippingProfile: parsed.data.shippingProfile,
     cashbackEnabled: parsed.data.requiresPrescription || parsed.data.isPopularPharmacy ? false : parsed.data.cashbackEnabled,
     cashbackRateBps: parsed.data.cashbackRateBps,
     activeIngredients: parsed.data.activeIngredients,
@@ -131,13 +138,16 @@ export async function PATCH(
     const product = await prisma.$transaction(async (transaction) => {
       await lockProductCatalog(transaction);
       if (imageAsset && !await transaction.productImage.findUnique({ where: { id: imageAsset.id }, select: { id: true } })) throw new ProductMutationError("A foto foi removida da biblioteca. Selecione outra foto.", 409);
-      const current = await transaction.product.findUnique({ where: { id, deletedAt: null }, select: { imageUrl: true, featuredPosition: true } });
+      const current = await transaction.product.findUnique({ where: { id, deletedAt: null }, select: { imageUrl: true, featuredPosition: true, name: true, brand: true, ean: true, shippingProfile: true } });
       if (!current) return null;
+      const identityChanged = productIdentityKey({ name: current.name, brand: current.brand ?? "", ean: current.ean ?? "" }) !== productIdentityKey({ name: productData.name, brand: productData.brand ?? "", ean: productData.ean ?? "" });
+      const shippingProfile = productData.shippingProfile ?? (identityChanged ? invalidateShippingProfile(current.shippingProfile) : undefined);
       const imageUrl = imageAsset?.url ?? (clearImage ? null : normalizedImageUrl ?? current.imageUrl);
       const featuredPosition = await resolveFeaturedPosition(transaction, { featured: parsed.data.featured, currentPosition: current.featuredPosition, status: productData.status, imageUrl });
       const updated = await transaction.product.updateMany({
         data: {
           ...productData,
+          shippingProfile,
           brand: normalizeOptional(productData.brand) ?? null,
           category: normalizeOptional(productData.category) ?? null,
           description: normalizeOptional(productData.description) ?? null,
@@ -173,6 +183,7 @@ export async function PATCH(
           entity: "Product",
           entityId: savedProduct.id,
           metadata: {
+            shippingDraftUpdated: shippingProfile !== undefined,
             cashbackEnabled: savedProduct.cashbackEnabled,
             cashbackRateBps: savedProduct.cashbackRateBps,
             hasImage: Boolean(savedProduct.imageUrl),

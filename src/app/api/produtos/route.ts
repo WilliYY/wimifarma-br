@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const productSelect = {
+  shippingProfile: true,
   cashbackEnabled: true,
   cashbackRateBps: true,
   activeIngredients: true,
@@ -111,6 +112,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 });
   }
 
+  if (parsed.data.shippingProfile !== undefined && guard.session?.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Somente o administrador pode configurar a embalagem de frete." }, { status: 403 });
+  }
   const prisma = getPrisma();
   const slug = await uniqueSlug(parsed.data.slug ?? parsed.data.name);
   if ((parsed.data.cashbackEnabled !== undefined || parsed.data.cashbackRateBps !== undefined) && guard.session?.user.role !== "ADMIN") {
@@ -164,6 +168,7 @@ export async function POST(request: Request) {
           entity: "Product",
           entityId: product.id,
           metadata: {
+            shippingDraftUpdated: parsed.data.shippingProfile !== undefined,
             cashbackEnabled: product.cashbackEnabled,
             cashbackRateBps: product.cashbackRateBps,
             hasImage: Boolean(product.imageUrl),

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { isValidGtin } from "./identity";
 import { productTypes, type ProductType } from "./product-types";
+import { qualifyShippingReference, rawShippingReferenceSchema, sameShippingVariant, shippingReferenceJsonSchema, shippingResearchInstructions, type ShippingReference } from "@/features/shipping/product-reference";
 
 const uniqueStrings = (values: string[]) => {
   const seen = new Set<string>();
@@ -60,6 +61,7 @@ export const productSuggestionRequestSchema = z.object({
 }).refine(input => input.name.length >= 3 || isValidGtin(input.ean), { message: "Informe nome ou EAN valido.", path: ["name"] });
 
 export const productSuggestionSchema = z.object({
+  shipping: rawShippingReferenceSchema.nullable().catch(null).default(null),
   productType: z.enum(productTypes).default("unknown"),
   name: nullableSuggestionText(3, 160).default(null),
   brand: nullableSuggestionText(2, 120).default(null),
@@ -75,7 +77,8 @@ export const productSuggestionSchema = z.object({
 });
 
 export type ProductSuggestionRequest = z.infer<typeof productSuggestionRequestSchema>;
-export type ProductSuggestion = z.infer<typeof productSuggestionSchema>;
+type RawProductSuggestion = z.infer<typeof productSuggestionSchema>;
+export type ProductSuggestion = Omit<RawProductSuggestion, "shipping"> & { shipping: ShippingReference | null };
 
 export type ProductSuggestionSource = {
   title: string;
@@ -101,6 +104,7 @@ type SuggestProductDataOptions = {
 
 const productSuggestionJsonSchema = {
   properties: {
+    shipping: shippingReferenceJsonSchema,
     productType: { type: "string", enum: productTypes, description: "Tipo comercial identificado, sem inferir receita ou regras de venda." },
     name: { type: "string", nullable: true, description: "Nome comercial, concentracao, forma e quantidade da apresentacao exata; null se incerto." },
     brand: { type: "string", nullable: true, description: "Marca real confirmada, nunca o nome da categoria." },
@@ -146,6 +150,7 @@ const productSuggestionJsonSchema = {
     },
   },
   required: [
+    "shipping",
     "name", "brand", "ean", "productType", "identityMatch", "evidenceSourceIndexes",
     "activeIngredients",
     "category",
@@ -177,6 +182,7 @@ export function buildProductResearchPrompt(input: ProductSuggestionRequest) {
     "Nao recomende dose, posologia, substituicao, diagnostico ou tratamento. Nao conclua se exige receita ou participa da Farmacia Popular.",
     "Se o nome identificar mais de um produto, versao ou composicao, marque a ambiguidade nas notas em vez de escolher por conta propria.",
     "Responda com notas factuais organizadas em identificacao, apresentacao, composicao, finalidade oficial, divergencias e fatos nao confirmados.",
+    shippingResearchInstructions,
     "--- DADOS DO CATALOGO ---",
     JSON.stringify(input),
     "--- FIM DOS DADOS ---",
@@ -205,6 +211,7 @@ export function buildProductStructuringPrompt(
     "Nao inclua nomes de concorrentes, erros ortograficos artificiais, alegacoes promocionais ou termos sem suporte nas fontes.",
     "Escolha uma categoria principal especifica: por exemplo Chocolates, Balas e gomas, Biscoitos e snacks, Higiene bucal, Desodorantes, Fraldas, Cuidados com os cabelos, Protecao solar, Dermocosmeticos, Nutricao infantil. Prefira uma categoria existente equivalente, sem forcar produto diferente nela. Categorias nao limitam o catalogo.",
     "Considere apenas evidencias vinculadas as URLs fornecidas; qualquer afirmacao sem apoio deve ficar de fora ou virar warning.",
+    "Em shipping, estruture somente os dados LOGISTICOS explicitos nas notas. Cada peso/dimensao exige sourceIndex das FONTES FORNECIDAS e evidence copiado literalmente das notas, contendo valores e unidades. Nao confundir peso liquido, volume, dosagem, faixa de peso do bebe ou caixa master com peso bruto da unidade vendida. Dimensoes incompletas, eixos desconhecidos, divergencias ou ausencia de fonte: null com aviso. Nao estimar. A embalagem de transporte adicional da farmacia nao pode ser adivinhada.",
     "--- DADOS INFORMADOS ---",
     JSON.stringify(input),
     "--- FIM DOS DADOS ---",
@@ -316,9 +323,18 @@ export function presentationNumbers(name: string) {
 
 function qualifySuggestion(
   input: ProductSuggestionRequest,
-  suggestion: ProductSuggestion,
+  rawSuggestion: RawProductSuggestion,
   sources: ProductSuggestionSource[],
+  research: string,
 ) {
+  let suggestion: ProductSuggestion = { ...rawSuggestion, shipping: qualifyShippingReference(rawSuggestion.shipping, {
+    name: rawSuggestion.name ?? input.name, sources, research,
+    exactIdentity: rawSuggestion.identityMatch === "exact" && Boolean(rawSuggestion.name)
+      && sameShippingVariant(input.name, rawSuggestion.name ?? "")
+      && (!input.brand || normalizedSourceText(input.brand).replace(/ /g, "") === normalizedSourceText(rawSuggestion.brand ?? "").replace(/ /g, ""))
+      && rawSuggestion.evidenceSourceIndexes.some(index => Boolean(sources[index]))
+      && (!input.ean || input.ean === rawSuggestion.ean),
+  }) };
   const sourceGuidance = suggestion.productType === "medicine"
     ? "Confira o fabricante, a embalagem e a bula."
     : "Confira a marca, o fabricante e a embalagem.";
@@ -328,7 +344,7 @@ function qualifySuggestion(
   if (sources.length === 0) {
     return {
       ...suggestion,
-      name: null, brand: null, ean: null, category: null, description: null, activeIngredients: [], searchTerms: [],
+      name: null, brand: null, ean: null, category: null, description: null, activeIngredients: [], searchTerms: [], shipping: null,
       confidence: "low" as const,
       sources,
       warnings: uniqueStrings([
@@ -343,7 +359,7 @@ function qualifySuggestion(
   const foundNumbers = presentationNumbers(suggestion.name ?? "");
   const presentationConflict = Boolean(suggestion.name && requestedNumbers.some(number => !foundNumbers.includes(number)));
   if (suggestion.identityMatch === "conflict" || eanConflict || presentationConflict) {
-    return { ...suggestion, name: null, brand: null, ean: null, category: null, description: null, activeIngredients: [], searchTerms: [], confidence: "low" as const, sources,
+    return { ...suggestion, name: null, brand: null, ean: null, category: null, description: null, activeIngredients: [], searchTerms: [], shipping: null, confidence: "low" as const, sources,
       warnings: uniqueStrings(["Dados divergentes: confira nome, EAN, versao e quantidade na embalagem antes de preencher.", ...suggestion.warnings]) };
   }
   const brand = input.brand || suggestion.brand || "";
@@ -409,7 +425,7 @@ export async function suggestProductData(
     {
       contents: [{ parts: [{ text: buildProductResearchPrompt(input) }], role: "user" }],
       generationConfig: {
-        maxOutputTokens: 2_600,
+        maxOutputTokens: 3_500,
         temperature: 0.1,
         ...thinkingConfigForModel(options.model, 1_024),
       },
@@ -425,7 +441,7 @@ export async function suggestProductData(
     {
       contents: [{ parts: [{ text: buildProductStructuringPrompt(input, research, sources) }], role: "user" }],
       generationConfig: {
-        maxOutputTokens: 3_072,
+        maxOutputTokens: 4_096,
         responseMimeType: "application/json",
         responseSchema: productSuggestionJsonSchema,
         temperature: 0,
@@ -440,5 +456,5 @@ export async function suggestProductData(
     options,
   );
   const suggestion = parseProductSuggestion(geminiText(structuredPayload));
-  return qualifySuggestion(input, suggestion, sources);
+  return qualifySuggestion(input, suggestion, sources, research);
 }
