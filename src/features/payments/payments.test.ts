@@ -39,10 +39,13 @@ test("reconciliation rejects another merchant, another reference, another paymen
 });
 test("webhook HMAC rejects unsigned, altered resource, replay and cross-request signatures", () => {
   const secret = "synthetic-webhook-secret", now = 1_790_683_200_000;
-  const ts = String(now); const digest = createHmac("sha256", secret).update(`id:ordsynthetic1;request-id:synthetic-request;ts:${ts};`).digest("hex");
+  const ts = String(now); const digest = createHmac("sha256", secret).update(`id:ORDSYNTHETIC1;request-id:synthetic-request;ts:${ts};`).digest("hex");
   const request = (id = "ORDSYNTHETIC1", requestId = "synthetic-request", signature = `ts=${ts},v1=${digest}`) => new Request(`https://example.com/webhook?data.id=${id}`, { headers: { "x-request-id": requestId, "x-signature": signature } });
   assert.equal(validWebhookSignature(request(), secret, now), true);
   assert.equal(validWebhookSignature(request("ORDOTHER"), secret, now), false);
+  assert.equal(validWebhookSignature(request("ordsynthetic1"), secret, now), false);
+  const lowercaseDigest = createHmac("sha256", secret).update(`id:ordsynthetic1;request-id:synthetic-request;ts:${ts};`).digest("hex");
+  assert.equal(validWebhookSignature(request("ordsynthetic1", undefined, `ts=${ts},v1=${lowercaseDigest}`), secret, now), true);
   assert.equal(validWebhookSignature(request(undefined, "other"), secret, now), false);
   assert.equal(validWebhookSignature(request(undefined, undefined, ""), secret, now), false);
   assert.equal(validWebhookSignature(request(), secret, now + 11 * 60_000), false);

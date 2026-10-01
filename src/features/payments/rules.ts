@@ -41,7 +41,8 @@ export function webhookSignatureFailure(request: Request, secret: string, now = 
   if (!ts || !digest) return "invalid_signature_format";
   const millis = ts.length <= 10 ? Number(ts) * 1000 : Number(ts);
   if (!Number.isFinite(millis) || Math.abs(now - millis) > 10 * 60_000) return "expired_signature";
-  const expected = createHmac("sha256", secret).update(`id:${id.toLowerCase()};request-id:${requestId};ts:${ts};`).digest();
+  // Preserve the signed resource exactly as the official Orders SDK does.
+  const expected = createHmac("sha256", secret).update(`id:${id};request-id:${requestId};ts:${ts};`).digest();
   return timingSafeEqual(expected, Buffer.from(digest, "hex")) ? null : "signature_mismatch";
 }
 export function validWebhookSignature(request: Request, secret: string, now = Date.now()) {

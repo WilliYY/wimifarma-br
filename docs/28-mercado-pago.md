@@ -63,7 +63,13 @@ Homologação no navegador em 30/09: cartão oficial `APRO` aprovado, resultado 
 
 Em 01/10, a versão `4a8567b` foi publicada e o health confirmado. O simulador oficial retornou 401 mesmo após reconferir a assinatura de teste. Rejeições passam a registrar somente um código fixo de motivo (`PAYMENT_WEBHOOK_REJECTED`), sem URL, cabeçalhos, assinatura, corpo ou credenciais. Isso permite distinguir ausência/formato, expiração e divergência do HMAC sem enfraquecer a validação; resposta externa continua genérica.
 
+Diagnóstico concluído em 01/10: o simulador assina `data.id` preservando maiúsculas/minúsculas. Enviar o mesmo ID em minúsculas retornou 200 e conciliou a recusa consultando a ordem canônica (o corpo fictício do simulador dizia aprovado e foi corretamente ignorado). O SDK Node oficial, revisão `99857f33aaa037bea3423a9a9cb8c092d5c7f229`, também preserva o valor no manifesto HMAC. Removida a conversão indevida para minúsculas; a consulta subsequente à Orders normaliza o ID somente depois de validar a assinatura. Testes cobrem assinaturas válidas nos dois formatos e rejeitam alteração de caixa após assinatura.
+
+Pix de homologação gerado pelo gateway, QR Code/copia e cola exibidos e preservados no recarregamento. Não houve transferência real nem confirmação artificial de pagamento. Credenciais de produção ativadas no portal em 01/10, com aceite explícito do titular; conexão da loja ainda em teste enquanto a homologação termina.
+
 ## Referências oficiais
+
+- https://github.com/mercadopago/sdk-nodejs/blob/99857f33aaa037bea3423a9a9cb8c092d5c7f229/src/utils/webhook/index.ts
 
 - https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-api/create-order/post
 

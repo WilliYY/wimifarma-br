@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-01 - Assinatura Orders e homologação do checkout
+
+- Preservar o `data.id` recebido no manifesto HMAC, conforme SDK oficial Node e ensaio no simulador, em vez de converter para minúsculas. Somente após autenticação normalizar o ID na consulta canônica.
+- Rejeições registram apenas códigos fixos de diagnóstico, sem dados privados. Cartão aprovado, recusa consultada via webhook e geração/persistência de Pix verificados com conta de teste; nenhuma transferência real.
+- Ativação de credenciais produtivas autorizada explicitamente pelo titular no portal; liberação pública da loja permanece dependente da conclusão da homologação. Evidências e limites em `28-mercado-pago.md`.
+
 ## 2026-09-30 - Pagamento no checkout com Mercado Pago / Orders
 
 - Escolha explícita do lojista: cobrar na finalização via Pix/cartão usando Bricks. Gateway inicia desativado e exige homologação separada; não muda o atendimento de itens restritos.
