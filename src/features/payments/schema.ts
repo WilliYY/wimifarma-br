@@ -26,7 +26,7 @@ export const providerOrderSchema = z.object({
   id: z.string().regex(/^ORD[A-Z0-9]+$/i), type: z.literal("online"),
   external_reference: z.string(), total_amount: money,
   country_code: z.literal("BRA"), user_id: z.union([z.string(), z.number()]).transform(String),
-  currency_id: z.literal("BRL").optional(),
+  currency: z.literal("BRL").optional(), currency_id: z.literal("BRL").optional(),
   status: z.string(), status_detail: z.string().optional(),
   last_updated_date: z.string().datetime({ offset: true }),
   transactions: z.object({ payments: z.array(z.object({

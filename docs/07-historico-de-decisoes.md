@@ -10,6 +10,8 @@
 - Homologação no navegador identificou requisições prévias do Secure Fields: permitir os hosts oficiais `secure-fields.mercadopago.com` e `api-static.mercadopago.com` em conexão/iframe somente na página de pagamento. Sem curingas ou alteração da política das demais rotas; regressão automatizada e credenciais de teste verificadas pelo gateway.
 
 
+- Ensaio de cartão aprovado confirmou conciliação e persistência sem estoque/cobrança reais. Para cartão recusado, HTTP 402 da Orders contém a ordem criada em `data`; validar esse envelope e moeda BRL antes da conciliação, mantendo os vínculos do pedido e a mesma chave de idempotência. Erros sem ordem válida continuam incertos.
+
 ## 2026-09-28 - Cotação Melhor Envio com ativação controlada
 
 - Origem confirmada pelo lojista: farmácia na Av. Minas Gerais, 2263, Ivaté/PR, CEP 87525-000. Loja e integração separadas de outras atividades da conta.

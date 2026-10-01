@@ -33,6 +33,8 @@ test("reconciliation rejects another merchant, another reference, another paymen
   assert.doesNotThrow(() => assertPaymentBinding(remote(), expected));
   for (const changed of [{ accountId: "other" }, { id: "other" }, { amountCents: 1233 }, { providerOrderId: "ORDOTHER" }]) assert.throws(() => assertPaymentBinding(remote(), { ...expected, ...changed }));
   assert.equal(providerOrderSchema.safeParse({ ...remote(), currency_id: "USD" }).success, false);
+  assert.equal(providerOrderSchema.safeParse({ ...remote(), currency: "USD" }).success, false);
+  assert.equal(providerOrderSchema.safeParse({ ...remote(), currency: "BRL" }).success, true);
   assert.equal(providerOrderSchema.safeParse({ ...remote(), transactions: { payments: [] } }).success, false);
 });
 test("webhook HMAC rejects unsigned, altered resource, replay and cross-request signatures", () => {
@@ -61,6 +63,40 @@ test("provider uses fixed HTTPS origin, no redirects, one idempotency key and sa
   assert.equal(calls.length, 1); assert.equal(calls[0].url, "https://api.mercadopago.com/v1/orders");
   assert.equal(calls[0].options?.redirect, "error"); assert.equal(new Headers(calls[0].options?.headers).get("X-Idempotency-Key"), "same-key");
   await assert.rejects(mercadoPagoRequest("https://attacker.example", "synthetic-private-token")); assert.equal(calls.length, 1);
+});
+test("Orders 402 unwraps a canonical declined order and retains all reconciliation bindings", async context => {
+  const declined = { ...remote("failed", "cc_rejected_other_reason"), currency: "BRL" };
+  let calls = 0;
+  context.mock.method(globalThis, "fetch", async () => {
+    calls += 1;
+    return Response.json({ errors: [{ code: "failed", message: "upstream-private-message" }], data: declined }, { status: 402 });
+  });
+  const order = providerOrderSchema.parse(await mercadoPagoRequest("/v1/orders", "synthetic-token", { safe: true }, "same-key"));
+  assert.equal(calls, 1);
+  assert.equal(providerState(order), "FAILED");
+  const expected = { id: "local-synthetic", providerOrderId: null, amountCents: 1234, accountId: "123" };
+  assert.doesNotThrow(() => assertPaymentBinding(order, expected));
+  for (const changed of [{ accountId: "other" }, { id: "other" }, { amountCents: 1233 }, { providerOrderId: "ORDOTHER" }]) {
+    assert.throws(() => assertPaymentBinding(order, { ...expected, ...changed }));
+  }
+  assert.doesNotMatch(JSON.stringify(order), /upstream-private-message/);
+});
+test("invalid or unrelated error responses stay uncertain instead of confirming failure", async context => {
+  let status = 402;
+  let payload: unknown = { errors: [{ code: "failed", message: "upstream-private-message" }] };
+  context.mock.method(globalThis, "fetch", async () => Response.json(payload, { status }));
+  const rejected = (path = "/v1/orders", body: unknown = {}) => assert.rejects(
+    mercadoPagoRequest(path, "synthetic-token", body, "same-key"),
+    (error: Error) => /Consulte o status/.test(error.message) && !/upstream-private-message/.test(error.message),
+  );
+  await rejected();
+  payload = { data: { ...remote("failed"), currency: "USD" } }; await rejected();
+  payload = { data: { ...remote("failed"), transactions: { payments: [] } } }; await rejected();
+  payload = { data: remote("failed") };
+  await rejected("/v1/orders/ORDSYNTHETIC1");
+  await assert.rejects(mercadoPagoRequest("/v1/orders", "synthetic-token"), /Consulte o status/);
+  status = 400; await rejected();
+  status = 503; await rejected();
 });
 test("mutations enforce origin, content type, bounded body and JSON validity", async () => {
   const old = process.env.AUTH_URL; process.env.AUTH_URL = "https://example.com";
