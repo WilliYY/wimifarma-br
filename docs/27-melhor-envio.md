@@ -52,6 +52,8 @@ OAuth da aplicação Wimifarma concluído com os três escopos previstos. Seleci
 
 Cotações públicas continuam desativadas e produtos sem liberação automática. Nenhuma etiqueta ou cobrança foi criada. Pendentes: medidas reais, elegibilidade da carga e preparação fiscal.
 
+Revisão em 01/10/2026: conexão de produção preservada e cotação pública ainda desativada. Solicitados ao lojista peso e dimensões da embalagem pronta do KitKat e do Dove, além de confirmação sobre NF-e e local de postagem. A agência selecionada anteriormente é uma referência da configuração, não comprovação de que a operação já está pronta. Mercado Pago foi ativado separadamente; isso não libera frete nacional, compra de etiquetas ou emissão fiscal. Ao liberar futuramente, conferir a embalagem real, testar a cotação e manter etiqueta/postagem sob operação humana.
+
 ## Referências oficiais
 
 - https://docs.melhorenvio.com.br/reference/introducao-api-melhor-envio

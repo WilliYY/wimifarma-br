@@ -41,10 +41,10 @@
 
 ## Pendencias Altas
 
-### Homologar pagamento online e regras comerciais do checkout
+### Acompanhar pagamento online e regras comerciais do checkout
 
-- Mercado Pago / Orders e Bricks escolhido: Pix/cartão no checkout, reserva atômica e conciliação autenticada. Concluir testes no provedor, credenciais/webhook de produção e ativação controlada; documentação em `28-mercado-pago.md`.
-- Até a homologação, cobrança pública desativada; testes somente ADMIN e dados fictícios. Fiscal, restrições logísticas e reembolso parcial exigem conferência operacional.
+- Mercado Pago / Orders e Bricks ativado em produção em 01/10/2026 após cartão aprovado/recusado, Pix e webhook verificados em teste. Credenciais produtivas verificadas pelo provedor e opção online disponível no checkout público; documentação em `28-mercado-pago.md`.
+- Não foi realizada cobrança monetária real nesta configuração. Acompanhar as primeiras vendas e conciliação no painel. Fiscal, restrições logísticas e reembolso parcial exigem conferência operacional; frete nacional continua pendente.
 - Itens com receita e Farmacia Popular permanecem bloqueados no checkout ate existir fluxo juridico e farmaceutico aprovado.
 - Revisar a Politica de Privacidade com responsavel juridico e completar razao social, CNPJ, encarregado/canal LGPD e prazos formais de retencao.
 

@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-01 - Ativação pública do Mercado Pago
+
+- Conexão de produção verificada e salva desativada antes de uma segunda gravação para liberar Pix/cartão no checkout, conforme autorização do lojista. Webhook produtivo cadastrado exclusivamente para o evento Order (Mercado Pago).
+- Aprovação e recusa de cartão, criação/persistência/expiração de Pix e notificação assinada verificados com o provedor em teste. Concorrência e recuperação de falha de rede cobertas pelo ensaio isolado; nenhuma cobrança real nem reserva de estoque nos cinco pedidos de homologação.
+- Disponibilidade de pagamento online confirmada para visitantes sem sessão e no checkout visual. Credenciais cifradas no servidor, sem segredos versionados. Operação e limites em `28-mercado-pago.md`.
+- Frete nacional permanece desativado apesar do OAuth Melhor Envio conectado: faltam dados físicos reais das embalagens e confirmação operacional/fiscal. Não liberar produtos com estimativas inventadas.
+
 ## 2026-10-01 - Assinatura Orders e homologação do checkout
 
 - Preservar o `data.id` recebido no manifesto HMAC, conforme SDK oficial Node e ensaio no simulador, em vez de converter para minúsculas. Somente após autenticação normalizar o ID na consulta canônica.

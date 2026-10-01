@@ -1,5 +1,20 @@
 # 28 - Mercado Pago: checkout e homologação
 
+## Estado atual — 01/10/2026
+
+**Produção conectada e pagamentos públicos ativados**, conforme autorização do lojista, após os ensaios descritos abaixo. A conexão foi salva inicialmente desativada, validada pelo servidor no Mercado Pago e ativada em uma segunda gravação. O webhook de produção está cadastrado para **Order (Mercado Pago)**. O checkout público retorna a opção online também sem sessão; o formulário foi conferido no navegador sem enviar uma compra real.
+
+O Melhor Envio está conectado, mas a cotação nacional permanece desligada até cadastrar medidas/peso reais das embalagens e confirmar elegibilidade, preparação fiscal e postagem. Essa pendência não impede pagamento de pedidos elegíveis para retirada ou entrega local. Nenhuma cobrança real, etiqueta ou nota fiscal foi emitida nos testes.
+
+## Rotina da loja
+
+1. O cliente monta o carrinho, informa contato, escolhe retirada/entrega disponível e **Pix ou cartão online**. Após revisar, segue para o formulário seguro; Pix mostra QR Code/copia e cola, cartão é processado pelo Mercado Pago em uma parcela.
+2. Em `/admin/pedidos`, conferir o estado financeiro confirmado pelo gateway antes de preparar o pedido. Pedido enviado, Pix gerado e comprovante apresentado pelo cliente não equivalem a pagamento aprovado.
+3. Com pagamento aprovado, separar os produtos e atualizar a preparação, entrega/retirada e conclusão no painel. Cashback somente após pedido concluído e pago, conforme contratos existentes.
+4. O recebimento, disponibilidade do saldo, taxas e reembolsos são acompanhados na conta Mercado Pago. A liberação de saldo segue as condições dessa conta; o site não define o prazo nem movimenta o saldo.
+5. Para estornar, usar o painel do Mercado Pago e aguardar a conciliação do pedido. Reembolso parcial exige revisão humana. Não editar o banco nem aprovar manualmente um pagamento online.
+6. Para interromper novas cobranças, desmarcar a liberação em `/admin/pagamentos`, mantendo credenciais e webhook para os pedidos já existentes.
+
 ## Decisão e escopo
 
 O lojista escolheu Checkout Transparente / Bricks e pagamento na finalização do checkout, antes da confirmação operacional da farmácia (29/09/2026). A integração usa a API Orders e Card Payment Brick oficial, com Pix dinâmico e cartão em uma parcela. O gateway inicia desativado; configuração de teste aparece somente para ADMIN. A publicação do código não comprova homologação nem habilita cobrança real.
@@ -66,6 +81,10 @@ Em 01/10, a versão `4a8567b` foi publicada e o health confirmado. O simulador o
 Diagnóstico concluído em 01/10: o simulador assina `data.id` preservando maiúsculas/minúsculas. Enviar o mesmo ID em minúsculas retornou 200 e conciliou a recusa consultando a ordem canônica (o corpo fictício do simulador dizia aprovado e foi corretamente ignorado). O SDK Node oficial, revisão `99857f33aaa037bea3423a9a9cb8c092d5c7f229`, também preserva o valor no manifesto HMAC. Removida a conversão indevida para minúsculas; a consulta subsequente à Orders normaliza o ID somente depois de validar a assinatura. Testes cobrem assinaturas válidas nos dois formatos e rejeitam alteração de caixa após assinatura.
 
 Pix de homologação gerado pelo gateway, QR Code/copia e cola exibidos e preservados no recarregamento. Não houve transferência real nem confirmação artificial de pagamento. Credenciais de produção ativadas no portal em 01/10, com aceite explícito do titular; conexão da loja ainda em teste enquanto a homologação termina.
+
+Conclusão da homologação em 01/10: com `0221e3c` publicado e saudável, o simulador oficial retornou **200 OK** para ID maiúsculo. Um novo cartão fictício `OTHE` foi recusado diretamente na submissão, com mensagem imediata de pagamento não aprovado e estado `FAILED`, sem depender de correção manual. O Pix de teste expirou e foi conciliado como `CANCELED`. Todos os cinco pedidos de teste ficaram em estados terminais (`PAID`, `FAILED` ou `CANCELED`), sem reserva de estoque e sem requisição cifrada retida. O ensaio de concorrência, idempotência e recuperação de falha de rede foi executado no banco isolado com provedor simulado; não representa interrupção deliberada da rede produtiva.
+
+Em seguida, credenciais e assinatura de produção foram transferidas pelo portal autorizado diretamente ao formulário administrativo, sem registro de segredos em artefatos. O servidor verificou a conta e confirmou a gravação; ativação pública confirmada na revisão 4 da configuração. Consulta anônima de `/checkout` retornou 200 e disponibilidade online habilitada; a opção foi conferida visualmente no checkout. A homologação financeira usou a conta de teste: não houve transação monetária real de aprovação, estorno ou 3DS em produção.
 
 ## Referências oficiais
 

@@ -10,6 +10,8 @@ Criar uma base moderna e evolutiva para site publico, ofertas, catalogo, atendim
 
 O sistema possui carrinho e checkout, entrega local ou retirada e atendimento humano. Mercado Pago / Orders e Bricks permite Pix e cartão na finalização após homologação e ativação; inicia desativado. Dados de cartão ficam nos campos seguros do provedor. Contrato em [docs/28-mercado-pago.md](docs/28-mercado-pago.md).
 
+Estado operacional em 01/10/2026: Mercado Pago conectado e pagamento público ativado após homologação com conta de teste, sem transação monetária real. Melhor Envio conectado, com cotação nacional ainda desligada até cadastrar embalagens reais e concluir a preparação operacional/fiscal. O guia de pagamentos acima descreve a rotina e os limites.
+
 ## Stack
 
 - Next.js 15 com App Router
