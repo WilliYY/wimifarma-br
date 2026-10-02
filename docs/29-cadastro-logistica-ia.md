@@ -49,6 +49,10 @@ Em 02/10, na evolução do preenchimento conjunto: 155 testes gerais e 18 de fre
 
 Checks desta evolução: lint, TypeScript, Prisma validate e revisão dos dois casos de peso/avisos aprovados. Auditoria npm mantém os dois alertas altos preexistentes (`fast-uri` e `brace-expansion`); nenhuma dependência foi alterada. Prévia isolada encerrada após QA.
 
+Publicação desta evolução: commit `0cfe047` enviado ao GitHub e aplicado no VPS. Build Linux/Docker concluiu compilação, lint, tipos e páginas; somente `app` foi recriado, sem migration. Imagem anterior preservada como `wimifarma-br-app:pre-shipping-autofill-414d1a7`. Container saudável e `/api/health` com `ok: true` em 02/10 às 21:35 UTC. O cadastro publicado exibe o novo contrato de preenchimento conjunto.
+
+Conferência no Chrome após publicar: pesquisa real de “Óleo de Banho Dove Glicerinado 240ml”, com marca Dove, terminou com baixa confiança por divergência de EAN nas notas e sem links de fontes retornados pelo provedor. Peso e dimensões permaneceram vazios; não houve aplicação automática dos dados de catálogo. Este resultado comprova o bloqueio de dados insuficientes, não a exatidão de medidas desse produto. O preenchimento com referências utilizáveis foi comprovado pela prévia sintética e pelos testes. Formulário cancelado, sem cadastrar/alterar produto ou comprar frete.
+
 ## Referências
 
 - [Melhor Envio — cotação e unidades da API](https://docs.melhorenvio.com.br/docs/cotacao-de-fretes).
