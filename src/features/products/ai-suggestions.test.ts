@@ -42,6 +42,22 @@ function structuredFetch(suggestion: Record<string, unknown>, source: string, re
   } : { candidates: [{ content: { parts: [{ text: JSON.stringify(suggestion) }] } }] }))) as typeof fetch;
 }
 
+test("catalog research preserves sourced gross weight across product types when dimensions are incomplete", async () => {
+  for (const [name, productType, category] of [
+    ["Medicamento sintético 20 comprimidos", "medicine", "Medicamentos"],
+    ["Perfume sintético 100 ml", "beauty", "Perfumaria"],
+    ["Chocolate sintético 100 g", "food", "Chocolates"],
+    ["Fralda sintética M 40 unidades", "hygiene", "Fraldas"],
+    ["Kit sintético 3 sabonetes", "hygiene", "Higiene"],
+  ]) {
+    const evidence = "Peso do produto embalado: 1.000 g.";
+    const answer = { name, brand: "Sintética", ean: null, productType, identityMatch: "exact", evidenceSourceIndexes: [0], activeIngredients: [], category, confidence: "medium", description: null, searchTerms: [], warnings: [], shipping: { identityMatch: "exact", packageLevel: name.startsWith("Kit") ? "retail_kit" : "retail_unit", weight: { value: 1000, unit: "g", kind: "gross", sourceIndex: 0, evidence }, dimensions: { width: 10, height: null, length: 20, unit: "cm", sourceIndex: 0, evidence: "Comprimento 20 cm e largura 10 cm." }, warnings: [] } };
+    const result = await suggestProductData(productSuggestionRequestSchema.parse({ name, brand: answer.brand }), { apiKey: "synthetic", model: "gemini-test", fetchImplementation: structuredFetch(answer, "https://example.com/ficha", evidence) });
+    assert.equal(result.shipping?.weightGrams, 1000, name);
+    assert.equal(result.shipping?.heightCm, null);
+  }
+});
+
 const chocolate = {
   name: "Chocolate KitKat ao Leite 41.5 g", brand: "KitKat", ean: "7891000248768",
   productType: "food", identityMatch: "exact", evidenceSourceIndexes: [0],

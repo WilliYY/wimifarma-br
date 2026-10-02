@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CashbackProductFields } from "@/components/admin/cashback-product-fields";
-import { ProductShippingFields } from "@/components/admin/product-shipping-fields";
+import { ProductShippingFields, type ProductShippingFieldsHandle } from "@/components/admin/product-shipping-fields";
 import { ProductMarketingTools } from "@/components/admin/product-marketing-tools";
 import { ProductDeleteButton, ProductTrashDialog } from "@/components/admin/product-trash";
 import { CatalogSeoOverview } from "@/components/admin/catalog-seo-overview";
@@ -187,6 +187,7 @@ function ProductFormFields({
   disabled?: boolean;
 }) {
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const shippingFieldsRef = useRef<ProductShippingFieldsHandle>(null);
   const pendingResearch = useRef<AbortController | null>(null);
   const researchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastResearchKey = useRef(product ? productIdentityKey({ name: product.name, brand: product.brand ?? "", ean: product.ean ?? "" }) : "");
@@ -275,6 +276,9 @@ function ProductFormFields({
       field.value = value;
       field.dispatchEvent(new Event("input", { bubbles: true }));
       appliedFields += 1;
+    }
+    if (canManageShipping && data.shipping) {
+      appliedFields += shippingFieldsRef.current?.applySuggestion(data.shipping, productIdentityKey(currentIdentity())) ?? 0;
     }
     refreshSeo();
     return appliedFields;
@@ -491,7 +495,7 @@ function ProductFormFields({
         <Textarea defaultValue={product?.description ?? ""} maxLength={800} name="description" onChange={refreshSeo} placeholder="Apresentacao, quantidade ou observacao importante." />
       </label>
 
-      <ProductShippingFields initialProfile={product?.shippingProfile} identityKey={productIdentityKey(photoIdentity)} suggestion={suggestion?.shipping} researched={Boolean(suggestion)} canEdit={canManageShipping} busy={isSuggesting} onResearch={() => void requestSuggestions(true)} medicine={typeHint === "medicine"} />
+      <ProductShippingFields ref={shippingFieldsRef} initialProfile={product?.shippingProfile} identityKey={productIdentityKey(photoIdentity)} suggestion={suggestion?.shipping} researched={Boolean(suggestion)} canEdit={canManageShipping} busy={isSuggesting} onResearch={() => void requestSuggestions(true)} medicine={typeHint === "medicine"} />
 
       {seo.name && <div className="min-w-0 border-l-2 border-pharma-green pl-3"><p className="text-xs font-semibold text-muted">Previa na busca</p><p className="mt-1 break-words text-sm font-bold text-ink">{seo.name} | Wimifarma</p><p className="mt-1 break-words text-xs leading-5 text-muted">{buildProductMetaDescription(seo)}</p></div>}
 

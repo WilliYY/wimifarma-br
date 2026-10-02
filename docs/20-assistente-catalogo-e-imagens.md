@@ -48,6 +48,8 @@ Artes nao sao geradas em segundo plano. A foto vai para a conta Gemini configura
 
 A evolução de 01/10 adiciona pesquisa logística à mesma consulta de nome/EAN, referências por medida e campos de embalagem no cadastro. A IA não mede a foto nem estima dados ausentes; somente ADMIN salva rascunhos e a aprovação permanece em Fretes e entregas. Contrato e casos por categoria: [29-cadastro-logistica-ia.md](29-cadastro-logistica-ia.md).
 
+Em 02/10, o preenchimento de catálogo/SEO passou a aplicar também as referências logísticas aos campos vazios. Identidade de alta confiança permite aplicação automática; sugestões que exigem revisão dependem de **Aplicar sugestões**. Peso e medidas manuais são preservados mesmo quando o administrador escolhe substituir outros dados do cadastro. A busca cobre qualquer categoria comercial, mas ausência de fonte ou apresentação exata mantém as medidas ausentes.
+
 ## Arquivos principais
 
 - `src/features/products/ai-suggestions.ts`, `product-types.ts` e testes: classificacao, pesquisa e criterios por tipo.

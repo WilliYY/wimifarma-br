@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-02 - Preenchimento logístico junto do catálogo/SEO
+
+- O mesmo caminho que aplica catálogo/descrição/SEO também aplica referências de peso e medidas aos campos vazios, automaticamente com identidade de alta confiança ou após revisão explícita. Valores manuais são preservados e somente ADMIN grava o rascunho.
+- Peso e dimensões são validados de forma independente, preservando fatos úteis quando o outro grupo está incompleto. Formatos brasileiros são reconhecidos com contexto e avisos válidos não se perdem por um aviso malformado. Evidência de peso líquido ou sem embalagem não vira peso bruto.
+- Busca continua multissetor, sem novas chamadas de IA, dependências ou migrations. Ausência de evidência não gera estimativa; aprovação de embalagem e ativação do frete permanecem separadas. Critérios e validação em `29-cadastro-logistica-ia.md`.
+
 ## 2026-10-01 - Referências logísticas no cadastro assistido
 
 - A pesquisa multissetor passa a procurar peso bruto e dimensões da apresentação exata, com evidência por fonte e conversão determinística de unidades; fotos, conteúdo líquido, dosagem e caixa master não são medidas de frete.

@@ -20,12 +20,42 @@ test("converts sourced gross weight and explicit units, preserving evidence", ()
 
 test("never turns net contents, baby weight, unknown units or ungrounded values into freight", () => {
   assert.equal(qualifyShippingReference({ ...reference(), weight: { ...reference().weight, kind: "net" } }, context)?.weightGrams, null);
-  assert.equal(qualifyShippingReference({ ...reference(), weight: { ...reference().weight, unit: "ml" } }, context), null);
+  const invalidWeight = qualifyShippingReference({ ...reference(), weight: { ...reference().weight, unit: "ml" } }, context);
+  assert.equal(invalidWeight?.weightGrams, null);
+  assert.equal(invalidWeight?.widthCm, 8);
   assert.equal(qualifyShippingReference({ ...reference(), weight: { ...reference().weight, value: 9 } }, context)?.weightGrams, null);
   assert.equal(qualifyShippingReference(reference(), { ...context, research: "Faixa de peso do bebê: 9 kg; pacote M." })?.weightGrams, null);
   const missingSource = qualifyShippingReference(reference(), { ...context, sources: [] });
   assert.equal(missingSource?.weightSource, null); assert.equal(missingSource?.widthCm, null);
   assert.equal(qualifyShippingReference(reference(), { ...context, sources: [{ title: "Inválida", url: "javascript:alert(1)" }] })?.weightGrams, null);
+});
+
+test("reads explicit gross package weight with Brazilian thousands and decimal formats", () => {
+  for (const [text, value, grams] of [
+    ["Peso bruto da unidade: 1.000 g.", 1000, 1000],
+    ["Peso do produto embalado: 1.250,5 g.", 1250.5, 1251],
+    ["Peso total do pacote fechado: 0,35 kg.", 0.35, 350],
+    ["Gross weight of the packaged product: 0.35 kg.", 0.35, 350],
+    ["Peso bruto do sabonete líquido: 350 g com embalagem comercial.", 350, 350],
+  ] as const) {
+    const unit = text.includes("kg") ? "kg" : "g";
+    const result = qualifyShippingReference({ ...reference(), weight: { ...reference().weight, value, unit, evidence: text } }, { ...context, research: `${text}\n${evidenceDimensions}` });
+    assert.equal(result?.weightGrams, grams, text);
+  }
+  for (const text of ["Peso líquido da unidade: 350 g.", "Peso total da unidade: 350 g (peso líquido sem embalagem).", "Gross weight: 350 g; net weight is shown.", "Peso da embalagem vazia: 350 g.", "Peso do bebê: 350 g.", "Gross weight: 1.000 g."]) {
+    const result = qualifyShippingReference({ ...reference(), weight: { ...reference().weight, value: text.includes("1.000") ? 1000 : 350, unit: "g", evidence: text } }, { ...context, research: text });
+    assert.equal(result?.weightGrams, null, text);
+  }
+});
+
+test("keeps a sourced fact when the other measurement is incomplete or malformed", () => {
+  const incomplete = { ...reference().dimensions, height: undefined };
+  const result = qualifyShippingReference({ ...reference(), dimensions: incomplete, warnings: ["Fontes divergentes para as medidas.", "a".repeat(500)] }, context);
+  assert.equal(result?.weightGrams, 350);
+  assert.equal(result?.widthCm, null);
+  assert.match(result!.warnings.join(" "), /Dimensões/);
+  assert.ok(result!.warnings.includes("Fontes divergentes para as medidas."));
+  assert.equal(qualifyShippingReference({ ...reference(), identityMatch: "invented" }, context), null);
 });
 
 test("master case, conflicting or uncertain identity never provides applicable values", () => {

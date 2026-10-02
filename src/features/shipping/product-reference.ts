@@ -8,9 +8,9 @@ const positive = z.number().finite().positive();
 export const rawShippingReferenceSchema = z.object({
   identityMatch: z.enum(["exact", "uncertain", "conflict"]),
   packageLevel: z.enum(["retail_unit", "retail_kit", "shipping_package", "case", "unknown"]),
-  weight: z.object({ ...citedFact, value: positive, unit: z.enum(["g", "kg"]), kind: z.enum(["gross", "net", "unknown"]) }).nullable(),
-  dimensions: z.object({ ...citedFact, width: positive, height: positive, length: positive, unit: z.enum(["mm", "cm", "m"]) }).nullable(),
-  warnings: z.array(z.string().trim().min(2).max(220)).max(5),
+  weight: z.object({ ...citedFact, value: positive, unit: z.enum(["g", "kg"]), kind: z.enum(["gross", "net", "unknown"]) }).nullable().catch(null).default(null),
+  dimensions: z.object({ ...citedFact, width: positive, height: positive, length: positive, unit: z.enum(["mm", "cm", "m"]) }).nullable().catch(null).default(null),
+  warnings: z.array(z.string().trim().min(2).max(220).catch("")).catch([]).transform(values => values.filter(Boolean).slice(0, 5)).default([]),
 });
 
 const sourceSchema = z.object({
@@ -31,7 +31,14 @@ export type ShippingReference = z.infer<typeof shippingReferenceSchema>;
 
 const textKey = (text: string) => text.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
 function citesNumbers(evidence: string, values: number[], unit: string) {
-  const numbers = (evidence.match(/\d+(?:[.,]\d+)*/g) ?? []).map(value => Number(value.includes(",") ? value.replace(/\./g, "").replace(",", ".") : value));
+  const numbers = (evidence.match(/\d+(?:[.,]\d+)*/g) ?? []).map(value => {
+    if (value.includes(",")) return Number(value.replace(/\./g, "").replace(",", "."));
+    if (/^[1-9]\d{0,2}(?:\.\d{3})+$/.test(value)) {
+      // Brazilian grouping needs Portuguese measurement context; otherwise the dot is ambiguous.
+      return /\b(?:peso|largura|altura|comprimento)\b/i.test(evidence) ? Number(value.replace(/\./g, "")) : NaN;
+    }
+    return Number(value);
+  });
   const units: Record<string, string> = { g: "g|gramas?", kg: "kg|quilogramas?", mm: "mm|mil[ií]metros?", cm: "cm|cent[ií]metros?", m: "m|metros?" };
   return new RegExp(`(?<![a-z])(?:${units[unit] ?? unit})\\b`, "i").test(evidence) && values.every(value => numbers.includes(value));
 }
@@ -68,7 +75,8 @@ export function qualifyShippingReference(raw: unknown, context: {
   }
   const weightSource = sourceFor(data.weight);
   if (data.weight?.kind === "gross" && weightSource && citesNumbers(data.weight.evidence, [data.weight.value], data.weight.unit)
-    && /bruto|gross|peso.{0,12}com.{0,12}embalagem/i.test(data.weight.evidence)) {
+    && /bruto|gross|peso.{0,20}com.{0,20}embalagem|peso (?:do )?produto embalado|peso total (?:da unidade|do pacote fechado)/i.test(data.weight.evidence)
+    && !/(?:peso|massa|conte[uú]do)\s+l[ií]quid[oa]|net\s*weight|sem\s+(?:a\s+)?embalagem|embalagem vazia|faixa de peso|peso do beb[eê]/i.test(data.weight.evidence)) {
     const grams = Math.ceil(data.weight.value * (data.weight.unit === "kg" ? 1000 : 1));
     if (grams >= 1 && grams <= 30000) { result.weightGrams = grams; result.weightSource = weightSource; }
   }
@@ -106,5 +114,5 @@ export const shippingResearchInstructions = [
   "Distinga peso liquido/conteudo de peso bruto com embalagem comercial e de peso do volume pronto para envio. Nao converter ml/L em gramas/kg; nao usar mg por comprimido como peso da caixa. Nao estimar peso/dimensoes por foto, proporcao visual, produto semelhante ou conhecimento geral.",
   "Medicamento: caixa ou frasco da concentracao/quantidade exatas; perfumaria: frasco cheio com tampa/caixa, volume nao e massa; fralda: pacote fechado da marca/linha, tamanho RN/P/M/G/GG/XXG e quantidade exatos, nunca dimensao da fralda aberta, tamanho do bebe ou faixa de peso corporal; alimentos: unidade/kit exatos, peso liquido separado do bruto. Nunca dividir caixa master para inferir uma unidade, nem multiplicar dimensoes por quantidade.",
   "Identifique o nivel de embalagem: unidade comercial, kit vendido inteiro, volume pronto para transporte ou caixa master. Rotule largura, altura e comprimento; se a ordem das dimensoes nao estiver identificada, nao adivinhe os eixos. Preserve unidades originais. Fontes divergentes para a mesma apresentacao exigem campos incertos vazios e aviso, nao uma media.",
-  "Nas notas de LOGISTICA inclua os valores, unidades, nivel da embalagem e a fonte que os sustenta. Sem dado bruto explicito ou fonte especifica, deixe ausente. Nao conclua aceitação de transporte, conservacao, receita ou liberacao de frete: isso depende de revisao humana.",
+  "Nas notas de LOGISTICA inclua uma linha curta por fato, com valores, unidades originais, nivel da embalagem e URL da fonte. Separe peso bruto e dimensoes: se encontrar apenas um, preserve esse dado e marque o outro como ausente. Inclua produtos embalados, dispositivos, suplementos, alimentos, higiene, perfumaria e kits, sem limitar por categoria. Sem dado bruto explicito ou fonte especifica, deixe ausente. Nao conclua aceitação de transporte, conservacao, receita ou liberacao de frete: isso depende de revisao humana.",
 ].join("\n");
