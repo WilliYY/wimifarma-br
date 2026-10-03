@@ -1,5 +1,9 @@
 # 06 - Pendencias
 
+## Dependências - auditoria de 03/10/2026
+
+- `npm audit --audit-level=moderate` apontou sete vulnerabilidades HIGH no conjunto existente, incluindo `brace-expansion` e `fast-uri`. A entrega Miauby não adicionou dependências. Planejar correção pontual das versões e executar regressão/build antes de publicar essa mudança separada.
+
 ## Melhor Envio - ativação operacional
 
 - OAuth e cotação real concluídos em 29/09/2026: PAC/SEDEX e agência Correios AC IVATE. Conferência de produtos/embalagens e liberação pública continuam pendentes.
