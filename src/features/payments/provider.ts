@@ -1,7 +1,8 @@
 import { PaymentError, providerOrderSchema } from "./schema";
 
 export async function mercadoPagoRequest(path: string, accessToken: string, body?: unknown, key?: string) {
-  if (!/^\/(users\/me|v1\/orders(?:\/ORD[A-Z0-9]+)?)$/i.test(path)) throw new PaymentError("Operação de pagamento inválida.", 400);
+  if (!/^\/(users\/me|v1\/payment_methods|v1\/orders(?:\/ORD[A-Z0-9]+)?)$/i.test(path)
+    || (path.toLowerCase() === "/v1/payment_methods" && body !== undefined)) throw new PaymentError("Operação de pagamento inválida.", 400);
   try {
     const response = await fetch(`https://api.mercadopago.com${path}`, {
       method: body === undefined ? "GET" : "POST", redirect: "error", cache: "no-store",

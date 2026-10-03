@@ -76,6 +76,19 @@ test("provider uses fixed HTTPS origin, no redirects, one idempotency key and sa
   assert.equal(calls[0].options?.redirect, "error"); assert.equal(new Headers(calls[0].options?.headers).get("X-Idempotency-Key"), "same-key");
   await assert.rejects(mercadoPagoRequest("https://attacker.example", "synthetic-private-token")); assert.equal(calls.length, 1);
 });
+test("public brand catalog permits only the exact read endpoint", async context => {
+  const calls: { url: string; options?: RequestInit }[] = [];
+  const brands = [{ id: "visa", name: "Visa", status: "active", payment_type_id: "credit_card" }];
+  context.mock.method(globalThis, "fetch", async (url: string, options?: RequestInit) => { calls.push({ url, options }); return Response.json(brands); });
+  assert.deepEqual(await mercadoPagoRequest("/v1/payment_methods", "synthetic-token"), brands);
+  assert.equal(calls[0].url, "https://api.mercadopago.com/v1/payment_methods");
+  assert.equal(calls[0].options?.method, "GET");
+  assert.equal(calls[0].options?.redirect, "error");
+  for (const path of ["/v1/payment_methods/visa", "/v1/payment_methods?extra=1", "/v1/payment_methods/../orders", "/v1/payments"]) await assert.rejects(mercadoPagoRequest(path, "synthetic-token"));
+  await assert.rejects(mercadoPagoRequest("/v1/payment_methods", "synthetic-token", {}));
+  assert.equal(calls.length, 1, "invalid paths and catalog writes never reach the gateway");
+});
+
 test("Orders 402 unwraps a canonical declined order and retains all reconciliation bindings", async context => {
   const declined = { ...remote("failed", "cc_rejected_other_reason"), currency: "BRL" };
   let calls = 0;

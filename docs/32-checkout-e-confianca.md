@@ -34,3 +34,11 @@ HTTPS e campos de cartão do Mercado Pago já são mecanismos técnicos de prote
 `scripts/payment-db-audit.ts` exige PostgreSQL descartável/isolado com nome e endereço protegidos. Testa idempotência, concorrência de estoque, expiração Pix persistida, parcelas enviadas, notificações e Miauby deduplicadas. Gateway/WhatsApp são simulados: esse ensaio não comprova transferência monetária nem entrega de mensagem real.
 
 Referências de integração: [Pix/Orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-integration/websites/pix), [customização de Bricks](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/additional-settings/websites/behavior-customizations), [métodos de pagamento](https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-api/payment-methods/get) e [CEP de Douradina](https://douradina.pr.gov.br/localizacao/).
+
+## Evidências de 03/10/2026
+
+- 173 testes gerais, 22 de frete e 14 cenários UI aprovados; lint, typecheck e Prisma validate aprovados. Banco PostgreSQL 17 descartável, sem rede externa e com gateway/WhatsApp simulados, confirmou expiração Pix persistida, parcelas, estoque concorrente, idempotência e deduplicação da Miauby.
+- Commit `9c52b05` publicado com build Linux aprovado e 18 migrations, incluindo a data de expiração. Backup privado de banco/uploads/configuração conferido; app healthy, zero reinícios e `/api/health` com `ok: true`. Nenhuma cobrança real criada.
+- A referência da imagem anterior estava ausente no Docker, impedindo tag/commit do container. Rollback foi reconstruído pelo commit anterior `e6b5992` em `wimifarma-br-app:pre-checkout-9c52b05`, antes de recriar o app. A mudança de banco é aditiva e compatível com essa versão.
+- Na inspeção publicada, a proteção do cliente HTTP bloqueava `/v1/payment_methods`; a consulta do catálogo ganhou permissão exata e somente GET. A regressão falhou antes da correção; não abrir URLs arbitrárias, subrotas, query strings ou POST do catálogo.
+- A auditoria npm reconfirmou sete vulnerabilidades HIGH preexistentes, documentadas em `06-pendencias.md`, sem mudança de dependências.
