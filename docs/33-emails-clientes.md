@@ -39,6 +39,8 @@ A compra e a mensagem de pagamento confirmado são eventos diferentes. Erros de 
 
 Conta do provedor, acesso ao DNS, remetente e regras de adesão precisam ser definidos antes da integração de envio. Nenhuma migration de marketing, importação de dados, chave privada ou envio real foi criada nesta etapa. As três prévias permitem revisar a identidade visual e o texto antes dessa configuração.
 
+Prévia verificada em desktop e celular de 390 px, com três logos oficiais carregadas e sem overflow. Capturas locais: `outputs/email-modelos/desktop.png` e `mobile.png`, fora do Git e com dados fictícios. Isso valida a prévia no navegador; a homologação nos clientes reais de e-mail faz parte da integração futura.
+
 ## Referências consultadas em 03/10/2026
 
 - API oficial e recursos transacionais/campanhas: https://developers.brevo.com/docs/getting-started

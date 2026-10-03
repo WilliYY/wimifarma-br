@@ -13,6 +13,8 @@ O proprietário autorizou receber alertas no seu próprio WhatsApp terminado em 
 
 O carrinho vazio sincroniza somente o cancelamento de avisos pendentes, inclusive ao reabrir o site; não cria um aviso de WhatsApp. Repetições do mesmo estado já sincronizado são dispensadas. Uma atualização em andamento invalida o estado anterior: se o cliente esvaziar novamente o carrinho, o cancelamento aguarda essa atualização para evitar um resumo pendente com produtos removidos.
 
+Correção publicada em `3ab8a86`, com 42 testes da Miauby aprovados e aplicação saudável. A corrida foi reproduzida antes da correção; testes verificam vazio inicial, novo esvaziamento durante requisição e eventos cancelados sem novas mensagens. Esta auditoria não enviou alerta real ao WhatsApp e não alterou ponte/credenciais/destinatário.
+
 A área mostra conexão, controles individuais e últimos 30 eventos. A foto fornecida pelo lojista foi preservada em `public/brand/miauby-avatar.webp`, com 640 × 640 px e cerca de 18 KB.
 
 ## Persistência e segurança

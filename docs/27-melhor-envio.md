@@ -84,6 +84,10 @@ Simulação real: origem 87525-000, volume ilustrativo de 300 g e largura × alt
 
 Cobertura permanece dinâmica por CEP/serviço; não prometer entrega domiciliar em 100% dos lugares. Etiqueta, documento fiscal e postagem continuam humanos. Melhor Envio não recebeu permissão adicional de gasto.
 
+Publicação da revisão `3ab8a86`: build Linux/Docker aprovado, aplicação healthy, zero reinícios e health público `ok=true`. Conferência no navegador após publicar: chave geral marcada, Cimegrip com campos de embalagem disponíveis e Losartana ainda no atendimento. Cotação da cesta real Dove + Cimegrip para 87501-070 foi recusada corretamente por falta de liberação da embalagem do Dove; nenhum preço fictício, pedido, cobrança ou etiqueta foi criado. Cesta de dois itens/R$ 46,89 preservada.
+
+Validação: 173 testes gerais, 29 de frete, 13 de pagamento, 42 da Miauby e 24 cenários UI; lint, typecheck, Prisma e `git diff --check` aprovados. Auditoria npm reconfirmou sete HIGH preexistentes, registradas em `06-pendencias.md`, sem alterações de dependências. Rollback do aplicativo preservado em `wimifarma-br-app:pre-national-3ab8a86`; imagem publicada `wimifarma-br-app:national-3ab8a86`. Não há migration nesta entrega.
+
 Referências oficiais consultadas em 03/10/2026:
 
 - RDC 44/2009, arts. 52–57: https://anvisalegis.datalegis.net/action/ActionDatalegis.php?acao=abrirTextoAto&cod_menu=8542&cod_modulo=310&link=S&numeroAto=00000044&orgao=RDC/DC/ANVISA/MS&seqAto=000&tipo=RDC&valorAno=2009
