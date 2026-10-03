@@ -14,6 +14,8 @@ O assistente permanece junto da identificação, com fontes, confiança e aplica
 
 Verificação: Chromium em 320/390/768/1440 px confirmou cadastro/edição sem overflow, ações visíveis após rolar até logística e preservação de marca/peso manuais ao aplicar IA. `npm.cmd run audit:assistant` passou nas quatro larguras, cobrindo foto original, fotos reais/artes, cancelamento, resposta atrasada e marketing, sem escrita comercial. A fixture agora compila o CSS atual do Tailwind, sem depender de `.next` antigo. Galeria permite quebra de rótulo e mantém alvos de 44 px. Capturas em `outputs/product-form-ui-2026-10-03`.
 
+Publicado em `4b79d71` após build Linux/Docker aprovado. Conferência no navegador conectado confirmou modal de 1152 px sem overflow, foco no nome e ações de cadastro/cancelamento visíveis. Nenhum produto foi salvo; revisão logística e restrições comerciais continuam intactas.
+
 ## Pesquisa e SEO
 
 - Gemini continua somente no servidor, usando pesquisa Google e estruturacao em duas etapas. Nenhuma nova integracao paga.
