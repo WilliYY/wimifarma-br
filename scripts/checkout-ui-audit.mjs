@@ -21,7 +21,7 @@ const browser = await chromium.launch();
 const results = [], failures = [];
 const product = price => ({id:"fixture-item",slug:"fixture-item",name:"Dove óleo de banho · produto de teste",imageUrl:"/qa-product.webp",category:"Teste",unitPriceCents:price,originalPriceCents:null,stock:20,requiresPrescription:false,isPopularPharmacy:false,quantity:1});
 
-async function fixture(width, {price=9990,customer=false,failOrder=false,failPayment=false,failPaymentStatus="UNKNOWN",shippingAvailable=true,medicine=false,balance="0.01"}={}) {
+async function fixture(width, {price=9990,customer=false,failOrder=false,failPayment=false,failPaymentStatus="UNKNOWN",shippingAvailable=true,medicine=false,ordinaryMedicine=false,balance="0.01"}={}) {
   const context = await browser.newContext({viewport:{width,height:1000},reducedMotion:"reduce"});
   const page = await context.newPage(); const errors=[], orders=[], payments=[], quotes=[];
   const state = {failOrder,failPayment,status:"NEW",expiresAt:null};
@@ -36,7 +36,7 @@ async function fixture(width, {price=9990,customer=false,failOrder=false,failPay
       const button=document.createElement("button"); button.textContent="Pagar com cartão simulado";button.onclick=()=>settings.callbacks.onSubmit({token:"synthetic-token",payment_method_id:"visa",installments:12,payer:{email:"cliente@example.invalid"}},{paymentTypeId:"credit_card"}).catch(()=>{});container.appendChild(button);
       settings.callbacks.onReady(); return {unmount:async()=>container.replaceChildren()};
     }}; } };
-  }, {items:medicine?[product(price-999),{...product(999),id:"fixture-medicine",name:"Cimegrip · produto sintético",imageUrl:null,category:"Medicamentos"}]:[product(price)]});
+  }, {items:medicine||ordinaryMedicine?[product(price-999),{...product(999),id:"fixture-medicine",name:"Medicamento · produto sintético",imageUrl:null,category:"Medicamentos",requiresPrescription:medicine}]:[product(price)]});
   await context.route("**/*", async route => {
     const request=route.request(),url=new URL(request.url());
     if(url.origin!==base) return route.abort();
@@ -68,6 +68,10 @@ async function privacy(page) {await page.getByRole("checkbox",{name:/Revisei meu
 async function fits(page,width) {assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`overflow at ${width}`);}
 async function test(name,run) {try {await run();results.push({name,passed:true});console.log(`PASS ${name}`);}catch(e){failures.push({name,error:e.message});console.log(`FAIL ${name}: ${e.message}`);}}
 try {
+  await test("ordinary medication can request carrier quote and create Pix with approved mocked packaging",async()=>{
+    const f=await fixture(390,{ordinaryMedicine:true});const {page}=f;
+    try {await fillContact(page);await page.getByLabel("CEP",{exact:true}).fill("01001000");await expect(page.getByLabel("Cidade",{exact:true})).toHaveValue("São Paulo");await page.getByLabel("Numero",{exact:true}).fill("123");await expect(page.getByRole("heading",{name:"Este carrinho precisa de atendimento"})).toHaveCount(0);await page.getByRole("button",{name:"Calcular frete"}).click();await page.getByRole("radio",{name:/Transportadora Teste/}).check();await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByLabel("Código Pix copia e cola")).toHaveValue("SYNTHETIC-PIX-CODE");assert.equal(f.quotes.length,1);assert.equal(f.orders.length,1);assert.equal(f.payments.length,1);await fits(page,390);assert.deepEqual(f.errors,[]);}finally{await f.context.close();}
+  });
   for (const width of [320,390,768,1440]) for (const medicine of [false,true]) await test(`blocked carrier and compact address ${width} ${medicine?"medicine":"disabled"}`,async()=>{
     const f=await fixture(width,{price:4689,customer:true,balance:"0",shippingAvailable:medicine,medicine});const {page}=f;
     try {

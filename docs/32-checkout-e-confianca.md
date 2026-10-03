@@ -1,5 +1,7 @@
 # 32 - Checkout e confiança
 
+Revisão nacional/Miauby de 03/10: ver `27-melhor-envio.md` para a configuração ativa e a regra atual de medicamentos sem receita. Ainda é obrigatória a aprovação de peso/embalagem por produto; categoria sem receita não exige atendimento por si só. Retirada/entrega local mantêm as mesmas regras. Prévia de futuros e-mails, sem envio ativo: `33-emails-clientes.md`.
+
 ## Experiência atual
 
 Checkout em uma página, com três colunas a partir de 1280 px, duas no tablet e blocos verticais no celular. Contato, entrega e pagamento permanecem visíveis; cartão abre após dados/endereço válidos e consentimento. Bandeiras vêm do catálogo público do Mercado Pago; indisponibilidade desse catálogo não impede o formulário seguro.

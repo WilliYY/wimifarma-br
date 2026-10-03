@@ -264,6 +264,8 @@ docker network connect wimifarma-br-network nginx-proxy-manager-app-1
 
 ## Documentacao
 
+- `docs/33-emails-clientes.md`: proposta de confirmação de compra, carrinho e novidades; configuração externa e automações ainda pendentes. Prévia com dados fictícios em `docs/email-modelos.html`.
+
 A pasta `docs/` e a memoria longa do projeto. Comece por:
 
 - `docs/00-visao-geral.md`

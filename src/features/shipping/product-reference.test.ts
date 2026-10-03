@@ -128,7 +128,8 @@ test("catalog can save partial drafts but cannot approve a carrier profile", () 
   const product = { id: "fixture", name: "Produto", category: "Higiene", requiresPrescription: false, isPopularPharmacy: false, shippingProfile: draft, updatedAt: new Date() };
   assert.throws(() => validateShippingProduct(product), /não foi liberado/);
   const approved = { enabled: true, transportReviewed: true, weightGrams: 350, widthCm: 8, heightCm: 20, lengthCm: 10 };
-  assert.throws(() => validateShippingProduct({ ...product, category: "Medicamentos", shippingProfile: approved }), /atendimento/);
+  assert.deepEqual(validateShippingProduct({ ...product, category: "Medicamentos", shippingProfile: approved }), approved);
+  assert.throws(() => validateShippingProduct({ ...product, requiresPrescription: true, shippingProfile: approved }), /atendimento/);
   const invalidated = invalidateShippingProfile(approved)!;
   assert.equal(invalidated.enabled, false); assert.equal(invalidated.transportReviewed, false);
   assert.equal(invalidated.weightGrams, 350); assert.equal(invalidated.reference, null);

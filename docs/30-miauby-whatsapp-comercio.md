@@ -11,6 +11,8 @@ O proprietário autorizou receber alertas no seu próprio WhatsApp terminado em 
 - **Pagamento confirmado:** entra na fila somente após conciliação autenticada do gateway que muda o pedido para PAID. Webhooks repetidos não duplicam esse aviso. Pagamentos combinados manualmente não são apresentados como confirmação do gateway.
 - **Teste:** botão administrativo envia um aviso explicitamente fictício ao mesmo destino, sem criar pedido, cobrar, comprar etiqueta ou alterar estoque.
 
+O carrinho vazio sincroniza somente o cancelamento de avisos pendentes, inclusive ao reabrir o site; não cria um aviso de WhatsApp. Repetições do mesmo estado já sincronizado são dispensadas. Uma atualização em andamento invalida o estado anterior: se o cliente esvaziar novamente o carrinho, o cancelamento aguarda essa atualização para evitar um resumo pendente com produtos removidos.
+
 A área mostra conexão, controles individuais e últimos 30 eventos. A foto fornecida pelo lojista foi preservada em `public/brand/miauby-avatar.webp`, com 640 × 640 px e cerca de 18 KB.
 
 ## Persistência e segurança

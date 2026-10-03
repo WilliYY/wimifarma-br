@@ -44,7 +44,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const notifiedCart = useRef<string | null>(null);
-  const cartNoticeQueued = useRef(false);
   const cartNoticeQueue = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
@@ -72,11 +71,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!hydrated) return;
     const payload = JSON.stringify({ items: items.map(item => ({ productId: item.id, quantity: item.quantity })) });
-    if (notifiedCart.current === payload || (!cartNoticeQueued.current && !items.length)) return;
+    if (notifiedCart.current === payload) return;
     let active = true;
     let retry: ReturnType<typeof setTimeout> | undefined;
     const attempt = (canRetry: boolean) => {
-      cartNoticeQueued.current = true;
+      // An in-flight update invalidates the last snapshot, including an empty one.
+      notifiedCart.current = null;
       cartNoticeQueue.current = cartNoticeQueue.current.then(async () => {
         if (!active) return;
         try {

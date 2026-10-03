@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-03 - Cotação nacional, carrinho da Miauby e proposta de e-mails
+
+- Autorizada a chave geral de frete nacional pelo lojista. Categoria Medicamentos deixa de impedir itens sem receita, desde que embalagem e transporte sejam aprovados. Carrinho com medicamento usa somente PAC/SEDEX, com conferência também no token ao finalizar. Prescrição e Farmácia Popular mantêm atendimento; não existe liberação de compra online de controlados por foto de receita no WhatsApp. Fontes e operação em `27-melhor-envio.md`.
+- Cadastro da Losartana estava sem receita; a embalagem apresentada exige prescrição. Correção pelo painel inclui desativar cashback incompatível, preservando preço/estoque. Nenhuma medida foi presumida nem produto foi aprovado para transporte nesta tarefa.
+- Carrinho vazio sincroniza cancelamento, sem criar mensagem. Uma atualização em andamento invalida a deduplicação anterior para que um novo esvaziamento não deixe alertas pendentes. Testes reproduziram a corrida e a reabertura vazia; contrato em `30-miauby-whatsapp-comercio.md`.
+- Simulador administrativo remove cotações antigas ao alterar a encomenda/iniciar nova consulta, inclusive se o provedor falhar. A aprovação da conexão não é garantia de cobertura de qualquer CEP.
+- E-mails: proposta Brevo com compra/pagamento, carrinho e novidades, sem disparo ativo ou importação de clientes. Conta, domínio/remetente e consentimento separados precisam ser definidos antes do envio. Contrato e prévias com marca oficial em `33-emails-clientes.md` e `email-modelos.html`.
+
 ## 2026-10-03 - Disponibilidade do frete e equilíbrio do checkout
 
 - O checkout recebe do servidor somente um booleano sobre a cotação pública: configuração ativa, produção, serviços e credenciais presentes. Essa leitura não renova tokens nem consulta transportadoras. Falhas mantêm retirada/entrega local disponíveis e registram somente um marcador operacional, sem segredos.

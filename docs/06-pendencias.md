@@ -6,11 +6,16 @@
 
 ## Melhor Envio - ativação operacional
 
-- OAuth e cotação real concluídos em 29/09/2026: PAC/SEDEX e agência Correios AC IVATE. Conferência de produtos/embalagens e liberação pública continuam pendentes.
+- OAuth e cotação real concluídos em 29/09/2026: PAC/SEDEX e agência Correios AC IVATE. Em 03/10 o lojista autorizou a chave geral nacional; perfis dos produtos, medidas reais e operação de postagem continuam pendentes. A categoria Medicamentos sem receita não bloqueia envio, mas precisa de perfil aprovado; não confundir liberação geral com aprovação de cada embalagem.
 - Conferir cadastro fiscal da loja e emissão de NF-e no sistema da farmácia.
 - Cadastrar peso e medidas reais de cada unidade embalada e liberar somente mercadorias aceitas pelos serviços selecionados.
 - Cotações iniciam desativadas. Compra de etiquetas e emissão fiscal permanecem no fluxo operacional externo; pagamento online tem homologação separada em `28-mercado-pago.md`.
 - Futuro: consolidar caixas de vários produtos, emissão de etiqueta pelo admin após conferência, rastreio automático e outros provedores. Contrato em `27-melhor-envio.md`.
+
+## E-mails para clientes
+
+- Proposta Brevo e modelos com a marca oficial preparados em `33-emails-clientes.md` e `email-modelos.html`. Não há envio ativo: confirmar conta/provedor, autenticação do domínio e remetente recebido pela equipe.
+- Antes de carrinho/novidades, implementar adesão opcional, descadastro, supressão e fila própria. Usuários existentes não são inscritos automaticamente; não segmentar por dados de saúde. Compra e pagamento confirmado usam eventos distintos e deduplicados.
 
 ## Google: configuração externa única
 

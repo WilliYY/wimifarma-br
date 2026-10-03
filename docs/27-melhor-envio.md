@@ -19,7 +19,7 @@ Dinheiro fica limitado a retirada ou entrega local em Ivaté/Douradina-PR. Local
 3. O botão Conectar inicia OAuth; o administrador autoriza no próprio Melhor Envio. Escopos: `shipping-calculate`, `shipping-companies`, `shipping-tracking`. **Não solicitar `shipping-checkout` ou outras permissões de gasto nesta fase.**
 4. Simular uma embalagem consulta preços e não gera remessas. Selecionar serviços somente após confirmar aceitação da carga, unidade de postagem e/ou coleta em Ivaté. Salvar configuração aplica a seleção.
 5. Pesar e medir cada unidade já embalada; registrar gramas e centímetros. Cada unidade é cotada como um volume separado, limitando a 20 volumes por pedido. Consolidação de vários produtos na mesma caixa é uma evolução pendente; não presumir dimensões da caixa a partir de fotos ou peso nominal do produto.
-6. Marcar a revisão de conservação/aceitação e liberar os produtos elegíveis. Medicamentos classificados como tal, receita e Farmácia Popular ficam no atendimento; líquidos, aerossóis e itens sensíveis ao calor exigem análise da equipe e da transportadora.
+6. Marcar a revisão de conservação/aceitação e liberar os produtos elegíveis. Medicamentos sem receita podem usar PAC/SEDEX; a categoria não bloqueia esses itens. `requiresPrescription` e Farmácia Popular continuam no atendimento. Líquidos, aerossóis e itens sensíveis ao calor exigem análise da equipe e da transportadora.
 7. Ativar a cotação no checkout somente depois da homologação. Entrega local e retirada permanecem disponíveis. Para outros CEPs o cliente calcula e escolhe uma cotação. O pagamento nacional aceita Pix combinado com a equipe ou Mercado Pago quando homologado e habilitado.
 8. O admin de pedidos mostra serviço, transportadora, valor e prazo escolhido. Comprar a etiqueta no Melhor Envio somente após conferir pagamento, NF-e, embalagem e destinatário.
 
@@ -60,7 +60,7 @@ Cotações públicas continuam desativadas e produtos sem liberação automátic
 
 Revisão em 01/10/2026: conexão de produção preservada e cotação pública ainda desativada. Solicitados ao lojista peso e dimensões da embalagem pronta do KitKat e do Dove, além de confirmação sobre NF-e e local de postagem. A agência selecionada anteriormente é uma referência da configuração, não comprovação de que a operação já está pronta. Mercado Pago foi ativado separadamente; isso não libera frete nacional, compra de etiquetas ou emissão fiscal. Ao liberar futuramente, conferir a embalagem real, testar a cotação e manter etiqueta/postagem sob operação humana.
 
-## Diagnóstico e apresentação no checkout em 03/10/2026
+## Diagnóstico inicial e apresentação no checkout em 03/10/2026
 
 O painel autenticado confirmou conexão de produção, PAC/SEDEX selecionados e a opção de cotação pública desmarcada. A falha observada ocorre antes da chamada ao provedor. Para a cesta Dove + Cimegrip, há ainda dois bloqueios independentes: Dove sem peso/dimensões aprovados e Cimegrip sujeito a atendimento farmacêutico. Ativar somente a chave geral não resolve essa cesta.
 
@@ -69,6 +69,27 @@ O painel autenticado confirmou conexão de produção, PAC/SEDEX selecionados e 
 A interface mostra o impedimento antes do botão de cotação, oferece retirada/WhatsApp e não chama a API enquanto a configuração ou a regra farmacêutica impedir o envio. O predicado de restrição é compartilhado com a validação existente do servidor. Uma seleção antiga nesses casos deixa de compor preço/validação e é removida do rascunho. A interface é orientação; assinatura, estoque, embalagem e elegibilidade continuam conferidos na API.
 
 Para liberar produtos elegíveis: medir/pesar a embalagem pronta, confirmar revisão e liberação no painel de fretes, conferir aceitação da carga/documento fiscal/postagem e então habilitar a cotação e testar o serviço real. A conferência desta tarefa não alterou essas aprovações nem criou etiqueta.
+
+## Liberação solicitada e revisão das restrições em 03/10/2026
+
+O lojista autorizou a chave geral de cotação nacional. A revisão remove o bloqueio baseado apenas na categoria Medicamentos; exige ainda peso bruto, dimensões, conservação e aceitação aprovados por ADMIN. Carrinho que contenha medicamento admite exclusivamente os serviços Melhor Envio **1/PAC e 2/SEDEX** nesta fase. O filtro vale tanto na consulta como na validação da cotação assinada ao finalizar; outros serviços cotados pelo provedor não são aceitos automaticamente.
+
+Ativação da configuração confirmada no painel e na base: revisão **5**, produção, `enabled=true`, origem 87525-000 e serviços 1/2. Nenhum produto tem perfil de embalagem aprovado; isso permanece um impedimento real da cotação do carrinho, inclusive após a ativação geral.
+
+Medicamentos de prescrição não são sinônimo de controlados. RDC 44/2009 exige avaliação da receita antes da dispensação também para prescrição comum. `requiresPrescription` permanece bloqueado no checkout, pois ainda não existe comprovação persistida de avaliação farmacêutica para liberar um pedido específico. RDC 812/2023 permite entrega remota de controlados nos seus requisitos, mas mantém vedada compra/venda pela internet; uma foto enviada ao WhatsApp não libera essa compra. `isPopularPharmacy` mantém seu fluxo próprio. Não desmarcar esses campos para oferecer frete.
+
+A conferência do catálogo encontrou Losartana Teuto sem marcador de receita, contrariando a embalagem apresentada. Correção pelo painel: marcar receita e remover cashback incompatível com o contrato vigente, sem alterar preço ou estoque. Cimegrip e Dove estão sem qualquer perfil de embalagem; remover o bloqueio de categoria não inventa essas medidas nem aprova envio.
+
+Simulação real: origem 87525-000, volume ilustrativo de 300 g e largura × altura × comprimento de 15 × 10 × 20 cm, mercadoria R$ 50,00. Para 01001-000 o provedor retornou PAC R$ 19,77/9 dias e SEDEX R$ 24,05/5 dias, incluindo preparação. Esses dados não são medidas dos produtos da loja nem tabela fixa de fretes. Consultas posteriores foram recusadas pelo provedor; o CEP 69005-010 foi confirmado válido pelo serviço de endereço. A falha não comprova ausência de cobertura nacional e não deve ser apresentada como cotação bem-sucedida. O simulador passa a limpar preços anteriores quando a encomenda muda ou uma nova consulta começa, evitando mostrar o preço de outro destino depois de uma falha.
+
+Cobertura permanece dinâmica por CEP/serviço; não prometer entrega domiciliar em 100% dos lugares. Etiqueta, documento fiscal e postagem continuam humanos. Melhor Envio não recebeu permissão adicional de gasto.
+
+Referências oficiais consultadas em 03/10/2026:
+
+- RDC 44/2009, arts. 52–57: https://anvisalegis.datalegis.net/action/ActionDatalegis.php?acao=abrirTextoAto&cod_menu=8542&cod_modulo=310&link=S&numeroAto=00000044&orgao=RDC/DC/ANVISA/MS&seqAto=000&tipo=RDC&valorAno=2009
+- RDC 812/2023, art. 34-B: https://anvisalegis-empresa.datalegis.net/action/ActionDatalegis.php?acao=abrirTextoAto&cod_menu=8542&cod_modulo=310&link=S&numeroAto=00000812&orgao=RDC/DC/ANVISA/MS&seqAto=000&tipo=RDC&valorAno=2023
+- Correios, restrições e contrato específico para controlados: https://www.correios.com.br/enviar/proibicoes-e-restricoes
+- Aceitação por transportadora: https://centraldeajuda.melhorenvio.com.br/hc/pt-br/articles/31220391789332-Guia-de-produtos-que-podem-ou-n%C3%A3o-ser-enviados-pelo-Melhor-Envio
 
 ## Referências oficiais da API
 

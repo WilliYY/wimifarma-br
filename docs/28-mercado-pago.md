@@ -96,6 +96,8 @@ Em seguida, credenciais e assinatura de produção foram transferidas pelo porta
 
 ## Referências oficiais
 
+Revisão em 03/10/2026, após solicitação de novo teste: 13 testes de pagamento e 24 cenários de checkout isolado aprovados. Os ensaios cobrem criação/exibição do Pix, duas horas de validade, recarregamento sem nova cobrança, gate de contato/privacidade/endereço, parcelas e falha incerta. Nessas auditorias o gateway é simulado, sem cobrança ou envio real de WhatsApp. Inspeção no checkout publicado confirmou nove bandeiras e os três campos seguros reais de número/vencimento/CVV carregados de `secure-fields.mercadopago.com`, sem preencher cartão ou enviar pedido. A homologação externa de Pix/cartão descrita acima permanece a evidência com conta de teste; não foi repetida trocando a conexão de produção e nenhuma transferência real foi feita nesta revisão.
+
 - https://github.com/mercadopago/sdk-nodejs/blob/99857f33aaa037bea3423a9a9cb8c092d5c7f229/src/utils/webhook/index.ts
 
 - https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-api/create-order/post

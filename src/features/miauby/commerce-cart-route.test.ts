@@ -95,6 +95,16 @@ test("empty cart cancels only pending events in its signed session", async () =>
   assert.equal(f.events[1].status, "PENDING"); assert.equal(f.events[2].status, "SENT");
   const empty = await harness(); assert.equal((await empty.post({ items: [] })).status, 200); assert.equal(empty.events.length, 0);
 });
+
+test("repeated empty snapshots never create events and keep existing pending alerts cancelled", async () => {
+  const f = await harness(); const first = await f.post(cart()); const token = first.cookies.get(cookieName)!.value;
+  for (let repeat = 0; repeat < 5; repeat++) assert.equal((await f.post({ items: [] }, token)).status, 200);
+  assert.equal(f.events.length, 1); assert.equal(f.events[0].status, "FAILED");
+  assert.match(f.events[0].lastError!, /Carrinho esvaziado/);
+  const empty = await harness();
+  for (let repeat = 0; repeat < 5; repeat++) assert.equal((await empty.post({ items: [] })).status, 200);
+  assert.equal(empty.events.length, 0);
+});
 test("unsigned cookie cannot cancel another session and is replaced on creation", async () => {
   const f = await harness(); const valid = createCartIdentity(secret, now); const invalid = `${valid.slice(0, -1)}${valid.endsWith("0") ? "1" : "0"}`;
   await f.post(cart(), valid); assert.equal((await f.post({ items: [] }, invalid)).status, 200); assert.equal(f.events[0].status, "PENDING");

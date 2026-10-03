@@ -40,7 +40,8 @@ test("normalization preserves configured prices, rejects provider errors and una
 });
 test("shipping fails closed without measured packaging and commercial review", () => {
   assert.deepEqual(validateShippingProduct(product), profile);
-  for (const changes of [{ shippingProfile: null }, { shippingProfile: { ...profile, transportReviewed: false } }, { shippingProfile: { ...profile, enabled: false } }, { requiresPrescription: true }, { isPopularPharmacy: true }, { category: "Medicamentos" }, { category: "Farmácia Popular" }]) assert.throws(() => validateShippingProduct({ ...product, ...changes }));
+  for (const changes of [{ shippingProfile: null }, { shippingProfile: { ...profile, transportReviewed: false } }, { shippingProfile: { ...profile, enabled: false } }, { requiresPrescription: true }, { isPopularPharmacy: true }, { category: "Farmácia Popular" }]) assert.throws(() => validateShippingProduct({ ...product, ...changes }));
+  assert.deepEqual(validateShippingProduct({ ...product, category: "Medicamentos" }), profile);
 });
 test("cart fingerprint binds quantity, price and packaging version", () => {
   const items = [{ productId: product.id, quantity: 1, expectedUnitPriceCents: 1200 }];
