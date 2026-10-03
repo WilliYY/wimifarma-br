@@ -34,7 +34,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - `CashbackAccount`: conta de cashback por cliente.
 - `CashbackTransaction`: movimentacoes de cashback.
 - `WhatsAppContact`: contatos ou mensagens recebidas pelo WhatsApp.
-- `SiteVisit`: visitantes anonimos do site publico, com identificador local, pagina inicial, ultima pagina, contagem de visualizacoes e hash opcional de IP.
+- `SiteVisit`: navegadores identificados por token aleatorio, pagina inicial, ultima pagina, contagem de visualizacoes e origem de referencia. Campos legados opcionais de IP e user-agent permanecem no schema, mas nao recebem novos valores.
 - `AuditLog`: historico de acoes.
 - `SecretCredential`: credenciais administrativas cifradas para APIs, tokens e senhas.
 - `LoginAttempt`: tentativas de login para rate limit simples.
@@ -59,7 +59,7 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - `Customer.phone` e opcional no banco para permitir cliente Google sem telefone; o cadastro manual ainda pode exigir telefone na validacao da API.
 - `Customer.email` e `Customer.googleSubject` sao unicos para ligar novas sessoes Google ao mesmo cliente.
 - `Customer.passwordHash` e `passwordSetAt` permitem conta de cliente por email/senha sem misturar com `User` administrativo.
-- `SiteVisit.sessionId` e unico para contar visitantes sem criar dados pessoais diretos; IP, quando disponivel, e salvo apenas como hash usando `VISIT_HASH_SALT` ou `AUTH_SECRET`.
+- `SiteVisit.sessionId` e unico e reutilizado por recargas, abas e retornos do mesmo navegador. O nome historico do campo foi mantido; ele representa identidade persistente do navegador, nao uma sessao de acesso. Cookie HttpOnly assinado com `AUTH_SECRET`, valido por 365 dias e renovado a cada registro, tem prioridade sobre o identificador local. O `upsert` atualiza `views` e `lastSeenAt` sem criar outro visitante. Nao ha nova migration nem deduplicacao retroativa de registros antigos. Contrato e limites em `31-visitas-do-site.md`.
 - O admin de cupons usa o modelo `Coupon` existente; `durationDays` e calculado na API para preencher `startsAt` e `endsAt`, sem nova migration.
 - `Product.imageAssetId` referencia opcionalmente a imagem reutilizavel, enquanto `imageUrl` continua preservado para compatibilidade com produtos anteriores.
 - `Product.featuredPosition` indica uma das 10 posicoes exclusivas da vitrine `Melhores ofertas`; valor nulo mantem o produto fora da home.
@@ -67,6 +67,8 @@ O banco guarda usuarios administrativos, produtos, ofertas, cupons, leads, clien
 - `ProductReview` liga produto, cliente e pedido concluido. A combinacao `productId + customerId` e unica, a nota fica limitada de 1 a 5 pelo schema e pela constraint SQL, e somente registros `isPublished` entram na pagina publica.
 
 ## Riscos ao Alterar
+
+Desde 03/10/2026, `OnlinePayment.pixExpiresAt` e uma data anulavel adicionada pela migration `20261003140000_checkout_pix_expiration`. Ela conserva a expiracao do Pix entre recargas e prioriza a data canonica do provedor; nao determina status financeiro. Pagamentos antigos sem essa data continuam consultaveis, sem contador inventado.
 
 - Alterar schema sem criar/aplicar migration.
 - Usar `prisma db push` em producao sem planejamento.

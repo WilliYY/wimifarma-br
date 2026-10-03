@@ -7,6 +7,7 @@ import { createOrderNumber, prepareCheckoutOrder, type CheckoutRequest } from ".
 import { validateOrderShipping } from "@/features/shipping/service";
 import { PaymentError } from "@/features/payments/schema";
 import { queueCommerceOrder } from "@/features/miauby/commerce-service";
+import { customerShippingFee } from "@/features/shipping/delivery-policy";
 
 const orderResultSelect = {
   id: true,
@@ -23,7 +24,7 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   const customer = sessionCustomerId && !isTest ? await tx.customer.findFirst({ where: { id: sessionCustomerId, status: "ACTIVE" }, select: { id: true } }) : null;
   if (input.cashbackRedeemCents > 0 && !customer) throw new CashbackRuleError("Entre na sua conta de cliente para usar cashback.", 401);
   const account = customer && input.checkoutRequestId ? await lockCashbackAccount(tx, customer.id) : null;
-  const requestId = customer || integration ? input.checkoutRequestId : undefined;
+  const requestId = input.checkoutRequestId;
   if (requestId) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${requestId}, 0))`;
   const hash = requestId ? createHash("sha256").update(JSON.stringify({ ...input, checkoutRequestId: undefined })).digest("hex") : undefined;
   if (requestId) {
@@ -40,7 +41,8 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   const prepared = prepareCheckoutOrder(products.map((p) => ({ ...p, price: p.price.toString(), promotionalPrice: p.promotionalPrice?.toString() ?? null })), input.items);
   if (!prepared.ok) throw new CashbackRuleError(prepared.message, prepared.code === "NOT_FOUND" ? 404 : 409, prepared.code);
   const shippingQuote = await validateOrderShipping(tx, input);
-  const deliveryFeeCents = shippingQuote?.priceCents ?? prepared.deliveryFeeCents;
+  const carrierPriceCents = shippingQuote?.priceCents ?? prepared.deliveryFeeCents;
+  const deliveryFeeCents = customerShippingFee(carrierPriceCents, prepared.subtotalCents, input.cashbackRedeemCents);
   const redeem = input.cashbackRedeemCents;
   if (redeem > prepared.subtotalCents || (redeem > 0 && (!account || account.balance.lessThan((redeem / 100).toFixed(2))))) {
     throw new CashbackRuleError("Saldo de cashback alterado ou insuficiente. Atualize o saldo e revise o desconto.");
@@ -62,7 +64,7 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
     addressNumber: address?.number, city: address?.city, complement: address?.complement,
     customerEmail: input.customer.email, customerId: customer?.id, customerName: input.customer.name, customerPhone: input.customer.phone,
     deliveryFeeCents, fulfillmentMethod: input.fulfillmentMethod,
-    ...(shippingQuote ? { shippingQuote } : {}),
+    ...(shippingQuote ? { shippingQuote: { ...shippingQuote, customerPriceCents: deliveryFeeCents, freeShipping: deliveryFeeCents === 0 } } : {}),
     items: { create: items }, neighborhood: address?.neighborhood, notes: input.notes,
     number: createOrderNumber(), paymentMethod: input.paymentMethod, postalCode: address?.postalCode,
     privacyConsentAt: new Date(), state: address?.state, street: address?.street,

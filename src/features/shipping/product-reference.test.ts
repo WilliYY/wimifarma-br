@@ -77,6 +77,48 @@ test("out of range and mismatched dimensions are omitted, partial valid evidence
   assert.equal(oversized?.weightGrams, null);
 });
 
+test("requires dimensions tied to named axes and their own units", () => {
+  for (const text of [
+    "Dimensões da unidade: 80 x 200 x 100 mm.",
+    "Largura 200 mm, altura 80 mm, comprimento 100 mm.",
+    "Largura 80 cm, altura 200 cm, comprimento 100 mm.",
+    "Largura 80 mm, altura 200 mm, comprimento 100 mm; largura 90 mm.",
+    "Fralda aberta: largura 80 mm, altura 200 mm, comprimento 100 mm.",
+    "Caixa master: largura 80 mm, altura 200 mm, comprimento 100 mm.",
+  ]) {
+    const result = qualifyShippingReference({ ...reference(), dimensions: { ...reference().dimensions, evidence: text } }, { ...context, research: `${evidenceWeight}\n${text}` });
+    assert.equal(result?.widthCm, null, text);
+    assert.equal(result?.weightGrams, 350, text);
+  }
+});
+
+test("accepts a shared dimension unit only with an explicit axis order", () => {
+  const text = "Dimensões (C x L x A): 100 x 80 x 200 mm da unidade.";
+  const result = qualifyShippingReference({ ...reference(), dimensions: { ...reference().dimensions, evidence: text } }, { ...context, research: text });
+  assert.deepEqual([result?.lengthCm, result?.widthCm, result?.heightCm], [10, 8, 20]);
+  const wrong = text.replace("C x L x A", "A x L x C");
+  assert.equal(qualifyShippingReference({ ...reference(), dimensions: { ...reference().dimensions, evidence: wrong } }, { ...context, research: wrong })?.widthCm, null);
+});
+
+test("requires the claimed weight number to carry the claimed mass unit", () => {
+  const text = "Peso bruto: 0,35 kg; conteúdo: 350 ml.";
+  const result = qualifyShippingReference({ ...reference(), weight: { ...reference().weight, value: 350, unit: "kg", evidence: text } }, { ...context, research: text });
+  assert.equal(result?.weightGrams, null);
+  const count = "Peso bruto: 0,35 kg; kit com 2 unidades.";
+  assert.equal(qualifyShippingReference({ ...reference(), weight: { ...reference().weight, value: 2, evidence: count } }, { ...context, research: count })?.weightGrams, null);
+});
+
+test("does not reuse an individual reference for a kit or multipack", () => {
+  for (const name of ["Kit de 3 sabonetes", "Sabonete multipack 3 unidades", "Combo de 3 sabonetes"]) {
+    assert.equal(qualifyShippingReference(reference(), { ...context, name })?.weightGrams, null, name);
+  }
+  assert.equal(sameShippingVariant("Sabonete 90 g", "Kit sabonete 90 g"), false);
+  assert.equal(sameShippingVariant("Kit sabonete 90 g", "Sabonete 90 g"), false);
+  const kit = qualifyShippingReference({ ...reference(), packageLevel: "retail_kit" }, { ...context, name: "Kit de 3 sabonetes" });
+  assert.equal(kit?.weightGrams, 350);
+  assert.equal(kit?.widthCm, 8);
+});
+
 test("catalog can save partial drafts but cannot approve a carrier profile", () => {
   const draft = { enabled: false, transportReviewed: false, weightGrams: 350, widthCm: null, heightCm: null, lengthCm: null };
   assert.equal(shippingDraftSchema.safeParse(draft).success, true);

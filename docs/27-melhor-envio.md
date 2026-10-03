@@ -10,6 +10,10 @@ O novo módulo começa desativado. Nenhum produto ganha medidas ou permissão de
 
 ## Operação
 
+Regra aprovada em 03/10/2026: frete gratis a partir de **R$ 99,90 em produtos apos o desconto de cashback**, incluindo outras cidades com CEP/servico elegivel. A cotacao assinada mantem o custo original da transportadora; o pedido registra separadamente `customerPriceCents` e `freeShipping`. O servidor recalcula a gratuidade, sem confiar no resumo do navegador. Essa regra nao habilita cotacao/produtos pendentes de revisao.
+
+Dinheiro fica limitado a retirada ou entrega local em Ivaté/Douradina-PR. Local exige CEP, cidade e UF coerentes: faixa ja existente de Ivaté (87525-000 a 87527-999) e CEP generico confirmado de Douradina (87485-000). Nao ampliar para faixas rurais presumidas. Enderecos fora dessa cobertura exigem frete real selecionado; cartao na entrega nao vale para transportadora.
+
 1. ADMIN abre `/admin/fretes` e cadastra e-mail técnico, CEP de saída e dias úteis para preparação.
 2. O aplicativo cadastrado no Melhor Envio usa a URL de callback `https://wimifarma.com.br/api/admin/fretes/conectar/callback`. Os dados do aplicativo são guardados cifrados no banco. Sandbox e produção são contas/aplicativos distintos; mudar ambiente limpa a conexão.
 3. O botão Conectar inicia OAuth; o administrador autoriza no próprio Melhor Envio. Escopos: `shipping-calculate`, `shipping-companies`, `shipping-tracking`. **Não solicitar `shipping-checkout` ou outras permissões de gasto nesta fase.**

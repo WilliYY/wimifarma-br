@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { getDeliveryAvailability } from "@/features/products/product-detail";
+import { isLocalDeliveryAddress } from "@/features/shipping/delivery-policy";
+import { normalizeBrazilianPhone } from "@/lib/brazilian-phone";
 
 const requiredText = (label: string, max: number) =>
   z.string().trim().min(1, `${label} e obrigatorio.`).max(max);
@@ -29,8 +30,8 @@ export const checkoutRequestSchema = z
     customer: z.object({
       name: requiredText("Nome", 120),
       phone: requiredText("Telefone", 20)
-        .transform(digits)
-        .pipe(z.string().min(10, "Informe um telefone valido.").max(11, "Informe um telefone valido.")),
+        .transform(normalizeBrazilianPhone)
+        .pipe(z.string("Informe um telefone válido com DDD.")),
       email: z
         .union([z.literal(""), z.string().trim().email("Informe um e-mail valido.").max(160)])
         .optional()
@@ -69,21 +70,17 @@ export const checkoutRequestSchema = z
           path: ["address"],
           message: "Informe o endereco para entrega.",
         });
-      } else if (!data.shippingToken && (
-        normalizeText(data.address.city) !== "ivate" ||
-        data.address.state !== "PR" ||
-        !getDeliveryAvailability(data.address.postalCode).available
-      )) {
+      } else if (!data.shippingToken && !isLocalDeliveryAddress(data.address)) {
         context.addIssue({
           code: "custom",
           path: ["address", "city"],
-          message: "Nesta etapa, a entrega esta disponivel somente em Ivate-PR.",
+          message: "Escolha um frete para outras cidades ou entrega local em Ivaté/Douradina-PR.",
         });
       }
     }
 
     if (data.shippingToken && (data.fulfillmentMethod !== "DELIVERY" || !["PIX", "ONLINE"].includes(data.paymentMethod))) {
-      context.addIssue({ code: "custom", path: ["paymentMethod"], message: "Envio por transportadora requer entrega e pagamento combinado por Pix." });
+      context.addIssue({ code: "custom", path: ["paymentMethod"], message: "Transportadora aceita Pix ou cartão pelo Mercado Pago; dinheiro e maquininha somente na retirada ou entrega local." });
     }
 
     const productIds = new Set<string>();
@@ -258,12 +255,4 @@ export function createOrderNumber(now = new Date(), random = crypto.randomUUID()
   const date = now.toISOString().slice(0, 10).replaceAll("-", "");
   const suffix = random.replaceAll("-", "").slice(0, 8).toUpperCase();
   return `WIM-${date}-${suffix}`;
-}
-
-function normalizeText(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
 }

@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-03 - Checkout, frete e visitantes
+
+- Checkout passa a uma pagina responsiva, com contato, entrega e pagamento. Telefone brasileiro aceita DDI +55/0055 e valida DDD/numero; dados persistidos usam formato nacional.
+- Pix usa PT2H e expiracao persistida/canonica, sem renovar apos F5. Cartao aceita parcelas reais do SDK (1..12; debito 1), e a conta foi configurada para parcelado vendedor ate 3x. PAN/CVV continuam exclusivos dos campos do provedor; nao foi criada cobranca real nos testes.
+- Frete gratis em R$ 99,90 de produtos apos cashback vale tambem para transportadoras em outras cidades elegiveis. Custo original e valor cobrado sao preservados separadamente. Dinheiro somente retirada/entrega local em Ivate/Douradina. Cotacao nacional continua pendente de embalagens reais e operacao fiscal/postagem.
+- Visitantes usam identidade persistente assinada em cookie HttpOnly, compativel com a identidade local anterior e concorrencia entre abas. F5 incrementa visualizacoes, sem virar novo visitante; mede navegadores, nao pessoas. Sem novo IP/user-agent/referrer privado armazenado. Contrato em `31-visitas-do-site.md`.
+- Referencias logisticas reforcam correspondencia da apresentacao/kit, rotulos por eixo e rejeicao de caixa master ou fralda aberta. Nenhuma estimativa por foto nem chamada extra de IA. Regras em `29-cadastro-logistica-ia.md`; experiencia e selos reais em `32-checkout-e-confianca.md`.
+
 ## 2026-10-03 - Miauby e alertas comerciais
 
 - Decisão: reutilizar somente o transporte WhatsApp existente do legado, por ponte com token exclusivo e destino fixo aprovado pelo proprietário. Bancos e comandos dos projetos continuam separados.

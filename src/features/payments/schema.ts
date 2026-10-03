@@ -16,9 +16,9 @@ export const paymentInputSchema = z.discriminatedUnion("method", [
     token: z.string().regex(/^[a-zA-Z0-9_-]{10,250}$/),
     paymentMethodId: z.string().regex(/^[a-zA-Z0-9_-]{1,50}$/),
     paymentType: z.enum(["credit_card", "debit_card", "prepaid_card"]),
-    installments: z.literal(1),
+    installments: z.number().int().min(1).max(12),
     identification: z.object({ type: z.enum(["CPF", "CNPJ"]), number: z.string().regex(/^\d{11,14}$/) }).optional(),
-  }),
+  }).refine(value => value.paymentType === "credit_card" || value.installments === 1, "Débito e pré-pago são à vista."),
 ]);
 export type PaymentInput = z.infer<typeof paymentInputSchema>;
 const money = z.string().regex(/^\d{1,10}(\.\d{1,2})?$/);
@@ -31,6 +31,7 @@ export const providerOrderSchema = z.object({
   last_updated_date: z.string().datetime({ offset: true }),
   transactions: z.object({ payments: z.array(z.object({
     amount: money, status: z.string(), status_detail: z.string().optional(),
+    date_of_expiration: z.string().datetime({ offset: true }).optional(),
     payment_method: z.object({ id: z.string(), type: z.string(), qr_code: z.string().max(5000).optional() }),
   })).length(1) }),
 });

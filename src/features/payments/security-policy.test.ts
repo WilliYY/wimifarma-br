@@ -16,6 +16,7 @@ test("only payment pages allow both official Secure Fields preflight and iframe 
     }));
   };
   const payment = policy("/checkout/pagamento/:path*");
+  assert.deepEqual(policy("/checkout"), payment);
   const ordinary = policy("/:path*");
   for (const host of ["https://secure-fields.mercadopago.com", "https://api-static.mercadopago.com"]) {
     assert.ok(payment.get("connect-src")?.includes(host), `Missing preflight permission for ${host}`);

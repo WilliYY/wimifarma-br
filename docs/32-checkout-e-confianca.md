@@ -1,0 +1,36 @@
+# 32 - Checkout e confiança
+
+## Experiência atual
+
+Checkout em uma página, com três colunas a partir de 1280 px, duas no tablet e blocos verticais no celular. Contato, entrega e pagamento permanecem visíveis; cartão abre após dados/endereço válidos e consentimento. Bandeiras vêm do catálogo público do Mercado Pago; indisponibilidade desse catálogo não impede o formulário seguro.
+
+Telefone aceita formato nacional, +55 ou 0055, com DDD válido. Cliente autenticado/rascunho preenche contato; e-mail preenche o Brick. Não guardamos PAN/CVV nem acessamos cartões privados da carteira Mercado Pago. Preenchimento de cartão salvo depende do navegador.
+
+Pix gera QR Code/copia e cola inline, com vencimento de duas horas persistido no banco. Recarregar retoma o pedido autorizado e mantém o prazo original. Após vencimento, consultar o gateway; o contador local não decide cancelamento ou pagamento. Falha de rede conserva a tentativa para evitar pedidos/cobranças duplicados.
+
+Cartão apresenta condições calculadas pelo provedor antes de pagar, até 12 parcelas (débito/pré-pago: uma). Até 3x sem juros foi configurado na conta da loja em 03/10/2026; a loja absorve a tarifa. Acima de 3x, prevalecem juros/opções reais do Mercado Pago, sem tabela inventada no site.
+
+## Entrega
+
+Retirada gratuita na Av. Minas Gerais, 2263. Entrega local em Ivaté/Douradina requer CEP, cidade e UF coerentes e confirmação operacional. Dinheiro somente nesses casos; transportadora exige cotação real e método elegível.
+
+A partir de R$ 99,90 em produtos após cashback, o cliente não paga o frete de transportadora disponível, incluindo outras cidades. A loja continua pagando o custo da transportadora. A cotação preserva esse custo no pedido. Não há prazo/preço/transportadora fictícios quando a cotação está desativada.
+
+Melhor Envio está conectado, mas o envio nacional permanece desativado até revisar embalagem pronta, peso, aceitação da carga, documento fiscal e postagem. A IA pesquisa a apresentação exata/EAN e deixa medidas úteis como rascunho; peso líquido, caixa master, fralda aberta ou imagem sem escala não podem definir o frete. Conferir fisicamente antes de aprovar.
+
+## Como obter selos reais
+
+- **Ebit, incluindo Diamante:** aderir ao programa de lojistas e integrar a pesquisa oficial de satisfação. Classificação depende das avaliações e dos critérios vigentes do programa; cadastro não concede Diamante. [Termo oficial](https://ebit.com.br/termo-lojista).
+- **RA Verificada:** solicitar o programa pelo Reclame AQUI, com assinatura/verificação da empresa, incluindo dados cadastrais e validações exigidas. Após aprovação, usar o HTML oficial em Área da Empresa > RA Verificada > Compartilhar selo. É diferente de RA1000. [Manual oficial](https://manual.reclameaqui.com.br/ra-verificada).
+- **Avaliações do Consumidor Google:** ativar o programa no Merchant Center, aceitar o contrato e integrar o convite opcional após compra. O selo e a nota dependem das avaliações elegíveis; não criar avaliações ou nota fictícias. [Guia oficial](https://support.google.com/merchants/answer/14629804?hl=pt-BR).
+- **Top Quality Store do Google:** na consulta de 03/10/2026, a lista de países do programa não inclui o Brasil. Não anunciar esse selo como disponível para a Wimifarma. [Disponibilidade oficial](https://support.google.com/merchants/answer/14261098?hl=en).
+
+HTTPS e campos de cartão do Mercado Pago já são mecanismos técnicos de proteção; não representam certificação Ebit/Reclame AQUI. Só publicar selos obtidos e seus links/HTML oficiais, com autorização para eventuais custos e novas integrações.
+
+## Validação reproduzível
+
+`npm.cmd test`, `npm.cmd run test:payments`, `npm.cmd run test:shipping`, `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run prisma:validate`, `npm.cmd audit --audit-level=moderate` e build Linux/Docker. `node scripts/checkout-ui-audit.mjs` monta componentes reais em loopback totalmente interceptado: 320/390/768/1440 px, Pix/recarga, cartões, regras de frete, dinheiro e falhas de rede. Imagens em `outputs/checkout-review`, sem dados reais.
+
+`scripts/payment-db-audit.ts` exige PostgreSQL descartável/isolado com nome e endereço protegidos. Testa idempotência, concorrência de estoque, expiração Pix persistida, parcelas enviadas, notificações e Miauby deduplicadas. Gateway/WhatsApp são simulados: esse ensaio não comprova transferência monetária nem entrega de mensagem real.
+
+Referências de integração: [Pix/Orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-integration/websites/pix), [customização de Bricks](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/additional-settings/websites/behavior-customizations), [métodos de pagamento](https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-api/payment-methods/get) e [CEP de Douradina](https://douradina.pr.gov.br/localizacao/).

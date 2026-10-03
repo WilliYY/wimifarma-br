@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { allowedCheckoutStep, CHECKOUT_DRAFT_KEY, checkoutSteps, readCheckoutDraft, type CheckoutDraft, type CheckoutStep } from "@/features/orders/checkout-draft";
 
-export function useCheckoutSession(initial: CheckoutDraft, owner: string) {
+export function useCheckoutSession(initial: CheckoutDraft, owner: string, singlePage = false) {
   const [draft, setDraft] = useState(initial);
   const [step, setStep] = useState<CheckoutStep>(0);
   const [ready, setReady] = useState(false);
@@ -21,6 +21,10 @@ export function useCheckoutSession(initial: CheckoutDraft, owner: string) {
     setDraft(restored);
     const pathname = window.location.pathname;
     function readStep() {
+      if (singlePage) {
+        const url = new URL(window.location.href); url.hash = "";
+        window.history.replaceState(window.history.state, "", url); setStep(0); return;
+      }
       const requested = checkoutSteps.indexOf(window.location.hash.slice(1) as typeof checkoutSteps[number]);
       const safe = allowedCheckoutStep(requested, latest.current);
       const url = new URL(window.location.href);
@@ -35,7 +39,7 @@ export function useCheckoutSession(initial: CheckoutDraft, owner: string) {
     return () => window.removeEventListener("popstate", onPopState);
     // The identity is fixed for this mounted checkout. Initial props are only defaults.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [owner]);
+  }, [owner, singlePage]);
 
   useEffect(() => {
     latest.current = draft;

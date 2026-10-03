@@ -2,7 +2,7 @@
 
 ## Dependências - auditoria de 03/10/2026
 
-- `npm audit --audit-level=moderate` apontou sete vulnerabilidades HIGH no conjunto existente, incluindo `brace-expansion` e `fast-uri`. A entrega Miauby não adicionou dependências. Planejar correção pontual das versões e executar regressão/build antes de publicar essa mudança separada.
+- `npm audit --audit-level=moderate` apontou sete vulnerabilidades HIGH no conjunto existente, incluindo `brace-expansion`, `braces` e `fast-uri`. Reconfirmado na entrega do checkout em 03/10, sem novas dependencias ou mudanca no lockfile. Planejar correção pontual das versões e executar regressão/build antes de publicar essa mudança separada; o `--force` sugere downgrade incompatível do eslint-config-next.
 
 ## Melhor Envio - ativação operacional
 

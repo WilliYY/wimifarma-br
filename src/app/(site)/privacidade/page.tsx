@@ -28,7 +28,7 @@ const sections = [
   },
   {
     title: "Armazenamento local e cookies",
-    text: "O carrinho usa o armazenamento local do navegador para lembrar produtos e quantidades. Cookies estritamente necessarios podem manter login e seguranca da sessao. Atualmente nao usamos cookies de publicidade; se isso mudar, o aviso e os controles de consentimento deverao ser atualizados.",
+    text: "O carrinho usa o armazenamento local do navegador para lembrar produtos e quantidades. Cookies estritamente necessarios podem manter login e seguranca da sessao. Para contar visitantes sem repetir recargas e retornos, usamos um identificador aleatorio no armazenamento local e o cookie assinado wimi-visitor, valido por 365 dias e renovado a cada acesso registrado. O identificador local permanece ate voce limpar os dados do site. Essa contagem representa navegadores, sem identificar uma pessoa entre dispositivos; nao usa IP ou fingerprinting. Registramos paginas visitadas sem parametros da URL e apenas a origem do site de referencia. Atualmente nao usamos cookies de publicidade; se isso mudar, o aviso e os controles de consentimento deverao ser atualizados.",
   },
   {
     title: "Avaliacoes de produtos",

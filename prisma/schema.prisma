@@ -337,6 +337,7 @@ model OnlinePayment {
   requestIv String?
   requestTag String?
   pixCode String?
+  pixExpiresAt DateTime?
   providerUpdatedAt DateTime?
   lastCheckedAt DateTime?
   createdAt DateTime @default(now())

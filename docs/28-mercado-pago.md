@@ -1,6 +1,6 @@
 # 28 - Mercado Pago: checkout e homologação
 
-## Estado atual — 01/10/2026
+## Estado atual — 03/10/2026
 
 **Produção conectada e pagamentos públicos ativados**, conforme autorização do lojista, após os ensaios descritos abaixo. A conexão foi salva inicialmente desativada, validada pelo servidor no Mercado Pago e ativada em uma segunda gravação. O webhook de produção está cadastrado para **Order (Mercado Pago)**. O checkout público retorna a opção online também sem sessão; o formulário foi conferido no navegador sem enviar uma compra real.
 
@@ -8,7 +8,7 @@ O Melhor Envio está conectado, mas a cotação nacional permanece desligada at�
 
 ## Rotina da loja
 
-1. O cliente monta o carrinho, informa contato, escolhe retirada/entrega disponível e **Pix ou cartão online**. Após revisar, segue para o formulário seguro; Pix mostra QR Code/copia e cola, cartão é processado pelo Mercado Pago em uma parcela.
+1. O cliente monta o carrinho e informa contato, entrega e **Pix ou cartão** na mesma pagina. Pix mostra QR Code/copia e cola com validade de duas horas e retomada apos F5. Cartao abre campos seguros apos contato, endereco e consentimento validos, com ate 12 parcelas conforme o provedor: ate 3x sem juros e acima conforme Mercado Pago.
 2. Em `/admin/pedidos`, conferir o estado financeiro confirmado pelo gateway antes de preparar o pedido. Pedido enviado, Pix gerado e comprovante apresentado pelo cliente não equivalem a pagamento aprovado.
 3. Com pagamento aprovado, separar os produtos e atualizar a preparação, entrega/retirada e conclusão no painel. Cashback somente após pedido concluído e pago, conforme contratos existentes.
 4. O recebimento, disponibilidade do saldo, taxas e reembolsos são acompanhados na conta Mercado Pago. A liberação de saldo segue as condições dessa conta; o site não define o prazo nem movimenta o saldo.
@@ -17,7 +17,7 @@ O Melhor Envio está conectado, mas a cotação nacional permanece desligada at�
 
 ## Decisão e escopo
 
-O lojista escolheu Checkout Transparente / Bricks e pagamento na finalização do checkout, antes da confirmação operacional da farmácia (29/09/2026). A integração usa a API Orders e Card Payment Brick oficial, com Pix dinâmico e cartão em uma parcela. O gateway inicia desativado; configuração de teste aparece somente para ADMIN. A publicação do código não comprova homologação nem habilita cobrança real.
+O lojista escolheu Checkout Transparente / Bricks e pagamento na finalização do checkout, antes da confirmação operacional da farmácia (29/09/2026). A integração usa a API Orders e Card Payment Brick oficial, com Pix dinâmico e cartão parcelado. O gateway inicia desativado; configuração de teste aparece somente para ADMIN. A publicação do código não comprova homologação nem habilita cobrança real.
 
 Itens com receita e Farmácia Popular continuam fora do checkout. O atendimento e a preparação do pedido continuam humanos. O módulo de frete é independente: não compra etiquetas nem emite nota fiscal. O contrato logístico está em `27-melhor-envio.md`.
 
@@ -32,7 +32,7 @@ Itens com receita e Farmácia Popular continuam fora do checkout. O atendimento 
 
 ## Fluxo e segurança
 
-- `POST /api/pedidos` fixa produtos, preços, desconto e frete no servidor, cria `Order` e `OnlinePayment` atomicamente. A chave de checkout evita duplicar pedidos. O cliente segue para `/checkout/pagamento/[id]` e pode retomar pelo histórico da própria conta.
+- `POST /api/pedidos` fixa produtos, preços, desconto e frete no servidor, cria `Order` e `OnlinePayment` atomicamente. A chave de checkout evita duplicar pedidos, inclusive manuais de convidados. Pagamento aparece inline no checkout; `/checkout/pagamento/[id]` permanece disponivel no historico. O ponteiro sessionStorage nao concede acesso: proprietario/cookie assinado continuam obrigatorios.
 - Acesso exige o proprietário autenticado ou cookie HttpOnly, SameSite e Secure em HTTPS, assinado para aquele pedido/tentativa; homologação exige ADMIN adicionalmente. Respostas financeiras são `private, no-store`.
 - Antes de enviar ao gateway, lock do pedido e atualização condicional dos produtos reservam estoque em produção. Falha/cancelamento confirmado libera a reserva uma única vez; aprovação consome a reserva. Reembolso não presume devolução física da mercadoria.
 - Um pedido tem uma tentativa financeira e uma chave de idempotência. O corpo imutável da requisição fica cifrado para recuperar uma resposta incerta. Nunca criar outra cobrança com chave diferente enquanto a primeira estiver sem confirmação. Dados cifrados da requisição são apagados após uma resposta canônica conciliada.
@@ -41,7 +41,7 @@ Itens com receita e Farmácia Popular continuam fora do checkout. O atendimento 
 - O navegador consulta a cada 30 segundos enquanto aguarda. Manutenção no processo consulta até vinte pendências por minuto, com intervalo de cinco minutos por registro. Pedido sem tentativa expira após trinta minutos. Reenvio incerto conserva chave/corpo por até uma hora; depois exige conferência humana, mantendo estoque reservado.
 - Reembolso/contestação e cancelamento financeiro são realizados no painel do Mercado Pago e sincronizados. O admin da loja não pode marcar um pagamento online como pago. Reembolso parcial fica destacado e bloqueia a preparação, exigindo conferência manual dos benefícios e valores.
 - Access Token e assinatura ficam no cofre AES-256-GCM existente (`SECRET_VAULT_KEY`), nunca em Git, logs ou respostas ao navegador. `AUTH_SECRET` protege o acesso de convidado. Não trocar chaves sem plano de migração.
-- Cartão é digitado nos campos seguros do SDK oficial; a aplicação recebe somente token e dados necessários do pagador, nunca número/CVV. CSP libera os hosts do SDK somente na rota de pagamento. Pix é renderizado localmente a partir do código retornado pelo provedor, sem imagem remota arbitrária.
+- Cartão é digitado nos campos seguros do SDK oficial; a aplicação recebe somente token e dados necessários do pagador, nunca número/CVV. CSP libera os hosts do SDK em `/checkout` e `/checkout/pagamento/[id]`. Pix é renderizado localmente a partir do código retornado pelo provedor, sem imagem remota arbitrária.
 - APIs de mutação exigem origem, JSON limitado a 16 KB e limite por IP/processo. Produção com várias réplicas deve evoluir o limite para armazenamento compartilhado. HTTP do provedor usa host fixo, TLS, timeout e redirecionamentos bloqueados; erros externos são saneados.
 
 ## Operação e limites
@@ -49,10 +49,18 @@ Itens com receita e Farmácia Popular continuam fora do checkout. O atendimento 
 - Pagamento confirmado permite atendimento; cashback continua condicionado a pedido **concluído e pago**. Reembolso integral/contestação usa a reversão existente. Reembolso parcial exige revisão humana, sem ajuste automático proporcional de cashback nesta fase.
 - Para falha de rede prolongada, conferir o pedido e a referência no Mercado Pago antes de nova cobrança ou ajuste de estoque. Não alterar manualmente o banco para forçar aprovação.
 - Ao desligar novos pagamentos, manter credenciais e webhook para reconciliar os existentes. Não remover a migration para voltar ao fluxo manual.
-- Compra sem valor restante após cashback deve seguir atendimento, sem cobrança de valor zero. Parcelamento, boleto, captura manual, estorno pelo admin e múltiplas contas recebedoras não fazem parte desta entrega.
+- Compra sem valor restante após cashback deve seguir atendimento, sem cobrança de valor zero. Boleto, captura manual, estorno pelo admin e múltiplas contas recebedoras não fazem parte desta entrega.
 - A chave pública e Access Token devem ser da mesma aplicação/ambiente; o teste real do Brick é necessário além da validação `/users/me`.
 
 ## Arquivos e validação
+
+### Refinamento de 03/10/2026
+
+- Pix envia `expiration_time: PT2H`. A migration `20261003140000_checkout_pix_expiration` adiciona `OnlinePayment.pixExpiresAt`; grava prazo inicial e prioriza `date_of_expiration` canônico do provedor. F5 nao renova o prazo. O contador apenas oculta QR/copia e cola vencidos, sem aprovar ou cancelar financeiramente.
+- Card Payment Brick limita opcoes entre 1 e 12 parcelas e envia a selecao real; debito/pre-pago aceitam somente uma. A conta foi configurada no painel Mercado Pago em **Taxas e parcelas > Checkout > Por parcelamento > Oferecer**, com parcelado vendedor ate 3x, persistido apos recarregar. Em 03/10, o painel exibiu 6,61% de financiamento para 3x, somados aos 2,99% de processamento daquela conta; nao sao taxas fixas no codigo. A loja absorve o parcelamento sem juros.
+- Bandeiras publicas sao consultadas no servidor e armazenadas em cache por 30 minutos; falta de catalogo nao impede os campos seguros. Identificacao de bandeira, parcelas, juros e total finais pertencem ao SDK/gateway.
+- E-mail da conta/rascunho preenche o Brick. Cartoes salvos dependem do navegador; nao ha acesso automatico aos cartoes privados da carteira Mercado Pago nesta integracao Orders/Card Payment.
+- Auditoria UI: `node scripts/checkout-ui-audit.mjs`, completamente interceptada em loopback, sem cobranca ou dados reais. Auditoria de banco inclui expiracao persistida, parcelas e idempotencia manual. Guia atual: `32-checkout-e-confianca.md`.
 
 Módulo `src/features/payments`, APIs `/api/admin/pagamentos`, `/api/pagamentos/[id]` e webhook, componentes `payment-panel`/`online-payment`, checkout, histórico e administração dos pedidos, CSP, instrumentação e migration `20260929170000_mercado_pago_orders` (aditiva: método ONLINE e duas tabelas).
 

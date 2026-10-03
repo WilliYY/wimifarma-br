@@ -1,56 +1,54 @@
-import { createHash } from "crypto";
-import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
+import { NextRequest, NextResponse } from "next/server";
+import { readVisitorId, signVisitorId, validVisitorId, VISITOR_COOKIE, VISITOR_COOKIE_MAX_AGE } from "@/features/analytics/visitor-identity";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
 
-function cleanText(value: unknown, maxLength: number) {
-  return String(value ?? "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, maxLength);
+function cleanPath(value: unknown) {
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/";
+  return value.split(/[?#]/)[0].slice(0, 240);
 }
 
-function getClientIp(request: Request) {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  const realIp = request.headers.get("x-real-ip");
-  return cleanText(forwardedFor?.split(",")[0] ?? realIp ?? "", 80);
-}
-
-function hashIp(ip: string) {
-  if (!ip) {
+function cleanReferrer(value: unknown) {
+  try {
+    const url = new URL(typeof value === "string" ? value : "");
+    return ["http:", "https:"].includes(url.protocol) ? url.origin : null;
+  } catch {
     return null;
   }
-
-  const salt = process.env.VISIT_HASH_SALT || process.env.AUTH_SECRET || "wimifarma";
-
-  return createHash("sha256").update(`${salt}:${ip}`).digest("hex");
 }
 
-export async function POST(request: Request) {
-  const body = await readJsonBody(request);
-  const sessionId = cleanText(body?.sessionId, 80);
+export async function POST(request: NextRequest) {
+  const siteUrl = process.env.AUTH_URL || request.url;
+  if (request.headers.get("origin") !== new URL(siteUrl).origin) {
+    return NextResponse.json({ message: "Origem invalida para registrar visita." }, { status: 403 });
+  }
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) return NextResponse.json({ message: "Registro de visitas indisponivel." }, { status: 503 });
 
-  if (!sessionId || sessionId.length < 12) {
+  const body = await readJsonBody(request);
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ message: "Visita invalida." }, { status: 400 });
+  }
+  const cookieId = readVisitorId(request.cookies.get(VISITOR_COOKIE)?.value, secret);
+  if (!cookieId && body.sessionId != null && !validVisitorId(body.sessionId)) {
     return NextResponse.json(
       { message: "Sessao invalida para registrar visita." },
       { status: 400 },
     );
   }
 
-  const path = cleanText(body?.path, 240) || "/";
-  const referrer = cleanText(body?.referrer, 240) || null;
-  const userAgent = cleanText(request.headers.get("user-agent"), 300) || null;
-  const ipHash = hashIp(getClientIp(request));
+  // Preserve identifiers already stored by the previous tracker, including legacy IDs.
+  const sessionId = cookieId || (validVisitorId(body.sessionId) ? body.sessionId : randomUUID());
+  const path = cleanPath(body.path);
   const prisma = getPrisma();
 
   await prisma.siteVisit.upsert({
     create: {
       firstPath: path,
-      ipHash,
       lastPath: path,
-      referrer,
+      referrer: cleanReferrer(body.referrer),
       sessionId,
-      userAgent,
     },
     update: {
       lastPath: path,
@@ -60,5 +58,14 @@ export async function POST(request: Request) {
     where: { sessionId },
   });
 
-  return NextResponse.json({ ok: true });
+  const response = NextResponse.json({ ok: true, visitorId: sessionId });
+  response.headers.set("Cache-Control", "no-store");
+  response.cookies.set(VISITOR_COOKIE, signVisitorId(sessionId, secret), {
+    httpOnly: true,
+    maxAge: VISITOR_COOKIE_MAX_AGE,
+    path: "/",
+    sameSite: "lax",
+    secure: new URL(siteUrl).protocol === "https:",
+  });
+  return response;
 }

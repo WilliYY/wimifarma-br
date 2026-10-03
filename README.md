@@ -30,6 +30,9 @@ Estado operacional em 01/10/2026: Mercado Pago conectado e pagamento público at
 
 ## Status Atual
 
+- Checkout em uma pagina responsiva: Pix por duas horas, cartao com parcelas reais do Mercado Pago (conta configurada ate 3x sem juros), telefone com +55 e dinheiro somente retirada/entrega local. Frete gratis acima de R$ 99,90 apos cashback tambem para outras cidades elegiveis; cotacao nacional ainda depende de embalagens reais. Guia: [docs/32-checkout-e-confianca.md](docs/32-checkout-e-confianca.md).
+- Visitantes unicos por navegador persistente, com F5/abas contabilizados como visualizacoes. Contrato e privacidade: [docs/31-visitas-do-site.md](docs/31-visitas-do-site.md).
+
 - Miauby: alertas de carrinho, pedido e pagamento confirmado por WhatsApp através de ponte restrita com o canal existente. Painel e histórico exclusivos de ADMIN em `/admin/miauby`; configuração e limites em [docs/30-miauby-whatsapp-comercio.md](docs/30-miauby-whatsapp-comercio.md).
 
 - Cadastro assistido pesquisa peso bruto e dimensões da apresentação exata e preenche os campos vazios junto dos dados de catálogo/SEO quando a identidade tem alta confiança. Preserva valores manuais, exibe fontes e salva medidas como rascunho para revisão no módulo de frete. Não mede por fotografia nem confunde conteúdo líquido com peso embalado. Contrato: [docs/29-cadastro-logistica-ia.md](docs/29-cadastro-logistica-ia.md).

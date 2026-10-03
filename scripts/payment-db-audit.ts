@@ -17,14 +17,19 @@ const bundle = await build({ entryPoints: ["src/features/payments/service.ts"], 
   builder.onResolve({ filter: /features\/auth\/auth$|lib\/prisma$|^next\/headers$/ }, args => ({ path: args.path, namespace: "fixture" }));
   builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("auth") ? "export const auth=async()=>null;" : args.path.endsWith("headers") ? "export const cookies=async()=>({get:()=>undefined});" : "export const getPrisma=()=>globalThis.fixture.prisma;" }));
 } }] });
-type Remote = { id: string; type: string; external_reference: string; total_amount: string; country_code: string; user_id: string; status: string; status_detail: string; last_updated_date: string; transactions: { payments: { amount: string; status: string; status_detail: string; payment_method: { id: string; type: string } }[] } };
-type Api = { startPayment: (id: string, input: { method: "pix"; email: string }) => Promise<unknown>; applyProviderOrder: (remote: Remote) => Promise<unknown>; refreshPayment: (id: string) => Promise<unknown>; cancelUnsubmittedPayment: (id: string) => Promise<void> };
+type Remote = { id: string; type: string; external_reference: string; total_amount: string; country_code: string; user_id: string; status: string; status_detail: string; last_updated_date: string; transactions: { payments: { amount: string; status: string; status_detail: string; date_of_expiration?: string; payment_method: { id: string; type: string } }[] } };
+type Api = { startPayment: (id: string, input: { method: "pix"; email: string } | { method: "card"; email: string; token: string; paymentMethodId: string; paymentType: "credit_card"; installments: number }) => Promise<unknown>; applyProviderOrder: (remote: Remote) => Promise<unknown>; refreshPayment: (id: string) => Promise<unknown>; cancelUnsubmittedPayment: (id: string) => Promise<void> };
 const loaded = { exports: {} as Api }; let calls = 0; let failNetwork = false;
-const remotes = new Map<string, Remote>(); const keys: string[] = [];
+const remotes = new Map<string, Remote>(); const keys: string[] = []; const bodies: Record<string, unknown>[] = [];
 const fetchFixture = async (_url: string, options: RequestInit) => {
-  calls++; const body = JSON.parse(String(options.body)); const key = new Headers(options.headers).get("X-Idempotency-Key")!; keys.push(key);
+  calls++; const body = JSON.parse(String(options.body)); bodies.push(body); const key = new Headers(options.headers).get("X-Idempotency-Key")!; keys.push(key);
   if (failNetwork) { failNetwork = false; throw new Error("synthetic network failure"); }
   const remote: Remote = { id: `ORD${body.external_reference.toUpperCase()}`, type: "online", external_reference: body.external_reference, total_amount: body.total_amount, country_code: "BRA", user_id: "123", status: "action_required", status_detail: "waiting_transfer", last_updated_date: "2026-09-29T12:00:00Z", transactions: { payments: [{ amount: body.total_amount, status: "action_required", status_detail: "waiting_transfer", payment_method: { id: "pix", type: "bank_transfer" } }] } };
+  remote.transactions.payments[0].payment_method = { id: body.transactions.payments[0].payment_method.id, type: body.transactions.payments[0].payment_method.type };
+  if (body.transactions.payments[0].payment_method.id === "pix") {
+    assert.equal(body.transactions.payments[0].expiration_time, "PT2H");
+    remote.transactions.payments[0].date_of_expiration = new Date(Date.now() + 2 * 60 * 60_000).toISOString();
+  }
   remotes.set(body.external_reference, remote); return new Response(JSON.stringify(remote));
 };
 vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, Headers, AbortSignal, console, process, Buffer, fetch: fetchFixture, fixture: { prisma } });
@@ -47,7 +52,9 @@ try {
   const results = await Promise.allSettled([pay(duplicates[0].id), pay(second.id)]);
   assert.equal(results.filter(r => r.status === "fulfilled").length, 1); assert.equal(await stock(product.id), 0); assert.equal(calls, 1);
   const active = await prisma.onlinePayment.findFirstOrThrow({ where: { status: "PENDING" } });
+  assert.equal(active.pixExpiresAt?.toISOString(), remotes.get(active.id)!.transactions.payments[0].date_of_expiration, "canonical Pix expiry is persisted");
   await Promise.all([pay(active.orderId), pay(active.orderId)]); assert.equal(calls, 1, "same payment is not charged twice");
+  assert.equal((await prisma.onlinePayment.findUniqueOrThrow({ where: { id: active.id } })).pixExpiresAt?.getTime(), active.pixExpiresAt?.getTime(), "reload and repeated submission do not extend Pix validity");
   const pending = remotes.get(active.id)!;
   const paid: Remote = { ...pending, status: "processed", status_detail: "accredited", last_updated_date: "2026-09-29T12:01:00Z", transactions: { payments: [{ ...pending.transactions.payments[0], status: "processed", status_detail: "accredited" }] } };
   await Promise.all([api.applyProviderOrder(paid), api.applyProviderOrder(paid)]);
@@ -77,7 +84,15 @@ try {
   await api.refreshPayment(uncertain.id); assert.equal(keys.at(-1), keys.at(-2), "unknown retries retain the same key"); assert.equal(await stock(product.id), 1);
   const refreshed = await prisma.onlinePayment.findUniqueOrThrow({ where: { id: unknown.id } }); assert.equal(refreshed.requestCiphertext, null);
   const beforeCalls = calls; const draft = await makeOrder(product.id); await api.cancelUnsubmittedPayment(draft.id); assert.equal(calls, beforeCalls); assert.equal(await stock(product.id), 1);
-  console.log("PASS: idempotent checkout, concurrent stock reservation, duplicate notifications, unique commerce order/payment alerts, injected commerce send without network, stale events, refund, single release, uncertain retry, cancellation");
+  const card = await makeOrder(product.id);
+  await api.startPayment(card.id, { method: "card", email: "buyer@example.com", token: "synthetic-card-token", paymentMethodId: "visa", paymentType: "credit_card", installments: 12 });
+  assert.equal((bodies.at(-1) as { transactions: { payments: { payment_method: { installments: number } }[] } }).transactions.payments[0].payment_method.installments, 12, "selected installment count reaches the gateway unchanged");
+  assert.equal((await prisma.onlinePayment.findUniqueOrThrow({ where: { orderId: card.id } })).pixExpiresAt, null, "card has no Pix expiration");
+  await prisma.product.update({ where: { id: product.id }, data: { stock: 2 } });
+  const manual = { ...input(product.id), paymentMethod: "CASH" as const };
+  const manualDuplicates = await Promise.all([prisma.$transaction(tx => createCheckout(tx, manual)), prisma.$transaction(tx => createCheckout(tx, manual))]);
+  assert.equal(manualDuplicates[0].id, manualDuplicates[1].id, "guest manual checkout is also idempotent");
+  console.log("PASS: idempotent online/manual checkout, stock concurrency, canonical 2h Pix expiration and reload, card installments, commerce deduplication, stale events, refund, single release, uncertain retry, cancellation");
 } finally { await prisma.$disconnect(); }
 }
 void main().catch(error => { console.error("Payment database audit failed", error); process.exitCode = 1; });

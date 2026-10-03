@@ -347,3 +347,18 @@ textarea {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* The delivery form also lives in a narrow checkout column on wide screens. */
+.checkout-delivery-compact .delivery-address-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.checkout-delivery-compact .delivery-address-grid > * {
+  grid-column: span 2 / span 2;
+}
+.checkout-delivery-compact .delivery-address-grid > div:nth-child(3),
+.checkout-delivery-compact .delivery-address-grid > div:nth-child(4) {
+  grid-column: span 1 / span 1;
+}
+.checkout-delivery-compact > fieldset {
+  grid-template-columns: minmax(0, 1fr);
+}

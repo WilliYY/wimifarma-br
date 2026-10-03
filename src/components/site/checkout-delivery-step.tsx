@@ -7,11 +7,12 @@ import { postalAddressSchema } from "@/features/orders/postal-code";
 import { formatPostalCode, getDeliveryAvailability, normalizePostalCode } from "@/features/products/product-detail";
 import { CheckoutShippingOptions } from "./checkout-shipping-options";
 import type { ShippingSelection } from "@/features/shipping/schema";
+import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/features/shipping/delivery-policy";
 
 type Address = CheckoutDraft["address"];
-type Props = { address: Address; fulfillmentMethod: CheckoutDraft["fulfillmentMethod"]; onAddress: Dispatch<SetStateAction<Address>>; onMethod: (method: CheckoutDraft["fulfillmentMethod"]) => void; shippingSelection?: ShippingSelection; onShipping: (option?: ShippingSelection) => void };
+type Props = { address: Address; fulfillmentMethod: CheckoutDraft["fulfillmentMethod"]; onAddress: Dispatch<SetStateAction<Address>>; onMethod: (method: CheckoutDraft["fulfillmentMethod"]) => void; shippingSelection?: ShippingSelection; onShipping: (option?: ShippingSelection) => void; compact?: boolean; discountCents?: number };
 
-export function CheckoutDeliveryStep({ address, fulfillmentMethod, onAddress, onMethod, shippingSelection, onShipping }: Props) {
+export function CheckoutDeliveryStep({ address, fulfillmentMethod, onAddress, onMethod, shippingSelection, onShipping, compact = false, discountCents = 0 }: Props) {
   const [status, setStatus] = useState({ loading: false, message: "", failed: false });
   const [retry, setRetry] = useState(0);
   const code = normalizePostalCode(address.postalCode);
@@ -51,14 +52,14 @@ export function CheckoutDeliveryStep({ address, fulfillmentMethod, onAddress, on
   function field(label: string, key: keyof Address, maxLength: number, autoComplete = "off", placeholder = "") {
     return <label className="grid min-w-0 gap-2 text-sm font-black text-ink"><span>{label}</span><input autoComplete={autoComplete} className={fieldClass} maxLength={maxLength} name={key} onChange={(event) => onAddress((current) => ({ ...current, [key]: key === "state" ? event.target.value.replace(/[^a-z]/gi, "").toUpperCase() : event.target.value }))} placeholder={placeholder} ref={key === "number" ? numberRef : undefined} required={key !== "complement"} value={address[key]} /></label>;
   }
-  return <div>
-    <h1 className="text-2xl font-black text-ink">Como deseja receber?</h1>
+  return <div className={compact ? "checkout-delivery-compact" : undefined}>
+    <h2 className="text-lg font-black text-ink">Como deseja receber?</h2>
     <p className="mt-2 text-sm leading-6 text-muted">Consulte a entrega pelo CEP ou retire na Wimifarma.</p>
     <fieldset className="mt-6 grid gap-3 sm:grid-cols-2"><legend className="sr-only">Entrega ou retirada</legend>
       {([{ value: "DELIVERY", label: "Receber em casa", detail: "Consulte a cobertura pelo CEP", Icon: MapPin }, { value: "PICKUP", label: "Retirar na farmacia", detail: "Av. Minas Gerais, 2263", Icon: Store }] as const).map(({ value, label, detail, Icon }) => <label className={`relative flex min-h-24 cursor-pointer items-center gap-3 rounded-md border p-4 transition focus-within:ring-2 focus-within:ring-brand ${fulfillmentMethod === value ? "border-brand bg-brand-soft" : "border-line hover:border-brand/40"}`} key={value}><input checked={fulfillmentMethod === value} className="sr-only" name="fulfillment" onChange={() => onMethod(value)} type="radio" value={value} /><Icon className="h-5 w-5 shrink-0 text-brand" /><span className="min-w-0"><strong className="block text-sm text-ink">{label}</strong><span className="mt-1 block text-xs text-muted">{detail}</span></span>{fulfillmentMethod === value && <Check className="ml-auto h-4 w-4 shrink-0 text-brand" />}</label>)}
     </fieldset>
     {fulfillmentMethod === "DELIVERY" ? <>
-      <div className="mt-7 grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-12">
+      <div className="delivery-address-grid mt-5 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-12">
         <label className="grid min-w-0 gap-2 text-sm font-black text-ink lg:col-span-3"><span>CEP</span><input autoComplete="postal-code" className={fieldClass} inputMode="numeric" maxLength={9} name="postalCode" onChange={(event) => { const postalCode = formatPostalCode(event.target.value); onAddress((current) => normalizePostalCode(current.postalCode) === normalizePostalCode(postalCode) ? { ...current, postalCode } : { ...current, postalCode, street: "", neighborhood: "", city: "", state: "" }); }} placeholder="00000-000" ref={postalRef} required value={address.postalCode} /></label>
         <div className="lg:col-span-6">{field("Endereco", "street", 120, "address-line1", "Rua ou avenida")}</div>
         <div className="lg:col-span-3">{field("Numero", "number", 20, "off", "Numero da casa")}</div>
@@ -67,7 +68,9 @@ export function CheckoutDeliveryStep({ address, fulfillmentMethod, onAddress, on
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_4.5rem] gap-3 lg:col-span-4">{field("Cidade", "city", 80, "address-level2")}{field("UF", "state", 2, "address-level1")}</div>
       </div>
       <div aria-live="polite" className="mt-3 flex min-h-6 flex-wrap items-center gap-2 text-xs text-muted">{status.loading && <Loader2 className="h-4 w-4 animate-spin" />}<span>{status.message}</span>{status.failed && <button className="inline-flex min-h-9 cursor-pointer items-center gap-1 rounded px-2 font-bold text-brand focus-visible:ring-2 focus-visible:ring-brand" onClick={() => setRetry((value) => value + 1)} type="button"><RotateCw className="h-3 w-3" />Tentar novamente</button>}</div>
-      {outsideCoverage && <CheckoutShippingOptions key={code} postalCode={code} selected={shippingSelection} onSelect={onShipping} />}
+      {code.length === 8 && !outsideCoverage && <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-xs leading-5 text-emerald-800"><strong className="block">Entrega local · Grátis</strong>Equipe Wimifarma. Prazo e disponibilidade confirmados no atendimento.</div>}
+      {outsideCoverage && <CheckoutShippingOptions key={code} postalCode={code} selected={shippingSelection} onSelect={onShipping} discountCents={discountCents} />}
     </> : <div className="mt-6 border-l-4 border-pharma-green bg-emerald-50 p-5"><p className="font-bold text-ink">Retirada gratuita na Wimifarma</p><p className="mt-1 text-sm text-muted">Av. Minas Gerais, 2263, Ivate-PR</p><p className="mt-2 text-xs text-pharma-green">Aguarde a equipe confirmar que o pedido esta pronto.</p></div>}
+    <p className="mt-4 text-xs leading-5 text-muted">Frete grátis a partir de {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(FREE_SHIPPING_THRESHOLD_CENTS / 100)} em produtos após descontos, inclusive para outras cidades com frete disponível.</p>
   </div>;
 }

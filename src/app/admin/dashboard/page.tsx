@@ -256,9 +256,9 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
         value: numberFormatter.format(whatsappContacts),
       },
       {
-        description: `${numberFormatter.format(recentSiteVisitors)} nas ultimas 24h`,
+        description: `${numberFormatter.format(recentSiteVisitors)} navegadores ativos nas ultimas 24h`,
         icon: Eye,
-        label: "Visitantes do site",
+        label: "Visitantes únicos do site",
         roles: ["ADMIN", "MANAGER", "STAFF"],
         tone: "teal",
         value: numberFormatter.format(siteVisitors),

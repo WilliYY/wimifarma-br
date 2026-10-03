@@ -10,7 +10,7 @@ import { moneyToCents } from "@/features/orders/checkout";
 import { queueCommerceOrder } from "@/features/miauby/commerce-service";
 import { readPaymentIntegration } from "./integration";
 import { mercadoPagoRequest } from "./provider";
-import { assertPaymentBinding, paymentBody, providerState, validPaymentAccess } from "./rules";
+import { assertPaymentBinding, paymentBody, PIX_EXPIRATION_MS, providerState, validPaymentAccess } from "./rules";
 import { PaymentError, providerOrderSchema, type PaymentInput, type ProviderOrder } from "./schema";
 
 export const paymentCookieName = (id: string) => `wimi-payment-${id}`;
@@ -52,7 +52,7 @@ export async function startPayment(orderId: string, input: PaymentInput) {
       }
     }
     const encrypted = encryptValue(JSON.stringify(paymentBody(input, current.amountCents, current.id)));
-    const saved = await tx.onlinePayment.update({ where: { id: current.id }, data: { status: "SUBMITTING", stockReserved: current.environment === "production", requestCiphertext: encrypted.ciphertext, requestIv: encrypted.iv, requestTag: encrypted.tag } });
+    const saved = await tx.onlinePayment.update({ where: { id: current.id }, data: { status: "SUBMITTING", pixExpiresAt: input.method === "pix" ? new Date(Date.now() + PIX_EXPIRATION_MS) : null, stockReserved: current.environment === "production", requestCiphertext: encrypted.ciphertext, requestIv: encrypted.iv, requestTag: encrypted.tag } });
     await tx.auditLog.create({ data: { action: "PAYMENT_STARTED", entity: "Order", entityId: orderId, metadata: { environment: current.environment, amountCents: current.amountCents, method: input.method } } });
     return saved;
   });
@@ -105,6 +105,7 @@ export async function applyProviderOrder(remote: ProviderOrder) {
       providerOrderId: remote.id, status: next, statusDetail: remote.status_detail,
       providerUpdatedAt: updatedAt, lastCheckedAt: new Date(), stockReserved: terminal ? false : current.stockReserved,
       pixCode: terminal ? null : remote.transactions.payments[0].payment_method.qr_code ?? null,
+      ...(remote.transactions.payments[0].date_of_expiration ? { pixExpiresAt: new Date(remote.transactions.payments[0].date_of_expiration) } : {}),
       requestCiphertext: null, requestIv: null, requestTag: null,
     } });
     if (["PAID", "PARTIALLY_REFUNDED"].includes(next)) await tx.order.update({ where: { id: current.orderId }, data: { paymentStatus: "PAID" } });
@@ -134,10 +135,11 @@ export async function refreshPayment(orderId: string) {
   return paymentView(orderId);
 }
 export async function paymentView(orderId: string) {
-  const payment = await getPrisma().onlinePayment.findUniqueOrThrow({ where: { orderId }, include: { order: { select: { number: true } } } });
+  const payment = await getPrisma().onlinePayment.findUniqueOrThrow({ where: { orderId }, include: { order: { select: { number: true, customerEmail: true } } } });
   const integration = await paymentConnection(payment.environment, payment.accountId);
   return { orderId, number: payment.order.number, amountCents: payment.amountCents, status: payment.status,
-    statusDetail: payment.statusDetail, pixCode: payment.pixCode, qrDataUrl: payment.pixCode ? await QRCode.toDataURL(payment.pixCode, { width: 320, margin: 2 }) : null, environment: payment.environment, publicKey: integration.publicKey };
+    statusDetail: payment.statusDetail, pixCode: payment.pixCode, pixExpiresAt: payment.pixExpiresAt?.toISOString() ?? null,
+    payerEmail: payment.order.customerEmail ?? "", qrDataUrl: payment.pixCode ? await QRCode.toDataURL(payment.pixCode, { width: 320, margin: 2 }) : null, environment: payment.environment, publicKey: integration.publicKey };
 }
 export async function cancelUnsubmittedPayment(orderId: string) {
   await getPrisma().$transaction(async (tx) => {

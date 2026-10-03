@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { normalizeBrazilianPhone } from "@/lib/brazilian-phone";
+import { customerShippingFee, FREE_SHIPPING_THRESHOLD_CENTS, isLocalDeliveryAddress } from "@/features/shipping/delivery-policy";
 
 import {
   canTransitionStatus,
@@ -30,6 +32,35 @@ const baseRequest = {
   privacyConsent: true as const,
   items: [{ productId: product.id, quantity: 2, expectedUnitPriceCents: 999 }],
 };
+
+test("telefone brasileiro aceita DDI sem confundir DDD 55 e rejeita números inválidos", () => {
+  for (const input of ["+55 (44) 99999-9999", "5544999999999", "005544999999999", "(44) 99999-9999"]) {
+    assert.equal(normalizeBrazilianPhone(input), "44999999999");
+    assert.equal(checkoutRequestSchema.parse({ ...baseRequest, customer: { ...baseRequest.customer, phone: input } }).customer.phone, "44999999999");
+  }
+  assert.equal(normalizeBrazilianPhone("55999999999"), "55999999999");
+  assert.equal(normalizeBrazilianPhone("+55 44 3663-1234"), "4436631234");
+  for (const phone of ["+1 44999999999", "00999999999", "44444444444", "4491234567", "119999999999", "telefone44999999999"]) {
+    assert.equal(normalizeBrazilianPhone(phone), null);
+    assert.equal(checkoutRequestSchema.safeParse({ ...baseRequest, customer: { ...baseRequest.customer, phone } }).success, false);
+  }
+});
+
+test("frete grátis usa total dos produtos após desconto e preserva custo da transportadora", () => {
+  assert.equal(FREE_SHIPPING_THRESHOLD_CENTS, 9990);
+  assert.equal(customerShippingFee(2300, 9989, 0), 2300);
+  assert.equal(customerShippingFee(2300, 9990, 0), 0);
+  assert.equal(customerShippingFee(2300, 10000, 11), 2300);
+  assert.equal(customerShippingFee(2300, 10000, 10), 0);
+});
+
+test("dinheiro e maquininha são locais ou retirada; cidade digitada não amplia CEP", () => {
+  const douradina = { postalCode: "87485-000", street: "Rua Teste", number: "1", neighborhood: "Centro", city: "Douradina", state: "PR" };
+  assert.equal(isLocalDeliveryAddress(douradina), true);
+  assert.equal(checkoutRequestSchema.safeParse({ ...baseRequest, fulfillmentMethod: "DELIVERY", paymentMethod: "CASH", address: douradina }).success, true);
+  assert.equal(isLocalDeliveryAddress({ ...douradina, postalCode: "01001-000" }), false);
+  assert.equal(checkoutRequestSchema.safeParse({ ...baseRequest, fulfillmentMethod: "DELIVERY", paymentMethod: "CASH", shippingToken: "synthetic", address: { ...douradina, postalCode: "01001000" } }).success, false);
+});
 
 test("cashback exige centavos inteiros e chave de tentativa valida sem quebrar checkout antigo", () => {
   assert.equal(checkoutRequestSchema.parse(baseRequest).cashbackRedeemCents, 0);

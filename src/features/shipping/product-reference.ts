@@ -30,19 +30,42 @@ export const shippingReferenceSchema = z.object({
 export type ShippingReference = z.infer<typeof shippingReferenceSchema>;
 
 const textKey = (text: string) => text.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
-function citesNumbers(evidence: string, values: number[], unit: string) {
-  const numbers = (evidence.match(/\d+(?:[.,]\d+)*/g) ?? []).map(value => {
-    if (value.includes(",")) return Number(value.replace(/\./g, "").replace(",", "."));
-    if (/^[1-9]\d{0,2}(?:\.\d{3})+$/.test(value)) {
-      // Brazilian grouping needs Portuguese measurement context; otherwise the dot is ambiguous.
-      return /\b(?:peso|largura|altura|comprimento)\b/i.test(evidence) ? Number(value.replace(/\./g, "")) : NaN;
-    }
-    return Number(value);
-  });
-  const units: Record<string, string> = { g: "g|gramas?", kg: "kg|quilogramas?", mm: "mm|mil[ií]metros?", cm: "cm|cent[ií]metros?", m: "m|metros?" };
-  return new RegExp(`(?<![a-z])(?:${units[unit] ?? unit})\\b`, "i").test(evidence) && values.every(value => numbers.includes(value));
+const numberPattern = "\\d+(?:[.,]\\d+)*";
+const unitPatterns: Record<string, string> = { g: "g|gramas?", kg: "kg|quilogramas?", mm: "mm|mil[ií]metros?", cm: "cm|cent[ií]metros?", m: "m|metros?" };
+function measurementNumber(value: string, evidence: string) {
+  if (value.includes(",")) return Number(value.replace(/\./g, "").replace(",", "."));
+  if (/^[1-9]\d{0,2}(?:\.\d{3})+$/.test(value)) {
+    // Brazilian grouping needs Portuguese measurement context; otherwise the dot is ambiguous.
+    return /\b(?:peso|largura|altura|comprimento)\b/i.test(evidence) ? Number(value.replace(/\./g, "")) : NaN;
+  }
+  return Number(value);
 }
+function citesNumbers(evidence: string, values: number[], unit: string) {
+  const matches = evidence.matchAll(new RegExp(`(?<![\\d.,])(${numberPattern})\\s*(?:${unitPatterns[unit]})\\b`, "gi"));
+  const numbers = [...matches].map(match => measurementNumber(match[1], evidence));
+  return values.every(value => numbers.includes(value));
+}
+function citesDimensions(fact: NonNullable<z.infer<typeof rawShippingReferenceSchema>["dimensions"]>) {
+  const axes = { width: "largura|width", height: "altura|height", length: "comprimento|profundidade|length|depth" };
+  const namedAxes = (Object.keys(axes) as (keyof typeof axes)[]).every(axis => {
+    const matches = fact.evidence.matchAll(new RegExp(`\\b(?:${axes[axis]})\\s*[:=]?\\s*(${numberPattern})\\s*(?:${unitPatterns[fact.unit]})\\b`, "gi"));
+    const values = [...matches].map(match => measurementNumber(match[1], fact.evidence));
+    return values.length > 0 && values.every(value => value === fact[axis]);
+  });
+  if (namedAxes) return true;
+  if (/\b(?:largura|width|altura|height|comprimento|profundidade|length|depth)\b/i.test(fact.evidence)) return false;
+  // A common unit is usable only when the source itself explicitly defines the axis order.
+  const compact = [...fact.evidence.matchAll(new RegExp(`\\b([CLA])\\s*[x×]\\s*([CLA])\\s*[x×]\\s*([CLA])\\s*\\)?\\s*[:=]\\s*(${numberPattern})\\s*[x×]\\s*(${numberPattern})\\s*[x×]\\s*(${numberPattern})\\s*(?:${unitPatterns[fact.unit]})\\b`, "gi"))];
+  const axisKey = { c: "length", l: "width", a: "height" } as const;
+  return compact.length > 0 && compact.every(match => {
+    const labels = match.slice(1, 4).map(label => label.toLowerCase() as keyof typeof axisKey);
+    return new Set(labels).size === 3 && labels.every((label, index) => measurementNumber(match[index + 4], fact.evidence) === fact[axisKey[label]]);
+  });
+}
+const isKit = (name: string) => /\b(?:kit|combo|multipack|multi-pack)\b/i.test(name);
+const unusablePackaging = /caixa\s+master|master\s+(?:case|carton)|fralda\s+aberta|(?:sem|fora\s+da)\s+(?:a\s+)?embalagem|embalagem\s+vazia/i;
 export function sameShippingVariant(requested: string, found: string) {
+  if (isKit(requested) !== isKit(found)) return false;
   if (!/fralda/i.test(requested)) return true;
   const sizes: string[] = requested.toUpperCase().match(/\b(?:RN|XXG|XG|GG|G|M|P)\b/g) ?? [];
   const foundSizes: string[] = found.toUpperCase().match(/\b(?:RN|XXG|XG|GG|G|M|P)\b/g) ?? [];
@@ -62,13 +85,14 @@ export function qualifyShippingReference(raw: unknown, context: {
     widthCm: null, heightCm: null, lengthCm: null, weightSource: null, dimensionsSource: null,
     warnings, researchedAt: new Date().toISOString(),
   };
-  if (!context.exactIdentity || data.identityMatch !== "exact" || ["case", "unknown"].includes(data.packageLevel)) {
+  if (!context.exactIdentity || data.identityMatch !== "exact" || ["case", "unknown"].includes(data.packageLevel)
+    || (isKit(context.name) && data.packageLevel === "retail_unit")) {
     warnings.unshift("Apresentação ou nível de embalagem não confirmado. Meça e pese a unidade que será vendida.");
     return result;
   }
   result.packageLevel = data.packageLevel as ShippingReference["packageLevel"];
   function sourceFor(fact: z.infer<typeof rawShippingReferenceSchema>["weight"] | z.infer<typeof rawShippingReferenceSchema>["dimensions"]) {
-    if (!fact || !textKey(context.research).includes(textKey(fact.evidence))) return null;
+    if (!fact || unusablePackaging.test(fact.evidence) || !textKey(context.research).includes(textKey(fact.evidence))) return null;
     const source = context.sources[fact.sourceIndex];
     const candidate = sourceSchema.safeParse(source && { ...source, evidence: fact.evidence });
     return candidate.success ? candidate.data : null;
@@ -82,7 +106,7 @@ export function qualifyShippingReference(raw: unknown, context: {
   }
   if (data.weight && data.weight.kind !== "gross") warnings.push("Peso líquido/conteúdo não é peso para frete. Pese o produto com a embalagem.");
   const dimensionsSource = sourceFor(data.dimensions);
-  if (data.dimensions && dimensionsSource && citesNumbers(data.dimensions.evidence, [data.dimensions.width, data.dimensions.height, data.dimensions.length], data.dimensions.unit)) {
+  if (data.dimensions && dimensionsSource && citesDimensions(data.dimensions)) {
     const factor = { mm: 0.1, cm: 1, m: 100 }[data.dimensions.unit];
     const [width, height, length] = [data.dimensions.width, data.dimensions.height, data.dimensions.length].map(value => Math.ceil(value * factor * 100) / 100);
     if ([width, height, length].every(value => value > 0 && value <= 200)) {
@@ -111,8 +135,9 @@ export const shippingReferenceJsonSchema = {
 
 export const shippingResearchInstructions = [
   "Pesquise tambem LOGISTICA da apresentacao exata: EAN, marca, modelo/versao, concentracao, quantidade e tamanho. Procure ficha tecnica do fabricante, catalogo logistico/distribuidor e lojas com especificacoes identificadas. Registre fonte e trecho factual de cada peso ou dimensao; ausencia significa nao encontrado, nunca estimativa.",
+  "Na mesma pesquisa, busque combinacoes do EAN exato ou nome/marca/apresentacao com peso bruto, peso com embalagem, largura, altura, comprimento e ficha tecnica. Nao pare no peso/volume do rotulo. Kit, combo e multipack exigem dados do conjunto vendido inteiro; pacote fechado de fraldas e unidade comercial, nao caixa master.",
   "Distinga peso liquido/conteudo de peso bruto com embalagem comercial e de peso do volume pronto para envio. Nao converter ml/L em gramas/kg; nao usar mg por comprimido como peso da caixa. Nao estimar peso/dimensoes por foto, proporcao visual, produto semelhante ou conhecimento geral.",
   "Medicamento: caixa ou frasco da concentracao/quantidade exatas; perfumaria: frasco cheio com tampa/caixa, volume nao e massa; fralda: pacote fechado da marca/linha, tamanho RN/P/M/G/GG/XXG e quantidade exatos, nunca dimensao da fralda aberta, tamanho do bebe ou faixa de peso corporal; alimentos: unidade/kit exatos, peso liquido separado do bruto. Nunca dividir caixa master para inferir uma unidade, nem multiplicar dimensoes por quantidade.",
-  "Identifique o nivel de embalagem: unidade comercial, kit vendido inteiro, volume pronto para transporte ou caixa master. Rotule largura, altura e comprimento; se a ordem das dimensoes nao estiver identificada, nao adivinhe os eixos. Preserve unidades originais. Fontes divergentes para a mesma apresentacao exigem campos incertos vazios e aviso, nao uma media.",
+  "Identifique o nivel de embalagem: unidade comercial, kit vendido inteiro, volume pronto para transporte ou caixa master. Cite largura, altura e comprimento com numero e unidade explicitos para cada eixo; se a ordem das dimensoes nao estiver identificada, nao adivinhe os eixos. Preserve unidades originais. Fontes divergentes para a mesma apresentacao exigem campos incertos vazios e aviso, nao uma media.",
   "Nas notas de LOGISTICA inclua uma linha curta por fato, com valores, unidades originais, nivel da embalagem e URL da fonte. Separe peso bruto e dimensoes: se encontrar apenas um, preserve esse dado e marque o outro como ausente. Inclua produtos embalados, dispositivos, suplementos, alimentos, higiene, perfumaria e kits, sem limitar por categoria. Sem dado bruto explicito ou fonte especifica, deixe ausente. Nao conclua aceitação de transporte, conservacao, receita ou liberacao de frete: isso depende de revisao humana.",
 ].join("\n");

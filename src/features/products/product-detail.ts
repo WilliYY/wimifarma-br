@@ -1,9 +1,8 @@
 import { z } from "zod";
 import { isValidGtin } from "./identity";
 import { SITE_URL, STORE_ID } from "@/lib/seo";
+import { localDeliveryCity } from "@/features/shipping/delivery-policy";
 
-const IVATE_POSTAL_CODE_START = 87_525_000;
-const IVATE_POSTAL_CODE_END = 87_527_999;
 const META_DESCRIPTION_MAX_LENGTH = 160;
 
 export const productReviewInputSchema = z.object({
@@ -163,14 +162,14 @@ export function getDeliveryAvailability(value: string): DeliveryAvailability {
     };
   }
 
-  const postalCode = Number(normalizedPostalCode);
-  const available = postalCode >= IVATE_POSTAL_CODE_START && postalCode <= IVATE_POSTAL_CODE_END;
+  const city = localDeliveryCity(normalizedPostalCode);
+  const available = Boolean(city);
 
   return {
     available,
     normalizedPostalCode,
     title: available
-      ? "Entrega disponível em Ivaté"
+      ? `Entrega disponível em ${city}`
       : "Entrega pelo site ainda nao disponivel para este CEP",
   };
 }

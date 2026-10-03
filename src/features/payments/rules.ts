@@ -1,14 +1,15 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { PaymentError, type PaymentInput, type ProviderOrder } from "./schema";
+export const PIX_EXPIRATION_MS = 2 * 60 * 60_000;
 
-export function paymentBody(input: PaymentInput, amountCents: number, reference: string) {
+export function paymentBody<T extends PaymentInput>(input: T, amountCents: number, reference: string) {
   if (!Number.isSafeInteger(amountCents) || amountCents < 1) throw new PaymentError("O valor do pagamento deve ser maior que zero.");
   const amount = (amountCents / 100).toFixed(2);
   return { type: "online", processing_mode: "automatic", total_amount: amount, external_reference: reference,
     payer: { email: input.email, ...(input.method === "card" && input.identification ? { identification: input.identification } : {}) },
-    transactions: { payments: [{ amount, ...(input.method === "pix" ? { expiration_time: "PT30M" } : {}),
+    transactions: { payments: [{ amount, ...(input.method === "pix" ? { expiration_time: "PT2H" } : {}),
       payment_method: input.method === "pix" ? { id: "pix", type: "bank_transfer" }
-        : { id: input.paymentMethodId, type: input.paymentType, token: input.token, installments: 1 },
+        : { id: input.paymentMethodId, type: input.paymentType, token: input.token, installments: input.installments },
     }] },
   };
 }

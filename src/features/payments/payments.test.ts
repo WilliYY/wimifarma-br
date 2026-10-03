@@ -16,8 +16,11 @@ test("server fixes amount/reference/installments and does not forward arbitrary 
   const body = paymentBody(input, 1234, "local-synthetic");
   assert.equal(body.total_amount, "12.34"); assert.equal(body.external_reference, "local-synthetic");
   assert.doesNotMatch(JSON.stringify(body), /attacker|card_number|do-not-forward|0\.01/);
-  assert.equal(paymentBody({ method: "pix", email: "buyer@example.com" }, 100, "test").transactions.payments[0].expiration_time, "PT30M");
-  assert.equal(paymentInputSchema.safeParse({ ...input, installments: 12 }).success, false);
+  assert.equal(paymentBody({ method: "pix", email: "buyer@example.com" }, 100, "test").transactions.payments[0].expiration_time, "PT2H");
+  assert.equal(paymentBody({ ...input, installments: 3 }, 1234, "test").transactions.payments[0].payment_method.installments, 3);
+  assert.equal(paymentInputSchema.safeParse({ ...input, installments: 12 }).success, true);
+  for (const installments of [0, 13, 1.5]) assert.equal(paymentInputSchema.safeParse({ ...input, installments }).success, false);
+  assert.equal(paymentInputSchema.safeParse({ ...input, paymentType: "debit_card", installments: 3 }).success, false);
   assert.throws(() => paymentBody(input, 0, "test"));
 });
 test("only accredited provider state is paid; holds, failures, refund and partial refund are distinct", () => {

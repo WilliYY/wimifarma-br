@@ -33,7 +33,7 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
 ];
 
-// Only the payment document loads the provider's hosted PCI fields and SDK.
+// Checkout and payment resumption load the provider's hosted PCI fields and SDK.
 const paymentSecurityPolicy = contentSecurityPolicy
   .replace(`script-src ${scriptSources}`, `script-src ${scriptSources} https://sdk.mercadopago.com https://http2.mlstatic.com`)
   // Secure Fields fetches its cache URL before assigning the iframe src;
@@ -73,6 +73,10 @@ const nextConfig: NextConfig = {
       {
         headers: securityHeaders,
         source: "/:path*",
+      },
+      {
+        headers: [{ key: "Content-Security-Policy", value: paymentSecurityPolicy }, { key: "Referrer-Policy", value: "no-referrer" }],
+        source: "/checkout",
       },
       {
         headers: [{ key: "Content-Security-Policy", value: paymentSecurityPolicy }, { key: "Referrer-Policy", value: "no-referrer" }],
