@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-03 - Disponibilidade do frete e equilíbrio do checkout
+
+- O checkout recebe do servidor somente um booleano sobre a cotação pública: configuração ativa, produção, serviços e credenciais presentes. Essa leitura não renova tokens nem consulta transportadoras. Falhas mantêm retirada/entrega local disponíveis e registram somente um marcador operacional, sem segredos.
+- A regra existente de medicamentos, receita e Farmácia Popular foi compartilhada com a apresentação do checkout. O aviso aparece antes de oferecer cotação, com atalhos para retirada e atendimento; a API continua validando produtos, embalagens e cotação assinada. Seleções restauradas são descartadas quando a integração ou o carrinho impedem transportadora.
+- Inspeção autenticada confirmou Melhor Envio conectado, mas cotação pública desativada. Na cesta informada, Dove está sem embalagem aprovada e Cimegrip não admite cotação automática. Nenhuma configuração foi ativada e nenhuma medida foi inventada.
+- Três colunas de mesma largura/altura no desktop, endereço em quatro linhas com ordem de teclado correspondente e resumo claro com subtotal enquanto falta entrega válida. Saldo zero de cashback ocupa uma linha. Sem dependências, migrations, cobranças ou etiquetas novas.
+
 ## 2026-10-03 - Visual do checkout e editor de produtos
 
 - Checkout mantém uma página, com três colunas no desktop, duas no tablet e uma no celular. Cabeçalhos numerados, seleção de pagamento com legenda, miniaturas reais da cesta e resumo escuro destacam as informações antes da confirmação.

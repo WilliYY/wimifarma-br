@@ -4,6 +4,7 @@ import { auth } from "@/features/auth/auth";
 import { sessionCustomerId } from "@/features/auth/customer-session";
 import { getPrisma } from "@/lib/prisma";
 import { publicPaymentConfiguration } from "@/features/payments/integration";
+import { publicCarrierShippingAvailable } from "@/features/shipping/integration";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default async function Page() {
 
   return (
     <CheckoutPage
+      carrierShippingAvailable={await publicCarrierShippingAvailable()}
       paymentConfig={await publicPaymentConfiguration(session?.user?.role === "ADMIN")}
       isCustomer={Boolean(customer)}
       draftOwner={session?.user?.id ? `${session.user.role}:${session.user.id}` : "guest"}

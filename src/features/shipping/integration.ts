@@ -17,6 +17,15 @@ export async function readShippingIntegration() {
   const credentials = row.ciphertext && row.iv && row.tag ? credentialsSchema.parse(JSON.parse(decryptValue({ ciphertext: row.ciphertext, iv: row.iv, tag: row.tag }))) : null;
   return { settings, credentials, revision: row.revision };
 }
+export async function publicCarrierShippingAvailable(): Promise<boolean> {
+  try {
+    const { settings, credentials } = await readShippingIntegration();
+    return Boolean(settings.enabled && settings.environment === "production" && settings.serviceIds.length > 0 && credentials?.accessToken && credentials.refreshToken);
+  } catch {
+    console.error("[melhor-envio] connection-unavailable");
+    return false;
+  }
+}
 export async function saveShippingSettings(settings: ShippingSettings, revision: number, userId: string, application?: { clientId: string; clientSecret: string }) {
   const prisma = getPrisma();
   return prisma.$transaction(async (tx) => {

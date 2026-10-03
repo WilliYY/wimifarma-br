@@ -7,27 +7,27 @@ import { chromium, expect } from "@playwright/test";
 
 // Entirely intercepted loopback fixture: no Next server, live data or gateway.
 const base = "http://127.0.0.1:3198";
-const output = "outputs/checkout-review";
+const output = "outputs/checkout-shipping-review";
 const productPhoto = await fs.readFile("public/banners/products/dove-oleo.webp");
 const modules = {
   "next/link": 'import React from "react"; export default function Link({children,...p}) { return React.createElement("a",p,children); }',
   "next/image": 'import React from "react"; export default function Image({unoptimized,priority,fill,...p}) { return React.createElement("img",p); }',
   "next/script": 'import {useEffect} from "react"; export default function Script({onReady}) { useEffect(()=>{ onReady?.(); },[]); return null; }',
 };
-const bundle = await build({ stdin: { contents: `import React from 'react'; import {createRoot} from 'react-dom/client'; import {CartProvider} from './src/components/site/cart-provider'; import {CheckoutPage} from './src/components/site/checkout-page'; createRoot(document.getElementById('root')).render(<CartProvider><CheckoutPage initialCustomer={{name:'',phone:'',email:'',street:'',neighborhood:''}} isCustomer={new URLSearchParams(location.search).has('customer')} paymentConfig={{publicKey:'TEST-fixture-only',environment:'test',brands:[{id:'visa',name:'Visa',image:null}]}} /></CartProvider>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"', "process.env": "{}" }, plugins: [{ name: "fixture-next", setup(b) { b.onResolve({filter:/^next\/(link|image|script)$/}, a => ({path:a.path,namespace:"fixture"})); b.onLoad({filter:/.*/,namespace:"fixture"}, a => ({contents:modules[a.path],loader:"js",resolveDir:process.cwd()})); } }] });
+const bundle = await build({ stdin: { contents: `import React from 'react'; import {createRoot} from 'react-dom/client'; import {CartProvider} from './src/components/site/cart-provider'; import {CheckoutPage} from './src/components/site/checkout-page'; createRoot(document.getElementById('root')).render(<CartProvider><CheckoutPage initialCustomer={{name:'',phone:'',email:'',street:'',neighborhood:''}} carrierShippingAvailable={!new URLSearchParams(location.search).has('shipping-disabled')} isCustomer={new URLSearchParams(location.search).has('customer')} paymentConfig={{publicKey:'TEST-fixture-only',environment:'test',brands:[{id:'visa',name:'Visa',image:null}]}} /></CartProvider>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"', "process.env": "{}" }, plugins: [{ name: "fixture-next", setup(b) { b.onResolve({filter:/^next\/(link|image|script)$/}, a => ({path:a.path,namespace:"fixture"})); b.onLoad({filter:/.*/,namespace:"fixture"}, a => ({contents:modules[a.path],loader:"js",resolveDir:process.cwd()})); } }] });
 const css = (await postcss([tailwind()]).process(await fs.readFile("src/app/globals.css", "utf8"), { from: "src/app/globals.css" })).css;
 await fs.mkdir(output, { recursive: true });
 const browser = await chromium.launch();
 const results = [], failures = [];
 const product = price => ({id:"fixture-item",slug:"fixture-item",name:"Dove óleo de banho · produto de teste",imageUrl:"/qa-product.webp",category:"Teste",unitPriceCents:price,originalPriceCents:null,stock:20,requiresPrescription:false,isPopularPharmacy:false,quantity:1});
 
-async function fixture(width, {price=9990,customer=false,failOrder=false,failPayment=false,failPaymentStatus="UNKNOWN"}={}) {
+async function fixture(width, {price=9990,customer=false,failOrder=false,failPayment=false,failPaymentStatus="UNKNOWN",shippingAvailable=true,medicine=false,balance="0.01"}={}) {
   const context = await browser.newContext({viewport:{width,height:1000},reducedMotion:"reduce"});
-  const page = await context.newPage(); const errors=[], orders=[], payments=[];
+  const page = await context.newPage(); const errors=[], orders=[], payments=[], quotes=[];
   const state = {failOrder,failPayment,status:"NEW",expiresAt:null};
   page.on("pageerror",e=>errors.push(e.message));
-  await context.addInitScript(({item}) => {
-    if (!localStorage.getItem("wimifarma-cart-v1")) localStorage.setItem("wimifarma-cart-v1",JSON.stringify([item]));
+  await context.addInitScript(({items}) => {
+    if (!localStorage.getItem("wimifarma-cart-v1")) localStorage.setItem("wimifarma-cart-v1",JSON.stringify(items));
     window.__bricks=[];
     window.MercadoPago = class { bricks() { return {create:async(type,id,settings)=>{
       window.__bricks.push({type,initialization:settings.initialization,customization:settings.customization});
@@ -36,7 +36,7 @@ async function fixture(width, {price=9990,customer=false,failOrder=false,failPay
       const button=document.createElement("button"); button.textContent="Pagar com cartão simulado";button.onclick=()=>settings.callbacks.onSubmit({token:"synthetic-token",payment_method_id:"visa",installments:12,payer:{email:"cliente@example.invalid"}},{paymentTypeId:"credit_card"}).catch(()=>{});container.appendChild(button);
       settings.callbacks.onReady(); return {unmount:async()=>container.replaceChildren()};
     }}; } };
-  }, {item:product(price)});
+  }, {items:medicine?[product(price-999),{...product(999),id:"fixture-medicine",name:"Cimegrip · produto sintético",imageUrl:null,category:"Medicamentos"}]:[product(price)]});
   await context.route("**/*", async route => {
     const request=route.request(),url=new URL(request.url());
     if(url.origin!==base) return route.abort();
@@ -46,9 +46,9 @@ async function fixture(width, {price=9990,customer=false,failOrder=false,failPay
     if(url.pathname==="/qa.css") return route.fulfill({contentType:"text/css",body:css});
     if(url.pathname==="/qa-product.webp") return route.fulfill({contentType:"image/webp",body:productPhoto});
     if(url.pathname==="/secure-fields") return route.fulfill({contentType:"text/html; charset=utf-8",body:'<label>Número de cartão simulado<input></label><label>CVV simulado<input></label>'});
-    if(url.pathname.startsWith("/api/cep/")) { const cep=url.pathname.split("/").pop(); return json({data:{postalCode:cep,street:"Rua Sintética",neighborhood:"Bairro Teste",city:cep==="87485000"?"Douradina":cep==="87525000"?"Ivaté":"São Paulo",state:cep==="01001000"?"SP":"PR"}}); }
-    if(url.pathname==="/api/minha-conta/cashback") return json({data:{balance:"0.01"}});
-    if(url.pathname==="/api/fretes/cotacao") return json({data:[{provider:"melhor-envio",serviceId:1,carrier:"Transportadora Teste",service:"Normal",priceCents:2000,deliveryDays:5,token:"synthetic-quote"}]});
+    if(url.pathname.startsWith("/api/cep/")) { const cep=url.pathname.split("/").pop(); return json({data:{postalCode:cep,street:"Rua Sintética",neighborhood:"Bairro Teste",city:cep==="87485000"?"Douradina":cep==="87525000"?"Ivaté":cep==="87501070"?"Umuarama":"São Paulo",state:cep==="01001000"?"SP":"PR"}}); }
+    if(url.pathname==="/api/minha-conta/cashback") return json({data:{balance}});
+    if(url.pathname==="/api/fretes/cotacao") {quotes.push(request.postDataJSON());return json({data:[{provider:"melhor-envio",serviceId:1,carrier:"Transportadora Teste",service:"Normal",priceCents:2000,deliveryDays:5,token:"synthetic-quote"}]});}
     if(url.pathname==="/api/pedidos") {orders.push(request.postDataJSON());if(state.failOrder){state.failOrder=false;return route.abort("failed");}return json({data:{id:"fixture-order",number:"WF-SINTETICO-1",totalCents:price,paymentMethod:orders.at(-1).paymentMethod}});}
     if(url.pathname==="/api/pagamentos/fixture-order") {
       if(request.method()==="POST") {payments.push(request.postDataJSON());if(state.failPayment){state.failPayment=false;state.status=failPaymentStatus;return route.abort("failed");}if(request.postDataJSON().method==="pix"){state.status="PENDING";state.expiresAt=new Date(Date.now()+2*60*60*1000).toISOString();}if(request.postDataJSON().method==="card")state.status="PAID";}
@@ -57,9 +57,10 @@ async function fixture(width, {price=9990,customer=false,failOrder=false,failPay
     if(url.pathname==="/api/miauby/carrinho")return json({});
     throw new Error(`Unexpected intercepted request: ${request.method()} ${url.pathname}`);
   });
-  await page.goto(`${base}/checkout${customer?'?customer':''}`);
+  const query=new URLSearchParams();if(customer)query.set("customer","");if(!shippingAvailable)query.set("shipping-disabled","");
+  await page.goto(`${base}/checkout?${query}`);
   await expect(page.getByRole("heading",{name:"Finalize sua compra"})).toBeVisible();
-  return {page,context,state,errors,orders,payments};
+  return {page,context,state,errors,orders,payments,quotes};
 }
 async function fillContact(page,email="cliente@example.invalid") {await page.getByLabel("Nome completo").fill("Cliente Sintético");await page.getByLabel("WhatsApp / telefone").fill("+55 (44) 99999-0000");await page.getByLabel("E-mail",{exact:true}).fill(email);}
 async function pickup(page) {await page.getByText("Retirar na farmacia",{exact:true}).click();}
@@ -67,6 +68,28 @@ async function privacy(page) {await page.getByRole("checkbox",{name:/Revisei meu
 async function fits(page,width) {assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`overflow at ${width}`);}
 async function test(name,run) {try {await run();results.push({name,passed:true});console.log(`PASS ${name}`);}catch(e){failures.push({name,error:e.message});console.log(`FAIL ${name}: ${e.message}`);}}
 try {
+  for (const width of [320,390,768,1440]) for (const medicine of [false,true]) await test(`blocked carrier and compact address ${width} ${medicine?"medicine":"disabled"}`,async()=>{
+    const f=await fixture(width,{price:4689,customer:true,balance:"0",shippingAvailable:medicine,medicine});const {page}=f;
+    try {
+      await fillContact(page);await page.getByLabel("CEP",{exact:true}).fill("87501070");await expect(page.getByLabel("Cidade",{exact:true})).toHaveValue("Umuarama");await page.getByLabel("Numero",{exact:true}).fill("123");
+      await expect(page.getByRole("heading",{name:medicine?"Este carrinho precisa de atendimento":"Entrega por transportadora indisponível"})).toBeVisible();await expect(page.getByRole("button",{name:"Calcular frete"})).toHaveCount(0);
+      const summary=page.getByRole("region",{name:"Resumo da compra"});await expect(summary.getByText(medicine?"Atendimento":"Indisponível",{exact:true})).toBeVisible();await expect(summary.getByText("Subtotal",{exact:true})).toBeVisible();await expect(summary.getByText("Grátis",{exact:true})).toHaveCount(0);
+      await expect(page.getByText("Sem saldo disponível para este pedido.",{exact:true})).toBeVisible();await fits(page,width);
+      const rects=await page.locator('.delivery-address-grid input').evaluateAll(els=>els.map(e=>({name:e.name,x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y,width:e.getBoundingClientRect().width})));
+      const find=name=>rects.find(r=>r.name===name);assert.equal(rects.length,7);assert.equal(find("postalCode").y,find("number").y);assert.equal(find("neighborhood").y,find("complement").y);assert.equal(find("city").y,find("state").y);assert.ok(find("street").width>find("number").width);assert.equal(new Set(rects.map(r=>r.y)).size,4);
+      if(width===1440){const panels=await page.locator('[data-checkout-panel]').evaluateAll(els=>els.map(e=>({width:e.getBoundingClientRect().width,height:e.getBoundingClientRect().height,y:e.getBoundingClientRect().y})));assert.equal(panels.length,3);for(const key of ["width","height","y"])assert.ok(Math.max(...panels.map(p=>p[key]))-Math.min(...panels.map(p=>p[key]))<2,`${key} differs between desktop panels`);}
+      // Tab order follows the visible rows, including the optional complement.
+      await page.getByLabel("CEP",{exact:true}).focus();for(const name of ["number","street","neighborhood","complement","city","state"]){await page.keyboard.press("Tab");assert.equal(await page.evaluate(()=>document.activeElement.name),name);}
+      await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByRole("alert")).toContainText("retirada");assert.equal(f.orders.length,0);assert.equal(f.payments.length,0);assert.equal(f.quotes.length,0);
+      await page.screenshot({path:`${output}/delivery-${medicine?"medicine":"disabled"}-${width}.png`,fullPage:true});await page.getByRole("button",{name:"Retirar na loja"}).click();await expect(summary.getByText("Grátis",{exact:true})).toBeVisible();await expect(summary.getByText("Total do pedido",{exact:true})).toBeVisible();assert.deepEqual(f.errors,[]);
+    }finally{await f.context.close();}
+  });
+  await test("restored carrier selection is discarded when quoting becomes unavailable",async()=>{
+    const f=await fixture(390);const {page}=f;
+    try {await fillContact(page);await page.getByLabel("CEP",{exact:true}).fill("01001000");await expect(page.getByLabel("Cidade",{exact:true})).toHaveValue("São Paulo");await page.getByLabel("Numero",{exact:true}).fill("123");await page.getByRole("button",{name:"Calcular frete"}).click();await page.getByRole("radio",{name:/Transportadora Teste/}).check();await expect.poll(()=>page.evaluate(()=>Boolean(JSON.parse(sessionStorage.getItem("wimifarma-checkout-draft-v1"))?.data.shippingSelection))).toBe(true);
+      await page.goto(`${base}/checkout?shipping-disabled`);await expect(page.getByRole("heading",{name:"Entrega por transportadora indisponível"})).toBeVisible();await expect.poll(()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem("wimifarma-checkout-draft-v1"))?.data.shippingSelection)).toBeUndefined();await expect(page.getByRole("region",{name:"Resumo da compra"}).getByText("Indisponível",{exact:true})).toBeVisible();await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();assert.equal(f.orders.length,0);assert.equal(f.payments.length,0);assert.equal(f.quotes.length,1);assert.deepEqual(f.errors,[]);
+    }finally{await f.context.close();}
+  });
   for(const width of [320,390,768,1440]) await test(`layout and Pix reload ${width}`,async()=>{
     const f=await fixture(width);const {page}=f;
     try {

@@ -60,7 +60,17 @@ Cotações públicas continuam desativadas e produtos sem liberação automátic
 
 Revisão em 01/10/2026: conexão de produção preservada e cotação pública ainda desativada. Solicitados ao lojista peso e dimensões da embalagem pronta do KitKat e do Dove, além de confirmação sobre NF-e e local de postagem. A agência selecionada anteriormente é uma referência da configuração, não comprovação de que a operação já está pronta. Mercado Pago foi ativado separadamente; isso não libera frete nacional, compra de etiquetas ou emissão fiscal. Ao liberar futuramente, conferir a embalagem real, testar a cotação e manter etiqueta/postagem sob operação humana.
 
-## Referências oficiais
+## Diagnóstico e apresentação no checkout em 03/10/2026
+
+O painel autenticado confirmou conexão de produção, PAC/SEDEX selecionados e a opção de cotação pública desmarcada. A falha observada ocorre antes da chamada ao provedor. Para a cesta Dove + Cimegrip, há ainda dois bloqueios independentes: Dove sem peso/dimensões aprovados e Cimegrip sujeito a atendimento farmacêutico. Ativar somente a chave geral não resolve essa cesta.
+
+`publicCarrierShippingAvailable()` fornece exclusivamente um booleano ao checkout, sem renovar tokens, chamar o Melhor Envio ou expor configuração/credenciais. Erros de leitura/decifração/validação retornam indisponível e geram o marcador fixo `[melhor-envio] connection-unavailable`. Não imprime o erro original ou dados privados.
+
+A interface mostra o impedimento antes do botão de cotação, oferece retirada/WhatsApp e não chama a API enquanto a configuração ou a regra farmacêutica impedir o envio. O predicado de restrição é compartilhado com a validação existente do servidor. Uma seleção antiga nesses casos deixa de compor preço/validação e é removida do rascunho. A interface é orientação; assinatura, estoque, embalagem e elegibilidade continuam conferidos na API.
+
+Para liberar produtos elegíveis: medir/pesar a embalagem pronta, confirmar revisão e liberação no painel de fretes, conferir aceitação da carga/documento fiscal/postagem e então habilitar a cotação e testar o serviço real. A conferência desta tarefa não alterou essas aprovações nem criou etiqueta.
+
+## Referências oficiais da API
 
 - https://docs.melhorenvio.com.br/reference/introducao-api-melhor-envio
 - https://docs.melhorenvio.com.br/docs/autenticacao

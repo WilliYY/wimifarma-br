@@ -4,7 +4,7 @@
 
 Checkout em uma página, com três colunas a partir de 1280 px, duas no tablet e blocos verticais no celular. Contato, entrega e pagamento permanecem visíveis; cartão abre após dados/endereço válidos e consentimento. Bandeiras vêm do catálogo público do Mercado Pago; indisponibilidade desse catálogo não impede o formulário seguro.
 
-O visual usa cabeçalhos numerados com orientação curta, campos com foco visível, miniaturas dos produtos e opções de pagamento com legendas. O resumo escuro diferencia produtos, frete, desconto e total; a barra de frete grátis considera os produtos após cashback e não garante cobertura de CEP. Ícones de confirmação nos dados/entrega indicam somente preenchimento conforme a validação existente. Não representam confirmação operacional ou aprovação financeira.
+O visual usa cabeçalhos numerados com orientação curta, campos com foco visível, miniaturas dos produtos e opções de pagamento com legendas. As três colunas têm a mesma largura e altura no desktop, sem altura fixa ou corte do conteúdo. O endereço compacto usa quatro linhas e preserva a ordem visual no teclado. O resumo claro diferencia produtos, frete, desconto e subtotal/total; saldo zero de cashback ocupa uma linha. A barra de frete grátis considera os produtos após cashback e não garante cobertura de CEP. Ícones de confirmação nos dados/entrega indicam somente preenchimento conforme a validação existente. Não representam confirmação operacional ou aprovação financeira.
 
 Telefone aceita formato nacional, +55 ou 0055, com DDD válido. Cliente autenticado/rascunho preenche contato; e-mail preenche o Brick. Não guardamos PAN/CVV nem acessamos cartões privados da carteira Mercado Pago. Preenchimento de cartão salvo depende do navegador.
 
@@ -20,6 +20,10 @@ A partir de R$ 99,90 em produtos após cashback, o cliente não paga o frete de 
 
 Melhor Envio está conectado, mas o envio nacional permanece desativado até revisar embalagem pronta, peso, aceitação da carga, documento fiscal e postagem. A IA pesquisa a apresentação exata/EAN e deixa medidas úteis como rascunho; peso líquido, caixa master, fralda aberta ou imagem sem escala não podem definir o frete. Conferir fisicamente antes de aprovar.
 
+O checkout informa essa indisponibilidade antes de oferecer cotação. Medicamentos e itens sujeitos às regras farmacêuticas também exibem atendimento/retirada, sem consulta automática de transportadora. Preços anteriores restaurados não permanecem válidos se essa integração ou elegibilidade estiver bloqueada; o servidor preserva todas as validações de frete.
+
+O resumo usa subtotal enquanto falta uma entrega válida, com estado separado para CEP pendente, frete a selecionar, atendimento ou indisponibilidade. Após escolher retirada, entrega local ou uma cotação elegível, exibe o total e o custo correspondente. A composição do preço e a regra de R$ 99,90 após descontos permanecem iguais.
+
 ## Como obter selos reais
 
 - **Ebit, incluindo Diamante:** aderir ao programa de lojistas e integrar a pesquisa oficial de satisfação. Classificação depende das avaliações e dos critérios vigentes do programa; cadastro não concede Diamante. [Termo oficial](https://ebit.com.br/termo-lojista).
@@ -31,7 +35,7 @@ HTTPS e campos de cartão do Mercado Pago já são mecanismos técnicos de prote
 
 ## Validação reproduzível
 
-`npm.cmd test`, `npm.cmd run test:payments`, `npm.cmd run test:shipping`, `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run prisma:validate`, `npm.cmd audit --audit-level=moderate` e build Linux/Docker. `node scripts/checkout-ui-audit.mjs` monta componentes reais em loopback totalmente interceptado: 320/390/768/1440 px, Pix/recarga, cartões, regras de frete, dinheiro e falhas de rede. Imagens em `outputs/checkout-review`, sem dados reais.
+`npm.cmd test`, `npm.cmd run test:payments`, `npm.cmd run test:shipping`, `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run prisma:validate`, `npm.cmd audit --audit-level=moderate` e build Linux/Docker. `node scripts/checkout-ui-audit.mjs` monta componentes reais em loopback totalmente interceptado: 320/390/768/1440 px, Pix/recarga, cartões, regras de frete, dinheiro e falhas de rede. Também cobre transportadora desativada, cesta com medicamento, descarte de seleção antiga, ausência de POST indevido, ordem de teclado e simetria desktop. Novas imagens em `outputs/checkout-shipping-review`, sem dados reais; capturas anteriores permanecem em `outputs/checkout-review`.
 
 `scripts/payment-db-audit.ts` exige PostgreSQL descartável/isolado com nome e endereço protegidos. Testa idempotência, concorrência de estoque, expiração Pix persistida, parcelas enviadas, notificações e Miauby deduplicadas. Gateway/WhatsApp são simulados: esse ensaio não comprova transferência monetária nem entrega de mensagem real.
 
@@ -39,6 +43,7 @@ Referências de integração: [Pix/Orders](https://www.mercadopago.com.br/develo
 
 ## Evidências de 03/10/2026
 
+- Revisão de frete/simetria: 173 testes gerais, 25 testes de frete e 23 cenários UI em 320/390/768/1440 px aprovados; lint e TypeScript aprovados. Bloqueios antecipados não geram cotação/pedido/pagamento, retirada continua disponível e uma cotação antiga é descartada quando a integração fica indisponível. Simetria desktop, quatro linhas de endereço e ordem de teclado conferidas. Capturas sintéticas em `outputs/checkout-shipping-review`; não comprovam medição física ou cotação real.
 - Refinamento visual: 173 testes gerais, 14 cenários de checkout com miniatura real e quatro larguras no cadastro/assistente aprovados. Lint, TypeScript e Prisma validate aprovados. Campos, handlers e permissões preservados na revisão estática; nenhum pedido/cobrança real criado pela auditoria visual.
 - Visual publicado no commit `4b79d71`, com build Linux/Docker aprovado. App healthy, zero reinícios e health público `ok: true`. Navegador conectado confirmou três títulos alinhados, foto da cesta carregada e ausência de overflow; cadastro abriu com modal de 1152 px e salvar/cancelar visíveis. Nenhum produto ou pedido foi salvo nessa conferência. Imagem anterior preservada em `wimifarma-br-app:pre-ui-4b79d71`; sem migration ou mudança de credenciais.
 - 173 testes gerais, 13 de pagamentos, 22 de frete e 14 cenários UI aprovados; lint, typecheck e Prisma validate aprovados. Banco PostgreSQL 17 descartável, sem rede externa e com gateway/WhatsApp simulados, confirmou expiração Pix persistida, parcelas, estoque concorrente, idempotência e deduplicação da Miauby.

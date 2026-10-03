@@ -14,22 +14,25 @@ import { normalizePostalCode } from "@/features/products/product-detail";
 import { customerShippingFee, FREE_SHIPPING_THRESHOLD_CENTS, isLocalDeliveryAddress } from "@/features/shipping/delivery-policy";
 import { OnlinePayment } from "./online-payment";
 import { PaymentCardForm, type SecureCardInput } from "./payment-card-form";
+import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
 
 type PaymentConfig = { publicKey: string; environment: string; brands: { id: string; name: string; image: string | null }[] } | null;
 type Result = { id: string; number: string; totalCents: number; paymentMethod: string };
-type Props = { initialCustomer: { name: string; phone: string; email: string; street: string; neighborhood: string }; draftOwner?: string; isCustomer?: boolean; paymentConfig?: PaymentConfig };
+type Props = { initialCustomer: { name: string; phone: string; email: string; street: string; neighborhood: string }; draftOwner?: string; isCustomer?: boolean; paymentConfig?: PaymentConfig; carrierShippingAvailable?: boolean };
 const money = (cents: number) => new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" }).format(cents / 100);
 const fieldClass = "checkout-field h-12 w-full min-w-0 rounded-xl border border-line bg-white px-3.5 text-sm font-medium text-ink outline-none transition hover:border-ink/25 focus:border-brand focus:ring-4 focus:ring-brand/10 disabled:cursor-not-allowed";
 const panelClass = "min-w-0 overflow-hidden rounded-2xl border border-line bg-white p-5 shadow-[0_8px_30px_-20px_rgba(17,24,39,0.18)] sm:p-6";
 
-export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer = false, paymentConfig = null }: Props) {
+export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer = false, paymentConfig = null, carrierShippingAvailable = false }: Props) {
   const { clearCart, hydrated, items, itemCount, subtotalCents } = useCart();
   const { draft, setDraft, ready, clearDraft } = useCheckoutSession({
     customer: { name: initialCustomer.name, phone: initialCustomer.phone, email: initialCustomer.email },
     address: { postalCode: "", street: initialCustomer.street, number: "", complement: "", neighborhood: initialCustomer.neighborhood, city: "", state: "" },
     fulfillmentMethod: "DELIVERY", paymentMethod: paymentConfig ? "ONLINE" : "PIX", onlineMethod: "pix", notes: "",
   }, draftOwner, true);
-  const { customer, fulfillmentMethod, address, notes, shippingSelection } = draft;
+  const { customer, fulfillmentMethod, address, notes, shippingSelection: storedShippingSelection } = draft;
+  const requiresShippingSupport = items.some(requiresPharmacyShippingSupport);
+  const shippingSelection = carrierShippingAvailable && !requiresShippingSupport ? storedShippingSelection : undefined;
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -48,6 +51,9 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   useEffect(() => {
     if (previousCart.current !== cartKey) { previousCart.current = cartKey; setDraft(current => ({ ...current, shippingSelection: undefined })); }
   }, [cartKey, setDraft]);
+  useEffect(() => {
+    if (ready && hydrated && storedShippingSelection && (!carrierShippingAvailable || requiresShippingSupport)) setDraft(current => ({ ...current, shippingSelection: undefined }));
+  }, [ready, hydrated, storedShippingSelection, carrierShippingAvailable, requiresShippingSupport, setDraft]);
   const local = fulfillmentMethod === "PICKUP" || (!shippingSelection && isLocalDeliveryAddress(address));
   const method = draft.paymentMethod === "CASH" && local ? "cash" : !paymentConfig && draft.paymentMethod === "CARD_ON_DELIVERY" && local ? "manual-card" : draft.onlineMethod === "card" && paymentConfig ? "card" : "pix";
   const online = Boolean(paymentConfig && method !== "cash");
@@ -56,7 +62,9 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   const fee = fulfillmentMethod === "PICKUP" ? 0 : customerShippingFee(shippingSelection?.priceCents ?? 0, subtotalCents, discountCents);
   const total = subtotalCents - discountCents + fee;
   const contactReady = !checkoutStepError(0, draft) && Boolean(customer.email.trim());
-  const deliveryReady = !checkoutStepError(1, draft);
+  const deliveryReady = !checkoutStepError(1, { ...draft, shippingSelection });
+  const carrierDestination = normalizePostalCode(address.postalCode).length === 8 && !isLocalDeliveryAddress(address);
+  const shippingStatus = !carrierDestination ? "Informe o CEP" : requiresShippingSupport ? "Atendimento" : !carrierShippingAvailable ? "Indisponível" : "Selecione o frete";
   function setAddress(value: SetStateAction<CheckoutDraft["address"]>) {
     setDraft(current => { const next = typeof value === "function" ? value(current.address) : value; return { ...current, address: next, shippingSelection: normalizePostalCode(next.postalCode) === normalizePostalCode(current.address.postalCode) ? current.shippingSelection : undefined }; });
   }
@@ -76,7 +84,8 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   }
   async function submitOrder(card?: SecureCardInput) {
     if (sending.current) throw new Error("Já estamos enviando este pedido.");
-    const invalid = checkoutStepError(0, draft) || checkoutStepError(1, draft);
+    const carrierBlocked = fulfillmentMethod === "DELIVERY" && carrierDestination && !shippingSelection && (!carrierShippingAvailable || requiresShippingSupport);
+    const invalid = checkoutStepError(0, draft) || (carrierBlocked ? requiresShippingSupport ? "Este carrinho precisa de atendimento farmacêutico. Escolha retirada ou fale com a equipe." : "A entrega por transportadora está indisponível. Escolha retirada ou fale com a equipe." : checkoutStepError(1, { ...draft, shippingSelection }));
     if (invalid || (online && !customer.email.trim()) || !privacyConsent) {
       const message = invalid || (online && !customer.email.trim() ? "Informe seu e-mail para receber a confirmação do pagamento." : "Revise os dados e confirme a política de privacidade.");
       setError(message); throw new Error(message);
@@ -127,8 +136,8 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
         <div><strong className="block text-xs font-bold text-ink">Conexão protegida</strong><span className="mt-1 block text-xs text-muted">{paymentConfig ? "Pagamento pelo Mercado Pago" : "Atendimento pela Wimifarma"}</span></div>
       </div>
     </header>
-    <div className="grid items-start gap-5 md:grid-cols-2 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)_minmax(0,1.1fr)]">
-      <section className={panelClass}>
+    <div className="grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3 xl:items-stretch">
+      <section className={panelClass} data-checkout-panel="customer">
         <PanelTitle number="1" Icon={UserRound} title="Seus dados" description="Para acompanhar e receber seu pedido." complete={contactReady} />
         <fieldset disabled={Boolean(onlineOrder) || submitting} className="mt-5 grid min-w-0 gap-4 disabled:opacity-70">
           <Field label="Nome completo" autoComplete="name" maxLength={120} required value={customer.name} onChange={event => setDraft(current => ({ ...current, customer: { ...current.customer, name: event.target.value } }))} />
@@ -148,8 +157,8 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
           <Link href="/carrinho" className="mt-4 inline-flex min-h-8 items-center gap-1 text-xs font-bold text-brand hover:underline">Editar minha cesta<ArrowRight className="h-3 w-3" /></Link>
         </details>}
       </section>
-      <section className={panelClass}><PanelTitle number="2" Icon={Truck} title="Entrega ou retirada" description="Escolha a opção mais conveniente." complete={deliveryReady} /><fieldset disabled={Boolean(onlineOrder) || submitting} className="mt-5 min-w-0 disabled:opacity-70"><legend className="sr-only">Dados da entrega</legend><CheckoutDeliveryStep compact address={address} fulfillmentMethod={fulfillmentMethod} onAddress={setAddress} discountCents={discountCents} shippingSelection={shippingSelection} onMethod={value => setDraft(current => ({ ...current, fulfillmentMethod: value, shippingSelection: undefined }))} onShipping={value => setDraft(current => ({ ...current, shippingSelection: value }))} /></fieldset></section>
-      <section className={`${panelClass} relative md:col-span-2 xl:col-span-1`}>
+      <section className={panelClass} data-checkout-panel="delivery"><PanelTitle number="2" Icon={Truck} title="Entrega ou retirada" description="Escolha a opção mais conveniente." complete={deliveryReady} /><fieldset disabled={Boolean(onlineOrder) || submitting} className="mt-5 min-w-0 disabled:opacity-70"><legend className="sr-only">Dados da entrega</legend><CheckoutDeliveryStep compact carrierShippingAvailable={carrierShippingAvailable} address={address} fulfillmentMethod={fulfillmentMethod} onAddress={setAddress} discountCents={discountCents} shippingSelection={shippingSelection} onMethod={value => setDraft(current => ({ ...current, fulfillmentMethod: value, shippingSelection: undefined }))} onShipping={value => setDraft(current => ({ ...current, shippingSelection: value }))} /></fieldset></section>
+      <section className={`${panelClass} relative md:col-span-2 xl:col-span-1`} data-checkout-panel="payment">
         <div aria-hidden="true" className="absolute inset-x-0 top-0 h-0.5 bg-brand" />
         <PanelTitle number="3" Icon={CreditCard} title="Pagamento" description="Confira o total e finalize com segurança." />
         {onlineOrder ? <><OnlinePayment embedded orderId={onlineOrder} initialMethod={draft.onlineMethod ?? "pix"} onPaid={finishPayment} onTerminal={forgetActivePayment} onReview={resetPayment} />{error && <p className="mt-4 rounded-lg bg-brand-soft p-3 text-sm text-brand" role="alert">{error}</p>}</> : <>
@@ -157,11 +166,11 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
           <p className="mt-3 text-xs leading-5 text-muted">{method === "cash" ? "Apenas retirada ou entrega local em Ivaté e Douradina. Informe o troco nas observações." : method === "manual-card" ? "Pague na maquininha ao receber ou retirar." : !paymentConfig ? "A farmácia enviará os dados do Pix após confirmar o pedido." : method === "pix" ? "QR Code e copia e cola aqui na tela. Você terá 2 horas para pagar." : "Até 3x sem juros. Acima de 3x, juros e total calculados pelo Mercado Pago."}</p>
           {method === "card" && paymentConfig?.brands.length ? <div className="mt-4 flex flex-wrap items-center gap-2" aria-label="Bandeiras disponíveis no Mercado Pago">{paymentConfig.brands.map(brand => <span key={brand.id} className="grid h-7 min-w-10 place-items-center rounded border border-line px-1.5">{brand.image ? <Image unoptimized src={brand.image} alt={brand.name} width={36} height={20} className="h-5 w-auto max-w-12 object-contain" /> : <span className="text-[10px] font-semibold">{brand.name}</span>}</span>)}</div> : null}
           {isCustomer && <fieldset disabled={submitting}><CheckoutCashback subtotalCents={subtotalCents} selectedCents={discountCents} onSelect={setCashbackRedeemCents} /></fieldset>}
-          <div className="mt-5 rounded-2xl bg-ink p-5 text-white">
-            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white/65">Resumo da compra</p>
-            <dl className="grid gap-3 text-sm"><SummaryLine label="Produtos" value={money(subtotalCents)} /><SummaryLine label={fulfillmentMethod === "PICKUP" ? "Retirada" : shippingSelection ? `${shippingSelection.carrier} · ${shippingSelection.service}` : deliveryKnown ? "Entrega local" : "Frete"} value={!deliveryKnown ? "Consultar CEP" : fee === 0 ? "Grátis" : money(fee)} />{discountCents > 0 && <SummaryLine label="Cashback" value={`− ${money(discountCents)}`} />}</dl>
-            <div className="mt-4 flex flex-wrap items-end justify-between gap-2 border-t border-white/15 pt-4"><span className="max-w-40 text-sm font-semibold">{deliveryKnown ? "Total" : "Produtos · frete a calcular"}</span><strong className="text-3xl font-black tracking-tight">{money(total)}</strong></div>
-          </div>
+          <section className="mt-5 overflow-hidden rounded-2xl border border-line bg-surface-subtle/50" aria-label="Resumo da compra">
+            <div className="flex items-center gap-2.5 border-b border-line px-4 py-3.5"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-brand"><ShoppingBag className="h-4 w-4" /></span><h3 className="flex-1 text-sm font-black text-ink">Resumo da compra</h3><span className="text-xs text-muted">{itemCount} {itemCount === 1 ? "item" : "itens"}</span></div>
+            <dl className="grid gap-3 px-4 py-4 text-sm"><SummaryLine label="Produtos" value={money(subtotalCents)} /><SummaryLine label={fulfillmentMethod === "PICKUP" ? "Retirada" : shippingSelection ? `${shippingSelection.carrier} · ${shippingSelection.service}` : deliveryKnown ? "Entrega local" : "Frete"} value={!deliveryKnown ? shippingStatus : fee === 0 ? "Grátis" : money(fee)} />{discountCents > 0 && <SummaryLine label="Cashback" value={`− ${money(discountCents)}`} />}</dl>
+            <div className="border-t border-line bg-white px-4 py-4"><div className="flex flex-wrap items-end justify-between gap-2"><span className="text-sm font-bold text-ink">{deliveryKnown ? "Total do pedido" : "Subtotal"}</span><strong className="text-3xl font-black tracking-tight text-brand">{money(total)}</strong></div>{!deliveryKnown && <p className="mt-2 text-xs leading-5 text-muted">O total será atualizado ao escolher uma entrega disponível.</p>}</div>
+          </section>
           <FreeShippingProgress eligibleCents={subtotalCents - discountCents} />
           <label className="mt-5 flex items-start gap-3 text-xs leading-5 text-muted"><input checked={privacyConsent} className="mt-1 h-4 w-4 shrink-0 accent-brand" onChange={event => setPrivacyConsent(event.target.checked)} type="checkbox" /><span>Revisei meus dados e li a <Link className="font-bold text-brand underline" href="/privacidade" target="_blank">Política de Privacidade</Link>.</span></label>
           {error && <p className="mt-4 rounded-lg bg-brand-soft p-3 text-sm text-brand" role="alert">{error}</p>}
@@ -188,7 +197,7 @@ function PaymentChoice({ selected, onSelect, label, detail, Icon, disabled = fal
     {selected && <span className="absolute right-3 top-3 grid h-4 w-4 place-items-center rounded-full bg-brand text-white"><Check className="h-2.5 w-2.5" /></span>}
   </label>;
 }
-function SummaryLine({ label, value }: { label: string; value: string }) { return <div className="flex min-w-0 justify-between gap-3"><dt className="min-w-0 text-white/70">{label}</dt><dd className="shrink-0 font-semibold">{value}</dd></div>; }
+function SummaryLine({ label, value }: { label: string; value: string }) { return <div className="flex min-w-0 justify-between gap-3"><dt className="min-w-0 text-muted">{label}</dt><dd className="shrink-0 font-semibold text-ink">{value}</dd></div>; }
 function FreeShippingProgress({ eligibleCents }: { eligibleCents: number }) {
   const reached = eligibleCents >= FREE_SHIPPING_THRESHOLD_CENTS;
   const percent = Math.min(100, Math.max(0, eligibleCents / FREE_SHIPPING_THRESHOLD_CENTS * 100));
