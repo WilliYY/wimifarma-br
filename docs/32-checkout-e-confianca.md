@@ -4,6 +4,8 @@
 
 Checkout em uma página, com três colunas a partir de 1280 px, duas no tablet e blocos verticais no celular. Contato, entrega e pagamento permanecem visíveis; cartão abre após dados/endereço válidos e consentimento. Bandeiras vêm do catálogo público do Mercado Pago; indisponibilidade desse catálogo não impede o formulário seguro.
 
+O visual usa cabeçalhos numerados com orientação curta, campos com foco visível, miniaturas dos produtos e opções de pagamento com legendas. O resumo escuro diferencia produtos, frete, desconto e total; a barra de frete grátis considera os produtos após cashback e não garante cobertura de CEP. Ícones de confirmação nos dados/entrega indicam somente preenchimento conforme a validação existente. Não representam confirmação operacional ou aprovação financeira.
+
 Telefone aceita formato nacional, +55 ou 0055, com DDD válido. Cliente autenticado/rascunho preenche contato; e-mail preenche o Brick. Não guardamos PAN/CVV nem acessamos cartões privados da carteira Mercado Pago. Preenchimento de cartão salvo depende do navegador.
 
 Pix gera QR Code/copia e cola inline, com vencimento de duas horas persistido no banco. Recarregar retoma o pedido autorizado e mantém o prazo original. Após vencimento, consultar o gateway; o contador local não decide cancelamento ou pagamento. Falha de rede conserva a tentativa para evitar pedidos/cobranças duplicados.
@@ -37,6 +39,7 @@ Referências de integração: [Pix/Orders](https://www.mercadopago.com.br/develo
 
 ## Evidências de 03/10/2026
 
+- Refinamento visual: 173 testes gerais, 14 cenários de checkout com miniatura real e quatro larguras no cadastro/assistente aprovados. Lint, TypeScript e Prisma validate aprovados. Campos, handlers e permissões preservados na revisão estática; nenhum pedido/cobrança real criado pela auditoria visual.
 - 173 testes gerais, 13 de pagamentos, 22 de frete e 14 cenários UI aprovados; lint, typecheck e Prisma validate aprovados. Banco PostgreSQL 17 descartável, sem rede externa e com gateway/WhatsApp simulados, confirmou expiração Pix persistida, parcelas, estoque concorrente, idempotência e deduplicação da Miauby.
 - Commit `9c52b05` publicado com build Linux aprovado e 18 migrations, incluindo a data de expiração. Backup privado de banco/uploads/configuração conferido; app healthy, zero reinícios e `/api/health` com `ok: true`. Nenhuma cobrança real criada.
 - A referência da imagem anterior estava ausente no Docker, impedindo tag/commit do container. Rollback foi reconstruído pelo commit anterior `e6b5992` em `wimifarma-br-app:pre-checkout-9c52b05`, antes de recriar o app. A mudança de banco é aditiva e compatível com essa versão.

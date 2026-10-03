@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-03 - Visual do checkout e editor de produtos
+
+- Checkout mantém uma página, com três colunas no desktop, duas no tablet e uma no celular. Cabeçalhos numerados, seleção de pagamento com legenda, miniaturas reais da cesta e resumo escuro destacam as informações antes da confirmação.
+- A barra de frete grátis usa o valor dos produtos após cashback, limitada ao objetivo de R$ 99,90. O indicador de preenchimento usa a validação existente; não representa aprovação do pedido, pagamento ou disponibilidade de entrega.
+- Cadastro e edição passam a um modal amplo, com cabeçalho e ações sempre visíveis e rolagem somente no corpo. Identificação, preço/publicação, descrição/busca, fotos e prévia SEO ficam em seções; peso e medidas mantêm revisão separada.
+- Mudança visual, sem dependências, migrations, alteração de permissões, chamadas extras de IA ou regras de pagamento/frete. Contratos em `10-layout-e-experiencia.md` e `32-checkout-e-confianca.md`.
+
 ## 2026-10-03 - Checkout, frete e visitantes
 
 - Checkout passa a uma pagina responsiva, com contato, entrega e pagamento. Telefone brasileiro aceita DDI +55/0055 e valida DDD/numero; dados persistidos usam formato nacional.

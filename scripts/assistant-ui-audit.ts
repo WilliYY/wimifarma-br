@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import { build } from "esbuild";
+import postcss from "postcss";
+import tailwind from "@tailwindcss/postcss";
 import { chromium, expect } from "@playwright/test";
 
 // Actual admin components, isolated HTTP fixtures. Never connects to a database.
 async function main() {
   const bundle = await build({ entryPoints: ["scripts/fixtures/qa-catalog-page.tsx"], bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"', "process.env": "{}" } });
-  const css = (await Promise.all((await fs.readdir(".next/static/css")).filter(file => file.endsWith(".css")).map(file => fs.readFile(`.next/static/css/${file}`, "utf8")))).join("\n");
+  const css = (await postcss([tailwind()]).process(await fs.readFile("src/app/globals.css", "utf8"), { from: "src/app/globals.css" })).css;
   const photo = await fs.readFile("public/banners/products/dove-original.webp");
   const previewDataUrl = `data:image/webp;base64,${photo.toString("base64")}`;
   const browser = await chromium.launch({ headless: true });
@@ -23,7 +25,7 @@ async function main() {
         const req = route.request(); const url = new URL(req.url());
         if (url.hostname !== "127.0.0.1") return route.abort();
         const json = (data: unknown) => route.fulfill({ contentType: "application/json", body: JSON.stringify(data) });
-        if (url.pathname === "/admin/catalogos") return route.fulfill({ contentType: "text/html", body: '<!doctype html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/qa.css"></head><body><div id="root"></div><script src="/qa.js"></script></body></html>' });
+        if (url.pathname === "/admin/catalogos") return route.fulfill({ contentType: "text/html; charset=utf-8", body: '<!doctype html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/qa.css"></head><body><div id="root"></div><script src="/qa.js"></script></body></html>' });
         if (url.pathname === "/qa.js") return route.fulfill({ contentType: "text/javascript", body: Buffer.from(bundle.outputFiles[0].contents) });
         if (url.pathname === "/qa.css") return route.fulfill({ contentType: "text/css", body: css });
         if (url.pathname === "/api/admin/imagens-produtos/sugestoes") {

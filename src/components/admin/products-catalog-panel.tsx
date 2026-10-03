@@ -2,6 +2,7 @@
 
 import {
   FormEvent,
+  type ReactNode,
   type RefObject,
   useEffect,
   useMemo,
@@ -167,6 +168,27 @@ function productPayload(
     status: fieldValue(formData, "status"),
     stock: fieldValue(formData, "stock") || "0",
   };
+}
+
+function ProductFormSection({ number, title, description, children, className }: {
+  number: string;
+  title: string;
+  description: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section aria-label={title} className={cn("grid min-w-0 gap-4 rounded-xl border border-line bg-white p-4 sm:p-5", className)}>
+      <div className="flex items-start gap-3 border-b border-line pb-4">
+        <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-xs font-black text-brand">{number}</span>
+        <div className="min-w-0">
+          <h3 className="text-sm font-black text-ink">{title}</h3>
+          <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
+        </div>
+      </div>
+      {children}
+    </section>
+  );
 }
 
 function ProductFormFields({
@@ -356,164 +378,179 @@ function ProductFormFields({
   const nonMedicine = ["food", "beauty", "hygiene", "device", "other"].includes(typeHint);
 
   return (
-    <fieldset className="grid min-w-0 gap-4" disabled={disabled}>
-      <label className="grid gap-2 text-sm font-semibold text-ink">
-        Nome do produto
-        <Input defaultValue={product?.name} maxLength={160} name="name" onBlur={scheduleResearch} onChange={identityChanged} placeholder="Nome, marca, versão e quantidade" ref={nameInputRef} required />
-      </label>
-      <div className="overflow-hidden rounded-md border border-brand/20 bg-surface-subtle">
-        <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-brand/10 text-brand">
-              <Sparkles className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-black text-ink">Assistente de cadastro</p>
-              <label className="mt-1 flex cursor-pointer items-center gap-2 text-xs font-semibold text-muted"><input checked={automatic} className="h-4 w-4 accent-brand" onChange={event => changeAutomatic(event.target.checked)} type="checkbox" />Preenchimento automatico com IA</label>
+    <fieldset className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain bg-surface-subtle p-3 sm:p-5" disabled={disabled}>
+      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+        <div className="grid min-w-0 gap-4">
+          <ProductFormSection number="01" title="Identificação do produto" description="Comece pela apresentação exata. Nome e preço são obrigatórios.">
+            <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+              Nome do produto
+              <Input defaultValue={product?.name} maxLength={160} name="name" onBlur={scheduleResearch} onChange={identityChanged} placeholder="Nome, marca, versão e quantidade" ref={nameInputRef} required />
+            </label>
+            <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
+              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+                Marca
+                <Input defaultValue={product?.brand ?? ""} maxLength={120} name="brand" onBlur={scheduleResearch} onChange={identityChanged} placeholder="Opcional" />
+              </label>
+              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+                Categoria
+                <Input defaultValue={product?.category ?? ""} list={categoryListId} maxLength={120} name="category" onChange={refreshSeo} placeholder="Ex.: Chocolates, Perfumaria, Medicamentos" />
+                <datalist id={categoryListId}>
+                  {[...new Set([...categoryOptions, ...catalogCategorySuggestions])].map((category) => <option key={category} value={category} />)}
+                </datalist>
+              </label>
             </div>
-          </div>
-          <Button disabled={isSuggesting} onClick={() => void requestSuggestions()} size="sm" type="button" variant="secondary">
-            {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {isSuggesting ? "Conferindo fontes..." : "Pesquisar agora"}
-          </Button>
-        </div>
-
-        {suggestion && confidenceInfo ? (
-          <div className="grid gap-3 border-t border-line bg-white p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className={cn("rounded-md px-2.5 py-1 text-xs font-black", confidenceInfo.className)}>
-                {confidenceInfo.label}
-              </span>
-              <Button disabled={suggestion.identityMatch === "conflict" || suggestion.sources.length === 0 || !suggestion.name} onClick={() => {
-                if (!window.confirm("Substituir os campos pelos dados pesquisados? Confira embalagem e fontes antes de publicar.")) return;
-                const appliedFields = applySuggestion(suggestion, { overwrite: true });
-                toast.success(appliedFields > 0 ? "Sugestoes aplicadas. Revise antes de salvar." : "Nao ha dados confirmados para aplicar.");
-              }} size="sm" type="button" variant="secondary">
-                <CheckCircle2 className="h-4 w-4" />
-                Aplicar sugestoes
-              </Button>
+            <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
+              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+                SKU
+                <Input defaultValue={product?.sku ?? ""} maxLength={80} name="sku" placeholder="Opcional" />
+              </label>
+              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+                Codigo EAN
+                <Input defaultValue={product?.ean ?? ""} inputMode="numeric" maxLength={32} name="ean" onBlur={scheduleResearch} onChange={identityChanged} placeholder="Codigo da embalagem" />
+              </label>
             </div>
-            <div className="grid gap-2 text-xs leading-5 text-muted sm:grid-cols-2">
-              <p><strong className="text-ink">Categoria:</strong> {suggestion.category ?? "Nao confirmada"}</p>
-              <p><strong className="text-ink">Tipo:</strong> {productTypeLabels[typeHint]}</p>
-              {!nonMedicine && <p className="sm:col-span-2"><strong className="text-ink">Principios:</strong> {suggestion.activeIngredients.join(", ") || "Nao confirmados"}</p>}
-              <p className="sm:col-span-2"><strong className="text-ink">Termos:</strong> {suggestion.searchTerms.join(", ") || "Nenhum termo confirmado"}</p>
-              {suggestion.description ? <p className="sm:col-span-2"><strong className="text-ink">Descricao:</strong> {suggestion.description}</p> : null}
-            </div>
-            {suggestion.warnings.length > 0 ? (
-              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-5 text-amber-900">
-                {suggestion.warnings.join(" ")}
+            <div className="overflow-hidden rounded-xl border border-brand/20 bg-brand-soft/40">
+              <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-brand/10 text-brand">
+                    <Sparkles className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-black text-ink">Assistente de cadastro</p>
+                    <label className="mt-1 flex cursor-pointer items-start gap-2 text-xs font-semibold text-muted"><input checked={automatic} className="mt-0.5 h-4 w-4 shrink-0 accent-brand" onChange={event => changeAutomatic(event.target.checked)} type="checkbox" />Preenchimento automatico com IA</label>
+                  </div>
+                </div>
+                <Button className="min-h-11 shrink-0 whitespace-normal" disabled={isSuggesting} onClick={() => void requestSuggestions()} size="sm" type="button" variant="secondary">
+                  {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  {isSuggesting ? "Conferindo fontes..." : "Pesquisar agora"}
+                </Button>
               </div>
-            ) : null}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-muted">
-              <span>Fontes:</span>
-              {suggestion.sources.length > 0 ? suggestion.sources.map((source) => (
-                <a className="inline-flex max-w-56 items-center gap-1 text-brand hover:underline" href={source.url} key={source.url} rel="noreferrer" target="_blank">
-                  <span className="truncate">{source.title}</span>
-                  <ExternalLink className="h-3 w-3 shrink-0" />
-                </a>
-              )) : <span>Nenhuma fonte retornada</span>}
+
+              {suggestion && confidenceInfo ? (
+                <div className="grid gap-3 border-t border-line bg-white p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className={cn("rounded-md px-2.5 py-1 text-xs font-black", confidenceInfo.className)}>
+                      {confidenceInfo.label}
+                    </span>
+                    <Button disabled={suggestion.identityMatch === "conflict" || suggestion.sources.length === 0 || !suggestion.name} onClick={() => {
+                      if (!window.confirm("Substituir os campos pelos dados pesquisados? Confira embalagem e fontes antes de publicar.")) return;
+                      const appliedFields = applySuggestion(suggestion, { overwrite: true });
+                      toast.success(appliedFields > 0 ? "Sugestoes aplicadas. Revise antes de salvar." : "Nao ha dados confirmados para aplicar.");
+                    }} size="sm" type="button" variant="secondary">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Aplicar sugestoes
+                    </Button>
+                  </div>
+                  <div className="grid gap-2 text-xs leading-5 text-muted sm:grid-cols-2">
+                    <p><strong className="text-ink">Categoria:</strong> {suggestion.category ?? "Nao confirmada"}</p>
+                    <p><strong className="text-ink">Tipo:</strong> {productTypeLabels[typeHint]}</p>
+                    {!nonMedicine && <p className="sm:col-span-2"><strong className="text-ink">Principios:</strong> {suggestion.activeIngredients.join(", ") || "Nao confirmados"}</p>}
+                    <p className="sm:col-span-2"><strong className="text-ink">Termos:</strong> {suggestion.searchTerms.join(", ") || "Nenhum termo confirmado"}</p>
+                    {suggestion.description ? <p className="sm:col-span-2"><strong className="text-ink">Descricao:</strong> {suggestion.description}</p> : null}
+                  </div>
+                  {suggestion.warnings.length > 0 ? (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-5 text-amber-900">
+                      {suggestion.warnings.join(" ")}
+                    </div>
+                  ) : null}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-muted">
+                    <span>Fontes:</span>
+                    {suggestion.sources.length > 0 ? suggestion.sources.map((source) => (
+                      <a className="inline-flex max-w-56 items-center gap-1 text-brand hover:underline" href={source.url} key={source.url} rel="noreferrer" target="_blank">
+                        <span className="truncate">{source.title}</span>
+                        <ExternalLink className="h-3 w-3 shrink-0" />
+                      </a>
+                    )) : <span>Nenhuma fonte retornada</span>}
+                  </div>
+                </div>
+              ) : null}
             </div>
-          </div>
-        ) : null}
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-semibold text-ink">
-          Marca
-          <Input defaultValue={product?.brand ?? ""} maxLength={120} name="brand" onBlur={scheduleResearch} onChange={identityChanged} placeholder="Opcional" />
-        </label>
-        <label className="grid gap-2 text-sm font-semibold text-ink">
-          Categoria
-          <Input defaultValue={product?.category ?? ""} list={categoryListId} maxLength={120} name="category" onChange={refreshSeo} placeholder="Ex.: Chocolates, Perfumaria, Medicamentos" />
-          <datalist id={categoryListId}>
-            {[...new Set([...categoryOptions, ...catalogCategorySuggestions])].map((category) => <option key={category} value={category} />)}
-          </datalist>
-        </label>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-semibold text-ink">
-          Principios ativos (somente medicamentos)
-          <Input
-            defaultValue={product?.activeIngredients.join(", ") ?? ""}
-            maxLength={1200}
-            name="activeIngredients"
-            placeholder={nonMedicine ? "Não se aplica a este tipo de produto" : "Ex.: paracetamol, fenilefrina"}
-          />
-          <span className="text-xs font-medium leading-5 text-muted">
-            {nonMedicine ? "Deixe vazio para alimentos, perfumaria e higiene. Ingredientes comuns não são princípios ativos." : "Separe por virgula. Preencha somente quando aplicavel; ajuda a encontrar correlatos."}
-          </span>
-        </label>
-        <label className="grid gap-2 text-sm font-semibold text-ink">
-          Termos de busca
-          <Input
-            defaultValue={product?.searchTerms.join(", ") ?? ""}
-            maxLength={1000}
-            name="searchTerms"
-            placeholder={typeHint === "food" ? "Ex.: chocolate, wafer, ao leite, marca" : "Nome, marca, tipo e características"}
-          />
-          <span className="text-xs font-medium leading-5 text-muted">
-            Use termos objetivos do cadastro, sem orientacao medica.
-          </span>
-        </label>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-semibold text-ink">
-          Preco normal
-          <Input defaultValue={product?.price} min="0.01" name="price" placeholder="0,00" required step="0.01" type="number" />
-        </label>
-        <label className="grid gap-2 text-sm font-semibold text-ink">
-          Preco promocional
-          <Input defaultValue={product?.promotionalPrice ?? ""} min="0.01" name="promotionalPrice" placeholder="Opcional" step="0.01" type="number" />
-        </label>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-semibold text-ink">
-          Estoque
-          <Input defaultValue={product?.stock ?? 0} min="0" name="stock" required type="number" />
-        </label>
-        <label className="grid gap-2 text-sm font-semibold text-ink">
-          Status
-          <select className="h-11 rounded-md border border-line bg-white px-3 text-sm text-ink shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15" defaultValue={product?.status ?? "ACTIVE"} name="status">
-            <option value="DRAFT">Rascunho</option>
-            <option value="ACTIVE">Publicado</option>
-            <option value="ARCHIVED">Arquivado</option>
-          </select>
-        </label>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-semibold text-ink">
-          SKU
-          <Input defaultValue={product?.sku ?? ""} maxLength={80} name="sku" placeholder="Opcional" />
-        </label>
-        <label className="grid gap-2 text-sm font-semibold text-ink">
-          Codigo EAN
-          <Input defaultValue={product?.ean ?? ""} inputMode="numeric" maxLength={32} name="ean" onBlur={scheduleResearch} onChange={identityChanged} placeholder="Codigo da embalagem" />
-        </label>
-      </div>
-      <label className="grid gap-2 text-sm font-semibold text-ink">
-        Descricao
-        <Textarea defaultValue={product?.description ?? ""} maxLength={800} name="description" onChange={refreshSeo} placeholder="Apresentacao, quantidade ou observacao importante." />
-      </label>
+          </ProductFormSection>
+          <ProductFormSection number="02" title="Preço e publicação" description="Defina os valores, o estoque e como o produto aparece na loja.">
+            <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
+              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+                Preco normal
+                <Input defaultValue={product?.price} min="0.01" name="price" placeholder="0,00" required step="0.01" type="number" />
+              </label>
+              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+                Preco promocional
+                <Input defaultValue={product?.promotionalPrice ?? ""} min="0.01" name="promotionalPrice" placeholder="Opcional" step="0.01" type="number" />
+              </label>
+            </div>
+            <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
+              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+                Estoque
+                <Input defaultValue={product?.stock ?? 0} min="0" name="stock" required type="number" />
+              </label>
+              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+                Status
+                <select className="h-11 rounded-md border border-line bg-white px-3 text-sm text-ink shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15" defaultValue={product?.status ?? "ACTIVE"} name="status">
+                  <option value="DRAFT">Rascunho</option>
+                  <option value="ACTIVE">Publicado</option>
+                  <option value="ARCHIVED">Arquivado</option>
+                </select>
+              </label>
+            </div>
+            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-brand/20 bg-brand-soft/40 px-3 py-3 text-sm font-bold text-ink"><input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={isShowcasePosition(product?.featuredPosition ?? null)} name="featured" type="checkbox" /><Star className="h-4 w-4 text-brand" />Destacar em Melhores ofertas</label>
 
-      <ProductShippingFields ref={shippingFieldsRef} initialProfile={product?.shippingProfile} identityKey={productIdentityKey(photoIdentity)} suggestion={suggestion?.shipping} researched={Boolean(suggestion)} canEdit={canManageShipping} busy={isSuggesting} onResearch={() => void requestSuggestions(true)} medicine={typeHint === "medicine"} />
+            {canManageCashback ? <CashbackProductFields enabled={product?.cashbackEnabled} rateBps={product?.cashbackRateBps} /> : null}
 
-      {seo.name && <div className="min-w-0 border-l-2 border-pharma-green pl-3"><p className="text-xs font-semibold text-muted">Previa na busca</p><p className="mt-1 break-words text-sm font-bold text-ink">{seo.name} | Wimifarma</p><p className="mt-1 break-words text-xs leading-5 text-muted">{buildProductMetaDescription(seo)}</p></div>}
-
-      <ProductImagePicker identity={photoIdentity} initialImageAssetId={product?.imageAssetId} initialImageUrl={product?.imageUrl} key={product?.id ?? "new"} ref={imagePickerRef} />
-
-      <label className="flex cursor-pointer items-center gap-3 border-y border-line py-3 text-sm font-bold text-ink"><input className="h-4 w-4 accent-brand" defaultChecked={isShowcasePosition(product?.featuredPosition ?? null)} name="featured" type="checkbox" /><Star className="h-4 w-4 text-brand" />Destacar em Melhores ofertas</label>
-
-      {canManageCashback ? <CashbackProductFields enabled={product?.cashbackEnabled} rateBps={product?.cashbackRateBps} /> : null}
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="flex items-center gap-3 rounded-md border border-line bg-surface-subtle px-3 py-3 text-sm font-bold text-ink">
-          <input className="h-4 w-4 accent-brand" defaultChecked={product?.isPopularPharmacy} name="isPopularPharmacy" type="checkbox" />
-          Farmacia Popular
-        </label>
-        <label className="flex items-center gap-3 rounded-md border border-line bg-surface-subtle px-3 py-3 text-sm font-bold text-ink">
-          <input className="h-4 w-4 accent-brand" defaultChecked={product?.requiresPrescription} name="requiresPrescription" type="checkbox" />
-          Exige receita
-        </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="flex items-center gap-3 rounded-md border border-line bg-surface-subtle px-3 py-3 text-sm font-bold text-ink">
+                <input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={product?.isPopularPharmacy} name="isPopularPharmacy" type="checkbox" />
+                Farmacia Popular
+              </label>
+              <label className="flex items-center gap-3 rounded-md border border-line bg-surface-subtle px-3 py-3 text-sm font-bold text-ink">
+                <input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={product?.requiresPrescription} name="requiresPrescription" type="checkbox" />
+                Exige receita
+              </label>
+            </div>
+          </ProductFormSection>
+          <ProductFormSection number="03" title="Descrição e busca" description="Informações objetivas ajudam o cliente a encontrar o produto.">
+            <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+              Descricao
+              <Textarea defaultValue={product?.description ?? ""} maxLength={800} name="description" onChange={refreshSeo} placeholder="Apresentacao, quantidade ou observacao importante." />
+            </label>
+            <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
+              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+                Principios ativos (somente medicamentos)
+                <Input
+                  defaultValue={product?.activeIngredients.join(", ") ?? ""}
+                  maxLength={1200}
+                  name="activeIngredients"
+                  placeholder={nonMedicine ? "Não se aplica a este tipo de produto" : "Ex.: paracetamol, fenilefrina"}
+                />
+                <span className="text-xs font-medium leading-5 text-muted">
+                  {nonMedicine ? "Deixe vazio para alimentos, perfumaria e higiene. Ingredientes comuns não são princípios ativos." : "Separe por virgula. Preencha somente quando aplicavel; ajuda a encontrar correlatos."}
+                </span>
+              </label>
+              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+                Termos de busca
+                <Input
+                  defaultValue={product?.searchTerms.join(", ") ?? ""}
+                  maxLength={1000}
+                  name="searchTerms"
+                  placeholder={typeHint === "food" ? "Ex.: chocolate, wafer, ao leite, marca" : "Nome, marca, tipo e características"}
+                />
+                <span className="text-xs font-medium leading-5 text-muted">
+                  Use termos objetivos do cadastro, sem orientacao medica.
+                </span>
+              </label>
+            </div>
+          </ProductFormSection>
+        </div>
+        <div className="grid min-w-0 gap-4">
+          <ProductFormSection className="[&_button]:h-auto [&_button]:min-h-11 [&_button]:whitespace-normal [&_button]:py-2.5" number="04" title="Fotos do produto" description="Envie uma foto, use a biblioteca e confira o resultado antes de salvar.">
+            <ProductImagePicker identity={photoIdentity} initialImageAssetId={product?.imageAssetId} initialImageUrl={product?.imageUrl} key={product?.id ?? "new"} ref={imagePickerRef} />
+          </ProductFormSection>
+          <ProductFormSection number="05" title="Prévia na busca" description="Confira o título e a descrição exibidos a partir dos dados do cadastro.">
+            {seo.name && <div className="min-w-0 border-l-2 border-pharma-green pl-3"><p className="text-xs font-semibold text-muted">Previa na busca</p><p className="mt-1 break-words text-sm font-bold text-ink">{seo.name} | Wimifarma</p><p className="mt-1 break-words text-xs leading-5 text-muted">{buildProductMetaDescription(seo)}</p></div>}
+            {!seo.name && <p className="rounded-lg border border-dashed border-line bg-surface-subtle p-4 text-xs leading-5 text-muted">Informe o nome do produto para visualizar a prévia de busca.</p>}
+          </ProductFormSection>
+        </div>
+        <div className="min-w-0 lg:col-span-2">
+          <ProductShippingFields ref={shippingFieldsRef} initialProfile={product?.shippingProfile} identityKey={productIdentityKey(photoIdentity)} suggestion={suggestion?.shipping} researched={Boolean(suggestion)} canEdit={canManageShipping} busy={isSuggesting} onResearch={() => void requestSuggestions(true)} medicine={typeHint === "medicine"} />
+        </div>
       </div>
     </fieldset>
   );
@@ -909,17 +946,17 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
         }}
         open={isCreateOpen}
       >
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-md bg-brand-soft text-brand">
-              <PackagePlus className="h-5 w-5" />
+        <DialogContent className="flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-6xl flex-col gap-0 overflow-hidden rounded-xl p-0 sm:h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:w-[calc(100%-2rem)] sm:p-0">
+          <DialogHeader className="shrink-0 gap-1 border-b border-line px-4 py-4 pr-14 sm:px-6 sm:pr-14">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand"><PackagePlus className="h-5 w-5" /></span>
+              <DialogTitle>Cadastrar produto</DialogTitle>
             </div>
-            <DialogTitle>Cadastrar produto</DialogTitle>
             <DialogDescription>
-              Dados, foto e publicacao na loja.
+              Dados, fotos e publicação. Confira antes de salvar.
             </DialogDescription>
           </DialogHeader>
-          <form className="grid gap-4" onSubmit={handleSubmit}>
+          <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
             <ProductFormFields
               canManageCashback={canManageCashback}
               canManageShipping={canManageShipping}
@@ -928,11 +965,11 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
               imagePickerRef={imagePickerRef}
               disabled={isSubmitting}
             />
-            <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
+            <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-line bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <Button disabled={isSubmitting} onClick={() => setIsCreateOpen(false)} type="button" variant="secondary">
                 Cancelar
               </Button>
-              <Button disabled={isSubmitting} type="submit">
+              <Button className="min-h-11 sm:min-w-52" disabled={isSubmitting} type="submit">
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
                 Cadastrar produto
               </Button>
@@ -947,13 +984,13 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
         }}
         open={Boolean(editingProduct)}
       >
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
+        <DialogContent className="flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-6xl flex-col gap-0 overflow-hidden rounded-xl p-0 sm:h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:w-[calc(100%-2rem)] sm:p-0">
+          <DialogHeader className="shrink-0 gap-1 border-b border-line px-4 py-4 pr-14 sm:px-6 sm:pr-14">
             <DialogTitle>Editar produto</DialogTitle>
             <DialogDescription>Atualize os dados, a classificacao ou a imagem deste item.</DialogDescription>
           </DialogHeader>
           {editingProduct ? (
-            <form className="grid gap-4" key={`${editingProduct.id}-${editingProduct.updatedAt}`} onSubmit={handleUpdate}>
+            <form className="flex min-h-0 flex-1 flex-col" key={`${editingProduct.id}-${editingProduct.updatedAt}`} onSubmit={handleUpdate}>
               <ProductFormFields
                 canManageCashback={canManageCashback}
                 canManageShipping={canManageShipping}
@@ -963,9 +1000,9 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                 disabled={isUpdating}
                 product={editingProduct}
               />
-              <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
+              <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-line bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <Button disabled={isUpdating} onClick={() => setEditingProduct(null)} type="button" variant="secondary">Cancelar</Button>
-                <Button disabled={isUpdating} type="submit">
+                <Button className="min-h-11 sm:min-w-52" disabled={isUpdating} type="submit">
                   {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
                   Salvar alteracoes
                 </Button>

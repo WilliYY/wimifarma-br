@@ -8,6 +8,7 @@ import { chromium, expect } from "@playwright/test";
 // Entirely intercepted loopback fixture: no Next server, live data or gateway.
 const base = "http://127.0.0.1:3198";
 const output = "outputs/checkout-review";
+const productPhoto = await fs.readFile("public/banners/products/dove-oleo.webp");
 const modules = {
   "next/link": 'import React from "react"; export default function Link({children,...p}) { return React.createElement("a",p,children); }',
   "next/image": 'import React from "react"; export default function Image({unoptimized,priority,fill,...p}) { return React.createElement("img",p); }',
@@ -18,7 +19,7 @@ const css = (await postcss([tailwind()]).process(await fs.readFile("src/app/glob
 await fs.mkdir(output, { recursive: true });
 const browser = await chromium.launch();
 const results = [], failures = [];
-const product = price => ({id:"fixture-item",slug:"fixture-item",name:"Produto sintético de auditoria",imageUrl:null,category:"Teste",unitPriceCents:price,originalPriceCents:null,stock:20,requiresPrescription:false,isPopularPharmacy:false,quantity:1});
+const product = price => ({id:"fixture-item",slug:"fixture-item",name:"Dove óleo de banho · produto de teste",imageUrl:"/qa-product.webp",category:"Teste",unitPriceCents:price,originalPriceCents:null,stock:20,requiresPrescription:false,isPopularPharmacy:false,quantity:1});
 
 async function fixture(width, {price=9990,customer=false,failOrder=false,failPayment=false,failPaymentStatus="UNKNOWN"}={}) {
   const context = await browser.newContext({viewport:{width,height:1000},reducedMotion:"reduce"});
@@ -43,6 +44,7 @@ async function fixture(width, {price=9990,customer=false,failOrder=false,failPay
     if(url.pathname==="/checkout") return route.fulfill({contentType:"text/html; charset=utf-8",body:'<!doctype html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/qa.css"></head><body><main id="root"></main><script src="/qa.js"></script></body></html>'});
     if(url.pathname==="/qa.js") return route.fulfill({contentType:"text/javascript",body:Buffer.from(bundle.outputFiles[0].contents)});
     if(url.pathname==="/qa.css") return route.fulfill({contentType:"text/css",body:css});
+    if(url.pathname==="/qa-product.webp") return route.fulfill({contentType:"image/webp",body:productPhoto});
     if(url.pathname==="/secure-fields") return route.fulfill({contentType:"text/html; charset=utf-8",body:'<label>Número de cartão simulado<input></label><label>CVV simulado<input></label>'});
     if(url.pathname.startsWith("/api/cep/")) { const cep=url.pathname.split("/").pop(); return json({data:{postalCode:cep,street:"Rua Sintética",neighborhood:"Bairro Teste",city:cep==="87485000"?"Douradina":cep==="87525000"?"Ivaté":"São Paulo",state:cep==="01001000"?"SP":"PR"}}); }
     if(url.pathname==="/api/minha-conta/cashback") return json({data:{balance:"0.01"}});
@@ -68,7 +70,7 @@ try {
   for(const width of [320,390,768,1440]) await test(`layout and Pix reload ${width}`,async()=>{
     const f=await fixture(width);const {page}=f;
     try {
-      await fits(page,width);const boxes=await page.locator('h2').filter({hasText:/^(Seus dados|Entrega ou retirada|Pagamento)$/}).evaluateAll(els=>els.map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y})));
+      await fits(page,width);await expect(page.getByAltText("Dove óleo de banho · produto de teste")).toBeVisible();assert.ok(await page.getByAltText("Dove óleo de banho · produto de teste").evaluate(img=>img.complete&&img.naturalWidth>0));const boxes=await page.locator('h2').filter({hasText:/^(Seus dados|Entrega ou retirada|Pagamento)$/}).evaluateAll(els=>els.map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y})));
       if(width===1440){assert.equal(boxes.length,3);assert.ok(Math.max(...boxes.map(b=>b.y))-Math.min(...boxes.map(b=>b.y))<2);assert.ok(boxes[0].x<boxes[1].x&&boxes[1].x<boxes[2].x);}
       await page.screenshot({path:`${output}/checkout-${width}.png`,fullPage:true});
       await fillContact(page);await pickup(page);await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();

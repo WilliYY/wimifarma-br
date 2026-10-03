@@ -6,6 +6,14 @@
 - Destaque opcional no cadastro/edicao usa as dez posicoes existentes. Gravacao de produto, posicao e auditoria e transacional. Uma vitrine cheia retorna conflito sem criar cadastro parcial. Ofertas e catalogo compartilham um lock de escrita.
 - Menu: Usuarios, Produtos/Catalogo, Ofertas, Pedidos, Cupons, Cashback, depois os demais modulos. Permissoes preservadas.
 
+## Editor visual em 03/10/2026
+
+Cadastro e edição compartilham cinco seções: identificação, preço/publicação, descrição/busca, fotos e prévia SEO. No desktop, dados e imagens usam duas colunas; no celular, os blocos ficam em sequência. Cabeçalho e botões de salvar/cancelar permanecem visíveis enquanto o corpo rola.
+
+O assistente permanece junto da identificação, com fontes, confiança e aplicação das sugestões. Fotos, descrição e busca preservam os controles existentes. Peso e medidas ficam abaixo, em largura completa; permissões e aprovação logística não mudam. O formulário continua único, com validação nativa e todos os campos acessíveis, sem novo passo de publicação.
+
+Verificação: Chromium em 320/390/768/1440 px confirmou cadastro/edição sem overflow, ações visíveis após rolar até logística e preservação de marca/peso manuais ao aplicar IA. `npm.cmd run audit:assistant` passou nas quatro larguras, cobrindo foto original, fotos reais/artes, cancelamento, resposta atrasada e marketing, sem escrita comercial. A fixture agora compila o CSS atual do Tailwind, sem depender de `.next` antigo. Galeria permite quebra de rótulo e mantém alvos de 44 px. Capturas em `outputs/product-form-ui-2026-10-03`.
+
 ## Pesquisa e SEO
 
 - Gemini continua somente no servidor, usando pesquisa Google e estruturacao em duas etapas. Nenhuma nova integracao paga.
