@@ -6,6 +6,8 @@ A arquitetura organiza a plataforma em camadas para evitar mistura entre site pu
 
 ## Camadas
 
+Alertas comerciais da Miauby usam outbox PostgreSQL no BR e ponte autenticada exclusiva no serviço WhatsApp existente. Os dois projetos conservam bancos, regras e tokens internos separados. Somente seus serviços de aplicação participam da rede externa `wimifarma-miauby-bridge-network`. Contrato em `30-miauby-whatsapp-comercio.md`.
+
 ```text
 src/app/(site)        Rotas publicas e paginas de marketing/comerciais
 src/app/admin         Rotas reservadas do painel

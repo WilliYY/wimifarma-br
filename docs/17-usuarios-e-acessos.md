@@ -1,5 +1,7 @@
 # Usuarios Wimifarma
 
+`/admin/miauby` e `/api/admin/miauby` são exclusivos de ADMIN. MANAGER e CUSTOMER não podem consultar histórico, enviar testes ou configurar alertas; página e API autorizam no servidor. O menu usa a mesma matriz. Contrato em `30-miauby-whatsapp-comercio.md`.
+
 ## Padrao de acesso rapido ao painel (2026-09-23)
 
 - O cabecalho publico exibe o atalho textual **Painel admin** para `/admin/dashboard` no celular, tablet e desktop. Desde 2026-09-25, no desktop ele integra o cartao da conta, abaixo do nome/saldo; no celular ocupa a largura do grupo de controles.

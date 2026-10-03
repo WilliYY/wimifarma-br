@@ -203,7 +203,7 @@ export function FloatingWhatsApp() {
                 className="h-full w-full object-contain"
                 height={88}
                 priority={false}
-                src="/miauby/miauby-avatar-v2.webp"
+                src="/brand/miauby-avatar.webp"
                 width={88}
               />
             </span>
@@ -355,7 +355,7 @@ export function FloatingWhatsApp() {
             alt=""
             className="h-full w-full object-contain"
             height={112}
-            src="/miauby/miauby-avatar-v2.webp"
+            src="/brand/miauby-avatar.webp"
             width={112}
           />
         </span>

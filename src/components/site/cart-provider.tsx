@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -42,6 +43,9 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const notifiedCart = useRef<string | null>(null);
+  const cartNoticeQueued = useRef(false);
+  const cartNoticeQueue = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     try {
@@ -63,6 +67,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (hydrated) {
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch { /* Keep the cart usable in memory. */ }
     }
+  }, [hydrated, items]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const payload = JSON.stringify({ items: items.map(item => ({ productId: item.id, quantity: item.quantity })) });
+    if (notifiedCart.current === payload || (!cartNoticeQueued.current && !items.length)) return;
+    let active = true;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const attempt = (canRetry: boolean) => {
+      cartNoticeQueued.current = true;
+      cartNoticeQueue.current = cartNoticeQueue.current.then(async () => {
+        if (!active) return;
+        try {
+          const response = await fetch("/api/miauby/carrinho", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true });
+          if (response.ok && active) notifiedCart.current = payload;
+          else if (active && canRetry && [429, 503].includes(response.status)) retry = setTimeout(() => attempt(false), 60_000);
+        } catch { /* An alert must never interrupt shopping. */ }
+      });
+    };
+    const timer = setTimeout(() => attempt(true), items.length ? 30_000 : 0);
+    // Serialize requests so clearing waits for the initial signed cookie to arrive.
+    return () => { active = false; clearTimeout(timer); if (retry) clearTimeout(retry); };
   }, [hydrated, items]);
 
   const addProduct = useCallback((product: CartProduct, quantity = 1) => {

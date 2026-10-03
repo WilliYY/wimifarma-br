@@ -6,6 +6,7 @@ import { CashbackRuleError, lockCashbackAccount } from "@/features/cashback/wall
 import { createOrderNumber, prepareCheckoutOrder, type CheckoutRequest } from "./checkout";
 import { validateOrderShipping } from "@/features/shipping/service";
 import { PaymentError } from "@/features/payments/schema";
+import { queueCommerceOrder } from "@/features/miauby/commerce-service";
 
 const orderResultSelect = {
   id: true,
@@ -75,5 +76,6 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
     await tx.cashbackTransaction.create({ data: { accountId: account.id, eventKey: `redemption:${order.id}:RESERVED`, type: "DEBIT", amount, reference: order.number, description: `Cashback reservado para desconto - pedido ${order.number}` } });
     await tx.auditLog.create({ data: { action: "CASHBACK_REDEMPTION_RESERVED", entity: "Order", entityId: order.id, metadata: { customerId: customer?.id, amountCents: redeem } } });
   }
+  await queueCommerceOrder(tx, "order", { ...order, items: items.map(item => ({ name: item.productName, quantity: item.quantity })) }, isTest);
   return tx.order.findUniqueOrThrow({ where: { id: order.id }, select: orderResultSelect });
 }

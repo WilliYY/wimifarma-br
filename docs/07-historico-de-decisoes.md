@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-03 - Miauby e alertas comerciais
+
+- Decisão: reutilizar somente o transporte WhatsApp existente do legado, por ponte com token exclusivo e destino fixo aprovado pelo proprietário. Bancos e comandos dos projetos continuam separados.
+- O painel Miauby é exclusivo de ADMIN. Carrinho, pedido recebido e confirmação autenticada de pagamento possuem controles e textos distintos; não enviam dados de identificação do cliente.
+- A outbox transacional e a reserva atômica da ponte deduplicam eventos. Payload congela após primeira tentativa; resultado incerto não é reenviado automaticamente. Aceitação pelo provedor não é recibo de entrega.
+- Foto original preservada e comprimida em WebP de 640 px; regras, retenção, rede e validação em `30-miauby-whatsapp-comercio.md`. Nenhuma regra financeira ou restrição de transporte foi relaxada.
+
 ## 2026-10-02 - Preenchimento logístico junto do catálogo/SEO
 
 - O mesmo caminho que aplica catálogo/descrição/SEO também aplica referências de peso e medidas aos campos vazios, automaticamente com identidade de alta confiança ou após revisão explícita. Valores manuais são preservados e somente ADMIN grava o rascunho.

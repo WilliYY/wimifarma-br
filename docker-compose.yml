@@ -20,6 +20,9 @@ services:
       NODE_OPTIONS: ${NODE_OPTIONS:---max_old_space_size=1024}
       BACKGROUND_REMOVAL_URL: ${BACKGROUND_REMOVAL_URL:-http://background-removal:7000}
       REMOVE_BG_API_KEY: ${REMOVE_BG_API_KEY:-}
+      MIAUBY_COMMERCE_URL: ${MIAUBY_COMMERCE_URL:-}
+      MIAUBY_COMMERCE_TOKEN: ${MIAUBY_COMMERCE_TOKEN:-}
+      MIAUBY_COMMERCE_RECIPIENT_HINT: ${MIAUBY_COMMERCE_RECIPIENT_HINT:-}
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
       interval: 30s
@@ -35,6 +38,7 @@ services:
     mem_reservation: ${APP_MEM_RESERVATION:-512m}
     networks:
       - wimifarma-br-network
+      - wimifarma-miauby-bridge-network
     ports:
       - "${APP_HOST_BIND:-127.0.0.1}:${APP_PORT:-3001}:3000"
     restart: unless-stopped
@@ -152,6 +156,9 @@ services:
     command: npm run prisma:seed
 
 networks:
+  wimifarma-miauby-bridge-network:
+    name: wimifarma-miauby-bridge-network
+    external: true
   wimifarma-br-network:
     name: wimifarma-br-network
 

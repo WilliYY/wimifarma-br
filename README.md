@@ -30,6 +30,8 @@ Estado operacional em 01/10/2026: Mercado Pago conectado e pagamento público at
 
 ## Status Atual
 
+- Miauby: alertas de carrinho, pedido e pagamento confirmado por WhatsApp através de ponte restrita com o canal existente. Painel e histórico exclusivos de ADMIN em `/admin/miauby`; configuração e limites em [docs/30-miauby-whatsapp-comercio.md](docs/30-miauby-whatsapp-comercio.md).
+
 - Cadastro assistido pesquisa peso bruto e dimensões da apresentação exata e preenche os campos vazios junto dos dados de catálogo/SEO quando a identidade tem alta confiança. Preserva valores manuais, exibe fontes e salva medidas como rascunho para revisão no módulo de frete. Não mede por fotografia nem confunde conteúdo líquido com peso embalado. Contrato: [docs/29-cadastro-logistica-ia.md](docs/29-cadastro-logistica-ia.md).
 
 - Fretes Melhor Envio: módulo ADMIN `/admin/fretes` com conexão OAuth, simulação e embalagens. Ativação depende de conta autorizada e homologação dos serviços/produtos; não compra etiquetas nem processa pagamentos. Contrato em [docs/27-melhor-envio.md](docs/27-melhor-envio.md).

@@ -7,6 +7,7 @@ import { settleOrderBenefits } from "@/features/cashback/redemption";
 import { getPrisma } from "@/lib/prisma";
 import { decryptValue, encryptValue } from "@/lib/secret-vault";
 import { moneyToCents } from "@/features/orders/checkout";
+import { queueCommerceOrder } from "@/features/miauby/commerce-service";
 import { readPaymentIntegration } from "./integration";
 import { mercadoPagoRequest } from "./provider";
 import { assertPaymentBinding, paymentBody, providerState, validPaymentAccess } from "./rules";
@@ -107,6 +108,7 @@ export async function applyProviderOrder(remote: ProviderOrder) {
       requestCiphertext: null, requestIv: null, requestTag: null,
     } });
     if (["PAID", "PARTIALLY_REFUNDED"].includes(next)) await tx.order.update({ where: { id: current.orderId }, data: { paymentStatus: "PAID" } });
+    if (next === "PAID" && current.order.paymentStatus !== "PAID") await queueCommerceOrder(tx, "payment", { ...current.order, items: current.order.items.map(item => ({ name: item.productName, quantity: item.quantity })) }, current.environment === "test");
     if (failed) await tx.order.update({ where: { id: current.orderId }, data: { paymentStatus: "CANCELED", status: "CANCELED" } });
     if (["REFUNDED", "DISPUTED"].includes(next)) await tx.order.update({ where: { id: current.orderId }, data: { paymentStatus: "REFUNDED", status: "CANCELED" } });
     if (current.environment === "production" && next !== "PARTIALLY_REFUNDED") {

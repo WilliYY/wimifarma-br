@@ -15,6 +15,7 @@
     "test:users": "tsx --test src/features/auth/customer-session.test.ts",
     "test:shipping": "tsx --test src/features/shipping/*.test.ts",
     "test:payments": "tsx --test src/features/payments/*.test.ts",
+    "test:miauby": "tsx --test src/features/miauby/*.test.ts",
     "audit:users": "tsx scripts/users-access-audit.ts",
     "audit:catalog": "tsx scripts/catalog-audit.ts",
     "audit:browser": "node scripts/browser-audit.mjs",

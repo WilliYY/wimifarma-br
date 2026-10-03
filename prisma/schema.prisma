@@ -584,3 +584,33 @@ model ShippingIntegration {
   revision   Int      @default(1)
   updatedAt  DateTime @updatedAt
 }
+
+model MiaubyConfig {
+  id            String   @id
+  enabled       Boolean  @default(false)
+  cartAlerts    Boolean  @default(true)
+  orderAlerts   Boolean  @default(true)
+  paymentAlerts Boolean  @default(true)
+  updatedAt     DateTime @updatedAt
+}
+
+model MiaubyEvent {
+  id             String    @id @default(cuid())
+  key            String    @unique
+  type           String
+  text           String
+  sessionId      String?
+  status         String    @default("PENDING")
+  attempts       Int       @default(0)
+  availableAt    DateTime  @default(now())
+  leaseExpiresAt DateTime?
+  messageId      String?
+  lastError      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  sentAt         DateTime?
+
+  @@index([status, availableAt])
+  @@index([sessionId, status])
+  @@index([createdAt])
+}

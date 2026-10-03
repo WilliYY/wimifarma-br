@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import {
   BadgePercent,
   Boxes,
+  Bot,
   ChartNoAxesCombined,
   Crown,
   Home,
@@ -64,6 +65,7 @@ const adminNav = [
   { href: "/admin/api-senhas", icon: KeyRound, label: "API e Senhas", roles: adminRoutePermissions["/admin/api-senhas"] },
   { href: "/admin/fretes", icon: Truck, label: "Fretes e entregas", roles: adminRoutePermissions["/admin/fretes"] },
   { href: "/admin/pagamentos", icon: WalletCards, label: "Pagamentos", roles: adminRoutePermissions["/admin/pagamentos"] },
+  { href: "/admin/miauby", icon: Bot, label: "Miauby", roles: adminRoutePermissions["/admin/miauby"] },
   { href: "/admin/temas", icon: Palette, label: "Temas", roles: adminRoutePermissions["/admin/temas"] },
   {
     href: "/admin/club-wimifarma",
