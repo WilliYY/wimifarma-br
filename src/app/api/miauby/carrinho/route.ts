@@ -7,7 +7,7 @@ import { getPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-export const miaubyCartCookie = "wimi-miauby-cart";
+const miaubyCartCookie = "wimi-miauby-cart";
 export async function POST(request: NextRequest) {
   try {
     const parsed = cartRequestSchema.safeParse(await paymentJson(request));
