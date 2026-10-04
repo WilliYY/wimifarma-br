@@ -23,12 +23,24 @@ export function readCartIdentity(token: string | undefined, secret: string, now 
 export const cartEventKey = (id: string, now = Date.now()) => `cart:${id}:${Math.floor(now / 600_000)}`;
 export const commerceMoney = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 const safeText = (text: string) => text.replace(/[\r\n\t*_~`\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 100);
-export function formatCommerceItems(items: { name: string; quantity: number }[]) {
-  return items.slice(0, 10).map(item => `${item.quantity} × ${safeText(item.name)}`).join("\n") + (items.length > 10 ? `\nMais ${items.length - 10} itens no painel.` : "");
+export function formatCommerceItems(items: { name: string; quantity: number; unitPriceCents?: number; totalCents?: number }[]) {
+  return items.slice(0, 10).map(item => `${item.quantity} × ${safeText(item.name)}${item.unitPriceCents !== undefined && item.totalCents !== undefined ? ` · un. ${commerceMoney(item.unitPriceCents)} · total ${commerceMoney(item.totalCents)}` : ""}`).join("\n") + (items.length > 10 ? `\nMais ${items.length - 10} itens no painel.` : "");
 }
-export function formatCommerceOrder(type: "order" | "payment", order: { id: string; number: string; totalCents: number; fulfillmentMethod: string; items: { name: string; quantity: number }[] }, isTest = false) {
+export function formatCommerceOrder(type: "order" | "payment", order: { id: string; number: string; totalCents: number; fulfillmentMethod: string;
+  subtotalCents?: number; deliveryFeeCents?: number; cashbackEarnedCents?: number; cashbackState?: string; status?: string; paymentStatus?: string;
+  items: Parameters<typeof formatCommerceItems>[0] }, isTest = false) {
   const title = type === "payment" ? "Pagamento confirmado pelo gateway" : "Novo pedido recebido — não confirma pagamento";
-  return `${isTest ? "[TESTE — sem compra real]\n" : ""}Miauby · Wimifarma\n${title}\nPedido ${safeText(order.number)}\nTotal: ${commerceMoney(order.totalCents)}\n${order.fulfillmentMethod === "PICKUP" ? "Retirada na farmácia" : "Entrega solicitada"}\n${formatCommerceItems(order.items)}\nConfira os detalhes no painel de pedidos.`;
+  const summary: string[] = [];
+  if (order.subtotalCents !== undefined && order.deliveryFeeCents !== undefined) {
+    summary.push(`Subtotal: ${commerceMoney(order.subtotalCents)}`, `Frete: ${commerceMoney(order.deliveryFeeCents)}`);
+    const discount = order.subtotalCents + order.deliveryFeeCents - order.totalCents;
+    if (discount > 0) summary.push(`Descontos: −${commerceMoney(discount)}`);
+  }
+  if ((order.cashbackEarnedCents ?? 0) > 0) {
+    if (order.cashbackState === "CREDITED" && order.status === "COMPLETED" && order.paymentStatus === "PAID") summary.push(`Cashback creditado: ${commerceMoney(order.cashbackEarnedCents!)}`);
+    else if (order.cashbackState === "PENDING") summary.push(`Cashback previsto: ${commerceMoney(order.cashbackEarnedCents!)}. Crédito após conclusão e pagamento.`);
+  }
+  return `${isTest ? "[TESTE — sem compra real]\n" : ""}Miauby · Wimifarma\n${title}\nPedido ${safeText(order.number)}\n${formatCommerceItems(order.items)}\n${summary.length ? `${summary.join("\n")}\n` : ""}Total: ${commerceMoney(order.totalCents)}\n${order.fulfillmentMethod === "PICKUP" ? "Retirada na farmácia" : "Entrega solicitada"}\nConfira os detalhes no painel de pedidos.`;
 }
 export function classifyBridgeResult(result: BridgeResult, eventId: string): CommerceState {
   if (result.eventId !== eventId || result.uncertain || result.status === "uncertain") return "UNCERTAIN";

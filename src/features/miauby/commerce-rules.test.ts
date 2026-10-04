@@ -31,3 +31,15 @@ test("only a matching positive provider message id proves acceptance, never deli
   assert.equal(classifyBridgeResult({ ...accepted, status: "blocked", accepted: false, retryable: true }, "fixture"), "PENDING");
   assert.equal(classifyBridgeResult({ ...accepted, status: "uncertain", accepted: false, uncertain: true }, "fixture"), "UNCERTAIN");
 });
+
+test("owner alerts share truthful money details without claiming pending cashback as earned", () => {
+  const input = { id: "fixture", number: "TEST-123", totalCents: 1000, subtotalCents: 1200, deliveryFeeCents: 0,
+    cashbackEarnedCents: 60, cashbackState: "PENDING", fulfillmentMethod: "PICKUP",
+    items: [{ name: "Produto sintético", quantity: 2, unitPriceCents: 600, totalCents: 1200 }] };
+  const result = formatCommerceOrder("payment", input);
+  assert.match(result, /Subtotal: R\$\s*12,00/);
+  assert.match(result, /Descontos: −R\$\s*2,00/);
+  assert.match(result, /2 × Produto sintético.*R\$\s*12,00/);
+  assert.match(result, /Cashback previsto/);
+  assert.doesNotMatch(result, /ganhou|creditado|saldo disponível/i);
+});

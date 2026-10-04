@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { CustomerMessagePreview } from "@/components/admin/customer-message-preview";
 
 type Settings = {
   enabled: boolean;
@@ -195,6 +196,8 @@ export function MiaubyPanel() {
           </div>
         </div>
       </section>
+
+      <CustomerMessagePreview />
 
       {error && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">{error} {data && "Os dados exibidos podem estar desatualizados."}</div>}
       <p className="sr-only" role="status">{notice}</p>

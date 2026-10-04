@@ -1,5 +1,11 @@
 # Miauby: alertas comerciais por WhatsApp
 
+## Resumos e prévia — 04/10/2026
+
+Os alertas de pedido/pagamento ao proprietário agora incluem quantidade, preço unitário e total de itens, subtotal, frete e descontos quando disponíveis no snapshot confiável. Cashback pendente é identificado como previsto, sem inventar saldo ou crédito. IDs de eventos, destinatário fixo, deduplicação e quarentena de envio incerto permanecem.
+
+O painel ADMIN oferece prévia de mensagens ao cliente, com dados explicitamente fictícios e texto comum a WhatsApp/e-mail. Não está ativado envio ao cliente, cadastro de destinatários ou disparos de pós-venda; guia em `37-mensagens-clientes.md`. Produtos comprados não viram segmentação clínica e avaliações falsas não são publicadas.
+
 ## Escopo e operação
 
 A Miauby do site mantém seu chat de catálogo. Os avisos comerciais usam o canal WhatsApp já conectado no projeto separado `wimifarma-com`, através de uma ponte exclusiva. Não compartilham banco, contatos de clientes, comandos financeiros ou token interno amplo do legado.
