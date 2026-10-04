@@ -1,5 +1,9 @@
 # 28 - Mercado Pago: checkout e homologação
 
+## Comparação de tarifas — 04/10/2026
+
+O painel ganhou um comparador de tarifas da conta e consulta Asaas separada, exclusiva de ADMIN. Isto não altera o provedor do checkout nem ativa cobranças no Asaas. Não tratar as tarifas de publicidade como contrato. A escolha automática de gateway depende de conta, vínculo persistente por pedido, reconciliação e homologação futura. Ver `38-politica-de-taxas.md`.
+
 ## Estado atual — 04/10/2026
 
 **Produção conectada e pagamentos públicos ativados**, conforme autorização do lojista, após os ensaios descritos abaixo. A conexão foi salva inicialmente desativada, validada pelo servidor no Mercado Pago e ativada em uma segunda gravação. O webhook de produção está cadastrado para **Order (Mercado Pago)**. O checkout público retorna a opção online também sem sessão; o formulário foi conferido no navegador sem enviar uma compra real.

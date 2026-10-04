@@ -1,5 +1,6 @@
 import { getPrisma } from "@/lib/prisma";
 import { cancelUnsubmittedPayment, refreshPayment } from "./service";
+import { synchronizeFeeSettings } from "./fee-settings";
 
 let started = false; let running = false;
 // Webhooks are primary. This bounded recovery loop handles abandoned tabs and network failures.
@@ -27,4 +28,7 @@ export function startPaymentMaintenance() {
   const run = () => { void reconcilePendingPayments().catch(() => console.warn("PAYMENT_MAINTENANCE_FAILED")); };
   const initial = setTimeout(run, 30_000); initial.unref();
   const timer = setInterval(run, 60_000); timer.unref();
+  const reviewFees = () => { void synchronizeFeeSettings().catch(() => console.warn("PAYMENT_FEE_REVIEW_FAILED")); };
+  const feeInitial = setTimeout(reviewFees, 60_000); feeInitial.unref();
+  const feeTimer = setInterval(reviewFees, 6 * 60 * 60_000); feeTimer.unref();
 }
