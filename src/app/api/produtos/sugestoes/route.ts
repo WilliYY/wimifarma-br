@@ -5,9 +5,11 @@ import {
   suggestProductData,
 } from "@/features/products/ai-suggestions";
 import { readJsonBody } from "@/lib/api";
+import { createProductSuggestionCache, productSuggestionCacheKey } from "@/features/products/ai-suggestion-cache";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+const cachedSuggestion = createProductSuggestionCache<Awaited<ReturnType<typeof suggestProductData>>>();
 
 export async function POST(request: Request) {
   const guard = await requireAdminApi();
@@ -27,10 +29,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const data = await suggestProductData(parsed.data, {
+    const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+    const data = await cachedSuggestion(productSuggestionCacheKey(parsed.data, model, apiKey), () => suggestProductData(parsed.data, {
       apiKey,
-      model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
-    });
+      model,
+    }));
 
     return NextResponse.json(
       { data },

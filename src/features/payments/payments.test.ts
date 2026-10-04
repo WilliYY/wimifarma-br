@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createHmac } from "node:crypto";
-import { paymentBody, providerState, assertPaymentBinding, validWebhookSignature, webhookSignatureFailure, paymentAccessToken, validPaymentAccess } from "./rules";
+import { paymentBody, providerState, providerStatusDetail, assertPaymentBinding, validWebhookSignature, webhookSignatureFailure, paymentAccessToken, validPaymentAccess } from "./rules";
 import { paymentInputSchema, providerOrderSchema } from "./schema";
 import { mercadoPagoRequest } from "./provider";
 import { paymentJson } from "./http";
@@ -30,6 +30,16 @@ test("only accredited provider state is paid; holds, failures, refund and partia
   assert.equal(providerState(remote("processing", "pending_review_manual")), "PENDING");
   for (const [status, expected] of [["failed", "FAILED"], ["canceled", "CANCELED"], ["refunded", "REFUNDED"], ["charged_back", "DISPUTED"]]) assert.equal(providerState(remote(status, status)), expected);
   assert.equal(providerState(remote("processed", "partially_refunded")), "PARTIALLY_REFUNDED");
+});
+
+test("payment details retain the transaction failure instead of the generic order detail", () => {
+  const order = remote("failed", "failed");
+  order.transactions.payments[0].status_detail = "processing_error";
+  assert.equal(providerStatusDetail(order), "processing_error");
+  delete order.transactions.payments[0].status_detail;
+  assert.equal(providerStatusDetail(order), "failed");
+  delete order.status_detail;
+  assert.equal(providerStatusDetail(order), null);
 });
 test("reconciliation rejects another merchant, another reference, another payment and changed amount/currency", () => {
   const expected = { id: "local-synthetic", providerOrderId: "ORDSYNTHETIC1", amountCents: 1234, accountId: "123" };

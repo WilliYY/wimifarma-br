@@ -12,7 +12,7 @@ import { CheckoutDeliveryStep } from "./checkout-delivery-step";
 import { CheckoutCashback } from "./checkout-cashback";
 import { normalizePostalCode } from "@/features/products/product-detail";
 import { customerShippingFee, FREE_SHIPPING_THRESHOLD_CENTS, isLocalDeliveryAddress } from "@/features/shipping/delivery-policy";
-import { OnlinePayment } from "./online-payment";
+import { OnlinePayment, type PaymentView } from "./online-payment";
 import { PaymentCardForm, type SecureCardInput } from "./payment-card-form";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
 
@@ -20,8 +20,8 @@ type PaymentConfig = { publicKey: string; environment: string; brands: { id: str
 type Result = { id: string; number: string; totalCents: number; paymentMethod: string };
 type Props = { initialCustomer: { name: string; phone: string; email: string; street: string; neighborhood: string }; draftOwner?: string; isCustomer?: boolean; paymentConfig?: PaymentConfig; carrierShippingAvailable?: boolean };
 const money = (cents: number) => new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" }).format(cents / 100);
-const fieldClass = "checkout-field h-12 w-full min-w-0 rounded-xl border border-line bg-white px-3.5 text-sm font-medium text-ink outline-none transition hover:border-ink/25 focus:border-brand focus:ring-4 focus:ring-brand/10 disabled:cursor-not-allowed";
-const panelClass = "min-w-0 overflow-hidden rounded-2xl border border-line bg-white p-5 shadow-[0_8px_30px_-20px_rgba(17,24,39,0.18)] sm:p-6";
+const fieldClass = "checkout-field h-13 w-full min-w-0 rounded-xl border border-line bg-white px-4 text-base font-medium text-ink outline-none transition hover:border-ink/25 focus:border-brand focus:ring-4 focus:ring-brand/10 disabled:cursor-not-allowed";
+const panelClass = "min-w-0 overflow-hidden rounded-2xl border border-line bg-white p-5 shadow-[0_8px_30px_-20px_rgba(17,24,39,0.18)] sm:p-6 2xl:p-7";
 
 export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer = false, paymentConfig = null, carrierShippingAvailable = false }: Props) {
   const { clearCart, hydrated, items, itemCount, subtotalCents } = useCart();
@@ -33,11 +33,12 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   const { customer, fulfillmentMethod, address, notes, shippingSelection: storedShippingSelection } = draft;
   const requiresShippingSupport = items.some(requiresPharmacyShippingSupport);
   const shippingSelection = carrierShippingAvailable && !requiresShippingSupport ? storedShippingSelection : undefined;
-  const [privacyConsent, setPrivacyConsent] = useState(false);
+  const [privacyConsent, setPrivacyConsent] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [order, setOrder] = useState<Result | null>(null);
   const [onlineOrder, setOnlineOrder] = useState<string | null>(null);
+  const [initialPayment, setInitialPayment] = useState<PaymentView | null>(null);
   const [cashbackRedeemCents, setCashbackRedeemCents] = useState(0);
   const sending = useRef(false);
   const requestAttempt = useRef<{ signature: string; id: string } | null>(null);
@@ -79,7 +80,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
     clearDraft();
   }
   function resetPayment() {
-    setOnlineOrder(null); requestAttempt.current = null;
+    setOnlineOrder(null); setInitialPayment(null); requestAttempt.current = null;
     try { sessionStorage.removeItem(resumeKey); sessionStorage.removeItem(`wimifarma-checkout-attempt:${draftOwner}`); } catch { /* Optional persistence. */ }
   }
   async function submitOrder(card?: SecureCardInput) {
@@ -111,6 +112,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
           const payment = await fetch(`/api/pagamentos/${result.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(card ?? { method: "pix", email: customer.email.trim() }) });
           const paymentPayload = await payment.json().catch(() => null);
           if (!payment.ok) throw new Error(paymentPayload?.error || "Consulte a situação do pagamento antes de tentar novamente.");
+          if (paymentPayload?.data?.orderId === result.id) setInitialPayment(paymentPayload.data);
         } finally { setOnlineOrder(result.id); }
         return;
       }
@@ -133,10 +135,10 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
       </div>
       <div className="flex items-center gap-3 rounded-xl bg-surface-subtle px-4 py-3">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-pharma-green"><LockKeyhole className="h-5 w-5" /></span>
-        <div><strong className="block text-xs font-bold text-ink">Conexão protegida</strong><span className="mt-1 block text-xs text-muted">{paymentConfig ? "Pagamento pelo Mercado Pago" : "Atendimento pela Wimifarma"}</span></div>
+        <div><strong className="block text-sm font-bold text-ink">Conexão protegida</strong><span className="mt-1 block text-xs text-muted">Checkout Wimifarma</span></div>
       </div>
     </header>
-    <div className="grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3 xl:items-stretch">
+    <div className="grid items-start gap-6 md:grid-cols-2 min-[86.25rem]:grid-cols-3 min-[86.25rem]:items-stretch">
       <section className={panelClass} data-checkout-panel="customer">
         <PanelTitle number="1" Icon={UserRound} title="Seus dados" description="Para acompanhar e receber seu pedido." complete={contactReady} />
         <fieldset disabled={Boolean(onlineOrder) || submitting} className="mt-5 grid min-w-0 gap-4 disabled:opacity-70">
@@ -158,10 +160,10 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
         </details>}
       </section>
       <section className={panelClass} data-checkout-panel="delivery"><PanelTitle number="2" Icon={Truck} title="Entrega ou retirada" description="Escolha a opção mais conveniente." complete={deliveryReady} /><fieldset disabled={Boolean(onlineOrder) || submitting} className="mt-5 min-w-0 disabled:opacity-70"><legend className="sr-only">Dados da entrega</legend><CheckoutDeliveryStep compact carrierShippingAvailable={carrierShippingAvailable} address={address} fulfillmentMethod={fulfillmentMethod} onAddress={setAddress} discountCents={discountCents} shippingSelection={shippingSelection} onMethod={value => setDraft(current => ({ ...current, fulfillmentMethod: value, shippingSelection: undefined }))} onShipping={value => setDraft(current => ({ ...current, shippingSelection: value }))} /></fieldset></section>
-      <section className={`${panelClass} relative md:col-span-2 xl:col-span-1`} data-checkout-panel="payment">
+      <section className={`${panelClass} relative md:col-span-2 min-[86.25rem]:col-span-1`} data-checkout-panel="payment">
         <div aria-hidden="true" className="absolute inset-x-0 top-0 h-0.5 bg-brand" />
         <PanelTitle number="3" Icon={CreditCard} title="Pagamento" description="Confira o total e finalize com segurança." />
-        {onlineOrder ? <><OnlinePayment embedded orderId={onlineOrder} initialMethod={draft.onlineMethod ?? "pix"} onPaid={finishPayment} onTerminal={forgetActivePayment} onReview={resetPayment} />{error && <p className="mt-4 rounded-lg bg-brand-soft p-3 text-sm text-brand" role="alert">{error}</p>}</> : <>
+        {onlineOrder ? <><OnlinePayment embedded orderId={onlineOrder} initialData={initialPayment} initialMethod={draft.onlineMethod ?? "pix"} onPaid={finishPayment} onTerminal={forgetActivePayment} onReview={resetPayment} />{error && <p className="mt-4 rounded-lg bg-brand-soft p-3 text-sm text-brand" role="alert">{error}</p>}</> : <>
           <fieldset className="mt-5 grid grid-cols-2 gap-2" disabled={submitting}><legend className="sr-only">Forma de pagamento</legend><PaymentChoice selected={method === "pix"} onSelect={() => selectPayment("pix")} label="Pix" detail="Pagamento à vista" Icon={QrCode} /><PaymentChoice selected={method === "card" || method === "manual-card"} onSelect={() => selectPayment(paymentConfig ? "card" : "manual-card")} label="Cartão" detail={paymentConfig ? "Até 3x sem juros" : "Na maquininha"} Icon={CreditCard} disabled={!paymentConfig && !local} />{local && <div className="col-span-2"><PaymentChoice selected={method === "cash"} onSelect={() => selectPayment("cash")} label={fulfillmentMethod === "PICKUP" ? "Dinheiro na retirada" : "Dinheiro na entrega local"} detail="Pague ao receber" Icon={Banknote} /></div>}</fieldset>
           <p className="mt-3 text-xs leading-5 text-muted">{method === "cash" ? "Apenas retirada ou entrega local em Ivaté e Douradina. Informe o troco nas observações." : method === "manual-card" ? "Pague na maquininha ao receber ou retirar." : !paymentConfig ? "A farmácia enviará os dados do Pix após confirmar o pedido." : method === "pix" ? "QR Code e copia e cola aqui na tela. Você terá 2 horas para pagar." : "Até 3x sem juros. Acima de 3x, juros e total calculados pelo Mercado Pago."}</p>
           {method === "card" && paymentConfig?.brands.length ? <div className="mt-4 flex flex-wrap items-center gap-2" aria-label="Bandeiras disponíveis no Mercado Pago">{paymentConfig.brands.map(brand => <span key={brand.id} className="grid h-7 min-w-10 place-items-center rounded border border-line px-1.5">{brand.image ? <Image unoptimized src={brand.image} alt={brand.name} width={36} height={20} className="h-5 w-auto max-w-12 object-contain" /> : <span className="text-[10px] font-semibold">{brand.name}</span>}</span>)}</div> : null}
@@ -172,17 +174,17 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
             <div className="border-t border-line bg-white px-4 py-4"><div className="flex flex-wrap items-end justify-between gap-2"><span className="text-sm font-bold text-ink">{deliveryKnown ? "Total do pedido" : "Subtotal"}</span><strong className="text-3xl font-black tracking-tight text-brand">{money(total)}</strong></div>{!deliveryKnown && <p className="mt-2 text-xs leading-5 text-muted">O total será atualizado ao escolher uma entrega disponível.</p>}</div>
           </section>
           <FreeShippingProgress eligibleCents={subtotalCents - discountCents} />
-          <label className="mt-5 flex items-start gap-3 text-xs leading-5 text-muted"><input checked={privacyConsent} className="mt-1 h-4 w-4 shrink-0 accent-brand" onChange={event => setPrivacyConsent(event.target.checked)} type="checkbox" /><span>Revisei meus dados e li a <Link className="font-bold text-brand underline" href="/privacidade" target="_blank">Política de Privacidade</Link>.</span></label>
+          <label className="mt-5 flex items-start gap-3 text-sm leading-6 text-muted"><input checked={privacyConsent} className="mt-1 h-5 w-5 shrink-0 accent-brand" onChange={event => setPrivacyConsent(event.target.checked)} type="checkbox" /><span>Finalizar com os dados informados, conforme a <Link className="font-bold text-brand underline" href="/privacidade" target="_blank">Política de Privacidade</Link>.</span></label>
           {error && <p className="mt-4 rounded-lg bg-brand-soft p-3 text-sm text-brand" role="alert">{error}</p>}
           {method === "card" && paymentConfig ? <div className="mt-5">{contactReady && deliveryReady && privacyConsent && total > 0 ? <PaymentCardForm publicKey={paymentConfig.publicKey} amountCents={total} email={customer.email.trim()} onSubmit={submitOrder} /> : <p className="rounded-lg bg-surface-subtle p-4 text-xs leading-5 text-muted">Preencha seus dados, selecione a entrega e confirme a política de privacidade para abrir os campos do cartão.</p>}</div> : <button type="button" disabled={submitting} onClick={() => void submitOrder().catch(() => undefined)} className="mt-5 flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-black text-white transition hover:bg-brand-dark disabled:opacity-60">{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}{submitting ? "Confirmando..." : online ? "Gerar Pix e finalizar" : "Confirmar pedido"}</button>}
-          <p className="mt-4 flex items-center justify-center gap-2 text-center text-[11px] leading-5 text-muted"><LockKeyhole className="h-3 w-3 shrink-0" />{online ? "Pagamento protegido pelo Mercado Pago" : "Preparação confirmada pela farmácia"}</p>
+          <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs leading-5 text-muted"><LockKeyhole className="h-3.5 w-3.5 shrink-0" />{online ? "Pix e cartão processados com segurança por Mercado Pago" : "Preparação confirmada pela farmácia"}</p>
         </>}
       </section>
     </div>
   </CheckoutShell>;
 }
 
-function CheckoutShell({ children }: { children: React.ReactNode }) { return <section className="min-h-[75vh] bg-[#f5f6f8] px-4 pb-20 pt-32 sm:px-6 sm:pt-40 lg:px-8 lg:pt-52"><div className="mx-auto max-w-[1440px]">{children}</div></section>; }
+function CheckoutShell({ children }: { children: React.ReactNode }) { return <section className="min-h-[75vh] bg-[#f5f6f8] px-4 pb-20 pt-32 sm:px-6 sm:pt-40 lg:px-8 lg:pt-52"><div className="mx-auto max-w-[1600px]">{children}</div></section>; }
 function PanelTitle({ number, Icon, title, description, complete = false }: { number: string; Icon: typeof UserRound; title: string; description: string; complete?: boolean }) {
   return <div className="border-b border-line pb-5">
     <div className="flex items-center gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-soft text-sm font-black text-brand">{number}</span><h2 className="min-w-0 flex-1 text-lg font-black leading-6 text-ink">{title}</h2>{complete ? <Check className="h-4 w-4 shrink-0 text-pharma-green" aria-label="Dados preenchidos" /> : <Icon className="h-4 w-4 shrink-0 text-muted" />}</div>

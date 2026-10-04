@@ -4,7 +4,9 @@ Revisão nacional/Miauby de 03/10: ver `27-melhor-envio.md` para a configuraçã
 
 ## Experiência atual
 
-Checkout em uma página, com três colunas a partir de 1280 px, duas no tablet e blocos verticais no celular. Contato, entrega e pagamento permanecem visíveis; cartão abre após dados/endereço válidos e consentimento. Bandeiras vêm do catálogo público do Mercado Pago; indisponibilidade desse catálogo não impede o formulário seguro.
+Checkout em uma página, com três colunas a partir de 1380 px, duas no tablet e blocos verticais no celular. Campos de contato/endereço usam 16 px, com espaço para leitura e toque. Contato, entrega e pagamento permanecem visíveis; cartão abre após dados/endereço válidos e confirmação transacional. Bandeiras vêm do catálogo público do Mercado Pago; indisponibilidade desse catálogo não impede o formulário seguro.
+
+Por solicitação do lojista, a confirmação transacional inicia marcada, com o texto “Finalizar com os dados informados, conforme a Política de Privacidade”. Não afirma que o cliente leu um documento e não autoriza marketing. Pode ser desmarcada; o servidor exige sua confirmação ao finalizar. O formulário do cartão usa a customização oficial do Brick e mantém identificação do titular exigida pelo componente brasileiro. Não existe CPF cadastrado para preencher automaticamente, nem acesso a cartões privados.
 
 O visual usa cabeçalhos numerados com orientação curta, campos com foco visível, miniaturas dos produtos e opções de pagamento com legendas. As três colunas têm a mesma largura e altura no desktop, sem altura fixa ou corte do conteúdo. O endereço compacto usa quatro linhas e preserva a ordem visual no teclado. O resumo claro diferencia produtos, frete, desconto e subtotal/total; saldo zero de cashback ocupa uma linha. A barra de frete grátis considera os produtos após cashback e não garante cobertura de CEP. Ícones de confirmação nos dados/entrega indicam somente preenchimento conforme a validação existente. Não representam confirmação operacional ou aprovação financeira.
 
@@ -20,9 +22,9 @@ Retirada gratuita na Av. Minas Gerais, 2263. Entrega local em Ivaté/Douradina r
 
 A partir de R$ 99,90 em produtos após cashback, o cliente não paga o frete de transportadora disponível, incluindo outras cidades. A loja continua pagando o custo da transportadora. A cotação preserva esse custo no pedido. Não há prazo/preço/transportadora fictícios quando a cotação está desativada.
 
-Melhor Envio está conectado, mas o envio nacional permanece desativado até revisar embalagem pronta, peso, aceitação da carga, documento fiscal e postagem. A IA pesquisa a apresentação exata/EAN e deixa medidas úteis como rascunho; peso líquido, caixa master, fralda aberta ou imagem sem escala não podem definir o frete. Conferir fisicamente antes de aprovar.
+Melhor Envio está conectado e a chave geral de cotação nacional foi ativada em 03/10. Cada produto ainda exige embalagem pronta, peso e transporte aprovados. A IA pesquisa a apresentação exata/EAN e deixa medidas úteis como rascunho; peso líquido, caixa master, fralda aberta ou imagem sem escala não podem definir o frete. Sem referência confiável, os campos permanecem vazios. Conferir antes de aprovar; documento fiscal e postagem continuam sob responsabilidade operacional da loja.
 
-O checkout informa essa indisponibilidade antes de oferecer cotação. Medicamentos e itens sujeitos às regras farmacêuticas também exibem atendimento/retirada, sem consulta automática de transportadora. Preços anteriores restaurados não permanecem válidos se essa integração ou elegibilidade estiver bloqueada; o servidor preserva todas as validações de frete.
+O checkout informa bloqueios antes de oferecer cotação. Receita e Farmácia Popular exigem atendimento; medicamento sem receita pode cotar PAC/SEDEX com embalagem aprovada. Preços anteriores restaurados não permanecem válidos se essa integração ou elegibilidade estiver bloqueada; o servidor preserva todas as validações de frete.
 
 O resumo usa subtotal enquanto falta uma entrega válida, com estado separado para CEP pendente, frete a selecionar, atendimento ou indisponibilidade. Após escolher retirada, entrega local ou uma cotação elegível, exibe o total e o custo correspondente. A composição do preço e a regra de R$ 99,90 após descontos permanecem iguais.
 

@@ -1,5 +1,14 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-04 - Checkout, operação de pedidos e referências logísticas
+
+- Checkout com campos de 16 px, três colunas somente a partir de 1380 px e identidade Wimifarma nas opções oficiais do Brick. Confirmação transacional inicia marcada a pedido do lojista, sem afirmar leitura e sem adesão de marketing. CPF exigido pelo Brick permanece; não há CPF ou cartão salvo pela aplicação.
+- Pix conserva a resposta inicial ao falhar uma leitura posterior; prazo original de duas horas, idempotência e confirmação exclusiva do gateway preservados. Detalhe da transação prevalece ao detalhe genérico da Order. Consulta de produção confirmou cartão real do lojista aprovado e Pix anteriores com processing_error sem QR. Titular cadastrou a chave Pix; nova geração ainda precisa ser conferida.
+- Pedidos separados por feitos, em andamento, concluídos e cancelados/estornados. Dados técnicos recolhidos, estado financeiro sempre visível; nenhuma alteração de transições ou reconciliação. Contrato em `34-pedidos-operacao.md`.
+- IA pesquisa apresentação/EAN, embalagem de venda e peso bruto; referências incompatíveis não preenchem frete. Cache de resultado por identidade/modelo/credencial, até 128 entradas, 24 h para alta confiança e 5 min para demais, com deduplicação concorrente e sem armazenar falhas. Não há aprovação automática de medidas ou contratação de base comercial.
+- Comparação de e-mails sem mensalidade, bases logísticas e custo de IA em `35-referencias-catalogo-e-emails.md`. Brevo Free/pré-pago para início; SES e listmonk como alternativa por uso. Nenhuma conta, DNS ou envio novo configurado.
+- Verificados 184 testes gerais, 14 de pagamentos, 29 de frete e 28 cenários UI interceptados. Lint, TypeScript e Prisma validate aprovados. Audit mantém sete HIGH preexistentes; nenhuma dependência adicionada. Capturas sintéticas em `outputs/checkout-shipping-review`, sem dados reais; build/publicação têm evidência própria posterior.
+
 ## 2026-10-03 - Cotação nacional, carrinho da Miauby e proposta de e-mails
 
 - Autorizada a chave geral de frete nacional pelo lojista. Categoria Medicamentos deixa de impedir itens sem receita, desde que embalagem e transporte sejam aprovados. Carrinho com medicamento usa somente PAC/SEDEX, com conferência também no token ao finalizar. Prescrição e Farmácia Popular mantêm atendimento; não existe liberação de compra online de controlados por foto de receita no WhatsApp. Fontes e operação em `27-melhor-envio.md`.

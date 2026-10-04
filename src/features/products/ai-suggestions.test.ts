@@ -9,6 +9,11 @@ import {
   suggestProductData,
 } from "./ai-suggestions";
 
+test("logistics research searches exact closed unit in stages without inventing gross weight or axes", () => {
+  const prompt = buildProductResearchPrompt({ name: "Produto Sintético", brand: "Sintética", ean: "7891000248768", knownCategories: [] });
+  for (const text of ["(1) fixe a identidade/EAN", "(2) procure ficha tecnica", "(3) se faltar peso bruto", "distribuidor e varejo tecnico", "cada eixo nomeado", "Peso liquido, volume do rotulo", "Isso nao transforma varejo em fonte oficial"]) assert.ok(prompt.includes(text));
+});
+
 test("shipping references follow sourced identity and reject a different diaper size or EAN", async () => {
   const evidence = "Peso bruto do pacote: 0,8 kg com embalagem comercial.";
   const answer = { name: "Fralda Sintética M 40 unidades", brand: "Sintética", ean: "7891000248768", productType: "hygiene", identityMatch: "exact", evidenceSourceIndexes: [0], activeIngredients: [], category: "Fraldas", confidence: "medium", description: null, searchTerms: [], warnings: [], shipping: { identityMatch: "exact", packageLevel: "retail_unit", weight: { value: 0.8, unit: "kg", kind: "gross", sourceIndex: 0, evidence }, dimensions: null, warnings: [] } };

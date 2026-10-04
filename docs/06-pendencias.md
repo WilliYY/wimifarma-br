@@ -1,5 +1,13 @@
 # 06 - Pendencias
 
+## Revisão de 04/10/2026
+
+- Confirmar nova geração Pix após cadastro da chave pelo titular; duas tentativas anteriores falharam e cartão real consta aprovado.
+- Quatro produtos ativos sem perfil logístico aprovado: obter referência de peso bruto/embalagem pronta antes de liberar transporte por produto.
+- E-mails: escolher/conectar conta e autenticar domínio; comparação gratuita/pré-paga em `35-referencias-catalogo-e-emails.md`. Nenhum envio ativo.
+- Verificar modelo de imagens configurado: `gemini-2.5-flash-image` tem encerramento oficial em 02/10/2026. Não trocar sem confirmar disponibilidade/compatibilidade; o modelo textual é independente.
+- Audit de dependências ainda aponta sete vulnerabilidades HIGH preexistentes; tratar em revisão própria, sem downgrade forçado nesta entrega.
+
 ## Dependências - auditoria de 03/10/2026
 
 - `npm audit --audit-level=moderate` apontou sete vulnerabilidades HIGH no conjunto existente, incluindo `brace-expansion`, `braces` e `fast-uri`. Reconfirmado na entrega do checkout em 03/10, sem novas dependencias ou mudanca no lockfile. Planejar correção pontual das versões e executar regressão/build antes de publicar essa mudança separada; o `--force` sugere downgrade incompatível do eslint-config-next.

@@ -10,7 +10,7 @@ import { moneyToCents } from "@/features/orders/checkout";
 import { queueCommerceOrder } from "@/features/miauby/commerce-service";
 import { readPaymentIntegration } from "./integration";
 import { mercadoPagoRequest } from "./provider";
-import { assertPaymentBinding, paymentBody, PIX_EXPIRATION_MS, providerState, validPaymentAccess } from "./rules";
+import { assertPaymentBinding, paymentBody, PIX_EXPIRATION_MS, providerState, providerStatusDetail, validPaymentAccess } from "./rules";
 import { PaymentError, providerOrderSchema, type PaymentInput, type ProviderOrder } from "./schema";
 
 export const paymentCookieName = (id: string) => `wimi-payment-${id}`;
@@ -92,6 +92,7 @@ export async function applyProviderOrder(remote: ProviderOrder) {
     assertPaymentBinding(remote, current);
     if (current.providerUpdatedAt && updatedAt <= current.providerUpdatedAt) return;
     const next = providerState(remote);
+    const detail = providerStatusDetail(remote);
     // Final states cannot be reversed by a delayed initial response.
     if (["REFUNDED", "DISPUTED", "FAILED", "CANCELED"].includes(current.status) && next !== current.status) return;
     if (current.status === "PAID" && ["PENDING", "FAILED", "CANCELED"].includes(next)) return;
@@ -102,7 +103,7 @@ export async function applyProviderOrder(remote: ProviderOrder) {
     }
     const terminal = ["PAID", "PARTIALLY_REFUNDED", "REFUNDED", "DISPUTED", "FAILED", "CANCELED"].includes(next);
     await tx.onlinePayment.update({ where: { id: current.id }, data: {
-      providerOrderId: remote.id, status: next, statusDetail: remote.status_detail,
+      providerOrderId: remote.id, status: next, statusDetail: detail,
       providerUpdatedAt: updatedAt, lastCheckedAt: new Date(), stockReserved: terminal ? false : current.stockReserved,
       pixCode: terminal ? null : remote.transactions.payments[0].payment_method.qr_code ?? null,
       ...(remote.transactions.payments[0].date_of_expiration ? { pixExpiresAt: new Date(remote.transactions.payments[0].date_of_expiration) } : {}),
@@ -116,9 +117,9 @@ export async function applyProviderOrder(remote: ProviderOrder) {
       await settleOrderCashback(tx, current.orderId);
       await settleOrderBenefits(tx, current.orderId);
     }
-    if (next !== current.status || remote.status_detail !== current.statusDetail) await tx.auditLog.create({ data: {
+    if (next !== current.status || detail !== current.statusDetail) await tx.auditLog.create({ data: {
       action: "PAYMENT_RECONCILED", entity: "Order", entityId: current.orderId,
-      metadata: { from: current.status, to: next, detail: remote.status_detail ?? "", providerOrderId: remote.id, environment: current.environment },
+      metadata: { from: current.status, to: next, detail: detail ?? "", providerOrderId: remote.id, environment: current.environment },
     } });
   });
   return true;

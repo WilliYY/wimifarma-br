@@ -66,6 +66,10 @@ textarea {
   font: inherit;
 }
 
+.checkout-field {
+  font-size: 16px;
+}
+
 .checkout-field:-webkit-autofill,
 .checkout-field:-webkit-autofill:hover,
 .checkout-field:-webkit-autofill:focus {

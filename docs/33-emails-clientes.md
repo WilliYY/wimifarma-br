@@ -2,6 +2,8 @@
 
 ## Situação e proposta
 
+Comparação de 04/10: `35-referencias-catalogo-e-emails.md`. Para começar sem mensalidade, Brevo Free e créditos pré-pagos; alternativa com cobrança por uso é SES, com listmonk para campanhas. Hospedagem/manutenção e autenticação de domínio continuam necessárias. Nenhum serviço novo foi contratado ou conectado.
+
 Pedido do lojista em 03/10/2026: confirmação de compra, recuperação de carrinho e novidades. **O site ainda não envia e-mails.** Não existe provedor de e-mail configurado, remetente autenticado, fila de e-mails ou consentimento específico de marketing persistido. A proposta abaixo não habilita disparos nem importa clientes para terceiros.
 
 Recomendação: Brevo, cuja API oficial reúne e-mails transacionais, contatos e campanhas. Usar a conta empresarial da Wimifarma, sem misturar com outros projetos. O lojista ainda precisa confirmar o serviço/conta; não contratar plano pago automaticamente. Modelos visuais com dados fictícios: `email-modelos.html`.

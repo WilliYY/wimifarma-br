@@ -32,7 +32,18 @@ export function PaymentCardForm({ publicKey, amountCents, email, onSubmit }: { p
     const mp = new window.MercadoPago(publicKey, { locale: "pt-BR" });
     void mp.bricks().create("cardPayment", id, {
       initialization: { amount: amountCents / 100, payer: { email } },
-      customization: { paymentMethods: { minInstallments: 1, maxInstallments: 12 } },
+      customization: {
+        paymentMethods: { minInstallments: 1, maxInstallments: 12 },
+        visual: {
+          hideFormTitle: true,
+          texts: { formSubmit: "Pagar e finalizar", cardholderIdentification: { placeholder: "CPF do titular" } },
+          style: { theme: "flat", customVariables: {
+            baseColor: "#c8102e", baseColorFirstVariant: "#9f0d24", baseColorSecondVariant: "#fff1f3",
+            textPrimaryColor: "#111827", inputBackgroundColor: "#ffffff", formBackgroundColor: "#ffffff",
+            fontSizeMedium: "16px", inputVerticalPadding: "14px", borderRadiusMedium: "12px", formPadding: "0px",
+          } },
+        },
+      },
       callbacks: {
         onReady: () => { if (!disposed) setReady(true); },
         onSubmit: (form: CardData, additional: { paymentTypeId: string }) => submit.current({
@@ -46,7 +57,7 @@ export function PaymentCardForm({ publicKey, amountCents, email, onSubmit }: { p
   }, [sdkReady, publicKey, amountCents, email, id]);
   return <div className="min-w-0">
     <Script src="https://sdk.mercadopago.com/js/v2" onReady={() => setSdkReady(true)} onError={() => setError("Não foi possível carregar o Mercado Pago.")} />
-    <p className="mb-3 flex items-center gap-2 text-xs text-muted"><LockKeyhole className="h-3.5 w-3.5" />Campos protegidos pelo Mercado Pago</p>
+    <p className="mb-3 flex items-center gap-2 text-sm text-muted"><LockKeyhole className="h-4 w-4" />Dados do cartão protegidos</p>
     {!ready && !error && <p className="flex gap-2 py-4 text-sm text-muted"><Loader2 className="h-4 w-4 animate-spin" />Carregando cartão e parcelamento...</p>}
     <div id={id} />
     {error && <p role="alert" className="mt-3 text-sm text-brand">{error}</p>}

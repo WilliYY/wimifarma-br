@@ -1,5 +1,20 @@
 # Peso e medidas no cadastro assistido
 
+## Pesquisa e custo por repetição (04/10/2026)
+
+A pesquisa organiza a logística em etapas na mesma consulta ao Gemini: confirmar EAN/apresentação e unidade comercial fechada; procurar ficha técnica do fabricante; completar fatos ausentes em distribuidores e varejo técnico da mesma apresentação. As buscas refinam peso bruto com embalagem e os eixos nomeados. Nenhuma nova conta, provedor ou chamada independente foi adicionada. A pesquisa não converte volume ou conteúdo líquido em peso bruto, não atribui eixos a sequências sem identificação e não estima por foto ou produto semelhante. As validações existentes de identidade, fonte, trecho e unidades continuam obrigatórias; fontes de varejo para logística não se tornam fontes oficiais de identidade.
+
+A rota administrativa validada `/api/produtos/sugestoes` usa cache em memória do processo para repetições idênticas. A chave é um hash da identidade exata fornecida (EAN, nome, marca e categorias), modelo e impressão digital da credencial. A chave não contém a credencial em texto nem é registrada em logs. Autenticação, validação da requisição e disponibilidade da configuração são conferidas antes do cache; a resposta ao navegador permanece `Cache-Control: no-store`.
+
+- Alta confiança: até 24 horas desde a conclusão da pesquisa. Confiança média/baixa: até 5 minutos, permitindo nova pesquisa após incerteza.
+- Até 128 resultados, cada um limitado a 256 KiB para retenção. Resultados maiores são devolvidos, mas não guardados; entradas menos recentemente usadas são removidas quando o limite é atingido.
+- Até 20 pesquisas distintas simultâneas. Requisições iguais compartilham uma pesquisa pendente e recebem cópias independentes. Excesso de pesquisas distintas retorna falha temporária pelo tratamento já existente da rota.
+- Falhas nunca são armazenadas. Entradas vencidas são removidas na próxima consulta e a cada minuto durante períodos ociosos. A leitura não prolonga a validade.
+
+Reinício ou deploy limpa o cache. Instâncias/processos distintos mantêm caches independentes; não existe armazenamento persistente ou compartilhado. A economia depende de repetições dentro da mesma instância; não há percentual ou valor financeiro estimado. Uma pesquisa idêntica antes do vencimento reutiliza o resultado, inclusive ao clicar novamente no botão de pesquisa.
+
+Validação direcionada: `node --import tsx --test src/features/products/ai-suggestion-cache.test.ts src/features/products/ai-suggestions.test.ts`. Os testes cobrem isolamento da identidade/modelo/credencial, concorrência, falha seguida de nova tentativa, validade, limites, resultados grandes e as salvaguardas existentes de fontes e logística.
+
 ## Escopo e uso
 
 O cadastro/edição de produtos possui a seção **Peso e medidas para frete**. A pesquisa existente de nome/marca/EAN também procura especificações logísticas, sem chamada adicional por tecla. O botão **Pesquisar peso e medidas** repete a pesquisa completa quando necessário.

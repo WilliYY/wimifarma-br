@@ -1,10 +1,14 @@
 # 28 - Mercado Pago: checkout e homologação
 
-## Estado atual — 03/10/2026
+## Estado atual — 04/10/2026
 
 **Produção conectada e pagamentos públicos ativados**, conforme autorização do lojista, após os ensaios descritos abaixo. A conexão foi salva inicialmente desativada, validada pelo servidor no Mercado Pago e ativada em uma segunda gravação. O webhook de produção está cadastrado para **Order (Mercado Pago)**. O checkout público retorna a opção online também sem sessão; o formulário foi conferido no navegador sem enviar uma compra real.
 
-O Melhor Envio está conectado, mas a cotação nacional permanece desligada até cadastrar medidas/peso reais das embalagens e confirmar elegibilidade, preparação fiscal e postagem. Essa pendência não impede pagamento de pedidos elegíveis para retirada ou entrega local. Nenhuma cobrança real, etiqueta ou nota fiscal foi emitida nos testes.
+O Melhor Envio está conectado e a chave geral nacional foi ativada em 03/10. Os produtos precisam de perfil logístico aprovado; os quatro ativos ainda não possuem esse perfil. Isso não impede retirada/entrega local elegível. Nenhuma etiqueta ou nota fiscal foi emitida nesta revisão.
+
+Em 04/10, consulta canônica confirmou uma compra real do lojista com cartão como `processed/accredited` e duas tentativas de Pix como `failed`, com detalhe da transação `processing_error` e sem QR. A conta não tinha chave Pix; o titular cadastrou uma e a tela confirmou o cadastro. Ainda é necessário gerar um novo Pix para comprovar o QR em produção; as tentativas antigas não se tornam válidas retroativamente. A revisão não efetuou pagamento nem reembolso.
+
+O checkout conserva o QR recebido na resposta inicial mesmo se a leitura seguinte falhar; o gateway continua sendo a fonte do estado financeiro. O detalhe da transação é preferido ao detalhe genérico da Order, sem converter erro em aprovação. Identidade visual Wimifarma usa opções oficiais do Brick; há informação discreta sobre processamento pelo Mercado Pago. CPF exigido pelo Brick brasileiro permanece; não há CPF salvo para preenchimento automático.
 
 ## Rotina da loja
 

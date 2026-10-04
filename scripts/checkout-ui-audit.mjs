@@ -21,7 +21,7 @@ const browser = await chromium.launch();
 const results = [], failures = [];
 const product = price => ({id:"fixture-item",slug:"fixture-item",name:"Dove óleo de banho · produto de teste",imageUrl:"/qa-product.webp",category:"Teste",unitPriceCents:price,originalPriceCents:null,stock:20,requiresPrescription:false,isPopularPharmacy:false,quantity:1});
 
-async function fixture(width, {price=9990,customer=false,failOrder=false,failPayment=false,failPaymentStatus="UNKNOWN",shippingAvailable=true,medicine=false,ordinaryMedicine=false,balance="0.01"}={}) {
+async function fixture(width, {price=9990,customer=false,failOrder=false,failPayment=false,failPaymentRead=false,rejectPix=false,failPaymentStatus="UNKNOWN",shippingAvailable=true,medicine=false,ordinaryMedicine=false,balance="0.01"}={}) {
   const context = await browser.newContext({viewport:{width,height:1000},reducedMotion:"reduce"});
   const page = await context.newPage(); const errors=[], orders=[], payments=[], quotes=[];
   const state = {failOrder,failPayment,status:"NEW",expiresAt:null};
@@ -51,8 +51,10 @@ async function fixture(width, {price=9990,customer=false,failOrder=false,failPay
     if(url.pathname==="/api/fretes/cotacao") {quotes.push(request.postDataJSON());return json({data:[{provider:"melhor-envio",serviceId:1,carrier:"Transportadora Teste",service:"Normal",priceCents:2000,deliveryDays:5,token:"synthetic-quote"}]});}
     if(url.pathname==="/api/pedidos") {orders.push(request.postDataJSON());if(state.failOrder){state.failOrder=false;return route.abort("failed");}return json({data:{id:"fixture-order",number:"WF-SINTETICO-1",totalCents:price,paymentMethod:orders.at(-1).paymentMethod}});}
     if(url.pathname==="/api/pagamentos/fixture-order") {
+      if(request.method()==="GET" && failPaymentRead) return route.abort("failed");
       if(request.method()==="POST") {payments.push(request.postDataJSON());if(state.failPayment){state.failPayment=false;state.status=failPaymentStatus;return route.abort("failed");}if(request.postDataJSON().method==="pix"){state.status="PENDING";state.expiresAt=new Date(Date.now()+2*60*60*1000).toISOString();}if(request.postDataJSON().method==="card")state.status="PAID";}
-      return json({data:{orderId:"fixture-order",number:"WF-SINTETICO-1",amountCents:price,status:state.status,statusDetail:null,pixCode:state.status==="PENDING"?"SYNTHETIC-PIX-CODE":null,pixExpiresAt:state.expiresAt,payerEmail:"cliente@example.invalid",qrDataUrl:state.status==="PENDING"?'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240"><rect width="240" height="240" fill="white"/><text x="20" y="120">QR SINTÉTICO</text></svg>'):null,environment:"test",publicKey:"TEST-fixture-only"}});
+      if(rejectPix && state.status==="PENDING") state.status="FAILED";
+      return json({data:{orderId:"fixture-order",number:"WF-SINTETICO-1",amountCents:price,status:state.status,statusDetail:rejectPix?"processing_error":null,pixCode:state.status==="PENDING"?"SYNTHETIC-PIX-CODE":null,pixExpiresAt:state.expiresAt,payerEmail:"cliente@example.invalid",qrDataUrl:state.status==="PENDING"?'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240"><rect width="240" height="240" fill="white"/><text x="20" y="120">QR SINTÉTICO</text></svg>'):null,environment:"test",publicKey:"TEST-fixture-only"}});
     }
     if(url.pathname==="/api/miauby/carrinho")return json({});
     throw new Error(`Unexpected intercepted request: ${request.method()} ${url.pathname}`);
@@ -64,10 +66,22 @@ async function fixture(width, {price=9990,customer=false,failOrder=false,failPay
 }
 async function fillContact(page,email="cliente@example.invalid") {await page.getByLabel("Nome completo").fill("Cliente Sintético");await page.getByLabel("WhatsApp / telefone").fill("+55 (44) 99999-0000");await page.getByLabel("E-mail",{exact:true}).fill(email);}
 async function pickup(page) {await page.getByText("Retirar na farmacia",{exact:true}).click();}
-async function privacy(page) {await page.getByRole("checkbox",{name:/Revisei meus dados/}).check();}
+async function privacy(page) {await page.getByRole("checkbox",{name:/Finalizar com os dados/}).check();}
 async function fits(page,width) {assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`overflow at ${width}`);}
 async function test(name,run) {try {await run();results.push({name,passed:true});console.log(`PASS ${name}`);}catch(e){failures.push({name,error:e.message});console.log(`FAIL ${name}: ${e.message}`);}}
 try {
+  await test("preselected checkout acknowledgment is separate from optional marketing",async()=>{
+    const f=await fixture(390);try {await expect(f.page.getByRole("checkbox",{name:/Finalizar com os dados/})).toBeChecked();await expect(f.page.getByText(/Revisei meus dados e li/)).toHaveCount(0);assert.equal(f.orders.length,0);}finally{await f.context.close();}
+  });
+  await test("new Pix stays visible when the following read fails",async()=>{
+    const f=await fixture(390,{failPaymentRead:true});try {await fillContact(f.page);await pickup(f.page);await f.page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(f.page.getByLabel("Código Pix copia e cola")).toHaveValue("SYNTHETIC-PIX-CODE");await expect(f.page.getByAltText("QR Code para pagar este pedido com Pix")).toBeVisible();assert.equal(f.orders.length,1);assert.equal(f.payments.length,1);await fits(f.page,390);}finally{await f.context.close();}
+  });
+  await test("processing failure never shows a QR or paid confirmation",async()=>{
+    const f=await fixture(390,{rejectPix:true});try {await fillContact(f.page);await pickup(f.page);await f.page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(f.page.getByText("Não foi possível gerar o pagamento por um erro de processamento.",{exact:true})).toBeVisible();await expect(f.page.getByAltText("QR Code para pagar este pedido com Pix")).toHaveCount(0);await expect(f.page.getByRole("heading",{name:"Pagamento confirmado"})).toHaveCount(0);assert.equal(f.payments.length,1);}finally{await f.context.close();}
+  });
+  await test("readable fields and two-column layout at 1280px",async()=>{
+    const f=await fixture(1280);try {const fields=await f.page.locator('.checkout-field').evaluateAll(els=>els.map(e=>({font:parseFloat(getComputedStyle(e).fontSize),height:e.getBoundingClientRect().height})));assert.ok(fields.length>0&&fields.every(e=>e.font>=16&&e.height>=48));const panels=await f.page.locator('[data-checkout-panel]').evaluateAll(els=>els.map(e=>e.getBoundingClientRect().y));assert.ok(Math.abs(panels[0]-panels[1])<2&&panels[2]>panels[0]);await fits(f.page,1280);}finally{await f.context.close();}
+  });
   await test("ordinary medication can request carrier quote and create Pix with approved mocked packaging",async()=>{
     const f=await fixture(390,{ordinaryMedicine:true});const {page}=f;
     try {await fillContact(page);await page.getByLabel("CEP",{exact:true}).fill("01001000");await expect(page.getByLabel("Cidade",{exact:true})).toHaveValue("São Paulo");await page.getByLabel("Numero",{exact:true}).fill("123");await expect(page.getByRole("heading",{name:"Este carrinho precisa de atendimento"})).toHaveCount(0);await page.getByRole("button",{name:"Calcular frete"}).click();await page.getByRole("radio",{name:/Transportadora Teste/}).check();await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByLabel("Código Pix copia e cola")).toHaveValue("SYNTHETIC-PIX-CODE");assert.equal(f.quotes.length,1);assert.equal(f.orders.length,1);assert.equal(f.payments.length,1);await fits(page,390);assert.deepEqual(f.errors,[]);}finally{await f.context.close();}
@@ -110,7 +124,7 @@ try {
   });
   await test("card contact/privacy/address gate and 12 installments",async()=>{
     const f=await fixture(390);const {page}=f;
-    try {await page.getByLabel("Cartão",{exact:true}).locator("..").click();await expect(page.locator("iframe")).toHaveCount(0);await fillContact(page,"invalid");await pickup(page);await privacy(page);await expect(page.locator("iframe")).toHaveCount(0);await page.getByLabel("E-mail",{exact:true}).fill("cliente@example.invalid");await page.getByRole("checkbox",{name:/Revisei meus dados/}).uncheck();await expect(page.locator("iframe")).toHaveCount(0);await privacy(page);await expect(page.locator("iframe")).toBeVisible();
+    try {await page.getByLabel("Cartão",{exact:true}).locator("..").click();await expect(page.locator("iframe")).toHaveCount(0);await fillContact(page,"invalid");await pickup(page);await privacy(page);await expect(page.locator("iframe")).toHaveCount(0);await page.getByLabel("E-mail",{exact:true}).fill("cliente@example.invalid");await page.getByRole("checkbox",{name:/Finalizar com os dados/}).uncheck();await expect(page.locator("iframe")).toHaveCount(0);await privacy(page);await expect(page.locator("iframe")).toBeVisible();
       assert.deepEqual(await page.evaluate(()=>window.__bricks.at(-1).customization.paymentMethods),{minInstallments:1,maxInstallments:12});await page.screenshot({path:`${output}/card-390.png`,fullPage:true});await page.getByRole("button",{name:"Pagar com cartão simulado"}).click();await expect(page.getByRole("heading",{name:"Pagamento confirmado"})).toBeVisible();assert.equal(f.payments[0].installments,12);assert.ok(!JSON.stringify(f.orders).includes("synthetic-token"));assert.deepEqual(f.errors,[]);
     }finally{await f.context.close();}
   });
@@ -128,11 +142,11 @@ try {
   });
   await test("uncertain order retry preserves request id",async()=>{
     const f=await fixture(390,{failOrder:true});const {page}=f;
-    try {await fillContact(page);await pickup(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByRole("alert")).toContainText("privacidade");assert.equal(f.orders.length,0);await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByRole("alert")).toBeVisible();await page.reload();await expect(page.getByLabel("Nome completo")).toHaveValue("Cliente Sintético");await expect(page.getByRole("checkbox",{name:/Revisei meus dados/})).not.toBeChecked();await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByAltText("QR Code para pagar este pedido com Pix")).toBeVisible();assert.equal(f.orders.length,2);assert.equal(f.orders[0].checkoutRequestId,f.orders[1].checkoutRequestId);}finally{await f.context.close();}
+    try {await fillContact(page);await pickup(page);await page.getByRole("checkbox",{name:/Finalizar com os dados/}).uncheck();await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByRole("alert")).toContainText("privacidade");assert.equal(f.orders.length,0);await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByRole("alert")).toBeVisible();await page.reload();await expect(page.getByLabel("Nome completo")).toHaveValue("Cliente Sintético");await expect(page.getByRole("checkbox",{name:/Finalizar com os dados/})).toBeChecked();await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByAltText("QR Code para pagar este pedido com Pix")).toBeVisible();assert.equal(f.orders.length,2);assert.equal(f.orders[0].checkoutRequestId,f.orders[1].checkoutRequestId);}finally{await f.context.close();}
   });
   await test("uncertain payment resumes without second charge",async()=>{
     const f=await fixture(390,{failPayment:true});const {page}=f;
-    try {await fillContact(page);await pickup(page);await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByText("Aguardando confirmação do Mercado Pago",{exact:true})).toBeVisible();await page.reload();await expect(page.getByText("Aguardando confirmação do Mercado Pago",{exact:true})).toBeVisible();assert.equal(f.orders.length,1);assert.equal(f.payments.length,1);await page.getByRole("button",{name:"Consultar pagamento"}).click();assert.deepEqual(f.payments.at(-1),{action:"refresh"});}finally{await f.context.close();}
+    try {await fillContact(page);await pickup(page);await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByText("Aguardando confirmação do pagamento",{exact:true})).toBeVisible();await page.reload();await expect(page.getByText("Aguardando confirmação do pagamento",{exact:true})).toBeVisible();assert.equal(f.orders.length,1);assert.equal(f.payments.length,1);await page.getByRole("button",{name:"Consultar pagamento"}).click();assert.deepEqual(f.payments.at(-1),{action:"refresh"});}finally{await f.context.close();}
   });
   for (const status of ["REFUNDED", "PARTIALLY_REFUNDED", "DISPUTED"]) await test(`terminal ${status} releases resume pointer without clearing cart`, async () => {
     const f = await fixture(390);

@@ -48,7 +48,7 @@ export function CheckoutDeliveryStep({ address, fulfillmentMethod, onAddress, on
   }, [code, fulfillmentMethod, retry]);
 
   const outsideCoverage = code.length === 8 && !getDeliveryAvailability(code).available;
-  const fieldClass = "checkout-field h-12 w-full min-w-0 rounded-xl border border-line bg-white px-3.5 text-sm font-medium text-ink outline-none transition hover:border-ink/25 focus:border-brand focus:ring-4 focus:ring-brand/10";
+  const fieldClass = "checkout-field h-13 w-full min-w-0 rounded-xl border border-line bg-white px-4 text-base font-medium text-ink outline-none transition hover:border-ink/25 focus:border-brand focus:ring-4 focus:ring-brand/10";
   function field(label: string, key: keyof Address, maxLength: number, autoComplete = "off", placeholder = "") {
     return <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink"><span>{compact && key === "complement" ? <>Complemento<span className="sr-only"> (opcional)</span></> : label}</span><input autoComplete={autoComplete} className={fieldClass} maxLength={maxLength} name={key} onChange={(event) => onAddress((current) => ({ ...current, [key]: key === "state" ? event.target.value.replace(/[^a-z]/gi, "").toUpperCase() : event.target.value }))} placeholder={placeholder} ref={key === "number" ? numberRef : undefined} required={key !== "complement"} value={address[key]} /></label>;
   }

@@ -10,7 +10,9 @@ Criar uma base moderna e evolutiva para site publico, ofertas, catalogo, atendim
 
 O sistema possui carrinho e checkout, entrega local ou retirada e atendimento humano. Mercado Pago / Orders e Bricks permite Pix e cartão na finalização após homologação e ativação; inicia desativado. Dados de cartão ficam nos campos seguros do provedor. Contrato em [docs/28-mercado-pago.md](docs/28-mercado-pago.md).
 
-Estado operacional em 01/10/2026: Mercado Pago conectado e pagamento público ativado após homologação com conta de teste, sem transação monetária real. Melhor Envio conectado, com cotação nacional ainda desligada até cadastrar embalagens reais e concluir a preparação operacional/fiscal. O guia de pagamentos acima descreve a rotina e os limites.
+Estado operacional em 04/10/2026: Mercado Pago conectado e pagamento público ativado. Compra real do lojista com cartão consta aprovada; tentativas anteriores de Pix falharam no processamento. O titular cadastrou a chave Pix; uma nova geração precisa confirmar o QR em produção. Melhor Envio conectado com cotação nacional ativada, mas os quatro produtos ativos ainda estão sem perfil logístico aprovado. Sem peso/embalagem confiáveis, não há cotação de produto. Os guias de pagamentos e frete descrevem os limites.
+
+Checkout e pedidos receberam revisão visual; pesquisa da IA reutiliza resultados por identidade exata e mantém medidas sem referência vazias. Comparação de e-mails gratuitos/pré-pagos e bases logísticas em [docs/35-referencias-catalogo-e-emails.md](docs/35-referencias-catalogo-e-emails.md). E-mails ainda não estão conectados nem enviando.
 
 ## Stack
 

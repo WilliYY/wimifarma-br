@@ -23,6 +23,9 @@ export function providerState(order: ProviderOrder) {
   if (["canceled", "cancelled", "expired"].includes(order.status)) return "CANCELED";
   return "PENDING";
 }
+export function providerStatusDetail(order: ProviderOrder) {
+  return order.transactions.payments[0].status_detail ?? order.status_detail ?? null;
+}
 export function assertPaymentBinding(remote: ProviderOrder, expected: { id: string; providerOrderId: string | null; amountCents: number; accountId: string }) {
   const cents = (value: string) => Math.round(Number(value) * 100);
   if (remote.external_reference !== expected.id || remote.user_id !== expected.accountId
