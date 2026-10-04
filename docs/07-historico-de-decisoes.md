@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-04 - Tarifas, mensagens comerciais e ranking mensal
+
+- Comparador administrativo de custo por valor, taxa fixa, percentual, parcelas sem juros confirmadas e prazo. Consulta Asaas padrão de cartão a cada seis horas após conexão, snapshot 24h; manual sete dias. Cofre independente, auditoria antes/depois e sandbox fora de compras reais. Nenhum segundo gateway de cobrança ativado; conta Asaas e homologação pendentes. Contrato em `38-politica-de-taxas.md` e pesquisa em `36-referencias-pagamentos.md`.
+- WhatsApp/e-mail compartilham modelo canônico de carrinho, pedido, Pix, lembrete, pagamento e pós-venda. Prévia ADMIN com dados fictícios. Alertas reais ao proprietário ganham preços, subtotal, frete, descontos e cashback previsto. Envio a clientes continua não conectado; não usar a ponte do proprietário para mensagens arbitrárias. Contrato em `37-mensagens-clientes.md`.
+- Ranking mensal e histórico individual, somente ADMIN, paginados. Ranking soma pedidos concluídos e pagos; exclui testes e usa mês da criação no horário São Paulo. Histórico inclui estados pendente/cancelado identificados, sem somá-los como compradores no ranking.
+- Avaliações seguem autênticas, incentivo existente de 1% extra para produtos elegíveis independentemente da nota. Não publicar testemunhos fabricados ou fotos geradas como clientes reais; Wimicoins não foram emitidos nem ativados.
+- Fretes apresentados por preço crescente e prazo como desempate; retirada e entrega local gratuita em Ivaté/Douradina preservadas. Cotação nacional continua dependente de embalagem aprovada por produto.
+
 ## 2026-10-04 - Checkout, operação de pedidos e referências logísticas
 
 - Checkout com campos de 16 px, três colunas somente a partir de 1380 px e identidade Wimifarma nas opções oficiais do Brick. Confirmação transacional inicia marcada a pedido do lojista, sem afirmar leitura e sem adesão de marketing. CPF exigido pelo Brick permanece; não há CPF ou cartão salvo pela aplicação.

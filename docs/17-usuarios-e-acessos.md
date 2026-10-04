@@ -1,5 +1,11 @@
 # Usuarios Wimifarma
 
+## Ranking e histórico — 04/10/2026
+
+Pessoas e acessos oferece filtro de mês e ordenação por gasto ou quantidade, preservando os controles de acesso. Somente pedidos `COMPLETED` + `PAID`, vinculados legitimamente ao cliente e sem OnlinePayment de ambiente teste, entram no ranking. Mês considera a criação do pedido em `America/Sao_Paulo`, início inclusivo/fim exclusivo. Sem mês, usa todo histórico. Não é relatório fiscal, nem saldo a receber.
+
+O botão `Ver histórico de compras` consulta `/api/admin/pessoas/{id}/compras`, exclusiva de ADMIN, sem dados de cartão, telefone ou endereço. Paginação de 20 e mesma exclusão de testes; detalhes incluem itens e total. Pedidos pendentes/cancelados aparecem com estados explícitos, mas não aumentam gasto elegível no ranking. Respostas privadas, filtros validados, SQL parametrizado, sem escrita ou alteração de permissões.
+
 `/admin/miauby` e `/api/admin/miauby` são exclusivos de ADMIN. MANAGER e CUSTOMER não podem consultar histórico, enviar testes ou configurar alertas; página e API autorizam no servidor. O menu usa a mesma matriz. Contrato em `30-miauby-whatsapp-comercio.md`.
 
 ## Padrao de acesso rapido ao painel (2026-09-23)

@@ -1,5 +1,6 @@
 import { Prisma } from "@/generated/prisma/client";
 import { z } from "zod";
+import { purchaseMonthSchema, purchasePeriod } from "./purchase-period";
 
 export const accessSchema = z.object({
   kind: z.enum(["customer", "staff"]),
@@ -13,6 +14,7 @@ export const directoryQuerySchema = z.object({
   status: z.enum(["ALL", "ACTIVE", "BLOCKED"]).default("ALL"),
   sort: z.enum(["hierarchy", "spent", "orders", "recent"]).default("hierarchy"),
   page: z.coerce.number().int().min(1).max(100000).default(1),
+  month: purchaseMonthSchema,
 });
 export type DirectoryPerson = {
   id: string; kind: "customer" | "staff"; staffId: string | null;
@@ -66,9 +68,13 @@ export async function changeAccess(tx: Prisma.TransactionClient, actorId: string
 }
 
 export async function getDirectory(tx: Prisma.TransactionClient, query: z.infer<typeof directoryQuerySchema>) {
+  const period = purchasePeriod(query.month);
+  const dateFilter = period ? Prisma.sql`AND "createdAt" >= ((${period.start}::timestamp AT TIME ZONE 'America/Sao_Paulo') AT TIME ZONE 'UTC')
+    AND "createdAt" < ((${period.end}::timestamp AT TIME ZONE 'America/Sao_Paulo') AT TIME ZONE 'UTC')` : Prisma.empty;
   const cte = Prisma.sql`WITH purchases AS (
     SELECT "customerId", COUNT(*)::int AS "orderCount", SUM("totalCents")::float8 AS "spentCents"
-    FROM "Order" WHERE "status" = 'COMPLETED' AND "paymentStatus" = 'PAID' AND "customerId" IS NOT NULL GROUP BY "customerId"
+    FROM "Order" WHERE "status" = 'COMPLETED' AND "paymentStatus" = 'PAID' AND "customerId" IS NOT NULL
+    ${dateFilter} AND NOT EXISTS (SELECT 1 FROM "OnlinePayment" op WHERE op."orderId" = "Order".id AND op.environment = 'test') GROUP BY "customerId"
   ), people AS (
     SELECT c.id, 'customer'::text AS kind, u.id AS "staffId", c.name, c.email,
       COALESCE(u.role::text, 'CUSTOMER') AS role,

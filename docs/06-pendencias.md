@@ -1,5 +1,12 @@
 # 06 - Pendencias
 
+## Mensagens e segundo gateway — 04/10/2026
+
+- Asaas: lojista ainda sem conta. Comparador e consulta de tarifas preparados; cobrança e seleção automática no checkout não estão habilitadas. Ver `38-politica-de-taxas.md`.
+- Modelos WhatsApp/e-mail integrados à prévia Miauby ADMIN; envio ao cliente depende de provedor/remetente, domínio, destinatários verificados, consentimento/supressão e fila idempotente. Alertas atuais ao proprietário continuam separados. Ver `37-mensagens-clientes.md`.
+- Confirmar Pix real após cadastro da chave: o checkout preparado ainda depende de geração pelo lojista. Não há novo QR confirmado nesta revisão.
+- Ranking mensal e histórico individual preparados; validar consulta real no PostgreSQL após deploy. Não incluir compras de teste ou inventar avaliações.
+
 ## Revisão de 04/10/2026
 
 - Confirmar nova geração Pix após cadastro da chave pelo titular; duas tentativas anteriores falharam e cartão real consta aprovado.

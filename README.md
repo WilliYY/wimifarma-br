@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Operação comercial: comparador de tarifas ADMIN sem mudar o gateway do checkout ([contrato](docs/38-politica-de-taxas.md)), prévia canônica Miauby/e-mail ainda sem envio ao cliente ([mensagens](docs/37-mensagens-clientes.md)), ranking por mês e histórico individual ([acessos](docs/17-usuarios-e-acessos.md)). Testes adicionais: `npm run test:commerce` e `npm run test:payments`.
+
 Cashback por produto: configuracao ADMIN, percentual inicial de 2%, valores na vitrine e saldo/pendencias do cliente. Regras em [docs/15-cashback-produtos.md](docs/15-cashback-produtos.md). Bonus de 1% pela primeira avaliacao de cada produto e uso do saldo como desconto: [docs/16-cashback-avaliacoes-resgate.md](docs/16-cashback-avaliacoes-resgate.md).
 
 Plataforma comercial da Wimifarma, farmacia em Ivate-PR. O projeto nao e WordPress, nao depende de HostGator e nao deve ser misturado com Candy English.
