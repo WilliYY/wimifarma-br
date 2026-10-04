@@ -8,6 +8,8 @@
 - IA pesquisa apresentação/EAN, embalagem de venda e peso bruto; referências incompatíveis não preenchem frete. Cache de resultado por identidade/modelo/credencial, até 128 entradas, 24 h para alta confiança e 5 min para demais, com deduplicação concorrente e sem armazenar falhas. Não há aprovação automática de medidas ou contratação de base comercial.
 - Comparação de e-mails sem mensalidade, bases logísticas e custo de IA em `35-referencias-catalogo-e-emails.md`. Brevo Free/pré-pago para início; SES e listmonk como alternativa por uso. Nenhuma conta, DNS ou envio novo configurado.
 - Verificados 184 testes gerais, 14 de pagamentos, 29 de frete e 28 cenários UI interceptados. Lint, TypeScript e Prisma validate aprovados. Audit mantém sete HIGH preexistentes; nenhuma dependência adicionada. Capturas sintéticas em `outputs/checkout-shipping-review`, sem dados reais; build/publicação têm evidência própria posterior.
+- Publicado código `1bc99d1`, com build Linux/Docker aprovado; documentação complementar em `58d9ecd`. Health público `ok: true`, container healthy e zero reinícios. Rollback preservado em `wimifarma-br-app:pre-commerce-1bc99d1`. Sem migrations ou mudanças de credenciais.
+- Navegador conectado confirmou campos de 16 px, botão seguro do cartão vermelho, três iframes de dados sensíveis, nove bandeiras e ausência de overflow. Filtros de pedidos mostraram sete cancelados/estornados e dois pedidos feitos; a compra aprovada não aparece entre cancelados. Nenhum pedido foi submetido pela auditoria; checkout de chocolate/retirada preparado para o titular concluir a nova geração Pix.
 
 ## 2026-10-03 - Cotação nacional, carrinho da Miauby e proposta de e-mails
 
