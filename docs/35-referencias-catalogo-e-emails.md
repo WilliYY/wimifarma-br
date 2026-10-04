@@ -47,11 +47,11 @@ Antes de migrar, confirmar identificador oficial do substituto, acesso da conta,
 | Brevo pré-pago | Pacotes de 5 mil a 1 milhão de créditos, sem expiração e sem assinatura | Créditos para marketing e transacionais; preço do pacote deve ser conferido antes da compra |
 | Mailjet Free | 6 mil e-mails/mês, limite de 200/dia e até 1 mil contatos | Alternativa para baixo volume; o limite diário também restringe o uso da franquia mensal |
 | Resend Free transacional | 3 mil e-mails/mês e limite de 100/dia | Opção para mensagens transacionais; não confundir com a oferta e cobrança de marketing |
-| Amazon SES | US$ 0,10 por mil e-mails no envio padrão; camada Essentials acrescenta US$ 0,16 por mil | Novas contas têm Essentials como padrão desde 21/07/2026. Considerar os componentes contratados; não comparar apenas o preço-base |
+| Amazon SES | US$ 0,10 por mil e-mails no modelo à la carte; plano Essentials custa US$ 0,16 por mil | São alternativas, não valores somados. Novas contas têm Essentials como padrão desde 21/07/2026 e podem mudar para à la carte |
 
 Fontes oficiais: [planos e créditos Brevo](https://help.brevo.com/hc/en-us/articles/208589409-About-Brevo-s-pricing-plans), [Mailjet](https://www.mailjet.com/pricing/), [Resend transacional](https://resend.com/pricing?product=transactional) e [Amazon SES](https://aws.amazon.com/ses/pricing/).
 
-No SES, envio padrão com Essentials representa US$ 0,26 por mil e-mails nesses dois componentes. Dados, anexos, IP dedicado e outros serviços podem acrescentar cobrança. Não há compromisso mínimo de envio; hospedagem, domínio e operação continuam custos separados. Franquias promocionais e limites da conta precisam ser conferidos na contratação, sem presumir acesso ou capacidade de produção.
+No SES, 10 mil envios representam US$ 1,00 no modelo à la carte ou US$ 1,60 no Essentials, antes dos extras. Dados, anexos, IP dedicado e outros serviços podem acrescentar cobrança. Não há compromisso mínimo de envio no modelo à la carte; hospedagem, domínio e operação continuam custos separados. Franquias promocionais e limites da conta precisam ser conferidos na contratação, sem presumir acesso ou capacidade de produção.
 
 ### Código aberto
 
