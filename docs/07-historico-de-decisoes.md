@@ -2,6 +2,8 @@
 
 ## 2026-10-05 - Segurança padrão e opções de comunicação
 
+- Publicação: `8f18abb`, build Linux/Docker aprovado, app healthy/zero reinícios e workflow GitHub Security checks aprovado. APIs privadas anônimas respondem 401 com no-store; home/login/checkout/health respondem 200. Imagem anterior preservada para recuperação; comprovante em `42-revisao-de-seguranca.md`.
+
 - Revisão confirmou associação insegura de Google por e-mail com cadastro local por senha e ausência de revogação após troca de senha. Associação agora falha fechado; versão privada da credencial no JWT é comparada ao banco e não aparece na Session. Contas já vinculadas corretamente preservadas; cookies anteriores exigem nova entrada. Sem migration ou alteração de senha real.
 - APIs privadas com no-store; patches compatíveis de fast-uri/brace-expansion removem alertas de produção. Cinco high de desenvolvimento em braces/ESLint permanecem visíveis, sem downgrade forçado. `SECURITY.md`, AGENTS e workflow estabelecem revisão, regressões e gate high/critical de produção.
 - 79 testes de segurança, 187 gerais, 18 comerciais e 45 de frete, com sobreposição entre suites; lint, tipos e Prisma aprovados. Ensaio independente confirmou revogação STAFF/Google, corrida de rotação e ausência da versão na Session. Limites em `42-revisao-de-seguranca.md`.

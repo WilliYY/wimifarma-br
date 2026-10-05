@@ -36,3 +36,12 @@ Fontes de versão corrigida: [fast-uri](https://github.com/advisories/GHSA-hrr3-
 - `npm audit --omit=dev`: zero vulnerabilidades na consulta atual. Auditoria completa ainda tem cinco high na cadeia de desenvolvimento `braces` → `micromatch`/`fast-glob` → ESLint Next. Não é prova de exploração do site. [Aviso upstream](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) não publicou versão corrigida compatível na consulta; não aplicar downgrade automático de Next/ESLint.
 - MFA próprio, restauração de backups, segurança dos demais serviços do VPS, auditoria de associações antigas, scan de imagem/OS e pentest completo continuam fora desta comprovação. MFA da conta Google é controle separado.
 - Build Linux, publicação, health e histórico real do workflow têm evidência própria após a entrega. Não confundir configuração CI com execução comprovada no GitHub.
+
+## Comprovante de publicação — 2026-10-05
+
+- Código `8f18abb` publicado no GitHub e aplicado por fast-forward no VPS. Build Linux/Docker concluído; app recriado sem migração de banco.
+- Imagem em execução: `sha256:c7a855927317ea3e6867b47a6023916f524e5ec631219790d88cfff343ce3197`, usuário `nextjs`, health `healthy`, zero reinícios. Imagem anterior preservada como `wimifarma-br-app:pre-security-8f18abb`.
+- HTTPS público: `/api/health`, home, login e checkout retornaram 200. APIs `/api/admin/fretes` e `/api/minha-conta/pedidos` retornaram 401 sem sessão e `Cache-Control: private, no-store, max-age=0`.
+- HSTS, `nosniff` e `X-Frame-Options: DENY` presentes; política específica do checkout mantém o SDK Mercado Pago. A verificação não criou pedidos, cobranças, etiquetas ou mensagens.
+- Workflow [Security checks](https://github.com/WilliYY/wimifarma-br/actions/runs/37354232654) concluído com sucesso para esse commit, confirmado pela API oficial do GitHub.
+- Revogação e associação Google verificadas por regressões e revisão independente com dados sintéticos. Não foi alterada senha real em produção como teste; sessões legadas precisam de novo login.
