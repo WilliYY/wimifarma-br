@@ -6,6 +6,7 @@ import { getPrisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations/auth";
 import { refreshStaffToken } from "@/features/auth/staff-session";
 import { isVerifiedGoogleProfile, refreshCustomerToken } from "@/features/auth/customer-session";
+import { credentialVersion } from "@/features/auth/credential-version";
 
 const LOGIN_WINDOW_MINUTES = 15;
 const LOGIN_MAX_FAILURES = 8;
@@ -78,6 +79,9 @@ async function persistGoogleCustomer(input: {
   };
 
   if (existing && (existing.status !== "ACTIVE" || (existing.googleSubject && existing.googleSubject !== input.googleSubject))) return null;
+
+  // Matching email alone does not authorize linking a local password account.
+  if (existing && !existing.googleSubject && existing.passwordHash) return null;
 
   if (existing) {
     return prisma.customer.update({
@@ -188,6 +192,7 @@ export const authConfig = {
             name: user.name,
             role: user.role,
             customerId: user.customerId ?? undefined,
+            credentialVersion: credentialVersion(user.passwordHash),
           };
         }
 
@@ -223,6 +228,7 @@ export const authConfig = {
           image: customer.imageUrl,
           name: customer.name,
           role: "CUSTOMER",
+          credentialVersion: credentialVersion(customer.passwordHash),
         };
       },
     }),
@@ -263,6 +269,7 @@ export const authConfig = {
           token.role = "CUSTOMER";
           token.customerId = customer.id;
           token.googleSubject = customer.googleSubject ?? undefined;
+          token.credentialVersion = credentialVersion(customer.passwordHash);
           await recordLoginAttempt(customer.email!, true);
           const staff = await getPrisma().user.findUnique({ where: { customerId: customer.id }, select: { id: true, isActive: true } });
           if (staff?.isActive) await getPrisma().user.update({ where: { id: staff.id }, data: { lastLoginAt: new Date() } });
@@ -275,20 +282,27 @@ export const authConfig = {
         token.id = user.id;
         token.role = isAppRole(user.role) ? user.role : "CUSTOMER";
         token.customerId = user.customerId;
+        token.credentialVersion = user.credentialVersion;
         delete token.googleSubject;
       }
 
       if (token.role === "CUSTOMER" || token.googleSubject) {
-        return refreshCustomerToken(token, (id) => getPrisma().customer.findUnique({ where: { id }, select: {
-          id: true, status: true, googleSubject: true,
-          staffAccess: { select: { id: true, role: true, isActive: true } },
-        } }));
+        return refreshCustomerToken(token, async (id) => {
+          const customer = await getPrisma().customer.findUnique({ where: { id }, select: {
+            id: true, status: true, googleSubject: true, passwordHash: true,
+            staffAccess: { select: { id: true, role: true, isActive: true } },
+          } });
+          return customer ? { ...customer, credentialVersion: credentialVersion(customer.passwordHash) } : null;
+        });
       }
 
-      return refreshStaffToken(token, (id) => getPrisma().user.findUnique({
-        where: { id },
-        select: { id: true, role: true, isActive: true },
-      }));
+      return refreshStaffToken(token, async (id) => {
+        const staff = await getPrisma().user.findUnique({
+          where: { id },
+          select: { id: true, role: true, isActive: true, passwordHash: true },
+        });
+        return staff ? { ...staff, credentialVersion: credentialVersion(staff.passwordHash) } : null;
+      });
     },
     async session({ session, token }) {
       if (session.user) {

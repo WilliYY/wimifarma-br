@@ -49,6 +49,8 @@ Migration aditiva `20260916120000_user_customer_access`. Fazer backup verificado
 
 ## Evidencias locais
 
+Atualização de segurança de 05/10/2026: Google não associa implicitamente uma conta por e-mail quando existe senha local sem subject Google. A vinculação precisa de comprovação explícita futura; contas já vinculadas ao mesmo subject continuam válidas. JWT de cliente/staff verifica versão privada da credencial; trocar senha revoga sessões anteriores, e tokens antigos sem versão exigem login novamente. Nenhuma versão/hash aparece na Session pública. Contrato e regressões em `42-revisao-de-seguranca.md`.
+
 - `npm test`: 97 testes aprovados; build com lint/TypeScript e `prisma validate` aprovados; `npm audit --audit-level=moderate`: zero vulnerabilidades.
 - `scripts/users-access-audit.ts`: API reservada, versao antiga rejeitada, promocao/rebaixamento/bloqueio Google, preservacao da identidade de cliente, concorrencia de dois administradores e ranking financeiro aprovados.
 - Playwright: edicao de perfil e telas 320/390/768/1440 sem overflow ou erros JS; carrinho fecha por clique fora e Escape, permite rolar/navegar e respeita movimento reduzido.

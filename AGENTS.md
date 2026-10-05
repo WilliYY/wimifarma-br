@@ -49,6 +49,7 @@ Preservar os padroes ja existentes no projeto, salvo quando houver motivo tecnic
 - Nunca expor PostgreSQL publicamente.
 - Nunca deixar credenciais temporarias em producao.
 - O login temporario `adm / adm` foi removido e nunca deve ser reintroduzido.
+- Revisar seguranca em toda entrega e especialmente em auth/permissoes, pagamentos, webhooks, uploads, IA e cofre. Seguir `SECURITY.md` e `docs/42-revisao-de-seguranca.md`; executar `npm.cmd run test:security` e auditoria de producao com bloqueio high/critical antes de publicar. Nao ocultar alertas da auditoria completa nem prometer site invulneravel. Mudancas sensiveis exigem revisao independente e regressao de abuso com dados sinteticos.
 
 ## Regra 6: Escopo Comercial
 

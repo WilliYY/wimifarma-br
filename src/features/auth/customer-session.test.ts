@@ -10,18 +10,28 @@ test("Google verification requires trusted boolean, email and matching subject",
   assert.equal(isVerifiedGoogleProfile(undefined, "google-1"), false);
 });
 
-const customer = { id: "c1", status: "ACTIVE", googleSubject: "google-1", staffAccess: { id: "u1", role: "ADMIN", isActive: true } };
+const customer = { id: "c1", status: "ACTIVE", googleSubject: "google-1", credentialVersion: "version-1", staffAccess: { id: "u1", role: "ADMIN", isActive: true } };
 test("only a verified Google identity with explicit staff link gains access", async () => {
-  const old = { id: "c1", role: "CUSTOMER" };
+  const old = { id: "c1", role: "CUSTOMER", credentialVersion: "version-1" };
   assert.equal((await refreshCustomerToken(old, async () => customer))?.role, "CUSTOMER");
   const google = { ...old, googleSubject: "google-1", customerId: "c1" };
   assert.deepEqual(await refreshCustomerToken(google, async () => customer), { ...google, id: "u1", role: "ADMIN" });
   assert.equal(await refreshCustomerToken({ ...google, googleSubject: "wrong" }, async () => customer), null);
 });
 test("linked Google sessions follow demotion and blocking immediately", async () => {
-  const token = { id: "u1", role: "ADMIN", customerId: "c1", googleSubject: "google-1" };
+  const token = { id: "u1", role: "ADMIN", customerId: "c1", googleSubject: "google-1", credentialVersion: "version-1" };
   assert.equal((await refreshCustomerToken(token, async () => ({ ...customer, staffAccess: { ...customer.staffAccess, role: "CUSTOMER" } })))?.id, "c1");
   assert.equal(await refreshCustomerToken(token, async () => ({ ...customer, status: "INACTIVE" })), null);
   assert.equal(await refreshCustomerToken(token, async () => ({ ...customer, staffAccess: { ...customer.staffAccess, isActive: false } })), null);
   assert.equal(await refreshCustomerToken(token, async () => null), null);
+});
+
+test("password change revokes customer and Google-linked staff sessions", async () => {
+  for (const token of [
+    { id: "c1", role: "CUSTOMER", credentialVersion: "version-1" },
+    { id: "u1", role: "ADMIN", customerId: "c1", googleSubject: "google-1", credentialVersion: "version-1" },
+  ]) {
+    assert.equal(await refreshCustomerToken(token, async () => ({ ...customer, credentialVersion: "version-2" })), null);
+  }
+  assert.equal(await refreshCustomerToken({ id: "c1", role: "CUSTOMER" }, async () => customer), null);
 });

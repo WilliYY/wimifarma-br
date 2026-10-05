@@ -74,6 +74,10 @@ const nextConfig: NextConfig = {
         headers: securityHeaders,
         source: "/:path*",
       },
+      ...["/api/admin/:path*", "/api/minha-conta/:path*"].map(source => ({
+        source,
+        headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0" }],
+      })),
       {
         headers: [{ key: "Content-Security-Policy", value: paymentSecurityPolicy }, { key: "Referrer-Policy", value: "no-referrer" }],
         source: "/checkout",

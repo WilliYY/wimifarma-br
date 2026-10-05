@@ -1,10 +1,11 @@
-type CustomerToken = { id?: unknown; role?: unknown; customerId?: unknown; googleSubject?: unknown };
+type CustomerToken = { id?: unknown; role?: unknown; customerId?: unknown; googleSubject?: unknown; credentialVersion?: unknown };
 
 export function isVerifiedGoogleProfile(profile: { email?: unknown; email_verified?: unknown; sub?: unknown } | undefined, subject: string) {
   return profile?.email_verified === true && typeof profile.email === "string" && profile.email.includes("@") && Boolean(subject) && profile.sub === subject;
 }
 type CustomerIdentity = {
   id: string; status: string; googleSubject: string | null;
+  credentialVersion: string;
   staffAccess: { id: string; role: string; isActive: boolean } | null;
 };
 
@@ -13,6 +14,7 @@ export async function refreshCustomerToken<T extends CustomerToken>(token: T, fi
   if (typeof id !== "string" || !id) return null;
   const customer = await find(id);
   if (!customer || customer.id !== id || customer.status !== "ACTIVE" || customer.staffAccess?.isActive === false) return null;
+  if (typeof token.credentialVersion !== "string" || token.credentialVersion !== customer.credentialVersion) return null;
   if (token.googleSubject && token.googleSubject !== customer.googleSubject) return null;
   // Only a freshly verified Google login can use the explicitly assigned staff link.
   const staff = token.googleSubject ? customer.staffAccess : null;

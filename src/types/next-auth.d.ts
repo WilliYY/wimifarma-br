@@ -15,6 +15,7 @@ declare module "next-auth" {
   interface User {
     role?: SessionRole;
     customerId?: string;
+    credentialVersion?: string;
   }
 }
 
@@ -24,5 +25,6 @@ declare module "next-auth/jwt" {
     role?: SessionRole;
     customerId?: string;
     googleSubject?: string;
+    credentialVersion?: string;
   }
 }

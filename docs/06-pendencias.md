@@ -1,5 +1,12 @@
 # 06 - Pendencias
 
+## Segurança e comunicação — 05/10/2026
+
+- Correções de associação Google, revogação de sessão e dependências em `42-revisao-de-seguranca.md`. Audit de produção agora zero; cinco high de desenvolvimento ligados a `braces` ainda sem correção compatível. Avisos de sete high abaixo são históricos. Não usar downgrade `npm audit fix --force`.
+- Revisar privadamente associações anteriores caso haja evidência de problema; correção não atesta ausência de comprometimento histórico. MFA próprio e revisão de infraestrutura/OS/backups permanecem pendentes.
+- Painel próprio de e-mail é viável usando provedor; Brevo Free tem 300 envios/dia, não 300 contatos. Comparação Resend/SES/listmonk e gateways/selos em `41-emails-pagamentos-e-confianca.md`. Escolha de conta, DNS/remetente, opt-in/outbox e homologação precedem envio a clientes.
+- Candidatura de perfil Reclame AQUI e Ebit, dados empresariais no rodapé e políticas operacionais precisam de informações/adesão reais. Não exibir selos concedidos a outras empresas ou avaliações fabricadas.
+
 ## Mensagens e segundo gateway — 04/10/2026
 
 - Asaas: conta criada/aprovada pelo lojista. Criação da chave API aparece desabilitada na interface; verificar requisitos e liberação pelo próprio Asaas. Tarifas manuais de cartão 1x e Pix dinâmico registradas em 05/10 por sete dias. Comparador e consulta de tarifas preparados; cobrança e seleção automática no checkout não estão habilitadas. Ver `40-asaas-configuracao-e-homologacao.md`.

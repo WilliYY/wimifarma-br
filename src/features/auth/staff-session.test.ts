@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { refreshStaffToken } from "./staff-session";
 
-const token = { id: "staff-1", role: "ADMIN", email: "staff@example.test", sub: "staff-1" };
-const active = { id: "staff-1", role: "ADMIN", isActive: true };
+const token = { id: "staff-1", role: "ADMIN", email: "staff@example.test", sub: "staff-1", credentialVersion: "version-1" };
+const active = { id: "staff-1", role: "ADMIN", isActive: true, credentialVersion: "version-1" };
 
 test("staff session rejects a legacy or deleted administrator", async () => {
   for (const id of ["demo-admin", "deleted-user"]) {
@@ -38,4 +38,9 @@ test("staff session preserves valid users and does not change customer authentic
 test("staff session fails closed on unknown roles and database unavailability", async () => {
   assert.equal(await refreshStaffToken({ ...token, role: "UNKNOWN" }, async () => active), null);
   await assert.rejects(refreshStaffToken(token, async () => { throw new Error("database unavailable"); }), /database unavailable/);
+});
+
+test("staff password rotation rejects previous and unversioned sessions", async () => {
+  assert.equal(await refreshStaffToken(token, async () => ({ ...active, credentialVersion: "version-2" })), null);
+  assert.equal(await refreshStaffToken({ id: token.id, role: token.role }, async () => active), null);
 });

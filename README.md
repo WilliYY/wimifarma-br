@@ -1,5 +1,9 @@
 # Wimifarma BR
 
+Segurança: revisão padrão em [SECURITY.md](SECURITY.md), suite `npm run test:security` e CI de push/PR/semanal com auditoria de produção. Correções e limites em [docs/42-revisao-de-seguranca.md](docs/42-revisao-de-seguranca.md). A atualização exige nova entrada para sessões antigas, sem alterar contas/senhas.
+
+Pesquisa atual de painel próprio de e-mails, provedores sem mensalidade, outros gateways e selos reais em [docs/41-emails-pagamentos-e-confianca.md](docs/41-emails-pagamentos-e-confianca.md). E-mails e novos gateways não foram ativados por essa pesquisa.
+
 Frete: cotação automática após CEP completo, cancelamento de respostas antigas e repetição explícita. Referências do catálogo e três caixas para avaliação em [docs/39-frete-automatico-e-embalagens.md](docs/39-frete-automatico-e-embalagens.md). Medidas comerciais em rascunho não liberam o transporte; caixas reais/peso bruto continuam pendentes.
 
 IA do cadastro: fatos exatos primeiro; dados ausentes podem receber faixa estimada por embalagem comparável com fonte e margem, preenchendo apenas rascunhos vazios. Contrato em [docs/29-cadastro-logistica-ia.md](docs/29-cadastro-logistica-ia.md). Asaas: conta aprovada, tarifas administrativas registradas, chave API ainda indisponível; configuração e próximos testes em [docs/40-asaas-configuracao-e-homologacao.md](docs/40-asaas-configuracao-e-homologacao.md).

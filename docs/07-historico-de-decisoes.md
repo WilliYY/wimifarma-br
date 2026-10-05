@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-05 - Segurança padrão e opções de comunicação
+
+- Revisão confirmou associação insegura de Google por e-mail com cadastro local por senha e ausência de revogação após troca de senha. Associação agora falha fechado; versão privada da credencial no JWT é comparada ao banco e não aparece na Session. Contas já vinculadas corretamente preservadas; cookies anteriores exigem nova entrada. Sem migration ou alteração de senha real.
+- APIs privadas com no-store; patches compatíveis de fast-uri/brace-expansion removem alertas de produção. Cinco high de desenvolvimento em braces/ESLint permanecem visíveis, sem downgrade forçado. `SECURITY.md`, AGENTS e workflow estabelecem revisão, regressões e gate high/critical de produção.
+- 79 testes de segurança, 187 gerais, 18 comerciais e 45 de frete, com sobreposição entre suites; lint, tipos e Prisma aprovados. Ensaio independente confirmou revogação STAFF/Google, corrida de rotação e ausência da versão na Session. Limites em `42-revisao-de-seguranca.md`.
+- Pesquisa oficial distingue limite de envios Brevo, quotas Marketing/Transactional Resend e SES por uso. Recomenda painel ADMIN próprio com provedor, sem SMTP próprio ou inscrição automática de clientes. Alternativas de checkout e selos dependem de taxa/conta e concessão real; nada contratado, enviado ou ativado nesta pesquisa. Referências em `41-emails-pagamentos-e-confianca.md`.
+
 ## 2026-10-05 - Cotação automática e conferência do catálogo
 
 - Cotar automaticamente após 450 ms de CEP completo/carrinho elegível; chave estável inclui produtos, quantidades e preços. AbortController e geração da consulta rejeitam respostas antigas. Escolha do serviço permanece manual; callback, cashback e endereço complementar não repetem a chamada. Sem mudança no token/regras do servidor.

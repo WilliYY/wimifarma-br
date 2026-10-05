@@ -241,7 +241,8 @@ export function CustomerAccountPanel({
 
     setHasPassword(true);
     setPassword({ confirmPassword: "", currentPassword: "", password: "" });
-    toast.success("Senha salva.");
+    toast.success("Senha salva. Entre novamente para continuar.");
+    router.replace("/login?callbackUrl=%2Fminha-conta");
     router.refresh();
     } catch {
       toast.error("Não foi possível salvar a senha. Verifique sua conexão.");

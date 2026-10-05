@@ -1,5 +1,5 @@
-type StaffToken = { id?: unknown; role?: unknown };
-type StaffRecord = { id: string; role: string; isActive: boolean };
+type StaffToken = { id?: unknown; role?: unknown; credentialVersion?: unknown };
+type StaffRecord = { id: string; role: string; isActive: boolean; credentialVersion: string };
 
 export async function refreshStaffToken<T extends StaffToken>(
   token: T,
@@ -12,6 +12,7 @@ export async function refreshStaffToken<T extends StaffToken>(
 
   const user = await findUser(token.id);
   if (!user?.isActive || user.id !== token.id || !staffRoles.includes(user.role)) return null;
+  if (typeof token.credentialVersion !== "string" || token.credentialVersion !== user.credentialVersion) return null;
 
   return { ...token, role: user.role };
 }
