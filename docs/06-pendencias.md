@@ -2,7 +2,7 @@
 
 ## Mensagens e segundo gateway — 04/10/2026
 
-- Asaas: lojista ainda sem conta. Comparador e consulta de tarifas preparados; cobrança e seleção automática no checkout não estão habilitadas. Ver `38-politica-de-taxas.md`.
+- Asaas: conta criada/aprovada pelo lojista. Criação da chave API aparece desabilitada na interface; verificar requisitos e liberação pelo próprio Asaas. Tarifas manuais de cartão 1x e Pix dinâmico registradas em 05/10 por sete dias. Comparador e consulta de tarifas preparados; cobrança e seleção automática no checkout não estão habilitadas. Ver `40-asaas-configuracao-e-homologacao.md`.
 - Modelos WhatsApp/e-mail integrados à prévia Miauby ADMIN; envio ao cliente depende de provedor/remetente, domínio, destinatários verificados, consentimento/supressão e fila idempotente. Alertas atuais ao proprietário continuam separados. Ver `37-mensagens-clientes.md`.
 - Confirmar Pix real após cadastro da chave: o checkout preparado ainda depende de geração pelo lojista. Não há novo QR confirmado nesta revisão.
 - Ranking mensal e histórico individual publicados. SQL mensal validado no PostgreSQL; seleção automatizada do campo nativo de mês e screenshots ficaram limitados pelo navegador conectado. Não incluir compras de teste ou inventar avaliações. Evidências em `38-politica-de-taxas.md`.
@@ -10,7 +10,7 @@
 ## Revisão de 04/10/2026
 
 - Confirmar nova geração Pix após cadastro da chave pelo titular; duas tentativas anteriores falharam e cartão real consta aprovado.
-- Quatro produtos ativos sem perfil logístico aprovado: obter referência de peso bruto/embalagem pronta antes de liberar transporte por produto.
+- Quatro produtos ativos sem perfil logístico aprovado: Dove com EAN corrigido e dimensões comerciais em rascunho, ainda sem peso bruto. Confirmar apresentação do KitKat/Cimegripe e as caixas reais, ainda não compradas, antes de aprovar transporte. Fontes em `39-frete-automatico-e-embalagens.md`.
 - E-mails: escolher/conectar conta e autenticar domínio; comparação gratuita/pré-paga em `35-referencias-catalogo-e-emails.md`. Nenhum envio ativo.
 - Verificar modelo de imagens configurado: `gemini-2.5-flash-image` tem encerramento oficial em 02/10/2026. Não trocar sem confirmar disponibilidade/compatibilidade; o modelo textual é independente.
 - Audit de dependências ainda aponta sete vulnerabilidades HIGH preexistentes; tratar em revisão própria, sem downgrade forçado nesta entrega.

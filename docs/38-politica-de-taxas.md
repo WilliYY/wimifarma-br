@@ -16,7 +16,7 @@ API `/api/admin/pagamentos/taxas` é exclusiva de ADMIN, retorna `private, no-st
 
 ## O que falta para cobrar por outro provedor
 
-O lojista ainda não possui conta Asaas. Cadastro/aprovação, credencial segura, confirmação da atividade e condições comerciais precedem homologação. Roteamento financeiro real exige persistir o provedor escolhido por pedido antes da primeira cobrança, idempotência, reconciliação, webhook autenticado e testes de recusa, expiração, reembolso e resultado incerto. Resultado incerto nunca autoriza uma segunda cobrança em outro gateway. Pesquisa e fontes em [36-referencias-pagamentos.md](36-referencias-pagamentos.md).
+A conta Asaas foi criada/aprovada pelo lojista. Em 05/10/2026, o botão de chave API permaneceu desabilitado. Foram registrados contratos manuais da conta para cartão à vista e Pix dinâmico, sem ativar cobrança. Estado, tarifas observadas, limites do checkout e próxima ação em [40-asaas-configuracao-e-homologacao.md](40-asaas-configuracao-e-homologacao.md). Credencial segura, confirmação da atividade e condições comerciais precedem homologação. Roteamento financeiro real exige persistir o provedor escolhido por pedido antes da primeira cobrança, idempotência, reconciliação, webhook autenticado e testes de recusa, expiração, reembolso e resultado incerto. Resultado incerto nunca autoriza uma segunda cobrança em outro gateway. Pesquisa e fontes em [36-referencias-pagamentos.md](36-referencias-pagamentos.md).
 
 Validação: testes puros de tarifas, normalização e limites HTTP; testes com cofre AES-GCM real e banco/provedor simulados para concorrência, sandbox, credenciais e permissões. São testes locais, não prova de consulta à conta Asaas ou pagamento real.
 

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { qualifyShippingReference, sameShippingVariant, shippingResearchInstructions } from "./product-reference";
+import { qualifyShippingReference, sameShippingVariant, shippingEstimateSchema, shippingReferenceSchema, shippingResearchInstructions } from "./product-reference";
 import { shippingDraftSchema, invalidateShippingProfile } from "./product-draft";
 import { shippingProfileSchema } from "./schema";
 import { validateShippingProduct } from "./rules";
@@ -9,7 +9,154 @@ import { productCreateSchema } from "../products/schema";
 const evidenceWeight = "Peso bruto da unidade: 0,35 kg com embalagem comercial.";
 const evidenceDimensions = "Largura 80 mm, altura 200 mm, comprimento 100 mm da unidade.";
 const reference = () => ({ identityMatch: "exact", packageLevel: "retail_unit", weight: { value: 0.35, unit: "kg", kind: "gross", sourceIndex: 0, evidence: evidenceWeight }, dimensions: { width: 80, height: 200, length: 100, unit: "mm", sourceIndex: 0, evidence: evidenceDimensions }, warnings: [] });
-const context = { name: "Produto sintético 300 ml", exactIdentity: true, research: `${evidenceWeight}\n${evidenceDimensions}`, sources: [{ title: "Ficha técnica sintética", url: "https://example.com/produto" }] };
+const context = { name: "Perfume sintético 300 ml", exactIdentity: true, research: `${evidenceWeight}\n${evidenceDimensions}`, sources: [{ title: "Ficha técnica sintética", url: "https://example.com/produto" }] };
+
+const targetEvidence = `${context.name}; frasco fechado plástico 300 ml.`;
+const comparableEvidence = "Perfume comparável 300 ml; frasco fechado plástico 300 ml; peso bruto 0,35 kg; largura 8 cm, altura 20 cm, comprimento 10 cm.";
+const estimateReference = () => ({ ...reference(), weight: null, dimensions: null, estimate: {
+  comparableName: "Perfume comparável 300 ml", packageDescription: "frasco fechado plástico 300 ml", packageLevel: "retail_unit",
+  productFamily: "perfume", packageMaterial: "plástico", targetSourceIndex: 0, targetEvidence,
+  sourceIndex: 0, evidence: comparableEvidence, assumptions: ["Mesma apresentação e formato de frasco; conferir tampa e proteção reais."],
+  weight: { value: 0.35, unit: "kg", kind: "gross" }, dimensions: { width: 8, height: 20, length: 10, unit: "cm" },
+} });
+const estimateContext = { ...context, research: `${targetEvidence}\n${context.research}\n${comparableEvidence}` };
+
+test("estimates separate conservative ranges from sourced comparable facts without changing exact values", () => {
+  const result = qualifyShippingReference(estimateReference(), estimateContext)!;
+  assert.equal(result.weightGrams, null);
+  assert.equal(result.widthCm, null);
+  assert.deepEqual(result.estimate?.weightGrams, { min: 280, max: 420 });
+  assert.deepEqual(result.estimate?.heightCm, { min: 16, max: 24 });
+  assert.equal(result.estimate?.source.evidence, comparableEvidence);
+  assert.equal(result.estimate?.confidence, "low");
+  assert.equal(result.estimate?.targetSource?.evidence, targetEvidence);
+  assert.equal(result.estimate?.productFamily, "perfume");
+  assert.equal(result.estimate?.packageMaterial, "plástico");
+  assert.match(result.estimate!.assumptions.join(" "), /20%/);
+  const partial = qualifyShippingReference({ ...estimateReference(), weight: reference().weight }, estimateContext)!;
+  assert.equal(partial.weightGrams, 350);
+  assert.equal(partial.estimate?.weightGrams, null);
+  assert.equal(partial.estimate?.heightCm?.max, 24);
+});
+
+test("comparable estimates reject absent sources, fabricated evidence and unknown or conflicting target presentation", () => {
+  for (const patch of [{ sources: [] }, { research: "Sem comparável comprovado." }, { exactIdentity: false }, { name: "Produto sintético" }]) {
+    assert.equal(qualifyShippingReference(estimateReference(), { ...estimateContext, ...patch })?.estimate ?? null, null);
+  }
+  for (const patch of [{ identityMatch: "conflict" }, { identityMatch: "uncertain" }, { packageLevel: "unknown" }]) {
+    assert.equal(qualifyShippingReference({ ...estimateReference(), ...patch }, estimateContext)?.estimate ?? null, null);
+  }
+  const wrongPresentation = { ...estimateReference().estimate, comparableName: "Produto comparável 500 ml" };
+  assert.equal(qualifyShippingReference({ ...estimateReference(), estimate: wrongPresentation }, { ...estimateContext, research: comparableEvidence.replaceAll("300 ml", "500 ml") })?.estimate ?? null, null);
+});
+
+test("estimate mass still requires gross evidence and dimensions remain independently usable", () => {
+  for (const [weightPatch, evidence] of [
+    [{ kind: "net" }, comparableEvidence.replace("peso bruto", "peso líquido")],
+    [{ kind: "gross" }, comparableEvidence.replace("peso bruto", "peso líquido")],
+    [{ unit: "ml" }, comparableEvidence.replace("0,35 kg", "0,35 ml")],
+    [{ value: 5 }, comparableEvidence],
+  ] as const) {
+    const raw = estimateReference();
+    const result = qualifyShippingReference({ ...raw, estimate: { ...raw.estimate, evidence, weight: { ...raw.estimate.weight, ...weightPatch } } }, { ...estimateContext, research: `${targetEvidence}\n${evidence}` });
+    assert.equal(result?.estimate?.weightGrams ?? null, null);
+    assert.equal(result?.estimate?.widthCm?.max, 10);
+  }
+  const raw = estimateReference();
+  const result = qualifyShippingReference({ ...raw, estimate: { ...raw.estimate, dimensions: { ...raw.estimate.dimensions, width: -1 } } }, estimateContext);
+  assert.equal(result?.estimate?.widthCm ?? null, null);
+  assert.equal(result?.estimate?.weightGrams?.max, 420);
+});
+
+test("kit estimates require a comparable complete retail kit and never divide a master case", () => {
+  const evidence = "Kit comparável 3 sabonetes; kit fechado papelão 3 sabonetes; peso bruto 350 g; largura 8 cm, altura 20 cm, comprimento 10 cm.";
+  const raw = estimateReference();
+  const kit = { ...raw, packageLevel: "retail_kit", estimate: { ...raw.estimate, comparableName: "Kit comparável 3 sabonetes", packageDescription: "kit fechado papelão 3 sabonetes", packageLevel: "retail_kit", productFamily: "sabonete", packageMaterial: "papelão", targetEvidence: "Kit sintético 3 sabonetes; kit fechado papelão 3 sabonetes.", evidence, weight: { value: 350, unit: "g", kind: "gross" } } };
+  const kitContext = { ...estimateContext, name: "Kit sintético 3 sabonetes", research: `${kit.estimate.targetEvidence}\n${evidence}` };
+  assert.equal(qualifyShippingReference(kit, kitContext)?.estimate?.weightGrams?.max, 420);
+  assert.equal(qualifyShippingReference({ ...kit, estimate: { ...kit.estimate, packageLevel: "retail_unit" } }, kitContext)?.estimate ?? null, null);
+  const masterEvidence = evidence.replace("kit fechado", "caixa master");
+  assert.equal(qualifyShippingReference({ ...kit, estimate: { ...kit.estimate, evidence: masterEvidence, packageDescription: "caixa master 3 sabonetes" } }, { ...kitContext, research: masterEvidence })?.estimate ?? null, null);
+});
+
+test("estimate ranges reject reversed, narrow and excessive values while old references remain valid", () => {
+  const result = qualifyShippingReference(estimateReference(), estimateContext)!;
+  const estimate = result.estimate!;
+  for (const weightGrams of [{ min: 420, max: 280 }, { min: 350, max: 350 }, { min: 350, max: 351 }, { min: 20000, max: 30001 }]) {
+    assert.equal(shippingEstimateSchema.safeParse({ ...estimate, weightGrams }).success, false);
+  }
+  assert.equal(shippingEstimateSchema.safeParse({ ...estimate, widthCm: { min: 160, max: 240 } }).success, false);
+  const oldReference = { ...result };
+  delete oldReference.estimate;
+  assert.equal(shippingReferenceSchema.safeParse(oldReference).success, true);
+  const largeEvidence = comparableEvidence.replace("0,35 kg", "29 kg");
+  const raw = estimateReference();
+  const limited = qualifyShippingReference({ ...raw, estimate: { ...raw.estimate, evidence: largeEvidence, weight: { value: 29, unit: "kg", kind: "gross" } } }, { ...estimateContext, research: estimateContext.research.replace(comparableEvidence, largeEvidence) });
+  assert.equal(limited?.estimate?.weightGrams, null);
+  assert.equal(limited?.estimate?.heightCm?.max, 24);
+});
+
+test("comparable presentation rejects unknown packaging formats and conflicting formats", () => {
+  assert.equal(qualifyShippingReference(estimateReference(), { ...estimateContext, research: `${context.research}\n${comparableEvidence}` })?.estimate ?? null, null);
+  assert.equal(qualifyShippingReference(estimateReference(), { ...estimateContext, name: "Produto sintético bisnaga 300 ml" })?.estimate ?? null, null);
+  const raw = estimateReference();
+  assert.equal(qualifyShippingReference({ ...raw, estimate: { ...raw.estimate, assumptions: [] } }, estimateContext)?.estimate ?? null, null);
+});
+
+test("never estimates diapers from wet wipes despite equal count, size and package format", () => {
+  const raw = estimateReference();
+  const evidence = "Lenços umedecidos M 40 unidades; pacote fechado plástico M 40 unidades; peso bruto 350 g; largura 8 cm, altura 20 cm, comprimento 10 cm.";
+  const estimate = { ...raw.estimate, productFamily: "higiene", packageMaterial: "plástico", targetSourceIndex: 0,
+    targetEvidence: "Fralda infantil M 40 unidades; pacote fechado plástico M 40 unidades.",
+    comparableName: "Lenços umedecidos M 40 unidades", packageDescription: "pacote fechado plástico M 40 unidades", evidence,
+    weight: { value: 350, unit: "g", kind: "gross" },
+  };
+  const result = qualifyShippingReference({ ...raw, estimate }, { ...context, name: "Fralda infantil M 40 unidades", research: `${estimate.targetEvidence}\n${evidence}` });
+  assert.equal(result?.estimate ?? null, null);
+  assert.equal(qualifyShippingReference({ ...raw, estimate: { ...estimate, productFamily: "fralda" } }, { ...context, name: "Fralda infantil M 40 unidades", research: `${estimate.targetEvidence}\n${evidence}` })?.estimate ?? null, null);
+});
+
+test("never estimates glass bottles from plastic bottles with the same perfume volume", () => {
+  const raw = estimateReference();
+  const evidence = "Perfume comparável 300 ml; frasco fechado plástico 300 ml; peso bruto 350 g; largura 8 cm, altura 20 cm, comprimento 10 cm.";
+  const estimate = { ...raw.estimate, productFamily: "perfume", packageMaterial: "plástico", targetSourceIndex: 0,
+    targetEvidence: "Perfume alvo 300 ml; frasco fechado vidro 300 ml.",
+    comparableName: "Perfume comparável 300 ml", packageDescription: "frasco fechado plástico 300 ml", evidence,
+    weight: { value: 350, unit: "g", kind: "gross" },
+  };
+  const result = qualifyShippingReference({ ...raw, estimate }, { ...context, name: "Perfume alvo 300 ml", research: `${estimate.targetEvidence}\n${evidence}` });
+  assert.equal(result?.estimate ?? null, null);
+});
+
+test("estimate requires factual target material and source while preserving valid exact shipping facts", () => {
+  const raw = estimateReference();
+  for (const patch of [{ productFamily: "higiene" }, { packageMaterial: "desconhecido" }, { targetSourceIndex: 7 }, { targetEvidence: "Trecho inventado sobre frasco plástico." }]) {
+    const result = qualifyShippingReference({ ...raw, weight: reference().weight, estimate: { ...raw.estimate, ...patch } }, estimateContext);
+    assert.equal(result?.estimate ?? null, null);
+    assert.equal(result?.weightGrams, 350);
+  }
+  const noMaterial = targetEvidence.replace(" plástico", "");
+  assert.equal(qualifyShippingReference({ ...raw, estimate: { ...raw.estimate, targetEvidence: noMaterial } }, { ...estimateContext, research: estimateContext.research.replace(targetEvidence, noMaterial) })?.estimate ?? null, null);
+});
+
+test("comparable estimates follow packaging across medicine, food, diapers, devices and beauty", () => {
+  for (const [product, family, presentation, format, material] of [
+    ["Comprimidos", "comprimido", "20 comprimidos 500 mg", "caixa", "papelão"],
+    ["Chocolate", "chocolate", "100 g", "barra", "plástico"],
+    ["Fralda", "fralda", "M 40 unidades", "pacote", "plástico"],
+    ["Termômetro", "termômetro", "1 unidade", "estojo", "plástico"],
+    ["Perfume", "perfume", "100 ml", "frasco", "vidro"],
+  ]) {
+    const name = `${product} alvo ${presentation}`;
+    const comparableName = `${product} comparável ${presentation}`;
+    const packageDescription = `${format} fechado ${material} ${presentation}`;
+    const evidence = `${comparableName}; ${packageDescription}; peso bruto 350 g; largura 8 cm, altura 20 cm, comprimento 10 cm.`;
+    const raw = estimateReference();
+    const estimate = { ...raw.estimate, comparableName, packageDescription, evidence, productFamily: family, packageMaterial: material, targetEvidence: `${name}; ${packageDescription}.`, weight: { value: 350, unit: "g", kind: "gross" } };
+    const result = qualifyShippingReference({ ...raw, estimate }, { ...context, name, research: `${name}; ${packageDescription}.\n${evidence}` });
+    assert.deepEqual(result?.estimate?.weightGrams, { min: 280, max: 420 }, name);
+  }
+});
 
 test("converts sourced gross weight and explicit units, preserving evidence", () => {
   const result = qualifyShippingReference(reference(), context)!;

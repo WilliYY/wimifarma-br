@@ -1,5 +1,9 @@
 # 27 - Melhor Envio e frete por transportadora
 
+## Cotação automática e embalagens — 05/10/2026
+
+O checkout inicia a consulta 450 ms após CEP completo e carrinho elegível, cancela consultas obsoletas e oferece **Consultar novamente**. Conta/PAC/SEDEX responderam em simulações reais para São Paulo e Umuarama. Produtos continuam exigindo perfil do volume pronto para envio aprovado; o Dove recebeu somente dimensões comerciais em rascunho e correção de EAN. O lojista ainda não possui caixas. Fontes, três referências de caixas, preços/prazos simulados e limites em `39-frete-automatico-e-embalagens.md`.
+
 ## Escopo e implantação
 
 Solicitado pelo lojista em 28/09/2026. Origem confirmada: Avenida Minas Gerais, 2263, Ivaté/PR, CEP 87525-000. O endereço pessoal em Umuarama não é a origem da farmácia. A loja Wimifarma é separada da loja preexistente de outra atividade.

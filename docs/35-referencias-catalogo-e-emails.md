@@ -15,7 +15,7 @@ A prioridade é identificar o EAN e a apresentação exatos, procurar a ficha t�
 
 Fontes: [FAQ da API GS1 Brasil](https://portalapi.gs1br.org/pageFaq), [API Cosmos](https://api.cosmos.bluesoft.com.br/api), [schema de produto Open Food Facts](https://openfoodfacts.github.io/documentation/docs/Product-Opener/schemas/schemas/product_misc/) e [Open Beauty Facts](https://world.openbeautyfacts.org/).
 
-Uma fotografia pode ajudar a identificar rótulo e apresentação. Não permite inferir massa, densidade, proteção de transporte ou um eixo oculto com precisão. Sem evidência utilizável, o campo permanece vazio. Não converter ml em g, atribuir eixos a números sem ordem declarada nem estimar por produto parecido.
+Uma fotografia pode ajudar a identificar rótulo e apresentação. Não permite inferir massa, densidade, proteção de transporte ou um eixo oculto com precisão. Sem evidência ou comparação utilizável, o campo permanece vazio. Não converter ml em g nem atribuir eixos a números sem ordem declarada. A partir de 05/10, uma apresentação semelhante com fatos logísticos comprovados pode fundamentar uma faixa estimada separada, com fonte, premissas e revisão; não se torna medida exata do produto.
 
 O contrato existente está em [29 - Cadastro e logística com IA](29-cadastro-logistica-ia.md): referências preenchem campos vazios, preservam dados manuais e permanecem em rascunho. A equipe pesa e mede a unidade pronta para envio, incluindo a proteção realmente utilizada. A revisão humana em **Fretes e entregas** continua necessária para liberar a embalagem. Pesquisa de medidas não libera medicamento, receita, Farmácia Popular ou transporte automaticamente.
 

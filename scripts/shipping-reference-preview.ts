@@ -17,7 +17,10 @@ async function main() {
       try { input = JSON.parse(body); } catch { res.writeHead(400).end(); return; }
       const name = input.name || "Produto sintético";
       const source = { title: "Referência sintética de QA", url: "https://example.com/ficha", evidence: "Peso bruto: 800 g. Comprimento 15 cm, largura 20 cm, altura 30 cm." };
-      const shipping = /sem medidas/i.test(name) ? null : { productName: name, packageLevel: "retail_unit", weightGrams: 800, widthCm: 20, heightCm: 30, lengthCm: 15, weightSource: source, dimensionsSource: source, warnings: ["Dados sintéticos de QA; confira embalagem real."], researchedAt: new Date().toISOString() };
+      const shipping = /sem medidas/i.test(name) ? null : { productName: name, packageLevel: "retail_unit", weightGrams: 800, widthCm: 20, heightCm: 30, lengthCm: 15, weightSource: source, dimensionsSource: source, warnings: ["Dados sintéticos de QA; confira embalagem real."], researchedAt: new Date().toISOString(), ...(/estimado/i.test(name) ? {
+        weightGrams: null, widthCm: null, heightCm: null, lengthCm: null, weightSource: null, dimensionsSource: null,
+        estimate: { comparableName: "Pacote comparável sintético M 40 unidades", packageDescription: "Pacote fechado flexível da mesma contagem e tamanho.", confidence: "low", source, assumptions: ["Mesma apresentação e material; margem de 20%.", "Caixa adicional ainda não incluída."], weightGrams: { min: 640, max: 960 }, widthCm: { min: 16, max: 24 }, heightCm: { min: 24, max: 36 }, lengthCm: { min: 12, max: 18 } },
+      } : {}) };
       res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify({ data: { name, brand: input.brand || "Marca sintética", ean: input.ean || null, productType: /medicamento/i.test(name) ? "medicine" : "other", identityMatch: "exact", confidence: /revisar/i.test(name) ? "medium" : "high", category: "Categoria sintética", activeIngredients: [], searchTerms: [name, "Marca sintética"], description: "Descrição sintética de teste do cadastro; nenhum produto ou medida desta página corresponde a uma ficha real.", warnings: [], sources: [source], shipping } }));
       return;
     }

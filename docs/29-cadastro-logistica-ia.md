@@ -2,7 +2,7 @@
 
 ## Pesquisa e custo por repetição (04/10/2026)
 
-A pesquisa organiza a logística em etapas na mesma consulta ao Gemini: confirmar EAN/apresentação e unidade comercial fechada; procurar ficha técnica do fabricante; completar fatos ausentes em distribuidores e varejo técnico da mesma apresentação. As buscas refinam peso bruto com embalagem e os eixos nomeados. Nenhuma nova conta, provedor ou chamada independente foi adicionada. A pesquisa não converte volume ou conteúdo líquido em peso bruto, não atribui eixos a sequências sem identificação e não estima por foto ou produto semelhante. As validações existentes de identidade, fonte, trecho e unidades continuam obrigatórias; fontes de varejo para logística não se tornam fontes oficiais de identidade.
+A pesquisa organiza a logística em etapas na mesma consulta ao Gemini: confirmar EAN/apresentação e unidade comercial fechada; procurar ficha técnica do fabricante; completar fatos ausentes em distribuidores e varejo técnico da mesma apresentação. As buscas refinam peso bruto com embalagem e os eixos nomeados. Nenhuma nova conta, provedor ou chamada independente foi adicionada. A pesquisa não converte volume ou conteúdo líquido em peso bruto nem atribui eixos a sequências sem identificação. Desde 05/10, quando falta a ficha exata, a mesma pesquisa pode procurar um produto comparável com dados comprovados e oferecer uma estimativa separada. As validações existentes de identidade, fonte, trecho e unidades continuam obrigatórias; fontes de varejo para logística não se tornam fontes oficiais de identidade.
 
 A rota administrativa validada `/api/produtos/sugestoes` usa cache em memória do processo para repetições idênticas. A chave é um hash da identidade exata fornecida (EAN, nome, marca e categorias), modelo e impressão digital da credencial. A chave não contém a credencial em texto nem é registrada em logs. Autenticação, validação da requisição e disponibilidade da configuração são conferidas antes do cache; a resposta ao navegador permanece `Cache-Control: no-store`.
 
@@ -20,12 +20,12 @@ Validação direcionada: `node --import tsx --test src/features/products/ai-sugg
 O cadastro/edição de produtos possui a seção **Peso e medidas para frete**. A pesquisa existente de nome/marca/EAN também procura especificações logísticas, sem chamada adicional por tecla. O botão **Pesquisar peso e medidas** repete a pesquisa completa quando necessário.
 
 1. Informe marca, apresentação, quantidade e EAN quando disponível. A mesma linha com outro tamanho/quantidade pode ter embalagem diferente.
-2. Confira o peso bruto, comprimento, largura e altura apresentados com fonte e trecho da pesquisa. Campos sem evidência utilizável permanecem vazios.
+2. Confira o peso bruto, comprimento, largura e altura apresentados com fonte e trecho da pesquisa. Dados exatos e estimados aparecem separados. Campos sem evidência ou comparação utilizável permanecem vazios.
 3. Para ADMIN, o preenchimento dos dados de catálogo/SEO também preenche peso e medidas vazios quando a identidade tem alta confiança. Para sugestões que exigem revisão, **Aplicar sugestões** usa o mesmo caminho; a opção **Usar referências nos campos vazios** permanece disponível. Valores manuais nunca são substituídos, inclusive ao substituir outros dados do cadastro. Dados copiados da pesquisa são descartados se a identidade mudar, preservando campos digitados manualmente. Marca/EAN preenchidos pela própria sugestão fazem parte da identidade resultante e não apagam as medidas recém-aplicadas.
 4. Pese/meça a unidade pronta para envio, incluindo a proteção e caixa realmente usadas pela farmácia. As fontes normalmente descrevem apenas a embalagem comercial; a IA não sabe a embalagem adicional da loja.
 5. Salve o produto. Os dados de frete ficam em rascunho, inclusive quando completos. Em **Fretes e entregas**, confira peso, medidas, conservação e aceitação antes de aprovar a embalagem e liberar o produto. A ativação geral do Melhor Envio continua separada.
 
-Medicamentos podem ter medidas pesquisadas e cadastradas, mas continuam fora da cotação automática. Nenhum texto da IA altera receita, Farmácia Popular ou permissão de transporte. Colaboradores podem consultar referências no cadastro, mas somente ADMIN grava medidas.
+Medicamentos sem receita podem ter medidas pesquisadas e usar PAC/SEDEX depois de aprovação do perfil no fluxo existente. Nenhum texto da IA altera receita, Farmácia Popular ou permissão de transporte. Colaboradores podem consultar referências no cadastro, mas somente ADMIN grava medidas.
 
 ## Critérios da pesquisa
 
@@ -34,7 +34,17 @@ Medicamentos podem ter medidas pesquisadas e cadastradas, mas continuam fora da 
 - Fraldas: pacote fechado da linha, tamanho e contagem exatos. Tamanho da fralda aberta e faixa de peso do bebê não são dados de transporte. Divergência M/G/RN/etc bloqueia aplicação da referência.
 - Alimentos e kits: distinguir unidade vendida, kit completo e caixa master. Não dividir caixa master nem multiplicar dimensões para estimar unidades.
 - Fabricante e ficha técnica são priorizados; distribuidores/lojas com a apresentação identificada podem fornecer referências sujeitas a revisão. Fonte e trecho são mostrados por grupo de medidas. Não há garantia de disponibilidade, exatidão ou aprovação logística de uma página externa.
-- Peso líquido, valores sem fonte, unidades desconhecidas, dimensões incompletas, eixos não identificados, conflito de apresentação e estimativas por foto/produto parecido não são usados. Não substituir divergências por média.
+- Peso líquido, valores sem fonte, unidades desconhecidas, dimensões incompletas, eixos não identificados e conflito de apresentação não são usados como fatos exatos. Não substituir divergências por média. Estimativas por comparação seguem o contrato separado abaixo; fotografia sem escala não mede um eixo nem determina massa.
+
+## Estimativa por comparação autorizada em 05/10/2026
+
+Quando a ficha exata não possui algum grupo de medidas, a pesquisa pode localizar uma embalagem semelhante, com nome, apresentação, material e contagem identificados. A estruturadora recebe fatos do comparável com fonte/trecho e unidades originais. O servidor qualifica esses fatos e gera a faixa conservadora; não aceita uma faixa numérica livre inventada pela IA como medida comprovada.
+
+A estimativa fica em `reference.estimate`, separada dos campos exatos. Mostra produto comparável, descrição da embalagem, família específica, material, fontes de alvo/comparável, premissas e intervalo por eixo/peso com confiança baixa. Exige família, formato e material compatíveis; mesma contagem e “pacote fechado” não bastam para comparar fralda com lenço. A margem de 20% é uma regra de estimativa, não uma precisão medida nem garantia estatística. Apresentação alvo incerta/conflitante, outro tamanho/contagem, caixa master ou base sem peso bruto/eixos comprovados não geram uma comparação utilizável. Não há escala automática de quantidade ou conversão de densidade.
+
+No cadastro, fatos exatos têm prioridade. Aplicar catálogo/SEO também preenche campos logísticos vazios pelo caminho existente: usa o limite superior de uma faixa estimada apenas quando não há fato exato para aquele campo. Dados manuais são preservados. Faixas, fonte e premissas permanecem no JSON; um valor copiado da estimativa aparece identificado na interface. Salvar mantém `enabled: false` e `transportReviewed: false`. Trocar a identidade descarta os dados copiados da pesquisa.
+
+Essa comparação reduz digitação e pesquisa repetida para embalagens padronizadas. Famílias físicas reconhecidas cobrem medicamentos, perfumaria/higiene, alimentos, fraldas e dispositivos comuns; família ou material desconhecidos mantêm a estimativa ausente. Não certifica o peso/volume final, a embalagem externa que ainda será comprada ou o encaixe de um carrinho. Conferir um exemplar de cada apresentação e caixa padronizada pode ser reaproveitado para unidades idênticas; não é necessário pesar cada unidade de estoque. Antes de cotar, a aprovação do volume real continua no painel de fretes.
 
 A estruturadora só recebe notas e fontes da pesquisa Google. Cada fato logístico exige índice de fonte válido, trecho presente nas notas e valores/unidades compatíveis com esse trecho. Conversões são determinísticas: kg → g e mm/m → cm, com limites do perfil de frete; valores não são arredondados para baixo. Isso reduz erros de estruturação, mas não certifica o conteúdo da página ou a interpretação da pesquisa: conferência física continua necessária. Trata-se de instruções, validação e pesquisa do assistente existente, não treinamento de um novo modelo.
 
@@ -71,6 +81,8 @@ Publicação desta evolução: commit `0cfe047` enviado ao GitHub e aplicado no 
 Conferência no Chrome após publicar: pesquisa real de “Óleo de Banho Dove Glicerinado 240ml”, com marca Dove, terminou com baixa confiança por divergência de EAN nas notas e sem links de fontes retornados pelo provedor. Peso e dimensões permaneceram vazios; não houve aplicação automática dos dados de catálogo. Este resultado comprova o bloqueio de dados insuficientes, não a exatidão de medidas desse produto. O preenchimento com referências utilizáveis foi comprovado pela prévia sintética e pelos testes. Formulário cancelado, sem cadastrar/alterar produto ou comprar frete.
 
 ## Referências
+
+Validação do fallback em 05/10/2026: 45 testes de frete e 185 testes gerais aprovados, incluindo integração simulada Gemini com exatamente duas chamadas, bloqueio de conflito e faixas determinísticas. Regressões rejeitam fralda/lenço, vidro/plástico e família/material desconhecidos, preservando fatos exatos. Lint/typecheck completos aprovados. Ensaio do formulário real isolado preservou peso manual, preencheu dimensões estimadas e descartou somente dados copiados quando a identidade mudou. Sem gravação/provedor real nesse ensaio; detalhes de publicação em `39-frete-automatico-e-embalagens.md`.
 
 - [Melhor Envio — cotação e unidades da API](https://docs.melhorenvio.com.br/docs/cotacao-de-fretes).
 - [Melhor Envio — peso com embalagem individual no cadastro](https://centraldeajuda.melhorenvio.com.br/hc/pt-br/articles/31220437601556-Como-cadastrar-meus-produtos-na-minha-plataforma-de-e-commerce).

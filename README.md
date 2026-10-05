@@ -1,5 +1,9 @@
 # Wimifarma BR
 
+Frete: cotação automática após CEP completo, cancelamento de respostas antigas e repetição explícita. Referências do catálogo e três caixas para avaliação em [docs/39-frete-automatico-e-embalagens.md](docs/39-frete-automatico-e-embalagens.md). Medidas comerciais em rascunho não liberam o transporte; caixas reais/peso bruto continuam pendentes.
+
+IA do cadastro: fatos exatos primeiro; dados ausentes podem receber faixa estimada por embalagem comparável com fonte e margem, preenchendo apenas rascunhos vazios. Contrato em [docs/29-cadastro-logistica-ia.md](docs/29-cadastro-logistica-ia.md). Asaas: conta aprovada, tarifas administrativas registradas, chave API ainda indisponível; configuração e próximos testes em [docs/40-asaas-configuracao-e-homologacao.md](docs/40-asaas-configuracao-e-homologacao.md).
+
 Operação comercial: comparador de tarifas ADMIN sem mudar o gateway do checkout ([contrato](docs/38-politica-de-taxas.md)), prévia canônica Miauby/e-mail ainda sem envio ao cliente ([mensagens](docs/37-mensagens-clientes.md)), ranking por mês e histórico individual ([acessos](docs/17-usuarios-e-acessos.md)). Testes adicionais: `npm run test:commerce` e `npm run test:payments`.
 
 Cashback por produto: configuracao ADMIN, percentual inicial de 2%, valores na vitrine e saldo/pendencias do cliente. Regras em [docs/15-cashback-produtos.md](docs/15-cashback-produtos.md). Bonus de 1% pela primeira avaliacao de cada produto e uso do saldo como desconto: [docs/16-cashback-avaliacoes-resgate.md](docs/16-cashback-avaliacoes-resgate.md).

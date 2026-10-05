@@ -1,5 +1,14 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-05 - Cotação automática e conferência do catálogo
+
+- Cotar automaticamente após 450 ms de CEP completo/carrinho elegível; chave estável inclui produtos, quantidades e preços. AbortController e geração da consulta rejeitam respostas antigas. Escolha do serviço permanece manual; callback, cashback e endereço complementar não repetem a chamada. Sem mudança no token/regras do servidor.
+- Pedido posterior autoriza fallback por embalagem semelhante. A mesma pesquisa Gemini procura comparável com fatos validados e compatibilidade de família específica, formato, material e apresentação; faixas de baixa confiança são geradas localmente com margem de 20%, separadas da referência exata. Catálogo/SEO aplica o limite superior apenas aos campos vazios em rascunho; fontes de alvo/comparável, premissas e faixa ficam visíveis/persistidas. Revisão rejeitou comparação fralda/lenço da mesma contagem; regressão específica acrescentada. Não converte líquido em bruto, escala contagens sem fonte ou aprova transporte. Contrato em `29-cadastro-logistica-ia.md`.
+- Pesquisa não encontrou peso bruto pronto para transporte dos quatro produtos. Corrigidos marca/EAN do Dove conforme fabricante/varejo; dimensões comerciais C6 × L6 × A14cm salvas em rascunho, peso vazio e transporte não aprovado. Referências e divergências do catálogo em `39-frete-automatico-e-embalagens.md`.
+- Lojista ainda sem caixas; três tamanhos de papelão pesquisados são opções comerciais com medidas internas/tara, sem compra ou aplicação automática como volume final. Consolidação de carrinhos continua futura.
+- Conta Melhor Envio/PAC/SEDEX confirmadas com cotação administrativa real em 04/10 para São Paulo/Umuarama, usando encomenda fictícia. Não foram compradas etiquetas nem aprovados perfis para demonstrar sucesso.
+- Lojista informou conta Asaas aprovada e autorizou configuração. Chave API ainda indisponível na interface; cartão 1x (1,99% + R$0,49, 32 dias) e Pix dinâmico gratuito registrados manualmente por sete dias no comparador, com confirmação visual. Contrato de checkout hospedado e limites de expiração Pix pesquisados. Não confundir conta aprovada com segundo gateway homologado; operação e próxima ação em `40-asaas-configuracao-e-homologacao.md`.
+
 ## 2026-10-04 - Tarifas, mensagens comerciais e ranking mensal
 
 - Comparador administrativo de custo por valor, taxa fixa, percentual, parcelas sem juros confirmadas e prazo. Consulta Asaas padrão de cartão a cada seis horas após conexão, snapshot 24h; manual sete dias. Cofre independente, auditoria antes/depois e sandbox fora de compras reais. Nenhum segundo gateway de cobrança ativado; conta Asaas e homologação pendentes. Contrato em `38-politica-de-taxas.md` e pesquisa em `36-referencias-pagamentos.md`.

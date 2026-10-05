@@ -47,6 +47,42 @@ function structuredFetch(suggestion: Record<string, unknown>, source: string, re
   } : { candidates: [{ content: { parts: [{ text: JSON.stringify(suggestion) }] } }] }))) as typeof fetch;
 }
 
+test("catalog returns sourced comparable ranges separately using only its two Gemini requests", async () => {
+  const name = "Perfume sintético 100 ml";
+  const targetEvidence = `${name}; frasco fechado vidro 100 ml.`;
+  const evidence = "Perfume comparável 100 ml; frasco fechado vidro 100 ml; peso bruto 250 g; largura 5 cm, altura 12 cm, comprimento 8 cm.";
+  const research = `${targetEvidence}\n${evidence}`;
+  const answer = { name, brand: "Sintética", ean: null, productType: "beauty", identityMatch: "exact", evidenceSourceIndexes: [0], activeIngredients: [], category: "Perfumaria", confidence: "medium", description: null, searchTerms: [], warnings: [], shipping: {
+    identityMatch: "exact", packageLevel: "retail_unit", weight: null, dimensions: null, warnings: [], estimate: {
+      comparableName: "Perfume comparável 100 ml", packageDescription: "frasco fechado vidro 100 ml", packageLevel: "retail_unit",
+      productFamily: "perfume", packageMaterial: "vidro", targetSourceIndex: 0, targetEvidence,
+      sourceIndex: 0, evidence, assumptions: ["Mesmo formato e volume; tampa, material e proteção podem variar."],
+      weight: { value: 250, unit: "g", kind: "gross" }, dimensions: { width: 5, height: 12, length: 8, unit: "cm" },
+    },
+  } };
+  const requests: Record<string, unknown>[] = [];
+  const underlying = structuredFetch(answer, "https://example.com/ficha", research);
+  const fetchImplementation = (async (url, init) => {
+    requests.push(JSON.parse(String(init?.body)));
+    return underlying(url, init);
+  }) as typeof fetch;
+  const result = await suggestProductData(productSuggestionRequestSchema.parse({ name, brand: answer.brand }), { apiKey: "synthetic", model: "gemini-test", fetchImplementation });
+  assert.equal(requests.length, 2);
+  assert.equal(result.shipping?.weightGrams, null);
+  assert.equal(result.shipping?.lengthCm, null);
+  assert.deepEqual(result.shipping?.estimate?.weightGrams, { min: 200, max: 300 });
+  assert.deepEqual(result.shipping?.estimate?.heightCm, { min: 9, max: 15 });
+  assert.equal(result.shipping?.estimate?.targetSource?.evidence, targetEvidence);
+  assert.match(JSON.stringify(requests[1]), /comparableName/);
+  assert.match(buildProductResearchPrompt(productSuggestionRequestSchema.parse({ name })), /COMPARAVEL PARA ESTIMATIVA/);
+  assert.match(buildProductStructuringPrompt(productSuggestionRequestSchema.parse({ name }), research, []), /shipping\.estimate/);
+  const conflicting = await suggestProductData(productSuggestionRequestSchema.parse({ name: "Perfume sintético 200 ml", brand: answer.brand }), { apiKey: "synthetic", model: "gemini-test", fetchImplementation: structuredFetch(answer, "https://example.com/ficha", research) });
+  assert.equal(conflicting.shipping, null);
+  const wrongEan = { ...answer, ean: "7891000248768" };
+  const eanConflict = await suggestProductData(productSuggestionRequestSchema.parse({ name, ean: "4005808808281", brand: answer.brand }), { apiKey: "synthetic", model: "gemini-test", fetchImplementation: structuredFetch(wrongEan, "https://example.com/ficha", research) });
+  assert.equal(eanConflict.shipping, null);
+});
+
 test("catalog research preserves sourced gross weight across product types when dimensions are incomplete", async () => {
   for (const [name, productType, category] of [
     ["Medicamento sintético 20 comprimidos", "medicine", "Medicamentos"],
