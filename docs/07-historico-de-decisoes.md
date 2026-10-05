@@ -8,6 +8,7 @@
 - Lojista ainda sem caixas; três tamanhos de papelão pesquisados são opções comerciais com medidas internas/tara, sem compra ou aplicação automática como volume final. Consolidação de carrinhos continua futura.
 - Conta Melhor Envio/PAC/SEDEX confirmadas com cotação administrativa real em 04/10 para São Paulo/Umuarama, usando encomenda fictícia. Não foram compradas etiquetas nem aprovados perfis para demonstrar sucesso.
 - Lojista informou conta Asaas aprovada e autorizou configuração. Chave API ainda indisponível na interface; cartão 1x (1,99% + R$0,49, 32 dias) e Pix dinâmico gratuito registrados manualmente por sete dias no comparador, com confirmação visual. Contrato de checkout hospedado e limites de expiração Pix pesquisados. Não confundir conta aprovada com segundo gateway homologado; operação e próxima ação em `40-asaas-configuracao-e-homologacao.md`.
+- Publicado `2bb60e0`, build Linux/Docker aprovado, app healthy e zero reinícios; health público 200 e fretes administrativos anônimos 401. Chrome confirmou consulta automática por CEP, bloqueio do KitKat sem perfil aprovado e entrega local grátis em Ivaté. Pesquisa real do Dove retornou falta de referência qualificada; nenhum peso foi presumido. Evidência e imagem de recuperação em `39-frete-automatico-e-embalagens.md`.
 
 ## 2026-10-04 - Tarifas, mensagens comerciais e ranking mensal
 
