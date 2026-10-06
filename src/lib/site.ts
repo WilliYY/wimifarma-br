@@ -15,6 +15,8 @@ const whatsappMessage =
 
 export const siteConfig = {
   name: "Wimifarma",
+  legalName: "W Y Yoshiura Willian Produtos Farmacêuticos e Perfumaria",
+  cnpj: "07.676.534/0001-81",
   city: "Ivate-PR",
   phone: whatsappPhone,
   displayPhone: "(44) 98413-4971",

@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-06 - Rodapé e confiança visual
+
+- Reorganizar o rodapé com a identidade oficial, identificação empresarial, contato direto, navegação de compra, Pix/cartão e entrega por CEP. Usar HTTPS como informação de conexão, sem selo inventado ou garantia de invulnerabilidade.
+- Publicar o link de mapa Google existente; Ebit, RA1000 e Reclame AQUI continuam condicionados à confirmação dos perfis/selos. Search Console não é certificação pública.
+- Retirar apenas a decoração de 128 bolhas do rodapé, preservando a animação oficial no cabeçalho. Layout responsivo sem novo script cliente. Contrato e validações em [47-rodape-e-confianca-visual.md](47-rodape-e-confianca-visual.md).
+
 ## 2026-10-06 - Preparação dos cadastros gratuitos de reputação e presença
 
 - Localizar e reivindicar o perfil Google existente da Wimifarma no endereço correto, evitando duplicata. Aceite e verificação continuam pendentes; não presumir propriedade a partir da ficha pública.
