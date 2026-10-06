@@ -49,6 +49,14 @@ Após as cotações e a primeira prova pública aprovadas acima, uma repetição
 
 Regressão falhou antes da correção e passou depois; suite de frete 49/49 e segurança 92/92, com revisão independente aprovada e ESLint limpo. A disponibilidade atual precisa ser confirmada em nova consulta; os preços acima são evidência histórica deste ensaio. Essa instabilidade impede declarar transporte garantido para todos os destinos a qualquer momento.
 
+Às 18:30 UTC, depois da publicação de `b2d3e73`, o provedor voltou a retornar PAC/SEDEX para o mesmo carrinho. Nova execução integral do ensaio público passou: cotação automática, seleção e total, Pix/cartão disponíveis, persistência e quatro larguras. Container saudável/zero reinícios; imagem `sha256:0415efa648e2e679ea824313c182f35a4b910fbba3570695fa53164e3fe0646c`. [CI de segurança final aprovado](https://github.com/WilliYY/wimifarma-br/actions/runs/37511557399). Retomada constatada não elimina a possibilidade de nova indisponibilidade externa.
+
+## Arquivos e comandos da entrega
+
+Política compartilhada em `src/features/products/purchase-policy.ts`; cadastro/schemas e APIs em `src/features/products/schema.ts` e `src/app/api/produtos`; snapshots/transições em `src/features/orders/create-checkout.ts` e `src/app/api/pedidos/[id]/route.ts`; classificação e conferência em `products-catalog-panel.tsx` e `orders-panel.tsx`; consumo público em vitrine, busca, página, carrinho e histórico. Contrato persistente em `prisma/schema.prisma` e migração `20261006183000_prescription_orders`. Frete em `src/features/shipping/eligibility.ts`, `service.ts` e `rules.ts`. Diff completo nos commits da tarefa, iniciando em `9c7f356`.
+
+Comandos usados: `npm.cmd run test`, `test:security`, `test:shipping`, `typecheck`, `lint`, `prisma:validate`; `npm.cmd audit --omit=dev --audit-level=high --json` e auditoria completa; `node scripts/prescription-live-audit.mjs` com diretório de evidências. No servidor: build Docker (inclui `npm run build`), `prisma migrate deploy`, atualização somente da aplicação e health-check. Últimos resultados: 203/203 gerais, 92/92 de segurança e 49/49 de frete; nenhuma cobrança ou comunicação real nos ensaios.
+
 ## Limite de publicidade
 
 RDC 44/2009, art. 54, restringe imagens/promocionais de medicamentos com receita e admite lista neutra de preços nos termos da norma. O catálogo atual precisa de revisão específica dessa apresentação. Este trabalho separa pedido e dispensação; não atesta conformidade integral da publicidade nem autoriza campanha, avaliação incentivada, cashback ou Merchant Center para medicamentos de receita.
