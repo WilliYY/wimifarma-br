@@ -18,7 +18,9 @@ Losartana cadastrada exige receita; permanece no atendimento farmacêutico e nã
 
 ## Cadastro e aprovação
 
-Perfis guardam `measurementBasis` (`measured` ou `estimated`). O painel permite salvar rascunhos parciais desabilitados, usar o preset de dimensões externas da caixa e revisar explicitamente antes de liberar. Trocar a caixa invalida a revisão e a liberação; preserva o peso preenchido. Dados incompletos ou `enabled: true` sem revisão não são aceitos. APIs continuam exclusivas de ADMIN, com atualização otimista e auditoria.
+Perfis guardam `measurementBasis` (`measured` ou `estimated`). O painel permite salvar rascunhos parciais desabilitados, usar o preset de dimensões externas da caixa e revisar explicitamente antes de liberar. Trocar a caixa marca a origem estimada, invalida a revisão e a liberação e preserva o peso preenchido. Dados incompletos ou `enabled: true` sem revisão não são aceitos. APIs continuam exclusivas de ADMIN, com atualização otimista e auditoria.
+
+A pedido seguinte do lojista, a interface foi unificada: uma pesquisa/aplicação no topo faz cadastro, descrição/SEO e peso/medidas. A seção logística mantém fontes, referências/estimativas e edição manual, sem uma segunda IA ou botão de pesquisa. Todos os tipos podem guardar dados de embalagem, inclusive rascunho para medicamentos com receita; os bloqueios de venda/dispensação automática permanecem. Ver [29-cadastro-logistica-ia.md](29-cadastro-logistica-ia.md).
 
 O cálculo atual mantém um volume por unidade. Duas unidades geram duas caixas e a cotação pode ser mais cara que uma caixa consolidada. Esta entrega não implementa encaixe/consolidação automática nem promete tarifa ótima para carrinhos mistos. Cotação automática por CEP, ordenação por preço e prazo de desempate e frete local gratuito preservados. A aprovação operacional e o teste real têm comprovante próprio abaixo.
 
@@ -37,7 +39,7 @@ Não alteramos DNS, firewall, reputação ou servidor de e-mail. Recomendação 
 - A tela **Taxas → Integrações** informa API e integrações gratuitas. Subcontas têm cobrança separada; não usamos subcontas.
 - Cartão online: 1x em 1,99% + R$0,49, 2–6x em 2,49% + R$0,49, promoção até 04/01/2027; prazo de 32 dias. Antecipação é adicional.
 - **Integrações → Chaves de API → Gerar chave de API** continua desabilitado e sem chave existente. Motivo não informado na interface. É bloqueio do painel Asaas; não foi contornado. Conta aprovada não significa integração de cobrança homologada.
-- A gratuidade de Pix dinâmico está na aba **Movimentações financeiras**, junto de pagamentos/transferências. Isso não comprova recebimento comercial gratuito. A tarifa manual de zero cadastrada anteriormente deve ser retirada da comparação até confirmação da tarifa de entrada; não cadastrar taxa pública como contrato da conta.
+- A gratuidade de Pix dinâmico está na aba **Movimentações financeiras**, junto de pagamentos/transferências. Isso não comprova recebimento comercial gratuito. A tarifa manual de zero foi retirada do comparador em 06/10 pela operação administrativa auditada. Selecionar Pix passou a mostrar custo desconhecido/sem tarifa válida. Cartão 1x foi preservado; a conexão Mercado Pago permaneceu em produção/ativada. Não cadastrar taxa pública como contrato da conta.
 
 [Preços oficiais](https://www.asaas.com/precos-e-taxas) distinguem manutenção gratuita, taxas por recebimento e serviços adicionais. Não é preciso comprar plano mensal para a integração básica. Próxima ação na conta: solicitar ao suporte a liberação de chave API e a confirmação da tarifa de Pix recebido por cobrança. Não foi enviada mensagem de suporte em nome do lojista.
 
@@ -51,4 +53,8 @@ Não criamos contas, aceitamos contratos, contratamos planos ou exibimos selos n
 
 ## Comprovante de validação
 
-Publicação, testes, atualização dos perfis reais e retorno do Melhor Envio serão registrados após a conferência. Não confundir simulação administrativa com carrinho elegível, etiqueta comprada ou postagem realizada.
+- Código inicial `423dfd8`, publicado no GitHub/VPS. Revisão independente corrigiu origem estimada no preset; 47 testes de frete, 79 de segurança e 187 gerais passaram, além de lint, typecheck, Prisma validate e build Linux/Docker. Patch transitivo `source-map-js` 1.2.2 corrige [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q). Auditoria de produção zero; auditoria completa mantém cinco alertas high na cadeia de desenvolvimento/lint, sem downgrade forçado. CI Security checks passou.
+- App healthy, zero reinícios, imagem `sha256:613a12d9218f50f92ca7cf0c74c756b762f2dc91190630d5594eef5406cbf896`. Recuperação `wimifarma-br-app:pre-estimated-shipping-423dfd8`; sem migration ou credenciais alteradas. Checkout 200 e APIs privadas de frete/histórico retornam 401 sem sessão.
+- Chrome autenticado: três perfis da tabela foram salvos em ADMIN e conferidos após recarregar: `estimated`, peso/dimensões previstos, `transportReviewed: true`, `enabled: true`. Nenhum preço, estoque ou identidade de produto foi modificado.
+- Checkout real com uma unidade do KitKat: preencher 01001-000 gerou PAC R$21,70/até 9 dias úteis e SEDEX R$24,68/até 5 dias úteis, nessa ordem. Escolher PAC atualizou o total de R$4,99 para R$26,69. Alterar para 87501-070 gerou os mesmos preços com até 8/4 dias úteis; 87525-000 exibiu Entrega local · Grátis. Os prazos incluem preparação. São preços retornados nesta consulta, não promessa permanente ou cobertura de todo CEP.
+- Nenhum pedido, pagamento, etiqueta ou envio de mensagem foi criado neste teste. A unificação final da interface e o rascunho do quarto produto serão conferidos após sua publicação.

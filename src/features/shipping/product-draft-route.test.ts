@@ -31,21 +31,22 @@ test("freight admin persists partial drafts and retains authorization, version c
   } }] });
   const draft = { enabled: false, transportReviewed: false, measurementBasis: "estimated", weightGrams: null, widthCm: 20.8, lengthCm: 20.8, heightCm: 21.6 };
   const updatedAt = "2026-10-01T00:00:00.000Z";
-  for (const scenario of ["draft", "approved", "unreviewed", "incomplete", "stale", "unauthorized"] as const) {
+  for (const scenario of ["draft", "approved", "prescriptionDraft", "prescriptionApproval", "unreviewed", "incomplete", "stale", "unauthorized"] as const) {
     const writes: { where: Record<string, unknown>; data: { shippingProfile: unknown } }[] = [];
     const audits: { data: { userId: string; metadata: unknown } }[] = [];
     let transactions = 0;
     const tx = {
-      product: { findFirst: async () => ({ id: "synthetic-product", deletedAt: null, category: "Higiene", requiresPrescription: false, isPopularPharmacy: false }), updateMany: async (value: typeof writes[number]) => { writes.push(value); return { count: scenario === "stale" ? 0 : 1 }; } },
+      product: { findFirst: async () => ({ id: "synthetic-product", deletedAt: null, category: "Higiene", requiresPrescription: scenario.startsWith("prescription"), isPopularPharmacy: false }), updateMany: async (value: typeof writes[number]) => { writes.push(value); return { count: scenario === "stale" ? 0 : 1 }; } },
       auditLog: { create: async (value: typeof audits[number]) => { audits.push(value); } },
     };
     const fixture = { guard: scenario === "unauthorized" ? { response: new Response(null, { status: 401 }) } : { session: { user: { id: "synthetic-admin" } } }, prisma: { $transaction: async (callback: (value: typeof tx) => Promise<void>) => { transactions++; await callback(tx); } } };
     const loaded = { exports: {} as { PUT: (request: Request, context: unknown) => Promise<Response> } };
     vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, console, process: { env: { AUTH_URL: "https://example.com" } }, Buffer, fixture });
-    const profile = scenario === "approved" ? { ...draft, enabled: true, transportReviewed: true, weightGrams: 500 } : scenario === "unreviewed" ? { ...draft, enabled: true } : scenario === "incomplete" ? { ...draft, enabled: true, transportReviewed: true } : draft;
+    const profile = scenario === "approved" || scenario === "prescriptionApproval" ? { ...draft, enabled: true, transportReviewed: true, weightGrams: 500 } : scenario === "unreviewed" ? { ...draft, enabled: true } : scenario === "incomplete" ? { ...draft, enabled: true, transportReviewed: true } : draft;
     const response = await loaded.exports.PUT(new Request("https://example.com/api/admin/fretes/produtos/synthetic-product", { method: "PUT", headers: { "Content-Type": "application/json", origin: "https://example.com" }, body: JSON.stringify({ profile, updatedAt }) }), { params: Promise.resolve({ id: "synthetic-product" }) });
-    assert.equal(response.status, scenario === "unauthorized" ? 401 : scenario === "stale" ? 409 : scenario === "unreviewed" || scenario === "incomplete" ? 422 : 200, scenario);
+    assert.equal(response.status, scenario === "unauthorized" ? 401 : scenario === "stale" ? 409 : scenario === "unreviewed" || scenario === "incomplete" || scenario === "prescriptionApproval" ? 422 : 200, scenario);
     if (scenario === "unauthorized" || scenario === "unreviewed" || scenario === "incomplete") { assert.equal(transactions, 0); continue; }
+    if (scenario === "prescriptionApproval") { assert.equal(transactions, 1); assert.equal(writes.length, 0); assert.equal(audits.length, 0); continue; }
     assert.equal(writes.length, 1);
     assert.equal((writes[0].where.updatedAt as Date).toISOString(), updatedAt);
     assert.deepEqual(writes[0].data.shippingProfile, scenario === "approved" ? profile : { ...profile, reference: null });

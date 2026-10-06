@@ -379,9 +379,66 @@ function ProductFormFields({
 
   return (
     <fieldset className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain bg-surface-subtle p-3 sm:p-5" disabled={disabled}>
+      <div className="mb-5 overflow-hidden rounded-xl border border-brand/20 bg-brand-soft/40">
+        <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-brand/10 text-brand">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-black text-ink">Assistente único de cadastro</p>
+              <p className="mt-1 text-xs leading-5 text-muted">Nome, descrição, SEO, categoria, peso e medidas em uma pesquisa. Informe o nome ou EAN abaixo e confira as fontes antes de salvar.</p>
+              <label className="mt-1 flex cursor-pointer items-start gap-2 text-xs font-semibold text-muted"><input checked={automatic} className="mt-0.5 h-4 w-4 shrink-0 accent-brand" onChange={event => changeAutomatic(event.target.checked)} type="checkbox" />Preencher campos vazios automaticamente com IA</label>
+            </div>
+          </div>
+          <Button className="min-h-11 shrink-0 whitespace-normal" disabled={isSuggesting} onClick={() => void requestSuggestions()} size="sm" type="button" variant="secondary">
+            {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {isSuggesting ? "Conferindo fontes..." : "Pesquisar cadastro completo"}
+          </Button>
+        </div>
+
+        {suggestion && confidenceInfo ? (
+          <div className="grid gap-3 border-t border-line bg-white p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className={cn("rounded-md px-2.5 py-1 text-xs font-black", confidenceInfo.className)}>
+                {confidenceInfo.label}
+              </span>
+              <Button disabled={suggestion.identityMatch === "conflict" || suggestion.sources.length === 0 || !suggestion.name} onClick={() => {
+                if (!window.confirm("Substituir os campos pelos dados pesquisados? Confira embalagem e fontes antes de publicar.")) return;
+                const appliedFields = applySuggestion(suggestion, { overwrite: true });
+                toast.success(appliedFields > 0 ? "Sugestoes aplicadas. Revise antes de salvar." : "Nao ha dados confirmados para aplicar.");
+              }} size="sm" type="button" variant="secondary">
+                <CheckCircle2 className="h-4 w-4" />
+                Aplicar sugestões ao cadastro
+              </Button>
+            </div>
+            <div className="grid gap-2 text-xs leading-5 text-muted sm:grid-cols-2">
+              <p><strong className="text-ink">Categoria:</strong> {suggestion.category ?? "Nao confirmada"}</p>
+              <p><strong className="text-ink">Tipo:</strong> {productTypeLabels[typeHint]}</p>
+              {!nonMedicine && <p className="sm:col-span-2"><strong className="text-ink">Principios:</strong> {suggestion.activeIngredients.join(", ") || "Nao confirmados"}</p>}
+              <p className="sm:col-span-2"><strong className="text-ink">Termos:</strong> {suggestion.searchTerms.join(", ") || "Nenhum termo confirmado"}</p>
+              {suggestion.description ? <p className="sm:col-span-2"><strong className="text-ink">Descricao:</strong> {suggestion.description}</p> : null}
+            </div>
+            {suggestion.warnings.length > 0 ? (
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-5 text-amber-900">
+                {suggestion.warnings.join(" ")}
+              </div>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-muted">
+              <span>Fontes:</span>
+              {suggestion.sources.length > 0 ? suggestion.sources.map((source) => (
+                <a className="inline-flex max-w-56 items-center gap-1 text-brand hover:underline" href={source.url} key={source.url} rel="noreferrer" target="_blank">
+                  <span className="truncate">{source.title}</span>
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                </a>
+              )) : <span>Nenhuma fonte retornada</span>}
+            </div>
+          </div>
+        ) : null}
+      </div>
       <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
         <div className="grid min-w-0 gap-4">
-          <ProductFormSection number="01" title="Identificação do produto" description="Comece pela apresentação exata. Nome e preço são obrigatórios.">
+          <ProductFormSection number="01" title="Cadastro · identificação do produto" description="Comece pela apresentação exata. Nome e preço são obrigatórios.">
             <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
               Nome do produto
               <Input defaultValue={product?.name} maxLength={160} name="name" onBlur={scheduleResearch} onChange={identityChanged} placeholder="Nome, marca, versão e quantidade" ref={nameInputRef} required />
@@ -409,64 +466,8 @@ function ProductFormFields({
                 <Input defaultValue={product?.ean ?? ""} inputMode="numeric" maxLength={32} name="ean" onBlur={scheduleResearch} onChange={identityChanged} placeholder="Codigo da embalagem" />
               </label>
             </div>
-            <div className="overflow-hidden rounded-xl border border-brand/20 bg-brand-soft/40">
-              <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-brand/10 text-brand">
-                    <Sparkles className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-black text-ink">Assistente de cadastro</p>
-                    <label className="mt-1 flex cursor-pointer items-start gap-2 text-xs font-semibold text-muted"><input checked={automatic} className="mt-0.5 h-4 w-4 shrink-0 accent-brand" onChange={event => changeAutomatic(event.target.checked)} type="checkbox" />Preenchimento automatico com IA</label>
-                  </div>
-                </div>
-                <Button className="min-h-11 shrink-0 whitespace-normal" disabled={isSuggesting} onClick={() => void requestSuggestions()} size="sm" type="button" variant="secondary">
-                  {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  {isSuggesting ? "Conferindo fontes..." : "Pesquisar agora"}
-                </Button>
-              </div>
-
-              {suggestion && confidenceInfo ? (
-                <div className="grid gap-3 border-t border-line bg-white p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className={cn("rounded-md px-2.5 py-1 text-xs font-black", confidenceInfo.className)}>
-                      {confidenceInfo.label}
-                    </span>
-                    <Button disabled={suggestion.identityMatch === "conflict" || suggestion.sources.length === 0 || !suggestion.name} onClick={() => {
-                      if (!window.confirm("Substituir os campos pelos dados pesquisados? Confira embalagem e fontes antes de publicar.")) return;
-                      const appliedFields = applySuggestion(suggestion, { overwrite: true });
-                      toast.success(appliedFields > 0 ? "Sugestoes aplicadas. Revise antes de salvar." : "Nao ha dados confirmados para aplicar.");
-                    }} size="sm" type="button" variant="secondary">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Aplicar sugestoes
-                    </Button>
-                  </div>
-                  <div className="grid gap-2 text-xs leading-5 text-muted sm:grid-cols-2">
-                    <p><strong className="text-ink">Categoria:</strong> {suggestion.category ?? "Nao confirmada"}</p>
-                    <p><strong className="text-ink">Tipo:</strong> {productTypeLabels[typeHint]}</p>
-                    {!nonMedicine && <p className="sm:col-span-2"><strong className="text-ink">Principios:</strong> {suggestion.activeIngredients.join(", ") || "Nao confirmados"}</p>}
-                    <p className="sm:col-span-2"><strong className="text-ink">Termos:</strong> {suggestion.searchTerms.join(", ") || "Nenhum termo confirmado"}</p>
-                    {suggestion.description ? <p className="sm:col-span-2"><strong className="text-ink">Descricao:</strong> {suggestion.description}</p> : null}
-                  </div>
-                  {suggestion.warnings.length > 0 ? (
-                    <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-5 text-amber-900">
-                      {suggestion.warnings.join(" ")}
-                    </div>
-                  ) : null}
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-muted">
-                    <span>Fontes:</span>
-                    {suggestion.sources.length > 0 ? suggestion.sources.map((source) => (
-                      <a className="inline-flex max-w-56 items-center gap-1 text-brand hover:underline" href={source.url} key={source.url} rel="noreferrer" target="_blank">
-                        <span className="truncate">{source.title}</span>
-                        <ExternalLink className="h-3 w-3 shrink-0" />
-                      </a>
-                    )) : <span>Nenhuma fonte retornada</span>}
-                  </div>
-                </div>
-              ) : null}
-            </div>
           </ProductFormSection>
-          <ProductFormSection number="02" title="Preço e publicação" description="Defina os valores, o estoque e como o produto aparece na loja.">
+          <ProductFormSection number="02" title="Preços, estoque e publicação" description="Defina os valores, o estoque e como o produto aparece na loja.">
             <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
               <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
                 Preco normal
@@ -506,7 +507,7 @@ function ProductFormFields({
               </label>
             </div>
           </ProductFormSection>
-          <ProductFormSection number="03" title="Descrição e busca" description="Informações objetivas ajudam o cliente a encontrar o produto.">
+          <ProductFormSection number="03" title="Descrição e SEO" description="Informações objetivas ajudam o cliente a encontrar o produto.">
             <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
               Descricao
               <Textarea defaultValue={product?.description ?? ""} maxLength={800} name="description" onChange={refreshSeo} placeholder="Apresentacao, quantidade ou observacao importante." />
@@ -549,7 +550,7 @@ function ProductFormFields({
           </ProductFormSection>
         </div>
         <div className="min-w-0 lg:col-span-2">
-          <ProductShippingFields ref={shippingFieldsRef} initialProfile={product?.shippingProfile} identityKey={productIdentityKey(photoIdentity)} suggestion={suggestion?.shipping} researched={Boolean(suggestion)} canEdit={canManageShipping} busy={isSuggesting} onResearch={() => void requestSuggestions(true)} medicine={typeHint === "medicine"} />
+          <ProductShippingFields ref={shippingFieldsRef} initialProfile={product?.shippingProfile} identityKey={productIdentityKey(photoIdentity)} suggestion={suggestion?.shipping} researched={Boolean(suggestion)} canEdit={canManageShipping} medicine={typeHint === "medicine"} />
         </div>
       </div>
     </fieldset>

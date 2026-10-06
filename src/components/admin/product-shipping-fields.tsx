@@ -2,8 +2,7 @@
 
 import { forwardRef, useImperativeHandle, useState } from "react";
 import Link from "next/link";
-import { ExternalLink, Package, Ruler, Scale, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ExternalLink, Package, Ruler, Scale } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { shippingDraftSchema, type ShippingDraft } from "@/features/shipping/product-draft";
 import { shippingProfileSchema } from "@/features/shipping/schema";
@@ -18,8 +17,8 @@ export type ProductShippingFieldsHandle = { applySuggestion: (reference: Shippin
 
 export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
   initialProfile?: unknown; identityKey: string; suggestion?: ShippingReference | null; researched: boolean;
-  canEdit: boolean; busy: boolean; onResearch: () => void; medicine: boolean;
-}>(function ProductShippingFields({ initialProfile, identityKey, suggestion, researched, canEdit, busy, onResearch, medicine }, ref) {
+  canEdit: boolean; medicine: boolean;
+}>(function ProductShippingFields({ initialProfile, identityKey, suggestion, researched, canEdit, medicine }, ref) {
   const parsed = shippingProfileSchema.or(shippingDraftSchema).safeParse(initialProfile);
   const initial = parsed.success ? parsed.data : null;
   const [draft, setDraft] = useState(() => ({
@@ -51,8 +50,7 @@ export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
   useImperativeHandle(ref, () => ({ applySuggestion: copyReference }));
   return <section aria-label="Peso e medidas para frete" className="min-w-0 overflow-hidden rounded-xl border border-line bg-white">
     <div className="flex flex-wrap items-start justify-between gap-3 bg-surface-subtle p-4">
-      <div className="flex min-w-0 gap-3"><span className="rounded-lg bg-brand-soft p-2 text-brand"><Package className="h-5 w-5" /></span><div><h3 className="text-sm font-black">Peso e medidas para frete</h3><p className="mt-1 text-xs leading-5 text-muted">Fichas técnicas e estimativas com fonte, para agilizar a conferência.</p></div></div>
-      <Button className="min-h-11" disabled={busy} onClick={onResearch} type="button" variant="secondary"><Search className="h-4 w-4" />{busy ? "Pesquisando..." : "Pesquisar peso e medidas"}</Button>
+      <div className="flex min-w-0 gap-3"><span className="rounded-lg bg-brand-soft p-2 text-brand"><Package className="h-5 w-5" /></span><div><h3 className="text-sm font-black">Logística · peso e medidas para frete</h3><p className="mt-1 text-xs leading-5 text-muted">Resultados da pesquisa única do assistente de cadastro, com fontes para conferência.</p></div></div>
     </div>
     <div className="grid gap-4 p-4">
       <p className="text-xs leading-5 text-muted">A pesquisa acompanha o catálogo e SEO. Dados exatos têm prioridade; quando faltarem, uma comparação válida pode sugerir uma faixa estimada. Nos campos vazios usamos o limite superior dessa faixa como rascunho. Valores manuais são preservados. Confira a caixa e proteção finais; volume em ml e peso líquido não substituem o peso embalado.</p>
@@ -77,7 +75,6 @@ export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
           <p className="text-xs leading-5 text-amber-950">A faixa não certifica a medida nem inclui uma caixa adicional desconhecida. Salvar mantém o transporte desabilitado até a revisão.</p>
         </div>}
         {reference.warnings.length > 0 && <ul className="list-disc space-y-1 pl-4 text-xs leading-5 text-amber-900">{reference.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>}
-        {canEdit && hasValues && <Button className="min-h-11 w-full whitespace-normal" onClick={() => copyReference()} type="button" variant="secondary">Usar referências nos campos vazios</Button>}
       </div>}
       {!reference && <p className="rounded-lg border border-dashed border-line p-3 text-xs leading-5 text-muted">{researched ? "A pesquisa não encontrou referência ou comparação utilizável. Confira a apresentação/EAN ou preencha as medidas reais abaixo." : "Informe nome, marca, versão e quantidade ou o EAN. A pesquisa procura a ficha exata e, se necessário, uma embalagem semelhante com dados comprovados."}</p>}
       {canEdit ? <>

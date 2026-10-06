@@ -105,7 +105,7 @@ function ProductShippingForm({ product, busy, onSave }: { product: Product; busy
     setValidationMessage(""); onSave(result.data);
   }}>
     {!reviewed && <p className="mb-3 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-900">Rascunho: dados parciais podem ser salvos sem liberar o transporte. Confira o volume pronto para envio, com proteção e caixa, antes de aprovar. Referências da IA podem descrever apenas a embalagem comercial.</p>}
-    <strong className="text-sm text-ink">{product.name}</strong>{blocked ? <p className="mt-2 text-xs text-muted">Envio sujeito a atendimento farmacêutico; indisponível para cotação automática.</p> : <>
+    <strong className="text-sm text-ink">{product.name}</strong>{blocked && <p className="mt-2 text-xs text-muted">Você pode preparar peso e medidas deste produto. A venda e o envio exigem atendimento farmacêutico; o rascunho não libera cotação ou cobrança automática.</p>}<>
       <div className="mt-3 rounded-lg bg-surface-subtle p-3 text-xs leading-5 text-muted">
         <button className={`${button} mb-2`} disabled={busy} onClick={() => { setMeasurements({ ...measurements, lengthCm: "20.8", widthCm: "20.8", heightCm: "21.6" }); setMeasurementBasis("estimated"); invalidateReview(); }} type="button">Caixa média 20 cm</button>
         <p>Referência Packit: caixa interna de 20 × 20 × 20 cm; medidas externas C20,8 × L20,8 × A21,6 cm. Preenche somente dimensões em rascunho; o peso informado é preservado. Confira encaixe, proteção e peso final.</p>
@@ -116,7 +116,7 @@ function ProductShippingForm({ product, busy, onSave }: { product: Product; busy
       {measurementBasis === "estimated" && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-900">Estimativa operacional autorizada. Confira peso/dimensões reais antes da postagem; a transportadora pode ajustar o frete.</p>}
       <label className="mt-3 flex items-start gap-2 text-xs text-muted"><input checked={reviewed} disabled={busy} name="reviewed" onChange={(event) => { setReviewed(event.target.checked); if (!event.target.checked) setEnabled(false); }} type="checkbox" />Revisei as medidas/peso informados e a adequação da embalagem, conservação e aceitação nos serviços selecionados.</label>
       {validationMessage && <p className="mt-3 text-xs text-red-700" role="alert">{validationMessage}</p>}
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3"><label className="flex items-center gap-2 text-sm"><input checked={enabled} disabled={busy || !reviewed} name="enabled" onChange={(event) => setEnabled(event.target.checked)} type="checkbox" />Liberar para transportadora</label><div className="flex flex-wrap gap-2"><button className={`${button} bg-ink`} disabled={busy} name="intent" type="submit" value="draft">Salvar rascunho</button><button className={button} disabled={busy} name="intent" type="submit" value="approve">Aprovar dados completos</button></div></div>
-    </>}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3"><label className="flex items-center gap-2 text-sm"><input checked={enabled} disabled={busy || !reviewed || blocked} name="enabled" onChange={(event) => setEnabled(event.target.checked)} type="checkbox" />Liberar para transportadora</label><div className="flex flex-wrap gap-2"><button className={`${button} bg-ink`} disabled={busy} name="intent" type="submit" value="draft">Salvar rascunho</button><button className={button} disabled={busy || blocked} name="intent" type="submit" value="approve">Aprovar dados completos</button></div></div>
+    </>
   </form>;
 }
