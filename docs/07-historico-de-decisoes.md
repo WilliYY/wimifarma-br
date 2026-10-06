@@ -8,6 +8,7 @@
 - Segurança: patch transitivo `source-map-js` 1.2.1 → 1.2.2 corrige GHSA-68fv-2mgg-jv7q, sem nova dependência ou major. Auditoria de produção voltou a zero; cinco alertas high da cadeia de lint/desenvolvimento continuam visíveis, sem downgrade forçado.
 - Referências, e-mails próprios, limites e evidências de publicação em [43-frete-estimado-e-validacao-asaas.md](43-frete-estimado-e-validacao-asaas.md).
 - Complemento: um único assistente no topo do cadastro pesquisa/aplica nome, descrição, SEO, categoria e peso/medidas; removidos botões logísticos duplicados. Campos logísticos manuais, fontes, cache e permissão ADMIN preservados. Todos os tipos de produto podem guardar embalagem; itens com receita continuam como rascunhos sem liberação de transporte/venda automática. Uma caixa padrão não deve ser extrapolada para apresentações maiores.
+- Comparação de envios: manter Melhor Envio enquanto outra plataforma não comprovar vantagem no preço final ou na operação a partir de Ivaté. Frenet, envia.com e SuperFrete têm APIs, mas sobreposição de serviços e limitações de carga/contrato; nenhuma segunda integração foi ativada. Consulta administrativa sem filtro de serviços exibiu PAC/SEDEX para o volume e destino de teste. Fontes e limites em `43-frete-estimado-e-validacao-asaas.md`.
 
 ## 2026-10-05 - Segurança padrão e opções de comunicação
 
