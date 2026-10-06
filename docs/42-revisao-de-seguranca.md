@@ -1,5 +1,13 @@
 # 42 - Revisão de segurança
 
+## Dependência de imagens — 06/10/2026
+
+A auditoria antes da entrega de ecossistema encontrou um novo alerta high de produção: [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w), publicado na base GitHub em 06/10, afeta o librsvg empacotado por `sharp <0.35.5`. Atualizado `sharp` 0.35.4 → 0.35.5 no manifesto/lock, sem mudança na API de imagens, limites, formatos ou identidade visual. O [changelog oficial](https://sharp.pixelplumbing.com/changelog/v0.35.5/) identifica a versão corrigida; runtime Windows confirmou librsvg 2.63.2 e libvips 8.18.7.
+
+Após atualização: 27 testes de imagens e 79 de segurança, typecheck e lint passaram; revisão independente aprovou o patch, sem achados novos. Auditoria de produção retornou zero; completa mantém cinco high em `@next/eslint-plugin-next`, `braces`, `eslint-config-next`, `fast-glob` e `micromatch`, sem downgrade forçado. Build/runtime Linux são conferidos antes de concluir a publicação. Não usar versão do runtime Windows como prova dos binários Linux.
+
+A allowlist MIME existente permanece preservada e recusa `image/svg+xml`, mas MIME adulterado ou uma fonte remota podem alcançar o decoder librsvg. Não afirmar bloqueio integral de SVG: esta entrega corrige a dependência que processa os bytes e mantém os limites de imagem existentes.
+
 ## Escopo — 05/10/2026
 
 Revisão de autenticação/permissões, histórico privado, pagamentos/webhooks, cofre, imagens remotas e configuração. Rotas mapeadas e fluxos sensíveis revisados; não é pentest completo, análise forense nem garantia contra qualquer invasão. Testes usaram dados sintéticos, sem banco/rede reais. Verificação de infraestrutura foi somente leitura.
