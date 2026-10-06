@@ -60,6 +60,12 @@ enum CashbackTransactionType {
   ADJUSTMENT
 }
 
+enum PrescriptionType {
+  UNREVIEWED
+  ORDINARY
+  CONTROLLED
+}
+
 enum OrderStatus {
   PENDING
   CONFIRMED
@@ -131,6 +137,7 @@ model Product {
   imageAsset           ProductImage? @relation(fields: [imageAssetId], references: [id], onDelete: SetNull)
   isPopularPharmacy    Boolean       @default(false)
   requiresPrescription Boolean       @default(false)
+  prescriptionType    PrescriptionType @default(UNREVIEWED)
   status               ProductStatus @default(DRAFT)
   deletedAt            DateTime?
   purgeAt              DateTime?
@@ -285,6 +292,9 @@ model Order {
   paymentMethod       OrderPaymentMethod
   paymentStatus       OrderPaymentStatus @default(PENDING)
   status              OrderStatus        @default(PENDING)
+  requiresPrescriptionReview Boolean     @default(false)
+  prescriptionReviewedAt DateTime?
+  prescriptionReviewedById String?
   subtotalCents       Int
   deliveryFeeCents    Int                @default(0)
   totalCents          Int

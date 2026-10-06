@@ -1,10 +1,16 @@
 # 06 - Pendencias
 
+## Pedido online de receita comum — 06/10/2026
+
+- Receita comum classificada por ADMIN passa a permitir carrinho e pagamento sem upload; a farmácia confere a receita antes da dispensação. Controlados, receita não classificada e Farmácia Popular seguem atendimento. O contrato do documento 45 substitui os bloqueios genéricos de receita citados em registros anteriores.
+- Perfil logístico aprovado continua obrigatório para transportadora; estimativas não comprovam medidas reais. Conferir conservação, embalagem e aceitação antes da postagem.
+- Publicidade de medicamentos com receita precisa de revisão específica conforme RDC 44/2009, art. 54. Liberar pedido não equivale a autorizar imagens promocionais, cashback ou Merchant Center para esses itens.
+
 ## Frete estimado e Asaas — 06/10/2026
 
 - Ecossistema: Google Perfil da Empresa/Search Console/Merchant Center, Bing Places, Reclame AQUI/Ebit dependem de cadastro/propriedade/aprovação reais. Não incentivar avaliações Google. Asaas novamente sem chave disponível; liberar API, confirmar tarifas e homologar cobrança antes do roteamento. Roteiro e fontes em `44-ecossistema-frete-pagamentos-e-presenca.md`.
 
-- Frete: estimativas operacionais autorizadas para Cimegrip/KitKat (500 g) e Dove (800 g), com caixa média. Conferir peso e volume reais antes da primeira postagem; avaliar caixa consolidada para carrinhos com várias unidades. Losartana com receita continua no atendimento farmacêutico. Comprovante no documento 43.
+- Frete: estimativas operacionais autorizadas para Cimegrip/KitKat (500 g) e Dove (800 g), com caixa média. Conferir peso e volume reais antes da primeira postagem; avaliar caixa consolidada para carrinhos com várias unidades. Receita comum classificada pode usar checkout e perfil logístico aprovado, com conferência antes da dispensação. Comprovante das estimativas no documento 43.
 - Asaas: conta/dados/documentos aprovados, plano Básico e API gratuitos; geração da chave ainda bloqueada pelo painel. Solicitar liberação e confirmar tarifa de Pix recebido por cobrança. Homologação e segundo gateway público continuam pendentes.
 - E-mails: decidir transporte antes de instalar SMTP; DNS/reputação/porta 25 ainda não preparados para envio próprio. Não há envio ao cliente. Cadastro oficial de Reclame AQUI/Ebit e selos concedidos continuam pendentes.
 
@@ -84,7 +90,7 @@
 
 - Mercado Pago / Orders e Bricks ativado em produção em 01/10/2026 após cartão aprovado/recusado, Pix e webhook verificados em teste. Credenciais produtivas verificadas pelo provedor e opção online disponível no checkout público; documentação em `28-mercado-pago.md`.
 - Não foi realizada cobrança monetária real nesta configuração. Acompanhar as primeiras vendas e conciliação no painel. Fiscal, restrições logísticas e reembolso parcial exigem conferência operacional; frete nacional continua pendente.
-- Itens com receita e Farmacia Popular permanecem bloqueados no checkout ate existir fluxo juridico e farmaceutico aprovado.
+- Controlados, receita ainda nao classificada e Farmacia Popular permanecem no atendimento assistido; receita comum usa o fluxo do documento 45.
 - Revisar a Politica de Privacidade com responsavel juridico e completar razao social, CNPJ, encarregado/canal LGPD e prazos formais de retencao.
 
 ### Atualizar dependencias com alertas do `npm audit`

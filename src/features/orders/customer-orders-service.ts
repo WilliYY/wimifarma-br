@@ -7,6 +7,7 @@ const customerOrderSelect = {
   subtotalCents: true, deliveryFeeCents: true, totalCents: true, cashbackRedeemedCents: true,
   street: true, addressNumber: true, complement: true, neighborhood: true, city: true, state: true,
   createdAt: true, updatedAt: true,
+  requiresPrescriptionReview: true,
   items: { orderBy: { createdAt: "asc" }, select: {
     id: true, productName: true, productImageUrl: true, quantity: true, unitPriceCents: true, totalCents: true,
   } },

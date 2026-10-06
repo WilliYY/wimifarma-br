@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireAdminApi } from "@/features/auth/permissions";
 import { productUpdateSchema } from "@/features/products/schema";
+import { prescriptionClassificationIsConsistent, resolvePrescriptionType } from "@/features/products/purchase-policy";
 import { buildProductSearchText } from "@/features/products/public-search";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
@@ -33,6 +34,7 @@ const productSelect = {
   price: true,
   promotionalPrice: true,
   requiresPrescription: true,
+  prescriptionType: true,
   searchTerms: true,
   sku: true,
   slug: true,
@@ -89,6 +91,9 @@ export async function PATCH(
   if (parsed.data.shippingProfile !== undefined && guard.session?.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Somente o administrador pode configurar a embalagem de frete." }, { status: 403 });
   }
+  if (parsed.data.prescriptionType !== undefined && guard.session?.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Somente o administrador pode classificar o tipo de receita." }, { status: 403 });
+  }
   const prisma = getPrisma();
   if ((parsed.data.cashbackEnabled !== undefined || parsed.data.cashbackRateBps !== undefined) && guard.session?.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Somente o administrador pode configurar cashback." }, { status: 403 });
@@ -126,6 +131,7 @@ export async function PATCH(
     price: parsed.data.price,
     promotionalPrice: parsed.data.promotionalPrice,
     requiresPrescription: parsed.data.requiresPrescription,
+    prescriptionType: parsed.data.prescriptionType,
     searchTerms: parsed.data.searchTerms,
     sku: parsed.data.sku,
     status: parsed.data.status,
@@ -138,15 +144,19 @@ export async function PATCH(
     const product = await prisma.$transaction(async (transaction) => {
       await lockProductCatalog(transaction);
       if (imageAsset && !await transaction.productImage.findUnique({ where: { id: imageAsset.id }, select: { id: true } })) throw new ProductMutationError("A foto foi removida da biblioteca. Selecione outra foto.", 409);
-      const current = await transaction.product.findUnique({ where: { id, deletedAt: null }, select: { imageUrl: true, featuredPosition: true, name: true, brand: true, ean: true, shippingProfile: true } });
+      const current = await transaction.product.findUnique({ where: { id, deletedAt: null }, select: { imageUrl: true, featuredPosition: true, name: true, brand: true, ean: true, shippingProfile: true, requiresPrescription: true, prescriptionType: true } });
       if (!current) return null;
       const identityChanged = productIdentityKey({ name: current.name, brand: current.brand ?? "", ean: current.ean ?? "" }) !== productIdentityKey({ name: productData.name, brand: productData.brand ?? "", ean: productData.ean ?? "" });
+      const prescriptionType = resolvePrescriptionType(current.prescriptionType, parsed.data.prescriptionType, identityChanged);
+      if (current.requiresPrescription && !productData.requiresPrescription && guard.session?.user.role !== "ADMIN") throw new ProductMutationError("Somente o administrador pode retirar a exigência de receita.", 403);
+      if (!prescriptionClassificationIsConsistent({ requiresPrescription: productData.requiresPrescription, prescriptionType })) throw new ProductMutationError("Atualize o tipo de receita antes de retirar a exigência de receita.", 422);
       const shippingProfile = productData.shippingProfile ?? (identityChanged ? invalidateShippingProfile(current.shippingProfile) : undefined);
       const imageUrl = imageAsset?.url ?? (clearImage ? null : normalizedImageUrl ?? current.imageUrl);
       const featuredPosition = await resolveFeaturedPosition(transaction, { featured: parsed.data.featured, currentPosition: current.featuredPosition, status: productData.status, imageUrl });
       const updated = await transaction.product.updateMany({
         data: {
           ...productData,
+          prescriptionType,
           shippingProfile,
           brand: normalizeOptional(productData.brand) ?? null,
           category: normalizeOptional(productData.category) ?? null,
@@ -189,6 +199,8 @@ export async function PATCH(
             hasImage: Boolean(savedProduct.imageUrl),
             featuredPosition: savedProduct.featuredPosition,
             name: savedProduct.name,
+            prescriptionBefore: { requiresPrescription: current.requiresPrescription, type: current.prescriptionType },
+            prescriptionAfter: { requiresPrescription: savedProduct.requiresPrescription, type: savedProduct.prescriptionType },
             status: savedProduct.status,
           },
           userId: persistedUserId(guard.session?.user.id),

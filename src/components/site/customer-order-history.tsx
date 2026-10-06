@@ -55,6 +55,7 @@ export function CustomerOrderCard({ order, featured = false }: { order: Customer
         <span className={cn("rounded-full px-3 py-1.5 text-xs font-bold", tracking.canceled ? "bg-slate-100 text-slate-600" : order.status === "COMPLETED" ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900")}>{tracking.label}</span>
       </div>
       {featured && <OrderTracking order={order} />}
+      {order.requiresPrescriptionReview && !tracking.canceled && order.status !== "COMPLETED" && <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm leading-6 text-amber-900">Apresente a receita à farmácia antes da entrega ou retirada. <a className="font-bold underline underline-offset-4" href={helpUrl} rel="noreferrer" target="_blank">Combine pelo WhatsApp com o número do pedido.</a></p>}
       <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-2">
           {order.items.slice(0, 3).map(item => <ProductThumbnail key={item.id} name={item.productName} src={item.productImageUrl} />)}

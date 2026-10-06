@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       return response;
     }
     if (!sessionId) { token = createCartIdentity(process.env.AUTH_SECRET); sessionId = readCartIdentity(token, process.env.AUTH_SECRET)!; }
-    const products = await db.product.findMany({ where: { id: { in: parsed.data.items.map(item => item.productId) }, status: "ACTIVE", requiresPrescription: false, isPopularPharmacy: false }, select: { id: true, name: true, price: true, promotionalPrice: true, stock: true } });
+    const products = await db.product.findMany({ where: { id: { in: parsed.data.items.map(item => item.productId) }, status: "ACTIVE", prescriptionType: { not: "CONTROLLED" }, OR: [{ requiresPrescription: false }, { prescriptionType: "ORDINARY" }], isPopularPharmacy: false }, select: { id: true, name: true, price: true, promotionalPrice: true, stock: true } });
     const items = parsed.data.items.map(item => ({ ...item, product: products.find(product => product.id === item.productId) }));
     if (items.some(item => !item.product || item.quantity > item.product.stock)) throw new PaymentError("Carrinho indisponível.", 409);
     const total = items.reduce((sum, item) => sum + moneyToCents((item.product!.promotionalPrice ?? item.product!.price).toString()) * item.quantity, 0);

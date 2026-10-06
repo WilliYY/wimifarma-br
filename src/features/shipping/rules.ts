@@ -1,6 +1,7 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { shippingOptionSchema, shippingProfileSchema, shippingQuotePayloadSchema, ShippingError, type ShippingOption, type ShippingQuotePayload } from "./schema";
 import { requiresPharmacyShippingSupport } from "./eligibility";
+import type { PrescriptionType } from "@/features/products/purchase-policy";
 
 export function normalizeQuotes(raw: unknown, allowed: number[], preparationDays: number): ShippingOption[] {
   if (!Array.isArray(raw)) throw new ShippingError("O Melhor Envio retornou uma resposta inválida. Tente novamente.", 502);
@@ -22,6 +23,7 @@ export function normalizeQuotes(raw: unknown, allowed: number[], preparationDays
 
 export type ShippingProduct = {
   id: string; name: string; category: string | null; requiresPrescription: boolean; isPopularPharmacy: boolean;
+  prescriptionType?: PrescriptionType;
   shippingProfile: unknown; updatedAt: Date;
 };
 export function validateShippingProduct(product: ShippingProduct) {

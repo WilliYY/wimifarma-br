@@ -30,6 +30,7 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
     name: product.name,
     originalPriceCents: hasPromotion ? Math.round(normalPrice * 100) : null,
     requiresPrescription: product.requiresPrescription,
+    prescriptionType: product.prescriptionType,
     slug: product.slug,
     stock: product.stock,
     unitPriceCents: Math.round(currentPrice * 100),

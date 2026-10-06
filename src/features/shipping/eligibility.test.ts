@@ -19,6 +19,16 @@ test("prescription and Popular Pharmacy restrictions still require pharmacist su
   }
 });
 
+test("a classified ordinary prescription can quote shipping but not bypass packaging review", () => {
+  const ordinary = { ...product, category: "Medicamentos", requiresPrescription: true, prescriptionType: "ORDINARY" as const };
+  assert.equal(requiresPharmacyShippingSupport(ordinary), false);
+  assert.deepEqual(validateShippingProduct(ordinary), { ...profile, measurementBasis: "measured" });
+  assert.throws(() => validateShippingProduct({ ...ordinary, shippingProfile: { ...profile, transportReviewed: false } }));
+  assert.equal(requiresPharmacyShippingSupport({ ...ordinary, prescriptionType: "CONTROLLED" }), true);
+  assert.equal(requiresPharmacyShippingSupport({ ...ordinary, prescriptionType: "UNREVIEWED" }), true);
+  assert.deepEqual(permittedShippingServices([1, 2, 3], [ordinary]), [1, 2]);
+});
+
 test("ordinary medication can ship with reviewed packaging using PAC or SEDEX only", () => {
   for (const category of ["Medicamentos", "MEDICAMENTO", "Médicamentos", "Outros medicamentos"]) {
     const eligible = { ...product, category };

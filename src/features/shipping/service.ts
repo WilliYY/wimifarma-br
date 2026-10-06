@@ -7,7 +7,7 @@ import { normalizeQuotes, shippingFingerprint, signShippingQuote, validateShippi
 import { ShippingError, shippingSettingsSchema, type ShippingSelection } from "./schema";
 import { permittedShippingServices } from "./eligibility";
 
-export const shippingProductSelect = { id: true, name: true, slug: true, imageUrl: true, category: true, price: true, promotionalPrice: true, status: true, stock: true, requiresPrescription: true, isPopularPharmacy: true, shippingProfile: true, updatedAt: true } satisfies Prisma.ProductSelect;
+export const shippingProductSelect = { id: true, name: true, slug: true, imageUrl: true, category: true, price: true, promotionalPrice: true, status: true, stock: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, shippingProfile: true, updatedAt: true } satisfies Prisma.ProductSelect;
 function signingKey() { const key = process.env.AUTH_SECRET; if (!key) throw new ShippingError("O frete está temporariamente indisponível.", 503); return key; }
 
 export async function quoteCart(postalCode: string, items: CheckoutRequest["items"]): Promise<ShippingSelection[]> {

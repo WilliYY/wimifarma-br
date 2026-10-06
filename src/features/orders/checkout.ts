@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { isLocalDeliveryAddress } from "@/features/shipping/delivery-policy";
 import { normalizeBrazilianPhone } from "@/lib/brazilian-phone";
+import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 
 const requiredText = (label: string, max: number) =>
   z.string().trim().min(1, `${label} e obrigatorio.`).max(max);
@@ -104,8 +105,9 @@ export const orderStatusUpdateSchema = z
       .enum(["PENDING", "CONFIRMED", "PREPARING", "READY", "OUT_FOR_DELIVERY", "COMPLETED", "CANCELED"])
       .optional(),
     paymentStatus: z.enum(["PENDING", "PAID", "CANCELED", "REFUNDED"]).optional(),
+    prescriptionReviewed: z.literal(true).optional(),
   })
-  .refine((data) => data.status || data.paymentStatus, {
+  .refine((data) => data.status || data.paymentStatus || data.prescriptionReviewed, {
     message: "Informe o status que deve ser atualizado.",
   });
 
@@ -154,6 +156,7 @@ export type CheckoutProductRecord = {
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
   stock: number;
   requiresPrescription: boolean;
+  prescriptionType?: "UNREVIEWED" | "ORDINARY" | "CONTROLLED";
   isPopularPharmacy: boolean;
 };
 
@@ -197,7 +200,7 @@ export function prepareCheckoutOrder(
     if (product.status !== "ACTIVE") {
       return { ok: false, code: "UNAVAILABLE", message: `${product.name} nao esta disponivel para compra.` };
     }
-    if (product.requiresPrescription || product.isPopularPharmacy) {
+    if (requiresPurchaseAssistance(product)) {
       return {
         ok: false,
         code: "RESTRICTED",

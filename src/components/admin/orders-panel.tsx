@@ -38,6 +38,8 @@ export type AdminOrderRecord = {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
   status: OrderStatus;
+  requiresPrescriptionReview: boolean;
+  prescriptionReviewedAt: string | null;
   subtotalCents: number;
   deliveryFeeCents: number;
   totalCents: number;
@@ -122,7 +124,7 @@ export function OrdersPanel({ initialOrders }: { initialOrders: AdminOrderRecord
 
   const counts = orders.reduce((summary, order) => { summary[getAdminOrderGroup(order)] += 1; return summary; }, { NEW: 0, ACTIVE: 0, COMPLETED: 0, CANCELED: 0 });
 
-  async function updateOrder(orderId: string, field: "status" | "paymentStatus", value: string) {
+  async function updateOrder(orderId: string, field: "status" | "paymentStatus" | "prescriptionReviewed", value: string | true) {
     setUpdatingId(orderId);
     setError("");
     try {
@@ -135,7 +137,9 @@ export function OrdersPanel({ initialOrders }: { initialOrders: AdminOrderRecord
       if (!response.ok) throw new Error(typeof payload.error === "string" ? payload.error : "Nao foi possivel atualizar o pedido.");
       setOrders((current) => current.map((order) => order.id === orderId ? {
         ...order,
-        [field]: payload.data[field],
+        status: payload.data.status,
+        paymentStatus: payload.data.paymentStatus,
+        prescriptionReviewedAt: payload.data.prescriptionReviewedAt,
         cashbackRedeemedCents: payload.data.cashbackRedeemedCents,
         cashbackRedemptionState: payload.data.cashbackRedemptionState,
         updatedAt: payload.data.updatedAt,
@@ -175,13 +179,15 @@ export function OrdersPanel({ initialOrders }: { initialOrders: AdminOrderRecord
 
 function Metric({ icon: Icon, label, tone, value }: { icon: typeof ShoppingBag; label: string; tone: "brand" | "green" | "neutral"; value: number }) { const colors = tone === "brand" ? "bg-brand-soft text-brand" : tone === "green" ? "bg-[#e9f9ef] text-pharma-green" : "bg-surface-subtle text-muted"; return <div className="flex items-center gap-4 rounded-lg border border-line bg-white p-5 shadow-sm"><span className={`grid h-11 w-11 place-items-center rounded-md ${colors}`}><Icon className="h-5 w-5" /></span><span><strong className="block text-2xl font-black text-ink">{value}</strong><span className="text-xs font-bold text-muted">{label}</span></span></div>; }
 
-function OrderCard({ order, onUpdate, updating }: { order: AdminOrderRecord; onUpdate: (id: string, field: "status" | "paymentStatus", value: string) => void; updating: boolean }) {
+function OrderCard({ order, onUpdate, updating }: { order: AdminOrderRecord; onUpdate: (id: string, field: "status" | "paymentStatus" | "prescriptionReviewed", value: string | true) => void; updating: boolean }) {
+  const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const payment = order.paymentMethod === "ONLINE" ? { icon: CreditCard, label: "Mercado Pago" } : order.paymentMethod === "PIX" ? { icon: QrCode, label: "Pix" } : order.paymentMethod === "CARD_ON_DELIVERY" ? { icon: CreditCard, label: "Cartao" } : { icon: Banknote, label: "Dinheiro" };
   const MethodIcon = order.fulfillmentMethod === "DELIVERY" ? Bike : Store;
   const PaymentIcon = payment.icon;
   const online = order.onlinePayment;
-  const allowedTransitions = order.paymentMethod !== "ONLINE" ? transitions[order.status] :
+  const paymentAllowedTransitions = order.paymentMethod !== "ONLINE" ? transitions[order.status] :
     online?.environment === "production" && online.status === "PAID" ? transitions[order.status].filter(status => status !== "CANCELED") : [];
+  const allowedTransitions = paymentAllowedTransitions.filter(status => !order.requiresPrescriptionReview || order.prescriptionReviewedAt || !["READY", "OUT_FOR_DELIVERY", "COMPLETED"].includes(status));
   return <article className="min-w-0 overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
     <header className="flex flex-col gap-4 border-b border-line p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7"><div className="min-w-0"><div className="flex flex-wrap items-center gap-3"><h2 className="break-all text-lg font-black text-ink sm:text-xl">{order.number}</h2><span className={`rounded-full px-3 py-1.5 text-xs font-bold ${order.status === "PENDING" ? "bg-brand-soft text-brand" : order.status === "COMPLETED" ? "bg-[#e9f9ef] text-pharma-green" : order.status === "CANCELED" ? "bg-slate-100 text-slate-600" : "bg-amber-50 text-amber-700"}`}>{statusLabels[order.status]}</span><span className={`rounded-full px-3 py-1.5 text-xs font-bold ${order.paymentStatus === "PAID" && (!online || online.status === "PAID") ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>{online ? onlineStatusLabels[online.status] ?? online.status : `Pagamento ${paymentStatusLabels[order.paymentStatus].toLowerCase()}`}</span></div><p className="mt-2 text-sm font-medium text-muted">{dateTime.format(new Date(order.createdAt))}</p></div><div className="shrink-0"><p className="text-xs font-semibold text-muted sm:text-right">Total do pedido</p><strong className="text-2xl font-black text-ink">{currency.format(order.totalCents / 100)}</strong></div></header>
     {online?.environment === "test" && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 sm:mx-7">HOMOLOGAÇÃO — não separar nem entregar</p>}
@@ -194,6 +200,14 @@ function OrderCard({ order, onUpdate, updating }: { order: AdminOrderRecord; onU
       <div><p className="text-xs font-black uppercase text-muted">Itens</p><div className="mt-2 grid gap-2">{order.items.map((item) => <div className="flex justify-between gap-4 text-sm" key={item.id}><span className="font-semibold text-ink">{item.quantity}x {item.productName}</span><strong className="shrink-0 text-ink">{currency.format(item.totalCents / 100)}</strong></div>)}</div>{order.notes ? <p className="mt-4 rounded-md bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-900"><strong>Observacao:</strong> {order.notes}</p> : null}</div>
     </div>
     <OrderShippingSummary quote={order.shippingQuote} />
+    {order.requiresPrescriptionReview && <section aria-label="Conferência de receita" className="border-t border-line bg-amber-50 px-5 py-4 text-sm sm:px-7">
+      <p className="font-bold text-amber-900">{order.prescriptionReviewedAt ? `Receita conferida pelo farmacêutico · registro em ${dateTime.format(new Date(order.prescriptionReviewedAt))}` : "Receita pendente de conferência farmacêutica"}</p>
+      {!order.prescriptionReviewedAt && !["CANCELED", "COMPLETED"].includes(order.status) && <div className="mt-3 grid gap-3">
+        <p className="text-sm text-amber-900">Registre somente após o farmacêutico responsável conferir a receita. O pagamento não libera a dispensação.</p>
+        <label className="flex items-start gap-2 font-semibold text-amber-900"><input checked={reviewConfirmed} className="mt-1 h-4 w-4" disabled={updating} onChange={event => setReviewConfirmed(event.target.checked)} type="checkbox" />Farmacêutico conferiu a receita</label>
+        <button className="min-h-11 w-fit rounded-xl bg-brand px-4 py-2 font-bold text-white disabled:opacity-60" disabled={updating || !reviewConfirmed || online?.environment === "test" || online?.statusDetail === "partially_refunded"} onClick={() => onUpdate(order.id, "prescriptionReviewed", true)} type="button">Registrar conferência farmacêutica</button>
+      </div>}
+    </section>}
     {online && <details className="group border-t border-line px-5 py-4 text-sm sm:px-7">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-md font-semibold text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand [&::-webkit-details-marker]:hidden">Detalhes do pagamento · Mercado Pago<ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" /></summary>
       <div className="mt-4 space-y-2 rounded-xl bg-surface-subtle p-4 text-sm text-ink">

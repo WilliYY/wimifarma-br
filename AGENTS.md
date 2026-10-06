@@ -54,7 +54,7 @@ Preservar os padroes ja existentes no projeto, salvo quando houver motivo tecnic
 ## Regra 6: Escopo Comercial
 
 - Carrinho e checkout registram pedidos; pagamento online habilitado e confirmado exclusivamente pelo gateway. Preparacao e atendimento continuam humanos.
-- WhatsApp continua como apoio ao atendimento e e obrigatorio para itens com receita ou Farmacia Popular.
+- Receita comum classificada por ADMIN permite pedido e pagamento online sem upload; o farmaceutico confere a receita antes da dispensacao. Controlados, receita ainda nao classificada e Farmacia Popular seguem atendimento assistido. Contrato em `docs/45-pedido-online-e-conferencia-de-receita.md`.
 - Nao coletar dados de cartao nem marcar pagamento como aprovado sem gateway homologado.
 - Roleta e clube seguem preparados, sem regras comerciais reais ate aprovacao. Cashback por produto tem contrato em `docs/15-cashback-produtos.md`: saldo somente apos pedido concluido e pago. Bonus de avaliacao de 1% e resgate como desconto no checkout aprovados pelo lojista; contrato em `docs/16-cashback-avaliacoes-resgate.md`. Nao habilitar saque ou transferencia.
 - Farmacia Popular nao deve prometer disponibilidade automatica.

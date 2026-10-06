@@ -4,7 +4,7 @@ import { getPrisma } from "@/lib/prisma";
 import { categorySlug } from "@/lib/seo";
 
 export const PAGE_SIZE = 24;
-const storefrontSelect = { id: true, name: true, slug: true, brand: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, activeIngredients: true, searchTerms: true, requiresPrescription: true, isPopularPharmacy: true, cashbackEnabled: true, cashbackRateBps: true } satisfies Prisma.ProductSelect;
+const storefrontSelect = { id: true, name: true, slug: true, brand: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, activeIngredients: true, searchTerms: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, cashbackEnabled: true, cashbackRateBps: true } satisfies Prisma.ProductSelect;
 export const getPublicCategories = cache(async () => {
   const products = await getPrisma().product.findMany({ where: { status: "ACTIVE", category: { not: null } }, distinct: ["category"], select: { category: true }, orderBy: { category: "asc" } });
   const categories = new Map<string, { name: string; slug: string; names: string[] }>();

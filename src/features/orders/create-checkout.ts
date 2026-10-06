@@ -8,9 +8,11 @@ import { validateOrderShipping } from "@/features/shipping/service";
 import { PaymentError } from "@/features/payments/schema";
 import { queueCommerceOrder } from "@/features/miauby/commerce-service";
 import { customerShippingFee } from "@/features/shipping/delivery-policy";
+import { requiresPrescriptionReview } from "@/features/products/purchase-policy";
 
 const orderResultSelect = {
   id: true,
+  requiresPrescriptionReview: true,
   cashbackEarnedCents: true, cashbackState: true, cashbackRedeemedCents: true,
   cashbackRedemptionState: true, createdAt: true, fulfillmentMethod: true,
   number: true, paymentMethod: true, paymentStatus: true, status: true, totalCents: true,
@@ -35,7 +37,7 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
     }
   }
   const products = await tx.product.findMany({
-    select: { cashbackEnabled: true, cashbackRateBps: true, id: true, imageUrl: true, isPopularPharmacy: true, name: true, price: true, promotionalPrice: true, requiresPrescription: true, slug: true, status: true, stock: true },
+    select: { cashbackEnabled: true, cashbackRateBps: true, id: true, imageUrl: true, isPopularPharmacy: true, name: true, price: true, promotionalPrice: true, requiresPrescription: true, prescriptionType: true, slug: true, status: true, stock: true },
     where: { id: { in: input.items.map((item) => item.productId) } },
   });
   const prepared = prepareCheckoutOrder(products.map((p) => ({ ...p, price: p.price.toString(), promotionalPrice: p.promotionalPrice?.toString() ?? null })), input.items);
@@ -58,6 +60,7 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   if (integration && prepared.subtotalCents + deliveryFeeCents - redeem < 1) throw new PaymentError("Seu saldo cobre o pedido. Escolha o atendimento da farmácia para concluir sem cobrança online.");
   const address = input.fulfillmentMethod === "DELIVERY" ? input.address : undefined;
   const order = await tx.order.create({ data: {
+    requiresPrescriptionReview: products.some(requiresPrescriptionReview),
     cashbackEarnedCents, cashbackState: cashbackEarnedCents > 0 ? "PENDING" : "NONE",
     cashbackRedeemedCents: redeem, cashbackRedemptionState: redeem > 0 ? "RESERVED" : "NONE",
     checkoutRequestId: requestId, checkoutRequestHash: hash,

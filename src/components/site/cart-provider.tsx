@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 
+import { requiresPurchaseAssistance, type PrescriptionType } from "@/features/products/purchase-policy";
 const STORAGE_KEY = "wimifarma-cart-v1";
 
 export type CartProduct = {
@@ -22,6 +23,7 @@ export type CartProduct = {
   originalPriceCents: number | null;
   stock: number;
   requiresPrescription: boolean;
+  prescriptionType?: PrescriptionType;
   isPopularPharmacy: boolean;
 };
 
@@ -94,8 +96,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addProduct = useCallback((product: CartProduct, quantity = 1) => {
     if (
       !Number.isFinite(quantity) || product.stock < 1 ||
-      product.requiresPrescription ||
-      product.isPopularPharmacy
+      requiresPurchaseAssistance(product)
     ) {
       return;
     }
@@ -179,6 +180,7 @@ function isCartItem(value: unknown): value is CartItem {
     Number.isSafeInteger(item.stock) &&
     Number(item.stock) > 0 &&
     typeof item.requiresPrescription === "boolean" &&
+    (item.prescriptionType === undefined || (typeof item.prescriptionType === "string" && ["UNREVIEWED", "ORDINARY", "CONTROLLED"].includes(item.prescriptionType))) &&
     typeof item.isPopularPharmacy === "boolean" &&
     Number.isSafeInteger(item.quantity) &&
     Number(item.quantity) > 0 &&

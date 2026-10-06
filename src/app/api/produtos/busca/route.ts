@@ -23,6 +23,7 @@ const productSelect = {
   price: true,
   promotionalPrice: true,
   requiresPrescription: true,
+  prescriptionType: true,
   searchTerms: true,
   searchText: true,
   slug: true,
@@ -43,6 +44,7 @@ function serializeProduct(product: SearchProduct): PublicProductSearchItem {
     price: product.price.toString(),
     promotionalPrice: product.promotionalPrice?.toString() ?? null,
     requiresPrescription: product.requiresPrescription,
+    prescriptionType: product.prescriptionType,
     searchTerms: product.searchTerms,
     slug: product.slug,
   };

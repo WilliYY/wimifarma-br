@@ -18,6 +18,7 @@ export type PublicShowcaseProduct = {
   ratingAverage: number | null;
   ratingCount: number;
   requiresPrescription: boolean;
+  prescriptionType?: "UNREVIEWED" | "ORDINARY" | "CONTROLLED";
   slug: string;
   stock: number;
 };

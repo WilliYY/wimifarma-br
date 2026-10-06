@@ -3,6 +3,7 @@ import type { CustomerOrder, CustomerOrderHistory, OrderHistoryFilter } from "..
 // Synthetic fixtures only. No database access, customer records, or commercial writes.
 export const accountOrders: CustomerOrder[] = Array.from({ length: 9 }, (_, index) => ({
   id: `qa-order-${index}`, number: `WF-TESTE-${100 + index}`,
+  requiresPrescriptionReview: false, prescriptionReviewedAt: null,
   status: index === 0 ? "PREPARING" : index === 1 ? "READY" : index === 8 ? "CANCELED" : "COMPLETED",
   fulfillmentMethod: index === 1 ? "PICKUP" : "DELIVERY", paymentMethod: "PIX", paymentStatus: index < 2 ? "PENDING" : index === 8 ? "REFUNDED" : "PAID",
   subtotalCents: 2580, deliveryFeeCents: index === 1 ? 0 : 500, totalCents: index === 1 ? 2480 : 2980, cashbackRedeemedCents: 100,

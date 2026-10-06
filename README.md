@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Pedido online de medicamentos de receita comum, sem upload no checkout, com conferência farmacêutica antes da dispensação: [docs/45-pedido-online-e-conferencia-de-receita.md](docs/45-pedido-online-e-conferencia-de-receita.md). Classificação exclusiva de ADMIN, sem decisão automática da IA; controlados e Farmácia Popular seguem atendimento assistido.
+
 Ecossistema de envio, integração Asaas sem mensalidade, limites do roteamento de custos e cadastros Google/Bing/Reclame AQUI/Ebit: [docs/44-ecossistema-frete-pagamentos-e-presenca.md](docs/44-ecossistema-frete-pagamentos-e-presenca.md). Conferência de 06/10 manteve a chave Asaas bloqueada no painel externo; não houve ativação de um segundo gateway ou transportadora.
 
 Segurança: revisão padrão em [SECURITY.md](SECURITY.md), suite `npm run test:security` e CI de push/PR/semanal com auditoria de produção. Correções e limites em [docs/42-revisao-de-seguranca.md](docs/42-revisao-de-seguranca.md). A atualização exige nova entrada para sessões antigas, sem alterar contas/senhas.
@@ -22,7 +24,7 @@ Criar uma base moderna e evolutiva para site publico, ofertas, catalogo, atendim
 
 O sistema possui carrinho e checkout, entrega local ou retirada e atendimento humano. Mercado Pago / Orders e Bricks permite Pix e cartão na finalização após homologação e ativação; inicia desativado. Dados de cartão ficam nos campos seguros do provedor. Contrato em [docs/28-mercado-pago.md](docs/28-mercado-pago.md).
 
-Estado operacional: Mercado Pago conectado e pagamento público ativado. Compra real do lojista com cartão consta aprovada; tentativas anteriores de Pix falharam no processamento. O titular cadastrou a chave Pix; uma nova geração precisa confirmar o QR em produção. Melhor Envio conectado com cotação nacional ativada. Em 06/10/2026, o lojista autorizou pesos estimados de volumes prontos; perfis e cotações reais ficam registrados no documento 43. Losartana com receita continua no atendimento farmacêutico. Asaas Básico não exige mensalidade, mas a chave API permanece indisponível e não há cobrança homologada por esse provedor.
+Estado operacional: Mercado Pago conectado e pagamento público ativado. Compra real do lojista com cartão consta aprovada; tentativas anteriores de Pix falharam no processamento. O titular cadastrou a chave Pix; uma nova geração precisa confirmar o QR em produção. Melhor Envio conectado com cotação nacional ativada. Em 06/10/2026, o lojista autorizou pesos estimados de volumes prontos; perfis e cotações reais ficam registrados no documento 43. Receita comum pode usar checkout após classificação administrativa; a conferência farmacêutica ocorre antes da dispensação. Asaas Básico não exige mensalidade, mas a chave API permanece indisponível e não há cobrança homologada por esse provedor.
 
 Checkout e pedidos receberam revisão visual; pesquisa da IA reutiliza resultados por identidade exata e mantém medidas sem referência vazias. Comparação de e-mails gratuitos/pré-pagos e bases logísticas em [docs/35-referencias-catalogo-e-emails.md](docs/35-referencias-catalogo-e-emails.md). E-mails ainda não estão conectados nem enviando.
 
@@ -73,7 +75,7 @@ Checkout e pedidos receberam revisão visual; pesquisa da IA reutiliza resultado
 - `Produtos / Catalogo` permite cadastrar em modal, buscar, classificar, editar e adicionar ou remover produtos de `Melhores ofertas`; fotos podem ser retiradas/trocadas e tratadas antes de salvar. Novos WebP tem ate 1600 px/350 KB e ficam no volume `wimifarma-br-uploads`, servidos dinamicamente para evitar 404 apos upload.
 - A busca publica consulta produtos publicados no PostgreSQL por nome, marca, categoria, SKU, EAN, principios ativos e termos de busca; o autocomplete mostra foto e preco, abre `/produto/[slug]` no Enter e apresenta correlatos para consulta, sem tratar correlacao como substituicao automatica.
 - Produtos elegiveis podem ser adicionados ao carrinho e enviados pelo checkout em `/checkout`; o servidor recalcula preco, confere estoque e cria um pedido pendente para a equipe acompanhar em `/admin/pedidos`.
-- Itens com receita ou Farmacia Popular continuam no atendimento pelo WhatsApp. Pix combinado, cartão na entrega e dinheiro continuam preferências do atendimento. Quando habilitado, Mercado Pago oferece pagamento online e confirma o resultado por consulta autenticada; o site não armazena número de cartão ou CVV.
+- Receita comum classificada permite checkout sem envio de arquivo, com conferência farmacêutica antes da dispensação. Controlados, receita não classificada e Farmácia Popular seguem atendimento pelo WhatsApp. Pix combinado, cartão na entrega e dinheiro continuam preferências do atendimento. Quando habilitado, Mercado Pago oferece pagamento online e confirma o resultado por consulta autenticada; o site não armazena número de cartão ou CVV.
 - A politica publica em `/privacidade` descreve dados de conta, pedido, armazenamento local do carrinho e direitos do titular.
 - Admin possui o modulo `API e Senhas` para guardar credenciais sensiveis cifradas no banco, restrito a `ADMIN`.
 - APIs reservadas existem e exigem sessao `ADMIN` ou `MANAGER`.

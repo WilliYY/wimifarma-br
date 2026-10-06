@@ -8,6 +8,7 @@ import {
   checkoutRequestSchema,
   createOrderNumber,
   orderStatusTransitions,
+  orderStatusUpdateSchema,
   prepareCheckoutOrder,
   type CheckoutProductRecord,
 } from "./checkout";
@@ -140,4 +141,26 @@ test("impede saltos indevidos no andamento do pedido", () => {
   assert.equal(canTransitionStatus(orderStatusTransitions, "PENDING", "CONFIRMED"), true);
   assert.equal(canTransitionStatus(orderStatusTransitions, "PENDING", "COMPLETED"), false);
   assert.equal(canTransitionStatus(orderStatusTransitions, "COMPLETED", "CANCELED"), false);
+});
+
+test("receita comum revisada no catálogo permite pedido; controlados, pendentes e Popular exigem atendimento", () => {
+  const ordinary = { ...product, requiresPrescription: true, prescriptionType: "ORDINARY" as const };
+  assert.equal(prepareCheckoutOrder([ordinary], baseRequest.items).ok, true);
+  for (const restricted of [
+    { ...ordinary, prescriptionType: "CONTROLLED" as const },
+    { ...ordinary, prescriptionType: "UNREVIEWED" as const },
+    { ...ordinary, prescriptionType: undefined },
+    { ...ordinary, isPopularPharmacy: true },
+  ]) {
+    const result = prepareCheckoutOrder([restricted], baseRequest.items);
+    assert.equal(result.ok, false);
+    if (!result.ok) assert.equal(result.code, "RESTRICTED");
+  }
+});
+
+test("conferência exige confirmação explícita e não aceita data ou operador fornecidos pelo cliente", () => {
+  const confirmed = orderStatusUpdateSchema.parse({ prescriptionReviewed: true, prescriptionReviewedById: "forged", prescriptionReviewedAt: "2026-01-01" });
+  assert.deepEqual(confirmed, { prescriptionReviewed: true });
+  assert.equal(orderStatusUpdateSchema.safeParse({ prescriptionReviewed: false }).success, false);
+  assert.equal(orderStatusUpdateSchema.safeParse({}).success, false);
 });

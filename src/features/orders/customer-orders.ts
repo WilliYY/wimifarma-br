@@ -14,6 +14,7 @@ export type CustomerOrder = {
   deliveryFeeCents: number;
   totalCents: number;
   cashbackRedeemedCents: number;
+  requiresPrescriptionReview: boolean;
   street: string | null;
   addressNumber: string | null;
   complement: string | null;

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { cashbackRateSchema } from "@/features/cashback/rules";
 import { shippingDraftSchema } from "@/features/shipping/product-draft";
+import { prescriptionClassificationIsConsistent, prescriptionTypes } from "./purchase-policy";
 
 const productFieldsSchema = z.object({
   shippingProfile: shippingDraftSchema.optional(),
@@ -19,6 +20,7 @@ const productFieldsSchema = z.object({
   price: z.coerce.number().positive(),
   promotionalPrice: z.coerce.number().positive().optional(),
   requiresPrescription: z.boolean().default(false),
+  prescriptionType: z.enum(prescriptionTypes).optional(),
   searchTerms: z.array(z.string().trim().min(2).max(80)).max(20).default([]),
   sku: z.string().max(80).optional(),
   slug: z.string().min(3).max(120).optional(),
@@ -33,11 +35,12 @@ const promotionalPriceError = {
   message: "O preco promocional nao pode ser maior que o preco normal.",
   path: ["promotionalPrice"],
 };
+const prescriptionClassificationError = { message: "Marque 'Exige receita' para classificar receita comum ou controle especial.", path: ["prescriptionType"] };
 
 export const productCreateSchema = productFieldsSchema.extend({ status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).default("ACTIVE") }).refine(
   validPromotionalPrice,
   promotionalPriceError,
-);
+).refine(prescriptionClassificationIsConsistent, prescriptionClassificationError);
 
 export const productUpdateSchema = productFieldsSchema
   .omit({ slug: true })
@@ -56,4 +59,4 @@ export const productUpdateSchema = productFieldsSchema
   (product) =>
     validPromotionalPrice(product),
     promotionalPriceError,
-  );
+  ).refine(prescriptionClassificationIsConsistent, prescriptionClassificationError);

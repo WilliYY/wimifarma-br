@@ -5,8 +5,9 @@ import { ArrowUpRight, CheckCircle2, Link2, Loader2, Package, Truck } from "luci
 import { defaultShippingSettings, type ShippingOption, type ShippingSettings } from "@/features/shipping/schema";
 import { shippingAdminProfileSchema } from "@/features/shipping/product-draft";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
+import type { PrescriptionType } from "@/features/products/purchase-policy";
 
-type Product = { id: string; name: string; category: string | null; shippingProfile: unknown; requiresPrescription: boolean; isPopularPharmacy: boolean; updatedAt: string };
+type Product = { id: string; name: string; category: string | null; shippingProfile: unknown; requiresPrescription: boolean; prescriptionType?: PrescriptionType; isPopularPharmacy: boolean; updatedAt: string };
 type Data = { settings: ShippingSettings; revision: number; applicationConfigured: boolean; connected: boolean; expiresAt: number | null; products: Product[] };
 const field = "min-h-11 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/10";
 const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white disabled:opacity-50";

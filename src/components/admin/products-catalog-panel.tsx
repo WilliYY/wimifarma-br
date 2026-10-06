@@ -100,6 +100,7 @@ type ProductListItem = {
   price: string;
   promotionalPrice: string | null;
   requiresPrescription: boolean;
+  prescriptionType?: "UNREVIEWED" | "ORDINARY" | "CONTROLLED";
   searchTerms: string[];
   sku: string | null;
   slug: string;
@@ -163,6 +164,7 @@ function productPayload(
     price: fieldValue(formData, "price"),
     promotionalPrice: optionalValue("promotionalPrice"),
     requiresPrescription: formData.get("requiresPrescription") === "on",
+    ...(formData.has("prescriptionType") ? { prescriptionType: fieldValue(formData, "prescriptionType") } : {}),
     searchTerms: parseProductTerms(fieldValue(formData, "searchTerms")),
     sku: optionalValue("sku"),
     status: fieldValue(formData, "status"),
@@ -506,6 +508,15 @@ function ProductFormFields({
                 Exige receita
               </label>
             </div>
+            {canManageShipping ? <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+              Tipo de receita
+              <select className="min-h-11 w-full rounded-md border border-line bg-white px-3 text-sm" key={productIdentityKey(photoIdentity)} defaultValue={product && productIdentityKey({ name: product.name, brand: product.brand ?? "", ean: product.ean ?? "" }) === productIdentityKey(photoIdentity) ? product.prescriptionType ?? "UNREVIEWED" : "UNREVIEWED"} name="prescriptionType">
+                <option value="UNREVIEWED">Ainda não classificado</option>
+                <option value="ORDINARY">Receita comum · pedido online</option>
+                <option value="CONTROLLED">Controle especial · atendimento da farmácia</option>
+              </select>
+              <span className="text-xs font-normal leading-5 text-muted">Aplicável quando “Exige receita” está marcado. Receita comum permite carrinho e pagamento; o farmacêutico confere antes da entrega/retirada. A IA não define essa classificação.</span>
+            </label> : null}
           </ProductFormSection>
           <ProductFormSection number="03" title="Descrição e SEO" description="Informações objetivas ajudam o cliente a encontrar o produto.">
             <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">

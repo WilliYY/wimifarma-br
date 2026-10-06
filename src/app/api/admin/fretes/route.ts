@@ -11,7 +11,7 @@ export async function GET() {
   const guard = await requireAdminOnlyApi(); if (guard.response) return guard.response;
   try {
     const { settings, credentials, revision } = await readShippingIntegration();
-    const products = await getPrisma().product.findMany({ where: { deletedAt: null }, select: { id: true, name: true, category: true, shippingProfile: true, requiresPrescription: true, isPopularPharmacy: true, updatedAt: true }, orderBy: { name: "asc" }, take: 500 });
+    const products = await getPrisma().product.findMany({ where: { deletedAt: null }, select: { id: true, name: true, category: true, shippingProfile: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, updatedAt: true }, orderBy: { name: "asc" }, take: 500 });
     return NextResponse.json({ data: { settings, revision, applicationConfigured: Boolean(credentials), connected: Boolean(credentials?.accessToken), expiresAt: credentials?.expiresAt ?? null, products } }, { headers: noStore });
   } catch (error) { return shippingFailure(error); }
 }

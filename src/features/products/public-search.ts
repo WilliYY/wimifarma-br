@@ -1,3 +1,5 @@
+import type { PrescriptionType } from "./purchase-policy";
+
 export type ProductSearchSource = {
   activeIngredients: string[];
   brand?: string | null;
@@ -21,6 +23,7 @@ export type PublicProductSearchItem = {
   price: string;
   promotionalPrice: string | null;
   requiresPrescription: boolean;
+  prescriptionType?: PrescriptionType;
   searchTerms: string[];
   slug: string;
 };

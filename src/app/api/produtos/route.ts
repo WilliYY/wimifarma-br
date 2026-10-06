@@ -29,6 +29,7 @@ const productSelect = {
   price: true,
   promotionalPrice: true,
   requiresPrescription: true,
+  prescriptionType: true,
   searchTerms: true,
   sku: true,
   slug: true,
@@ -115,6 +116,9 @@ export async function POST(request: Request) {
   if (parsed.data.shippingProfile !== undefined && guard.session?.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Somente o administrador pode configurar a embalagem de frete." }, { status: 403 });
   }
+  if (parsed.data.prescriptionType !== undefined && guard.session?.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Somente o administrador pode classificar o tipo de receita." }, { status: 403 });
+  }
   const prisma = getPrisma();
   const slug = await uniqueSlug(parsed.data.slug ?? parsed.data.name);
   if ((parsed.data.cashbackEnabled !== undefined || parsed.data.cashbackRateBps !== undefined) && guard.session?.user.role !== "ADMIN") {
@@ -174,6 +178,7 @@ export async function POST(request: Request) {
             hasImage: Boolean(product.imageUrl),
             featuredPosition: product.featuredPosition,
             name: product.name,
+            prescriptionAfter: { requiresPrescription: product.requiresPrescription, type: product.prescriptionType },
             slug: product.slug,
             status: product.status,
           },

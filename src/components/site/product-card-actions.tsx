@@ -5,13 +5,14 @@ import { MessageCircle, Minus, Plus, ShoppingBag, ShoppingCart } from "lucide-re
 import { toast } from "sonner";
 import { useCart, type CartProduct } from "@/components/site/cart-provider";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 
 export function ProductCardActions({ product }: { product: CartProduct }) {
   const { addProduct, hydrated, items, updateQuantity } = useCart();
   const router = useRouter();
   const quantity = items.find((item) => item.id === product.id)?.quantity ?? 0;
   const limit = Math.min(product.stock, 20);
-  const restricted = product.requiresPrescription || product.isPopularPharmacy;
+  const restricted = requiresPurchaseAssistance(product);
   const button = "inline-flex h-10 min-w-0 cursor-pointer items-center justify-center gap-2 rounded-md px-3 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
   function add(buy = false) {

@@ -1,9 +1,12 @@
+import { requiresPurchaseAssistance, type PrescriptionType } from "@/features/products/purchase-policy";
+
 export function requiresPharmacyShippingSupport(product: {
   category: string | null;
   requiresPrescription: boolean;
+  prescriptionType?: PrescriptionType;
   isPopularPharmacy: boolean;
 }): boolean {
-  return product.requiresPrescription || product.isPopularPharmacy || /farmacia\s*popular/.test(normalizedCategory(product.category));
+  return requiresPurchaseAssistance(product) || /farmacia\s*popular/.test(normalizedCategory(product.category));
 }
 
 function normalizedCategory(category: string | null): string {

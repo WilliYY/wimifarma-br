@@ -36,6 +36,7 @@ export default async function Page() {
         cashbackEnabled: true,
         cashbackRateBps: true,
         requiresPrescription: true,
+        prescriptionType: true,
         reviews: {
           select: { rating: true },
           where: { isPublished: true, order: { status: "COMPLETED" } },
@@ -69,6 +70,7 @@ export default async function Page() {
         cashbackEnabled: true,
         cashbackRateBps: true,
         requiresPrescription: true,
+        prescriptionType: true,
         searchTerms: true,
         slug: true,
         stock: true,

@@ -27,7 +27,7 @@ O checkout conserva o QR recebido na resposta inicial mesmo se a leitura seguint
 
 O lojista escolheu Checkout Transparente / Bricks e pagamento na finalização do checkout, antes da confirmação operacional da farmácia (29/09/2026). A integração usa a API Orders e Card Payment Brick oficial, com Pix dinâmico e cartão parcelado. O gateway inicia desativado; configuração de teste aparece somente para ADMIN. A publicação do código não comprova homologação nem habilita cobrança real.
 
-Itens com receita e Farmácia Popular continuam fora do checkout. O atendimento e a preparação do pedido continuam humanos. O módulo de frete é independente: não compra etiquetas nem emite nota fiscal. O contrato logístico está em `27-melhor-envio.md`.
+Desde 06/10/2026, medicamentos de receita comum classificados por ADMIN podem usar checkout e pagamento sem upload, com conferência farmacêutica antes da dispensação. Controlados, receita não classificada e Farmácia Popular seguem fora do checkout. O pagamento não libera a entrega sem essa conferência. O atendimento e a preparação do pedido continuam humanos. Contrato em `45-pedido-online-e-conferencia-de-receita.md`. O módulo de frete é independente: não compra etiquetas nem emite nota fiscal. O contrato logístico está em `27-melhor-envio.md`.
 
 ## Configuração
 

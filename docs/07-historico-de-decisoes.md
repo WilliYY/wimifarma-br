@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-06 - Pedido online e conferência de receita antes da dispensação
+
+- Permitir carrinho e pagamento de medicamentos com receita comum, sem upload no checkout. Preservar a exigência de receita e avaliação farmacêutica antes da dispensação; não converter Losartana em medicamento isento de prescrição. Controlados, classificação pendente e Farmácia Popular seguem atendimento assistido.
+- Classificação explícita exclusiva de ADMIN, com padrão não revisado, invalidação ao alterar identidade e auditoria antes/depois. A IA de cadastro não autoriza venda nem altera exigência de receita. Validação na API e restrição no banco impedem classificação comum/controlada sem exigência de receita.
+- Pedido registra a necessidade de conferência a partir dos produtos persistidos. Pronto para retirada, saída para entrega e conclusão exigem registro de conferência pela equipe, validado sob lock; aprovação de pagamento não substitui essa etapa. Não armazenar imagem de receita ou dados clínicos.
+- Fonte oficial Teuto confirma a apresentação Losartana potássica 50 mg com 30 comprimidos e venda sob prescrição. Regras e fontes da Anvisa, testes, revisão independente e implantação em `45-pedido-online-e-conferencia-de-receita.md`. Publicidade de medicamentos de receita permanece uma revisão separada, com pendência explícita.
+
 ## 2026-10-06 - Ecossistema de envios, custos e reconhecimento externo
 
 - Manter Melhor Envio/PAC/SEDEX; comparar novo agregador somente por cobertura, preço final e operação comprovados a partir de Ivaté, com aceitação da carga. Revisão de líquidos encontrou divergência entre Correios e guia Melhor Envio; aplicar condições do canal contratado. Não habilitar serviços novos por inferência.

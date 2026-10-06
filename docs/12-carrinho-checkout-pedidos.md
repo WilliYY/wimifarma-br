@@ -18,7 +18,7 @@
 - Em telas a partir de 640 px, a cesta fica na lateral direita em altura completa. Em telas menores, ocupa os 70% inferiores da altura visivel, com acoes compactas e rolagem propria, deixando a parte superior da loja acessivel. Quantidades sincronizam mesmo quando alteradas nos cards com o painel aberto.
 - Quantidade, remocao, subtotal e limite de estoque usam o mesmo CartProvider dos cards. Limpar tudo exige confirmacao. Lista possui rolagem propria; rodape oferece checkout e cesta completa.
 - Cards reais da vitrine, catalogo e relacionados sao clicaveis em toda a area, exceto controles. Adicionar inclui uma unidade sem navegar; o contador altera o carrinho. Comprar preserva a quantidade ja escolhida ou adiciona uma unidade e solicita `/checkout`.
-- Receita e Farmacia Popular continuam somente por atendimento. Produtos sem estoque nao podem ser adicionados. O carrinho limita 30 produtos diferentes e 20 unidades por produto, sujeito ao estoque.
+- Receita comum classificada por ADMIN permite carrinho e pagamento sem upload; a receita deve ser conferida antes da dispensacao. Controlados, receita nao classificada e Farmacia Popular seguem atendimento. Contrato atual em `45-pedido-online-e-conferencia-de-receita.md`. Produtos sem estoque nao podem ser adicionados. O carrinho limita 30 produtos diferentes e 20 unidades por produto, sujeito ao estoque.
 - Selo de frete mostra a condicao de R$ 99,90 e consulta de CEP; nao amplia cobertura. Arraste dos carrosseis nao ativa o link de produto.
 
 ### Endereco e Continuidade (2026-09-13)
@@ -46,7 +46,7 @@
 ### Confirmacao de Pedidos
 
 - O navegador envia o preco esperado apenas para detectar alteracao; o banco e a fonte de verdade.
-- O servidor recusa produto inexistente, nao publicado, sem estoque suficiente, com preco alterado, com receita ou Farmacia Popular.
+- O servidor recusa produto inexistente, nao publicado, sem estoque suficiente, com preco alterado, controlado, com receita nao classificada ou Farmacia Popular. Para receita comum, grava a necessidade de conferencia no pedido; somente a equipe autorizada registra essa conferencia antes de pronto, entrega ou conclusao. Pagamento aprovado pelo gateway nao substitui avaliacao farmaceutica.
 - `Comprar agora` nao aprova pagamento nem reserva estoque; apenas antecipa a navegacao para o mesmo checkout de pedido pendente.
 - O pedido nasce `PENDING`, com pagamento `PENDING`. Pagamento online reserva estoque antes de chamar o gateway; aprovacao consome a reserva e cancelamento confirmado a devolve uma vez. Pedido manual mantem a operacao humana existente.
 - A aplicacao nao recebe numero de cartao ou CVV; os campos pertencem ao Mercado Pago. Nao solicita senha bancaria ou chave Pix do cliente.
@@ -76,4 +76,4 @@ As transicoes permitidas ficam em `src/features/orders/checkout.ts`; saltos e al
 
 ## Proxima Fase
 
-Concluir medidas fisicas e operacao fiscal/postagem para liberar transportadoras; integrar etiquetas ou emissao fiscal somente com autorizacao especifica. Itens com receita e Farmacia Popular continuam por atendimento.
+Conferir medidas fisicas e operacao fiscal/postagem antes do envio; integrar etiquetas ou emissao fiscal somente com autorizacao especifica. Receita comum classificada usa cotacao com perfil logistico aprovado; controlados, receita nao classificada e Farmacia Popular seguem atendimento.

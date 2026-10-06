@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { MessageCircle, ShoppingCart } from "lucide-react";
 import { useCart, type CartProduct } from "@/components/site/cart-provider";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 
 export function AddToCartButton({
   className,
@@ -16,7 +17,7 @@ export function AddToCartButton({
 }) {
   const router = useRouter();
   const { addProduct } = useCart();
-  const requiresAssistance = product.requiresPrescription || product.isPopularPharmacy;
+  const requiresAssistance = requiresPurchaseAssistance(product);
 
   if (requiresAssistance) {
     return (
