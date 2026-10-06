@@ -6,6 +6,7 @@
 - Classificação explícita exclusiva de ADMIN, com padrão não revisado, invalidação ao alterar identidade e auditoria antes/depois. A IA de cadastro não autoriza venda nem altera exigência de receita. Validação na API e restrição no banco impedem classificação comum/controlada sem exigência de receita.
 - Pedido registra a necessidade de conferência a partir dos produtos persistidos. Pronto para retirada, saída para entrega e conclusão exigem registro de conferência pela equipe, validado sob lock; aprovação de pagamento não substitui essa etapa. Não armazenar imagem de receita ou dados clínicos.
 - Fonte oficial Teuto confirma a apresentação Losartana potássica 50 mg com 30 comprimidos e venda sob prescrição. Regras e fontes da Anvisa, testes, revisão independente e implantação em `45-pedido-online-e-conferencia-de-receita.md`. Publicidade de medicamentos de receita permanece uma revisão separada, com pendência explícita.
+- Entrega: 203 testes gerais, 91 de segurança, 48 de frete, typecheck/lint/schema/build e CI passaram. Migração comprovada em PostgreSQL descartável e aplicada em produção; aplicação saudável. Losartana classificada como comum pelo painel, com perfil estimado de 500 g/caixa média autorizado. Adicionar/Comprar e cotação automática PAC/SEDEX conferidos em quatro larguras sem cobrança ou comunicação real; resultados de CEP e limitações de embalagem registrados no documento 45.
 
 ## 2026-10-06 - Ecossistema de envios, custos e reconhecimento externo
 

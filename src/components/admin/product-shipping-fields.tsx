@@ -82,7 +82,7 @@ export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
         {draft.dirty && <input name="shippingDraft" type="hidden" value={JSON.stringify(payload)} />}
         <p className="text-xs leading-5 text-muted">{draft.dirty ? "Ao salvar, estas medidas ficarão como rascunho e o frete deste produto precisará de nova revisão." : initial?.enabled ? "Este produto já possui embalagem liberada. Alterar medidas exige nova revisão." : "Salvar medidas não libera o frete automaticamente."} Confira o volume final em <Link className="font-bold text-brand underline" href="/admin/fretes" target="_blank" rel="noreferrer">Fretes e entregas</Link>.</p>
       </> : <p className="text-xs text-muted">Somente o administrador pode salvar e aprovar as medidas de transporte.</p>}
-      {medicine && <p className="rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-900">Medicamentos sem receita podem usar PAC ou SEDEX após conferência da embalagem e liberação em Fretes e entregas. Itens sujeitos a receita e Farmácia Popular precisam de atendimento farmacêutico.</p>}
+      {medicine && <p className="rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-900">Medicamentos elegíveis, inclusive os de receita comum classificados, podem usar PAC ou SEDEX após aprovação da embalagem em Fretes e entregas. O farmacêutico confere a receita antes da dispensação. Controlados, receita não classificada e Farmácia Popular seguem atendimento assistido.</p>}
     </div>
   </section>;
 });
