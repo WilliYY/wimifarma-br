@@ -1,5 +1,7 @@
 # Política administrativa de tarifas
 
+Revisão de 06/10/2026: a gratuidade observada do Pix dinâmico descrevia movimentações financeiras, sem confirmar recebimento comercial. A tarifa manual zero registrada em 05/10 deve ser retirada da comparação. O painel agora permite retirar contratos manuais pelo mesmo PUT auditado, mantendo revisão otimista e a conexão Mercado Pago. Conta Asaas Básico aprovada, API sem mensalidade, botão para gerar chave ainda desabilitado; [validação atual](43-frete-estimado-e-validacao-asaas.md).
+
 Em 04/10/2026 foi entregue um comparador administrativo em `/admin/pagamentos`. Ele estima o custo entre tarifas válidas da conta, com taxa fixa, percentual, parcelas e prazo da primeira parcela. Não cria pagamentos, não troca transações existentes e não ativa um segundo gateway. O checkout continua no Mercado Pago.
 
 ## Consulta e validade

@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-06 - Frete com estimativas explícitas e validação de custos Asaas
+
+- Decisão: atender à autorização do lojista para pesos médios de volumes prontos, com caixa média de referência; separar estimativa de medição real no perfil. Permitir rascunhos parciais na API ADMIN sem liberar transportadora; aprovação continua completa, revisada, auditada e vinculada à versão do produto.
+- Impacto: Cimegrip/KitKat 500 g e Dove 800 g, C20,8 × L20,8 × A21,6 cm externos. Um volume por unidade; sem consolidação nem remoção de bloqueio de receita. Conferir pacote real antes de postar; referências não comprovam peso exato.
+- Asaas: Básico aprovado e API sem mensalidade, mas chave ainda bloqueada. Pix dinâmico gratuito na tela de movimentações não comprova recebimento comercial: retirar tarifa zero manual e manter custo desconhecido até confirmar contrato. Mercado Pago permanece gateway de cobrança.
+- Segurança: patch transitivo `source-map-js` 1.2.1 → 1.2.2 corrige GHSA-68fv-2mgg-jv7q, sem nova dependência ou major. Auditoria de produção voltou a zero; cinco alertas high da cadeia de lint/desenvolvimento continuam visíveis, sem downgrade forçado.
+- Referências, e-mails próprios, limites e evidências de publicação em [43-frete-estimado-e-validacao-asaas.md](43-frete-estimado-e-validacao-asaas.md).
+
 ## 2026-10-05 - Segurança padrão e opções de comunicação
 
 - Publicação: `8f18abb`, build Linux/Docker aprovado, app healthy/zero reinícios e workflow GitHub Security checks aprovado. APIs privadas anônimas respondem 401 com no-store; home/login/checkout/health respondem 200. Imagem anterior preservada para recuperação; comprovante em `42-revisao-de-seguranca.md`.

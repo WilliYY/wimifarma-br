@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminOnlyApi } from "@/features/auth/permissions";
-import { shippingProfileSchema, ShippingError } from "@/features/shipping/schema";
+import { ShippingError } from "@/features/shipping/schema";
+import { shippingAdminProfileSchema } from "@/features/shipping/product-draft";
 import { validateShippingProduct } from "@/features/shipping/rules";
 import { noStore, shippingBody, shippingFailure } from "@/features/shipping/http";
 import { getPrisma } from "@/lib/prisma";
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
   const guard = await requireAdminOnlyApi(); if (guard.response) return guard.response;
   try {
-    const parsed = z.object({ profile: shippingProfileSchema, updatedAt: z.iso.datetime() }).safeParse(await shippingBody(request));
+    const parsed = z.object({ profile: shippingAdminProfileSchema, updatedAt: z.iso.datetime() }).safeParse(await shippingBody(request));
     if (!parsed.success) throw new ShippingError("Confira o peso, as medidas e a revisão de transporte.");
     const { id } = await context.params;
     await getPrisma().$transaction(async (tx) => {

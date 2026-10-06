@@ -4,18 +4,20 @@
 
 A conta Wimifarma aparece aprovada no painel Asaas. A página de integrações não possui chaves e o botão **Gerar chave de API** permanece desabilitado. O motivo específico não foi exposto pela interface; aprovação da conta não comprova liberação dessa operação. Não foi criado token, webhook, cliente ou cobrança nesta configuração.
 
-Em **Pagamentos** da Wimifarma foram registrados dois contratos manuais, observados no painel da própria conta, com validade de sete dias e auditoria:
+Em **Pagamentos** da Wimifarma foram registrados dois contratos manuais em 05/10, com validade de sete dias e auditoria. A conferência de 06/10 corrigiu a interpretação da tela de Pix:
 
 | Método | Tarifa observada | Primeiro recebimento registrado | Uso atual |
 | --- | --- | --- | --- |
 | Cartão à vista | 1,99% + R$0,49 por venda | 32 dias | Comparação administrativa de 1x |
-| Pix dinâmico | Gratuito, ilimitado na tela da conta | 0 dias | Comparação administrativa, sem antecipação |
+| Pix recebido por cobrança | Não confirmado | Não confirmado | Excluir tarifa zero da comparação até confirmar o contrato |
 
-Para R$100, o comparador mostrou R$2,48 de custo e R$97,52 líquidos no cartão, e R$0 de custo no Pix. São estimativas com contratos válidos, não recebimentos executados. A gratuidade do Pix dinâmico não deve ser confundida com tarifa de Pix manual/estático.
+Para R$100, o comparador mostrou R$2,48 de custo e R$97,52 líquidos no cartão. O retorno histórico de R$0 no Pix não é confiável: a gratuidade estava na aba Movimentações financeiras (pagamentos/transferências), sem comprovar recebimento comercial. O painel agora permite retirar tarifas manuais sem alterar a conexão Mercado Pago; a retirada e sua validação constam no documento 43. Nenhum recebimento foi executado.
 
 A tela também informou cartão 2–6x em 2,49% + R$0,49 e 7–12x em 2,99% + R$0,49, com promoção até 04/01/2027. Essas faixas não foram registradas como parcelamento homologado. A tarifa fixa é por venda parcelada, não multiplicada por parcela; antecipação e prazo de liquidação de toda a venda precisam de conferência própria. A promoção pode deixar de valer para recebimentos posteriores ao seu término.
 
 ## Como será usado
+
+Conferência de 06/10: dados comerciais, documentos e conta aprovados; plano atual Básico. A tela Taxas → Integrações informa API e integrações gratuitas. Não contratamos plano mensal, subconta, antecipação ou serviço pago. Mesmo assim, Gerar chave de API permanece desabilitado, sem motivo exposto. A liberação depende do Asaas. Detalhes em [43-frete-estimado-e-validacao-asaas.md](43-frete-estimado-e-validacao-asaas.md).
 
 1. Conectar a chave da conta aprovada ao cofre existente, sem expor a credencial no Git ou devolver seu conteúdo ao navegador. A consulta atual é somente de tarifas: revisão a cada seis horas, validade de 24 horas e histórico de mudanças. Contratos manuais não se atualizam sozinhos.
 2. Homologar criação de cobrança, QR Pix, cartão, notificações autenticadas, idempotência, expiração, recusas e estornos em sandbox antes da ativação pública.

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { ArrowUpRight, CheckCircle2, Link2, Loader2, Package, Truck } from "lucide-react";
-import { defaultShippingSettings, shippingProfileSchema, type ShippingOption, type ShippingSettings } from "@/features/shipping/schema";
-import { shippingDraftSchema } from "@/features/shipping/product-draft";
+import { defaultShippingSettings, type ShippingOption, type ShippingSettings } from "@/features/shipping/schema";
+import { shippingAdminProfileSchema } from "@/features/shipping/product-draft";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
 
 type Product = { id: string; name: string; category: string | null; shippingProfile: unknown; requiresPrescription: boolean; isPopularPharmacy: boolean; updatedAt: string };
@@ -78,10 +78,45 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
 }
 function Label({ text, children }: { text: string; children: React.ReactNode }) { return <label className="grid min-w-0 gap-2 text-xs font-bold text-muted"><span>{text}</span>{children}</label>; }
 function ProductShippingForm({ product, busy, onSave }: { product: Product; busy: boolean; onSave: (profile: unknown) => void }) {
-  const parsed = shippingProfileSchema.or(shippingDraftSchema).safeParse(product.shippingProfile); const profile = parsed.success ? parsed.data : null;
+  const parsed = shippingAdminProfileSchema.safeParse(product.shippingProfile); const profile = parsed.success ? parsed.data : null;
+  const [measurements, setMeasurements] = useState(() => ({
+    weightGrams: String(profile?.weightGrams ?? ""), widthCm: String(profile?.widthCm ?? ""),
+    heightCm: String(profile?.heightCm ?? ""), lengthCm: String(profile?.lengthCm ?? ""),
+  }));
+  const [reviewed, setReviewed] = useState(profile?.transportReviewed ?? false);
+  const [enabled, setEnabled] = useState(profile?.enabled ?? false);
+  const [measurementBasis, setMeasurementBasis] = useState<"measured" | "estimated">(profile?.measurementBasis ?? "measured");
+  const [reference, setReference] = useState(profile?.reference ?? null);
+  const [validationMessage, setValidationMessage] = useState("");
   const blocked = requiresPharmacyShippingSupport(product);
-  return <form className="rounded-xl border border-line p-4" onSubmit={(event) => { event.preventDefault(); const values = new FormData(event.currentTarget); onSave({ enabled: values.get("enabled") === "on", transportReviewed: values.get("reviewed") === "on", reference: profile?.reference ?? null, ...Object.fromEntries(["weightGrams", "widthCm", "heightCm", "lengthCm"].map((key) => [key, Number(values.get(key))])) }); }}>
-    {profile && !profile.transportReviewed && <p className="mb-3 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-900">Medidas em rascunho vindas do cadastro. Pese e meça a unidade pronta para envio, com proteção e caixa, antes de aprovar. Referências da IA podem descrever apenas a embalagem comercial.</p>}
-    <strong className="text-sm text-ink">{product.name}</strong>{blocked ? <p className="mt-2 text-xs text-muted">Envio sujeito a atendimento farmacêutico; indisponível para cotação automática.</p> : <><div className="mt-3 grid gap-3 sm:grid-cols-4">{[["weightGrams", "Peso embalado (g)"], ["widthCm", "Largura (cm)"], ["heightCm", "Altura (cm)"], ["lengthCm", "Comprimento (cm)"]].map(([name, label]) => <Label key={name} text={label}><input className={field} defaultValue={profile?.[name as "weightGrams" | "widthCm"] ?? ""} min={name === "weightGrams" ? 1 : 0.01} name={name} required step={name === "weightGrams" ? 1 : "any"} type="number" /></Label>)}</div><label className="mt-3 flex items-start gap-2 text-xs text-muted"><input defaultChecked={profile?.transportReviewed} name="reviewed" required type="checkbox" />Conferi peso e medidas do volume pronto para envio, embalagem, conservação e aceitação deste produto em todos os serviços selecionados.</label><div className="mt-3 flex flex-wrap items-center justify-between gap-3"><label className="flex items-center gap-2 text-sm"><input defaultChecked={profile?.enabled} name="enabled" type="checkbox" />Liberar para transportadora</label><button className={button} disabled={busy} type="submit">Salvar embalagem</button></div></>}
+  function invalidateReview() { setReviewed(false); setEnabled(false); setReference(null); setValidationMessage(""); }
+  return <form className="rounded-xl border border-line p-4" onSubmit={(event) => {
+    event.preventDefault();
+    const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    const draft = submitter?.value !== "approve";
+    const result = shippingAdminProfileSchema.safeParse({
+      enabled: draft ? false : enabled, transportReviewed: draft ? false : reviewed, measurementBasis, reference,
+      ...Object.fromEntries(Object.entries(measurements).map(([key, value]) => [key, value.trim() === "" ? null : Number(value)])),
+    });
+    if (!result.success || (!draft && !reviewed)) {
+      setValidationMessage(draft ? "Confira os números informados. Campos sem medida podem ficar vazios no rascunho." : "Informe peso e todas as medidas válidas e confirme a revisão antes de aprovar.");
+      return;
+    }
+    setValidationMessage(""); onSave(result.data);
+  }}>
+    {!reviewed && <p className="mb-3 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-900">Rascunho: dados parciais podem ser salvos sem liberar o transporte. Confira o volume pronto para envio, com proteção e caixa, antes de aprovar. Referências da IA podem descrever apenas a embalagem comercial.</p>}
+    <strong className="text-sm text-ink">{product.name}</strong>{blocked ? <p className="mt-2 text-xs text-muted">Envio sujeito a atendimento farmacêutico; indisponível para cotação automática.</p> : <>
+      <div className="mt-3 rounded-lg bg-surface-subtle p-3 text-xs leading-5 text-muted">
+        <button className={`${button} mb-2`} disabled={busy} onClick={() => { setMeasurements({ ...measurements, lengthCm: "20.8", widthCm: "20.8", heightCm: "21.6" }); setMeasurementBasis("estimated"); invalidateReview(); }} type="button">Caixa média 20 cm</button>
+        <p>Referência Packit: caixa interna de 20 × 20 × 20 cm; medidas externas C20,8 × L20,8 × A21,6 cm. Preenche somente dimensões em rascunho; o peso informado é preservado. Confira encaixe, proteção e peso final.</p>
+        <a className="mt-1 inline-flex items-center gap-1 font-bold text-brand" href="https://www.packit.com.br/10-caixas-de-papelao-20x20x20-cm" rel="noreferrer" target="_blank">Consultar caixa e medidas no fornecedor<ArrowUpRight className="h-3 w-3" /></a>
+      </div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-4">{([["weightGrams", "Peso embalado (g)"], ["widthCm", "Largura (cm)"], ["heightCm", "Altura (cm)"], ["lengthCm", "Comprimento (cm)"]] as const).map(([name, label]) => <Label key={name} text={label}><input className={field} disabled={busy} max={name === "weightGrams" ? 30000 : 200} min={name === "weightGrams" ? 1 : 0.01} name={name} onChange={(event) => { setMeasurements({ ...measurements, [name]: event.target.value }); invalidateReview(); }} step={name === "weightGrams" ? 1 : "any"} type="number" value={measurements[name]} /></Label>)}</div>
+      <div className="mt-3"><Label text="Origem do peso e das medidas"><select className={field} disabled={busy} onChange={(event) => { setMeasurementBasis(event.target.value as "measured" | "estimated"); invalidateReview(); }} value={measurementBasis}><option value="measured">Medidos no volume pronto para envio</option><option value="estimated">Estimativa operacional autorizada</option></select></Label></div>
+      {measurementBasis === "estimated" && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-900">Estimativa operacional autorizada. Confira peso/dimensões reais antes da postagem; a transportadora pode ajustar o frete.</p>}
+      <label className="mt-3 flex items-start gap-2 text-xs text-muted"><input checked={reviewed} disabled={busy} name="reviewed" onChange={(event) => { setReviewed(event.target.checked); if (!event.target.checked) setEnabled(false); }} type="checkbox" />Revisei as medidas/peso informados e a adequação da embalagem, conservação e aceitação nos serviços selecionados.</label>
+      {validationMessage && <p className="mt-3 text-xs text-red-700" role="alert">{validationMessage}</p>}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3"><label className="flex items-center gap-2 text-sm"><input checked={enabled} disabled={busy || !reviewed} name="enabled" onChange={(event) => setEnabled(event.target.checked)} type="checkbox" />Liberar para transportadora</label><div className="flex flex-wrap gap-2"><button className={`${button} bg-ink`} disabled={busy} name="intent" type="submit" value="draft">Salvar rascunho</button><button className={button} disabled={busy} name="intent" type="submit" value="approve">Aprovar dados completos</button></div></div>
+    </>}
   </form>;
 }

@@ -23,7 +23,7 @@ test("ordinary medication can ship with reviewed packaging using PAC or SEDEX on
   for (const category of ["Medicamentos", "MEDICAMENTO", "Médicamentos", "Outros medicamentos"]) {
     const eligible = { ...product, category };
     assert.equal(requiresPharmacyShippingSupport(eligible), false, category);
-    assert.deepEqual(validateShippingProduct(eligible), profile);
+    assert.deepEqual(validateShippingProduct(eligible), { ...profile, measurementBasis: "measured" });
     assert.throws(() => validateShippingProduct({ ...eligible, shippingProfile: null }), /ainda não foi liberado/);
     assert.deepEqual(permittedShippingServices([1, 2, 3, 4], [eligible]), [1, 2]);
     assert.deepEqual(permittedShippingServices([3, 4], [eligible]), []);
@@ -41,7 +41,7 @@ test("non-medicine categories do not require pharmacy support but still require 
   for (const category of [null, "", "Higiene", "Perfumaria", "Alimentos e chocolates", "Fraldas", "Cosméticos"]) {
     const eligible = { ...product, category };
     assert.equal(requiresPharmacyShippingSupport(eligible), false, String(category));
-    assert.deepEqual(validateShippingProduct(eligible), profile);
+    assert.deepEqual(validateShippingProduct(eligible), { ...profile, measurementBasis: "measured" });
     assert.throws(() => validateShippingProduct({ ...eligible, shippingProfile: null }), /ainda não foi liberado/);
   }
 });

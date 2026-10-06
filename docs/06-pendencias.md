@@ -1,5 +1,11 @@
 # 06 - Pendencias
 
+## Frete estimado e Asaas — 06/10/2026
+
+- Frete: estimativas operacionais autorizadas para Cimegrip/KitKat (500 g) e Dove (800 g), com caixa média. Conferir peso e volume reais antes da primeira postagem; avaliar caixa consolidada para carrinhos com várias unidades. Losartana com receita continua no atendimento farmacêutico. Comprovante no documento 43.
+- Asaas: conta/dados/documentos aprovados, plano Básico e API gratuitos; geração da chave ainda bloqueada pelo painel. Solicitar liberação e confirmar tarifa de Pix recebido por cobrança. Homologação e segundo gateway público continuam pendentes.
+- E-mails: decidir transporte antes de instalar SMTP; DNS/reputação/porta 25 ainda não preparados para envio próprio. Não há envio ao cliente. Cadastro oficial de Reclame AQUI/Ebit e selos concedidos continuam pendentes.
+
 ## Segurança e comunicação — 05/10/2026
 
 - Correções de associação Google, revogação de sessão e dependências em `42-revisao-de-seguranca.md`. Audit de produção agora zero; cinco high de desenvolvimento ligados a `braces` ainda sem correção compatível. Avisos de sete high abaixo são históricos. Não usar downgrade `npm audit fix --force`.

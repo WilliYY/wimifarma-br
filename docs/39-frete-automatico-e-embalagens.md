@@ -1,5 +1,11 @@
 # 39 - Frete automático e conferência de embalagens
 
+## Estimativa operacional autorizada — 06/10/2026
+
+O lojista autorizou peso médio para iniciar cotações. Perfis distinguem `measurementBasis: measured | estimated`. O painel permite salvar rascunhos parciais desabilitados e aplicar caixa de 20 cm (dimensões externas da referência: C20,8 × L20,8 × A21,6 cm), marcada como estimada. Mudanças invalidam revisão/liberação. Aprovação continua exigindo dados completos, revisão explícita, permissões ADMIN e auditoria. Peso total inclui proteção/caixa; não somar tara novamente.
+
+Pesos autorizados: Cimegrip e KitKat 500 g, Dove 240 ml 800 g. A cotação mantém um volume por unidade e restrições de receita; não consolida o carrinho numa única caixa. Conferir valores reais antes da postagem evita ajustes da transportadora. Referências, limites e conferência em [43-frete-estimado-e-validacao-asaas.md](43-frete-estimado-e-validacao-asaas.md). As verificações históricas abaixo permanecem como registro do estado anterior.
+
 ## Comportamento do checkout
 
 A cotação inicia automaticamente 450 ms após um CEP completo e carrinho elegível. Mudanças em CEP, produto, quantidade ou preço cancelam a consulta anterior e invalidam opções/seleção antigas. Respostas atrasadas não substituem a consulta atual. Alterar endereço complementar, cashback ou callback do componente não solicita outro frete. O cliente escolhe o serviço; o botão **Consultar novamente** permite repetir uma falha.

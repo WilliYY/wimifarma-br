@@ -24,6 +24,7 @@ export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
   const initial = parsed.success ? parsed.data : null;
   const [draft, setDraft] = useState(() => ({
     identityKey, dirty: false, copiedKeys: [] as (keyof Measures)[], reference: initial?.reference ?? null,
+    measurementBasis: initial?.measurementBasis ?? "measured",
     values: Object.fromEntries(fields.map(([key]) => [key, initial?.[key] == null ? "" : String(initial[key])])) as Measures,
   }));
   // A reference copied for a previous identity must not follow a different product.
@@ -32,6 +33,7 @@ export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
   const hasValues = Boolean(reference && fields.some(([key]) => suggestedValue(reference, key) != null));
   const payload: ShippingDraft = {
     enabled: false, transportReviewed: false,
+    measurementBasis: draft.measurementBasis,
     ...Object.fromEntries(fields.map(([key]) => [key, draft.values[key] === "" ? null : Number(draft.values[key])])) as Pick<ShippingDraft, keyof Measures>,
     reference: draft.reference,
   };
@@ -41,6 +43,7 @@ export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
     const copiedKeys = fields.filter(([key]) => !values[key].trim() && suggestedValue(nextReference, key) != null).map(([key]) => key);
     if (!copiedKeys.length) return 0;
     setDraft({ ...draft, identityKey: nextIdentityKey, dirty: true,
+      measurementBasis: copiedKeys.some(key => nextReference[key] == null && nextReference.estimate?.[key]) ? "estimated" : draft.measurementBasis,
       copiedKeys: [...new Set([...(draft.identityKey === nextIdentityKey ? draft.copiedKeys : []), ...copiedKeys])],
       reference: nextReference, values: Object.fromEntries(fields.map(([key]) => [key, values[key] || (suggestedValue(nextReference, key) == null ? "" : String(suggestedValue(nextReference, key)))])) as Measures });
     return copiedKeys.length;

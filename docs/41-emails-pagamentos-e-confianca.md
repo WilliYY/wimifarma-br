@@ -1,5 +1,7 @@
 # 41 - E-mails, pagamentos e confiança
 
+Atualização em 06/10/2026: diagnóstico de DNS (SPF sem remetentes autorizados, DMARC reject, MX nulo), teste limitado de SMTP externo do VPS, validação Asaas Básico sem mensalidade e links diretos de cadastro estão em [43-frete-estimado-e-validacao-asaas.md](43-frete-estimado-e-validacao-asaas.md). Software próprio de campanhas é possível; a operação de entrega exige autenticação, reputação, filas e tratamento de devoluções/descadastro. Nenhum SMTP, campanha ou plano pago foi instalado/ativado.
+
 Consulta de fontes oficiais em 05/10/2026. Preços públicos não substituem as condições efetivas da conta, a elegibilidade da farmácia ou a homologação do checkout. Nenhuma conta nova, contrato, cobrança, campanha ou selo foi ativado nesta pesquisa.
 
 ## Vale construir o painel de e-mails?
