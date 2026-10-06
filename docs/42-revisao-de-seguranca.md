@@ -4,9 +4,16 @@
 
 A auditoria antes da entrega de ecossistema encontrou um novo alerta high de produção: [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w), publicado na base GitHub em 06/10, afeta o librsvg empacotado por `sharp <0.35.5`. Atualizado `sharp` 0.35.4 → 0.35.5 no manifesto/lock, sem mudança na API de imagens, limites, formatos ou identidade visual. O [changelog oficial](https://sharp.pixelplumbing.com/changelog/v0.35.5/) identifica a versão corrigida; runtime Windows confirmou librsvg 2.63.2 e libvips 8.18.7.
 
-Após atualização: 27 testes de imagens e 79 de segurança, typecheck e lint passaram; revisão independente aprovou o patch, sem achados novos. Auditoria de produção retornou zero; completa mantém cinco high em `@next/eslint-plugin-next`, `braces`, `eslint-config-next`, `fast-glob` e `micromatch`, sem downgrade forçado. Build/runtime Linux são conferidos antes de concluir a publicação. Não usar versão do runtime Windows como prova dos binários Linux.
+Após atualização: 27 testes de imagens e 79 de segurança, typecheck e lint passaram; revisão independente aprovou o patch, sem achados novos. Auditoria de produção retornou zero; completa mantém cinco high em `@next/eslint-plugin-next`, `braces`, `eslint-config-next`, `fast-glob` e `micromatch`, sem downgrade forçado. Build e runtime Linux foram conferidos no comprovante abaixo. Não usar versão do runtime Windows como prova dos binários Linux.
 
 A allowlist MIME existente permanece preservada e recusa `image/svg+xml`, mas MIME adulterado ou uma fonte remota podem alcançar o decoder librsvg. Não afirmar bloqueio integral de SVG: esta entrega corrige a dependência que processa os bytes e mantém os limites de imagem existentes.
+
+### Comprovante Linux e publicação — 06/10/2026
+
+- Commit `cf2ceb0` publicado por fast-forward, build Docker/Next concluído e somente o app recriado, sem migração ou reinício de PostgreSQL. [Security checks](https://github.com/WilliYY/wimifarma-br/actions/runs/37504595404) passou.
+- Imagem ativa: `sha256:d9c249028316465fd4bc669bb2bbc61e2f9f1ed49fd900a04cf0de007b5dfa3c`; container healthy, zero reinícios. Imagem anterior preservada como `wimifarma-br-app:pre-sharp-cf2ceb0`.
+- Runtime Linux arm64/Node 24.21.0 confirmou Sharp 0.35.5 e libvips 8.18.7. O standalone omite `versions.json`, portanto `sharp.versions` não mostra librsvg. A biblioteca real foi comparada com o arquivo publicado no pacote npm `@img/sharp-libvips-linux-arm64@1.3.4`: integridade SHA-512 do tarball conferida e SHA-256 da biblioteca idêntico (`97c2ae9a663cd3de58a34d68820994e49e0e261fddbd4616bd726a72610bbc8f`). Metadados desse pacote confirmam librsvg **2.63.2**. Não inferir a plataforma a partir do computador local.
+- Conversão sintética SVG → WebP no container produziu imagem de 16 × 12 px/64 bytes; não reutilizou dados ou imagens de clientes. Health, home e checkout responderam 200; APIs de frete administrativo e pedidos privados responderam 401 sem sessão, com `private, no-store` e cabeçalhos de segurança. Não houve compra, cobrança, envio de mensagem ou alteração de credencial neste ensaio.
 
 ## Escopo — 05/10/2026
 

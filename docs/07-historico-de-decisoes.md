@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-06 - Ecossistema de envios, custos e reconhecimento externo
+
+- Manter Melhor Envio/PAC/SEDEX; comparar novo agregador somente por cobertura, preço final e operação comprovados a partir de Ivaté, com aceitação da carga. Revisão de líquidos encontrou divergência entre Correios e guia Melhor Envio; aplicar condições do canal contratado. Não habilitar serviços novos por inferência.
+- Seleção de pagamento deve ser determinística, com tarifas válidas da conta e provedor homologado; não precisa de IA. O comparador atual é administrativo e consulta Asaas ainda depende de credencial. Nova conferência confirmou botão de chave desabilitado; cobrança e roteamento automático não foram ativados.
+- Priorizar Google Perfil da Empresa, Search Console e Merchant Center para mercadorias elegíveis, depois Bing Places, Reclame AQUI e Ebit. Medicamentos seguem políticas próprias do Google; não estender cashback de avaliação às avaliações do Google. Cadastros, documentos sanitários e selos precisam de validação real. Fontes, roteiro e limitações em [44-ecossistema-frete-pagamentos-e-presenca.md](44-ecossistema-frete-pagamentos-e-presenca.md).
+- Segurança da entrega: auditoria nova identificou GHSA-wq5f-xc86-pv6w no Sharp de produção; patch 0.35.4 → 0.35.5 atualiza librsvg, sem alterar o contrato de imagens. Revisão independente, testes e prova do runtime Linux registrados em `42-revisao-de-seguranca.md`.
+
 ## 2026-10-06 - Frete com estimativas explícitas e validação de custos Asaas
 
 - Decisão: atender à autorização do lojista para pesos médios de volumes prontos, com caixa média de referência; separar estimativa de medição real no perfil. Permitir rascunhos parciais na API ADMIN sem liberar transportadora; aprovação continua completa, revisada, auditada e vinculada à versão do produto.
