@@ -9,7 +9,7 @@
 
 ## Frete estimado e Asaas — 06/10/2026
 
-- Ecossistema: Google Perfil da Empresa/Search Console/Merchant Center, Bing Places, Reclame AQUI/Ebit dependem de cadastro/propriedade/aprovação reais. Não incentivar avaliações Google. Asaas novamente sem chave disponível; liberar API, confirmar tarifas e homologar cobrança antes do roteamento. Roteiro e fontes em `44-ecossistema-frete-pagamentos-e-presenca.md`.
+- Ecossistema: perfil Google existente localizado; Reclame AQUI depende do e-mail empresarial vinculado; solicitação gratuita Ebit preparada, ainda não enviada; Search Console depende de DNS e Bing Places de entrada/verificação. Andamento em `46-cadastros-reputacao-e-presenca.md`; nenhum selo concedido. Não incentivar avaliações Google/Ebit. Asaas novamente sem chave disponível; liberar API, confirmar tarifas e homologar cobrança antes do roteamento. Roteiro em `44-ecossistema-frete-pagamentos-e-presenca.md`.
 
 - Frete: estimativas operacionais autorizadas para Cimegrip/KitKat (500 g) e Dove (800 g), com caixa média. Conferir peso e volume reais antes da primeira postagem; avaliar caixa consolidada para carrinhos com várias unidades. Receita comum classificada pode usar checkout e perfil logístico aprovado, com conferência antes da dispensação. Comprovante das estimativas no documento 43.
 - Asaas: conta/dados/documentos aprovados, plano Básico e API gratuitos; geração da chave ainda bloqueada pelo painel. Solicitar liberação e confirmar tarifa de Pix recebido por cobrança. Homologação e segundo gateway público continuam pendentes.

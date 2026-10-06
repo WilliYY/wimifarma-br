@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Cadastros de reputação e presença: [docs/46-cadastros-reputacao-e-presenca.md](docs/46-cadastros-reputacao-e-presenca.md). Perfil Google existente localizado; Reclame AQUI depende de validação no e-mail vinculado, Ebit de confirmação de novas adesões e Search Console de verificação DNS. Nenhum selo foi concedido nesta preparação.
+
 Pedido online de medicamentos de receita comum, sem upload no checkout, com conferência farmacêutica antes da dispensação: [docs/45-pedido-online-e-conferencia-de-receita.md](docs/45-pedido-online-e-conferencia-de-receita.md). Classificação exclusiva de ADMIN, sem decisão automática da IA; controlados e Farmácia Popular seguem atendimento assistido.
 
 Ecossistema de envio, integração Asaas sem mensalidade, limites do roteamento de custos e cadastros Google/Bing/Reclame AQUI/Ebit: [docs/44-ecossistema-frete-pagamentos-e-presenca.md](docs/44-ecossistema-frete-pagamentos-e-presenca.md). Conferência de 06/10 manteve a chave Asaas bloqueada no painel externo; não houve ativação de um segundo gateway ou transportadora.

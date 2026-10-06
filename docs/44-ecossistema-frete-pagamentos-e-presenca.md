@@ -53,7 +53,7 @@ Após liberação e confirmação segura da chave, conectar a consulta de tarifa
 | [Reclame AQUI](https://www.reclameaqui.com.br/criar-pagina-empresa) | Página da empresa, atendimento e reputação | [Página básica gratuita](https://www.reclameaqui.com.br/empresa/reclameaqui/faq/sou-empresa-e-quero-me-cadastrar_4toEyA3djba7xEAh/), com CNPJ e validação. [RA1000](https://blog.reclameaqui.com.br/o-que-e-o-selo-ra1000/) depende de indicadores e auditoria; não vem com o cadastro. |
 | [Ebit](https://www.ebit.com.br/empresa) | Avaliações pós-compra e reputação do comércio | [Programa básico gratuito](https://company.ebit.com.br/Termos/termo-lojista_EBIT_NIELSEN.pdf), condicionado à [aprovação da loja](https://ebit.zendesk.com/hc/pt-br/articles/360011020013-Como-posso-cadastrar-minha-loja-virtual-na-Ebit). Começa “Em Avaliação”; medalhas dependem de avaliações e critérios. |
 
-As contas não foram criadas nem sua propriedade confirmada nesta pesquisa. Nenhum código de verificação, alteração DNS, integração Ebit ou selo foi publicado. Search Console e Merchant Center são ferramentas administrativas; não usar seus logos como certificação de segurança.
+As contas não foram criadas nem sua propriedade confirmada nesta pesquisa inicial. Preparação posterior e bloqueios reais dos formulários estão em [46-cadastros-reputacao-e-presenca.md](46-cadastros-reputacao-e-presenca.md): ficha Google existente, validação Reclame AQUI por e-mail vinculado, links de adesão Ebit sem formulário e Search Console pendente de DNS. Nenhuma integração Ebit ou selo foi publicado. Search Console e Merchant Center são ferramentas administrativas; não usar seus logos como certificação de segurança.
 
 ### Produtos e avaliações no Google
 

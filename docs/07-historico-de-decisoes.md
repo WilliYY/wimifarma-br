@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-06 - Preparação dos cadastros gratuitos de reputação e presença
+
+- Localizar e reivindicar o perfil Google existente da Wimifarma no endereço correto, evitando duplicata. Aceite e verificação continuam pendentes; não presumir propriedade a partir da ficha pública.
+- Reclame AQUI localizou o CNPJ, mas exige validação pelo e-mail empresarial vinculado. A alternativa de biometria não encontrou responsáveis e ficou desabilitada. Preparar sem publicar página nem transmitir documento pessoal.
+- Ebit anuncia adesão gratuita, porém os links de inscrição não apresentaram formulário funcional. Solicitação ao suporte preparada, sem envio antes do consentimento e autorização. Não instalar selo ou script de uma loja ainda não aprovada.
+- Search Console iniciado para o domínio, ainda sem verificação DNS; Bing Places conferido, sem login ou concessão OAuth. RA1000 e Diamante são consequências de critérios e avaliações reais, sem atalhos ou avaliações fabricadas. Requisitos Ebit atuais diferem de manuais antigos.
+- Evidências, fontes e ações restantes em [46-cadastros-reputacao-e-presenca.md](46-cadastros-reputacao-e-presenca.md). Alteração apenas documental, sem assinatura ou pagamento.
+
 ## 2026-10-06 - Pedido online e conferência de receita antes da dispensação
 
 - Permitir carrinho e pagamento de medicamentos com receita comum, sem upload no checkout. Preservar a exigência de receita e avaliação farmacêutica antes da dispensação; não converter Losartana em medicamento isento de prescrição. Controlados, classificação pendente e Farmácia Popular seguem atendimento assistido.
