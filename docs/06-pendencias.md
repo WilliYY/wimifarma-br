@@ -9,7 +9,7 @@
 
 ## Frete estimado e Asaas — 06/10/2026
 
-- Ecossistema: perfil Google existente localizado; Reclame AQUI depende do e-mail empresarial vinculado; solicitação gratuita Ebit preparada, ainda não enviada; Search Console depende de DNS e Bing Places de entrada/verificação. Andamento em `46-cadastros-reputacao-e-presenca.md`; nenhum selo concedido. Não incentivar avaliações Google/Ebit. Asaas novamente sem chave disponível; liberar API, confirmar tarifas e homologar cobrança antes do roteamento. Roteiro em `44-ecossistema-frete-pagamentos-e-presenca.md`.
+- Ecossistema: solicitação de administração Google enviada, resposta do proprietário até 09/10; Reclame AQUI depende do e-mail empresarial vinculado; consulta de adesão gratuita Ebit enviada e e-mail confirmado, aguardando suporte. Search Console HTTPS verificado e sitemap processado com 15 páginas; aguardar relatórios/indexação. Propriedade de domínio completo por DNS e Bing Places permanecem pendentes. Andamento em `46-cadastros-reputacao-e-presenca.md`; nenhum selo concedido. Não incentivar avaliações Google/Ebit. Asaas novamente sem chave disponível; liberar API, confirmar tarifas e homologar cobrança antes do roteamento. Roteiro em `44-ecossistema-frete-pagamentos-e-presenca.md`.
 
 - Frete: estimativas operacionais autorizadas para Cimegrip/KitKat (500 g) e Dove (800 g), com caixa média. Conferir peso e volume reais antes da primeira postagem; avaliar caixa consolidada para carrinhos com várias unidades. Receita comum classificada pode usar checkout e perfil logístico aprovado, com conferência antes da dispensação. Comprovante das estimativas no documento 43.
 - Asaas: conta/dados/documentos aprovados, plano Básico e API gratuitos; geração da chave ainda bloqueada pelo painel. Solicitar liberação e confirmar tarifa de Pix recebido por cobrança. Homologação e segundo gateway público continuam pendentes.
@@ -56,7 +56,7 @@
 
 ## Google: configuração externa única
 
-- Confirmar propriedade no Search Console e envio de `https://wimifarma.com.br/sitemap.xml`; o mapa e o SEO acompanham os produtos publicados automaticamente.
+- Search Console: prefixo HTTPS confirmado e sitemap enviado/processado em 06/10/2026; acompanhar indexação e relatórios. Manter metatag de verificação. O mapa e o SEO acompanham os produtos publicados automaticamente; domínio completo por DNS continua opcional e pendente.
 - Vincular `https://wimifarma.com.br/google-products.xml` como fonte programada no Merchant Center, se a conta estiver habilitada. Conferir diagnósticos e políticas; não foi confirmada conexão das contas nesta implementação.
 - Indexação, posição e aprovação comercial dependem do Google. Não requer criar links de campanha para cada produto. Contrato: `docs/25-seo-automatico-e-lixeira.md`.
 

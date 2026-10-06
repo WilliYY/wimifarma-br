@@ -1,6 +1,6 @@
 # Wimifarma BR
 
-Cadastros de reputação e presença: [docs/46-cadastros-reputacao-e-presenca.md](docs/46-cadastros-reputacao-e-presenca.md). Perfil Google existente localizado; Reclame AQUI depende de validação no e-mail vinculado, Ebit de confirmação de novas adesões e Search Console de verificação DNS. Nenhum selo foi concedido nesta preparação.
+Cadastros de reputação e presença: [docs/46-cadastros-reputacao-e-presenca.md](docs/46-cadastros-reputacao-e-presenca.md). Search Console HTTPS verificado e sitemap processado, com 15 páginas encontradas. Solicitações Google e Ebit enviadas; Perfil da Empresa aguarda proprietário até 09/10 e Reclame AQUI depende do e-mail vinculado. Nenhum selo concedido.
 
 Pedido online de medicamentos de receita comum, sem upload no checkout, com conferência farmacêutica antes da dispensação: [docs/45-pedido-online-e-conferencia-de-receita.md](docs/45-pedido-online-e-conferencia-de-receita.md). Classificação exclusiva de ADMIN, sem decisão automática da IA; controlados e Farmácia Popular seguem atendimento assistido.
 

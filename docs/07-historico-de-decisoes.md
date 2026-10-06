@@ -7,6 +7,9 @@
 - Ebit anuncia adesão gratuita, porém os links de inscrição não apresentaram formulário funcional. Solicitação ao suporte preparada, sem envio antes do consentimento e autorização. Não instalar selo ou script de uma loja ainda não aprovada.
 - Search Console iniciado para o domínio, ainda sem verificação DNS; Bing Places conferido, sem login ou concessão OAuth. RA1000 e Diamante são consequências de critérios e avaliações reais, sem atalhos ou avaliações fabricadas. Requisitos Ebit atuais diferem de manuais antigos.
 - Evidências, fontes e ações restantes em [46-cadastros-reputacao-e-presenca.md](46-cadastros-reputacao-e-presenca.md). Alteração apenas documental, sem assinatura ou pagamento.
+- Complemento após autorização explícita: solicitação de administração da ficha Google enviada, com prazo de resposta do proprietário até 09/10/2026; consulta de adesão gratuita Ebit enviada e endereço de e-mail confirmado. Telas finais de sucesso comprovadas. Não solicitar transferência de propriedade, contratar plano ou presumir cadastro Ebit aprovado.
+- Continuação: DNS público no Registro.br, sem sessão autenticada. Preparar prefixo HTTPS no Search Console por metatag já suportada pelo layout; publicação/validação dependem de autorização específica da concessão de propriedade. Não alterar DNS nem credenciais para contornar a autenticação.
+- Conclusão após autorização específica: metatag configurada somente no `.env` privado, app recriado com a mesma imagem, saudável; propriedade HTTPS verificada. Sitemap enviado e processado pelo Google, com 15 páginas encontradas em 06/10/2026. Manter a tag; processamento não garante indexação/ranking. Sem alterações de DNS, banco ou cobrança. Segurança: 92 testes passaram, auditoria de produção sem vulnerabilidades; cinco alertas high de desenvolvimento permanecem na auditoria completa. Operação e comprovantes no documento 46.
 
 ## 2026-10-06 - Pedido online e conferência de receita antes da dispensação
 
