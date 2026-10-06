@@ -7,7 +7,7 @@ const outputDir = process.env.AUDIT_OUTPUT_DIR;
 if (!outputDir) throw new Error("AUDIT_OUTPUT_DIR is required for non-destructive visual evidence");
 await mkdir(outputDir, { recursive: true });
 const browser = await chromium.launch();
-const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: "reduce" });
 const page = await context.newPage();
 const errors = [];
 page.on("pageerror", (error) => errors.push(error.message));
