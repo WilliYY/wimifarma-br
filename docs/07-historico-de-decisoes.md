@@ -5,6 +5,7 @@
 - Reorganizar o rodapé com a identidade oficial, identificação empresarial, contato direto, navegação de compra, Pix/cartão e entrega por CEP. Usar HTTPS como informação de conexão, sem selo inventado ou garantia de invulnerabilidade.
 - Publicar o link de mapa Google existente; Ebit, RA1000 e Reclame AQUI continuam condicionados à confirmação dos perfis/selos. Search Console não é certificação pública.
 - Retirar apenas a decoração de 128 bolhas do rodapé, preservando a animação oficial no cabeçalho. Layout responsivo sem novo script cliente. Contrato e validações em [47-rodape-e-confianca-visual.md](47-rodape-e-confianca-visual.md).
+- Publicado com rebuild somente do app; site/API de saúde HTTP 200, metatag Google preservada. Lint/typecheck/build e 92 testes de segurança passaram; auditoria de produção limpa. Chrome confirmou rodapé e logo carregada no desktop. Capturas e emulação mobile falharam na ferramenta; validação renderizada do celular permanece pendente, sem aprovação presumida.
 
 ## 2026-10-06 - Preparação dos cadastros gratuitos de reputação e presença
 
