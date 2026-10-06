@@ -41,6 +41,14 @@ Receita comum classificada pode consultar transportadora somente com perfil log�
 - Cotação no checkout para duas unidades/CEP 87501-070: PAC R$43,40/8 dias úteis e SEDEX R$49,36/4 dias úteis. Cotação de uma unidade/CEP 01001-000: PAC R$21,70/9 dias úteis e SEDEX R$24,68/5 dias úteis. Preços e prazos são resultados momentâneos, incluem a preparação configurada e dependem de disponibilidade, volume estimado e consulta atual. Um volume por unidade continua sendo a regra; não há consolidação automática.
 - Evidências visuais locais em `outputs/prescription-oct06`, fora do Git. Nenhuma cobrança real, etiqueta ou mensagem ao cliente foi gerada nesta validação. Disponibilidade das opções Pix/cartão no checkout não equivale a uma nova homologação financeira desses meios.
 
+## Retorno intermitente do provedor — 06/10/2026, 18:22 UTC
+
+Após as cotações e a primeira prova pública aprovadas acima, uma repetição devolveu HTTP 200 com lista vazia. Diagnóstico isolado no servidor, sem expor credenciais, mostrou que o Melhor Envio retornou `error: "Serviço indisponível no momento"` tanto para PAC quanto para SEDEX. Os dois CEPs previamente atendidos ficaram sem opções; a resposta não comprova perda de cobertura, erro de dimensões ou falha OAuth.
+
+`normalizeQuotes` agora devolve erro temporário 503 quando todos os serviços retornados autorizados têm essa mensagem explícita. A interface apresenta a mensagem e permite consultar novamente ou escolher retirada. Sucesso parcial e ausência normal de cobertura permanecem distintos. Não foram adicionados retries automáticos, preços presumidos, serviços não autorizados ou cobranças. A detecção depende da mensagem atual do provedor e não restabelece o serviço externo.
+
+Regressão falhou antes da correção e passou depois; suite de frete 49/49 e segurança 92/92, com revisão independente aprovada e ESLint limpo. A disponibilidade atual precisa ser confirmada em nova consulta; os preços acima são evidência histórica deste ensaio. Essa instabilidade impede declarar transporte garantido para todos os destinos a qualquer momento.
+
 ## Limite de publicidade
 
 RDC 44/2009, art. 54, restringe imagens/promocionais de medicamentos com receita e admite lista neutra de preços nos termos da norma. O catálogo atual precisa de revisão específica dessa apresentação. Este trabalho separa pedido e dispensação; não atesta conformidade integral da publicidade nem autoriza campanha, avaliação incentivada, cashback ou Merchant Center para medicamentos de receita.

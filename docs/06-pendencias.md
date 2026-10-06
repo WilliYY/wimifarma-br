@@ -4,6 +4,7 @@
 
 - Receita comum classificada por ADMIN passa a permitir carrinho e pagamento sem upload; a farmácia confere a receita antes da dispensação. Controlados, receita não classificada e Farmácia Popular seguem atendimento. O contrato do documento 45 substitui os bloqueios genéricos de receita citados em registros anteriores.
 - Perfil logístico aprovado continua obrigatório para transportadora; estimativas não comprovam medidas reais. Conferir conservação, embalagem e aceitação antes da postagem.
+- Melhor Envio/Correios: consultas PAC/SEDEX retornaram preços válidos e, depois, indisponibilidade explícita do provedor. Tratamento de erro temporário foi corrigido; novas consultas dependem do serviço externo. Histórico e limites no documento 45.
 - Publicidade de medicamentos com receita precisa de revisão específica conforme RDC 44/2009, art. 54. Liberar pedido não equivale a autorizar imagens promocionais, cashback ou Merchant Center para esses itens.
 
 ## Frete estimado e Asaas — 06/10/2026

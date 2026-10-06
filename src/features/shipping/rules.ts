@@ -5,6 +5,12 @@ import type { PrescriptionType } from "@/features/products/purchase-policy";
 
 export function normalizeQuotes(raw: unknown, allowed: number[], preparationDays: number): ShippingOption[] {
   if (!Array.isArray(raw)) throw new ShippingError("O Melhor Envio retornou uma resposta inválida. Tente novamente.", 502);
+  const selected = raw.filter((entry) => entry && typeof entry === "object" && allowed.includes(entry.id));
+  // The provider can return HTTP 200 while every selected service is temporarily down.
+  // Keep that outage distinct from a destination with no available service.
+  if (selected.length && selected.every((entry) => typeof entry.error === "string" && /serviço indisponível no momento/i.test(entry.error))) {
+    throw new ShippingError("As transportadoras estão temporariamente indisponíveis. Aguarde um momento e consulte o frete novamente, ou escolha retirada.", 503);
+  }
   const quotes = new Map<number, ShippingOption>();
   for (const entry of raw) {
     if (!entry || typeof entry !== "object" || entry.error) continue;

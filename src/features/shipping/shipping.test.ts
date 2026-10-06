@@ -38,6 +38,19 @@ test("normalization preserves configured prices, rejects provider errors and una
   assert.deepEqual(normalizeQuotes(raw, [1, 3, 4, 5, 6], 2).map((q) => [q.serviceId, q.priceCents, q.deliveryDays]), [[1, 1250, 6]]);
   assert.throws(() => normalizeQuotes({ error: "no" }, [1], 1));
 });
+test("temporary failure of every selected carrier is distinguished from lack of coverage", () => {
+  const temporarilyUnavailable = [
+    { id: 1, name: "PAC", error: "Serviço indisponível no momento" },
+    { id: 2, name: "SEDEX", error: "Serviço indisponível no momento" },
+  ];
+  assert.throws(() => normalizeQuotes(temporarilyUnavailable, [1, 2], 1), { status: 503 });
+  assert.deepEqual(normalizeQuotes([{ id: 1, error: "CEP não atendido" }], [1], 1), []);
+  assert.deepEqual(normalizeQuotes([], [1, 2], 1), []);
+  const available = { id: 2, name: "SEDEX", price: "12.50", delivery_time: 4, company: { name: "Correios" } };
+  assert.deepEqual(normalizeQuotes([temporarilyUnavailable[0], available], [1, 2], 1).map((option) => option.serviceId), [2]);
+  assert.deepEqual(normalizeQuotes([{ id: 9, error: "Serviço indisponível no momento" }, available], [2], 1).map((option) => option.serviceId), [2]);
+});
+
 test("shipping fails closed without complete packaging and commercial review", () => {
   assert.deepEqual(validateShippingProduct(product), { ...profile, measurementBasis: "measured" });
   for (const changes of [{ shippingProfile: null }, { shippingProfile: { ...profile, transportReviewed: false } }, { shippingProfile: { ...profile, enabled: false } }, { requiresPrescription: true }, { isPopularPharmacy: true }, { category: "Farmácia Popular" }]) assert.throws(() => validateShippingProduct({ ...product, ...changes }));
