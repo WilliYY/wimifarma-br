@@ -30,4 +30,19 @@ Botão de chave API liberado e tela de criação aberta para o titular, sem saqu
 - Revisão independente encontrou o desvio de reclassificação de receita, corrigido e reproduzido novamente com zero reservas/chamadas ao gateway. Nenhum achado pendente após a correção e a revisão da interface.
 - Lint completo, lint final dos arquivos alterados e typecheck final aprovados.
 - Auditoria de produção: zero vulnerabilidades. Auditoria completa mantém cinco alertas **high** na cadeia de desenvolvimento (`@next/eslint-plugin-next`, `eslint-config-next`, `fast-glob`, `micromatch`, `braces`); não foram ocultados nem houve alteração de dependências nessa entrega.
-- Build local aprovado; publicação registrada abaixo após a conclusão. Testes sintéticos não equivalem a cobrança produtiva Pix/cartão ou homologação Asaas.
+- Build local e build Docker do servidor aprovados. Testes sintéticos não equivalem a cobrança produtiva Pix/cartão ou homologação Asaas.
+
+## Publicação e conferência produtiva
+
+Código publicado em `ddd9359` (`fix(commerce): restore payments and unify product registration`). GitHub e checkout do VPS sincronizados; apenas o serviço `app` foi reconstruído/recriado, sem alteração de banco ou migração. Imagem `sha256:8d8905190a4361fd315f1a49f887ecca4a2d1ea80f213ad98ef462a6e48a3b0f`, container saudável, zero reinícios. Imagem anterior preservada como `wimifarma-br-checkout-rollback:20261007`.
+
+Health, início, checkout, privacidade e sitemap responderam HTTP 200 após a publicação. O cadastro produtivo foi aberto sem salvar: identificação, descrição/SEO e logística unificadas, um assistente e nenhum controle visível de receita. O rodapé publicado exibe o efeito original de bolhas e as informações da loja. Capturas em `outputs/cadastro-publicado-20261007.png` e `outputs/rodape-bolhas-publicado-20261007.png`, fora do Git. A validação a 390 px descrita acima foi feita na prévia sintética; a inspeção produtiva foi em desktop. Nenhum novo pedido, cobrança, produto ou envio foi criado nesta conferência.
+
+## Arquivos e comandos desta entrega
+
+- Pagamento: `src/features/payments/service.ts` e `start-payment.test.ts`.
+- Cadastro/frete: `src/components/admin/products-catalog-panel.tsx`, `product-shipping-fields.tsx`, `shipping-panel.tsx`, `src/features/shipping/product-reference.ts` e `product-reference.test.ts`.
+- Rodapé: `src/components/site/site-footer.tsx` e `src/app/globals.css`.
+- Padrões/documentação: `AGENTS.md`, `README.md` e documentos 07, 28, 29, 40, 47, 48 e 49.
+- Validações: `npm.cmd test`, `npm.cmd run test:security`, `npm.cmd run test:shipping`, `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run build`, `npm.cmd audit --omit=dev --audit-level=high --json`, auditoria completa e `git diff --check`.
+- Entrega: commit/push, `git pull --ff-only`, `docker compose build app`, `docker compose up -d --no-deps app` e conferência de saúde/HTTP no VPS.

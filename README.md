@@ -4,11 +4,13 @@ Rodapé público com efeito original de bolhas preservado, identidade oficial, i
 
 Cadastro reúne identificação, descrição/SEO e logística com um assistente único: [docs/48-cadastro-unificado.md](docs/48-cadastro-unificado.md). Pagamento reutiliza a mesma classificação de receita do checkout; receita comum revisada permite Pix/cartão, mantendo a conferência farmacêutica antes da dispensação.
 
+Entrega de 07/10/2026, com conferência produtiva, testes, cotações reais e limites de homologação: [docs/49-validacao-checkout-cadastro-e-frete.md](docs/49-validacao-checkout-cadastro-e-frete.md). Controles de receita retirados da tela; classificações existentes preservadas.
+
 Cadastros de reputação e presença: [docs/46-cadastros-reputacao-e-presenca.md](docs/46-cadastros-reputacao-e-presenca.md). Search Console HTTPS verificado e sitemap processado, com 15 páginas encontradas. Solicitações Google e Ebit enviadas; Perfil da Empresa aguarda proprietário até 09/10 e Reclame AQUI depende do e-mail vinculado. Nenhum selo concedido.
 
 Pedido online de medicamentos de receita comum, sem upload no checkout, com conferência farmacêutica antes da dispensação: [docs/45-pedido-online-e-conferencia-de-receita.md](docs/45-pedido-online-e-conferencia-de-receita.md). Classificação exclusiva de ADMIN, sem decisão automática da IA; controlados e Farmácia Popular seguem atendimento assistido.
 
-Ecossistema de envio, integração Asaas sem mensalidade, limites do roteamento de custos e cadastros Google/Bing/Reclame AQUI/Ebit: [docs/44-ecossistema-frete-pagamentos-e-presenca.md](docs/44-ecossistema-frete-pagamentos-e-presenca.md). Conferência de 06/10 manteve a chave Asaas bloqueada no painel externo; não houve ativação de um segundo gateway ou transportadora.
+Ecossistema de envio, integração Asaas sem mensalidade, limites do roteamento de custos e cadastros Google/Bing/Reclame AQUI/Ebit: [docs/44-ecossistema-frete-pagamentos-e-presenca.md](docs/44-ecossistema-frete-pagamentos-e-presenca.md). Em 07/10 a criação da chave Asaas foi liberada no painel externo e aguarda conclusão pelo titular; o segundo gateway ainda não foi ativado. Estado atual em [docs/40-asaas-configuracao-e-homologacao.md](docs/40-asaas-configuracao-e-homologacao.md).
 
 Segurança: revisão padrão em [SECURITY.md](SECURITY.md), suite `npm run test:security` e CI de push/PR/semanal com auditoria de produção. Correções e limites em [docs/42-revisao-de-seguranca.md](docs/42-revisao-de-seguranca.md). A atualização exige nova entrada para sessões antigas, sem alterar contas/senhas.
 
