@@ -11,14 +11,14 @@ O rodapé público reúne informações úteis à compra e à identificação da
 - HTTPS é descrito como criptografia da conexão, sem alegação de certificação, auditoria externa ou invulnerabilidade. Pix/cartão são apresentados com consulta das condições no checkout, sem prometer bandeiras ou parcelas não confirmadas.
 - Link “Encontre a Wimifarma no Google” aponta ao mapa da loja já usado no site. Não significa que a solicitação de administração do perfil foi aprovada.
 - Reclame AQUI, RA1000 e Ebit/Diamante continuam fora do rodapé até confirmação da página empresarial e concessão/integração dos respectivos selos. Search Console é ferramenta administrativa e não selo para consumidores. Andamento no documento 46.
-- Removidas as 128 bolhas e o filtro SVG do antigo rodapé; somente os estilos exclusivos dessa decoração foram retirados. Animação original da logo do cabeçalho preservada. Não há novo JavaScript de cliente, biblioteca ou script externo.
+- A remoção das bolhas nessa entrega foi revertida a pedido do lojista em 07/10/2026: preservar permanentemente as 128 bolhas, os tempos, trajetórias, filtro SVG e fundo de marca originais. A organização e os links úteis abaixo da animação permanecem. Animação original da logo do cabeçalho preservada. Não há novo JavaScript de cliente, biblioteca ou script externo.
 - Layout empilha no celular, usa duas colunas no tablet e quatro no desktop. Links com alvo mínimo de 44px, foco de teclado visível e ícones decorativos ocultos da leitura assistiva.
 
 ## Arquivos
 
 - `src/components/site/site-footer.tsx`: rodapé, navegação e informações de compra.
 - `src/lib/site.ts`: CNPJ e razão social públicos.
-- `src/app/globals.css`: retirada dos estilos exclusivos das bolhas.
+- `src/app/globals.css`: estilos originais das bolhas restaurados em 07/10/2026.
 
 ## Próximas melhorias que dependem de dados reais
 

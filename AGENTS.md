@@ -187,6 +187,7 @@ npm.cmd audit --audit-level=moderate
 
 ## Identidade Visual Obrigatoria
 
+- Preservar o efeito original de bolhas do rodapé (`site-gooey-footer`, 128 bolhas, tempos originais e filtro `wimifarma-footer-blob`). O lojista determinou em 07/10/2026 que melhorias futuras não removam nem substituam essa animação. Respeitar a preferência de movimento reduzido existente.
 - Usar sempre a logo oficial completa da Wimifarma em banners, campanhas e imagens institucionais; nunca representar a farmacia apenas por cruz ou simbolo generico.
 - Arte original: `public/brand/logo-wimifarma.svg`. Versao leve derivada, sem redesenhar: `public/brand/logo-wimifarma-compact.webp`. Assinatura reutilizavel: `BrandSignature`.
 - Preservar letras, proporcoes e contorno. Em cenas geradas, fornecer a logo como referencia e conferir sacolas, uniformes e veiculos. Manter as marcas reais dos produtos.

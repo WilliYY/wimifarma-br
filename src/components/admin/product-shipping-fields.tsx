@@ -17,8 +17,8 @@ export type ProductShippingFieldsHandle = { applySuggestion: (reference: Shippin
 
 export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
   initialProfile?: unknown; identityKey: string; suggestion?: ShippingReference | null; researched: boolean;
-  canEdit: boolean; medicine: boolean;
-}>(function ProductShippingFields({ initialProfile, identityKey, suggestion, researched, canEdit, medicine }, ref) {
+  canEdit: boolean; medicine: boolean; integrated?: boolean;
+}>(function ProductShippingFields({ initialProfile, identityKey, suggestion, researched, canEdit, medicine, integrated = false }, ref) {
   const parsed = shippingProfileSchema.or(shippingDraftSchema).safeParse(initialProfile);
   const initial = parsed.success ? parsed.data : null;
   const [draft, setDraft] = useState(() => ({
@@ -48,11 +48,11 @@ export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
     return copiedKeys.length;
   }
   useImperativeHandle(ref, () => ({ applySuggestion: copyReference }));
-  return <section aria-label="Peso e medidas para frete" className="min-w-0 overflow-hidden rounded-xl border border-line bg-white">
-    <div className="flex flex-wrap items-start justify-between gap-3 bg-surface-subtle p-4">
-      <div className="flex min-w-0 gap-3"><span className="rounded-lg bg-brand-soft p-2 text-brand"><Package className="h-5 w-5" /></span><div><h3 className="text-sm font-black">Logística · peso e medidas para frete</h3><p className="mt-1 text-xs leading-5 text-muted">Resultados da pesquisa única do assistente de cadastro, com fontes para conferência.</p></div></div>
+  return <section aria-label="Peso e medidas para frete" className={`min-w-0 overflow-hidden bg-white ${integrated ? "" : "rounded-xl border border-line"}`}>
+    <div className={`flex flex-wrap items-start justify-between gap-3 ${integrated ? "px-4 pt-4 sm:px-6 sm:pt-6" : "bg-surface-subtle p-4"}`}>
+      <div className="flex min-w-0 gap-3"><span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-xs font-black text-brand">{integrated ? "03" : <Package className="h-5 w-5" />}</span><div><h3 className="text-base font-black">Peso e medidas para frete</h3><p className="mt-1 text-xs leading-5 text-muted">Mesma pesquisa, com fontes e estimativas identificadas para conferência.</p></div></div>
     </div>
-    <div className="grid gap-4 p-4">
+    <div className={`grid gap-4 p-4 ${integrated ? "sm:p-6" : ""}`}>
       <p className="text-xs leading-5 text-muted">A pesquisa acompanha o catálogo e SEO. Dados exatos têm prioridade; quando faltarem, uma comparação válida pode sugerir uma faixa estimada. Nos campos vazios usamos o limite superior dessa faixa como rascunho. Valores manuais são preservados. Confira a caixa e proteção finais; volume em ml e peso líquido não substituem o peso embalado.</p>
       {reference && <div className="grid min-w-0 gap-3 rounded-lg border border-sky-100 bg-sky-50/50 p-3">
         <p className="text-xs font-bold text-sky-900">{reference.estimate ? "Pesquisa concluída · há medidas estimadas" : hasValues ? "Referência encontrada · confira a embalagem" : "Dados insuficientes para sugerir medidas"}</p>

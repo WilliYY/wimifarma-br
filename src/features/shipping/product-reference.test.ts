@@ -21,6 +21,57 @@ const estimateReference = () => ({ ...reference(), weight: null, dimensions: nul
 } });
 const estimateContext = { ...context, research: `${targetEvidence}\n${context.research}\n${comparableEvidence}` };
 
+test("thin comparable packages retain conservative sub-centimeter ranges", () => {
+  for (const height of [0.5, 0.05, 1.1]) {
+    const raw = estimateReference();
+    const name = "Curativo alvo 1 unidade";
+    const comparableName = "Curativo comparável 1 unidade";
+    const packageDescription = "envelope fechado plástico 1 unidade";
+    const target = `${name}; ${packageDescription}.`;
+    const evidence = `${comparableName}; ${packageDescription}; largura 8 cm, altura ${height} cm, comprimento 10 cm.`;
+    const estimate = { ...raw.estimate, comparableName, packageDescription, productFamily: "curativo", targetEvidence: target, evidence, weight: null, dimensions: { ...raw.estimate.dimensions, height } };
+    const result = qualifyShippingReference({ ...raw, estimate }, { ...context, name, research: `${target}\n${evidence}` });
+    const range = result?.estimate?.heightCm;
+    assert.ok(range, `height ${height} cm remains usable`);
+    assert.ok(range.min > 0 && range.min <= height * 0.8);
+    assert.ok(range.max >= height * 1.2);
+    assert.equal(result?.heightCm, null);
+  }
+});
+
+test("dental cream and dental paste share a specific family without allowing mixed creams", () => {
+  const raw = estimateReference();
+  const name = "Creme dental alvo 90 g";
+  const comparableName = "Pasta dental comparável 90 g";
+  const packageDescription = "bisnaga fechada plástico 90 g";
+  const target = `${name}; ${packageDescription}.`;
+  const evidence = `${comparableName}; ${packageDescription}; peso bruto 110 g; largura 4 cm, altura 3 cm, comprimento 15 cm.`;
+  const estimate = { ...raw.estimate, comparableName, packageDescription, productFamily: "pasta dental", targetEvidence: target, evidence, weight: { value: 110, unit: "g", kind: "gross" }, dimensions: { width: 4, height: 3, length: 15, unit: "cm" } };
+  assert.ok(qualifyShippingReference({ ...raw, estimate }, { ...context, name, research: `${target}\n${evidence}` })?.estimate);
+  const mixed = "Creme dental e creme corporal alvo 90 g";
+  const mixedTarget = `${mixed}; ${packageDescription}.`;
+  assert.equal(qualifyShippingReference({ ...raw, estimate: { ...estimate, targetEvidence: mixedTarget } }, { ...context, name: mixed, research: `${mixedTarget}\n${evidence}` })?.estimate ?? null, null);
+});
+
+test("diaper comparables require compatible explicit adult or infant audiences", () => {
+  for (const [targetAudience, comparableAudience, allowed] of [
+    ["infantil", "adulta", false], ["adulta", "infantil", false],
+    ["geriátrica", "infantil", false], ["infantil", "", false],
+    ["", "adulta", false], ["", "", false], ["adulta infantil", "adulta infantil", false],
+    ["infantil", "infantil", true], ["adulta", "adulta", true], ["geriátrica", "adulta", true],
+  ] as const) {
+    const raw = estimateReference();
+    const name = `Fralda ${targetAudience} alvo M 40 unidades`;
+    const comparableName = `Fralda ${comparableAudience} comparável M 40 unidades`;
+    const packageDescription = "pacote fechado plástico M 40 unidades";
+    const target = `${name}; ${packageDescription}.`;
+    const evidence = `${comparableName}; ${packageDescription}; peso bruto 350 g; largura 8 cm, altura 20 cm, comprimento 10 cm.`;
+    const estimate = { ...raw.estimate, comparableName, packageDescription, productFamily: "fralda", targetEvidence: target, evidence, weight: { value: 350, unit: "g", kind: "gross" } };
+    const result = qualifyShippingReference({ ...raw, estimate }, { ...context, name, research: `${target}\n${evidence}` });
+    assert.equal(Boolean(result?.estimate), allowed, `${targetAudience} / ${comparableAudience}`);
+  }
+});
+
 test("estimates separate conservative ranges from sourced comparable facts without changing exact values", () => {
   const result = qualifyShippingReference(estimateReference(), estimateContext)!;
   assert.equal(result.weightGrams, null);
@@ -143,7 +194,7 @@ test("comparable estimates follow packaging across medicine, food, diapers, devi
   for (const [product, family, presentation, format, material] of [
     ["Comprimidos", "comprimido", "20 comprimidos 500 mg", "caixa", "papelão"],
     ["Chocolate", "chocolate", "100 g", "barra", "plástico"],
-    ["Fralda", "fralda", "M 40 unidades", "pacote", "plástico"],
+    ["Fralda infantil", "fralda", "M 40 unidades", "pacote", "plástico"],
     ["Termômetro", "termômetro", "1 unidade", "estojo", "plástico"],
     ["Perfume", "perfume", "100 ml", "frasco", "vidro"],
   ]) {

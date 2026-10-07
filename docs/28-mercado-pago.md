@@ -1,5 +1,13 @@
 # 28 - Mercado Pago: checkout e homologação
 
+## Correção da validação antes da cobrança — 07/10/2026
+
+A preparação do pagamento passa a usar a mesma política comercial do checkout (`requiresPurchaseAssistance`). A checagem antiga recusava qualquer `requiresPrescription=true`, inclusive receita comum já classificada por ADMIN, e devolvia “Preço, disponibilidade ou estoque mudou. Cancele este pedido e atualize o carrinho.” antes de chamar o gateway. Receita comum pode criar pedido e iniciar Pix/cartão sem upload; a conferência farmacêutica continua obrigatória antes da dispensação. Controlados, classificação pendente e Farmácia Popular permanecem bloqueados.
+
+Se um produto passa de isento para receita comum depois da criação, o pagamento recusa o pedido que não registrou a necessidade de conferência. O cliente deve cancelar e refazer o checkout para obter o snapshot correto; o pagamento não concede conferência nem modifica esse registro silenciosamente. A verificação usa o produto persistido e ocorre dentro da transação antes da reserva e da chamada ao gateway.
+
+As comparações de preço/estoque, prazo de reserva, lock do pedido, reserva atômica, corpo cifrado, chave de idempotência e reconciliação autenticada permanecem no fluxo existente. Regressões sintéticas em `src/features/payments/start-payment.test.ts` reproduzem a recusa anterior e verificam Pix/cartão, os bloqueios, mudança de exigência de receita após o pedido, corrida de estoque, expiração, repetição e resposta incerta. Banco e provedor são simulados; a validação não cria cobranças nem altera configuração financeira em produção.
+
 ## Comparação de tarifas — 04/10/2026
 
 O painel ganhou um comparador de tarifas da conta e consulta Asaas separada, exclusiva de ADMIN. Isto não altera o provedor do checkout nem ativa cobranças no Asaas. Não tratar as tarifas de publicidade como contrato. A escolha automática de gateway depende de conta, vínculo persistente por pedido, reconciliação e homologação futura. Ver `38-politica-de-taxas.md`.

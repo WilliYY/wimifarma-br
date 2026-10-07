@@ -5,6 +5,7 @@ import {
   type ReactNode,
   type RefObject,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -172,19 +173,21 @@ function productPayload(
   };
 }
 
-function ProductFormSection({ number, title, description, children, className }: {
+function ProductFormSection({ number, title, description, children, className, id, integrated = false }: {
   number: string;
   title: string;
   description: string;
   children: ReactNode;
   className?: string;
+  id?: string;
+  integrated?: boolean;
 }) {
   return (
-    <section aria-label={title} className={cn("grid min-w-0 gap-4 rounded-xl border border-line bg-white p-4 sm:p-5", className)}>
+    <section aria-label={title} id={id} className={cn("grid min-w-0 scroll-mt-4 gap-5 bg-white p-4 sm:p-6", integrated ? "border-b border-line last:border-b-0" : "rounded-xl border border-line", className)}>
       <div className="flex items-start gap-3 border-b border-line pb-4">
         <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-xs font-black text-brand">{number}</span>
         <div className="min-w-0">
-          <h3 className="text-sm font-black text-ink">{title}</h3>
+          <h3 className="text-base font-black text-ink">{title}</h3>
           <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
         </div>
       </div>
@@ -210,6 +213,7 @@ function ProductFormFields({
   product?: ProductListItem;
   disabled?: boolean;
 }) {
+  const sectionId = useId();
   const nameInputRef = useRef<HTMLInputElement>(null);
   const shippingFieldsRef = useRef<ProductShippingFieldsHandle>(null);
   const pendingResearch = useRef<AbortController | null>(null);
@@ -438,9 +442,12 @@ function ProductFormFields({
           </div>
         ) : null}
       </div>
-      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
-        <div className="grid min-w-0 gap-4">
-          <ProductFormSection number="01" title="Cadastro · identificação do produto" description="Comece pela apresentação exata. Nome e preço são obrigatórios.">
+      <nav aria-label="Seções do cadastro" className="mb-4 flex flex-wrap gap-2">
+        {[["identity", "Identificação"], ["description", "Descrição e SEO"], ["shipping", "Peso e medidas"], ["commercial", "Preços e estoque"], ["photos", "Fotos"]].map(([key, label]) => <button className="min-h-11 rounded-lg border border-line bg-white px-3 text-sm font-semibold text-muted transition-colors hover:border-brand/30 hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" key={key} onClick={() => document.getElementById(`${sectionId}-${key}`)?.scrollIntoView({ block: "start" })} type="button">{label}</button>)}
+      </nav>
+      <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div aria-label="Informações do produto" className="min-w-0 overflow-hidden rounded-2xl border border-line bg-white">
+          <ProductFormSection id={`${sectionId}-identity`} integrated number="01" title="Identificação" description="Nome, marca e apresentação exata orientam toda a pesquisa.">
             <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
               Nome do produto
               <Input defaultValue={product?.name} maxLength={160} name="name" onBlur={scheduleResearch} onChange={identityChanged} placeholder="Nome, marca, versão e quantidade" ref={nameInputRef} required />
@@ -469,56 +476,7 @@ function ProductFormFields({
               </label>
             </div>
           </ProductFormSection>
-          <ProductFormSection number="02" title="Preços, estoque e publicação" description="Defina os valores, o estoque e como o produto aparece na loja.">
-            <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
-              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
-                Preco normal
-                <Input defaultValue={product?.price} min="0.01" name="price" placeholder="0,00" required step="0.01" type="number" />
-              </label>
-              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
-                Preco promocional
-                <Input defaultValue={product?.promotionalPrice ?? ""} min="0.01" name="promotionalPrice" placeholder="Opcional" step="0.01" type="number" />
-              </label>
-            </div>
-            <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
-              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
-                Estoque
-                <Input defaultValue={product?.stock ?? 0} min="0" name="stock" required type="number" />
-              </label>
-              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
-                Status
-                <select className="h-11 rounded-md border border-line bg-white px-3 text-sm text-ink shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15" defaultValue={product?.status ?? "ACTIVE"} name="status">
-                  <option value="DRAFT">Rascunho</option>
-                  <option value="ACTIVE">Publicado</option>
-                  <option value="ARCHIVED">Arquivado</option>
-                </select>
-              </label>
-            </div>
-            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-brand/20 bg-brand-soft/40 px-3 py-3 text-sm font-bold text-ink"><input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={isShowcasePosition(product?.featuredPosition ?? null)} name="featured" type="checkbox" /><Star className="h-4 w-4 text-brand" />Destacar em Melhores ofertas</label>
-
-            {canManageCashback ? <CashbackProductFields enabled={product?.cashbackEnabled} rateBps={product?.cashbackRateBps} /> : null}
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="flex items-center gap-3 rounded-md border border-line bg-surface-subtle px-3 py-3 text-sm font-bold text-ink">
-                <input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={product?.isPopularPharmacy} name="isPopularPharmacy" type="checkbox" />
-                Farmacia Popular
-              </label>
-              <label className="flex items-center gap-3 rounded-md border border-line bg-surface-subtle px-3 py-3 text-sm font-bold text-ink">
-                <input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={product?.requiresPrescription} name="requiresPrescription" type="checkbox" />
-                Exige receita
-              </label>
-            </div>
-            {canManageShipping ? <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
-              Tipo de receita
-              <select className="min-h-11 w-full rounded-md border border-line bg-white px-3 text-sm" key={productIdentityKey(photoIdentity)} defaultValue={product && productIdentityKey({ name: product.name, brand: product.brand ?? "", ean: product.ean ?? "" }) === productIdentityKey(photoIdentity) ? product.prescriptionType ?? "UNREVIEWED" : "UNREVIEWED"} name="prescriptionType">
-                <option value="UNREVIEWED">Ainda não classificado</option>
-                <option value="ORDINARY">Receita comum · pedido online</option>
-                <option value="CONTROLLED">Controle especial · atendimento da farmácia</option>
-              </select>
-              <span className="text-xs font-normal leading-5 text-muted">Aplicável quando “Exige receita” está marcado. Receita comum permite carrinho e pagamento; o farmacêutico confere antes da entrega/retirada. A IA não define essa classificação.</span>
-            </label> : null}
-          </ProductFormSection>
-          <ProductFormSection number="03" title="Descrição e SEO" description="Informações objetivas ajudam o cliente a encontrar o produto.">
+          <ProductFormSection id={`${sectionId}-description`} integrated number="02" title="Descrição e SEO" description="Informações objetivas ajudam o cliente a encontrar o produto.">
             <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
               Descricao
               <Textarea defaultValue={product?.description ?? ""} maxLength={800} name="description" onChange={refreshSeo} placeholder="Apresentacao, quantidade ou observacao importante." />
@@ -549,19 +507,53 @@ function ProductFormFields({
                 </span>
               </label>
             </div>
+            <div aria-label="Prévia na busca" className="rounded-xl border border-line bg-surface-subtle p-4">
+              {seo.name && <div className="min-w-0 border-l-2 border-pharma-green pl-3"><p className="text-xs font-semibold text-muted">Prévia na busca</p><p className="mt-1 break-words text-sm font-bold text-ink">{seo.name} | Wimifarma</p><p className="mt-1 break-words text-xs leading-5 text-muted">{buildProductMetaDescription(seo)}</p></div>}
+              {!seo.name && <p className="text-xs leading-5 text-muted">Informe o nome do produto para visualizar a prévia de busca.</p>}
+            </div>
           </ProductFormSection>
+          <div id={`${sectionId}-shipping`} className="min-w-0 scroll-mt-4"><ProductShippingFields integrated ref={shippingFieldsRef} initialProfile={product?.shippingProfile} identityKey={productIdentityKey(photoIdentity)} suggestion={suggestion?.shipping} researched={Boolean(suggestion)} canEdit={canManageShipping} medicine={typeHint === "medicine"} /></div>
         </div>
-        <div className="grid min-w-0 gap-4">
-          <ProductFormSection className="[&_button]:h-auto [&_button]:min-h-11 [&_button]:whitespace-normal [&_button]:py-2.5" number="04" title="Fotos do produto" description="Envie uma foto, use a biblioteca e confira o resultado antes de salvar.">
+        <div className="grid min-w-0 gap-5">
+          <ProductFormSection id={`${sectionId}-commercial`} number="04" title="Preços, estoque e publicação" description="Defina os valores, o estoque e como o produto aparece na loja.">
+            <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
+              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+                Preco normal
+                <Input defaultValue={product?.price} min="0.01" name="price" placeholder="0,00" required step="0.01" type="number" />
+              </label>
+              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+                Preco promocional
+                <Input defaultValue={product?.promotionalPrice ?? ""} min="0.01" name="promotionalPrice" placeholder="Opcional" step="0.01" type="number" />
+              </label>
+            </div>
+            <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
+              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+                Estoque
+                <Input defaultValue={product?.stock ?? 0} min="0" name="stock" required type="number" />
+              </label>
+              <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+                Status
+                <select className="h-11 rounded-md border border-line bg-white px-3 text-sm text-ink shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15" defaultValue={product?.status ?? "ACTIVE"} name="status">
+                  <option value="DRAFT">Rascunho</option>
+                  <option value="ACTIVE">Publicado</option>
+                  <option value="ARCHIVED">Arquivado</option>
+                </select>
+              </label>
+            </div>
+            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-brand/20 bg-brand-soft/40 px-3 py-3 text-sm font-bold text-ink"><input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={isShowcasePosition(product?.featuredPosition ?? null)} name="featured" type="checkbox" /><Star className="h-4 w-4 text-brand" />Destacar em Melhores ofertas</label>
+
+            {canManageCashback ? <CashbackProductFields enabled={product?.cashbackEnabled} rateBps={product?.cashbackRateBps} /> : null}
+
+            <label className="flex items-center gap-3 rounded-md border border-line bg-surface-subtle px-3 py-3 text-sm font-bold text-ink">
+              <input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={product?.isPopularPharmacy} name="isPopularPharmacy" type="checkbox" />
+              Farmacia Popular
+            </label>
+            <input name="requiresPrescription" type="hidden" value={product?.requiresPrescription ? "on" : "off"} />
+            {canManageShipping ? <input name="prescriptionType" type="hidden" value={product && productIdentityKey({ name: product.name, brand: product.brand ?? "", ean: product.ean ?? "" }) === productIdentityKey(photoIdentity) ? product.prescriptionType ?? "UNREVIEWED" : "UNREVIEWED"} /> : null}
+          </ProductFormSection>
+          <ProductFormSection className="[&_button]:h-auto [&_button]:min-h-11 [&_button]:whitespace-normal [&_button]:py-2.5" id={`${sectionId}-photos`} number="05" title="Fotos do produto" description="Envie uma foto, use a biblioteca e confira o resultado antes de salvar.">
             <ProductImagePicker identity={photoIdentity} initialImageAssetId={product?.imageAssetId} initialImageUrl={product?.imageUrl} key={product?.id ?? "new"} ref={imagePickerRef} />
           </ProductFormSection>
-          <ProductFormSection number="05" title="Prévia na busca" description="Confira o título e a descrição exibidos a partir dos dados do cadastro.">
-            {seo.name && <div className="min-w-0 border-l-2 border-pharma-green pl-3"><p className="text-xs font-semibold text-muted">Previa na busca</p><p className="mt-1 break-words text-sm font-bold text-ink">{seo.name} | Wimifarma</p><p className="mt-1 break-words text-xs leading-5 text-muted">{buildProductMetaDescription(seo)}</p></div>}
-            {!seo.name && <p className="rounded-lg border border-dashed border-line bg-surface-subtle p-4 text-xs leading-5 text-muted">Informe o nome do produto para visualizar a prévia de busca.</p>}
-          </ProductFormSection>
-        </div>
-        <div className="min-w-0 lg:col-span-2">
-          <ProductShippingFields ref={shippingFieldsRef} initialProfile={product?.shippingProfile} identityKey={productIdentityKey(photoIdentity)} suggestion={suggestion?.shipping} researched={Boolean(suggestion)} canEdit={canManageShipping} medicine={typeHint === "medicine"} />
         </div>
       </div>
     </fieldset>

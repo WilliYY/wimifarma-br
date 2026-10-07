@@ -7,6 +7,7 @@ import { settleOrderBenefits } from "@/features/cashback/redemption";
 import { getPrisma } from "@/lib/prisma";
 import { decryptValue, encryptValue } from "@/lib/secret-vault";
 import { moneyToCents } from "@/features/orders/checkout";
+import { requiresPrescriptionReview, requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 import { queueCommerceOrder } from "@/features/miauby/commerce-service";
 import { readPaymentIntegration } from "./integration";
 import { mercadoPagoRequest } from "./provider";
@@ -45,7 +46,8 @@ export async function startPayment(orderId: string, input: PaymentInput) {
     for (const item of [...order.items].sort((a, b) => (a.productId ?? "").localeCompare(b.productId ?? ""))) {
       if (!item.productId) throw new PaymentError("Um produto não está mais disponível.");
       const product = await tx.product.findUnique({ where: { id: item.productId } });
-      if (!product || product.status !== "ACTIVE" || product.requiresPrescription || product.isPopularPharmacy || product.stock < item.quantity || moneyToCents((product.promotionalPrice ?? product.price).toString()) !== item.unitPriceCents) throw new PaymentError("Preço, disponibilidade ou estoque mudou. Cancele este pedido e atualize o carrinho.");
+      if (!product || product.status !== "ACTIVE" || requiresPurchaseAssistance(product) || product.stock < item.quantity || moneyToCents((product.promotionalPrice ?? product.price).toString()) !== item.unitPriceCents) throw new PaymentError("Preço, disponibilidade ou estoque mudou. Cancele este pedido e atualize o carrinho.");
+      if (requiresPrescriptionReview(product) && !order.requiresPrescriptionReview) throw new PaymentError("A exigência de receita mudou. Cancele este pedido e refaça o checkout.");
       if (current.environment === "production") {
         const reserved = await tx.product.updateMany({ where: { id: product.id, updatedAt: product.updatedAt, stock: { gte: item.quantity } }, data: { stock: { decrement: item.quantity } } });
         if (reserved.count !== 1) throw new PaymentError("Estoque alterado. Atualize o carrinho.");

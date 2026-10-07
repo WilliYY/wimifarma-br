@@ -54,6 +54,12 @@ Peso e dimensões são validados separadamente: medidas incompletas ou inválida
 
 A pesquisa também combina EAN ou nome/marca/apresentação com termos de peso bruto e ficha técnica na mesma chamada. A validação exige que cada número esteja ligado à sua unidade: quantidade de itens e volume não comprovam massa. Cada dimensão precisa aparecer com eixo, valor e unidade explícitos no trecho; uma unidade compartilhada é aceita em sequências como `(C x L x A): 10 x 8 x 20 cm`, com ordem declarada na própria fonte. Eixos invertidos, eixos repetidos com valores divergentes ou sequências sem identificação permanecem vazios. Trechos de caixa master, fralda aberta ou embalagem vazia são descartados. Kits, combos e multipacks não aceitam referências rotuladas como unidade individual, nem a troca entre nomes de conjunto e unidade. Esses bloqueios preservam os outros dados logísticos válidos e a revisão humana existente.
 
+## Correções de comparação em 07/10/2026
+
+Dimensões pequenas mantêm um limite inferior positivo: quando arredondar para centímetros inteiros descartaria uma faixa válida, o servidor arredonda os limites para fora em uma escala decimal compatível com a ordem de grandeza do valor comprovado. A margem mínima de ±20% continua obrigatória; os limites são estimados, sem adicionar precisão de medição ou alterar fatos exatos. Peso continua arredondado em gramas inteiros. A validação da proporção da faixa tolera apenas o erro numérico de ponto flutuante.
+
+“Creme dental” e “pasta dental” usam a mesma família específica; nomes que também indicam creme corporal continuam ambíguos e bloqueados. Fraldas exigem público adulto/geriátrico ou infantil/bebê explícito e compatível nos dois nomes. Mesmo tamanho, contagem, formato e material não autorizam comparar fralda adulta com infantil; público ausente ou contraditório bloqueia a estimativa. Fontes, EAN, apresentação, tamanho, material e revisão humana continuam obrigatórios.
+
 ## Persistência e autorização
 
 - Reutiliza `Product.shippingProfile` JSON; sem migration ou nova dependência. Rascunho aceita medidas parciais e mantém referência, fontes e data; força `enabled: false` e `transportReviewed: false`.

@@ -1,5 +1,14 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-07 - Bolhas preservadas, cadastro unificado e pagamento de receita comum
+
+- Restaurar exatamente o efeito original de 128 bolhas e filtro SVG do rodapé. A determinação do lojista é permanente: próximas melhorias não retiram ou substituem essa animação. Regra registrada em `AGENTS.md`; informações empresariais e links úteis continuam no rodapé. Selos RA1000/Ebit não são copiados da referência Nissei nem apresentados sem aprovação.
+- Cadastro reúne identificação, descrição/SEO e logística numa superfície, com um assistente central e atalhos, sem abas. Campos manuais, fontes e aprovação logística humana preservados. Contrato em [48-cadastro-unificado.md](48-cadastro-unificado.md).
+- Corrigir pagamento Pix/cartão que rejeitava qualquer `requiresPrescription`, apesar de o pedido aceitar receita comum `ORDINARY`. Reutilizar a política `requiresPurchaseAssistance` em ambas as etapas. Preço, disponibilidade, estoque, reserva, lock e idempotência continuam verificados; controlados, receita não classificada e Farmácia Popular permanecem assistidos. Regressão sintética de R$7,98 reproduziu o erro antes do gateway e comprovou a correção.
+- Refinar estimativas da IA para preservar dimensões inferiores a 1 cm, reconhecer creme dental sem conflito com creme e separar fraldas infantis/adultas por público explícito. Fontes, unidades, apresentação, materiais e margens conservadoras continuam obrigatórios; não transformar estimativa em medição.
+- Produção conferida somente em leitura: quatro produtos ativos com perfis estimados já aprovados, caixa externa 20,8 × 20,8 × 21,6 cm; Cimegrip, KitKat e Losartana com 500 g, Dove com 800 g. Nenhum peso exato de fabricante foi inventado e nenhum produto foi alterado nessa conferência.
+- Asaas liberou geração de chave API; etapa aberta para conclusão pelo titular, sem permissão de saques. Pesquisa oficial confirmou cartão hospedado/redirecionado para não coletar PAN/CVV e alternativa Pix estática por pedido com expiração de duas horas. Aguardar credenciais/homologação e tarifa efetiva antes de ativar; não contratar terceiro gateway sem vantagem demonstrada. Detalhes e fontes em [40-asaas-configuracao-e-homologacao.md](40-asaas-configuracao-e-homologacao.md).
+
 ## 2026-10-06 - Rodapé e confiança visual
 
 - Reorganizar o rodapé com a identidade oficial, identificação empresarial, contato direto, navegação de compra, Pix/cartão e entrega por CEP. Usar HTTPS como informação de conexão, sem selo inventado ou garantia de invulnerabilidade.

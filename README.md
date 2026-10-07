@@ -1,6 +1,8 @@
 # Wimifarma BR
 
-Rodapé público com identidade oficial, informações empresariais, contato, compra e privacidade: [docs/47-rodape-e-confianca-visual.md](docs/47-rodape-e-confianca-visual.md). Selos externos aparecem somente depois de aprovados.
+Rodapé público com efeito original de bolhas preservado, identidade oficial, informações empresariais, contato, compra e privacidade: [docs/47-rodape-e-confianca-visual.md](docs/47-rodape-e-confianca-visual.md). Selos externos aparecem somente depois de aprovados.
+
+Cadastro reúne identificação, descrição/SEO e logística com um assistente único: [docs/48-cadastro-unificado.md](docs/48-cadastro-unificado.md). Pagamento reutiliza a mesma classificação de receita do checkout; receita comum revisada permite Pix/cartão, mantendo a conferência farmacêutica antes da dispensação.
 
 Cadastros de reputação e presença: [docs/46-cadastros-reputacao-e-presenca.md](docs/46-cadastros-reputacao-e-presenca.md). Search Console HTTPS verificado e sitemap processado, com 15 páginas encontradas. Solicitações Google e Ebit enviadas; Perfil da Empresa aguarda proprietário até 09/10 e Reclame AQUI depende do e-mail vinculado. Nenhum selo concedido.
 

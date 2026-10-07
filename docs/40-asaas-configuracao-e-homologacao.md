@@ -1,5 +1,21 @@
 # 40 - Asaas: configuração e próxima homologação
 
+## Atualização confirmada em 07/10/2026
+
+O botão **Gerar chave de API** foi liberado. A tela de criação foi aberta no Chrome conectado, com nome, expiração opcional e uma permissão separada para saques. A geração, confirmação de segurança e envio da nova credencial foram deixados ao titular, conforme a política da ferramenta de navegador. A orientação é manter **saques desmarcados**. Não houve contratação de plano nem cobrança.
+
+Isso supera o bloqueio observado nos dias anteriores, mas não comprova uma chave criada ou conexão homologada. A consulta de tarifas existente e o checkout Mercado Pago permanecem como antes; nenhum roteamento automático para Asaas foi ativado.
+
+### Integração adequada ao checkout da Wimifarma
+
+A pesquisa oficial de 07/10 confirmou que o Asaas [não oferece tokenização de cartão no front-end](https://docs.asaas.com/docs/pci-dss). Para manter PAN/CVV fora do servidor da Wimifarma, cartão Asaas deve usar a [página hospedada e redirecionamento](https://docs.asaas.com/docs/link-do-checkout-e-redirecionamento-do-cliente). Portanto, o checkout embutido existente permanece com Mercado Pago; não substituir seus campos por coleta de dados de cartão própria.
+
+O [QR Pix estático](https://docs.asaas.com/reference/criar-qrcode-estatico) pode ser criado por pedido com valor fixo, `expirationSeconds: 7200`, `allowsMultiplePayments: false` e `externalReference`. Segundo [conciliação oficial](https://docs.asaas.com/docs/o-que-e-qr-code-estatico), a cobrança nasce ao receber o pagamento; a associação precisa conferir `payment.pixQrCodeId`, conta e valor, inclusive tentativas repetidas e vencidas. Isso é um contrato diferente de cobrança Pix dinâmica. A [central Asaas](https://central.ajuda.asaas.com/hc/pt-br/articles/32040230167067-Quais-s%C3%A3o-as-taxas-para-receber-via-Pix) anuncia até 100 recebimentos mensais gratuitos por chave ou QR estático; do 101º em diante vale a condição da conta. Não transformar essa franquia em tarifa Pix dinâmica zero nem ativar uma escolha financeira sem confirmar o contrato e o consumo da franquia.
+
+Antes de usar esse fluxo, homologar com [conta e chave sandbox próprias](https://docs.asaas.com/docs/sandbox). Webhook valida segredo separado `asaas-access-token`, persiste `event.id` único e responde HTTP **200**, conforme a [FAQ específica](https://docs.asaas.com/docs/faq-de-webhooks). Retorno de navegador não confirma pagamento. `PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED` distinguem confirmação e saldo disponível; tratar estorno/chargeback. Resultado incerto exige reconciliação antes de repetir uma cobrança, inclusive em outro provedor.
+
+Não há vantagem comprovada que exija um terceiro gateway agora: primeiro concluir chave, conexão, tarifa efetiva e homologação Asaas. A documentação pesquisada não comprova cobrança real, QR gerado, expiração bancária ou taxa específica desta conta.
+
 ## Estado confirmado em 05/10/2026
 
 A conta Wimifarma aparece aprovada no painel Asaas. A página de integrações não possui chaves e o botão **Gerar chave de API** permanece desabilitado. O motivo específico não foi exposto pela interface; aprovação da conta não comprova liberação dessa operação. Não foi criado token, webhook, cliente ou cobrança nesta configuração.

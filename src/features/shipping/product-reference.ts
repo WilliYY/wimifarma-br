@@ -33,7 +33,7 @@ const sourceSchema = z.object({
   evidence: z.string().min(8).max(400),
 });
 const rangeSchema = (limit: number) => z.object({ min: positive, max: positive.max(limit) })
-  .refine(range => range.min < range.max && range.max >= range.min * 1.5, "Intervalo conservador inválido.");
+  .refine(range => range.min < range.max && range.max + Number.EPSILON * range.max >= range.min * 1.5, "Intervalo conservador inválido.");
 export const shippingEstimateSchema = z.object({
   comparableName: z.string().min(3).max(160), packageDescription: z.string().min(8).max(220),
   source: sourceSchema, confidence: z.literal("low"),
@@ -109,12 +109,14 @@ function comparablePresentation(name: string) {
   return amounts.sort().join("|");
 }
 
-function estimateRange(value: number | null, limit: number) {
+function estimateRange(value: number | null, limit: number, dimension = false) {
   if (value === null) return null;
-  // Round outwards, keeping a visible 20% margin rather than invented decimal precision.
-  const min = Math.floor(value * 0.8);
-  const max = Math.ceil(value * 1.2);
-  return min >= 1 && max <= limit ? { min, max } : null;
+  // Keep whole-unit rounding unless a small dimension would lose its positive lower bound.
+  // These are conservative estimated bounds, never additional measurement precision.
+  const scale = dimension && value * 0.8 < 1 ? 10 ** -Math.floor(Math.log10(value * 0.8)) : 1;
+  const min = Math.floor(value * 0.8 * scale) / scale;
+  const max = Math.ceil(value * 1.2 * scale) / scale;
+  return min > 0 && max <= limit ? { min, max } : null;
 }
 
 const normalizedWords = (value: string) => textKey(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -125,7 +127,7 @@ function specificProductFamily(name: string) {
     ["óleo de banho", /\boleo\s+de\s+banho\b/], ["protetor solar", /\bprotetor(?:es)?\s+solar(?:es)?\b/],
     ["perfume", /\bperfumes?\b/], ["sabonete", /\bsabonetes?\b/], ["shampoo", /\b(?:shampoos?|xampus?)\b/],
     ["condicionador", /\bcondicionador(?:es)?\b/], ["desodorante", /\bdesodorantes?\b/],
-    ["hidratante", /\b(?:hidratantes?|locoes?|locao)\b/], ["creme", /\bcremes?\b/], ["gel", /\b(?:gel|geis)\b/],
+    ["hidratante", /\b(?:hidratantes?|locoes?|locao)\b/], ["creme", /\bcremes?\b(?!\s+dental\b)/], ["gel", /\b(?:gel|geis)\b/],
     ["comprimido", /\bcomprimidos?\b/], ["cápsula", /\bcapsulas?\b/], ["xarope", /\bxaropes?\b/],
     ["solução oral", /\bsolucao\s+oral\b/], ["suplemento em pó", /\b(?:whey|suplemento\s+em\s+po)\b/],
     ["chocolate", /\bchocolates?\b/], ["biscoito", /\bbiscoitos?\b/], ["bala", /\bbalas?\b/],
@@ -142,6 +144,13 @@ function packageMaterials(evidence: string) {
   return [...new Set(normalizedWords(evidence).match(/\b(?:vidro|plastico|papelao|papel|metal|aluminio|aco|laminado)\b/g) ?? [])].sort().join("|");
 }
 
+function diaperAudience(name: string) {
+  const words = normalizedWords(name);
+  const adult = /\b(?:adult[oa]s?|geriatric[oa]s?)\b/.test(words);
+  const infant = /\b(?:infantil|infantis|bebes?|criancas?|recem[- ]nascid[oa]s?)\b/.test(words);
+  return adult && infant ? "conflict" : adult ? "adult" : infant ? "infant" : "unknown";
+}
+
 function qualifyEstimate(data: z.infer<typeof rawShippingReferenceSchema>, context: Parameters<typeof qualifyShippingReference>[1], exact: ShippingReference) {
   const estimate = data.estimate;
   if (!estimate || data.packageLevel !== estimate.packageLevel || isKit(context.name) !== isKit(estimate.comparableName)
@@ -152,6 +161,8 @@ function qualifyEstimate(data: z.infer<typeof rawShippingReferenceSchema>, conte
   const family = specificProductFamily(context.name);
   if (!family || family !== specificProductFamily(estimate.comparableName)
     || normalizedWords(estimate.productFamily) !== normalizedWords(family)) return null;
+  if (family === "fralda" && (["conflict", "unknown"].includes(diaperAudience(context.name))
+    || diaperAudience(context.name) !== diaperAudience(estimate.comparableName))) return null;
   const targetSource = sourceSchema.safeParse(context.sources[estimate.targetSourceIndex]
     && { ...context.sources[estimate.targetSourceIndex], evidence: estimate.targetEvidence });
   if (!targetSource.success || unusablePackaging.test(estimate.targetEvidence)
@@ -178,9 +189,9 @@ function qualifyEstimate(data: z.infer<typeof rawShippingReferenceSchema>, conte
     productFamily: family, packageMaterial: estimate.packageMaterial, confidence: "low",
     assumptions: [...estimate.assumptions, "Intervalos de ±20% sobre o comparável, arredondados para fora. Confira peso, proteção e caixa reais antes de aprovar."],
     weightGrams: exact.weightGrams === null ? estimateRange(comparable.weightGrams, 30000) : null,
-    lengthCm: exact.lengthCm === null ? estimateRange(comparable.lengthCm, 200) : null,
-    widthCm: exact.widthCm === null ? estimateRange(comparable.widthCm, 200) : null,
-    heightCm: exact.heightCm === null ? estimateRange(comparable.heightCm, 200) : null,
+    lengthCm: exact.lengthCm === null ? estimateRange(comparable.lengthCm, 200, true) : null,
+    widthCm: exact.widthCm === null ? estimateRange(comparable.widthCm, 200, true) : null,
+    heightCm: exact.heightCm === null ? estimateRange(comparable.heightCm, 200, true) : null,
   };
   if (![candidate.weightGrams, candidate.lengthCm, candidate.widthCm, candidate.heightCm].some(Boolean)) return null;
   const parsed = shippingEstimateSchema.safeParse(candidate);
@@ -274,7 +285,7 @@ export const shippingResearchInstructions = [
   "Distinga peso liquido/conteudo de peso bruto com embalagem comercial e de peso do volume pronto para envio. Nao converter ml/L em gramas/kg; nao usar mg por comprimido como peso da caixa. Nao estimar por foto, proporcao visual ou conhecimento geral. Medidas de semelhantes nunca viram fatos exatos do alvo.",
   "Se faltarem fatos logisticos exatos, na MESMA pesquisa procure um produto comparavel com embalagem fechada de mesmo formato, quantidade, volume/dosagem e tamanho aplicaveis. Inclua medicamento, perfumaria, alimento, fralda, dispositivo e kit conforme embalagem, sem lista de marcas permitidas. Sem apresentacao do alvo conhecida ou com conflito de EAN/identidade, nao estime. Nao divida caixa master, nao converta volume/dose/faixa do bebe em massa e nao monte kit a partir de unidades individuais.",
   "Separe nas notas COMPARAVEL PARA ESTIMATIVA: nome/apresentacao, descricao curta da embalagem fechada, nivel retail_unit/retail_kit, URL e um trecho factual literal contendo esse nome, descricao, peso BRUTO explicito e/ou os tres eixos nomeados com unidades originais. Registre tambem uma linha separada com o nome completo do ALVO e o formato confirmado da embalagem (frasco, caixa, pacote, kit etc.); formato desconhecido bloqueia estimativa. Registre premissas de compatibilidade e diferencas. Sem fonte ou medidas comprovadas do comparavel, estimate null. O servidor gera intervalos conservadores de ±20%, nao pseudoprecisao; a caixa adicional da farmacia exige conferencia humana.",
-  "Para o comparavel, comprove a MESMA familia fisica especifica nos nomes do alvo e do comparavel (fralda nao e lenco umedecido; higiene/infantil/other nao bastam). Registre MATERIAL e formato factual da embalagem do alvo em targetEvidence com URL/fonte, e material/formato identicos no trecho do comparavel e packageDescription. Frasco de vidro nao e compativel com plastico. Material/familia desconhecidos ou divergentes: estimate null, preservando fatos exatos existentes.",
+  "Para o comparavel, comprove a MESMA familia fisica especifica nos nomes do alvo e do comparavel (fralda nao e lenco umedecido; higiene/infantil/other nao bastam). Fraldas exigem publico adulto/geriatrico ou infantil/bebe explicito e igual nos dois nomes; tamanho e quantidade iguais nao comprovam essa compatibilidade. Publico desconhecido ou ambiguo: estimate null. Creme dental e pasta dental pertencem a familia pasta dental, sem misturar creme corporal. Registre MATERIAL e formato factual da embalagem do alvo em targetEvidence com URL/fonte, e material/formato identicos no trecho do comparavel e packageDescription. Frasco de vidro nao e compativel com plastico. Material/familia desconhecidos ou divergentes: estimate null, preservando fatos exatos existentes.",
   "Medicamento: caixa ou frasco da concentracao/quantidade exatas; perfumaria: frasco cheio com tampa/caixa, volume nao e massa; fralda: pacote fechado da marca/linha, tamanho RN/P/M/G/GG/XXG e quantidade exatos, nunca dimensao da fralda aberta, tamanho do bebe ou faixa de peso corporal; alimentos: unidade/kit exatos, peso liquido separado do bruto. Nunca dividir caixa master para inferir uma unidade, nem multiplicar dimensoes por quantidade.",
   "Identifique o nivel de embalagem: unidade comercial, kit vendido inteiro, volume pronto para transporte ou caixa master. Cite largura, altura e comprimento com numero e unidade explicitos para cada eixo; se a ordem das dimensoes nao estiver identificada, nao adivinhe os eixos. Preserve unidades originais. Fontes divergentes para a mesma apresentacao exigem campos incertos vazios e aviso, nao uma media.",
   "Nas notas de LOGISTICA inclua uma linha curta por fato, com valores, unidades originais, nivel da embalagem e URL da fonte. Separe peso bruto e dimensoes: se encontrar apenas um, preserve esse dado e marque o outro como ausente. Inclua produtos embalados, dispositivos, suplementos, alimentos, higiene, perfumaria e kits, sem limitar por categoria. Sem dado bruto explicito ou fonte especifica, deixe ausente. Nao conclua aceitação de transporte, conservacao, receita ou liberacao de frete: isso depende de revisao humana.",
