@@ -5,7 +5,8 @@
 - Recuperar consulta do mesmo pagamento por GET após falha inicial; não recriar cobrança ou limpar referência automaticamente.
 - Consultar preço/estoque atual por API pública de leitura limitada e apresentar proposta antes de alterar o carrinho. Invalidar propostas quando o estado mudar, inclusive no provedor do carrinho; preservar validação autoritativa no checkout.
 - Exigir e-mail somente em pagamentos online, alinhando a interface ao contrato existente de dinheiro elegível.
-- Titular criou a chave Asaas; colagem no cofre e homologação ainda dependem das respectivas confirmações. Reclame AQUI validou o novo código do e-mail empresarial vinculado; dados do responsável preenchidos, plano pago desmarcado e etapa de senha aberta. Nenhum código ou selo foi registrado como dado público.
+- Titular criou a chave Asaas; colagem no cofre e homologação continuam pendentes. Reclame AQUI empresarial confirmado no plano gratuito; a pedido do titular, seu e-mail pessoal recebeu convite e teve o login confirmado. Após autorização expressa para administração exclusiva, o acesso da contabilidade foi desativado e a interface confirmou somente um administrador ativo. Diferenciar aprovação da descrição, confirmação do site, upload da logo e publicação do perfil. Nenhum código ou selo foi registrado como dado público.
+- Código `ff9db6e` publicado: app healthy, zero reinícios, quatro rotas HTTP 200 e API de revisão validada com origem permitida/externa e ID sintético. Rebuild somente do app, sem migração. Asaas ainda não processa pagamentos.
 - Regressões, revisão independente, limites e entrega em [50-recuperacao-de-compra-e-conexoes.md](50-recuperacao-de-compra-e-conexoes.md).
 
 ## 2026-10-07 - Bolhas preservadas, cadastro unificado e pagamento de receita comum

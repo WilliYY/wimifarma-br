@@ -15,6 +15,7 @@ Preço, estoque, reserva, propriedade do pedido, homologação e confirmação e
 
 ## Validação
 
+- `npm.cmd test`: **203 testes aprovados**.
 - `npm.cmd run test:security`: **109 testes aprovados**, incluindo recuperação GET, carrinho alterado durante consulta, origens externas, corpo excessivo, rate limit e erro de banco sem exposição de detalhes.
 - Revisão independente dos nove arquivos de implementação/teste: nenhum bloqueador; 11 regressões focadas aprovadas.
 - `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run build`, `npm.cmd run prisma:validate` e `git diff --check`: aprovados.
@@ -25,10 +26,22 @@ Preço, estoque, reserva, propriedade do pedido, homologação e confirmação e
 
 O titular informou e mostrou a criação da chave Asaas. A aba antiga perdeu controle pelo navegador conectado; uma nova aba **Pagamentos → Conectar consulta de tarifas Asaas** foi preparada para colagem segura. A chave não foi transcrita, armazenada em documentação ou versionada. A integração existente consulta tarifas de cartão; não cria cobranças Asaas nem altera o gateway do checkout. Conexão, resposta da conta e homologação devem ser registradas separadamente quando concluídas.
 
-O Reclame AQUI reenviou o código ao e-mail da contabilidade vinculado ao CNPJ, inclusive após novo pedido do lojista. O código recebido anteriormente estava vencido; a interface informa validade de 90 segundos. O novo código fornecido pelo titular foi aceito, e o fluxo abriu **Crie seu acesso**. Nome, cargo de dono e celular foram preenchidos; o teste de 14 dias do plano pago permaneceu desmarcado. A criação da senha e a confirmação final do acesso ficaram pendentes na aba aberta. Nenhum código fica nesta documentação. Isso ainda não comprova página pública ou selo RA1000.
+O Reclame AQUI validou o e-mail da contabilidade vinculado ao CNPJ, e o titular concluiu a senha e a criação do acesso. O painel empresarial abriu no plano **Gratuito** para a razão social conferida. O teste de plano pago e a oferta posterior de assinatura não foram contratados.
+
+A pedido do titular, foi enviado convite de administrador para seu e-mail pessoal autorizado. Após a conclusão pelo titular, **Gestão de usuários** confirmou esse acesso como **Ativado**. Em seguida, o titular determinou que somente ele tivesse administração total no Reclame AQUI. O login pessoal foi confirmado antes de desativar o acesso da contabilidade. A interface confirmou a perda de acesso desse usuário e passou a mostrar **um administrador ativo**, exclusivamente o titular. O cadastro anterior permanece desativado e recuperável, sem exclusão definitiva. Nenhuma senha foi alterada pelo agente. O convite já consumido não foi reenviado. Senhas, códigos, links de convite e capturas privadas não são versionados.
+
+A descrição factual da Wimifarma foi enviada e aparece **Aguardando aprovação**. A alteração do site oficial exige confirmação pelo link enviado ao e-mail validado da empresa. A logo completa foi preparada em PNG, mas o upload ficou bloqueado pela permissão de acesso a arquivos da extensão Chrome. Essas etapas permanecem pendentes. O acesso empresarial ativo não comprova URL pública publicada, RA Verificada ou RA1000; nenhum selo foi acrescentado ao site.
 
 ## Arquivos e operação
 
 Implementação em `src/components/site/{cart-page,cart-provider,checkout-page,online-payment}.tsx`, `src/features/products/cart-review.ts`, `src/features/payments/client-recovery.ts` e `src/app/api/carrinho/revisao/route.ts`, com testes correspondentes. `package.json` inclui `test:cart` e as regressões do carrinho em `test:security`. Documentação atualizada em README, histórico de decisões e documentos 40/46/50.
 
-Publicação: commit e push apenas dos arquivos da tarefa; `git pull --ff-only`, rebuild/recriação somente do app e conferência de saúde/HTTP. Sem migração ou alteração de dados comerciais. O estado produtivo será registrado após a conferência.
+Publicação de código: **`ff9db6e` — `fix(checkout): recover payment views and review stale carts`**, enviado ao GitHub e aplicado por `git pull --ff-only` em `/home/ubuntu/projetos/wimifarma-br`. Rebuild/recriação somente do app, sem migração ou alteração de dados comerciais.
+
+- Imagem publicada: `sha256:9e23442cb315c67b6e45f67e774a74584ecc10dc198e95469b740cf02a5bee9b`.
+- Container `wimifarma-br-app`: **healthy**, zero reinícios na conferência.
+- `/api/health`, `/carrinho`, `/checkout` e `/privacidade`: HTTP 200, com CSP e HSTS.
+- API de revisão com ID sintético inexistente: mesma origem retornou HTTP 200 com lista vazia e `Cache-Control: private, no-store`; origem externa retornou HTTP 403. Nenhum produto ou pedido foi gravado.
+- Rollback preservado em `wimifarma-br-recovery-rollback:ff9db6e`, imagem anterior `sha256:8d8905190a4361fd315f1a49f887ecca4a2d1ea80f213ad98ef462a6e48a3b0f`.
+
+A continuação do cadastro Reclame AQUI e o registro da publicação alteram somente documentação; não requerem novo build do app. Asaas segue aguardando colagem segura da chave na consulta de tarifas e homologação própria para cobranças; o checkout permanece Mercado Pago.
