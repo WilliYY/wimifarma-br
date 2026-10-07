@@ -3,10 +3,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckCircle2, Copy, CreditCard, QrCode, ShieldCheck } from "lucide-react";
+import { readPaymentView, type PaymentView } from "@/features/payments/client-recovery";
 import { useCart } from "./cart-provider";
 import { PaymentCardForm } from "./payment-card-form";
 
-export type PaymentView = { orderId: string; number: string; amountCents: number; status: string; statusDetail: string | null; pixCode: string | null; pixExpiresAt: string | null; payerEmail: string; qrDataUrl: string | null; environment: string; publicKey: string };
+export type { PaymentView } from "@/features/payments/client-recovery";
 const currency = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 
 export function OnlinePayment({ orderId, embedded = false, initialData = null, initialMethod = "pix", onPaid, onTerminal, onReview }: { orderId: string; embedded?: boolean; initialData?: PaymentView | null; initialMethod?: "pix" | "card"; onPaid?: () => void; onTerminal?: () => void; onReview?: () => void }) {
@@ -19,7 +20,8 @@ export function OnlinePayment({ orderId, embedded = false, initialData = null, i
   useEffect(() => { terminalCallback.current = onTerminal; }, [onTerminal]);
   const inflight = useRef(false); const { items, hydrated, clearCart } = useCart();
   const request = useCallback(async (body?: unknown) => {
-    const response = await fetch(`/api/pagamentos/${orderId}`, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : { cache: "no-store" });
+    if (!body) { const payment = await readPaymentView(orderId); setData(payment); return payment; }
+    const response = await fetch(`/api/pagamentos/${orderId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const payload = await response.json(); if (!response.ok) throw new Error(payload.error || "Não foi possível consultar o pagamento.");
     setData(payload.data); return payload.data as PaymentView;
   }, [orderId]);
@@ -56,6 +58,13 @@ export function OnlinePayment({ orderId, embedded = false, initialData = null, i
     catch (e) { setError(e instanceof Error ? e.message : "Não foi possível confirmar o pagamento."); await request().catch(() => undefined); throw e; }
     finally { setBusy(false); inflight.current = false; }
   }, [request]);
+  const retryConsultation = useCallback(async () => {
+    if (inflight.current) return;
+    inflight.current = true; setBusy(true); setError("");
+    try { await request(); }
+    catch (e) { setError(e instanceof Error ? e.message : "Não foi possível consultar o pagamento."); }
+    finally { setBusy(false); inflight.current = false; }
+  }, [request]);
   const expiration = data?.pixExpiresAt ? new Date(data.pixExpiresAt).getTime() : null;
   const seconds = expiration ? Math.max(0, Math.ceil((expiration - now) / 1000)) : null;
   const expired = seconds === 0;
@@ -85,6 +94,11 @@ export function OnlinePayment({ orderId, embedded = false, initialData = null, i
       <Link href="/minha-conta" className="mt-7 inline-block text-sm font-bold text-brand">Ver meus pedidos →</Link>
     </> : !error && <p className="mt-5">Carregando pedido...</p>}
     {error && <p role="status" className="mt-5 rounded-lg bg-brand-soft p-4 text-sm text-brand">{error}</p>}
+    {!data && <div className="mt-5 grid gap-3">
+      {error && <p className="text-sm leading-6 text-muted">Não conseguimos verificar a situação deste pedido. Entre na conta que fez o pedido ou use o navegador em que iniciou a compra. Consulte a situação antes de tentar pagar novamente.</p>}
+      {(error || busy) && <button type="button" disabled={busy} onClick={() => void retryConsultation()} className="min-h-12 rounded-xl border border-line font-bold disabled:opacity-50">{busy ? "Consultando pagamento..." : "Tentar consultar novamente"}</button>}
+      {error && <div className="flex flex-wrap gap-x-5 gap-y-3 text-sm font-bold text-brand"><Link href="/minha-conta" className="min-h-11 content-center underline">Entrar na conta e ver pedidos</Link><Link href="/carrinho" className="min-h-11 content-center underline">Ver meu carrinho</Link></div>}
+    </div>}
   </div>;
   return embedded ? content : <section className="min-h-[75vh] bg-[#f4f6f8] px-4 pb-20 pt-36 lg:pt-52">{content}</section>;
 }

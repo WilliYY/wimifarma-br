@@ -2,6 +2,8 @@
 
 ## Atualização confirmada em 07/10/2026
 
+O titular posteriormente concluiu a geração da chave e forneceu a confirmação visual de sucesso. A nova aba da Wimifarma foi preparada para colagem no campo seguro, porque o navegador conectado perdeu controle da aba anterior; nenhum segredo foi transcrito para arquivos ou logs. Isso comprova geração, mas ainda não conexão de tarifas ou homologação de cobrança. Andamento e verificações em [50-recuperacao-de-compra-e-conexoes.md](50-recuperacao-de-compra-e-conexoes.md).
+
 O botão **Gerar chave de API** foi liberado. A tela de criação foi aberta no Chrome conectado, com nome, expiração opcional e uma permissão separada para saques. A geração, confirmação de segurança e envio da nova credencial foram deixados ao titular, conforme a política da ferramenta de navegador. A orientação é manter **saques desmarcados**. Não houve contratação de plano nem cobrança.
 
 Isso supera o bloqueio observado nos dias anteriores, mas não comprova uma chave criada ou conexão homologada. A consulta de tarifas existente e o checkout Mercado Pago permanecem como antes; nenhum roteamento automático para Asaas foi ativado.

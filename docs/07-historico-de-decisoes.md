@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-07 - Recuperação explícita de pagamento e carrinho
+
+- Recuperar consulta do mesmo pagamento por GET após falha inicial; não recriar cobrança ou limpar referência automaticamente.
+- Consultar preço/estoque atual por API pública de leitura limitada e apresentar proposta antes de alterar o carrinho. Invalidar propostas quando o estado mudar, inclusive no provedor do carrinho; preservar validação autoritativa no checkout.
+- Exigir e-mail somente em pagamentos online, alinhando a interface ao contrato existente de dinheiro elegível.
+- Titular criou a chave Asaas; colagem no cofre e homologação ainda dependem das respectivas confirmações. Reclame AQUI validou o novo código do e-mail empresarial vinculado; dados do responsável preenchidos, plano pago desmarcado e etapa de senha aberta. Nenhum código ou selo foi registrado como dado público.
+- Regressões, revisão independente, limites e entrega em [50-recuperacao-de-compra-e-conexoes.md](50-recuperacao-de-compra-e-conexoes.md).
+
 ## 2026-10-07 - Bolhas preservadas, cadastro unificado e pagamento de receita comum
 
 - Restaurar exatamente o efeito original de 128 bolhas e filtro SVG do rodapé. A determinação do lojista é permanente: próximas melhorias não retiram ou substituem essa animação. Regra registrada em `AGENTS.md`; informações empresariais e links úteis continuam no rodapé. Selos RA1000/Ebit não são copiados da referência Nissei nem apresentados sem aprovação.

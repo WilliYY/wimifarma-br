@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { requiresPurchaseAssistance, type PrescriptionType } from "@/features/products/purchase-policy";
+import { reviewedCartItems, type CartReviewProposal } from "@/features/products/cart-review";
 const STORAGE_KEY = "wimifarma-cart-v1";
 
 export type CartProduct = {
@@ -38,6 +39,7 @@ type CartContextValue = {
   clearCart: () => void;
   removeProduct: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
+  applyCartReview: (proposal: CartReviewProposal) => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -136,6 +138,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const clearCart = useCallback(() => setItems([]), []);
+  const applyCartReview = useCallback((proposal: CartReviewProposal) => {
+    setItems(current => reviewedCartItems(current, proposal) ?? current);
+  }, []);
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
   const subtotalCents = items.reduce(
     (total, item) => total + item.unitPriceCents * item.quantity,
@@ -145,6 +150,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(
     () => ({
       addProduct,
+      applyCartReview,
       clearCart,
       hydrated,
       itemCount,
@@ -153,7 +159,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       subtotalCents,
       updateQuantity,
     }),
-    [addProduct, clearCart, hydrated, itemCount, items, removeProduct, subtotalCents, updateQuantity],
+    [addProduct, applyCartReview, clearCart, hydrated, itemCount, items, removeProduct, subtotalCents, updateQuantity],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

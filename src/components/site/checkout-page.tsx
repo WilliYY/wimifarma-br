@@ -62,7 +62,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   const deliveryKnown = fulfillmentMethod === "PICKUP" || Boolean(shippingSelection) || isLocalDeliveryAddress(address);
   const fee = fulfillmentMethod === "PICKUP" ? 0 : customerShippingFee(shippingSelection?.priceCents ?? 0, subtotalCents, discountCents);
   const total = subtotalCents - discountCents + fee;
-  const contactReady = !checkoutStepError(0, draft) && Boolean(customer.email.trim());
+  const contactReady = !checkoutStepError(0, draft) && (!online || Boolean(customer.email.trim()));
   const deliveryReady = !checkoutStepError(1, { ...draft, shippingSelection });
   const carrierDestination = normalizePostalCode(address.postalCode).length === 8 && !isLocalDeliveryAddress(address);
   const shippingStatus = !carrierDestination ? "Informe o CEP" : requiresShippingSupport ? "Atendimento" : !carrierShippingAvailable ? "Indisponível" : "Selecione o frete";
@@ -144,7 +144,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
         <fieldset disabled={Boolean(onlineOrder) || submitting} className="mt-5 grid min-w-0 gap-4 disabled:opacity-70">
           <Field label="Nome completo" autoComplete="name" maxLength={120} required value={customer.name} onChange={event => setDraft(current => ({ ...current, customer: { ...current.customer, name: event.target.value } }))} />
           <Field label="WhatsApp / telefone" autoComplete="tel" inputMode="tel" maxLength={20} required placeholder="+55 (44) 99999-9999" value={customer.phone} onChange={event => setDraft(current => ({ ...current, customer: { ...current.customer, phone: event.target.value } }))} />
-          <Field label={paymentConfig ? "E-mail" : "E-mail (opcional)"} autoComplete="email" type="email" maxLength={160} required={Boolean(paymentConfig)} value={customer.email} onChange={event => setDraft(current => ({ ...current, customer: { ...current.customer, email: event.target.value } }))} />
+          <Field label={online ? "E-mail" : "E-mail (opcional)"} autoComplete="email" type="email" maxLength={160} required={online} value={customer.email} onChange={event => setDraft(current => ({ ...current, customer: { ...current.customer, email: event.target.value } }))} />
           <label className="grid gap-2 text-sm font-semibold text-ink">Observação (opcional)<textarea className={`${fieldClass} h-20 resize-y py-3`} maxLength={500} value={notes} placeholder="Referência para entrega ou troco" onChange={event => setDraft(current => ({ ...current, notes: event.target.value }))} /></label>
         </fieldset>
         {!onlineOrder && <details className="mt-6 rounded-xl border border-line bg-surface-subtle/60 p-4" open>
