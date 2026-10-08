@@ -23,6 +23,14 @@ Implementação em `src/features/payments/asaas-sandbox.ts`, `src/app/api/admin/
 
 Validação local: `npm.cmd run test:security` (118/118), `npm.cmd run lint`, `npm.cmd run build` e `npm.cmd run prisma:validate` passaram após o patch. Auditoria de produção sem alertas; completa mantém cinco high de ferramentas. Não usar esses checks locais como prova de publicação ou homologação financeira completa.
 
+### Publicação e conferência ao vivo — 08/10/2026
+
+- Commit `9818312` enviado ao GitHub e aplicado por fast-forward no VPS. Build Docker concluído e somente o app recriado; não há migração nem reinício de PostgreSQL.
+- Container `healthy`, zero reinícios; runtime confirmou Next.js **15.5.27**. Imagem ativa `sha256:fec7109784c856ef88293cd572417284b72206260c380f887c789704fc2bd59b`; anterior preservada como `wimifarma-br-app:pre-asaas-9818312`.
+- Health, home e checkout retornaram HTTP 200. A API Sandbox sem sessão retornou 401 com `private, no-store, max-age=0`, CSP, HSTS, `nosniff` e `DENY`.
+- No Chrome autenticado, a credencial Sandbox foi selecionada e o novo botão retornou **Conexão Sandbox validada**, **três regras verificadas**, em **08/10/2026 às 08:51:54**. Consulta foi somente leitura no Asaas, com auditoria local; Mercado Pago e conexão de tarifas de produção preservados.
+- Comprovantes privados ficam em `outputs`, fora do Git. Os dois executores temporários de homologação sem credenciais em arquivo foram removidos do VPS; não repetir a criação da mesma tentativa após resposta incerta.
+
 ## Atualização confirmada em 07/10/2026
 
 O titular concluiu a geração da chave de produção. Em 07/10, o controle da aba foi recuperado e a credencial foi transferida diretamente do campo visível do Asaas para **Pagamentos → Conectar consulta de tarifas Asaas**, sem arquivos intermediários, logs ou transcrição na conversa. O painel confirmou salvamento e resposta válida da API às **14:50:06**; a conexão persistiu após recarregar. Isso comprova conexão de tarifas, mas ainda não homologação de cobrança. Andamento e verificações em [50-recuperacao-de-compra-e-conexoes.md](50-recuperacao-de-compra-e-conexoes.md).
