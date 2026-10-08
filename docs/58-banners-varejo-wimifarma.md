@@ -38,4 +38,15 @@ A auditoria completa `npm.cmd audit --audit-level=moderate --json` permanece com
 
 Revisão independente dos seis arquivos de código: nenhum defeito relevante. A revisão confirmou destinos, condições, assinatura, pausa e movimento reduzido, além de ESLint direcionado e parsing PostCSS. A conferência produtiva continua sendo responsabilidade da entrega, separada da revisão.
 
-`npm.cmd run build` concluiu com código zero: compilação Next.js 15.5.27, lint/tipos e 37 páginas estáticas. Evidência produtiva será registrada após publicação. Capturas e auxiliares de preview não entram no Git.
+`npm.cmd run build` concluiu com código zero: compilação Next.js 15.5.27, lint/tipos e 37 páginas estáticas. Capturas e auxiliares de preview não entram no Git.
+
+## Publicação e conferência real
+
+- Código `bdd3ecd` enviado ao GitHub e recebido no servidor por `git pull --ff-only`. Build Docker concluído; somente `app` recriado, sem migrations ou reinício do PostgreSQL.
+- Imagem publicada: `sha256:34f7858d724994fcdb6be576e29e02cfffb071de2081643d9e56fd5b39aafd4c`. Imagem anterior preservada em `wimifarma-br-app:pre-banners-bdd3ecd` para reversão.
+- Após a inicialização, `/api/health` retornou `ok: true`, home HTTP 200, container rodando e zero reinícios. A primeira consulta durante a recriação recebeu reset de conexão; a consulta posterior confirmou a saúde. Isso não representa erro de campanha.
+- As três campanhas e as três marcas foram conferidas no site publicado em 390, 768 e 1440 px: imagens carregadas, tema/seleção correta e nenhuma rolagem horizontal. Fonte Barlow confirmada no banner.
+- DOM produtivo conservou `logo-wimifarma-animated.svg` no cabeçalho, 128 elementos de bolhas e filtro original no rodapé. Esses arquivos não foram alterados.
+- Evidência visual local em `outputs/banners-wimifarma-publicado.png`, excluída do Git. Não foram feitos pedidos, cobranças, avaliações ou envios de mensagem durante o QA.
+
+Pendência técnica preexistente: cinco alertas high nas ferramentas de desenvolvimento, descritos acima. Não há pendência visual conhecida nesta entrega; ensaios em tamanhos específicos não garantem todos os navegadores ou dispositivos.
