@@ -3,6 +3,7 @@ import { z } from "zod";
 export class PaymentError extends Error {
   constructor(message: string, public status = 409) { super(message); }
 }
+export const ASAAS_MIN_CARD_AMOUNT_CENTS = 500;
 export const paymentSettingsSchema = z.object({
   revision: z.number().int().nonnegative(), enabled: z.boolean(), environment: z.enum(["test", "production"]),
   publicKey: z.string().trim().min(10).max(200),

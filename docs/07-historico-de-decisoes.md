@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-08 - Mínimo de cartão Asaas comprovado no Sandbox
+
+- O ensaio integrado de R$4,99 recebeu HTTP 400 `invalid_object` no log oficial, por valor inferior a R$5,00. Validar o mínimo de 500 centavos no adapter, serviço antes de persistir pedido e painel de homologação; manter Pix abaixo desse limite.
+- Preservar a regra de nenhum segundo POST após resultado incerto. Encerramento operacional exige evidência da rejeição definitiva, referência exata e auditoria; não criar resolução automática genérica de `UNKNOWN`. Mercado Pago e preços do catálogo permanecem preservados. Evidências em [51-asaas-pagamentos-sandbox.md](51-asaas-pagamentos-sandbox.md).
+- O ensaio seguinte revelou formatos reais adicionais: link Sandbox com prefixo exato `/000/` e ID de evento com sufixo `&` numérico. Aceitar somente esses formatos delimitados, com regressões de abuso; recuperar a sessão existente a partir do log, sem criar outra cobrança. O ID opaco do evento permanece integral para deduplicação.
+
 ## 2026-10-08 - Pedidos sintéticos Asaas e inbox durável
 
 - Implementar homologação ADMIN separada do checkout comercial: pedido fictício sem cliente, estoque, cashback ou mensagens; Pix estático de duas horas e cartão hospedado 1x. Preservar Mercado Pago e tarifas Asaas produtivas.

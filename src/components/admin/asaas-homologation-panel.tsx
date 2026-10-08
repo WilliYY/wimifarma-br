@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
+import { ASAAS_MIN_CARD_AMOUNT_CENTS } from "@/features/payments/schema";
 
 const endpoint = "/api/admin/pagamentos/asaas-homologacao";
 const intentKey = "wimifarma-asaas-homologacao-intent";
@@ -27,7 +28,7 @@ function sandboxLink(value: string) {
   try {
     const url = new URL(value);
     return url.protocol === "https:" && url.hostname === "sandbox.asaas.com" && !url.port && !url.username && !url.password
-      && !url.hash && ((/^\/checkoutSession\/show\/[a-zA-Z0-9-]+$/.test(url.pathname) && !url.search)
+      && !url.hash && ((/^\/(?:000\/)?checkoutSession\/show\/[a-zA-Z0-9-]+$/.test(url.pathname) && !url.search)
         || (url.pathname === "/checkoutSession/show" && /^\?id=[a-zA-Z0-9-]+$/.test(url.search)));
   } catch { return false; }
 }
@@ -110,10 +111,11 @@ export function AsaasHomologationPanel({ credentialId }: { credentialId: string 
   const requiresReview = state?.attempts.some(attempt => !["PENDING", "PAID", "FAILED", "CANCELED", "REFUNDED"].includes(attempt.status)) ?? false;
   const blocked = Boolean(intent) || requiresReview || storageBlocked;
   const product = state?.products.find(item => item.id === productId);
+  const belowCardMinimum = method === "card" && Boolean(product && product.priceCents < ASAAS_MIN_CARD_AMOUNT_CENTS);
 
   function create(event: React.FormEvent) {
     event.preventDefault();
-    if (lock.current || blocked || !state?.prepared || !state.webhookReady || !product) return;
+    if (lock.current || blocked || belowCardMinimum || !state?.prepared || !state.webhookReady || !product) return;
     const pending: Intent = { requestId: crypto.randomUUID(), productId: product.id, method };
     try { sessionStorage.setItem(intentKey, JSON.stringify(pending)); }
     catch { setMessage("Não foi possível preservar o identificador do ensaio. Nenhuma criação foi enviada."); return; }
@@ -141,8 +143,9 @@ export function AsaasHomologationPanel({ credentialId }: { credentialId: string 
       <label className="grid gap-2 text-sm font-bold">Forma de teste<select value={method} onChange={event => setMethod(event.target.value as "pix" | "card")}
         disabled={busy || blocked} className="rounded-lg border border-line p-3"><option value="pix">Pix fictício · validade de duas horas</option><option value="card">Cartão fictício · à vista (1x)</option></select></label>
       {product && <p className="text-sm font-bold">Valor do ensaio: {currency(product.priceCents)}. O servidor confere o preço atual.</p>}
+      {belowCardMinimum && <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm leading-6 text-amber-900">O cartão Asaas exige no mínimo {currency(ASAAS_MIN_CARD_AMOUNT_CENTS)}. Escolha outro produto ou teste Pix.</p>}
       {blocked && <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm leading-6 text-amber-900">Há um ensaio aguardando confirmação ou conferência. Consulte seu estado antes de continuar; a criação de outro ensaio está bloqueada.</p>}
-      <button type="submit" disabled={!state?.prepared || !state.webhookReady || !product || busy || blocked}
+      <button type="submit" disabled={!state?.prepared || !state.webhookReady || !product || belowCardMinimum || busy || blocked}
         className="min-h-12 rounded-lg bg-brand px-5 py-3 font-black text-white disabled:opacity-50">{busy ? "Verificando..." : "Criar ensaio fictício"}</button>
     </form>
     {message && <p role="alert" className="rounded-lg bg-brand-soft p-3 text-sm font-bold text-brand">{message}</p>}

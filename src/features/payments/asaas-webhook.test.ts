@@ -109,6 +109,18 @@ test("streaming byte limit, JSON format and event whitelist reject hostile input
   assert.equal((await h.receive({ id: "evt_bad", event: "PAYMENT_OVERDUE", payment: { id: "pay_synthetic" } })).status, 400);
   assert.equal(h.rows.length, 0);
 });
+
+test("provider event ID numeric suffix is retained exactly for deduplication; hostile IDs stay rejected", async () => {
+  const h = await harness();
+  const body = { id: "evt_synthetic0123456789&21402383", event: "PAYMENT_CREATED", payment: { id: "pay_synthetic" } };
+  assert.equal((await h.receive(body)).status, 200);
+  assert.equal((await h.receive(body)).status, 200);
+  assert.equal(h.rows.length, 1); assert.equal(h.rows[0].eventId, body.id);
+  for (const id of ["evt_bad&abc", "evt_bad&1&2", "evt_bad\n", "evt_bad/path", "evt_bad?token=x", "x".repeat(101)]) {
+    assert.equal((await h.receive({ ...body, id })).status, 400, JSON.stringify(id));
+  }
+  assert.equal(h.rows.length, 1); assert.equal(h.calls.fetch.length, 0); assert.equal(h.calls.refresh.length, 0);
+});
 test("200 requires durable sanitized receipt; duplicate retains pending attempts and rejects divergence", async () => {
   const h = await harness();
   h.fixture.failPersist = true;

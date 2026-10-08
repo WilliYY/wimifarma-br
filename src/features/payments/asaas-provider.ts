@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PaymentError } from "./schema";
+import { ASAAS_MIN_CARD_AMOUNT_CENTS, PaymentError } from "./schema";
 
 export type AsaasConnection = { accessToken: string; environment: "test" | "production" };
 const identifier = z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/);
@@ -143,6 +143,7 @@ function checkoutLink(link: string, id: string, environment: AsaasConnection["en
   try { url = new URL(link); } catch { throw new PaymentError(uncertainMessage, 503); }
   const host = environment === "test" ? "sandbox.asaas.com" : "asaas.com";
   const matches = (url.pathname === `/checkoutSession/show/${id}` && !url.search)
+    || (environment === "test" && url.pathname === `/000/checkoutSession/show/${id}` && !url.search)
     || (url.pathname === "/checkoutSession/show" && url.search === `?id=${id}`);
   if (url.protocol !== "https:" || url.hostname !== host || url.port || url.username || url.password || url.hash || !matches) {
     throw new PaymentError(uncertainMessage, 503);
@@ -152,7 +153,7 @@ function checkoutLink(link: string, id: string, environment: AsaasConnection["en
 export async function createAsaasCheckout(connection: AsaasConnection, input: {
   amountCents: number; externalReference: string; callback: z.infer<typeof callbackSchema>;
 }): Promise<Extract<AsaasPaymentResource, { checkoutSessionId: string }>> {
-  const data = parse(z.object({ amountCents, externalReference: reference, callback: callbackSchema }).strict(), input);
+  const data = parse(z.object({ amountCents: amountCents.min(ASAAS_MIN_CARD_AMOUNT_CENTS), externalReference: reference, callback: callbackSchema }).strict(), input);
   validateCallbacks(data.callback);
   const result = response(z.object({ id: z.uuid(), link: z.string().max(2000),
     status: z.enum(["ACTIVE", "CANCELED", "EXPIRED", "PAID"]), externalReference: z.string().max(200).optional() }),

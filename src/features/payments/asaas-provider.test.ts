@@ -72,6 +72,20 @@ test("Pix sends fixed single-use amount/expiry and returns bounded canonical res
 });
 const callbacks = { successUrl: "https://wimifarma.com.br/pedido?result=success",
   cancelUrl: "https://wimifarma.com.br/pedido?result=cancel", expiredUrl: "https://wimifarma.com.br/pedido?result=expired" };
+
+test("Asaas card rejects values below R$ 5 before HTTP and accepts the exact minimum", async () => {
+  const previous = process.env.AUTH_URL;
+  process.env.AUTH_URL = "https://wimifarma.com.br";
+  try {
+    await mocked(async calls => {
+      await assert.rejects(createAsaasCheckout(connection, { amountCents: 499, externalReference: "order-123", callback: callbacks }));
+      assert.equal(calls.length, 0);
+      await createAsaasCheckout(connection, { amountCents: 500, externalReference: "order-123", callback: callbacks });
+      assert.equal(calls.length, 1);
+      assert.equal(JSON.parse(String(calls[0].options.body)).items[0].value, 5);
+    }, { id: uuid, link: `https://sandbox.asaas.com/checkoutSession/show/${uuid}`, status: "ACTIVE", externalReference: "order-123" });
+  } finally { if (previous === undefined) delete process.env.AUTH_URL; else process.env.AUTH_URL = previous; }
+});
 test("hosted card checkout fixes 1x, quantity and duration without PAN/CVV/customerData", async () => {
   const previous = process.env.AUTH_URL;
   process.env.AUTH_URL = "https://wimifarma.com.br";
@@ -83,12 +97,20 @@ test("hosted card checkout fixes 1x, quantity and duration without PAN/CVV/custo
       assert.deepEqual(JSON.parse(String(calls[0].options.body)), { billingTypes: ["CREDIT_CARD"], chargeTypes: ["DETACHED"],
         minutesToExpire: 120, externalReference: "order-123", items: [{ name: "Pedido Wimifarma", quantity: 1, value: 12.34 }], callback: callbacks });
     }, { id: uuid, link: `https://sandbox.asaas.com/checkoutSession/show/${uuid}`, status: "ACTIVE", externalReference: "order-123" });
+    await mocked(async () => {
+      const resource = await createAsaasCheckout(connection, { amountCents: 1234, externalReference: "order-123", callback: callbacks });
+      assert.equal(resource.checkoutUrl, `https://sandbox.asaas.com/000/checkoutSession/show/${uuid}`);
+    }, { id: uuid, link: `https://sandbox.asaas.com/000/checkoutSession/show/${uuid}`, status: "ACTIVE", externalReference: "order-123" });
     for (const link of [`https://sandbox.asaas.com.evil.example/checkoutSession/show/${uuid}`,
       `https://user:password@sandbox.asaas.com/checkoutSession/show/${uuid}`,
-      `https://asaas.com/checkoutSession/show/${uuid}`, `https://sandbox.asaas.com/checkoutSession/show/other-id`]) {
+      `https://asaas.com/checkoutSession/show/${uuid}`, `https://sandbox.asaas.com/checkoutSession/show/other-id`,
+      `https://sandbox.asaas.com/001/checkoutSession/show/${uuid}`, `https://sandbox.asaas.com/000/checkoutSession/show/${uuid}?redirect=https://evil.example`]) {
       await mocked(async () => assert.rejects(createAsaasCheckout(connection,
         { amountCents: 1234, externalReference: "order-123", callback: callbacks })), { id: uuid, link, status: "ACTIVE" });
     }
+    await mocked(async () => assert.rejects(createAsaasCheckout({ environment: "production", accessToken: "$aact_prod_synthetic" },
+      { amountCents: 1234, externalReference: "order-123", callback: callbacks })),
+    { id: uuid, link: `https://asaas.com/000/checkoutSession/show/${uuid}`, status: "ACTIVE" });
     await mocked(async calls => {
       await assert.rejects(createAsaasCheckout(connection, { amountCents: 1234, externalReference: "order-123",
         callback: { ...callbacks, successUrl: "https://evil.example" } }));

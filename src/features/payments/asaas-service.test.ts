@@ -17,7 +17,7 @@ const bundle = build({ entryPoints: ["src/features/payments/asaas-service.ts"], 
 async function harness() {
   const connection = { id: "asaas-sandbox", accountId: "synthetic-wallet", revision: 2, environment: "test", enabled: false,
     connection: { accessToken: "synthetic", environment: "test" }, secrets: { webhookId: "synthetic-hook", pixAddressKey: "synthetic-key" } };
-  const product = { id: "synthetic-product", name: "Produto fictício", slug: "ficticio", imageUrl: null, price: "4.99", promotionalPrice: null,
+  const product = { id: "synthetic-product", name: "Produto fictício", slug: "ficticio", imageUrl: null, price: "5.00", promotionalPrice: null,
     stock: 4, status: "ACTIVE", requiresPrescription: false, isPopularPharmacy: false, prescriptionType: "UNREVIEWED" };
   const records: { order: Record<string, unknown>; payment: Record<string, unknown> }[] = [];
   const calls = { posts: 0, gets: 0, locks: 0, audits: [] as string[] };
@@ -68,8 +68,16 @@ async function harness() {
     URL, Buffer, console, crypto: webcrypto, process: { env: { AUTH_URL: "https://example.com" } }, fixture });
   const input = { productId: product.id, method: "pix", requestId: "123e4567-e89b-42d3-a456-426614174000" };
   return { ...loaded.exports, input, connection, product, calls, controls, records,
-    remote: (status = "RECEIVED", billingType = "PIX") => ({ id: "pay_synthetic", value: 4.99, netValue: 4.5, billingType, status, pixQrCodeId: "synthetic-qr", checkoutSession: "synthetic-session", refunds: [] }) };
+    remote: (status = "RECEIVED", billingType = "PIX") => ({ id: "pay_synthetic", value: 5, netValue: 4.5, billingType, status, pixQrCodeId: "synthetic-qr", checkoutSession: "synthetic-session", refunds: [] }) };
 }
+
+test("card minimum is checked before persisting an order or sending POST; small Pix remains valid", async () => {
+  const f = await harness(); f.product.price = "4.99";
+  await assert.rejects(f.createAsaasSandboxPayment({ ...f.input, method: "card" }, "synthetic-admin"), /R\$ 5,00/);
+  assert.equal(f.records.length, 0); assert.equal(f.calls.posts, 0);
+  await f.createAsaasSandboxPayment(f.input, "synthetic-admin");
+  assert.equal(f.records[0].payment.amountCents, 499); assert.equal(f.calls.posts, 1);
+});
 
 test("Sandbox creation persists binding before one POST, with no stock, customer, cashback or commercial message", async () => {
   const f = await harness(); await f.createAsaasSandboxPayment(f.input, "synthetic-admin");

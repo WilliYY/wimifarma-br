@@ -10,7 +10,7 @@ import { assertAsaasPaymentBinding, createAsaasCheckout, createAsaasPix, listAsa
   selectBoundAsaasPayment, type AsaasExpectedPayment } from "./asaas-provider";
 import { normalizeAsaasPayment } from "./asaas-normalization";
 import { reconcileGatewayState } from "./gateway-state";
-import { PaymentError } from "./schema";
+import { ASAAS_MIN_CARD_AMOUNT_CENTS, PaymentError } from "./schema";
 
 export const asaasTestCreation = z.object({ productId: z.string().min(1).max(128), method: z.enum(["pix", "card"]), requestId: z.uuid() }).strict();
 const uncertain = () => new PaymentError("A criação não foi confirmada. Consulte o ensaio existente antes de continuar.", 503);
@@ -62,6 +62,9 @@ export async function createAsaasSandboxPayment(input: z.infer<typeof asaasTestC
     }
     const amountCents = moneyToCents((product.promotionalPrice ?? product.price).toString());
     if (amountCents < 1 || amountCents > 10_000) throw new PaymentError("O ensaio deve ter valor entre R$ 0,01 e R$ 100,00.", 422);
+    if (data.method === "card" && amountCents < ASAAS_MIN_CARD_AMOUNT_CENTS) {
+      throw new PaymentError("O cartão Asaas exige um valor mínimo de R$ 5,00. Escolha outro produto ou teste Pix.", 422);
+    }
     const order = await tx.order.create({ data: {
       number: createOrderNumber(), checkoutRequestId: data.requestId, checkoutRequestHash: requestHash,
       customerId: null, customerName: "Comprador fictício · Sandbox", customerPhone: "11900000000", customerEmail: "homologacao@example.invalid",

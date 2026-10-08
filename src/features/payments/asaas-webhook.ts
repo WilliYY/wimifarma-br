@@ -10,7 +10,8 @@ const supportedEvents = new Set(["PAYMENT_CREATED", "PAYMENT_UPDATED", "PAYMENT_
   "PAYMENT_RESTORED", "PAYMENT_REFUNDED", "PAYMENT_PARTIALLY_REFUNDED", "PAYMENT_REFUND_IN_PROGRESS",
   "PAYMENT_CHARGEBACK_REQUESTED", "PAYMENT_CHARGEBACK_DISPUTE", "PAYMENT_AWAITING_CHARGEBACK_REVERSAL",
   "CHECKOUT_PAID", "CHECKOUT_CANCELED", "CHECKOUT_EXPIRED"]);
-const envelope = z.object({ id: z.string().min(1).max(100).regex(/^[a-zA-Z0-9_-]+$/),
+// Provider IDs can carry an ampersand plus a numeric suffix. Retain the opaque ID for deduplication.
+const envelope = z.object({ id: z.string().min(1).max(100).regex(/^[a-zA-Z0-9_-]+(?:&[0-9]+)?$/).refine(value => !/\s/.test(value)),
   event: z.string().min(1).max(80), payment: z.object({ id: z.string().regex(/^pay_[a-zA-Z0-9_-]{1,96}$/) }).optional(),
   checkout: z.object({ id: z.uuid() }).optional() });
 const maxBodyBytes = 64 * 1024;
