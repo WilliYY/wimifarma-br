@@ -2,8 +2,10 @@ import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { getPrisma } from "@/lib/prisma";
 import { readAsaasSandboxIntegration, ASAAS_SANDBOX_INTEGRATION_ID } from "./asaas-sandbox-integration";
+import { readAsaasIntegration } from "./asaas-integration";
 import { assertAsaasPaymentBinding, retrieveAsaasPayment } from "./asaas-provider";
 import { refreshAsaasSandboxPayment } from "./asaas-service";
+import { refreshAsaasCommercePayment } from "./asaas-commerce-service";
 import { PaymentError } from "./schema";
 
 const supportedEvents = new Set(["PAYMENT_CREATED", "PAYMENT_UPDATED", "PAYMENT_CONFIRMED", "PAYMENT_RECEIVED", "PAYMENT_DELETED",
@@ -42,11 +44,17 @@ async function boundedBody(request: Request) {
 
 /** Acknowledge only the durable receipt. No provider request or financial effect runs here. */
 export async function receiveAsaasSandboxWebhook(request: Request): Promise<Response> {
+  return receiveAsaasWebhook(request, "test");
+}
+export async function receiveAsaasProductionWebhook(request: Request): Promise<Response> {
+  return receiveAsaasWebhook(request, "production");
+}
+async function receiveAsaasWebhook(request: Request, environment: "test" | "production"): Promise<Response> {
   try {
-    const integration = await readAsaasSandboxIntegration();
+    const integration = await (environment === "test" ? readAsaasSandboxIntegration() : readAsaasIntegration());
     const binding = new URL(request.url).searchParams.getAll("binding");
     const expected = integration ? new URL(integration.secrets.webhookUrl).searchParams.get("binding") : null;
-    if (!integration || integration.environment !== "test" || !integration.accountId
+    if (!integration || integration.environment !== environment || !integration.accountId
       || !sameSecret(request.headers.get("asaas-access-token"), integration.secrets.webhookSecret)
       || binding.length !== 1 || !expected || binding[0] !== expected) return reply(401, "Webhook não autorizado.");
     if (request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json") {
@@ -63,7 +71,7 @@ export async function receiveAsaasSandboxWebhook(request: Request): Promise<Resp
     const isCheckout = event.event.startsWith("CHECKOUT_");
     if (isCheckout ? !event.checkout : !event.payment) return reply(400, "Recurso do evento inválido.");
     const prisma = getPrisma();
-    const identity = { provider: "asaas", environment: "test", accountId: integration.accountId, eventId: event.id };
+    const identity = { provider: "asaas", environment, accountId: integration.accountId, eventId: event.id };
     const identifiers = { eventType: event.event, providerPaymentId: isCheckout ? null : event.payment!.id,
       checkoutSessionId: isCheckout ? event.checkout!.id : null };
     try { await prisma.paymentWebhookEvent.create({ data: { ...identity, ...identifiers } }); }
@@ -79,14 +87,17 @@ export async function receiveAsaasSandboxWebhook(request: Request): Promise<Resp
 }
 
 /** Recoverable lease: crashed workers leave PENDING receipts eligible after one minute. */
-export async function processAsaasWebhookInbox(maxEvents = 10) {
+export async function processAsaasWebhookInbox(maxEvents = 10, environment: "test" | "production" = "test") {
   const limit = Math.min(10, Math.max(1, Math.floor(maxEvents) || 10));
   const result = { processed: 0, pending: 0, review: 0 };
-  const integration = await readAsaasSandboxIntegration();
-  if (!integration || integration.environment !== "test" || integration.connection.environment !== "test") return result;
+  const integration = await (environment === "test" ? readAsaasSandboxIntegration() : readAsaasIntegration());
+  if (!integration || integration.environment !== environment) return result;
+  const connection = integration.connection;
+  if (connection.environment !== environment) return result;
+  const refresh = environment === "test" ? refreshAsaasSandboxPayment : refreshAsaasCommercePayment;
   const prisma = getPrisma();
   const cutoff = new Date(Date.now() - leaseMilliseconds);
-  const eligible = { provider: "asaas", environment: "test", accountId: integration.accountId, status: "PENDING",
+  const eligible = { provider: "asaas", environment, accountId: integration.accountId, status: "PENDING",
     OR: [{ lastAttemptAt: null }, { lastAttemptAt: { lt: cutoff } }] };
   // Never-attempted receipts take priority; unresolved old resources cannot monopolize every batch.
   const events = await prisma.paymentWebhookEvent.findMany({ where: eligible,
@@ -99,9 +110,9 @@ export async function processAsaasWebhookInbox(maxEvents = 10) {
     let status = "PENDING";
     let bindingMismatch = false;
     try {
-      const scope = { provider: "asaas", integrationId: ASAAS_SANDBOX_INTEGRATION_ID, environment: "test", accountId: integration.accountId };
+      const scope = { provider: "asaas", integrationId: environment === "test" ? ASAAS_SANDBOX_INTEGRATION_ID : "asaas", environment, accountId: integration.accountId };
       if (event.providerPaymentId) {
-        const canonical = await retrieveAsaasPayment(integration.connection, event.providerPaymentId);
+        const canonical = await retrieveAsaasPayment(connection, event.providerPaymentId);
         const bindings = [{ providerOrderId: canonical.id },
           ...(canonical.pixQrCodeId ? [{ pixQrCodeId: canonical.pixQrCodeId }] : []),
           ...(canonical.checkoutSession ? [{ checkoutSessionId: canonical.checkoutSession }] : [])];
@@ -115,16 +126,16 @@ export async function processAsaasWebhookInbox(maxEvents = 10) {
           if (!resource) throw new PaymentError("Recurso persistido ausente.", 409);
           assertAsaasPaymentBinding(canonical, { amountCents: local.amountCents, method: local.method, resource,
             externalReference: local.id, ...(local.providerOrderId ? { paymentId: local.providerOrderId } : {}) });
-          const refreshed = await refreshAsaasSandboxPayment(local.orderId);
-          status = ["NEW", "PENDING", "UNKNOWN", "SUBMITTING"].includes(refreshed.status) ? "PENDING" : "PROCESSED";
+          const refreshed = await refresh(local.orderId);
+          status = refreshed.status === "REVIEW" ? "REVIEW" : ["NEW", "PENDING", "UNKNOWN", "SUBMITTING"].includes(refreshed.status) ? "PENDING" : "PROCESSED";
         }
       } else if (event.checkoutSessionId) {
         if (event.eventType !== "CHECKOUT_PAID") status = "REVIEW";
         else {
           const local = await prisma.onlinePayment.findFirst({ where: { ...scope, checkoutSessionId: event.checkoutSessionId } });
           if (local) {
-            const refreshed = await refreshAsaasSandboxPayment(local.orderId);
-            status = ["NEW", "PENDING", "UNKNOWN", "SUBMITTING"].includes(refreshed.status) ? "PENDING" : "PROCESSED";
+            const refreshed = await refresh(local.orderId);
+            status = refreshed.status === "REVIEW" ? "REVIEW" : ["NEW", "PENDING", "UNKNOWN", "SUBMITTING"].includes(refreshed.status) ? "PENDING" : "PROCESSED";
           }
         }
       }
@@ -138,7 +149,7 @@ export async function processAsaasWebhookInbox(maxEvents = 10) {
     // Commit review and its audit together, so audit failure leaves the receipt retryable.
     const finalized = bindingMismatch ? await prisma.$transaction(async tx => {
       const updated = await tx.paymentWebhookEvent.updateMany(finalization);
-      if (updated.count) await tx.auditLog.create({ data: { action: "ASAAS_SANDBOX_WEBHOOK_REVIEW", entity: "PaymentWebhookEvent",
+      if (updated.count) await tx.auditLog.create({ data: { action: environment === "test" ? "ASAAS_SANDBOX_WEBHOOK_REVIEW" : "ASAAS_WEBHOOK_REVIEW", entity: "PaymentWebhookEvent",
         entityId: event.id, metadata: { reason: "BINDING_MISMATCH", eventType: event.eventType } } });
       return updated;
     }) : await prisma.paymentWebhookEvent.updateMany(finalization);

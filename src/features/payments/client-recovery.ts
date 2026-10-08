@@ -1,4 +1,4 @@
-export type PaymentView = { orderId: string; number: string; amountCents: number; status: string; statusDetail: string | null; pixCode: string | null; pixExpiresAt: string | null; payerEmail: string; qrDataUrl: string | null; environment: string; publicKey: string };
+export type PaymentView = { orderId: string; number: string; amountCents: number; status: string; statusDetail: string | null; pixCode: string | null; pixExpiresAt: string | null; payerEmail: string; qrDataUrl: string | null; environment: string; publicKey: string; provider?: string; method?: string | null; installments?: number | null; checkoutUrl?: string | null };
 
 const consultationError = "Não foi possível consultar o pagamento. Tente consultar novamente.";
 

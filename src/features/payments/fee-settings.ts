@@ -4,6 +4,8 @@ import { decryptValue, encryptValue } from "@/lib/secret-vault";
 import { feeRulesSchema } from "./fee-policy";
 import { retrieveAsaasFees } from "./asaas-fees";
 import { PaymentError } from "./schema";
+import { retrieveAsaasWalletId } from "./asaas-provider";
+import type { Prisma } from "@/generated/prisma/client";
 
 const ID = "payment-fee-policy";
 const storedSchema = z.object({ rules: feeRulesSchema, apiKey: z.string().max(500).optional(),
@@ -13,9 +15,22 @@ export const feeSettingsInput = z.object({ revision: z.number().int().nonnegativ
   apiKey: z.string().trim().min(15).max(500).optional(), environment: z.enum(["production", "sandbox"]),
   zeroInterestInstallments: z.number().int().min(1).max(12) }).strict();
 
-async function readStored() {
-  const row = await getPrisma().paymentIntegration.findUnique({ where: { id: ID } });
+async function readStored(db: Pick<Prisma.TransactionClient, "paymentIntegration"> = getPrisma()) {
+  const row = await db.paymentIntegration.findUnique({ where: { id: ID } });
   return { revision: row?.revision ?? 0, config: row ? storedSchema.parse(JSON.parse(decryptValue(row))) : storedSchema.parse({ rules: [] }) };
+}
+// Server-only use: never return the account credential in an API response.
+export async function productionAsaasToken() {
+  const { config } = await readStored();
+  if (config.environment !== "production" || !/^\$aact_prod_\S+$/.test(config.apiKey ?? "")) throw new PaymentError("Conecte a chave produtiva Asaas no painel de tarifas.", 422);
+  return config.apiKey!;
+}
+export async function paymentRoutingRules(tx: Prisma.TransactionClient) { return (await readStored(tx)).config.rules; }
+async function accountFees(apiKey: string, environment: "production" | "sandbox", installments: number) {
+  const rules = await retrieveAsaasFees(apiKey, environment, installments);
+  if (environment !== "production") return rules;
+  const accountId = await retrieveAsaasWalletId({ accessToken: apiKey, environment: "production" });
+  return rules.map(rule => ({ ...rule, accountId, processingMode: "hosted-card" as const }));
 }
 export async function feeSettingsView() {
   const { revision, config } = await readStored();
@@ -51,7 +66,7 @@ export async function saveFeeSettings(input: z.infer<typeof feeSettingsInput>, u
   if (config.rules.length > 45) throw new PaymentError("Limite de 45 tarifas manuais; reserve três posições para a consulta automática.", 422);
   if (config.apiKey) {
     if (input.environment !== stored.config.environment && !input.apiKey) throw new PaymentError("Informe a credencial do novo ambiente.", 422);
-    const imported = await retrieveAsaasFees(config.apiKey, config.environment, config.zeroInterestInstallments);
+    const imported = await accountFees(config.apiKey, config.environment, config.zeroInterestInstallments);
     // Sandbox pricing cannot rank real merchant purchases.
     if (config.environment === "production") config.rules = [...config.rules, ...imported];
     config.lastSyncAt = new Date().toISOString();
@@ -68,7 +83,7 @@ export async function synchronizeFeeSettings(userId?: string) {
   try {
     const { revision, config } = await readStored();
     if (!config.apiKey) { if (userId) throw new PaymentError("Conecte a conta Asaas para consultar suas tarifas.", 422); return; }
-    const imported = await retrieveAsaasFees(config.apiKey, config.environment, config.zeroInterestInstallments);
+    const imported = await accountFees(config.apiKey, config.environment, config.zeroInterestInstallments);
     const rules = config.rules.filter(rule => !rule.id.startsWith("asaas-api-"));
     await persist({ ...config, rules: config.environment === "production" ? [...rules, ...imported] : rules, lastSyncAt: new Date().toISOString() }, revision, "PAYMENT_FEES_SYNCHRONIZED", userId);
   } finally { syncing = false; }

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { compareFees, type FeeRule, type FeeComparison } from "@/features/payments/fee-policy";
 
-type Settings = { revision: number; rules: FeeRule[]; environment: "production" | "sandbox"; zeroInterestInstallments: number; connected: boolean; lastSyncAt: string | null };
+type Settings = { revision: number; rules: FeeRule[]; environment: "production" | "sandbox"; zeroInterestInstallments: number; connected: boolean; lastSyncAt: string | null; providerAccounts?: Partial<Record<FeeRule["provider"], string>> };
 const money = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 const names = { "mercado-pago": "Mercado Pago", asaas: "Asaas", pagbank: "PagBank", stripe: "Stripe" };
 const field = "min-h-12 w-full min-w-0 rounded-xl border border-line bg-white px-3 text-base";
@@ -44,6 +44,7 @@ export function PaymentFeesPanel() {
       || !Number.isInteger(numbers[2]) || numbers.slice(0, 2).some(value => Math.abs(value * 100 - Math.round(value * 100)) > 1e-7)) { setMessage("Use até duas casas decimais nas tarifas e dias inteiros."); return; }
     const now = Date.now();
     const rule: FeeRule = { id: `manual-${manual.provider}-${method}-${manual.installments}`, provider: manual.provider, method, currency: "BRL",
+      accountId: settings.providerAccounts?.[manual.provider], processingMode: manual.provider === "mercado-pago" ? "orders" : manual.provider === "asaas" ? method === "pix" ? "static-pix" : "hosted-card" : undefined,
       minInstallments: method === "pix" ? 1 : manual.installments, maxInstallments: method === "pix" ? 1 : manual.installments,
       percentageBps: Math.round(numbers[0] * 100), fixedCents: Math.round(numbers[1] * 100), settlementDays: numbers[2], zeroInterestInstallments: manual.zeroInterest,
       checkedAt: new Date(now).toISOString(), validUntil: new Date(now + 7 * 24 * 60 * 60_000).toISOString(), source: manual.source };
@@ -54,7 +55,7 @@ export function PaymentFeesPanel() {
     installments: method === "pix" ? 1 : installments, maxSettlementDays: deadline }, settings?.rules ?? []); }
   catch { /* Empty or incomplete inputs do not rank providers. */ }
   return <section className="grid gap-5 rounded-2xl border border-line bg-white p-6" aria-label="Comparar taxas de pagamento">
-    <div><h2 className="text-xl font-black">Compare o custo dos pagamentos</h2><p className="mt-2 text-sm leading-6 text-muted">Simulação administrativa com tarifas da conta. O checkout continua usando Mercado Pago; o segundo gateway exige conta aprovada e homologação. Taxas públicas não são importadas como contrato.</p></div>
+    <div><h2 className="text-xl font-black">Compare o custo dos pagamentos</h2><p className="mt-2 text-sm leading-6 text-muted">Novos pedidos comparam as tarifas atuais dos gateways ativos e homologados. O Asaas hospedado aceita crédito à vista; parcelamento continua no Mercado Pago. Taxa desconhecida ou vencida conserva o provedor padrão. Asaas é revisado a cada seis horas; Mercado Pago exige reconferir o contrato a cada sete dias.</p></div>
     <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-2 text-sm font-semibold">Valor da compra (R$)<input className={field} inputMode="decimal" value={amount} onChange={event => setAmount(event.target.value)} /></label>
       <label className="grid gap-2 text-sm font-semibold">Método<select className={field} value={method} onChange={event => setMethod(event.target.value as "pix" | "card")}><option value="card">Cartão</option><option value="pix">Pix</option></select></label>
       <label className="grid gap-2 text-sm font-semibold">Parcelas<select className={field} value={method === "pix" ? 1 : installments} disabled={method === "pix"} onChange={event => setInstallments(Number(event.target.value))}>{Array.from({ length: 12 }, (_, i) => <option key={i} value={i + 1}>{i + 1}x</option>)}</select></label>

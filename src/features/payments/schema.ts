@@ -12,6 +12,7 @@ export const paymentSettingsSchema = z.object({
 });
 export const paymentInputSchema = z.discriminatedUnion("method", [
   z.object({ method: z.literal("pix"), email: z.email().max(160) }),
+  z.object({ method: z.literal("hosted-card"), email: z.email().max(160) }).strict(),
   z.object({
     method: z.literal("card"), email: z.email().max(160),
     token: z.string().regex(/^[a-zA-Z0-9_-]{10,250}$/),

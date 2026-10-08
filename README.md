@@ -292,6 +292,8 @@ docker network connect wimifarma-br-network nginx-proxy-manager-app-1
 
 ## Documentacao
 
+- `docs/53-asaas-clientes-e-roteamento.md`: Asaas comercial por instrumento homologado, roteamento seguro por tarifas da conta e diagnóstico Pix produtivo.
+
 - `docs/33-emails-clientes.md`: proposta de confirmação de compra, carrinho e novidades; configuração externa e automações ainda pendentes. Prévia com dados fictícios em `docs/email-modelos.html`.
 
 A pasta `docs/` e a memoria longa do projeto. Comece por:

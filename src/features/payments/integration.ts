@@ -3,6 +3,7 @@ import { getPrisma } from "@/lib/prisma";
 import { decryptValue, encryptValue } from "@/lib/secret-vault";
 import { PaymentError, paymentSettingsSchema } from "./schema";
 import { mercadoPagoRequest } from "./provider";
+import { readAsaasIntegration } from "./asaas-integration";
 
 export const PAYMENT_INTEGRATION_ID = "mercado-pago";
 const secretsSchema = z.object({ accessToken: z.string().min(10), webhookSecret: z.string().min(10) });
@@ -14,12 +15,17 @@ export async function readPaymentIntegration() {
 }
 export async function paymentAvailability(isAdmin = false) {
   const row = await getPrisma().paymentIntegration.findUnique({ where: { id: PAYMENT_INTEGRATION_ID } });
-  return Boolean(row && ((row.enabled && row.environment === "production") || (isAdmin && row.environment === "test")));
+  if (row && ((row.enabled && row.environment === "production") || (isAdmin && row.environment === "test"))) return true;
+  const asaas = await readAsaasIntegration();
+  return Boolean(asaas?.enabled && asaas.secrets.webhookId && asaas.secrets.methods.length);
 }
 export async function publicPaymentConfiguration(isAdmin = false) {
   const row = await getPrisma().paymentIntegration.findUnique({ where: { id: PAYMENT_INTEGRATION_ID }, select: { publicKey: true, environment: true, enabled: true } });
   const available = row && ((row.enabled && row.environment === "production") || (isAdmin && row.environment === "test"));
-  if (!available) return null;
+  if (!available) {
+    const asaas = await readAsaasIntegration();
+    return asaas?.enabled && asaas.secrets.webhookId && asaas.secrets.methods.length ? { publicKey: "", environment: "production", brands: [] } : null;
+  }
   let brands: { id: string; name: string; image: string | null }[] = [];
   let connection: Awaited<ReturnType<typeof readPaymentIntegration>>;
   try { connection = await readPaymentIntegration(); }

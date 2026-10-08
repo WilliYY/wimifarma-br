@@ -6,7 +6,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:
 import { build } from "esbuild";
 import type { FeeRule } from "./fee-policy";
 
-const key = "synthetic-asaas-test-key-not-a-real-credential";
+const key = "$aact_prod_synthetic-test-not-a-real-credential";
 const vaultMaterial = "synthetic-fee-test-vault-material";
 type Row = { id: string; revision: number; enabled: boolean; ciphertext: string; iv: string; tag: string; [field: string]: unknown };
 type Config = { rules: FeeRule[]; apiKey?: string; environment: "production" | "sandbox"; zeroInterestInstallments: number; lastSyncAt: string | null };
@@ -60,7 +60,8 @@ async function harness(config?: Config) {
     fetch: async (url: string, options: RequestInit) => {
       calls.requests.push({ url, method: options.method ?? "GET", accessToken: (options.headers as Record<string, string>).access_token });
       await controls.beforeResponse?.();
-      return new Response(JSON.stringify(controls.fail ? { error: key } : feePayload), { status: controls.fail ? 500 : 200 });
+      const body = url.endsWith("/wallets/") ? { data: [{ id: "ba942666-0578-403a-9d32-cd4aa9682b0d" }], hasMore: false } : feePayload;
+      return new Response(JSON.stringify(controls.fail ? { error: key } : body), { status: controls.fail ? 500 : 200 });
     },
   });
   return { service: loaded.exports, rows, calls, controls, untouchedMp };
@@ -85,7 +86,9 @@ test("fee credentials use the real encrypted vault and remain outside views, aud
   assert.equal(fixture.rows.get("mercado-pago"), fixture.untouchedMp);
   assert.ok(fixture.calls.reads.every(id => id === "payment-fee-policy"));
   assert.ok(fixture.calls.writes.every(id => id === "payment-fee-policy"));
-  assert.deepEqual(fixture.calls.requests, [{ url: "https://api.asaas.com/v3/myAccount/fees/", method: "GET", accessToken: key }]);
+  assert.deepEqual(fixture.calls.requests, [{ url: "https://api.asaas.com/v3/myAccount/fees/", method: "GET", accessToken: key },
+    { url: "https://api.asaas.com/v3/wallets/", method: "GET", accessToken: key }]);
+  assert.ok(view.rules.filter(rule => rule.provider === "asaas").every(rule => rule.accountId === "ba942666-0578-403a-9d32-cd4aa9682b0d" && rule.processingMode === "hosted-card"));
 });
 
 test("a stale settings revision rejects before querying any provider or writing", async () => {

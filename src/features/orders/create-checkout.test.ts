@@ -6,13 +6,14 @@ import { createRequire } from "node:module";
 import { webcrypto } from "node:crypto";
 
 const bundle = build({ entryPoints: ["src/features/orders/create-checkout.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "isolated-create-order", setup(builder) {
-  builder.onResolve({ filter: /features\/cashback\/(rules|review-rewards|wallet)$|features\/shipping\/service$|features\/payments\/schema$|features\/miauby\/commerce-service$/ }, args => ({ path: args.path, namespace: "fixture" }));
+  builder.onResolve({ filter: /features\/cashback\/(rules|review-rewards|wallet)$|features\/shipping\/service$|features\/payments\/(schema|routing)$|features\/miauby\/commerce-service$/ }, args => ({ path: args.path, namespace: "fixture" }));
   builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents:
     args.path.endsWith("rules") ? "export const productCashbackCents=()=>0;" :
     args.path.endsWith("review-rewards") ? "export const allocateCashbackDiscount=items=>items.map(()=>0);" :
     args.path.endsWith("wallet") ? "export class CashbackRuleError extends Error{}; export const lockCashbackAccount=()=>{throw new Error('unexpected wallet access')};" :
     args.path.endsWith("shipping/service") ? "export const validateOrderShipping=async()=>null;" :
-    args.path.endsWith("schema") ? "export class PaymentError extends Error{};" : "export const queueCommerceOrder=async()=>{};",
+    args.path.endsWith("schema") ? "export class PaymentError extends Error{};" :
+    args.path.endsWith("routing") ? "export const checkoutPaymentConnections=async()=>{throw new Error('unexpected payment access')}; export const resolveCheckoutPayment=async()=>{throw new Error('unexpected payment access')};" : "export const queueCommerceOrder=async()=>{};",
   }));
 } }] });
 

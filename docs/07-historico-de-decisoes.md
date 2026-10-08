@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-08 — Asaas comercial e tarifas vinculadas
+
+- Adicionar integração Asaas produtiva separada, crédito hospedado 1x e Pix homologado por instrumento. Preservar Mercado Pago, Sandbox e obrigações de conferência farmacêutica.
+- Persistir seleção de provedor antes do POST e reservar estoque transacionalmente. Resultado incerto não permite repetir criação Asaas nem trocar gateway. Webhook durável e consulta canônica produzem efeitos comerciais idempotentes.
+- Comparar taxas somente para contas/modalidades confirmadas e atuais; tarifa desconhecida conserva o padrão anterior. Renovação de credencial da mesma wallet preserva histórico. Contrato e evidência em [53-asaas-clientes-e-roteamento.md](53-asaas-clientes-e-roteamento.md).
+
 ## 2026-10-08 - Mínimo de cartão Asaas comprovado no Sandbox
 
 - O ensaio integrado de R$4,99 recebeu HTTP 400 `invalid_object` no log oficial, por valor inferior a R$5,00. Validar o mínimo de 500 centavos no adapter, serviço antes de persistir pedido e painel de homologação; manter Pix abaixo desse limite.

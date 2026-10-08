@@ -11,16 +11,17 @@ export async function reconcilePendingPayments() {
   running = true;
   try {
     await processAsaasWebhookInbox().catch(() => console.warn("ASAAS_WEBHOOK_RECOVERY_PENDING"));
+    await processAsaasWebhookInbox(10, "production").catch(() => console.warn("ASAAS_PRODUCTION_WEBHOOK_RECOVERY_PENDING"));
     const payments = await getPrisma().onlinePayment.findMany({
       where: { status: { in: ["NEW", "SUBMITTING", "UNKNOWN", "PENDING"] }, updatedAt: { lt: new Date(Date.now() - 60_000) },
         OR: [{ lastCheckedAt: null }, { lastCheckedAt: { lt: new Date(Date.now() - 5 * 60_000) } }] },
-      take: 20, orderBy: { updatedAt: "asc" }, select: { id: true, orderId: true, provider: true, status: true, createdAt: true },
+      take: 20, orderBy: { updatedAt: "asc" }, select: { id: true, orderId: true, provider: true, integrationId: true, environment: true, status: true, createdAt: true },
     });
     for (const payment of payments) {
       try {
         if (payment.status === "NEW") {
           if (payment.createdAt.getTime() < Date.now() - 30 * 60_000) await cancelUnsubmittedPayment(payment.orderId);
-        } else if (payment.provider === "asaas") await refreshAsaasSandboxPayment(payment.orderId);
+        } else if (payment.provider === "asaas" && payment.environment === "test" && payment.integrationId === "asaas-sandbox") await refreshAsaasSandboxPayment(payment.orderId);
         else await refreshPayment(payment.orderId);
       } catch { console.warn("PAYMENT_RECONCILIATION_PENDING", payment.id); }
       finally { await getPrisma().onlinePayment.updateMany({ where: { id: payment.id }, data: { lastCheckedAt: new Date() } }); }

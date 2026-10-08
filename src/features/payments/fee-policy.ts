@@ -5,6 +5,8 @@ const cents = z.number().int().min(0).max(1_000_000);
 export const feeRuleSchema = z.object({
   id: z.string().trim().min(1).max(100),
   provider: z.enum(["mercado-pago", "asaas", "pagbank", "stripe"]),
+  accountId: z.string().min(1).max(100).optional(),
+  processingMode: z.enum(["orders", "hosted-card", "static-pix"]).optional(),
   currency: z.literal("BRL").default("BRL"),
   method: z.enum(["pix", "card"]),
   fixedCents: cents,

@@ -9,9 +9,11 @@ const secret = "ab".repeat(32);
 const wallet = "synthetic-wallet";
 const bundle = build({ entryPoints: ["src/features/payments/asaas-webhook.ts"], bundle: true, write: false,
   platform: "node", format: "cjs", packages: "external", plugins: [{ name: "webhook-fixture", setup(builder) {
-    builder.onResolve({ filter: /(?:lib\/prisma|asaas-sandbox-integration|asaas-service)$/ }, args => ({ path: args.path, namespace: "fixture" }));
+    builder.onResolve({ filter: /(?:lib\/prisma|asaas-sandbox-integration|asaas-integration|asaas-commerce-service|asaas-service)$/ }, args => ({ path: args.path, namespace: "fixture" }));
     builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("prisma")
       ? "export const getPrisma=()=>globalThis.fixture.prisma;"
+      : args.path.endsWith("asaas-integration") ? "export const readAsaasIntegration=async()=>globalThis.fixture.production;"
+        : args.path.endsWith("asaas-commerce-service") ? "export const refreshAsaasCommercePayment=id=>globalThis.fixture.refresh(id);"
       : args.path.endsWith("asaas-service") ? "export const refreshAsaasSandboxPayment=id=>globalThis.fixture.refresh(id);"
         : "export const ASAAS_SANDBOX_INTEGRATION_ID='asaas-sandbox'; export const readAsaasSandboxIntegration=async()=>globalThis.fixture.integration;" }));
   } }] });
@@ -31,7 +33,7 @@ async function harness() {
   const rows: Data[] = [];
   const payments: Data[] = [];
   const calls = { fetch: [] as string[], refresh: [] as string[], audit: [] as Data[] };
-  const fixture = { integration: { environment: "test", accountId: wallet,
+  const fixture = { production: null as Data | null, integration: { environment: "test", accountId: wallet,
     connection: { environment: "test", accessToken: "$aact_hmlg_synthetic-key" },
     secrets: { webhookSecret: secret, webhookUrl: `https://example.invalid/webhook?binding=${binding}` } },
   failPersist: false, failFetch: false, canonical: { id: "pay_synthetic", billingType: "PIX", status: "RECEIVED", value: 10, netValue: 9,
@@ -71,12 +73,12 @@ async function harness() {
     findMany: async ({ where, take }: Data) => payments.filter(row => matches(row, where)).slice(0, take),
     findFirst: async ({ where }: Data) => payments.find(row => matches(row, where)) ?? null,
   } } };
-  const loaded = { exports: {} as { receiveAsaasSandboxWebhook(request: Request): Promise<Response>; processAsaasWebhookInbox(n?: number): Promise<Data> } };
+  const loaded = { exports: {} as { receiveAsaasSandboxWebhook(request: Request): Promise<Response>; receiveAsaasProductionWebhook(request: Request): Promise<Response>; processAsaasWebhookInbox(n?: number, environment?: "test" | "production"): Promise<Data> } };
   vm.runInNewContext((await bundle).outputFiles[0].text, { module: loaded, exports: loaded.exports,
     require: createRequire(`${process.cwd()}/package.json`), fixture, Buffer, Response, Request, URL, AbortSignal, Date,
     fetch: async (url: string, options: Data) => { calls.fetch.push(url); assert.equal(options.method, "GET");
       if (fixture.failFetch) throw new Error("sensitive network token");
-      assert.match(url, /^https:\/\/api-sandbox\.asaas\.com\/v3\/payments\/pay_/); return Response.json(fixture.canonical); },
+      assert.match(url, /^https:\/\/api(?:-sandbox)?\.asaas\.com\/v3\/payments\/pay_/); return Response.json(fixture.canonical); },
   });
   const receive = (body: unknown = { id: "evt_synthetic", event: "PAYMENT_RECEIVED", payment: { id: "pay_synthetic" } },
     overrides: { token?: string; binding?: string; contentType?: string; raw?: string; length?: string } = {}) => {
@@ -233,4 +235,27 @@ test("ten unresolved old events cannot starve a later refund or chargeback after
     assert.equal(h.rows[10].status, "PROCESSED", event);
     assert.deepEqual(h.calls.refresh, ["synthetic-order"]);
   }
+});
+
+test("production receiver uses independent secret, account and inbox environment", async () => {
+  const h = await harness();
+  h.fixture.production = { environment: "production", accountId: "production-wallet",
+    connection: { environment: "production", accessToken: "$aact_prod_synthetic" },
+    secrets: { webhookSecret: "cd".repeat(32), webhookUrl: `https://example.invalid/webhook?binding=${binding}` } };
+  const request = (token: string) => new Request(`https://example.invalid/webhook?binding=${binding}`, { method: "POST",
+    headers: { "content-type": "application/json", "asaas-access-token": token },
+    body: JSON.stringify({ id: "evt_synthetic", event: "PAYMENT_RECEIVED", payment: { id: "pay_synthetic" } }) });
+  assert.equal((await h.api.receiveAsaasProductionWebhook(request(secret))).status, 401);
+  assert.equal((await h.api.receiveAsaasProductionWebhook(request("cd".repeat(32)))).status, 200);
+  assert.equal(h.rows[0].environment, "production"); assert.equal(h.rows[0].accountId, "production-wallet");
+  await h.api.processAsaasWebhookInbox(); assert.equal(h.calls.fetch.length, 0);
+  h.local({ environment: "production", integrationId: "asaas", accountId: "production-wallet" });
+  await h.api.processAsaasWebhookInbox(10, "production"); assert.equal(h.rows[0].status, "PROCESSED");
+  assert.equal(h.calls.refresh.length, 1);
+});
+
+test("production canonical late payment review remains visible in inbox", async () => {
+  const h = await harness(); h.fixture.refreshStatus = "REVIEW";
+  await h.receive(); h.local(); await h.api.processAsaasWebhookInbox();
+  assert.equal(h.rows[0].status, "REVIEW");
 });

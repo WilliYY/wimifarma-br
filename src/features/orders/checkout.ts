@@ -40,6 +40,8 @@ export const checkoutRequestSchema = z
     }),
     fulfillmentMethod: z.enum(["DELIVERY", "PICKUP"]),
     paymentMethod: z.enum(["PIX", "CARD_ON_DELIVERY", "CASH", "ONLINE"]),
+    onlineMethod: z.enum(["pix", "card"]).optional(),
+    onlineInstallments: z.number().int().min(1).max(12).optional(),
     address: addressSchema.optional(),
     notes: optionalText(500),
     privacyConsent: z.literal(true),
@@ -81,7 +83,7 @@ export const checkoutRequestSchema = z
     }
 
     if (data.shippingToken && (data.fulfillmentMethod !== "DELIVERY" || !["PIX", "ONLINE"].includes(data.paymentMethod))) {
-      context.addIssue({ code: "custom", path: ["paymentMethod"], message: "Transportadora aceita Pix ou cartão pelo Mercado Pago; dinheiro e maquininha somente na retirada ou entrega local." });
+      context.addIssue({ code: "custom", path: ["paymentMethod"], message: "Transportadora aceita Pix ou cartão; dinheiro e maquininha somente na retirada ou entrega local." });
     }
 
     const productIds = new Set<string>();

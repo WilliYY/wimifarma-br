@@ -6,14 +6,15 @@ import { createRequire } from "node:module";
 import type { PaymentInput } from "./schema";
 
 const bundle = build({ entryPoints: ["src/features/payments/service.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "isolated-payment-start", setup(builder) {
-  builder.onResolve({ filter: /features\/auth\/auth$|lib\/prisma$|^next\/headers$|lib\/secret-vault$|features\/cashback\/(service|redemption)$|features\/miauby\/commerce-service$|^\.\/(integration|provider)$/ }, args => ({ path: args.path, namespace: "fixture" }));
+  builder.onResolve({ filter: /features\/auth\/auth$|lib\/prisma$|^next\/headers$|lib\/secret-vault$|features\/cashback\/(service|redemption)$|features\/miauby\/commerce-service$|^\.\/(integration|provider|asaas-commerce-service)$/ }, args => ({ path: args.path, namespace: "fixture" }));
   builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents:
     args.path.endsWith("auth") ? "export const auth=async()=>null;" :
     args.path.endsWith("headers") ? "export const cookies=async()=>({get:()=>undefined});" :
     args.path.endsWith("prisma") ? "export const getPrisma=()=>globalThis.fixture.prisma;" :
     args.path.endsWith("secret-vault") ? "export const encryptValue=value=>({ciphertext:value,iv:'synthetic',tag:'synthetic'}); export const decryptValue=value=>value.ciphertext;" :
     args.path.endsWith("integration") ? "export const readPaymentIntegration=async()=>globalThis.fixture.connection;" :
-    args.path.endsWith("provider") ? "export const mercadoPagoRequest=(...args)=>globalThis.fixture.provider(...args);" :
+    args.path.endsWith("provider") ? "export class MercadoPagoProviderError extends Error {} export const mercadoPagoRequest=(...args)=>globalThis.fixture.provider(...args);" :
+    args.path.endsWith("asaas-commerce-service") ? "export const startAsaasCommercePayment=async()=>{throw new Error('Pagamento comercial Asaas não encontrado.');}; export const refreshAsaasCommercePayment=async()=>{}; export const asaasCommercePaymentView=async()=>{};" :
     args.path.endsWith("redemption") ? "export const settleOrderBenefits=async()=>{};" :
     args.path.endsWith("commerce-service") ? "export const queueCommerceOrder=async()=>{};" : "export const settleOrderCashback=async()=>{};",
   }));
@@ -25,6 +26,7 @@ async function harness(overrides: Record<string, unknown> = {}, options: { envir
     prescriptionType: "ORDINARY", isPopularPharmacy: false, stock: 5, price: "7.98", promotionalPrice: null, updatedAt: new Date(), ...overrides };
   const payment = { id: "synthetic-payment", orderId: "synthetic-order", provider: "mercado-pago", status: "NEW", environment, accountId: "synthetic-account", amountCents: 798,
     idempotencyKey: "synthetic-key", stockReserved: false, providerOrderId: null, providerUpdatedAt: null, createdAt: new Date(), lastCheckedAt: null,
+    method: null as string | null, installments: null as number | null,
     pixCode: null, pixExpiresAt: null, requestCiphertext: null, requestIv: null, requestTag: null };
   const order = { id: payment.orderId, number: "SYNTHETIC", customerEmail: "synthetic@testuser.com", status: "PENDING", paymentStatus: "PENDING",
     requiresPrescriptionReview: options.requiresPrescriptionReview ?? true, prescriptionReviewedAt: null, createdAt: new Date(Date.now() - (options.ageMinutes ?? 0) * 60_000), onlinePayment: payment,
@@ -69,10 +71,18 @@ async function harness(overrides: Record<string, unknown> = {}, options: { envir
 
 test("Mercado Pago initiation and callback cannot operate an Asaas-bound attempt", async () => {
   const fixture = await harness(); fixture.payment.provider = "asaas";
-  await assert.rejects(fixture.run(), /Use o painel de homologação deste provedor/);
+  await assert.rejects(fixture.run(), /Pagamento comercial Asaas não encontrado/);
   assert.equal(await fixture.apply({ external_reference: fixture.payment.id }), false);
   assert.equal(fixture.calls.reserved, 0); assert.equal(fixture.calls.submitted.length, 0);
   assert.equal(fixture.payment.status, "NEW"); assert.equal(fixture.order.paymentStatus, "PENDING");
+});
+
+test("new Mercado Pago orders retain the chosen method; legacy orders persist actual method and installments", async () => {
+  const locked = await harness(); locked.payment.method = "pix";
+  await assert.rejects(locked.run("card"), /forma de pagamento escolhida/);
+  assert.equal(locked.calls.submitted.length, 0); assert.equal(locked.product.stock, 5);
+  const legacy = await harness(); await legacy.run("card");
+  assert.equal(legacy.payment.method, "card"); assert.equal(legacy.payment.installments, 3);
 });
 
 test("receita comum inicia Pix e cartão sem dispensar nem reservar estoque duas vezes", async () => {

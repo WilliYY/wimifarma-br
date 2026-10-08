@@ -3,6 +3,7 @@ import { PaymentError, type PaymentInput, type ProviderOrder } from "./schema";
 export const PIX_EXPIRATION_MS = 2 * 60 * 60_000;
 
 export function paymentBody<T extends PaymentInput>(input: T, amountCents: number, reference: string) {
+  if (input.method === "hosted-card") throw new PaymentError("Este meio de pagamento utiliza a página segura Asaas.", 422);
   if (!Number.isSafeInteger(amountCents) || amountCents < 1) throw new PaymentError("O valor do pagamento deve ser maior que zero.");
   const amount = (amountCents / 100).toFixed(2);
   return { type: "online", processing_mode: "automatic", total_amount: amount, external_reference: reference,

@@ -13,7 +13,6 @@ import { CheckoutCashback } from "./checkout-cashback";
 import { normalizePostalCode } from "@/features/products/product-detail";
 import { customerShippingFee, FREE_SHIPPING_THRESHOLD_CENTS, isLocalDeliveryAddress } from "@/features/shipping/delivery-policy";
 import { OnlinePayment, type PaymentView } from "./online-payment";
-import { PaymentCardForm, type SecureCardInput } from "./payment-card-form";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
 
 type PaymentConfig = { publicKey: string; environment: string; brands: { id: string; name: string; image: string | null }[] } | null;
@@ -83,7 +82,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
     setOnlineOrder(null); setInitialPayment(null); requestAttempt.current = null;
     try { sessionStorage.removeItem(resumeKey); sessionStorage.removeItem(`wimifarma-checkout-attempt:${draftOwner}`); } catch { /* Optional persistence. */ }
   }
-  async function submitOrder(card?: SecureCardInput) {
+  async function submitOrder() {
     if (sending.current) throw new Error("Já estamos enviando este pedido.");
     const carrierBlocked = fulfillmentMethod === "DELIVERY" && carrierDestination && !shippingSelection && (!carrierShippingAvailable || requiresShippingSupport);
     const invalid = checkoutStepError(0, draft) || (carrierBlocked ? requiresShippingSupport ? "Este carrinho precisa de atendimento farmacêutico. Escolha retirada ou fale com a equipe." : "A entrega por transportadora está indisponível. Escolha retirada ou fale com a equipe." : checkoutStepError(1, { ...draft, shippingSelection }));
@@ -95,7 +94,8 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
     try {
       const body = { address: fulfillmentMethod === "DELIVERY" ? address : undefined, customer, fulfillmentMethod,
         items: items.map(item => ({ productId: item.id, quantity: item.quantity, expectedUnitPriceCents: item.unitPriceCents })), notes, paymentMethod, privacyConsent,
-        cashbackRedeemCents: discountCents, shippingToken: fulfillmentMethod === "DELIVERY" ? shippingSelection?.token : undefined };
+        cashbackRedeemCents: discountCents, shippingToken: fulfillmentMethod === "DELIVERY" ? shippingSelection?.token : undefined,
+        ...(online ? { onlineMethod: method === "card" ? "card" : "pix", onlineInstallments: method === "card" ? draft.onlineInstallments ?? 1 : 1 } : {}) };
       const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(body)));
       const signature = Array.from(new Uint8Array(bytes), n => n.toString(16).padStart(2, "0")).join("");
       const storageKey = `wimifarma-checkout-attempt:${draftOwner}`;
@@ -109,7 +109,8 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
       if (result.paymentMethod === "ONLINE") {
         try { sessionStorage.setItem(resumeKey, result.id); sessionStorage.setItem(`wimifarma-payment-cart:${result.id}`, cartKey); sessionStorage.setItem(`wimifarma-payment-attempt:${result.id}`, storageKey); } catch { /* Secure cookie authorizes the payment page. */ }
         try {
-          const payment = await fetch(`/api/pagamentos/${result.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(card ?? { method: "pix", email: customer.email.trim() }) });
+          if (method === "card") return;
+          const payment = await fetch(`/api/pagamentos/${result.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ method: "pix", email: customer.email.trim() }) });
           const paymentPayload = await payment.json().catch(() => null);
           if (!payment.ok) throw new Error(paymentPayload?.error || "Consulte a situação do pagamento antes de tentar novamente.");
           if (paymentPayload?.data?.orderId === result.id) setInitialPayment(paymentPayload.data);
@@ -176,8 +177,9 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
           <FreeShippingProgress eligibleCents={subtotalCents - discountCents} />
           <label className="mt-5 flex items-start gap-3 text-sm leading-6 text-muted"><input checked={privacyConsent} className="mt-1 h-5 w-5 shrink-0 accent-brand" onChange={event => setPrivacyConsent(event.target.checked)} type="checkbox" /><span>Finalizar com os dados informados, conforme a <Link className="font-bold text-brand underline" href="/privacidade" target="_blank">Política de Privacidade</Link>.</span></label>
           {error && <p className="mt-4 rounded-lg bg-brand-soft p-3 text-sm text-brand" role="alert">{error}</p>}
-          {method === "card" && paymentConfig ? <div className="mt-5">{contactReady && deliveryReady && privacyConsent && total > 0 ? <PaymentCardForm publicKey={paymentConfig.publicKey} amountCents={total} email={customer.email.trim()} onSubmit={submitOrder} /> : <p className="rounded-lg bg-surface-subtle p-4 text-xs leading-5 text-muted">Preencha seus dados, selecione a entrega e confirme a política de privacidade para abrir os campos do cartão.</p>}</div> : <button type="button" disabled={submitting} onClick={() => void submitOrder().catch(() => undefined)} className="mt-5 flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-black text-white transition hover:bg-brand-dark disabled:opacity-60">{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}{submitting ? "Confirmando..." : online ? "Gerar Pix e finalizar" : "Confirmar pedido"}</button>}
-          <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs leading-5 text-muted"><LockKeyhole className="h-3.5 w-3.5 shrink-0" />{online ? "Pix e cartão processados com segurança por Mercado Pago" : "Preparação confirmada pela farmácia"}</p>
+          {method === "card" && paymentConfig && <label className="mt-5 grid gap-2 text-sm font-semibold">Como pagar no cartão<select className={fieldClass} value={draft.onlineInstallments ?? 1} onChange={event => setDraft(current => ({ ...current, onlineInstallments: Number(event.target.value) }))}><option value={1}>À vista · uma parcela</option><option value={12}>Parcelar · escolher parcelas no formulário</option></select><span className="text-xs leading-5 text-muted">Você confere os campos seguros, as parcelas e o total antes de pagar.</span></label>}
+          <button type="button" disabled={submitting} onClick={() => void submitOrder().catch(() => undefined)} className="mt-5 flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-black text-white transition hover:bg-brand-dark disabled:opacity-60">{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}{submitting ? "Confirmando..." : online ? method === "card" ? "Continuar para pagar com cartão" : "Gerar Pix e finalizar" : "Confirmar pedido"}</button>
+          <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs leading-5 text-muted"><LockKeyhole className="h-3.5 w-3.5 shrink-0" />{online ? "Pagamento protegido · Checkout Wimifarma" : "Preparação confirmada pela farmácia"}</p>
         </>}
       </section>
     </div>

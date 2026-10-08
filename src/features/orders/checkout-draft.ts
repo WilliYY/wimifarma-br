@@ -16,6 +16,7 @@ export const draftSchema = z.object({
   notes: z.string().max(500),
   shippingSelection: shippingSelectionSchema.optional(),
   onlineMethod: z.enum(["pix", "card"]).optional(),
+  onlineInstallments: z.number().int().min(1).max(12).optional(),
 });
 export type CheckoutDraft = z.infer<typeof draftSchema>;
 

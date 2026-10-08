@@ -10,9 +10,10 @@ import { moneyToCents } from "@/features/orders/checkout";
 import { requiresPrescriptionReview, requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 import { queueCommerceOrder } from "@/features/miauby/commerce-service";
 import { readPaymentIntegration } from "./integration";
-import { mercadoPagoRequest } from "./provider";
+import { mercadoPagoRequest, MercadoPagoProviderError } from "./provider";
 import { assertPaymentBinding, paymentBody, PIX_EXPIRATION_MS, providerState, providerStatusDetail, validPaymentAccess } from "./rules";
 import { PaymentError, providerOrderSchema, type PaymentInput, type ProviderOrder } from "./schema";
+import { startAsaasCommercePayment, refreshAsaasCommercePayment, asaasCommercePaymentView } from "./asaas-commerce-service";
 
 export const paymentCookieName = (id: string) => `wimi-payment-${id}`;
 export async function authorizePayment(orderId: string) {
@@ -32,6 +33,9 @@ async function paymentConnection(environment: string, accountId: string) {
 
 // Preparation commits before contacting the provider; retries use the same encrypted body and key.
 export async function startPayment(orderId: string, input: PaymentInput) {
+  const selected = await getPrisma().onlinePayment.findUniqueOrThrow({ where: { orderId } });
+  if (selected.provider === "asaas") return startAsaasCommercePayment(orderId, input);
+  if (input.method === "hosted-card") throw new PaymentError("Use o formulário seguro Mercado Pago para este pedido.", 422);
   const payment = await getPrisma().$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Order" WHERE id = ${orderId} FOR UPDATE`;
     const order = await tx.order.findUniqueOrThrow({ where: { id: orderId }, include: { onlinePayment: true, items: true } });
@@ -39,6 +43,7 @@ export async function startPayment(orderId: string, input: PaymentInput) {
     if (!current) throw new PaymentError("Pagamento não encontrado.", 404);
     if (current.provider !== "mercado-pago") throw new PaymentError("Use o painel de homologação deste provedor.", 403);
     if (current.status !== "NEW") return current;
+    if (current.method && current.method !== input.method) throw new PaymentError("Use a forma de pagamento escolhida neste pedido.", 422);
     if (order.status !== "PENDING" || order.paymentStatus !== "PENDING") throw new PaymentError("Este pedido não pode receber um novo pagamento.");
     if (Date.now() - order.createdAt.getTime() > 30 * 60_000) throw new PaymentError("A reserva de preço expirou. Cancele este pedido e refaça o checkout.");
     const connection = await tx.paymentIntegration.findUnique({ where: { id: "mercado-pago" } });
@@ -55,7 +60,9 @@ export async function startPayment(orderId: string, input: PaymentInput) {
       }
     }
     const encrypted = encryptValue(JSON.stringify(paymentBody(input, current.amountCents, current.id)));
-    const saved = await tx.onlinePayment.update({ where: { id: current.id }, data: { status: "SUBMITTING", pixExpiresAt: input.method === "pix" ? new Date(Date.now() + PIX_EXPIRATION_MS) : null, stockReserved: current.environment === "production", requestCiphertext: encrypted.ciphertext, requestIv: encrypted.iv, requestTag: encrypted.tag } });
+    const saved = await tx.onlinePayment.update({ where: { id: current.id }, data: { status: "SUBMITTING", method: input.method,
+      installments: input.method === "card" ? input.installments : null,
+      pixExpiresAt: input.method === "pix" ? new Date(Date.now() + PIX_EXPIRATION_MS) : null, stockReserved: current.environment === "production", requestCiphertext: encrypted.ciphertext, requestIv: encrypted.iv, requestTag: encrypted.tag } });
     await tx.auditLog.create({ data: { action: "PAYMENT_STARTED", entity: "Order", entityId: orderId, metadata: { environment: current.environment, amountCents: current.amountCents, method: input.method } } });
     return saved;
   });
@@ -80,6 +87,9 @@ export async function submitStoredPayment(paymentId: string) {
     await applyProviderOrder(remote);
   } catch (error) {
     await prisma.onlinePayment.updateMany({ where: { id: payment.id, providerOrderId: null, status: "SUBMITTING" }, data: { status: "UNKNOWN" } });
+    if (error instanceof MercadoPagoProviderError) await prisma.auditLog.create({ data: { action: "PAYMENT_SUBMISSION_DIAGNOSTIC",
+      entity: "Order", entityId: payment.orderId, metadata: { provider: "mercado-pago", environment: payment.environment,
+        ...error.diagnostics } } }).catch(() => console.warn("PAYMENT_DIAGNOSTIC_PENDING"));
     throw error;
   }
 }
@@ -132,6 +142,7 @@ export async function applyProviderOrder(remote: ProviderOrder) {
 
 export async function refreshPayment(orderId: string) {
   const payment = await getPrisma().onlinePayment.findUniqueOrThrow({ where: { orderId } });
+  if (payment.provider === "asaas") return refreshAsaasCommercePayment(orderId);
   if (payment.provider !== "mercado-pago") throw new PaymentError("Use o painel de homologação deste provedor.", 403);
   if (["SUBMITTING", "UNKNOWN"].includes(payment.status)) await submitStoredPayment(payment.id);
   else if (payment.providerOrderId && (!payment.lastCheckedAt || payment.lastCheckedAt.getTime() < Date.now() - 30_000)) {
@@ -143,9 +154,11 @@ export async function refreshPayment(orderId: string) {
 }
 export async function paymentView(orderId: string) {
   const payment = await getPrisma().onlinePayment.findUniqueOrThrow({ where: { orderId }, include: { order: { select: { number: true, customerEmail: true } } } });
+  if (payment.provider === "asaas") return asaasCommercePaymentView(orderId);
   if (payment.provider !== "mercado-pago") throw new PaymentError("Use o painel de homologação deste provedor.", 403);
   const integration = await paymentConnection(payment.environment, payment.accountId);
-  return { orderId, number: payment.order.number, amountCents: payment.amountCents, status: payment.status,
+  return { orderId, provider: "mercado-pago", method: payment.method, installments: payment.installments, checkoutUrl: null,
+    number: payment.order.number, amountCents: payment.amountCents, status: payment.status,
     statusDetail: payment.statusDetail, pixCode: payment.pixCode, pixExpiresAt: payment.pixExpiresAt?.toISOString() ?? null,
     payerEmail: payment.order.customerEmail ?? "", qrDataUrl: payment.pixCode ? await QRCode.toDataURL(payment.pixCode, { width: 320, margin: 2 }) : null, environment: payment.environment, publicKey: integration.publicKey };
 }

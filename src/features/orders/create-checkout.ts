@@ -9,6 +9,7 @@ import { PaymentError } from "@/features/payments/schema";
 import { queueCommerceOrder } from "@/features/miauby/commerce-service";
 import { customerShippingFee } from "@/features/shipping/delivery-policy";
 import { requiresPrescriptionReview } from "@/features/products/purchase-policy";
+import { checkoutPaymentConnections, resolveCheckoutPayment } from "@/features/payments/routing";
 
 const orderResultSelect = {
   id: true,
@@ -19,9 +20,8 @@ const orderResultSelect = {
 } satisfies Prisma.OrderSelect;
 
 export async function createCheckout(tx: Prisma.TransactionClient, input: CheckoutRequest, sessionCustomerId?: string, isAdmin = false) {
-  const integration = input.paymentMethod === "ONLINE" ? await tx.paymentIntegration.findUnique({ where: { id: "mercado-pago" } }) : null;
-  if (input.paymentMethod === "ONLINE" && (!integration || (!integration.enabled && !(isAdmin && integration.environment === "test")))) throw new PaymentError("Pagamento online indisponível. Escolha outra forma de pagamento.", 503);
-  const isTest = integration?.environment === "test";
+  const connections = input.paymentMethod === "ONLINE" ? await checkoutPaymentConnections(tx, isAdmin) : null;
+  const isTest = connections?.rows.some(row => row.environment === "test") ?? false;
   if (isTest && (!isAdmin || input.cashbackRedeemCents > 0 || !input.customer.email?.endsWith("@testuser.com"))) throw new PaymentError("Na homologação, use apenas dados fictícios e e-mail de comprador de teste, sem cashback.");
   const customer = sessionCustomerId && !isTest ? await tx.customer.findFirst({ where: { id: sessionCustomerId, status: "ACTIVE" }, select: { id: true } }) : null;
   if (input.cashbackRedeemCents > 0 && !customer) throw new CashbackRuleError("Entre na sua conta de cliente para usar cashback.", 401);
@@ -57,7 +57,12 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
     return { ...item, cashbackDiscountCents: discounts[index], cashbackEarnedCents: earned, cashbackRateBps: earned > 0 ? product.cashbackRateBps : 0 };
   });
   const cashbackEarnedCents = items.reduce((sum, item) => sum + item.cashbackEarnedCents, 0);
-  if (integration && prepared.subtotalCents + deliveryFeeCents - redeem < 1) throw new PaymentError("Seu saldo cobre o pedido. Escolha o atendimento da farmácia para concluir sem cobrança online.");
+  const totalCents = prepared.subtotalCents + deliveryFeeCents - redeem;
+  if (connections && totalCents < 1) throw new PaymentError("Seu saldo cobre o pedido. Escolha o atendimento da farmácia para concluir sem cobrança online.");
+  const onlineMethod = input.onlineMethod ?? "pix";
+  const selected = connections ? await resolveCheckoutPayment(connections, { amountCents: totalCents, method: onlineMethod,
+    installments: onlineMethod === "pix" ? 1 : input.onlineInstallments ?? 1 }, tx) : null;
+  const integration = selected?.integration;
   const address = input.fulfillmentMethod === "DELIVERY" ? input.address : undefined;
   const order = await tx.order.create({ data: {
     requiresPrescriptionReview: products.some(requiresPrescriptionReview),
@@ -72,9 +77,12 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
     number: createOrderNumber(), paymentMethod: input.paymentMethod, postalCode: address?.postalCode,
     privacyConsentAt: new Date(), state: address?.state, street: address?.street,
     subtotalCents: prepared.subtotalCents, totalCents: prepared.subtotalCents + deliveryFeeCents - redeem,
-    ...(integration ? { onlinePayment: { create: { idempotencyKey: randomUUID(), environment: integration.environment,
-      integrationRevision: integration.revision, accountId: integration.accountId, amountCents: prepared.subtotalCents + deliveryFeeCents - redeem } } } : {}),
+    ...(integration ? { onlinePayment: { create: { idempotencyKey: randomUUID(), provider: integration.id, integrationId: integration.id,
+      method: onlineMethod, installments: integration.id === "asaas" && onlineMethod === "card" ? 1 : null, environment: integration.environment,
+      integrationRevision: integration.revision, accountId: integration.accountId, amountCents: totalCents } } } : {}),
   } });
+  if (selected) await tx.auditLog.create({ data: { action: "PAYMENT_ROUTE_SELECTED", entity: "Order", entityId: order.id,
+    metadata: { ...selected.route, integrationRevision: selected.integration.revision, method: onlineMethod, amountCents: totalCents } } });
   if (redeem > 0 && account) {
     const amount = (redeem / 100).toFixed(2);
     await tx.cashbackAccount.update({ where: { id: account.id }, data: { balance: { decrement: amount } } });

@@ -45,11 +45,12 @@ export function SiteFooter() {
       <div className="relative z-10 border-b border-white/15">
         <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 lg:px-8">
           <h2 className="mb-5 text-sm font-bold">Informações para comprar com confiança</h2>
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {[
             { icon: LockKeyhole, badge: "HTTPS", title: "Conexão criptografada", text: "Proteção dos dados durante a navegação.", href: "/privacidade", action: "Conheça nossa política de privacidade" },
             { icon: Store, badge: "CNPJ", title: "Farmácia com endereço", text: `CNPJ ${siteConfig.cnpj} · Loja física em Ivaté-PR.`, href: "/contato", action: "Conheça a Wimifarma" },
             { icon: PackageCheck, badge: "Pedidos", title: "Acompanhe sua compra", text: "Histórico e andamento reunidos na sua conta.", href: "/minha-conta", action: "Acessar meus pedidos" },
+            { icon: MessageCircle, badge: "Atendimento", title: "Fale com nossa equipe", text: `WhatsApp ${siteConfig.displayPhone} · Atendimento da farmácia.`, href: siteConfig.whatsappUrl, action: "Conversar com a Wimifarma" },
           ].map(({ icon: Icon, badge, title, text, href, action }) => (
             <Link className="group flex min-w-0 items-start gap-4 rounded-2xl border border-white/15 bg-white/5 p-5 transition-colors hover:border-white/30 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pharma-yellow" href={href} key={title}>
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-pharma-yellow/30 bg-pharma-yellow/10 text-pharma-yellow"><Icon aria-hidden="true" className="h-6 w-6" /></span>
