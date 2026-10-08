@@ -23,7 +23,7 @@ async function harness(overrides: Record<string, unknown> = {}, options: { envir
   const environment = options.environment ?? "production";
   const product = { id: "synthetic-product", name: "Produto sintético", status: "ACTIVE", requiresPrescription: true,
     prescriptionType: "ORDINARY", isPopularPharmacy: false, stock: 5, price: "7.98", promotionalPrice: null, updatedAt: new Date(), ...overrides };
-  const payment = { id: "synthetic-payment", orderId: "synthetic-order", status: "NEW", environment, accountId: "synthetic-account", amountCents: 798,
+  const payment = { id: "synthetic-payment", orderId: "synthetic-order", provider: "mercado-pago", status: "NEW", environment, accountId: "synthetic-account", amountCents: 798,
     idempotencyKey: "synthetic-key", stockReserved: false, providerOrderId: null, providerUpdatedAt: null, createdAt: new Date(), lastCheckedAt: null,
     pixCode: null, pixExpiresAt: null, requestCiphertext: null, requestIv: null, requestTag: null };
   const order = { id: payment.orderId, number: "SYNTHETIC", customerEmail: "synthetic@testuser.com", status: "PENDING", paymentStatus: "PENDING",
@@ -59,12 +59,21 @@ async function harness(overrides: Record<string, unknown> = {}, options: { envir
       status: "action_required", status_detail: "waiting_payment", last_updated_date: new Date().toISOString(),
       transactions: { payments: [{ amount: "7.98", status: "action_required", payment_method: { id: "pix", type: "bank_transfer", qr_code: "synthetic-pix-code" } }] } };
   } };
-  const loaded = { exports: {} as { startPayment: (orderId: string, input: PaymentInput) => Promise<{ status: string; pixCode: string | null }> } };
+  const loaded = { exports: {} as { startPayment: (orderId: string, input: PaymentInput) => Promise<{ status: string; pixCode: string | null }>;
+    applyProviderOrder: (remote: unknown) => Promise<boolean> } };
   vm.runInNewContext((await bundle).outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, console, process, Buffer, fixture });
-  return { calls, product, payment, order, run: (method: "pix" | "card" = "pix") => loaded.exports.startPayment(order.id, method === "pix"
+  return { calls, product, payment, order, apply: loaded.exports.applyProviderOrder, run: (method: "pix" | "card" = "pix") => loaded.exports.startPayment(order.id, method === "pix"
     ? { method, email: order.customerEmail }
     : { method, email: order.customerEmail, token: "synthetic-card-token", paymentMethodId: "visa", paymentType: "credit_card", installments: 3 }) };
 }
+
+test("Mercado Pago initiation and callback cannot operate an Asaas-bound attempt", async () => {
+  const fixture = await harness(); fixture.payment.provider = "asaas";
+  await assert.rejects(fixture.run(), /Use o painel de homologação deste provedor/);
+  assert.equal(await fixture.apply({ external_reference: fixture.payment.id }), false);
+  assert.equal(fixture.calls.reserved, 0); assert.equal(fixture.calls.submitted.length, 0);
+  assert.equal(fixture.payment.status, "NEW"); assert.equal(fixture.order.paymentStatus, "PENDING");
+});
 
 test("receita comum inicia Pix e cartão sem dispensar nem reservar estoque duas vezes", async () => {
   for (const method of ["pix", "card"] as const) {

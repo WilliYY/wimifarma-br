@@ -14,6 +14,8 @@ Pedido online de medicamentos de receita comum, sem upload no checkout, com conf
 
 Ecossistema de envio, integração Asaas sem mensalidade, limites do roteamento de custos e cadastros Google/Bing/Reclame AQUI/Ebit: [docs/44-ecossistema-frete-pagamentos-e-presenca.md](docs/44-ecossistema-frete-pagamentos-e-presenca.md). Asaas: tarifas de produção conectadas, revisão automática de seis horas conferida e Sandbox cifrado separado, com validação exclusiva de ADMIN. QR fictício criado e cartão fictício confirmado no provedor; recebimento Pix, webhooks e integração produtiva de cobrança ainda pendentes. O segundo gateway não foi ativado. Estado atual em [docs/40-asaas-configuracao-e-homologacao.md](docs/40-asaas-configuracao-e-homologacao.md).
 
+Homologação Asaas vinculada a pedidos sintéticos ADMIN, com Pix de duas horas, cartão hospedado 1x, inbox durável e recuperação sem repetir cobranças: [docs/51-asaas-pagamentos-sandbox.md](docs/51-asaas-pagamentos-sandbox.md). Estoque, cashback e mensagens comerciais não são movimentados. Recebimento Pix e cenários financeiros integrados ainda precisam de evidência; o gateway público não foi alterado.
+
 Segurança: revisão padrão em [SECURITY.md](SECURITY.md), suite `npm run test:security` e CI de push/PR/semanal com auditoria de produção. Correções e limites em [docs/42-revisao-de-seguranca.md](docs/42-revisao-de-seguranca.md). A atualização exige nova entrada para sessões antigas, sem alterar contas/senhas.
 
 Pesquisa atual de painel próprio de e-mails, provedores sem mensalidade, outros gateways e selos reais em [docs/41-emails-pagamentos-e-confianca.md](docs/41-emails-pagamentos-e-confianca.md). E-mails e novos gateways não foram ativados por essa pesquisa.

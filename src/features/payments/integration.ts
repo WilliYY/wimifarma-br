@@ -54,7 +54,7 @@ export async function savePaymentIntegration(input: z.infer<typeof paymentSettin
   if ((input.environment === "test") !== account.tags.includes("test_user")) throw new PaymentError("A conta não corresponde ao ambiente selecionado. Use as credenciais do vendedor de teste para homologação.");
   return getPrisma().$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(728239145)`;
-    if (changed && await tx.onlinePayment.count({ where: { OR: [
+    if (changed && await tx.onlinePayment.count({ where: { provider: "mercado-pago", OR: [
       { environment: "production", status: { notIn: ["FAILED", "CANCELED"] } },
       { status: { in: ["NEW", "SUBMITTING", "UNKNOWN", "PENDING"] } },
     ] } })) {

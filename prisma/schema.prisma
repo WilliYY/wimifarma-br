@@ -334,7 +334,17 @@ model OnlinePayment {
   id String @id @default(cuid())
   orderId String @unique
   order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  providerOrderId String? @unique
+  provider String @default("mercado-pago")
+  integrationId String @default("mercado-pago")
+  providerOrderId String?
+  method String?
+  installments Int?
+  pixQrCodeId String?
+  checkoutSessionId String?
+  checkoutUrl String?
+  submissionStartedAt DateTime?
+  fundsAvailable Boolean @default(false)
+  financialReviewReason String?
   idempotencyKey String @unique
   environment String
   integrationRevision Int
@@ -354,6 +364,29 @@ model OnlinePayment {
   updatedAt DateTime @updatedAt
 
   @@index([status, updatedAt])
+  @@unique([provider, environment, accountId, providerOrderId], map: "OnlinePayment_remote_id_key")
+  @@unique([provider, environment, accountId, pixQrCodeId], map: "OnlinePayment_pix_id_key")
+  @@unique([provider, environment, accountId, checkoutSessionId], map: "OnlinePayment_checkout_id_key")
+}
+
+model PaymentWebhookEvent {
+  id String @id @default(cuid())
+  provider String
+  environment String
+  accountId String
+  eventId String
+  eventType String
+  providerPaymentId String?
+  checkoutSessionId String?
+  status String @default("PENDING")
+  attempts Int @default(0)
+  lastAttemptAt DateTime?
+  processedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, environment, accountId, eventId], map: "PaymentWebhookEvent_delivery_key")
+  @@index([status, lastAttemptAt])
 }
 
 model OrderItem {

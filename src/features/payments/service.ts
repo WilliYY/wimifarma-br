@@ -37,6 +37,7 @@ export async function startPayment(orderId: string, input: PaymentInput) {
     const order = await tx.order.findUniqueOrThrow({ where: { id: orderId }, include: { onlinePayment: true, items: true } });
     const current = order.onlinePayment;
     if (!current) throw new PaymentError("Pagamento não encontrado.", 404);
+    if (current.provider !== "mercado-pago") throw new PaymentError("Use o painel de homologação deste provedor.", 403);
     if (current.status !== "NEW") return current;
     if (order.status !== "PENDING" || order.paymentStatus !== "PENDING") throw new PaymentError("Este pedido não pode receber um novo pagamento.");
     if (Date.now() - order.createdAt.getTime() > 30 * 60_000) throw new PaymentError("A reserva de preço expirou. Cancele este pedido e refaça o checkout.");
@@ -65,6 +66,7 @@ export async function startPayment(orderId: string, input: PaymentInput) {
 export async function submitStoredPayment(paymentId: string) {
   const prisma = getPrisma();
   const payment = await prisma.onlinePayment.findUniqueOrThrow({ where: { id: paymentId } });
+  if (payment.provider !== "mercado-pago") return;
   if (payment.providerOrderId || !["SUBMITTING", "UNKNOWN"].includes(payment.status)) return;
   if (!payment.requestCiphertext || !payment.requestIv || !payment.requestTag) throw new PaymentError("A equipe precisa conferir a tentativa de pagamento.");
   const claimed = await prisma.onlinePayment.updateMany({ where: { id: payment.id, status: { in: ["SUBMITTING", "UNKNOWN"] }, OR: [{ lastCheckedAt: null }, { lastCheckedAt: { lt: new Date(Date.now() - 30_000) } }] }, data: { lastCheckedAt: new Date() } });
@@ -85,12 +87,13 @@ export async function submitStoredPayment(paymentId: string) {
 export async function applyProviderOrder(remote: ProviderOrder) {
   const prisma = getPrisma();
   const payment = await prisma.onlinePayment.findUnique({ where: { id: remote.external_reference } });
-  if (!payment) return false;
+  if (!payment || payment.provider !== "mercado-pago") return false;
   assertPaymentBinding(remote, payment);
   const updatedAt = new Date(remote.last_updated_date);
   await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Order" WHERE id = ${payment.orderId} FOR UPDATE`;
     const current = await tx.onlinePayment.findUniqueOrThrow({ where: { id: payment.id }, include: { order: { include: { items: true } } } });
+    if (current.provider !== "mercado-pago") return;
     assertPaymentBinding(remote, current);
     if (current.providerUpdatedAt && updatedAt <= current.providerUpdatedAt) return;
     const next = providerState(remote);
@@ -129,6 +132,7 @@ export async function applyProviderOrder(remote: ProviderOrder) {
 
 export async function refreshPayment(orderId: string) {
   const payment = await getPrisma().onlinePayment.findUniqueOrThrow({ where: { orderId } });
+  if (payment.provider !== "mercado-pago") throw new PaymentError("Use o painel de homologação deste provedor.", 403);
   if (["SUBMITTING", "UNKNOWN"].includes(payment.status)) await submitStoredPayment(payment.id);
   else if (payment.providerOrderId && (!payment.lastCheckedAt || payment.lastCheckedAt.getTime() < Date.now() - 30_000)) {
     const connection = await paymentConnection(payment.environment, payment.accountId);
@@ -139,6 +143,7 @@ export async function refreshPayment(orderId: string) {
 }
 export async function paymentView(orderId: string) {
   const payment = await getPrisma().onlinePayment.findUniqueOrThrow({ where: { orderId }, include: { order: { select: { number: true, customerEmail: true } } } });
+  if (payment.provider !== "mercado-pago") throw new PaymentError("Use o painel de homologação deste provedor.", 403);
   const integration = await paymentConnection(payment.environment, payment.accountId);
   return { orderId, number: payment.order.number, amountCents: payment.amountCents, status: payment.status,
     statusDetail: payment.statusDetail, pixCode: payment.pixCode, pixExpiresAt: payment.pixExpiresAt?.toISOString() ?? null,

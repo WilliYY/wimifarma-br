@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-08 - Pedidos sintéticos Asaas e inbox durável
+
+- Implementar homologação ADMIN separada do checkout comercial: pedido fictício sem cliente, estoque, cashback ou mensagens; Pix estático de duas horas e cartão hospedado 1x. Preservar Mercado Pago e tarifas Asaas produtivas.
+- Persistir provedor, conta, instrumento e marca de envio antes do único POST financeiro. Resposta incerta não permite repetir cobrança nem trocar gateway; UUID recupera o mesmo ensaio. Vincular QR/sessão separadamente da cobrança canônica.
+- Receber webhook autenticado em inbox único antes de responder 200; conciliar por API com valor/recurso/conta conferidos, fila justa e lease. Divergências permanentes ficam em revisão auditada. Nenhum callback ou payload isolado confirma compra; pagamento tardio não reativa pedido cancelado.
+- Migração aditiva validada em schema sintético PostgreSQL 17, sem dados de clientes. Revisão independente e regressões financeiras/abuso obrigatórias antes de publicar. Contrato e limites em [51-asaas-pagamentos-sandbox.md](51-asaas-pagamentos-sandbox.md).
+
 ## 2026-10-08 - Patch de segurança Next.js 15.5.27
 
 - Auditoria pré-publicação encontrou dois alertas moderate de cache SSG/ISR em Next.js até 15.5.26. Atualizar Next e ESLint Next para a versão oficial corrigida 15.5.27, fixada no manifesto/lock, sem trocar stack ou aplicar correções incompatíveis automaticamente.
