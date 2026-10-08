@@ -44,3 +44,7 @@ Não houve alteração de regras comerciais, pagamentos, permissões, dados de c
 ## Validação do incremento
 
 Revisão independente aprovada, sem defeitos confirmados. `npm.cmd run test:security`: 175 testes; `npm.cmd run test:shipping`: 52 testes. Lint, typecheck e build locais aprovados. Auditoria `--omit=dev --audit-level=high` sem vulnerabilidades; auditoria completa continua com cinco alertas high na cadeia de desenvolvimento `braces`/`micromatch`/`fast-glob`/ESLint, sem aplicar correção forçada incompatível.
+
+Publicação `a039549`: build Linux/Docker aprovado, somente app recriado, sem migration ou alterações de credenciais. Imagem `sha256:415723914e20aacb733102c4d53eb312a849999417f461a4b5d3e512ad8fe639`, container saudável, zero reinícios, health e checkout HTTP 200. Recuperação preservada em `wimifarma-br-app:pre-trust-a039549`. Nova consulta somente leitura confirmou integrações, estoque/preços e perfis preservados.
+
+Conferência visual em Chrome: viewport de 390 px, largura útil/rolável 375/375 px; viewport restaurado de 1920 px, largura útil/rolável 1905/1905 px. Sem transbordamento horizontal; 128 bolhas presentes. Capturas locais `outputs/rodape-confianca-celular-20261008.png` e `outputs/rodape-confianca-publicado-20261008.png`, fora do Git. O viewport foi restaurado após a inspeção. Nenhum selo RA/Ebit/Anvisa foi publicado.
