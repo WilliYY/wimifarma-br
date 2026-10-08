@@ -36,7 +36,7 @@ export function HeroProductStage({ variant, priority = false }: HeroProductStage
             loading={priority ? undefined : "eager"}
             priority={priority}
             quality={84}
-            sizes="(max-width: 639px) 40vw, (max-width: 1023px) 32vw, 280px"
+            sizes="(max-width: 767px) 55vw, (max-width: 1359px) 28vw, 330px"
             src={product.src}
           />
         </div>

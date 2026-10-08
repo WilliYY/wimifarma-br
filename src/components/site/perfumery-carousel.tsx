@@ -101,7 +101,6 @@ export function PerfumeryCarousel() {
         ref={frame}
         role="region"
       >
-        <div className="border-b border-black/5 px-5 py-3"><BrandSignature /></div>
         <div
           className={styles.surface}
           onDragStart={(event) => event.preventDefault()}
@@ -139,6 +138,7 @@ export function PerfumeryCarousel() {
             />
           </div>
           <div aria-atomic="true" aria-live={rotating ? "off" : "polite"} className={styles.copy}>
+            <div className={styles.signature}><BrandSignature /></div>
             <span className={styles.eyebrow}>{campaign.category}</span>
             <h2>{campaign.brand}</h2>
             <p>{campaign.description}</p>
@@ -151,7 +151,7 @@ export function PerfumeryCarousel() {
           <span className={styles.availability}>Consulte as opções disponíveis</span>
           <div aria-label="Marcas de perfumaria" className={styles.indicators}>
             {campaigns.map((item, index) => (
-              <button aria-label={`Mostrar ${item.brand}`} aria-pressed={active === index} key={item.brand} onClick={() => select(index)} title={item.brand} type="button"><span /></button>
+              <button aria-label={`Mostrar ${item.brand}`} aria-pressed={active === index} key={item.brand} onClick={() => select(index)} title={item.brand} type="button"><span>{item.brand}</span></button>
             ))}
           </div>
           <div className={styles.controls}>

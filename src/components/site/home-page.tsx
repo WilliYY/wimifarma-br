@@ -32,6 +32,7 @@ import type { CartProduct } from "@/components/site/cart-provider";
 import { HomeProductCarousel } from "@/components/site/home-product-carousel";
 import { PerfumeryCarousel } from "@/components/site/perfumery-carousel";
 import { HeroProductStage } from "@/components/site/hero-product-stage";
+import campaignStyles from "./home-campaign.module.css";
 import { BrandSignature } from "@/components/site/brand-signature";
 import type { RelatedProductCardItem } from "@/components/site/public-product-card";
 import { siteConfig } from "@/lib/site";
@@ -86,8 +87,7 @@ function formatProductPrice(value: string) {
 
 const heroSlides = [
   {
-    accent: "#126a3a",
-    background: "#f1f6ef",
+    background: "#fff7f5",
     cta: "Compartilhar minha experiência",
     description:
       "Conte como foi usar os produtos da sua compra e ajude outras pessoas a escolher com mais confiança.",
@@ -98,8 +98,7 @@ const heroSlides = [
     title: "Sua opinião vale mais.",
   },
   {
-    accent: "#a82e52",
-    background: "#fdf2ee",
+    background: "#fff7f5",
     cta: "Consultar perfumaria",
     description:
       "Perfumes, higiene e beleza para deixar seus momentos de autocuidado ainda melhores.",
@@ -112,8 +111,7 @@ const heroSlides = [
     title: "Seu cuidado merece um momento.",
   },
   {
-    accent: "#126a3a",
-    background: "#f6f5e9",
+    background: "#f2f7f3",
     cta: "Consultar linha infantil",
     description:
       "Fraldas, higiene e cuidados infantis. Encontre o que sua família precisa com a ajuda da nossa equipe.",
@@ -324,8 +322,8 @@ function HeroCarousel() {
     <div
       aria-label="Campanhas da Wimifarma"
       aria-roledescription="carrossel"
-      className="relative isolate touch-pan-y overflow-hidden rounded-3xl border border-line shadow-[0_16px_48px_rgba(17,24,39,0.08)]"
-      style={{ backgroundColor: slide.background }}
+      className={campaignStyles.campaign}
+      style={{ "--campaign-tint": slide.background } as CSSProperties}
       ref={carouselRef}
       onBlurCapture={(event) => {
         const nextTarget = event.relatedTarget;
@@ -348,88 +346,79 @@ function HeroCarousel() {
       }}
       role="region"
     >
-      <div className="grid lg:min-h-[460px] lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="self-center lg:order-2">
+      <div className={campaignStyles.surface}>
+        <div
+          aria-label={`${activeSlide + 1} de ${heroSlides.length}: ${slide.eyebrow}`}
+          aria-roledescription="slide"
+          aria-live={hasFocus || isInteracting || isManuallyPaused || shouldReduceMotion ? "polite" : "off"}
+          className={campaignStyles.copy}
+          role="group"
+        >
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full"
+            initial={false}
+            key={activeSlide}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: easeOut }}
+          >
+            <div className={campaignStyles.signature}><BrandSignature /></div>
+            <p className={campaignStyles.eyebrow}>{slide.eyebrow}</p>
+            <h1 className={campaignStyles.title}>{slide.title}</h1>
+            <p className={campaignStyles.description}>{slide.description}</p>
+            {activeSlide === 0 ? (
+              <div className={campaignStyles.reward}>
+                <p className={campaignStyles.rewardTitle}>
+                  <strong>1%</strong>
+                  <span>de cashback extra<br />para sua próxima compra</span>
+                </p>
+                <p className={campaignStyles.conditions}>
+                  Sobre uma unidade, na primeira avaliação de cada produto elegível de uma compra concluída e paga. Vale para qualquer nota.
+                </p>
+              </div>
+            ) : (
+              <p className={campaignStyles.categories}>{slide.categories}</p>
+            )}
+            <div className={campaignStyles.actions}>
+              <a
+                className={campaignStyles.cta}
+                href={slide.href}
+                rel={slide.href.startsWith("http") ? "noreferrer" : undefined}
+                target={slide.href.startsWith("http") ? "_blank" : undefined}
+              >
+                {slide.cta}
+                <ChevronRight aria-hidden="true" className="h-4 w-4" />
+              </a>
+              {activeSlide === 0 && (
+                <Link className={campaignStyles.rulesLink} href="/cashback">
+                  Como funciona
+                </Link>
+              )}
+            </div>
+          </motion.div>
+        </div>
+        <div className={campaignStyles.visual}>
           <HeroProductStage priority={activeSlide === 0} variant={slide.art} />
         </div>
-      <div
-        aria-label={`${activeSlide + 1} de ${heroSlides.length}: ${slide.eyebrow}`}
-        aria-roledescription="slide"
-        aria-live={hasFocus || isInteracting || isManuallyPaused || shouldReduceMotion ? "polite" : "off"}
-        className="flex items-center px-5 pb-5 pt-6 sm:px-8 lg:order-1 lg:px-10 lg:py-10 xl:px-12"
-        role="group"
-      >
-        <motion.div
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full"
-          initial={false}
-          key={activeSlide}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: easeOut }}
-        >
-          <div className="mb-4"><BrandSignature /></div>
-          <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-ink">
-            <span
-              aria-hidden="true"
-              className="h-2 w-2 rounded-full"
-              style={{ backgroundColor: slide.accent }}
-            />
-            {slide.eyebrow}
-          </p>
-          <h1 className="mt-3 max-w-[16ch] text-[2rem] font-bold leading-[1.06] tracking-tight text-ink sm:text-4xl xl:text-5xl">
-            {slide.title}
-          </h1>
-          <p className="mt-4 max-w-md text-sm leading-6 text-muted sm:text-base sm:leading-7">
-            {slide.description}
-          </p>
-          {activeSlide === 0 ? (
-            <div className="mt-4 max-w-md rounded-2xl border border-emerald-900/10 bg-white/75 px-4 py-3">
-              <p className="flex items-center gap-2 text-sm font-bold text-emerald-900">
-                <span className="rounded-lg bg-emerald-100 px-2 py-1 text-base">1%</span>
-                de cashback extra para sua próxima compra
-              </p>
-              <p className="mt-2 text-xs leading-5 text-muted">
-                Sobre uma unidade, na primeira avaliação de cada produto elegível de uma compra concluída e paga. Vale para qualquer nota.
-              </p>
-            </div>
-          ) : (
-            <p className="mt-3 text-xs font-semibold" style={{ color: slide.accent }}>{slide.categories}</p>
-          )}
-          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
-          <a
-            className="inline-flex min-h-12 items-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-white transition-colors hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
-            href={slide.href}
-            rel={slide.href.startsWith("http") ? "noreferrer" : undefined}
-            style={{ backgroundColor: slide.accent }}
-            target={slide.href.startsWith("http") ? "_blank" : undefined}
-          >
-            {slide.cta}
-            <ChevronRight aria-hidden="true" className="h-4 w-4" />
-          </a>
-          {activeSlide === 0 && (
-            <Link className="inline-flex min-h-11 items-center text-sm font-semibold text-emerald-900 underline decoration-emerald-900/30 underline-offset-4 hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-4" href="/cashback">
-              Como funciona
-            </Link>
-          )}
-          </div>
-        </motion.div>
-      </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t border-black/5 px-4 py-2 sm:px-7">
-        <div className="flex items-center">
+      <div className={campaignStyles.footer}>
+        <div className={campaignStyles.selectors}>
           {heroSlides.map((item, index) => (
             <button
               aria-label={`Mostrar campanha ${index + 1}: ${item.eyebrow}`}
               aria-pressed={activeSlide === index}
-              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+              className={campaignStyles.selector}
               key={item.art}
               onClick={() => setActiveSlide(index)}
               type="button"
-            ><span aria-hidden="true" className={`h-2 rounded-full transition-all duration-200 motion-reduce:transition-none ${activeSlide === index ? "w-6" : "w-2 bg-slate-400"}`} style={activeSlide === index ? { backgroundColor: item.accent } : undefined} /></button>
+            >
+              <span aria-hidden="true">0{index + 1}</span>
+              <span>{["Sua opinião", "Autocuidado", "Mãe e bebê"][index]}</span>
+            </button>
           ))}
         </div>
 
-        <div className="flex items-center gap-1 rounded-full bg-white/70 p-1">
+        <div className={campaignStyles.controls}>
           <button
             aria-label="Campanha anterior"
             className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-ink transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"

@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-08 — Banners com identidade de varejo Wimifarma
+
+- Reorganizar campanhas da home com painel vermelho, logo oficial completa e embalagens reais maiores. Aplicar a mesma assinatura às campanhas Dove, Rexona e NIVEA, preservando fotos e destinos existentes.
+- Manter textos, regras de cashback, controles de pausa e movimento reduzido. Preservar integralmente animação original do cabeçalho e 128 bolhas do rodapé. Nenhuma regra comercial ou dependência nova.
+- Referências, arquivos e evidências da revisão em [58-banners-varejo-wimifarma.md](58-banners-varejo-wimifarma.md).
+
 ## 2026-10-08 — Correções delimitadas após auditoria
 
 - Vincular busca à consulta concluída, apresentar cashback selecionado sem aumento silencioso e compartilhar saldo entre apresentações do cabeçalho com isolamento por cliente. Preservar autorização no servidor e identidade visual.

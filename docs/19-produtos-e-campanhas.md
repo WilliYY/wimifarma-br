@@ -1,5 +1,9 @@
 # Produtos e campanhas
 
+## Revisão de 2026-10-08: composição e identidade da loja
+
+As três campanhas da home agora usam painel vermelho, assinatura oficial completa e produtos reais maiores. Perfumaria recebe a mesma assinatura e seleção pelo nome da marca. Arquivos de imagem, textos, destinos e regras comerciais continuam existentes; pausas e movimento reduzido foram preservados. A composição anterior descrita abaixo é um registro histórico. Decisão e validação atual em [58-banners-varejo-wimifarma.md](58-banners-varejo-wimifarma.md).
+
 ## Revisao de 2026-09-20: marcas e marketing de avaliacao
 
 - Banner e `/cashback`: `Sua opinião vale mais.` convida a compartilhar experiencias. O 1% extra e secundario, com condicoes e link para as regras; qualquer nota recebe o mesmo tratamento. Nenhuma regra de cashback ou dado comercial mudou.

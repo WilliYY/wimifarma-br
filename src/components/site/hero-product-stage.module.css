@@ -1,27 +1,25 @@
 .stage {
   position: relative;
   isolation: isolate;
-  aspect-ratio: 3 / 2;
-  width: calc(100% - 32px);
-  margin: 16px;
+  aspect-ratio: 1.36;
+  width: 100%;
+  margin: 0;
   overflow: hidden;
-  border-radius: 24px;
-  background: #fff;
-  box-shadow: 0 12px 36px -24px #263e3830;
+  background: var(--campaign-tint, #fff7f5);
 }
 
-.beauty { box-shadow: 0 12px 36px -24px #a82e5230; }
-.care, .baby { border: 1px solid #e4ede6; }
+.stage::before { content: ""; position: absolute; width: 68%; height: 68%; top: 12%; left: 17%; border: 1px solid #c8102e18; border-radius: 50%; }
+.care, .beauty, .baby { color: inherit; }
 
 .brands {
   position: absolute;
   z-index: 2;
-  top: 6%;
+  top: 4%;
   left: 0;
   width: 100%;
   text-align: center;
-  color: #33443b;
-  font-size: clamp(12px, 1.3vw, 17px);
+  color: #5b5b62;
+  font-size: clamp(11px, 1.1vw, 14px);
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -31,22 +29,22 @@
   overflow: hidden;
 }
 
-.packshot { object-fit: cover; }
-.oil { left: 9%; top: 24%; width: 25%; height: 52%; }
-.lotion { left: 38%; top: 17%; width: 32%; height: 66%; }
-.deodorant { left: 73%; top: 28%; width: 20%; height: 55%; }
-.soap { z-index: 1; left: 16%; top: 70%; width: 30%; height: 24%; }
+.packshot { object-fit: contain; mix-blend-mode: multiply; }
+.oil { left: 0; top: 21%; width: 46%; height: 67%; }
+.lotion { left: 26%; top: 10%; width: 52%; height: 82%; }
+.deodorant { left: 60%; top: 29%; width: 43%; height: 64%; }
+.soap { z-index: 1; left: 4%; top: 69%; width: 38%; height: 23%; }
 .soap .packshot { object-fit: contain; }
 
-.diapers { left: 40%; top: 22%; width: 34%; height: 56%; }
+.diapers { left: 29%; top: 14%; width: 58%; height: 70%; }
 .diapers .packshot { object-fit: contain; }
-.shampoo { left: 78%; top: 34%; width: 21%; height: 48%; }
-.wash { left: 4%; top: 34%; width: 21%; height: 50%; }
-.conditioner { left: 25%; top: 48%; width: 16%; height: 36%; }
+.shampoo { left: 70%; top: 39%; width: 30%; height: 51%; }
+.wash { left: 0; top: 30%; width: 32%; height: 57%; }
+.conditioner { left: 17%; top: 55%; width: 28%; height: 38%; }
 
 .caption {
   position: absolute;
-  bottom: 3%;
+  bottom: 1%;
   left: 0;
   width: 100%;
   text-align: center;
@@ -54,6 +52,4 @@
   color: #526256;
 }
 
-@media (min-width: 640px) and (max-width: 1023px) {
-  .stage { max-width: 640px; margin-inline: auto; }
-}
+@media (max-width: 767px) { .stage { aspect-ratio: 1.65; max-width: 480px; margin-inline: auto; } }
