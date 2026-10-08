@@ -203,4 +203,10 @@ test("binding rejects changed value, instrument, resource, payment ID and ambigu
     { amountCents: 1234, method: "card", resource: { checkoutSessionId: uuid }, externalReference: "order-123" }));
   assert.throws(() => assertAsaasPaymentBinding(card,
     { amountCents: 1234, method: "card", resource: { checkoutSessionId: uuid }, externalReference: "wrong" }));
+  for (const externalReference of [null, undefined]) {
+    assert.doesNotThrow(() => assertAsaasPaymentBinding({ ...card, externalReference },
+      { amountCents: 1234, method: "card", resource: { checkoutSessionId: uuid }, externalReference: "order-123" }));
+    assert.throws(() => assertAsaasPaymentBinding({ ...card, externalReference, checkoutSession: "other-session" },
+      { amountCents: 1234, method: "card", resource: { checkoutSessionId: uuid }, externalReference: "order-123" }));
+  }
 });

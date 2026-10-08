@@ -189,13 +189,13 @@ test("CHECKOUT_PAID uses stored session and delegates canonical state without ap
   assert.equal(h.rows[0].status, "PENDING");
   assert.equal(h.payments[0].status, "PENDING"); assert.equal(h.calls.fetch.length, 0);
 });
-test("card canonical session and attempt reference must both match before refresh", async () => {
-  for (const reference of ["synthetic-attempt", "another-attempt"]) {
+test("card canonical session must match; an optional attempt reference must also match when present", async () => {
+  for (const reference of ["synthetic-attempt", null, undefined, "another-attempt"]) {
     const h = await harness(); await h.receive();
     h.local({ method: "card", pixQrCodeId: null, checkoutSessionId: binding });
     Object.assign(h.fixture.canonical, { billingType: "CREDIT_CARD", pixQrCodeId: null, checkoutSession: binding, externalReference: reference });
     await h.api.processAsaasWebhookInbox();
-    assert.equal(h.calls.refresh.length, reference === "synthetic-attempt" ? 1 : 0);
+    assert.equal(h.calls.refresh.length, reference === "another-attempt" ? 0 : 1);
   }
 });
 test("lease avoids immediate retries and batch size stays at ten", async () => {

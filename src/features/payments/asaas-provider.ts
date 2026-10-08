@@ -181,10 +181,12 @@ export function assertAsaasPaymentBinding(raw: unknown, expected: AsaasExpectedP
   const validMethod = expected.method === "pix" ? "pixQrCodeId" in resource && payment.billingType === "PIX"
     && payment.pixQrCodeId === resource.pixQrCodeId : expected.method === "card" && "checkoutSessionId" in resource
     && payment.billingType === "CREDIT_CARD" && payment.checkoutSession === resource.checkoutSessionId;
-  // Static QR receipt references are not guaranteed to carry externalReference.
+  // Static QR and hosted checkout payments may omit the resource's externalReference.
+  // The exact persisted session/QR, amount and instrument remain mandatory bindings.
   if (!validMethod || Math.round(payment.value * 100) !== expected.amountCents
     || (expected.paymentId !== undefined && payment.id !== expected.paymentId)
-    || (expected.method === "card" && expected.externalReference !== undefined && payment.externalReference !== expected.externalReference)) {
+    || (expected.method === "card" && expected.externalReference !== undefined && payment.externalReference != null
+      && payment.externalReference !== expected.externalReference)) {
     throw new PaymentError("Pagamento Asaas não corresponde ao pedido e ao recurso persistido.", 409);
   }
 }
