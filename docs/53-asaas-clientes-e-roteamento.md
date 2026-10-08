@@ -38,3 +38,13 @@ Rodapé acrescenta atendimento real pelo WhatsApp aos indicadores próprios HTTP
 Validação anterior à publicação: 219 testes de segurança (incluindo pagamentos e 21 novas regressões de ativação Asaas) e 19 regressões do checkout passaram; lint, typecheck e Prisma passaram. Auditoria de dependências produtivas: zero vulnerabilidades. Auditoria completa mantém cinco high na cadeia de ferramentas ESLint/fast-glob/micromatch/braces; não aplicar downgrade incompatível automático. Revisão independente aprovou o escopo após corrigir o uso da transação na consulta de tarifas e preservar o vínculo em renovação da credencial da mesma wallet. Resultados de implantação serão registrados antes da entrega.
 
 Fontes oficiais: [Asaas Checkout](https://docs.asaas.com/docs/checkout-asaas), [Criar checkout](https://docs.asaas.com/reference/criar-novo-checkout), [Eventos](https://docs.asaas.com/docs/eventos-para-checkout), [RDC44](https://bvsms.saude.gov.br/bvs/saudelegis/anvisa/2009/rdc0044_17_08_2009.pdf).
+
+## Implantação e ativação — 08/10/2026
+
+Código publicado no commit `42947cc`, com rollback da imagem anterior preservado. Build local e Docker passaram; container saudável, zero reinícios e `/api/health` respondendo. Sem migração de banco nesta entrega.
+
+O painel ADMIN preparou a conta produtiva Asaas usando a credencial já cifrada, conferiu aprovação/wallet, registrou o webhook e ativou somente crédito à vista. Consulta GET oficial confirmou o webhook ativo, não interrompido, autenticado e sequencial. O banco confirmou `enabled=true`, ambiente produtivo e métodos `[card]`, além de um cartão Sandbox `PAID`. Não foi feita cobrança real Asaas nesta entrega. Pix Asaas permanece desativado até completar o recebimento fictício; clientes continuam com Pix Mercado Pago.
+
+As tarifas Mercado Pago foram registradas com conta/modalidade e validade de sete dias: cartão 1x 4,98%, Pix 0,99%, recebimento na hora, tarifa fixa zero conforme painel autenticado. Asaas foi sincronizado pela API; a consulta final registrou 2,99% + R$0,49 para cartão 1x. A execução do seletor real com configurações produtivas escolheu Mercado Pago em R$10 (R$0,50 estimados) e Asaas em R$100 (R$3,48 estimados). Nenhum pedido/cobrança foi criado nessa conferência somente de leitura.
+
+O Pix produtivo existente foi retomado no navegador: QR Code, copiar código, contador de duas horas e estado aguardando pagamento visíveis. Rodapé publicado com quatro indicadores factuais. Inspeção móvel confirmou ausência de transbordamento no checkout/rodapé e preservou as 128 bolhas. Capturas locais ficam em `outputs/`, fora do Git e sem credenciais.
