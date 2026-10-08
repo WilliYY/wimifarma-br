@@ -1,5 +1,11 @@
 # 06 - Pendencias
 
+## Atualização de Asaas e acesso — 08/10/2026
+
+- A conexão Asaas de produção para consulta de tarifas está salva, com revisões automáticas de seis horas comprovadas pela auditoria. A chave Sandbox temporária está cifrada no cofre separado; novo painel ADMIN valida somente o acesso de testes. Os bloqueios de geração/conexão descritos nos registros anteriores foram resolvidos.
+- QR Pix fictício de R$10 foi criado; cartão fictício de R$10 foi confirmado na página hospedada e por leitura da API. Recebimento Pix, expiração, recusas, estornos e webhook ainda precisam de homologação. A escolha automática do provedor por tarifa e pagamentos Asaas nos pedidos ainda exigem implementação; checkout público permanece Mercado Pago. Evidências e contrato em `40-asaas-configuracao-e-homologacao.md`.
+- Reclame AQUI: acesso gratuito criado e administração exclusiva do titular confirmada em 07/10. Publicação do perfil/validações e selos concedidos são etapas distintas; status em `50-recuperacao-de-compra-e-conexoes.md`. E-mails comerciais continuam dependendo de transporte e domínio autenticado.
+
 ## Pedido online de receita comum — 06/10/2026
 
 - Receita comum classificada por ADMIN passa a permitir carrinho e pagamento sem upload; a farmácia confere a receita antes da dispensação. Controlados, receita não classificada e Farmácia Popular seguem atendimento. O contrato do documento 45 substitui os bloqueios genéricos de receita citados em registros anteriores.

@@ -1,5 +1,13 @@
 # 42 - Revisão de segurança
 
+## Dependência Next.js — 08/10/2026
+
+A auditoria antes da publicação do painel Sandbox identificou dois alertas moderate em Next.js até 15.5.26: [GHSA-4jqv-mc3x-m676](https://github.com/advisories/GHSA-4jqv-mc3x-m676) e [GHSA-mcj8-r9mp-w47p](https://github.com/advisories/GHSA-mcj8-r9mp-w47p), relacionados a envenenamento de cache SSG/ISR. Atualizados `next` e `eslint-config-next` de 15.5.25 para **15.5.27**, fixando a versão corrigida no manifesto/lock. A aplicação usa App Router; os avisos não demonstram por si só exploração desta aplicação. O patch preserva Next.js 15, contratos e layout, sem `audit fix --force` ou downgrade.
+
+Os cinco alertas high da cadeia de desenvolvimento `braces`/`micromatch`/`fast-glob`/ESLint Next continuam sendo reportados separadamente. A auditoria de produção e as validações após o patch têm registro próprio abaixo; não confundir ausência de alertas npm com segurança completa do site.
+
+Validação local após o patch: **118/118** testes de segurança, lint, build Next.js (37 páginas estáticas) e Prisma validate passaram. `npm audit --omit=dev --json` retornou zero; a auditoria completa retornou cinco high, zero critical, na mesma cadeia de ferramentas. Revisão independente aprovou manifesto/lock, integridades e compatibilidade React 19/ESLint 9/TypeScript. Comandos executados pelo isolamento temporário por tarefa; nenhuma credencial, banco, screenshot ou arquivo de ambiente entra no commit.
+
 ## Dependência de imagens — 06/10/2026
 
 A auditoria antes da entrega de ecossistema encontrou um novo alerta high de produção: [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w), publicado na base GitHub em 06/10, afeta o librsvg empacotado por `sharp <0.35.5`. Atualizado `sharp` 0.35.4 → 0.35.5 no manifesto/lock, sem mudança na API de imagens, limites, formatos ou identidade visual. O [changelog oficial](https://sharp.pixelplumbing.com/changelog/v0.35.5/) identifica a versão corrigida; runtime Windows confirmou librsvg 2.63.2 e libvips 8.18.7.

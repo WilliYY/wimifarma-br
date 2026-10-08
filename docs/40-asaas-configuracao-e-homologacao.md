@@ -1,12 +1,41 @@
-# 40 - Asaas: configuração e próxima homologação
+# 40 - Asaas: configuração e homologação
+
+## Continuação verificada em 08/10/2026
+
+O novo bloco **Asaas Sandbox · conexão de testes** em `/admin/pagamentos` lista somente metadados de credenciais `Asaas`/`sandbox` do cofre. A seleção é explícita; o servidor confere serviço, ambiente e prefixo `$aact_hmlg_`, descriptografa a chave e consulta exclusivamente `GET https://api-sandbox.asaas.com/v3/myAccount/fees/`. Não modifica a conexão de tarifas de produção, regras financeiras ou pedidos. A resposta contém apenas `validated`, quantidade de regras e horário; a auditoria `ASAAS_SANDBOX_CONNECTION_CHECKED` registra usuário/ID sem segredo.
+
+`GET /api/admin/pagamentos/asaas-sandbox` e `POST` da mesma rota são exclusivos de ADMIN. POST aceita somente `{ credentialId }`, JSON de até 2048 bytes, mesma origem e cinco verificações por minuto. Respostas são `private, no-store`; erros internos não expõem chaves, ciphertext ou detalhes da conta. O teste externo é leitura: validar acesso não representa homologação financeira.
+
+### Ensaios reais no ambiente Sandbox
+
+Com a chave cifrada já autorizada, um executor descartável conferiu as APIs oficiais do Sandbox. Nenhuma credencial foi copiada para arquivo ou terminal, e os POSTs ficaram restritos ao host Sandbox. O cadastro retornou `APPROVED` para situação geral, dados comerciais, conta bancária e documentação; nenhum documento pessoal real foi enviado.
+
+- Chave Pix aleatória de testes cadastrada pela interface e posteriormente confirmada `ACTIVE` pela API.
+- QR Pix de **R$10 fictícios** criado com imagem e payload válidos, `expirationSeconds: 7200`, `allowsMultiplePayments: false` e referência exclusiva. A criação foi auditada antes/depois da chamada. Não houve pagamento desse QR nem comprovação da expiração bancária: o ensaio completo exige outra conta Sandbox pagadora, conforme o [guia oficial](https://docs.asaas.com/docs/testar-pagamento-de-qrcodes-pix).
+- Checkout hospedado de cartão criado com valor fictício de **R$10**, uma unidade de **Homologacao ficticia Wimifarma**, sessão de 120 minutos e referência exclusiva, sem dados reais de cliente. A página `https://sandbox.asaas.com/checkoutSession/show?id=…` foi aberta e validada diretamente. Identificação, endereço e cartão foram preenchidos com dados sintéticos exclusivamente no provedor. A interface mostrou **Pagamento confirmado** e uma consulta posterior `GET /v3/payments?checkoutSession=…` retornou `CONFIRMED`, `CREDIT_CARD`, valor 10 e líquido 9,32. Valores/tarifas Sandbox não comprovam o contrato produtivo.
+- Esses ensaios não criaram pedidos, aprovaram pagamentos, liberaram cashback ou enviaram mensagens da Wimifarma. URLs de retorno não foram utilizadas como confirmação financeira. O checkout público continua Mercado Pago. Recusa, estorno, integração de webhook e roteamento automático ainda não foram homologados.
+
+As revisões automáticas de tarifas de produção também foram conferidas por leitura da auditoria: `PAYMENT_FEES_SYNCHRONIZED`, usuário nulo, em **08/10/2026 às 05:21:27 e 11:21:26 UTC** (02:21:27 e 08:21:26 em Brasília). Isso comprova execução do timer com intervalo de seis horas, sem depender da consulta manual.
+
+### Arquivos e revisão
+
+Implementação em `src/features/payments/asaas-sandbox.ts`, `src/app/api/admin/pagamentos/asaas-sandbox/route.ts`, `src/components/admin/asaas-sandbox-panel.tsx` e inclusão no painel de pagamentos, com regressões em `asaas-sandbox.test.ts` e `asaas-sandbox-route.test.ts`. Não há dependência ou migração nova. Revisão independente aprovou o código e as nove regressões focadas de autorização, cofre, ambiente, origem, limite, sanitização e isolamento de produção. A auditoria desta entrega também exigiu atualizar a dependência existente Next.js/ESLint Next para 15.5.27; decisão e limites em [42-revisao-de-seguranca.md](42-revisao-de-seguranca.md).
+
+Validação local: `npm.cmd run test:security` (118/118), `npm.cmd run lint`, `npm.cmd run build` e `npm.cmd run prisma:validate` passaram após o patch. Auditoria de produção sem alertas; completa mantém cinco high de ferramentas. Não usar esses checks locais como prova de publicação ou homologação financeira completa.
 
 ## Atualização confirmada em 07/10/2026
 
-O titular posteriormente concluiu a geração da chave e forneceu a confirmação visual de sucesso. A nova aba da Wimifarma foi preparada para colagem no campo seguro, porque o navegador conectado perdeu controle da aba anterior; nenhum segredo foi transcrito para arquivos ou logs. Isso comprova geração, mas ainda não conexão de tarifas ou homologação de cobrança. Andamento e verificações em [50-recuperacao-de-compra-e-conexoes.md](50-recuperacao-de-compra-e-conexoes.md).
+O titular concluiu a geração da chave de produção. Em 07/10, o controle da aba foi recuperado e a credencial foi transferida diretamente do campo visível do Asaas para **Pagamentos → Conectar consulta de tarifas Asaas**, sem arquivos intermediários, logs ou transcrição na conversa. O painel confirmou salvamento e resposta válida da API às **14:50:06**; a conexão persistiu após recarregar. Isso comprova conexão de tarifas, mas ainda não homologação de cobrança. Andamento e verificações em [50-recuperacao-de-compra-e-conexoes.md](50-recuperacao-de-compra-e-conexoes.md).
 
 O botão **Gerar chave de API** foi liberado. A tela de criação foi aberta no Chrome conectado, com nome, expiração opcional e uma permissão separada para saques. A geração, confirmação de segurança e envio da nova credencial foram deixados ao titular, conforme a política da ferramenta de navegador. A orientação é manter **saques desmarcados**. Não houve contratação de plano nem cobrança.
 
-Isso supera o bloqueio observado nos dias anteriores, mas não comprova uma chave criada ou conexão homologada. A consulta de tarifas existente e o checkout Mercado Pago permanecem como antes; nenhum roteamento automático para Asaas foi ativado.
+Na consulta da API, a simulação de **R$100 em cartão 1x**, prazo máximo de 35 dias, mostrou **R$3,48 de tarifa**, **R$96,52 líquidos** e primeiro recebimento em **32 dias**. É a tarifa padrão conservadora importada; a promoção manual anterior de R$2,48 não foi tomada como custo efetivo atual. O snapshot mais recente prevalece sobre uma regra manual antiga. Não houve cobrança, antecipação, contratação de mensalidade ou alteração da conexão Mercado Pago. Nenhum roteamento automático para Asaas foi ativado.
+
+O titular criou a conta Sandbox separada e autorizou a geração de uma chave temporária **Wimifarma Sandbox Homologacao**, com expiração em **14/10/2026 às 23:59**, sem saques. A interface confirmou **Habilitado**. A chave foi guardada cifrada em **API e Senhas → Asaas Sandbox — homologação**, serviço `Asaas`, identificador `sandbox`, e o registro permaneceu após recarregar. O modal com a chave foi fechado depois da confirmação de armazenamento. O cofre genérico não conecta automaticamente um gateway: esse registro não substitui o `payment-fee-policy` de produção nem libera cobranças. Nenhum segredo ou senha é versionado.
+
+A validação da geração usou o token oficial `000000` exclusivamente no Sandbox, conforme a [mudança vigente desde 01/10/2026](https://docs.asaas.com/changelog/token-000000-para-valida%C3%A7%C3%B5es-da-conta-no-sandbox). Não aplicar esse comportamento a validações de produção.
+
+A manutenção em produção inicia a revisão de tarifas após 60 segundos de inicialização e depois a cada seis horas, com validade de 24 horas. A hora da consulta manual não fixa o próximo horário da revisão automática. Conferir execução pelo evento `PAYMENT_FEES_SYNCHRONIZED` com `userId` nulo; a simples saúde do container não comprova execução do timer.
 
 ### Integração adequada ao checkout da Wimifarma
 
@@ -50,11 +79,11 @@ A documentação oficial oferece checkout hospedado e links de cobrança. Cartã
 
 No checkout Asaas, `minutesToExpire: 120` limita a sessão, mas não comprova expiração bancária do QR Pix em duas horas. A API de QR possui regras próprias relacionadas a vencimento e chave Pix. O prazo de duas horas já usado pelo Mercado Pago não deve ser anunciado para Asaas sem confirmação do contrato e teste do provedor.
 
-## Próxima ação necessária na conta
+## Próxima homologação necessária
 
-O titular deve verificar dados comerciais de atividade/faturamento, validação de identidade e Token App/SMS; se completos, pedir ao suporte Asaas a liberação do botão de chave API. Nenhum dado financeiro ausente foi inventado. Quando a operação estiver liberada, a geração e confirmação da credencial devem ser concluídas pelo titular. Depois, conectar em **Pagamentos → Conectar consulta de tarifas Asaas**, sem enviar a chave pela conversa.
+O bloqueio de geração e a conexão de tarifas de produção foram resolvidos. A chave Sandbox está no cofre separado, com vencimento documentado. Validar a API de testes sem trocar a configuração de produção; depois homologar QR Pix, checkout hospedado de cartão, expiração, recusas, webhooks autenticados, repetição de eventos, resultado incerto e estornos com dados sintéticos.
 
-Essa etapa depende do próprio Asaas e da confirmação de segurança do titular. O trabalho que já foi feito — consulta de tarifas preparada, contratos manuais, simulação e documentação — permanece utilizável enquanto isso.
+A cobrança Asaas ainda exige implementação e validação próprias: o fluxo atual de pedidos/pagamentos usa Mercado Pago. Guardar uma chave ou consultar tarifas não comprova pagamento, não habilita um segundo gateway e não autoriza repetir cobrança em outro provedor após resposta incerta.
 
 ## Fontes oficiais
 

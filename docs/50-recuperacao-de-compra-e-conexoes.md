@@ -24,7 +24,9 @@ Preço, estoque, reserva, propriedade do pedido, homologação e confirmação e
 
 ## Conexões externas
 
-O titular informou e mostrou a criação da chave Asaas. A aba antiga perdeu controle pelo navegador conectado; uma nova aba **Pagamentos → Conectar consulta de tarifas Asaas** foi preparada para colagem segura. A chave não foi transcrita, armazenada em documentação ou versionada. A integração existente consulta tarifas de cartão; não cria cobranças Asaas nem altera o gateway do checkout. Conexão, resposta da conta e homologação devem ser registradas separadamente quando concluídas.
+O titular criou a chave Asaas. Após recuperar o controle da aba em 07/10, a credencial foi transferida diretamente para **Pagamentos → Conectar consulta de tarifas Asaas**, e o painel confirmou resposta válida e persistência após recarregar. A simulação de R$100 em cartão 1x mostrou R$3,48 de custo padrão conservador, R$96,52 líquidos e 32 dias para o primeiro recebimento. A chave não foi transcrita, armazenada em documentação ou versionada. Em 08/10, a auditoria confirmou duas revisões automáticas com intervalo de seis horas.
+
+O titular concluiu a conta Sandbox e autorizou chave temporária sem saques, guardada cifrada no cofre separado. O novo bloco ADMIN de validação consulta apenas a API Sandbox sem substituir a produção. Ensaios posteriores no provedor criaram QR Pix fictício e confirmaram cartão fictício por tela/API; não criaram pedidos ou mensagens da Wimifarma. Recebimento Pix, webhooks, recusas/estornos e ativação do gateway continuam pendentes. Detalhes e limites em [40-asaas-configuracao-e-homologacao.md](40-asaas-configuracao-e-homologacao.md).
 
 O Reclame AQUI validou o e-mail da contabilidade vinculado ao CNPJ, e o titular concluiu a senha e a criação do acesso. O painel empresarial abriu no plano **Gratuito** para a razão social conferida. O teste de plano pago e a oferta posterior de assinatura não foram contratados.
 
@@ -44,4 +46,4 @@ Publicação de código: **`ff9db6e` — `fix(checkout): recover payment views a
 - API de revisão com ID sintético inexistente: mesma origem retornou HTTP 200 com lista vazia e `Cache-Control: private, no-store`; origem externa retornou HTTP 403. Nenhum produto ou pedido foi gravado.
 - Rollback preservado em `wimifarma-br-recovery-rollback:ff9db6e`, imagem anterior `sha256:8d8905190a4361fd315f1a49f887ecca4a2d1ea80f213ad98ef462a6e48a3b0f`.
 
-A continuação do cadastro Reclame AQUI e o registro da publicação alteram somente documentação; não requerem novo build do app. Asaas segue aguardando colagem segura da chave na consulta de tarifas e homologação própria para cobranças; o checkout permanece Mercado Pago.
+A continuação anterior do cadastro Reclame AQUI alterou somente documentação. A nova validação administrativa Sandbox descrita no documento 40 exige build/publicação próprios. A conexão de tarifas Asaas está salva; a integração produtiva de cobrança ainda exige homologação própria. O checkout permanece Mercado Pago.

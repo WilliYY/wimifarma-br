@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CreditCard, ShieldCheck } from "lucide-react";
 import { PaymentFeesPanel } from "./payment-fees-panel";
+import { AsaasSandboxPanel } from "./asaas-sandbox-panel";
 type Settings = { revision: number; enabled: boolean; environment: string; publicKey: string; connected: boolean };
 export function PaymentPanel() {
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -31,6 +32,7 @@ export function PaymentPanel() {
       <button disabled={!settings || busy} className="min-h-12 rounded-lg bg-brand px-5 py-3 font-black text-white disabled:opacity-50">{busy ? "Verificando..." : "Salvar conexão"}</button>
     </form>
     <PaymentFeesPanel />
+    <AsaasSandboxPanel />
     <div className="flex gap-3 rounded-xl border border-emerald-100 bg-emerald-50 p-5 text-sm leading-6"><ShieldCheck className="shrink-0 text-emerald-700" /><p>As chaves privadas ficam cifradas no servidor. O site não recebe número nem código de segurança do cartão. Reembolsos são realizados no painel do Mercado Pago e sincronizados com o pedido. <Link href="/checkout" className="font-bold underline">Abrir checkout</Link></p></div>
   </div>;
 }

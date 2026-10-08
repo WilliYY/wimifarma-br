@@ -1,5 +1,18 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-08 - Patch de segurança Next.js 15.5.27
+
+- Auditoria pré-publicação encontrou dois alertas moderate de cache SSG/ISR em Next.js até 15.5.26. Atualizar Next e ESLint Next para a versão oficial corrigida 15.5.27, fixada no manifesto/lock, sem trocar stack ou aplicar correções incompatíveis automaticamente.
+- App Router permanece preservado; o alerta não comprova exploração desta aplicação. Auditar produção e desenvolvimento separadamente e não omitir os cinco high da cadeia de ferramentas. Fontes e validação em [42-revisao-de-seguranca.md](42-revisao-de-seguranca.md).
+
+## 2026-10-08 - Asaas: tarifas conectadas e Sandbox separado
+
+- A conexão de produção de tarifas foi salva em 07/10 e persistiu após recarregar. Snapshot padrão: R$3,48 em R$100/cartão 1x, R$96,52 líquidos, primeira parcela em 32 dias. A auditoria de 08/10 comprovou revisões automáticas com intervalo de seis horas; não pressupor execução apenas pela saúde do app.
+- Chave temporária Sandbox autorizada pelo titular, sem saques e com expiração em 14/10 às 23:59, guardada cifrada no cofre independente. Nunca substituir `payment-fee-policy` de produção para realizar testes.
+- Novo painel/API exclusivos de ADMIN validam a credencial selecionada por consulta GET ao host fixo Sandbox. Conferir metadata, prefixo, origem, corpo, limites e sanitizar erros; não devolver segredos ou gravar regras financeiras. Registrar a verificação na auditoria.
+- Homologação no provedor criou QR Pix fictício de R$10, expiração de duas horas e uso único, e confirmou cartão fictício hospedado por tela/API. Não confundir criação de QR com recebimento, sessão com confirmação financeira ou tarifa Sandbox com custo produtivo. Nenhum pedido, cashback ou mensagem comercial foi criado.
+- Revisão independente aprovou os nove testes de abuso/isolamento. Recebimento Pix exige outra conta Sandbox pagadora; webhooks, recusas, estornos e roteamento produtivo continuam pendentes. Checkout público Mercado Pago preservado. Contrato, fontes e evidências em [40-asaas-configuracao-e-homologacao.md](40-asaas-configuracao-e-homologacao.md).
+
 ## 2026-10-07 - Recuperação explícita de pagamento e carrinho
 
 - Recuperar consulta do mesmo pagamento por GET após falha inicial; não recriar cobrança ou limpar referência automaticamente.
