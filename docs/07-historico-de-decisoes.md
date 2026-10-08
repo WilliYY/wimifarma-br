@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-08 — Correções delimitadas após auditoria
+
+- Vincular busca à consulta concluída, apresentar cashback selecionado sem aumento silencioso e compartilhar saldo entre apresentações do cabeçalho com isolamento por cliente. Preservar autorização no servidor e identidade visual.
+- Padronizar bloqueios nas devoluções de estoque dos gateways e limitar JSON de frete durante leitura por bytes. Confirmar regressões com recursos sintéticos, sem cobrança, comunicação ou etiqueta real.
+- Descobrir todos os testes na CI, incluindo UI e Miauby. Manter cinco high das ferramentas registrados: upstream ainda sem patch compatível. Contratos e evidências em [57-correcoes-da-auditoria.md](57-correcoes-da-auditoria.md).
+- Não introduzir aprovação manual de compras nem fluxo Asaas novo. Consulta produtiva pontual encontrou zero estados Asaas `REVIEW`/`UNKNOWN`; a evolução de revisão técnica permanece separada.
+
 ## 2026-10-08 — Auditoria de backend, frontend e desempenho
 
 - Registrar seis achados delimitados, distinguindo reprodução local, risco de concorrência e ocorrência produtiva não medida. Prioridade para revisão Asaas visível, busca e cashback; relatório em [56-auditoria-backend-frontend.md](56-auditoria-backend-frontend.md).

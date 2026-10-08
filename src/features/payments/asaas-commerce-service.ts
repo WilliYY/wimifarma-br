@@ -141,7 +141,7 @@ export async function refreshAsaasCommercePayment(orderId: string) {
     const terminal = ["PAID", "PARTIALLY_REFUNDED", "REFUNDED", "DISPUTED", "FAILED", "CANCELED"].includes(next);
     const failed = ["FAILED", "CANCELED"].includes(next);
     if (failed && current.stockReserved) {
-      for (const item of current.order.items) if (item.productId) await tx.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } });
+      for (const item of [...current.order.items].sort((a, b) => (a.productId ?? "").localeCompare(b.productId ?? ""))) if (item.productId) await tx.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } });
     }
     const changed = next !== current.status;
     const fundsAvailable = snapshot.fundsAvailable || (next === "PAID" && current.status === "PAID" && current.fundsAvailable);

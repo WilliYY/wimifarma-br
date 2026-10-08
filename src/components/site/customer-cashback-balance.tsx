@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 import { formatCurrency } from "@/lib/utils";
 
-export function CustomerCashbackBalance() {
+const CustomerCashbackContext = createContext<string | null>(null);
+
+export function CustomerCashbackProvider({ children, enabled }: { children: ReactNode; enabled: boolean }) {
   const [balance, setBalance] = useState<string | null>(null);
   useEffect(() => {
+    if (!enabled) return;
     const controller = new AbortController();
     let loading = false;
     async function refresh() {
@@ -25,6 +28,11 @@ export function CustomerCashbackBalance() {
     window.addEventListener("wimifarma:cashback-updated", refresh);
     document.addEventListener("visibilitychange", refresh);
     return () => { controller.abort(); clearInterval(timer); window.removeEventListener("focus", refresh); window.removeEventListener("wimifarma:cashback-updated", refresh); document.removeEventListener("visibilitychange", refresh); };
-  }, []);
+  }, [enabled]);
+  return <CustomerCashbackContext.Provider value={enabled ? balance : null}>{children}</CustomerCashbackContext.Provider>;
+}
+
+export function CustomerCashbackBalance() {
+  const balance = useContext(CustomerCashbackContext);
   return <span className="block truncate text-[11px] font-bold leading-4 text-emerald-800" title="Cashback liberado">Cashback {balance === null ? "..." : formatCurrency(Number(balance))}</span>;
 }

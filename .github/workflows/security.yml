@@ -38,8 +38,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Security regression tests
-        run: npm run test:security
+      - name: Install browser for isolated UI regression tests
+        run: npx playwright install --with-deps chromium
+
+      - name: All regression tests (including security, Miauby and checkout)
+        run: npm run test:all
 
       - name: Block high and critical production vulnerabilities
         run: npm audit --omit=dev --audit-level=high

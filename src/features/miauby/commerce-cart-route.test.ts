@@ -10,11 +10,11 @@ const now = Date.UTC(2026, 9, 3, 12);
 const secret = "synthetic-cart-test-secret";
 const cookieName = "wimi-miauby-cart";
 class FixedDate extends Date { static now() { return now; } }
-type Product = { id: string; name: string; price: number; promotionalPrice: number | null; stock: number; status: string; requiresPrescription: boolean; isPopularPharmacy: boolean };
+type Product = { id: string; name: string; price: number; promotionalPrice: number | null; stock: number; status: string; requiresPrescription: boolean; prescriptionType: "UNREVIEWED" | "ORDINARY" | "CONTROLLED"; isPopularPharmacy: boolean };
 type Event = { id: string; key: string; type: string; sessionId: string; status: string; attempts: number; text: string; availableAt: Date; lastError?: string };
 type EventWhere = { key?: string; type?: string; sessionId?: string; status?: string; attempts?: number };
-type ProductWhere = { id: { in: string[] }; status?: string; requiresPrescription?: boolean; isPopularPharmacy?: boolean };
-const baseProduct: Product = { id: "synthetic-product", name: "Produto sintético", price: 10, promotionalPrice: 8, stock: 20, status: "ACTIVE", requiresPrescription: false, isPopularPharmacy: false };
+type ProductWhere = { id?: { in: string[] }; status?: string; requiresPrescription?: boolean; prescriptionType?: Product["prescriptionType"] | { not: Product["prescriptionType"] }; isPopularPharmacy?: boolean; OR?: ProductWhere[] };
+const baseProduct: Product = { id: "synthetic-product", name: "Produto sintético", price: 10, promotionalPrice: 8, stock: 20, status: "ACTIVE", requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false };
 const cart = (quantity = 1, productId = baseProduct.id) => ({ items: [{ productId, quantity }] });
 const bundlePromise = build({ entryPoints: ["src/app/api/miauby/carrinho/route.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "cart-fixture", setup(builder) {
   builder.onResolve({ filter: /lib\/prisma$/ }, args => ({ path: args.path, namespace: "fixture" }));
@@ -29,6 +29,14 @@ async function harness(options: { products?: Product[]; failTransaction?: boolea
   let reads = 0;
   let transactions = 0;
   const matches = (event: Event, where: EventWhere) => Object.entries(where).every(([key, value]) => event[key as keyof Event] === value);
+  const matchesProduct = (product: Product, where: ProductWhere): boolean =>
+    (where.id === undefined || where.id.in.includes(product.id))
+    && (where.status === undefined || product.status === where.status)
+    && (where.requiresPrescription === undefined || product.requiresPrescription === where.requiresPrescription)
+    && (where.prescriptionType === undefined || (typeof where.prescriptionType === "string"
+      ? product.prescriptionType === where.prescriptionType : product.prescriptionType !== where.prescriptionType.not))
+    && (where.isPopularPharmacy === undefined || product.isPopularPharmacy === where.isPopularPharmacy)
+    && (where.OR === undefined || where.OR.some(clause => matchesProduct(product, clause)));
   const eventDb = {
     upsert: async ({ where, create }: { where: { key: string }; create: Omit<Event, "id" | "status" | "attempts"> }) => {
       let event = events.find(item => item.key === where.key);
@@ -45,9 +53,7 @@ async function harness(options: { products?: Product[]; failTransaction?: boolea
     miaubyEvent: eventDb,
     product: { findMany: async ({ where }: { where: ProductWhere }) => {
       reads++; productQueries.push(where);
-      return products.filter(product => where.id.in.includes(product.id) && (where.status === undefined || product.status === where.status)
-        && (where.requiresPrescription === undefined || product.requiresPrescription === where.requiresPrescription)
-        && (where.isPopularPharmacy === undefined || product.isPopularPharmacy === where.isPopularPharmacy));
+      return products.filter(product => matchesProduct(product, where));
     } },
     $transaction: async (callback: (tx: { miaubyEvent: typeof eventDb }) => Promise<void>) => {
       transactions++; const before = events.map(event => ({ ...event }));
@@ -123,11 +129,25 @@ test("retrying, accepted and uncertain cart snapshots remain unchanged", async (
     assert.equal((await f.post(cart(4), token)).status, 200); assert.equal(f.events.length, 1); assert.equal(f.events[0].text, original); assert.equal(f.events[0].status, state.status);
   }
 });
-test("product query excludes inactive, prescription and Popular Pharmacy products", async () => {
-  const products: Product[] = [baseProduct, { ...baseProduct, id: "inactive", status: "INACTIVE" }, { ...baseProduct, id: "prescription", requiresPrescription: true }, { ...baseProduct, id: "popular", isPopularPharmacy: true }];
-  for (const product of products.slice(1)) {
+test("cart refuses inactive, unclassified prescription, controlled and Popular Pharmacy items without alerts", async () => {
+  const products: Product[] = [
+    { ...baseProduct, id: "inactive", status: "INACTIVE" },
+    { ...baseProduct, id: "unclassified", requiresPrescription: true },
+    { ...baseProduct, id: "controlled", requiresPrescription: true, prescriptionType: "CONTROLLED" },
+    { ...baseProduct, id: "controlled-unflagged", prescriptionType: "CONTROLLED" },
+    { ...baseProduct, id: "popular", isPopularPharmacy: true },
+  ];
+  for (const product of products) {
     const f = await harness({ products }); assert.equal((await f.post(cart(1, product.id))).status, 409); assert.equal(f.events.length, 0);
-    const where = f.productQueries[0]; assert.equal(where.status, "ACTIVE"); assert.equal(where.requiresPrescription, false); assert.equal(where.isPopularPharmacy, false);
+    assert.equal(f.transactions(), 0);
+  }
+});
+test("cart accepts active ordinary prescription and non-prescription items using catalog values", async () => {
+  for (const product of [baseProduct, { ...baseProduct, requiresPrescription: true, prescriptionType: "ORDINARY" as const }]) {
+    const f = await harness({ products: [product] });
+    assert.equal((await f.post(cart(2, product.id))).status, 200);
+    assert.equal(f.events.length, 1); assert.equal(f.transactions(), 1);
+    assert.match(f.events[0].text, /Subtotal: R\$\s*16,00/);
   }
 });
 test("invalid quantities, duplicate ids, excessive items and stock shortage never enqueue", async () => {

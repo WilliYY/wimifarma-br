@@ -35,19 +35,24 @@ export function SiteSearch() {
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState(emptyResults);
+  const [responseResults, setResults] = useState(emptyResults);
+  const [completedQuery, setCompletedQuery] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [requestLoading, setIsLoading] = useState(false);
   const [isDesktopOpen, setIsDesktopOpen] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const trimmedQuery = query.trim();
+  const results = completedQuery === trimmedQuery ? responseResults : emptyResults;
+  const isLoading = requestLoading || (trimmedQuery.length >= 2 && completedQuery !== trimmedQuery);
   const items = useMemo(
     () => [...results.products, ...results.relatedProducts],
     [results],
   );
 
   useEffect(() => {
+    setActiveId(null);
+    setCompletedQuery(null);
     if (trimmedQuery.length < 2) {
       setResults(emptyResults);
       setActiveId(null);
@@ -68,11 +73,14 @@ export function SiteSearch() {
         );
         const payload = (await response.json()) as SearchResponse;
 
+        if (controller.signal.aborted) return;
+
         if (!response.ok || !payload.data) {
           throw new Error(payload.error || "Nao foi possivel buscar agora.");
         }
 
         setResults(payload.data);
+        setCompletedQuery(trimmedQuery);
         setActiveId(
           (currentId) =>
             [...payload.data!.products, ...payload.data!.relatedProducts].find(
@@ -80,10 +88,11 @@ export function SiteSearch() {
             )?.id ?? payload.data!.products[0]?.id ?? null,
         );
       } catch (requestError) {
-        if (requestError instanceof DOMException && requestError.name === "AbortError") {
+        if (controller.signal.aborted) {
           return;
         }
         setResults(emptyResults);
+        setCompletedQuery(trimmedQuery);
         setActiveId(null);
         setError(
           requestError instanceof Error

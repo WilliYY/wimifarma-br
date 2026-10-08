@@ -13,7 +13,7 @@ import { adminRoutePermissions, canAccessAdminRole } from "@/features/auth/permi
 import { SiteNav } from "@/components/site/site-nav";
 import { SiteSearch } from "@/components/site/site-search";
 import { CartHeaderButton } from "@/components/site/cart-header-button";
-import { CustomerCashbackBalance } from "@/components/site/customer-cashback-balance";
+import { CustomerCashbackBalance, CustomerCashbackProvider } from "@/components/site/customer-cashback-balance";
 import { sessionCustomerId } from "@/features/auth/customer-session";
 import { AnnouncementBar } from "@/components/site/announcement-bar";
 import { publicNavItems, siteConfig } from "@/lib/site";
@@ -67,6 +67,7 @@ export async function SiteHeader() {
   const userImage = session?.user?.image;
 
   return (
+    <CustomerCashbackProvider enabled={hasCustomer} key={sessionCustomerId(session) ?? "anonymous"}>
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white/96 shadow-[0_10px_30px_rgba(17,24,39,0.08)] backdrop-blur-md">
       <AnnouncementBar />
 
@@ -285,5 +286,6 @@ export async function SiteHeader() {
 
       <SiteNav items={[{ href: "/", label: "Home" }, ...publicNavItems]} />
     </header>
+    </CustomerCashbackProvider>
   );
 }

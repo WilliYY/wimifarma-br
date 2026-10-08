@@ -1,5 +1,11 @@
 # 42 - Revisão de segurança
 
+## Correções da auditoria — 08/10/2026
+
+- Limitar corpo JSON de frete durante leitura por bytes; cancelar excesso preservando erro 413. Devoluções de estoque seguem a ordem das reservas, preservando confirmação financeira e idempotência. Novas regressões de abuso/concorrência na seleção de segurança.
+- Provider de saldo por cliente, sem cache global entre sessões; regressão UI de troca de identidade/logout. CI executa descoberta completa de testes, incluindo Miauby e Chromium isolado.
+- Verificação independente de dependências reconfirmou `braces` 3.0.3 sem patch. Manter cinco high visíveis e ferramentas restritas a padrões glob confiáveis; revisão recomendada em 15/10/2026, sem automação criada. Fontes, validação e publicação no documento 57.
+
 ## Roteamento de pagamentos — 08/10/2026
 
 - Asaas habilitado inválido agora produz diagnóstico fixo auditável, conservando o gateway válido para novos pedidos. Mensagens brutas e segredos não são serializados; teste ADMIN permanece isolado. Revisão independente estática sem achados novos.

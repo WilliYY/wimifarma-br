@@ -114,7 +114,7 @@ export async function applyProviderOrder(remote: ProviderOrder) {
     if (current.status === "PARTIALLY_REFUNDED" && !["PARTIALLY_REFUNDED", "REFUNDED", "DISPUTED"].includes(next)) return;
     const failed = ["FAILED", "CANCELED"].includes(next);
     if (failed && current.stockReserved) {
-      for (const item of current.order.items) if (item.productId) await tx.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } });
+      for (const item of [...current.order.items].sort((a, b) => (a.productId ?? "").localeCompare(b.productId ?? ""))) if (item.productId) await tx.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } });
     }
     const terminal = ["PAID", "PARTIALLY_REFUNDED", "REFUNDED", "DISPUTED", "FAILED", "CANCELED"].includes(next);
     await tx.onlinePayment.update({ where: { id: current.id }, data: {

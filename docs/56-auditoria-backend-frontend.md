@@ -2,6 +2,8 @@
 
 Data: 08/10/2026. Código revisado: `57e292a`, com código executável de `415ecff` (o commit seguinte alterou somente documentação).
 
+Continuação autorizada: correções dos itens 2–6, validação e limites em [57-correcoes-da-auditoria.md](57-correcoes-da-auditoria.md). Este documento preserva o diagnóstico original; o fluxo de revisão técnica Asaas do item 1 permanece uma evolução separada.
+
 ## Resultado e escopo
 
 A separação entre rotas, componentes e módulos de negócio é adequada para a evolução atual. Prisma reutiliza cliente e pool, e pedidos, pagamentos, filas e webhooks têm índices e contratos próprios. A revisão não indica necessidade de reescrever a aplicação. Foram encontrados seis problemas delimitados, listados abaixo; esta entrega registra o diagnóstico, sem aplicar correções ao código executável.

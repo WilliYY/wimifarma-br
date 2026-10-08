@@ -10,9 +10,23 @@ export async function shippingBody(request: Request) {
   const expected = new URL(process.env.AUTH_URL || request.url).origin;
   if (!origin || origin !== expected) throw new ShippingError("Origem da solicitação inválida.", 403);
   if (!request.headers.get("content-type")?.startsWith("application/json")) throw new ShippingError("Envie JSON.", 415);
-  const bytes = await request.text();
-  if (bytes.length > 32_000) throw new ShippingError("Solicitação muito grande.", 413);
-  try { return JSON.parse(bytes) as unknown; } catch { throw new ShippingError("JSON inválido.", 400); }
+  const reader = request.body?.getReader();
+  if (!reader) throw new ShippingError("JSON inválido.", 400);
+  const chunks: Uint8Array[] = []; let size = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > 32_000) {
+        // A falha de descarte não deve substituir a rejeição pelo limite do corpo.
+        await reader.cancel().catch(() => undefined);
+        throw new ShippingError("Solicitação muito grande.", 413);
+      }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  try { return JSON.parse(new TextDecoder().decode(Buffer.concat(chunks))) as unknown; } catch { throw new ShippingError("JSON inválido.", 400); }
 }
 const requests = new Map<string, { expires: number; count: number }>();
 export function limitShippingRequest(request: Request) {
