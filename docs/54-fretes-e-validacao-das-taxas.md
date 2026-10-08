@@ -59,3 +59,11 @@ Medicamentos isentos de receita seguem compra normal. Receita comum classificada
 - Revisão independente de roteamento e testes: nenhum achado novo; diagnóstico anterior corrigido. O agente principal executou os testes no escopo temporário atual; o revisor fez inspeção estática, pois seu escopo antigo foi recusado pelo executor.
 - `npm.cmd audit --omit=dev --audit-level=high --json`: zero alertas de produção.
 - Auditoria completa: cinco high, zero critical, na cadeia já registrada de `braces`/`micromatch`/`fast-glob`/ESLint Next. A fonte oficial e npm continuam sem versão corrigida de braces; não aplicado downgrade sugerido de ESLint Next. Registro em documento 42. Auditoria completa não passou e não foi omitida.
+
+## Comprovante de publicação
+
+Código **415ecff**, enviado ao GitHub e aplicado por fast-forward em `/home/ubuntu/projetos/wimifarma-br`. Build Docker/Next Linux concluído; apenas `app` recriado, sem migração ou reinício do PostgreSQL. Imagem executada `sha256:bc8dc23c87a50d8058ff3d6c24bbe614ba7af20060d34c206f376d086c5ba89b`; rollback preservado em `wimifarma-br-app:pre-routing-415ecff`.
+
+Às **15h55 de 08/10/2026, horário de Brasília**: container `running/healthy`, zero reinícios; `/api/health` respondeu `ok:true`, `/checkout` HTTP 200. API ADMIN Asaas sem sessão e webhook Asaas sem autenticação responderam 401. API privada manteve `private, no-store`, CSP, HSTS, `nosniff` e `DENY`.
+
+No painel autenticado publicado, comparação de R$100 permaneceu Asaas/R$3,48 e o aviso Sandbox corrigido foi encontrado. A verificação é de conexão, seleção e disponibilidade; não houve nova cobrança real, recebimento Pix Asaas ou comprovação adicional de liquidação nesta entrega. O registro posterior de documentação não altera o código executável acima.
