@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-08 — Auditoria de backend, frontend e desempenho
+
+- Registrar seis achados delimitados, distinguindo reprodução local, risco de concorrência e ocorrência produtiva não medida. Prioridade para revisão Asaas visível, busca e cashback; relatório em [56-auditoria-backend-frontend.md](56-auditoria-backend-frontend.md).
+- Executar todos os 82 arquivos de testes: 492 de 493 passaram, com asserção antiga de receita no carrinho Miauby. Documentar lacuna da CI e cinco alertas high nas ferramentas; produção sem alertas npm nesta consulta.
+- Preservar código executável e regras comerciais durante a análise. Inspeção pública não criou cobranças, pedidos ou etiquetas. Métricas de resposta e recursos são amostras, sem garantia de desempenho sob carga.
+
 ## 2026-10-08 — Diagnóstico de roteamento e preparação Google Play
 
 - Distinguir Asaas habilitado inválido de provedor desativado. Conservar o gateway válido para novos pedidos e registrar categoria fixa na auditoria, sem erro bruto ou segredo. Preservar vínculo de pagamentos existentes e isolamento de teste ADMIN. Regressões e contrato no documento 54.
