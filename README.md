@@ -292,6 +292,8 @@ docker network connect wimifarma-br-network nginx-proxy-manager-app-1
 
 ## Documentacao
 
+- `docs/55-google-play-documentos-e-app.md`: documentos da conta, pendências Google e roteiro técnico do aplicativo Android.
+- `docs/54-fretes-e-validacao-das-taxas.md`: consultas reais PAC/SEDEX, alternativas de envio e limites da comparação de tarifas.
 - `docs/53-asaas-clientes-e-roteamento.md`: Asaas comercial por instrumento homologado, roteamento seguro por tarifas da conta e diagnóstico Pix produtivo.
 
 - `docs/33-emails-clientes.md`: proposta de confirmação de compra, carrinho e novidades; configuração externa e automações ainda pendentes. Prévia com dados fictícios em `docs/email-modelos.html`.

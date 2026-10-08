@@ -1,5 +1,12 @@
 # 06 - Pendencias
 
+## Estado mais recente — frete, pagamentos e Google Play — 08/10/2026
+
+- Asaas produtivo habilitado para cartão à vista; novos pedidos comparam tarifas válidas com Mercado Pago. Parcelamento e Pix continuam Mercado Pago. Recebimento Pix Asaas ainda precisa de homologação. Este estado substitui a pendência de roteamento público citada nos registros anteriores; contratos nos documentos 53 e 54.
+- Consultas reais sem filtro de serviços para São Paulo e Umuarama retornaram PAC/SEDEX. Frenet R$0 é candidato futuro; faltam conta/token, validação da carga e operação de postagem/coleta. Perfis atuais são estimativas autorizadas por volume, sem medição física; consolidar itens depende de dados adequados.
+- Play Console: conta pessoal sem app criado, confirmação de identidade em continuidade no celular e telefone ainda pendente. Titular pediu deixar a etapa para depois. Documentos e roteiro em `55-google-play-documentos-e-app.md`.
+- Perfil da Empresa Google acessível na conta pessoal aparece como Cópia; proprietário original na conta da farmácia ainda não confirmado. Preservar reivindicação existente e evitar duplicação. RA/Ebit continuam sem comprovação de concessão de selo.
+
 ## Atualização de Asaas e acesso — 08/10/2026
 
 - A conexão Asaas de produção para consulta de tarifas está salva, com revisões automáticas de seis horas comprovadas pela auditoria. A chave Sandbox temporária está cifrada no cofre separado; novo painel ADMIN valida somente o acesso de testes. Os bloqueios de geração/conexão descritos nos registros anteriores foram resolvidos.

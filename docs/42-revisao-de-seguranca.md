@@ -1,5 +1,12 @@
 # 42 - Revisão de segurança
 
+## Roteamento de pagamentos — 08/10/2026
+
+- Asaas habilitado inválido agora produz diagnóstico fixo auditável, conservando o gateway válido para novos pedidos. Mensagens brutas e segredos não são serializados; teste ADMIN permanece isolado. Revisão independente estática sem achados novos.
+- Validação local: 225 testes de segurança, lint, typecheck, Prisma validate e build passaram. Produção: auditoria npm zero alertas. Completa: cinco high e zero critical na cadeia de ferramentas já registrada abaixo.
+- Reconfirmado [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm): versões até 3.0.3 afetadas, sem patch publicado; `npm view braces version` retornou 3.0.3. Não aplicar downgrade automático de `eslint-config-next` para 14.2.35. A cadeia é de desenvolvimento; não fornecer padrões glob externos não confiáveis às ferramentas. Isso não equivale a remediação da dependência nem comprova ausência de outras falhas.
+- Não houve mudança de permissões, credenciais, schema, regras de dispensação ou animações. Contrato funcional, frete ao vivo e limites em documento 54; Google Play no documento 55.
+
 ## Dependência Next.js — 08/10/2026
 
 A auditoria antes da publicação do painel Sandbox identificou dois alertas moderate em Next.js até 15.5.26: [GHSA-4jqv-mc3x-m676](https://github.com/advisories/GHSA-4jqv-mc3x-m676) e [GHSA-mcj8-r9mp-w47p](https://github.com/advisories/GHSA-mcj8-r9mp-w47p), relacionados a envenenamento de cache SSG/ISR. Atualizados `next` e `eslint-config-next` de 15.5.25 para **15.5.27**, fixando a versão corrigida no manifesto/lock. A aplicação usa App Router; os avisos não demonstram por si só exploração desta aplicação. O patch preserva Next.js 15, contratos e layout, sem `audit fix --force` ou downgrade.

@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-08 — Diagnóstico de roteamento e preparação Google Play
+
+- Distinguir Asaas habilitado inválido de provedor desativado. Conservar o gateway válido para novos pedidos e registrar categoria fixa na auditoria, sem erro bruto ou segredo. Preservar vínculo de pagamentos existentes e isolamento de teste ADMIN. Regressões e contrato no documento 54.
+- Consultar todos os serviços disponíveis em duas rotas reais sem comprar etiquetas; retornaram PAC e SEDEX. Não consolidar volumes a partir de medidas estimadas sem comprovar encaixe/proteção. Frenet gratuito permanece candidato, sem integração criada.
+- Registrar documentos e etapas da conta pessoal Play Console; o fluxo de identidade passou ao celular, ainda sem aprovação observada. Avaliar Organização e PWA/TWA antes de criar/publicar app. Guia no documento 55; nenhum documento pessoal enviado ou versionado.
+
 ## 2026-10-08 — Asaas comercial e tarifas vinculadas
 
 - Adicionar integração Asaas produtiva separada, crédito hospedado 1x e Pix homologado por instrumento. Preservar Mercado Pago, Sandbox e obrigações de conferência farmacêutica.

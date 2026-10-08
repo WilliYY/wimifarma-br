@@ -125,7 +125,7 @@ export function AsaasHomologationPanel({ credentialId }: { credentialId: string 
 
   return <section className="grid gap-5 rounded-2xl border border-line bg-white p-6" aria-labelledby="asaas-homologation-title">
     <div><h2 id="asaas-homologation-title" className="font-black">Homologação Asaas · somente Sandbox</h2>
-      <p className="mt-2 text-sm leading-6 text-muted">Ensaios fictícios de uma unidade, com cartão à vista ou Pix. Não movimentam estoque, cashback nem mensagens comerciais. O checkout público continua com Mercado Pago.</p></div>
+      <p className="mt-2 text-sm leading-6 text-muted">Ensaios fictícios de uma unidade, com cartão à vista ou Pix. Não movimentam estoque, cashback nem mensagens comerciais. Estes testes não alteram os meios de pagamento liberados para clientes.</p></div>
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-surface-subtle p-4 text-sm">
       <p>{state?.prepared ? "Estrutura de teste preparada" : "Preparação pendente"} · {state?.webhookReady ? "Notificações configuradas" : "Notificações pendentes"}</p>
       <button type="button" disabled={busy} onClick={() => void operate()} className="min-h-11 rounded-lg border border-line px-4 py-2 font-bold disabled:opacity-50">Consultar ensaios</button>
