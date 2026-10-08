@@ -89,9 +89,11 @@ No checkout Asaas, `minutesToExpire: 120` limita a sessão, mas não comprova ex
 
 ## Próxima homologação necessária
 
+Atualização de 08/10: integração exclusiva de ADMIN/Sandbox publicada, com QR estático de R$4,99 válido por duas horas e cartão fictício de R$9,99 confirmado na API e automaticamente no pedido pelo webhook. Inbox durável processou três notificações sem movimentar estoque, cashback ou mensagens comerciais. Limites e correções de contrato estão no documento [51](51-asaas-pagamentos-sandbox.md). Recebimento Pix, expiração, recusas efetivas e estornos permanecem pendentes; cobrança pública e roteamento por tarifa não foram ativados. Nenhum plano mensal foi contratado.
+
 O bloqueio de geração e a conexão de tarifas de produção foram resolvidos. A chave Sandbox está no cofre separado, com vencimento documentado. Validar a API de testes sem trocar a configuração de produção; depois homologar QR Pix, checkout hospedado de cartão, expiração, recusas, webhooks autenticados, repetição de eventos, resultado incerto e estornos com dados sintéticos.
 
-A cobrança Asaas ainda exige implementação e validação próprias: o fluxo atual de pedidos/pagamentos usa Mercado Pago. Guardar uma chave ou consultar tarifas não comprova pagamento, não habilita um segundo gateway e não autoriza repetir cobrança em outro provedor após resposta incerta.
+A cobrança pública Asaas ainda exige completar a homologação e implementar/ativar seu uso comercial: o fluxo público continua com Mercado Pago. Guardar uma chave, consultar tarifas ou aprovar um ensaio Sandbox não habilita automaticamente o segundo gateway nem autoriza repetir cobrança em outro provedor após resposta incerta.
 
 ## Fontes oficiais
 
