@@ -38,7 +38,21 @@ Reproduções RED/GREEN:
 
 Validação local: **507/507** testes completos e **234/234** da seleção de segurança passaram; lint, typecheck e Prisma validate passaram. Os quatro testes UI usam React real/Chromium, incluindo troca de identidade. Revisão independente de backend, UI e executor/CI aprovada, sem achados novos. Concorrência continua comprovada pelo modelo sintético, sem ensaio em PostgreSQL real.
 
-Auditoria npm renovada: produção sem alertas, código 0; completa com cinco high/zero critical na cadeia de ferramentas, código 1. Build Next.js passou, incluindo 37 páginas estáticas. A publicação será registrada após conferir a aplicação em produção.
+Auditoria npm renovada: produção sem alertas, código 0; completa com cinco high/zero critical na cadeia de ferramentas, código 1. Build Next.js passou, incluindo 37 páginas estáticas.
+
+## Publicação e conferência em produção
+
+Fonte publicada: commit **`74163ec`** (`fix: corrige busca cashback estoque e limite de frete`), em 08/10/2026. Build Docker concluído no servidor e somente `wimifarma-br-app` recriado, sem migrations ou reinício do PostgreSQL. Imagem em execução: `sha256:b47481748cc1e1e2fef334140c2ae5de328aab4f7c6bf981a37cf1a9b89fad1c`. A imagem anterior foi preservada na tag `wimifarma-br-app:pre-audit-fixes-74163ec` para retorno.
+
+Conferência após a troca:
+
+- Container `healthy`, zero reinícios. `/api/health`, `/`, `/catalogo` e `/checkout` retornaram HTTP 200; `/api/admin/pagamentos/asaas` sem sessão retornou 401.
+- No Chrome conectado, Dove retornou o produto atual; trocar para Losartana e pressionar Enter durante debounce manteve a página, sem abrir o resultado Dove anterior. Depois da resposta, teclado navegou para um resultado da consulta atual.
+- Catálogo e checkout renderizados em produção. A cesta existente de dois itens foi preservada. Checkout em 1440 e 390 pixels sem transbordamento horizontal (`scrollWidth === clientWidth`); atalho administrativo visível também no celular.
+- Header mantém `logo-wimifarma-animated.svg`; rodapé mantém 128 bolhas. A preferência de tamanho do navegador foi restaurada ao final. Nenhum erro ou aviso capturado pelo logger da aba durante a conferência; o popup da extensão Méliuz é externo ao site.
+- Nenhum pedido, cobrança, cancelamento, envio de mensagem ou alteração de cliente foi executado. Não foi repetida homologação financeira real nesta entrega. Resgate de cashback e troca de identidade foram comprovados nos testes React com dados fictícios; a conta aberta não possuía saldo para reproduzi-los ao vivo.
+
+Observação fora das correções publicadas: a página de Cimegrip ainda mostra um texto antigo sobre combinar pagamento no atendimento, enquanto o checkout oferece pagamento online. Registrar para revisão de conteúdo; essa observação não indica falha comprovada no gateway.
 
 ## Dependências e alertas sem patch
 
