@@ -1,6 +1,6 @@
 # Wimifarma BR
 
-Rodapé público com efeito original de bolhas preservado, identidade oficial, informações empresariais, contato, compra e privacidade: [docs/47-rodape-e-confianca-visual.md](docs/47-rodape-e-confianca-visual.md). Selos externos aparecem somente depois de aprovados.
+Rodapé público com efeito original de bolhas preservado, identidade oficial, informações empresariais, contato, compra e privacidade: [docs/47-rodape-e-confianca-visual.md](docs/47-rodape-e-confianca-visual.md). Indicadores próprios de HTTPS, CNPJ e pedidos; selos externos aparecem somente depois de aprovados. Conferência atual de catálogo, pagamentos e cotações em [docs/52-confianca-e-conferencia-comercial.md](docs/52-confianca-e-conferencia-comercial.md).
 
 Cadastro reúne identificação, descrição/SEO e logística com um assistente único: [docs/48-cadastro-unificado.md](docs/48-cadastro-unificado.md). Pagamento reutiliza a mesma classificação de receita do checkout; receita comum revisada permite Pix/cartão, mantendo a conferência farmacêutica antes da dispensação.
 

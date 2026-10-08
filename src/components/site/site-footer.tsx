@@ -43,17 +43,25 @@ export function SiteFooter() {
         {footerBubbles.map((style, index) => <div className="site-gooey-footer__bubble" key={index} style={style} />)}
       </div>
       <div className="relative z-10 border-b border-white/15">
-        <div className="mx-auto grid max-w-7xl gap-6 px-5 py-7 sm:grid-cols-3 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 lg:px-8">
+          <h2 className="mb-5 text-sm font-bold">Informações para comprar com confiança</h2>
+          <div className="grid gap-3 md:grid-cols-3">
           {[
-            { icon: LockKeyhole, title: "Conexão protegida", text: "Navegação com criptografia HTTPS." },
-            { icon: Store, title: "Uma farmácia perto de você", text: "Loja física e atendimento em Ivaté-PR." },
-            { icon: PackageCheck, title: "Acompanhe sua compra", text: "Seus pedidos reunidos na sua conta." },
-          ].map(({ icon: Icon, title, text }) => (
-            <div key={title} className="flex min-w-0 items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-pharma-yellow"><Icon aria-hidden="true" className="h-5 w-5" /></span>
-              <div><p className="text-sm font-bold">{title}</p><p className="mt-1 text-sm leading-5 text-white/90">{text}</p></div>
-            </div>
+            { icon: LockKeyhole, badge: "HTTPS", title: "Conexão criptografada", text: "Proteção dos dados durante a navegação.", href: "/privacidade", action: "Conheça nossa política de privacidade" },
+            { icon: Store, badge: "CNPJ", title: "Farmácia com endereço", text: `CNPJ ${siteConfig.cnpj} · Loja física em Ivaté-PR.`, href: "/contato", action: "Conheça a Wimifarma" },
+            { icon: PackageCheck, badge: "Pedidos", title: "Acompanhe sua compra", text: "Histórico e andamento reunidos na sua conta.", href: "/minha-conta", action: "Acessar meus pedidos" },
+          ].map(({ icon: Icon, badge, title, text, href, action }) => (
+            <Link className="group flex min-w-0 items-start gap-4 rounded-2xl border border-white/15 bg-white/5 p-5 transition-colors hover:border-white/30 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pharma-yellow" href={href} key={title}>
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-pharma-yellow/30 bg-pharma-yellow/10 text-pharma-yellow"><Icon aria-hidden="true" className="h-6 w-6" /></span>
+              <span className="min-w-0">
+                <span className="inline-flex rounded-full border border-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/90">{badge}</span>
+                <span className="mt-2 block text-sm font-bold">{title}</span>
+                <span className="mt-1 block text-sm leading-6 text-white/90">{text}</span>
+                <span className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-pharma-yellow">{action}<ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transform-none" /></span>
+              </span>
+            </Link>
           ))}
+          </div>
         </div>
       </div>
 

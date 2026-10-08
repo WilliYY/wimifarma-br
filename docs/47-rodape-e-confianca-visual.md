@@ -24,6 +24,12 @@ O rodapé público reúne informações úteis à compra e à identificação da
 
 Fotos reais da fachada e da equipe, horários confirmados, política operacional de trocas/devoluções e identificação sanitária vigente fortalecem a confiança. Não inventar horários, responsáveis, licenças, avaliações ou certificações. Avaliações de compras verificadas já têm espaço na página inicial. Selos externos entram após aprovação, por links e integrações oficiais.
 
+## Indicadores próprios — 08/10/2026
+
+A faixa superior agora destaca HTTPS, CNPJ/loja física e acompanhamento de pedidos em cartões com links para privacidade, contato e conta. São informações da própria loja, sem representação de certificação independente. Mantidos a logo oficial, as 128 bolhas, o filtro, os tempos e a preferência de movimento reduzido. Nenhum script externo ou nova dependência foi incluído.
+
+RA1000, RA Verificada, Ebit/Diamante e suposta certificação Anvisa continuam sem exibição: não há concessão comprovada. A pesquisa pública desta data não localizou URL oficial inequívoca da Wimifarma no RA/Ebit. Uma conta empresarial ativa não comprova perfil publicado ou direito a selo. Dados sanitários reais, responsável técnico/CRF e licenças devem ser fornecidos e conferidos antes da publicação. Conferência operacional de catálogo, pagamento e frete no documento [52](52-confianca-e-conferencia-comercial.md).
+
 ## Validação
 
 Lint, typecheck e build locais passaram; 92 testes de segurança passaram. Auditoria de produção sem vulnerabilidades; auditoria completa mantém cinco alertas high nas ferramentas de desenvolvimento. Revisão independente aprovou os três arquivos de implementação, sem defeitos confirmados. A primeira coleta conjunta excedeu o tempo da ferramenta; build repetido com log próprio retornou código zero. Esta mudança não modifica pagamentos, frete, regras de medicamentos, dados de clientes ou permissões.
