@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { ArrowUpRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { siteConfig } from "@/lib/site";
 import { BrandSignature } from "@/components/site/brand-signature";
+import { HeroProductStage } from "@/components/site/hero-product-stage";
 import styles from "./perfumery-carousel.module.css";
 
 const campaigns = [
@@ -12,25 +12,19 @@ const campaigns = [
     brand: "Dove",
     theme: "dove",
     category: "Seu momento de cuidado",
-    description: "Cuidados para pele e cabelos, do banho à sua rotina de beleza.",
-    image: "/banners/dove-care.webp",
-    alt: "Produtos Dove Original para cuidados pessoais",
+    description: "Transforme o banho em cuidado.",
   },
   {
     brand: "Rexona",
     theme: "rexona",
     category: "Cuidado em movimento",
-    description: "Desodorantes para acompanhar seu dia. Consulte fragrâncias e versões.",
-    image: "/banners/rexona-care.webp",
-    alt: "Desodorante antitranspirante Rexona Bamboo 150 ml",
+    description: "Seu dia pede movimento.",
   },
   {
     brand: "NIVEA",
     theme: "nivea",
     category: "Carinho com a sua pele",
-    description: "Hidratantes e cuidados corporais para o seu ritual de todos os dias.",
-    image: "/banners/nivea-care.webp",
-    alt: "Loção hidratante corporal NIVEA Milk 400 ml",
+    description: "Cuidado para sentir na pele.",
   },
 ] as const;
 
@@ -124,18 +118,8 @@ export function PerfumeryCarousel() {
             gesture.current.moved = false;
           }}
         >
-          <div className={styles.art} key={campaign.image}>
-            <Image
-              alt={campaign.alt}
-              className={styles.image}
-              draggable={false}
-              fill
-              quality={84}
-              sizes={campaign.theme === "dove"
-                ? "(max-width: 639px) 640px, (max-width: 1359px) 100vw, 1280px"
-                : "(max-width: 639px) calc(100vw - 32px), (max-width: 1023px) 50vw, 650px"}
-              src={campaign.image}
-            />
+          <div className={styles.art} key={campaign.theme}>
+            <HeroProductStage variant={campaign.theme} />
           </div>
           <div aria-atomic="true" aria-live={rotating ? "off" : "polite"} className={styles.copy}>
             <div className={styles.signature}><BrandSignature /></div>

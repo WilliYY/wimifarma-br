@@ -292,6 +292,7 @@ docker network connect wimifarma-br-network nginx-proxy-manager-app-1
 
 ## Documentacao
 
+- `docs/59-banners-pessoas-e-produtos.md`: campanhas com pessoas, propagandas por marca, referências oficiais, prompts, assets e validação responsiva.
 - `docs/58-banners-varejo-wimifarma.md`: banners da home e perfumaria com logo oficial, produtos reais, navegação clara e validação responsiva.
 - `docs/57-correcoes-da-auditoria.md`: correções de busca, cashback, estoque e limite de frete; regressões completas na CI e alertas sem patch.
 - `docs/56-auditoria-backend-frontend.md`: revisão de bugs, estrutura, testes, segurança e desempenho, com prioridades e limites da evidência.

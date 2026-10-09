@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-09 — Campanhas com pessoas e produtos por marca
+
+- Atender à correção do lojista: menos texto, pessoas e apresentação dos produtos. Substituir o painel vermelho da revisão 58 por fotografia de campanha e um CTA; no celular, foto antes do texto.
+- Dove, Rexona e NIVEA usam composições próprias e cenas distintas, inspiradas em referências oficiais verificadas. Preservar embalagens reais e logo completa; não anunciar parceria, preço ou alegação não confirmada.
+- A primeira campanha agora abre `/catalogo`; cashback continua nas áreas próprias. Pausa, movimento reduzido, animação original do cabeçalho e 128 bolhas permanecem. Fontes, prompts, arquivos e evidências em [59-banners-pessoas-e-produtos.md](59-banners-pessoas-e-produtos.md).
+
 ## 2026-10-08 — Banners com identidade de varejo Wimifarma
 
 - Reorganizar campanhas da home com painel vermelho, logo oficial completa e embalagens reais maiores. Aplicar a mesma assinatura às campanhas Dove, Rexona e NIVEA, preservando fotos e destinos existentes.

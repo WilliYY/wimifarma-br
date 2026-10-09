@@ -87,41 +87,35 @@ function formatProductPrice(value: string) {
 
 const heroSlides = [
   {
-    background: "#fff7f5",
-    cta: "Compartilhar minha experiência",
-    description:
-      "Conte como foi usar os produtos da sua compra e ajude outras pessoas a escolher com mais confiança.",
-    eyebrow: "Quem compra, compartilha",
-    href: "/minha-conta/avaliacoes",
+    background: "#f2f7fa",
+    cta: "Ver produtos",
+    description: "Higiene, beleza e bem-estar.",
+    eyebrow: "Para o seu dia a dia",
+    href: "/catalogo",
     art: "care",
-    categories: "Opiniões sinceras fazem a diferença.",
-    title: "Sua opinião vale mais.",
+    title: "Seu cuidado, todo dia.",
   },
   {
     background: "#fff7f5",
     cta: "Consultar perfumaria",
-    description:
-      "Perfumes, higiene e beleza para deixar seus momentos de autocuidado ainda melhores.",
+    description: "Perfumaria e cuidados pessoais.",
     eyebrow: "Perfumaria e autocuidado",
     href: `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent(
       "Ola, gostaria de consultar os produtos de perfumaria e autocuidado da Wimifarma.",
     )}`,
     art: "beauty",
-    categories: "Perfumaria · Higiene · Beleza",
-    title: "Seu cuidado merece um momento.",
+    title: "Beleza no seu momento.",
   },
   {
     background: "#f2f7f3",
     cta: "Consultar linha infantil",
-    description:
-      "Fraldas, higiene e cuidados infantis. Encontre o que sua família precisa com a ajuda da nossa equipe.",
+    description: "Fraldas e higiene para os pequenos.",
     eyebrow: "Mãe e bebê",
     href: `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent(
       "Ola, gostaria de consultar os produtos para mae e bebe da Wimifarma.",
     )}`,
     art: "baby",
-    categories: "Fraldas · Higiene · Cuidado infantil",
-    title: "Carinho em cada fase da família.",
+    title: "Carinho em cada cuidado.",
   },
 ] as const;
 
@@ -365,19 +359,6 @@ function HeroCarousel() {
             <p className={campaignStyles.eyebrow}>{slide.eyebrow}</p>
             <h1 className={campaignStyles.title}>{slide.title}</h1>
             <p className={campaignStyles.description}>{slide.description}</p>
-            {activeSlide === 0 ? (
-              <div className={campaignStyles.reward}>
-                <p className={campaignStyles.rewardTitle}>
-                  <strong>1%</strong>
-                  <span>de cashback extra<br />para sua próxima compra</span>
-                </p>
-                <p className={campaignStyles.conditions}>
-                  Sobre uma unidade, na primeira avaliação de cada produto elegível de uma compra concluída e paga. Vale para qualquer nota.
-                </p>
-              </div>
-            ) : (
-              <p className={campaignStyles.categories}>{slide.categories}</p>
-            )}
             <div className={campaignStyles.actions}>
               <a
                 className={campaignStyles.cta}
@@ -388,11 +369,6 @@ function HeroCarousel() {
                 {slide.cta}
                 <ChevronRight aria-hidden="true" className="h-4 w-4" />
               </a>
-              {activeSlide === 0 && (
-                <Link className={campaignStyles.rulesLink} href="/cashback">
-                  Como funciona
-                </Link>
-              )}
             </div>
           </motion.div>
         </div>
@@ -413,7 +389,7 @@ function HeroCarousel() {
               type="button"
             >
               <span aria-hidden="true">0{index + 1}</span>
-              <span>{["Sua opinião", "Autocuidado", "Mãe e bebê"][index]}</span>
+              <span>{["Cuidados", "Beleza", "Mãe e bebê"][index]}</span>
             </button>
           ))}
         </div>

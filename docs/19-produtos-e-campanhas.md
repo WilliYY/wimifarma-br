@@ -1,5 +1,9 @@
 # Produtos e campanhas
 
+## Revisão de 2026-10-09: pessoas e campanhas por marca
+
+As campanhas agora apresentam pessoas, embalagens reais e pouco texto. Dove tem autocuidado, Rexona tem movimento ao ar livre e NIVEA tem cuidado corporal, com cenas próprias e assinatura da Wimifarma. A primeira campanha apresenta o catálogo; o cashback permanece nas áreas próprias. Fotos acima do texto no celular; animações da logo e do rodapé preservadas. A revisão abaixo permanece histórica. Contrato atual em [59-banners-pessoas-e-produtos.md](59-banners-pessoas-e-produtos.md).
+
 ## Revisão de 2026-10-08: composição e identidade da loja
 
 As três campanhas da home agora usam painel vermelho, assinatura oficial completa e produtos reais maiores. Perfumaria recebe a mesma assinatura e seleção pelo nome da marca. Arquivos de imagem, textos, destinos e regras comerciais continuam existentes; pausas e movimento reduzido foram preservados. A composição anterior descrita abaixo é um registro histórico. Decisão e validação atual em [58-banners-varejo-wimifarma.md](58-banners-varejo-wimifarma.md).

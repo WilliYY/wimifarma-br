@@ -1,5 +1,9 @@
 # 13 - Assets institucionais
 
+## Campanhas com pessoas — 2026-10-09
+
+Quatro novos WebP em `public/banners/`: `hero-care-people-v3.webp`, `hero-beauty-people-v3.webp`, `rexona-people-v3.webp` e `nivea-people-v3.webp`. Cenas ilustrativas geradas/editadas com `image_gen`; embalagens reais preservadas e assinatura oficial no HTML. Dimensões, bytes, referências, prompts e invariantes em [59-banners-pessoas-e-produtos.md](59-banners-pessoas-e-produtos.md). Não representar essas pessoas como clientes ou funcionários reais.
+
 ## Logo oficial em todas as campanhas - 2026-09-21
 
 Usar a marca completa da Wimifarma, sem substituir por cruz generica. Original em `public/brand/logo-wimifarma.svg`; versao leve de 18.980 bytes em `logo-wimifarma-compact.webp`. `BrandSignature` aplicado aos banners ativos. Delivery atualizado para `public/banners/delivery-wimifarma.webp`, 118.154 bytes, com sacola/uniforme/bau personalizados. A cena anterior `delivery-em-casa.webp` foi substituida. Regra, arquivos, prompt e verificacoes: `docs/23-identidade-visual-wimifarma.md`.
