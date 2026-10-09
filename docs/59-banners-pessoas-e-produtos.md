@@ -53,8 +53,19 @@ NIVEA — geração: fotografia publicitária horizontal ultra-wide. Mulher bras
 
 Prévia local com os componentes reais, estilos reais, dados vazios e adaptadores de Next Image/Link. Não acessa banco, gateway ou comunicações. A fonte dessa prévia é Arial; o app mantém Barlow. A prévia verifica a composição e não substitui a verificação do Next publicado.
 
-As três campanhas principais e as três campanhas por marca foram conferidas em 320, 768, 1024 e 1440 px sem rolagem horizontal e com uma única figura montada por carrossel. As imagens de Dove e Rexona em 320 px foram reconferidas após o carregamento, todas disponíveis. A revisão independente do código e dos assets não identificou defeitos. A inspeção produtiva será registrada após a publicação.
+As três campanhas principais e as três campanhas por marca foram conferidas em 320, 768, 1024 e 1440 px sem rolagem horizontal e com uma única figura montada por carrossel. As imagens de Dove e Rexona em 320 px foram reconferidas após o carregamento, todas disponíveis. A campanha infantil em 320 px também carregou seus quatro assets. A revisão independente do código e dos assets não identificou defeitos.
 
 Gates de 09/10/2026: `npm.cmd run lint`, `npm.cmd run typecheck` e `npm.cmd run build` aprovados; `npm.cmd run test:all` com 507 testes aprovados; `npm.cmd run test:security` com 234 testes aprovados; `npm.cmd audit --omit=dev --audit-level=high` sem vulnerabilidades. A auditoria completa foi executada e preserva os cinco alertas de desenvolvimento descritos abaixo. Não houve alteração de dependências.
 
 Pendência preexistente: cinco alertas high em ferramentas de desenvolvimento (`@next/eslint-plugin-next`, `eslint-config-next`, `fast-glob`, `micromatch`, `braces`), com correção sugerida incompatível. Não alterar dependências como parte deste trabalho visual. Tratamento em [57-correcoes-da-auditoria.md](57-correcoes-da-auditoria.md).
+
+### Publicação e inspeção real — 09/10/2026
+
+- Código e assets: commit `8d6c9fa`, enviado ao GitHub e aplicado por `git pull --ff-only` no VPS. Build Docker concluído; atualização apenas do serviço `app` com `docker compose up -d --no-deps app`.
+- Imagem ativa: `sha256:9f90195c1afbbb386758f1410f5870f39cacafdf8e84c3652a3a3278a955c013`. Container `running / healthy`, zero reinicializações na conferência. Imagem anterior preservada em `wimifarma-br-app:pre-people-banners-8d6c9fa`.
+- HTTPS: início, `/api/health` e os quatro novos WebP responderam HTTP 200. O log temporário específico do build foi removido após a verificação.
+- Chrome real em produção: as três marcas em 1440 px com uma figura ativa e imagens carregadas; Dove em 390 px sem rolagem horizontal, com embalagens legíveis e rosto sem cortes. A fonte real permanece Barlow. Captura final também feita no viewport padrão de 1920 px.
+- O botão `Ver produtos` foi clicado e abriu `/catalogo`, com o título `Produtos para o seu dia a dia`. Nenhum produto foi adicionado/removido e nenhuma mensagem ou cobrança foi disparada pela verificação.
+- O DOM publicado mantém 128 bolhas no rodapé e o atalho do administrador na sessão autorizada. A logo animada do cabeçalho não foi alterada.
+- Comprovação local em `outputs/banners-marcas-desktop-2026-10-09.png` e `outputs/banners-marcas-mobile-2026-10-09.png`, fora do Git. A prévia local foi encerrada e o viewport temporário foi restaurado.
+- O console do Chrome registrou três mensagens de listener assíncrono encerrado (`A listener indicated an asynchronous response...`), sem stack identificando código da aplicação. Não houve falha de carregamento nas campanhas verificadas; esse registro não comprova ausência de outros erros no site.
