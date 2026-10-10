@@ -10,6 +10,7 @@ import {
   ProductImageError,
 } from "@/features/product-images/service";
 import { getPrisma } from "@/lib/prisma";
+import { readLimitedBody, RequestBodyError } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -22,15 +23,13 @@ export async function POST(request: Request) {
   const guard = await requireAdminApi();
   if (guard.response) return guard.response;
 
-  const contentLength = Number(request.headers.get("content-length") ?? "0");
-  if (contentLength > MAX_PRODUCT_IMAGE_BYTES + 64_000) {
-    return NextResponse.json(
-      { error: "A imagem deve ter no maximo 10 MB." },
-      { status: 413 },
-    );
+  let formData: FormData;
+  try {
+    const bytes = await readLimitedBody(request, { maxBytes: MAX_PRODUCT_IMAGE_BYTES + 64_000, timeoutMs: 30_000 });
+    formData = await new Response(bytes, { headers: { "Content-Type": request.headers.get("content-type") ?? "" } }).formData();
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof RequestBodyError ? error.message : "Envie uma imagem válida." }, { status: error instanceof RequestBodyError ? error.status : 422 });
   }
-
-  const formData = await request.formData().catch(() => null);
   const image = formData?.get("image");
   const shouldRemoveBackground = formData?.get("removeBackground") === "true";
 

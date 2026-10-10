@@ -30,6 +30,16 @@ function binding(payment: OnlinePayment): AsaasExpectedPayment | null {
   return resource ? { amountCents: payment.amountCents, method: payment.method as "pix" | "card", resource,
     externalReference: payment.id, ...(payment.providerOrderId ? { paymentId: payment.providerOrderId } : {}) } : null;
 }
+type CheckoutEvent = { eventType: "CHECKOUT_CANCELED" | "CHECKOUT_EXPIRED"; checkoutSessionId: string };
+const checkoutReviewReasons = new Set(["CHECKOUT_CANCELED", "CHECKOUT_EXPIRED", "CHECKOUT_TIMEOUT"]);
+function checkoutReviewReason(payment: OnlinePayment, event?: CheckoutEvent) {
+  if (event && (payment.method !== "card" || payment.checkoutSessionId !== event.checkoutSessionId)) {
+    throw new PaymentError("O evento não corresponde ao checkout persistido.", 409);
+  }
+  if (event) return event.eventType;
+  return payment.method === "card" && payment.checkoutSessionId && payment.submissionStartedAt
+    && Date.now() - payment.submissionStartedAt.getTime() >= 120 * 60_000 ? "CHECKOUT_TIMEOUT" : null;
+}
 
 /** Commit the winning submission before the financial POST. Uncertain submissions never repeat. */
 export async function startAsaasCommercePayment(orderId: string, input: PaymentInput) {
@@ -111,10 +121,11 @@ export async function asaasCommercePaymentView(orderId: string) {
 }
 
 /** Only canonical authenticated GETs may change financial state. */
-export async function refreshAsaasCommercePayment(orderId: string) {
+export async function refreshAsaasCommercePayment(orderId: string, checkoutEvent?: CheckoutEvent) {
   const prisma = getPrisma();
   const payment = await prisma.onlinePayment.findUniqueOrThrow({ where: { orderId } });
   assertCommercial(payment);
+  checkoutReviewReason(payment, checkoutEvent);
   const expected = binding(payment);
   if (!expected) return asaasCommercePaymentView(orderId);
   const integration = await connectionFor(payment);
@@ -122,7 +133,20 @@ export async function refreshAsaasCommercePayment(orderId: string) {
   const remote = payment.providerOrderId ? await retrieveAsaasPayment(connection, payment.providerOrderId)
     : selectBoundAsaasPayment(await listAsaasPayments(connection, expected.resource), expected);
   if (!remote) {
-    await prisma.onlinePayment.update({ where: { id: payment.id }, data: { lastCheckedAt: new Date() } });
+    await prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT id FROM "Order" WHERE id = ${orderId} FOR UPDATE`;
+      const current = await tx.onlinePayment.findUniqueOrThrow({ where: { orderId } });
+      assertCommercial(current);
+      if (current.accountId !== payment.accountId || current.checkoutSessionId !== payment.checkoutSessionId) {
+        throw new PaymentError("O vínculo do pagamento mudou.", 409);
+      }
+      const reason = checkoutReviewReason(current, checkoutEvent);
+      const review = reason && ["PENDING", "UNKNOWN", "SUBMITTING"].includes(current.status);
+      await tx.onlinePayment.update({ where: { id: current.id }, data: { lastCheckedAt: new Date(),
+        ...(review ? { status: "REVIEW", financialReviewReason: reason, statusDetail: reason, checkoutUrl: null } : {}) } });
+      if (review) await tx.auditLog.create({ data: { action: "ASAAS_CHECKOUT_REVIEW", entity: "Order", entityId: orderId,
+        metadata: { provider: "asaas", environment: "production", reason, from: current.status, to: "REVIEW" } } });
+    });
     return asaasCommercePaymentView(orderId);
   }
   assertAsaasPaymentBinding(remote, expected);
@@ -135,8 +159,13 @@ export async function refreshAsaasCommercePayment(orderId: string) {
     if (!retained || current.accountId !== snapshot.accountId) throw new PaymentError("O vínculo do pagamento mudou.", 409);
     assertAsaasPaymentBinding(remote, retained);
     const canceledFulfillment = current.order.status === "CANCELED" || current.order.paymentStatus === "CANCELED";
-    const reconciled = reconcileGatewayState("asaas", current.status, snapshot.status);
-    const next = canceledFulfillment && ["PAID", "PARTIALLY_REFUNDED"].includes(reconciled ?? "") ? "REVIEW" : reconciled;
+    const reason = checkoutReviewReason(current, checkoutEvent);
+    const recoverableReview = current.status === "REVIEW" && checkoutReviewReasons.has(current.financialReviewReason ?? "");
+    // Only technical checkout uncertainty can be resolved automatically by a bound canonical payment.
+    const reconciled = reconcileGatewayState("asaas", recoverableReview ? "PENDING" : current.status, snapshot.status);
+    const checkoutNeedsReview = reconciled === "PENDING" && Boolean(reason || recoverableReview);
+    const next = (canceledFulfillment && ["PAID", "PARTIALLY_REFUNDED"].includes(reconciled ?? ""))
+      || checkoutNeedsReview ? "REVIEW" : reconciled;
     if (!next) return;
     const terminal = ["PAID", "PARTIALLY_REFUNDED", "REFUNDED", "DISPUTED", "FAILED", "CANCELED"].includes(next);
     const failed = ["FAILED", "CANCELED"].includes(next);
@@ -147,7 +176,10 @@ export async function refreshAsaasCommercePayment(orderId: string) {
     const fundsAvailable = snapshot.fundsAvailable || (next === "PAID" && current.status === "PAID" && current.fundsAvailable);
     await tx.onlinePayment.update({ where: { id: current.id }, data: { providerOrderId: remote.id, status: next,
       statusDetail: snapshot.statusDetail, fundsAvailable, lastCheckedAt: new Date(), stockReserved: terminal ? false : current.stockReserved,
-      ...(next === "REVIEW" ? { financialReviewReason: "Confira o estado financeiro canônico antes de alterar o pedido." } : {}),
+      ...(next === "REVIEW" ? { financialReviewReason: checkoutNeedsReview && !canceledFulfillment
+        ? recoverableReview ? current.financialReviewReason : reason
+        : "Confira o estado financeiro canônico antes de alterar o pedido." }
+        : recoverableReview ? { financialReviewReason: null } : {}),
       ...(terminal || next === "REVIEW" ? { pixCode: null, checkoutUrl: null } : {}) } });
     if (["PAID", "PARTIALLY_REFUNDED"].includes(next) && !canceledFulfillment) await tx.order.update({ where: { id: orderId }, data: { paymentStatus: "PAID" } });
     if (next === "PAID" && current.order.paymentStatus !== "PAID" && !canceledFulfillment) {
@@ -160,7 +192,8 @@ export async function refreshAsaasCommercePayment(orderId: string) {
       await settleOrderCashback(tx, orderId); await settleOrderBenefits(tx, orderId);
     }
     if (changed || snapshot.statusDetail !== current.statusDetail) await tx.auditLog.create({ data: { action: "ASAAS_PAYMENT_RECONCILED",
-      entity: "Order", entityId: orderId, metadata: { provider: "asaas", environment: "production", from: current.status, to: next, fundsAvailable } } });
+      entity: "Order", entityId: orderId, metadata: { provider: "asaas", environment: "production", from: current.status, to: next, fundsAvailable,
+        ...(checkoutNeedsReview ? { reason: recoverableReview ? current.financialReviewReason : reason } : {}) } } });
   });
   return asaasCommercePaymentView(orderId);
 }

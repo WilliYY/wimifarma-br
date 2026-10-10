@@ -3,6 +3,7 @@ import { requireAdminOnlyApi } from "@/features/auth/permissions";
 import { secretCredentialCreateSchema } from "@/features/secrets/schema";
 import { getPrisma } from "@/lib/prisma";
 import { encryptOptionalValue, encryptValue } from "@/lib/secret-vault";
+import { readJsonBody } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -40,11 +41,8 @@ export async function POST(request: Request) {
   const guard = await requireAdminOnlyApi();
   if (guard.response) return guard.response;
 
-  let body: unknown;
-
-  try {
-    body = await request.json();
-  } catch {
+  const body = await readJsonBody(request);
+  if (body === null) {
     return NextResponse.json({ error: "JSON invalido." }, { status: 400 });
   }
 
@@ -57,34 +55,37 @@ export async function POST(request: Request) {
   const secret = encryptValue(parsed.data.secret);
   const notes = encryptOptionalValue(parsed.data.notes);
   const prisma = getPrisma();
-  const credential = await prisma.secretCredential.create({
-    data: {
-      createdById: guard.session?.user.id,
-      identifier: parsed.data.identifier?.trim() || null,
-      notesCiphertext: notes?.ciphertext,
-      notesIv: notes?.iv,
-      notesTag: notes?.tag,
-      secretCiphertext: secret.ciphertext,
-      secretIv: secret.iv,
-      secretTag: secret.tag,
-      service: parsed.data.service?.trim() || null,
-      title: parsed.data.title,
-      updatedById: guard.session?.user.id,
-    },
-    select: credentialSelect,
-  });
-
-  await prisma.auditLog.create({
-    data: {
-      action: "SECRET_CREDENTIAL_CREATED",
-      entity: "SecretCredential",
-      entityId: credential.id,
-      metadata: {
-        service: credential.service,
-        title: credential.title,
+  const credential = await prisma.$transaction(async (tx) => {
+    const created = await tx.secretCredential.create({
+      data: {
+        createdById: guard.session?.user.id,
+        identifier: parsed.data.identifier?.trim() || null,
+        notesCiphertext: notes?.ciphertext,
+        notesIv: notes?.iv,
+        notesTag: notes?.tag,
+        secretCiphertext: secret.ciphertext,
+        secretIv: secret.iv,
+        secretTag: secret.tag,
+        service: parsed.data.service?.trim() || null,
+        title: parsed.data.title,
+        updatedById: guard.session?.user.id,
       },
-      userId: persistedUserId(guard.session?.user.id),
-    },
+      select: credentialSelect,
+    });
+
+    await tx.auditLog.create({
+      data: {
+        action: "SECRET_CREDENTIAL_CREATED",
+        entity: "SecretCredential",
+        entityId: created.id,
+        metadata: {
+          service: created.service,
+          title: created.title,
+        },
+        userId: persistedUserId(guard.session?.user.id),
+      },
+    });
+    return created;
   });
 
   return NextResponse.json({ data: credential }, { status: 201 });

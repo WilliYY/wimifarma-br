@@ -26,10 +26,11 @@ export async function POST(request: NextRequest) {
   const secret = process.env.AUTH_SECRET;
   if (!secret) return NextResponse.json({ message: "Registro de visitas indisponivel." }, { status: 503 });
 
-  const body = await readJsonBody(request);
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
+  const payload = await readJsonBody(request);
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     return NextResponse.json({ message: "Visita invalida." }, { status: 400 });
   }
+  const body = payload as Record<string, unknown>;
   const cookieId = readVisitorId(request.cookies.get(VISITOR_COOKIE)?.value, secret);
   if (!cookieId && body.sessionId != null && !validVisitorId(body.sessionId)) {
     return NextResponse.json(

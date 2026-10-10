@@ -14,6 +14,7 @@ import {
 } from "@/features/miauby/assistant";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
+import { acquireMiaubyInference, limitMiaubyRequest } from "@/features/miauby/request-limits";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -94,6 +95,13 @@ function json(data: Record<string, unknown>, status = 200) {
 }
 
 export async function POST(request: Request) {
+  const origin = request.headers.get("origin");
+  try {
+    const expected = new URL(process.env.AUTH_URL || request.url).origin;
+    if (request.headers.get("sec-fetch-site") === "cross-site" || (origin && new URL(origin).origin !== expected)) return json({ error: "Origem da solicitação não autorizada." }, 403);
+  } catch { return json({ error: "Origem da solicitação não autorizada." }, 403); }
+  const retryAfter = limitMiaubyRequest(request);
+  if (retryAfter) return NextResponse.json({ error: "Muitas perguntas. Aguarde um pouco e tente novamente." }, { status: 429, headers: { "Cache-Control": "no-store", "Retry-After": String(retryAfter) } });
   const parsed = miaubyRequestSchema.safeParse(await readJsonBody(request));
 
   if (!parsed.success) {
@@ -122,6 +130,9 @@ export async function POST(request: Request) {
     });
   }
 
+  const release = acquireMiaubyInference();
+  if (!release) return json({ message: miaubyFallbackReply(message, replyProducts), products: replyProducts, source: "fallback" });
+  let success = false;
   try {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
@@ -164,6 +175,7 @@ export async function POST(request: Request) {
         ?.map((part) => part.text ?? "")
         .join(" ") ?? "",
     );
+    success = true;
 
     return json({
       message: reply || miaubyFallbackReply(message, replyProducts),
@@ -178,5 +190,5 @@ export async function POST(request: Request) {
       products: replyProducts,
       source: "fallback",
     });
-  }
+  } finally { release(success); }
 }

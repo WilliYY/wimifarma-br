@@ -18,35 +18,40 @@ export async function DELETE(
 
   const { id } = await context.params;
   const prisma = getPrisma();
-  const credential = await prisma.secretCredential.findUnique({
-    select: {
-      id: true,
-      service: true,
-      title: true,
-    },
-    where: { id },
+  const deleted = await prisma.$transaction(async (tx) => {
+    const credential = await tx.secretCredential.findUnique({
+      select: {
+        id: true,
+        service: true,
+        title: true,
+      },
+      where: { id },
+    });
+
+    if (!credential) return false;
+
+    await tx.secretCredential.delete({ where: { id } });
+    await tx.auditLog.create({
+      data: {
+        action: "SECRET_CREDENTIAL_DELETED",
+        entity: "SecretCredential",
+        entityId: credential.id,
+        metadata: {
+          service: credential.service,
+          title: credential.title,
+        },
+        userId: persistedUserId(guard.session?.user.id),
+      },
+    });
+    return true;
   });
 
-  if (!credential) {
+  if (!deleted) {
     return NextResponse.json(
       { error: "Credencial nao encontrada." },
       { status: 404 },
     );
   }
-
-  await prisma.secretCredential.delete({ where: { id } });
-  await prisma.auditLog.create({
-    data: {
-      action: "SECRET_CREDENTIAL_DELETED",
-      entity: "SecretCredential",
-      entityId: credential.id,
-      metadata: {
-        service: credential.service,
-        title: credential.title,
-      },
-      userId: persistedUserId(guard.session?.user.id),
-    },
-  });
 
   return NextResponse.json({ ok: true });
 }

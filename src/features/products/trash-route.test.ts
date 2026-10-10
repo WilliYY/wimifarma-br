@@ -13,7 +13,7 @@ async function harness(path: string, role: string | null, count = 1, fail = fals
   const tx = { $queryRaw: async () => [], product: { updateMany: async () => { reads++; if (fail) throw new Error("private database details"); return { count }; } }, offer: { updateMany: async () => ({ count: 0 }) }, auditLog: { create: async () => ({}) } };
   type Handler = (request: Request, context: { params: Promise<{ id: string }> }) => Promise<Response>;
   const loaded = { exports: {} as Record<string, Handler> };
-  vm.runInNewContext(result.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, console, Date, fixture: {
+  vm.runInNewContext(result.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, console, Date, TextDecoder, Uint8Array, setTimeout, clearTimeout, fixture: {
     auth: async () => role ? { user: { id: "fixture-admin", role } } : null,
     prisma: { $transaction: async (callback: (db: typeof tx) => unknown) => callback(tx), product: { findMany: async () => { reads++; if (fail) throw new Error("private database details"); return []; } } },
   } });

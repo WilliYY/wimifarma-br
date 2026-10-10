@@ -13,7 +13,7 @@ const bundle = build({ entryPoints: ["src/features/payments/asaas-webhook.ts"], 
     builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("prisma")
       ? "export const getPrisma=()=>globalThis.fixture.prisma;"
       : args.path.endsWith("asaas-integration") ? "export const readAsaasIntegration=async()=>globalThis.fixture.production;"
-        : args.path.endsWith("asaas-commerce-service") ? "export const refreshAsaasCommercePayment=id=>globalThis.fixture.refresh(id);"
+        : args.path.endsWith("asaas-commerce-service") ? "export const refreshAsaasCommercePayment=(id,event)=>globalThis.fixture.refresh(id,event);"
       : args.path.endsWith("asaas-service") ? "export const refreshAsaasSandboxPayment=id=>globalThis.fixture.refresh(id);"
         : "export const ASAAS_SANDBOX_INTEGRATION_ID='asaas-sandbox'; export const readAsaasSandboxIntegration=async()=>globalThis.fixture.integration;" }));
   } }] });
@@ -32,14 +32,14 @@ function matches(row: Data, where: Data): boolean {
 async function harness() {
   const rows: Data[] = [];
   const payments: Data[] = [];
-  const calls = { fetch: [] as string[], refresh: [] as string[], audit: [] as Data[] };
+  const calls = { fetch: [] as string[], refresh: [] as string[], checkoutEvents: [] as Data[], audit: [] as Data[] };
   const fixture = { production: null as Data | null, integration: { environment: "test", accountId: wallet,
     connection: { environment: "test", accessToken: "$aact_hmlg_synthetic-key" },
     secrets: { webhookSecret: secret, webhookUrl: `https://example.invalid/webhook?binding=${binding}` } },
   failPersist: false, failFetch: false, canonical: { id: "pay_synthetic", billingType: "PIX", status: "RECEIVED", value: 10, netValue: 9,
     pixQrCodeId: "synthetic-qr" } as Data,
   refreshStatus: "PAID",
-  refresh: async (id: string) => { calls.refresh.push(id); return { status: fixture.refreshStatus }; },
+  refresh: async (id: string, event?: Data) => { calls.refresh.push(id); if (event) calls.checkoutEvents.push(event); return { status: fixture.refreshStatus }; },
   prisma: { $transaction: async (callback: (tx: Data) => Promise<Data>): Promise<Data> => callback(fixture.prisma),
   auditLog: { create: async ({ data }: Data) => { calls.audit.push(data); return data; } },
   paymentWebhookEvent: {
@@ -258,4 +258,21 @@ test("production canonical late payment review remains visible in inbox", async 
   const h = await harness(); h.fixture.refreshStatus = "REVIEW";
   await h.receive(); h.local(); await h.api.processAsaasWebhookInbox();
   assert.equal(h.rows[0].status, "REVIEW");
+});
+
+test("production canceled and expired checkouts retry missing bindings and request canonical recovery for the exact session", async () => {
+  for (const eventType of ["CHECKOUT_CANCELED", "CHECKOUT_EXPIRED"]) {
+    const h = await harness(); h.fixture.production = { ...h.fixture.integration, environment: "production",
+      connection: { environment: "production", accessToken: "$aact_prod_synthetic" } };
+    await h.api.receiveAsaasProductionWebhook(new Request(`https://example.invalid/webhook?binding=${binding}`, {
+      method: "POST", headers: { "content-type": "application/json", "asaas-access-token": secret },
+      body: JSON.stringify({ id: "evt_checkout", event: eventType, checkout: { id: binding } }) }));
+    await h.api.processAsaasWebhookInbox(10, "production");
+    assert.equal(h.rows[0].status, "PENDING"); assert.equal(h.calls.refresh.length, 0);
+    h.local({ environment: "production", integrationId: "asaas", method: "card", checkoutSessionId: binding });
+    h.fixture.refreshStatus = "REVIEW"; h.age(); await h.api.processAsaasWebhookInbox(10, "production");
+    assert.deepEqual(h.calls.refresh, ["synthetic-order"]);
+    assert.deepEqual(JSON.parse(JSON.stringify(h.calls.checkoutEvents)), [{ eventType, checkoutSessionId: binding }]);
+    assert.equal(h.rows[0].status, "REVIEW");
+  }
 });

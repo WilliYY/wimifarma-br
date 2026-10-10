@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-10 — Permissões, auditoria, requisições e revisão financeira
+
+- Revalidar o criador ADMIN sob o bloqueio usado pela revogação e tornar mutação/auditoria de usuário e cofre atômicas. Limitar corpos HTTP enquanto são recebidos, incluindo login e multipart inteiro.
+- Acrescentar limites locais de consumo/concorrência da Miauby sem remover o rate limit já existente no middleware. Registrar expressamente que cotas por processo não substituem orçamento do provedor.
+- Recuperar somente revisões técnicas Asaas por resposta canônica vinculada; manter revisão de estorno/financeira e reservas diante de respostas incertas. Não repetir cobrança para resolver consulta vazia.
+- Testes sintéticos e revisão independente obrigatórios; nenhuma migration ou nova dependência. Titular adiou restrição dos painéis e atualização do proxy compartilhado. Evidências em [60-correcao-e-revisao-de-seguranca.md](60-correcao-e-revisao-de-seguranca.md).
+
 ## 2026-10-09 — Campanhas com pessoas e produtos por marca
 
 - Atender à correção do lojista: menos texto, pessoas e apresentação dos produtos. Substituir o painel vermelho da revisão 58 por fotografia de campanha e um CTA; no celular, foto antes do texto.

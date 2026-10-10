@@ -1,6 +1,7 @@
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { adminUserCreateSchema, adminUserRoles } from "@/features/admin-users/schema";
+import { AccessError, lockUserAccess } from "@/features/admin-users/directory";
 import { requireAdminOnlyApi } from "@/features/auth/permissions";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
@@ -73,48 +74,52 @@ export async function POST(request: Request) {
   }
 
   const prisma = getPrisma();
-  const customerWithEmail = await prisma.customer.findUnique({
-    select: { id: true },
-    where: { email: parsed.data.email },
-  });
-
-  if (customerWithEmail) {
-    return NextResponse.json(
-      {
-        error:
-          "Esse email ja pertence a uma conta de cliente. Use um email administrativo diferente.",
-      },
-      { status: 409 },
-    );
-  }
-
   try {
     const passwordHash = await hash(parsed.data.password, 12);
-    const user = await prisma.user.create({
-      data: {
-        email: parsed.data.email,
-        name: parsed.data.name,
-        passwordHash,
-        role: parsed.data.role,
-      },
-      select: userSelect,
-    });
+    const user = await prisma.$transaction(async (tx) => {
+      await lockUserAccess(tx, guard.session!.user.id);
+      const customerWithEmail = await tx.customer.findUnique({
+        select: { id: true },
+        where: { email: parsed.data.email },
+      });
 
-    await prisma.auditLog.create({
-      data: {
-        action: "ADMIN_USER_CREATED",
-        entity: "User",
-        entityId: user.id,
-        metadata: {
-          email: user.email,
-          role: user.role,
+      if (customerWithEmail) {
+        throw new AccessError(
+          "Esse email ja pertence a uma conta de cliente. Use um email administrativo diferente.",
+          409,
+        );
+      }
+
+      const created = await tx.user.create({
+        data: {
+          email: parsed.data.email,
+          name: parsed.data.name,
+          passwordHash,
+          role: parsed.data.role,
         },
-        userId: persistedUserId(guard.session?.user.id),
-      },
+        select: userSelect,
+      });
+
+      await tx.auditLog.create({
+        data: {
+          action: "ADMIN_USER_CREATED",
+          entity: "User",
+          entityId: created.id,
+          metadata: {
+            email: created.email,
+            role: created.role,
+          },
+          userId: persistedUserId(guard.session?.user.id),
+        },
+      });
+      return created;
     });
 
     return NextResponse.json({ data: user }, { status: 201 });
   } catch (error) {
+    if (error instanceof AccessError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     if (isUniqueConstraintError(error)) {
       return NextResponse.json(
         { error: "Ja existe um acesso administrativo com esse email." },

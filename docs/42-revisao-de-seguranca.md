@@ -1,5 +1,12 @@
 # 42 - Revisão de segurança
 
+## Correções e revisão ampliada — 10/10/2026
+
+- Criação ADMIN revalida acesso sob bloqueio após o hash; criação de usuário e criação/exclusão no cofre são atômicas com auditoria.
+- JSON e POST Auth.js limitados durante a leitura; multipart limita o corpo inteiro antes do parsing. Miauby ganha cotas de inferência, concorrência e fallback no handler. O middleware já tinha rate limit/origem: a alegação anterior de ausência de limite foi corrigida.
+- Asaas distingue revisão técnica recuperável de revisão financeira, preservando estoque e impedindo reenvio de cobrança. Estorno em revisão não é promovido por confirmação atrasada.
+- Revisões independentes aprovadas; produção npm sem alertas, cinco high de desenvolvimento continuam visíveis. Infraestrutura compartilhada permanece sem alterações por decisão do titular. Contratos, validação e limites em [60-correcao-e-revisao-de-seguranca.md](60-correcao-e-revisao-de-seguranca.md).
+
 ## Correções da auditoria — 08/10/2026
 
 - Limitar corpo JSON de frete durante leitura por bytes; cancelar excesso preservando erro 413. Devoluções de estoque seguem a ordem das reservas, preservando confirmação financeira e idempotência. Novas regressões de abuso/concorrência na seleção de segurança.

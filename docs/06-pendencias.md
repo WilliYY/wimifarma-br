@@ -1,5 +1,10 @@
 # 06 - Pendencias
 
+## Segurança — 10/10/2026
+
+- Correções de permissões/auditoria, limites de leitura/IA e recuperação técnica Asaas no documento 60. O titular adiou a restrição dos painéis e a atualização do proxy compartilhado; manter como pendências, sem alterar outros projetos.
+- Ainda necessários MFA próprio, orçamento/cota externa da IA, limites no proxy e revisão de OS/backups. Cotas em memória reiniciam com o processo. Cinco high da cadeia de desenvolvimento continuam sem remediação compatível; auditoria de produção sem alertas nesta revisão.
+
 ## Estado mais recente — frete, pagamentos e Google Play — 08/10/2026
 
 - Asaas produtivo habilitado para cartão à vista; novos pedidos comparam tarifas válidas com Mercado Pago. Parcelamento e Pix continuam Mercado Pago. Recebimento Pix Asaas ainda precisa de homologação. Este estado substitui a pendência de roteamento público citada nos registros anteriores; contratos nos documentos 53 e 54.

@@ -13,8 +13,12 @@ export async function reconcilePendingPayments() {
     await processAsaasWebhookInbox().catch(() => console.warn("ASAAS_WEBHOOK_RECOVERY_PENDING"));
     await processAsaasWebhookInbox(10, "production").catch(() => console.warn("ASAAS_PRODUCTION_WEBHOOK_RECOVERY_PENDING"));
     const payments = await getPrisma().onlinePayment.findMany({
-      where: { status: { in: ["NEW", "SUBMITTING", "UNKNOWN", "PENDING"] }, updatedAt: { lt: new Date(Date.now() - 60_000) },
-        OR: [{ lastCheckedAt: null }, { lastCheckedAt: { lt: new Date(Date.now() - 5 * 60_000) } }] },
+      where: { updatedAt: { lt: new Date(Date.now() - 60_000) }, AND: [
+        { OR: [{ status: { in: ["NEW", "SUBMITTING", "UNKNOWN", "PENDING"] } },
+          { status: "REVIEW", provider: "asaas", integrationId: "asaas", environment: "production",
+            financialReviewReason: { in: ["CHECKOUT_CANCELED", "CHECKOUT_EXPIRED", "CHECKOUT_TIMEOUT"] } }] },
+        { OR: [{ lastCheckedAt: null }, { lastCheckedAt: { lt: new Date(Date.now() - 5 * 60_000) } }] },
+      ] },
       take: 20, orderBy: { updatedAt: "asc" }, select: { id: true, orderId: true, provider: true, integrationId: true, environment: true, status: true, createdAt: true },
     });
     for (const payment of payments) {

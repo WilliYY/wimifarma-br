@@ -41,7 +41,7 @@ test("freight admin persists partial drafts and retains authorization, version c
     };
     const fixture = { guard: scenario === "unauthorized" ? { response: new Response(null, { status: 401 }) } : { session: { user: { id: "synthetic-admin" } } }, prisma: { $transaction: async (callback: (value: typeof tx) => Promise<void>) => { transactions++; await callback(tx); } } };
     const loaded = { exports: {} as { PUT: (request: Request, context: unknown) => Promise<Response> } };
-    vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, TextDecoder, console, process: { env: { AUTH_URL: "https://example.com" } }, Buffer, fixture });
+    vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, TextDecoder, Uint8Array, setTimeout, clearTimeout, console, process: { env: { AUTH_URL: "https://example.com" } }, Buffer, fixture });
     const profile = scenario === "approved" || scenario === "prescriptionApproval" ? { ...draft, enabled: true, transportReviewed: true, weightGrams: 500 } : scenario === "unreviewed" ? { ...draft, enabled: true } : scenario === "incomplete" ? { ...draft, enabled: true, transportReviewed: true } : draft;
     const response = await loaded.exports.PUT(new Request("https://example.com/api/admin/fretes/produtos/synthetic-product", { method: "PUT", headers: { "Content-Type": "application/json", origin: "https://example.com" }, body: JSON.stringify({ profile, updatedAt }) }), { params: Promise.resolve({ id: "synthetic-product" }) });
     assert.equal(response.status, scenario === "unauthorized" ? 401 : scenario === "stale" ? 409 : scenario === "unreviewed" || scenario === "incomplete" || scenario === "prescriptionApproval" ? 422 : 200, scenario);
@@ -66,7 +66,7 @@ test("catalog endpoints reject non-admin shipping writes and self-approved draft
     for (const role of [null, "CUSTOMER", "STAFF", "MANAGER", "ADMIN"]) {
       type Handler = (request: Request, context: unknown) => Promise<Response>;
       const loaded = { exports: {} as Record<string, Handler> };
-      vm.runInNewContext(result.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, console, process, Buffer, fixture: { auth: async () => role ? { user: { id: "synthetic-user", role } } : null } });
+      vm.runInNewContext(result.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, TextDecoder, Uint8Array, setTimeout, clearTimeout, console, process, Buffer, fixture: { auth: async () => role ? { user: { id: "synthetic-user", role } } : null } });
       const shippingProfile = role === "ADMIN" ? { ...profile, enabled: true, transportReviewed: true } : profile;
       const response = await loaded.exports[method](new Request("https://example.com/api/produtos", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "Produto sintético", price: 10, shippingProfile, expectedUpdatedAt: "2026-10-01T00:00:00.000Z" }) }), { params: Promise.resolve({ id: "synthetic-product" }) });
       assert.equal(response.status, role === "ADMIN" ? 422 : role === "MANAGER" ? 403 : 401, `${method} ${role}`);

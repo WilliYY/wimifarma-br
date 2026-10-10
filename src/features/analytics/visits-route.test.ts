@@ -23,7 +23,7 @@ async function harness(secret: string | null = "synthetic-visitor-secret") {
     if (existing) { existing.views += update.views.increment; existing.lastPath = update.lastPath; }
     else visits.set(where.sessionId, { ...create, views: 1 });
   } } };
-  vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, Buffer, Date, console, process: { env: { AUTH_URL: "https://example.com", AUTH_SECRET: secret } }, fixture: { db } });
+  vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, Buffer, Date, console, TextDecoder, Uint8Array, setTimeout, clearTimeout, process: { env: { AUTH_URL: "https://example.com", AUTH_SECRET: secret } }, fixture: { db } });
   const post = (sessionId: unknown = id, token?: string, path = "/", origin = "https://example.com") => {
     const headers = new Headers({ "Content-Type": "application/json", "Origin": origin, "x-real-ip": "192.0.2.1" });
     if (token) headers.set("Cookie", `${cookieName}=${token}`);

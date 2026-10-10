@@ -30,7 +30,8 @@ async function harness() {
     pixExpiresAt: null, fundsAvailable: false, lastCheckedAt: null };
   const effects = { cashback: 0, benefits: 0, messages: 0 };
   const calls = { posts: 0, gets: 0, locks: 0 };
-  const controls = { uncertain: false, badAmount: false, deleted: false, status: "RECEIVED", refunds: [] as Data[] };
+  const audits: Data[] = [];
+  const controls = { uncertain: false, badAmount: false, deleted: false, empty: false, status: "RECEIVED", refunds: [] as Data[] };
   const prisma = {
     $queryRaw: async () => { calls.locks++; }, paymentIntegration: { findUnique: async () => connection },
     order: { findUniqueOrThrow: async () => ({ ...order, onlinePayment: { ...payment } }),
@@ -43,13 +44,13 @@ async function harness() {
       updateMany: async ({ where, data }: Data) => {
         if (where.status && payment.status !== where.status) return { count: 0 };
         Object.assign(payment, data); return { count: 1 };
-      } }, auditLog: { create: async () => ({}) },
+      } }, auditLog: { create: async ({ data }: Data) => { audits.push(data); return data; } },
   };
   let queue = Promise.resolve();
   const fixture = { connection, effects, prisma: { ...prisma, $transaction: (callback: (tx: Data) => Promise<unknown>) => {
     const result = queue.then(() => callback(prisma)); queue = result.then(() => undefined, () => undefined); return result;
   } } };
-  const loaded = { exports: {} as { startAsaasCommercePayment(id: string, input: Data): Promise<Data>; refreshAsaasCommercePayment(id: string): Promise<Data> } };
+  const loaded = { exports: {} as { startAsaasCommercePayment(id: string, input: Data): Promise<Data>; refreshAsaasCommercePayment(id: string, checkoutEvent?: Data): Promise<Data> } };
   vm.runInNewContext((await bundle).outputFiles[0].text, { module: loaded, exports: loaded.exports,
     require: createRequire(`${process.cwd()}/package.json`), fixture, Buffer, URL, AbortSignal, Date,
     process: { env: { AUTH_URL: "https://example.invalid" } }, fetch: async (_url: string, options: Data) => {
@@ -62,10 +63,99 @@ async function harness() {
       calls.gets++;
       const remote = { id: "pay_synthetic", billingType: payment.method === "card" ? "CREDIT_CARD" : "PIX", status: controls.status,
         value: controls.badAmount ? 6 : 5, netValue: 4.5, deleted: controls.deleted, pixQrCodeId: "synthetic-qr", checkoutSession: "123e4567-e89b-42d3-a456-426614174001", refunds: controls.refunds };
-      return Response.json(_url.includes("/payments?") ? { data: [remote], hasMore: false } : remote);
+      return Response.json(_url.includes("/payments?") ? { data: controls.empty ? [] : [remote], hasMore: false } : remote);
     } });
-  return { ...loaded.exports, product, payment, order, connection, effects, calls, controls, input: { method: "pix", email: "synthetic@example.invalid" } };
+  return { ...loaded.exports, product, payment, order, connection, effects, calls, controls, audits, input: { method: "pix", email: "synthetic@example.invalid" } };
 }
+
+test("canceled or expired checkout with no canonical payment becomes visible review and retains its reservation", async () => {
+  for (const eventType of ["CHECKOUT_CANCELED", "CHECKOUT_EXPIRED"]) {
+    const f = await harness(); await f.startAsaasCommercePayment(f.order.id, { ...f.input, method: "hosted-card" });
+    f.controls.empty = true;
+    const event = { eventType, checkoutSessionId: f.payment.checkoutSessionId };
+    const view = await f.refreshAsaasCommercePayment(f.order.id, event);
+    await f.refreshAsaasCommercePayment(f.order.id, event);
+    assert.equal(view.status, "REVIEW"); assert.equal(view.checkoutUrl, null);
+    assert.equal(f.payment.financialReviewReason, eventType); assert.equal(f.order.paymentStatus, "PENDING");
+    assert.equal(f.payment.stockReserved, true); assert.equal(f.product.stock, 1);
+    assert.equal(f.audits.filter(a => a.action === "ASAAS_CHECKOUT_REVIEW").length, 1);
+    await f.startAsaasCommercePayment(f.order.id, { ...f.input, method: "hosted-card" });
+    assert.equal(f.calls.posts, 1); assert.equal(f.calls.gets, 2); assert.equal(f.effects.messages, 0);
+    f.controls.empty = false; f.controls.status = "CONFIRMED";
+    await f.refreshAsaasCommercePayment(f.order.id); await f.refreshAsaasCommercePayment(f.order.id);
+    assert.equal(f.payment.status, "PAID"); assert.equal(f.payment.financialReviewReason, null);
+    assert.equal(f.effects.messages, 1); assert.equal(f.product.stock, 1);
+  }
+});
+
+test("checkout timeout with empty canonical list requires review without releasing stock", async () => {
+  const f = await harness(); await f.startAsaasCommercePayment(f.order.id, { ...f.input, method: "hosted-card" });
+  f.controls.empty = true;
+  await f.refreshAsaasCommercePayment(f.order.id); assert.equal(f.payment.status, "PENDING");
+  f.payment.submissionStartedAt = new Date(Date.now() - 3 * 60 * 60_000);
+  const view = await f.refreshAsaasCommercePayment(f.order.id);
+  assert.equal(view.status, "REVIEW"); assert.equal(view.checkoutUrl, null);
+  assert.equal(f.payment.financialReviewReason, "CHECKOUT_TIMEOUT");
+  assert.equal(f.payment.stockReserved, true); assert.equal(f.product.stock, 1); assert.equal(f.order.status, "PENDING");
+});
+
+test("checkout review retains stock for canonical pending and releases it once only after canonical cancellation", async () => {
+  const f = await harness(); await f.startAsaasCommercePayment(f.order.id, { ...f.input, method: "hosted-card" });
+  f.controls.status = "PENDING";
+  await f.refreshAsaasCommercePayment(f.order.id, { eventType: "CHECKOUT_CANCELED", checkoutSessionId: f.payment.checkoutSessionId });
+  assert.equal(f.payment.status, "REVIEW"); assert.equal(f.payment.financialReviewReason, "CHECKOUT_CANCELED");
+  assert.equal(f.product.stock, 1); assert.equal(f.payment.stockReserved, true);
+  await f.refreshAsaasCommercePayment(f.order.id);
+  assert.equal(f.payment.status, "REVIEW"); assert.equal(f.product.stock, 1);
+  f.controls.deleted = true;
+  await f.refreshAsaasCommercePayment(f.order.id); await f.refreshAsaasCommercePayment(f.order.id);
+  assert.equal(f.payment.status, "CANCELED"); assert.equal(f.order.status, "CANCELED");
+  assert.equal(f.product.stock, 2); assert.equal(f.payment.stockReserved, false); assert.equal(f.calls.posts, 1);
+  f.controls.deleted = false; f.controls.status = "RECEIVED";
+  await f.refreshAsaasCommercePayment(f.order.id);
+  assert.equal(f.payment.status, "REVIEW"); assert.equal(f.effects.messages, 0); assert.equal(f.order.paymentStatus, "CANCELED");
+});
+
+test("checkout event cannot affect another session or override canonical paid state or general review", async () => {
+  const f = await harness(); await f.startAsaasCommercePayment(f.order.id, { ...f.input, method: "hosted-card" });
+  await assert.rejects(f.refreshAsaasCommercePayment(f.order.id, { eventType: "CHECKOUT_CANCELED", checkoutSessionId: "another-session" }));
+  assert.equal(f.payment.status, "PENDING");
+  await f.refreshAsaasCommercePayment(f.order.id, { eventType: "CHECKOUT_CANCELED", checkoutSessionId: f.payment.checkoutSessionId });
+  assert.equal(f.payment.status, "PAID");
+  f.payment.status = "REVIEW"; f.payment.financialReviewReason = "OTHER_REVIEW";
+  await f.refreshAsaasCommercePayment(f.order.id);
+  assert.equal(f.payment.status, "REVIEW");
+});
+
+test("canonical financial review cannot inherit checkout timeout or cancellation recovery privileges", async () => {
+  for (const initial of ["PAID_TIMEOUT", "CHECKOUT_CANCELED", "CHECKOUT_EXPIRED", "CHECKOUT_TIMEOUT"]) {
+    const f = await harness(); await f.startAsaasCommercePayment(f.order.id, { ...f.input, method: "hosted-card" });
+    if (initial === "PAID_TIMEOUT") {
+      f.payment.submissionStartedAt = new Date(Date.now() - 3 * 60 * 60_000);
+      f.controls.status = "CONFIRMED"; await f.refreshAsaasCommercePayment(f.order.id);
+      assert.equal(f.payment.status, "PAID");
+    } else {
+      f.controls.empty = true;
+      if (initial === "CHECKOUT_TIMEOUT") f.payment.submissionStartedAt = new Date(Date.now() - 3 * 60 * 60_000);
+      await f.refreshAsaasCommercePayment(f.order.id, initial === "CHECKOUT_TIMEOUT" ? undefined : {
+        eventType: initial, checkoutSessionId: f.payment.checkoutSessionId });
+      assert.equal(f.payment.status, "REVIEW"); assert.equal(f.payment.financialReviewReason, initial);
+      f.controls.empty = false;
+    }
+    const reserved = f.payment.stockReserved;
+    const effects = { ...f.effects };
+    f.controls.status = "REFUND_IN_PROGRESS";
+    await f.refreshAsaasCommercePayment(f.order.id);
+    assert.equal(f.payment.status, "REVIEW");
+    assert.equal(f.payment.financialReviewReason, "Confira o estado financeiro canônico antes de alterar o pedido.", initial);
+    f.controls.status = "CONFIRMED";
+    await f.refreshAsaasCommercePayment(f.order.id); await f.refreshAsaasCommercePayment(f.order.id);
+    assert.equal(f.payment.status, "REVIEW", initial);
+    assert.equal(f.payment.statusDetail, "REFUND_IN_PROGRESS");
+    assert.equal(f.payment.stockReserved, reserved); assert.equal(f.product.stock, 1);
+    assert.deepEqual(f.effects, effects); assert.equal(f.calls.posts, 1);
+  }
+});
 
 test("concurrent starts reserve stock and create only one Asaas resource", async () => {
   const f = await harness(); await Promise.all([f.startAsaasCommercePayment(f.order.id, f.input), f.startAsaasCommercePayment(f.order.id, f.input)]);

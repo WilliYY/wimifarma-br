@@ -102,6 +102,7 @@ const currency = new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "curre
 const dateTime = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
 const groupLabels: Record<AdminOrderGroup, string> = { NEW: "Pedidos feitos", ACTIVE: "Em andamento", COMPLETED: "Concluídos", CANCELED: "Cancelados / estornados" };
 const onlineStatusLabels: Record<string, string> = {
+  REVIEW: "Conferência financeira necessária",
   NEW: "Aguardando pagamento", SUBMITTING: "Enviando pagamento", UNKNOWN: "Confirmação pendente",
   PENDING: "Aguardando pagamento", PAID: "Pagamento aprovado", FAILED: "Pagamento recusado",
   CANCELED: "Pagamento cancelado", REFUNDED: "Pagamento estornado", PARTIALLY_REFUNDED: "Reembolso parcial", DISPUTED: "Pagamento contestado",
@@ -193,6 +194,7 @@ function OrderCard({ order, onUpdate, updating }: { order: AdminOrderRecord; onU
     {online?.environment === "test" && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 sm:mx-7">HOMOLOGAÇÃO — não separar nem entregar</p>}
     {online && ["UNKNOWN", "SUBMITTING"].includes(online.status) && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:mx-7">Confirmação pendente. Não cobre novamente nem libere o estoque sem conferir a tentativa no Mercado Pago.</p>}
     {online?.status === "PARTIALLY_REFUNDED" && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:mx-7">Reembolso parcial: conferir valores e benefícios antes de continuar o atendimento.</p>}
+    {online?.status === "REVIEW" && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:mx-7">Conferência financeira necessária. Consulte a tentativa no gateway antes de continuar. Não cobre novamente nem libere o estoque enquanto a situação estiver incerta.</p>}
     {(order.cashbackRedeemedCents ?? 0) > 0 ? <p className="border-b border-line bg-emerald-50 px-5 py-3 text-sm text-emerald-900">Desconto de cashback: <strong>{currency.format((order.cashbackRedeemedCents ?? 0) / 100)}</strong> · {order.cashbackRedemptionState === "RETURNED" ? "Devolvido ao cliente" : order.cashbackRedemptionState === "REDEEMED" ? "Utilizado" : "Reservado"}. O total ja considera o desconto.</p> : null}
     <div className="grid gap-7 p-5 sm:p-7 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)]">
       <div><p className="text-xs font-black uppercase text-muted">Cliente</p><p className="mt-2 font-black text-ink">{order.customerName}</p><a className="mt-1 block text-sm font-semibold text-brand" href={`tel:${order.customerPhone}`}>{order.customerPhone}</a>{order.customerEmail ? <p className="mt-1 break-all text-xs font-semibold text-muted">{order.customerEmail}</p> : null}</div>

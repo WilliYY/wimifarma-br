@@ -130,11 +130,13 @@ export async function processAsaasWebhookInbox(maxEvents = 10, environment: "tes
           status = refreshed.status === "REVIEW" ? "REVIEW" : ["NEW", "PENDING", "UNKNOWN", "SUBMITTING"].includes(refreshed.status) ? "PENDING" : "PROCESSED";
         }
       } else if (event.checkoutSessionId) {
-        if (event.eventType !== "CHECKOUT_PAID") status = "REVIEW";
+        if (event.eventType !== "CHECKOUT_PAID" && environment === "test") status = "REVIEW";
         else {
           const local = await prisma.onlinePayment.findFirst({ where: { ...scope, checkoutSessionId: event.checkoutSessionId } });
           if (local) {
-            const refreshed = await refresh(local.orderId);
+            const refreshed = environment === "production" && (event.eventType === "CHECKOUT_CANCELED" || event.eventType === "CHECKOUT_EXPIRED")
+              ? await refreshAsaasCommercePayment(local.orderId, { eventType: event.eventType, checkoutSessionId: event.checkoutSessionId })
+              : await refresh(local.orderId);
             status = refreshed.status === "REVIEW" ? "REVIEW" : ["NEW", "PENDING", "UNKNOWN", "SUBMITTING"].includes(refreshed.status) ? "PENDING" : "PROCESSED";
           }
         }
