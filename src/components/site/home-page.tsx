@@ -780,6 +780,11 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
   );
 }
 
+function reviewInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return `${parts[0]?.[0] ?? "C"}${parts.length > 1 ? parts.at(-1)?.[0] ?? "" : ""}`.toLocaleUpperCase("pt-BR");
+}
+
 function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [carouselControls, setCarouselControls] = useState({
@@ -826,45 +831,46 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
     );
 
     carousel.scrollBy({
-      behavior: "smooth",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
       left: direction * visibleCards * cardStep,
     });
   }
 
   return (
-    <section className="bg-surface-subtle px-4 py-14 sm:px-6 lg:px-8">
+    <section className="bg-surface-subtle px-4 py-14 sm:px-6 lg:px-8" aria-labelledby="customer-reviews-title">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex items-end justify-between gap-4">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
           <div>
-            <span className="inline-flex items-center gap-2 text-xs font-black uppercase text-brand">
-              <ShieldCheck className="h-4 w-4" />
-              Compra verificada
+            <span className="inline-flex items-center gap-2 rounded-full border border-pharma-green/20 bg-white px-3 py-1.5 text-xs font-bold text-ink">
+              <ShieldCheck aria-hidden="true" className="h-4 w-4 text-pharma-green" />
+              Experiências de compras verificadas
             </span>
-            <h2 className="mt-2 text-3xl font-black leading-tight text-ink sm:text-4xl">
-              Avaliacoes de clientes
+            <h2 className="mt-3 text-3xl font-black leading-tight text-ink sm:text-4xl" id="customer-reviews-title">
+              Avaliações de clientes
             </h2>
+            <p className="mt-3 max-w-xl text-base leading-6 text-muted">Quem compra, compartilha. Sua experiência ajuda outras pessoas a escolher com mais confiança.</p>
           </div>
 
           {reviews.length > 0 ? (
             <div className="flex shrink-0 items-center gap-2">
               <button
                 aria-controls="customer-reviews-carousel"
-                aria-label="Ver avaliacoes anteriores"
+                aria-label="Ver avaliações anteriores"
                 className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35"
                 disabled={!carouselControls.previous}
                 onClick={() => scrollReviews(-1)}
-                title="Avaliacoes anteriores"
+                title="Avaliações anteriores"
                 type="button"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button
                 aria-controls="customer-reviews-carousel"
-                aria-label="Ver proximas avaliacoes"
+                aria-label="Ver próximas avaliações"
                 className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35"
                 disabled={!carouselControls.next}
                 onClick={() => scrollReviews(1)}
-                title="Proximas avaliacoes"
+                title="Próximas avaliações"
                 type="button"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -875,9 +881,9 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
 
         {reviews.length > 0 ? (
           <div
-            aria-label="Avaliacoes verificadas de clientes"
+            aria-label="Avaliações verificadas de clientes"
             aria-roledescription="carrossel"
-            className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-3 motion-reduce:scroll-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             id="customer-reviews-carousel"
             onScroll={updateCarouselControls}
             ref={carouselRef}
@@ -885,47 +891,50 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
           >
             {reviews.map((review, index) => (
               <article
-                aria-label={`Avaliacao ${index + 1} de ${reviews.length}`}
+                aria-label={`Avaliação ${index + 1} de ${reviews.length}`}
                 aria-roledescription="slide"
-                className="relative flex min-h-56 min-w-0 shrink-0 basis-[88%] snap-start flex-col rounded-md border border-line bg-white p-5 shadow-[0_12px_32px_rgba(17,24,39,0.06)] sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-2rem)/3)]"
+                className="relative flex min-h-72 min-w-0 shrink-0 basis-[88%] snap-start flex-col rounded-3xl border border-line bg-white p-6 shadow-sm transition-colors hover:border-brand/30 sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-2rem)/3)]"
                 data-review-card
                 key={review.id}
                 role="group"
               >
-                <Quote
-                  aria-hidden="true"
-                  className="absolute right-5 top-5 h-7 w-7 text-brand/15"
-                />
+                <div className="mb-5 flex items-center gap-3">
+                  <span aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-brand/10 bg-brand-soft text-base font-black text-brand" data-review-avatar>
+                    {reviewInitials(review.reviewerName)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <strong className="block truncate text-sm text-ink">{review.reviewerName}</strong>
+                    <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-ink/75"><ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 text-pharma-green" />Compra verificada</span>
+                  </div>
+                  <Quote aria-hidden="true" className="h-6 w-6 shrink-0 text-brand/20" />
+                </div>
                 <RatingStars rating={review.rating} size="h-4 w-4" />
-                <blockquote className="mt-4 line-clamp-4 text-base font-semibold leading-6 text-ink">
+                <blockquote className="mb-6 mt-3 line-clamp-4 text-base font-medium leading-7 text-ink">
                   &ldquo;{review.comment}&rdquo;
                 </blockquote>
-                <div className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-4">
-                  <div className="min-w-0">
-                    <strong className="block truncate text-sm text-ink">
-                      {review.reviewerName}
-                    </strong>
-                    <span className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-pharma-green">
-                      <ShieldCheck className="h-3.5 w-3.5" />
-                      Compra verificada
-                    </span>
-                  </div>
+                <div className="mt-auto min-w-0 border-t border-line pt-4">
+                  <span className="block text-xs text-muted">Sobre o produto</span>
                   <Link
-                    className="max-w-[9rem] truncate text-xs font-bold text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    className="mt-1 inline-flex min-h-11 max-w-full items-center gap-2 rounded-sm text-sm font-bold text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                     href={`/produto/${review.productSlug}#avaliacoes`}
                   >
-                    {review.productName}
+                    <span className="line-clamp-2 break-words">{review.productName}</span><ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0" />
                   </Link>
                 </div>
-                {review.incentivized ? <p className="mt-3 text-xs leading-5 text-muted">Avaliacao com incentivo de cashback, independente da nota.</p> : null}
+                {review.incentivized ? <p className="mt-3 text-xs leading-5 text-muted">Avaliação com incentivo de cashback, independente da nota.</p> : null}
               </article>
             ))}
           </div>
         ) : (
-          <div className="rounded-md border border-dashed border-line bg-white px-5 py-8 text-sm font-semibold text-muted">
-            Ainda nao ha avaliacoes verificadas publicadas.
+          <div className="flex flex-col items-start gap-5 rounded-3xl border border-line bg-white p-6 sm:flex-row sm:items-center sm:p-8">
+            <span aria-hidden="true" className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand"><Quote className="h-8 w-8" /></span>
+            <div className="max-w-xl">
+              <h3 className="text-xl font-bold text-ink">Sua experiência tem espaço aqui.</h3>
+              <p className="mt-2 text-sm leading-6 text-muted">Ainda não há avaliações verificadas publicadas. Depois de receber sua compra, conte como foi usar o produto.</p>
+            </div>
           </div>
         )}
+        <Link className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-brand/20 bg-white px-5 py-3 text-sm font-bold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2" href="/minha-conta/avaliacoes">Avaliar minhas compras<ChevronRight aria-hidden="true" className="h-4 w-4" /></Link>
       </div>
     </section>
   );

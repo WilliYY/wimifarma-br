@@ -1,5 +1,9 @@
 # 47 - Rodapé e confiança visual
 
+## Atualização — 11/10/2026
+
+A pedido do lojista, o rodapé passa a ter faixa vermelha de benefícios e corpo branco, com logo oficial colorida e selos gráficos próprios HTTPS/CNPJ/Privacidade. Preservados integralmente as 128 bolhas, tempos, filtro e CSS. Esta direção substitui o fundo escuro do corpo descrito na decisão original; as informações empresariais e limites dos selos externos permanecem. Contrato, avaliações com iniciais e validação em [61-avaliacoes-e-rodape.md](61-avaliacoes-e-rodape.md).
+
 ## Decisão — 06/10/2026
 
 O rodapé público reúne informações úteis à compra e à identificação da loja. Direção visual institucional: fundo escuro, assinatura oficial completa, detalhe vermelho, espaçamento consistente e textos legíveis. Mantidos a fonte Barlow e os tokens existentes. Viabilidade visual: impacto 4, adequação 4, implementação 4, desempenho 4, risco de inconsistência 3; DFII 13 (avaliação interna, sem métrica de conversão).

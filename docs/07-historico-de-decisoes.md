@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-11 — Avaliações com iniciais e rodapé claro
+
+- Usar iniciais do nome público nas avaliações verificadas, sem fotos ou retratos fictícios. Preservar notas, comentários, indicação de incentivo e elegibilidade existente.
+- Organizar o rodapé em faixa vermelha de benefícios, corpo claro e selos gráficos próprios de HTTPS, identificação da loja e privacidade. Preservar exatamente as 128 bolhas, o filtro e a identidade oficial.
+- Não copiar certificações, bandeiras, horários ou dados comerciais da referência. Nenhuma mudança de banco, API ou pagamento; proxy e painéis continuam adiados. Contrato e evidências em [61-avaliacoes-e-rodape.md](61-avaliacoes-e-rodape.md).
+
 ## 2026-10-10 — Permissões, auditoria, requisições e revisão financeira
 
 - Revalidar o criador ADMIN sob o bloqueio usado pela revogação e tornar mutação/auditoria de usuário e cofre atômicas. Limitar corpos HTTP enquanto são recebidos, incluindo login e multipart inteiro.

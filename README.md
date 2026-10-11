@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Avaliações com iniciais e rodapé claro com selos próprios, preservando as 128 bolhas: [docs/61-avaliacoes-e-rodape.md](docs/61-avaliacoes-e-rodape.md).
+
 Revisão de segurança de 10/10/2026: permissões ADMIN e auditoria atômica, limites de requisições/IA, uploads e recuperação técnica Asaas em [docs/60-correcao-e-revisao-de-seguranca.md](docs/60-correcao-e-revisao-de-seguranca.md). Revisões financeiras permanecem protegidas; infraestrutura compartilhada tem pendências adiadas pelo titular.
 
 Rodapé público com efeito original de bolhas preservado, identidade oficial, informações empresariais, contato, compra e privacidade: [docs/47-rodape-e-confianca-visual.md](docs/47-rodape-e-confianca-visual.md). Indicadores próprios de HTTPS, CNPJ e pedidos; selos externos aparecem somente depois de aprovados. Conferência atual de catálogo, pagamentos e cotações em [docs/52-confianca-e-conferencia-comercial.md](docs/52-confianca-e-conferencia-comercial.md).
