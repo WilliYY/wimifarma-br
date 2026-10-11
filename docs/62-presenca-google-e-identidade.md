@@ -18,6 +18,20 @@ A conta pessoal inicialmente aberta mostra uma ficha `Wimifarma rua maringa` com
 - Um único nó `WebSite`, vinculado à farmácia, com nome `Wimifarma` e alternativas `Wimifarma Ivaté` e `wimifarma.com.br`.
 - Sem notas agregadas dos depoimentos editoriais, horários inventados, palavras-chave repetidas, novas dependências ou mudanças comerciais.
 
+## Perfil da Empresa confirmado
+
+Após o lojista instalar a extensão no perfil Chrome `wimi`, o Codex conseguiu acessar a conta correta em 11/10/2026. O gerenciador mostrou uma empresa, 100% confirmada, e o painel público confirmou que a conta gerencia a ficha. O nome público e o campo de nome são `Wimifarma`; a indicação `rua maringa` aparece no endereço, não foi acrescentada ao nome comercial.
+
+- Site alterado de `http://wimifarma.com.br/` para `https://wimifarma.com.br/`. O Google inicialmente mostrou revisão pendente e depois exibiu a nova URL como valor atual, sem aviso de pendência nesse campo.
+- Descrição institucional enviada com marca, município, endereço, produtos e atendimento reais. O Google confirmou o envio e mostrou a descrição como pendente de revisão; aprovação pública ainda não foi comprovada.
+- Telefone `(44) 98413-4971` e link atual de WhatsApp `https://wa.me/5544984134971` conferidos. Havia uma edição anterior recusada que removia o nono dígito; ela não foi reenviada nem usada como contato atual.
+- Horário de 07:30 a 18:30 todos os dias, inclusive domingo, confirmado pelo lojista e preservado. Horários especiais não foram inventados.
+- Nome, categorias, endereço, acesso e propriedade preservados. A ficha duplicada da conta inicialmente consultada continua fora desta alteração.
+
+Descrição enviada:
+
+> A Wimifarma é uma farmácia em Ivaté, Paraná, localizada na Avenida Minas Gerais, 2263. Trabalhamos com medicamentos, genéricos, perfumaria, produtos de higiene, beleza e cuidados para o dia a dia. Oferecemos atendimento presencial e pelo WhatsApp, com orientação farmacêutica. Nosso site oficial reúne o catálogo de produtos e permite fazer pedidos online. Consulte nossa equipe para confirmar disponibilidade, entrega local e retirada na loja.
+
 ## Operação e limites
 
 Em futuras alterações de identidade, conferir HTML público, canonical, JSON-LD, logo e layout em desktop/celular após publicar. Testar a URL publicada no Search Console e solicitar novo rastreamento da home. Não repetir solicitações para tentar acelerar a fila.
@@ -33,6 +47,7 @@ A indexação já existente não garante destaque por marca. Nenhum ajuste do si
 - [Inspeção de URL](https://support.google.com/webmasters/answer/9012289?hl=pt-BR).
 - [Solicitar novo rastreamento](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl?hl=pt-br).
 - [Ortografia na Pesquisa](https://support.google.com/websearch/answer/134479?hl=pt-BR).
+- [Representar a empresa no Google](https://support.google.com/business/answer/3038177?hl=pt-BR).
 
 ## Validação
 
@@ -46,4 +61,4 @@ A indexação já existente não garante destaque por marca. Nenhum ajuste do si
 - Inspeção visual em desktop de 1280 px e celular de 390 px: sem transbordamento horizontal, H1 único e campanhas preservadas. Animações originais da marca e rodapé mantidas; a nova animação do Miauby foi cancelada pelo lojista.
 - Search Console: teste da URL publicada em 11/10/2026 às 18:25 confirmou “O URL está disponível para o Google”. Uma solicitação de indexação foi enviada e a confirmação “Indexação solicitada” apareceu. Isso confirma a entrada na fila, não novo rastreamento ou mudança de posição.
 - Evidências locais em `outputs/google-presenca-2026-10-11/`: `home-desktop.png`, `home-mobile.png` e `indexacao-solicitada.png`. Capturas permanecem fora do Git.
-- Conferência do Perfil da Empresa correto pendente: o lojista abriu o perfil Chrome `wimi`, mas ele ainda não está disponível no controle de navegador do Codex. Nenhuma alteração foi feita na ficha da conta inicialmente consultada.
+- Conferência do Perfil da Empresa correto concluída após conexão da extensão. Capturas `perfil-site-https.png` e `perfil-descricao-enviada.png` registram a URL atual e a descrição pendente. Aprovação da descrição e efeitos futuros na busca dependem do Google.
