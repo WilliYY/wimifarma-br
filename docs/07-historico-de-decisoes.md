@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-11 — Exemplos públicos de avaliações
+
+- Atender ao pedido de publicar exemplos agora com três cartões claramente identificados como demonstração, nomes `Exemplo A./B./C.` e iniciais. Não atribuir estrelas, compra verificada ou identidade de cliente aos exemplos.
+- Mostrar exemplos apenas enquanto a consulta de avaliações reais estiver vazia. Quando houver avaliações reais publicadas, somente elas ocupam a seção; dados ilustrativos não entram no banco, nas médias, nos produtos nem no cashback.
+- Preservar rodapé, bolhas, autenticação e regras comerciais. Contrato e evidências no documento [61](61-avaliacoes-e-rodape.md).
+
 ## 2026-10-11 — Avaliações com iniciais e rodapé claro
 
 - Usar iniciais do nome público nas avaliações verificadas, sem fotos ou retratos fictícios. Preservar notas, comentários, indicação de incentivo e elegibilidade existente.

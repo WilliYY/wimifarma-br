@@ -8,7 +8,7 @@ Melhorar as avaliações de clientes e o rodapé usando a referência visual for
 
 - Avatares com iniciais derivadas do nome público já abreviado; nenhuma foto de cliente ou retrato gerado por IA.
 - Cartões com nome, compra verificada, nota real, comentário, produto e indicação de incentivo de cashback existente. Não são criadas avaliações, notas ou identidades fictícias em produção.
-- Estado vazio com convite para compartilhar a experiência e link para `/minha-conta/avaliacoes`. Regras de elegibilidade e concessão de cashback permanecem no servidor.
+- Quando não há avaliações reais, exibir os três exemplos de demonstração descritos na atualização abaixo e o link para `/minha-conta/avaliacoes`. Regras de elegibilidade e concessão de cashback permanecem no servidor.
 - Carrossel preservado, com setas, rolagem horizontal e foco visível. Movimento reduzido também é respeitado na rolagem acionada pelas setas.
 
 ## Rodapé e selos
@@ -45,3 +45,11 @@ Navegador real no domínio HTTPS confirmou 320, 390, 768, 1440 e 1920 px sem tra
 As requisições de mutação foram bloqueadas durante os testes públicos, incluindo as revisões automáticas do carrinho; nenhuma compra, cobrança, mensagem ou alteração de cliente foi realizada. Uma captura com recorte fora dos limites do navegador falhou; a captura de desktop foi repetida com coordenadas de página completa e concluída. Não houve alteração do produto para resolver essa limitação de captura.
 
 Cliques reais confirmaram `Avaliar minhas compras` levando o visitante ao login com retorno preservado para `/minha-conta/avaliacoes`, e o link de privacidade do rodapé abrindo a página correta.
+
+## Atualização — exemplos solicitados pelo lojista
+
+Após a publicação inicial, o lojista pediu alguns exemplos públicos imediatamente. A seção sem avaliações reais agora exibe três cartões de demonstração com iniciais e textos ilustrativos sobre navegação, consulta do produto e contato/entrega. O cabeçalho diz `Exemplos de demonstração`, cada cartão tem a identificação `Demonstração` e o aviso `Texto ilustrativo. Não é uma avaliação real.`. Não são usados nomes de pessoas, fotos, estrelas nem selo de compra verificada.
+
+Os exemplos são conteúdo de apresentação em `home-page.tsx`, sem inserção em `ProductReview`, pedidos ou contas. Não afetam a média de notas, a página de produto ou o cashback. Assim que existir qualquer avaliação real na consulta da home, os exemplos deixam de aparecer e o carrossel real permanece igual. README e histórico de decisões foram atualizados. Rodapé/bolhas e adiamento do proxy/painéis permanecem intactos.
+
+Validação desta atualização: lint, typecheck, build e `test:security` aprovados; revisão independente sem achados. Auditoria de produção novamente com zero vulnerabilidades; auditoria completa mantém as cinco high de desenvolvimento já descritas acima. Navegador local em 320, 390, 768 e 1440 px confirmou três demonstrações, avisos visíveis, ausência de estrelas/selo de compra verificada/fotos, nenhuma rolagem horizontal e 128 bolhas. Com uma avaliação real sintética, os exemplos desapareceram e o cartão real preservou iniciais, compra verificada e aviso de incentivo. Nenhuma gravação real foi realizada.
