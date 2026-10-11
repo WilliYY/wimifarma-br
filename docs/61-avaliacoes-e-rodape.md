@@ -34,4 +34,14 @@ Implementação em `src/components/site/home-page.tsx` e `src/components/site/si
 - Auditoria de navegador com componentes reais e avaliações sintéticas: 320, 390, 768, 1440 e 1920 px, sem transbordamento; logo carregada, 128 bolhas/filtro, selos, links, estado vazio, iniciais, nota baixa, textos longos, incentivo e ida/volta do carrossel conferidos. Requisições de mutação do carrinho foram interceptadas; nenhum envio ou gravação real foi executado.
 - Auxiliares ficaram no escopo temporário da tarefa. Capturas de referência ficam em `outputs/*-2026-10-11.png`, fora do Git.
 
-A evidência final da publicação será acrescentada após conferência no servidor e no domínio público.
+## Publicação e conferência real
+
+Commit `e2a567e` enviado ao GitHub e publicado com `git pull --ff-only`, `docker compose build app` e `docker compose up -d --no-deps app`. Sem migration nem recriação de Postgres, proxy ou painéis. Imagem anterior preservada em `wimifarma-br-reviews-rollback:20261011`.
+
+Build Linux/Docker aprovado. App saudável, zero reinícios, imagem `sha256:6e01e777df22f222bf168ddeac6d3355a9370b09319b182f86675661c46f0bca`. `/api/health`, `/`, `/catalogo`, `/privacidade` e `/login` retornaram HTTP 200.
+
+Navegador real no domínio HTTPS confirmou 320, 390, 768, 1440 e 1920 px sem transbordamento, logo carregada, selos, destinos e 128 bolhas. Movimento normal e reduzido foram conferidos. Atualmente a home não tem avaliações verificadas publicadas: o estado vazio foi aprovado em produção; os cartões preenchidos e o carrossel foram validados apenas com dados sintéticos locais. Nenhum comentário ou retrato fictício foi inserido no banco.
+
+As requisições de mutação foram bloqueadas durante os testes públicos, incluindo as revisões automáticas do carrinho; nenhuma compra, cobrança, mensagem ou alteração de cliente foi realizada. Uma captura com recorte fora dos limites do navegador falhou; a captura de desktop foi repetida com coordenadas de página completa e concluída. Não houve alteração do produto para resolver essa limitação de captura.
+
+Cliques reais confirmaram `Avaliar minhas compras` levando o visitante ao login com retorno preservado para `/minha-conta/avaliacoes`, e o link de privacidade do rodapé abrindo a página correta.
