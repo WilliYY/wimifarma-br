@@ -853,7 +853,7 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
             <h2 className="mt-3 text-3xl font-black leading-tight text-ink sm:text-4xl" id="customer-reviews-title">
               Avaliações de clientes
             </h2>
-            <p className="mt-3 max-w-xl text-base leading-6 text-muted">Relatos recebidos pelo WhatsApp e avaliações de compras no site. Sua experiência ajuda outras pessoas a escolher com mais confiança.</p>
+            <p className="mt-3 max-w-xl text-base leading-6 text-muted">Sua experiência ajuda outras pessoas a escolher com mais confiança.</p>
           </div>
 
           {displayedReviews.length > 0 ? (
@@ -886,7 +886,7 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
 
         {displayedReviews.length > 0 ? (
           <div
-            aria-label="Avaliações de clientes no site e pelo WhatsApp"
+            aria-label="Avaliações de clientes"
             aria-roledescription="carrossel"
             className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-3 motion-reduce:scroll-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             id="customer-reviews-carousel"
@@ -909,11 +909,9 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
                   </span>
                   <div className="min-w-0 flex-1">
                     <strong className="block truncate text-sm text-ink">{review.reviewerName}</strong>
-                    {review.source === "whatsapp" ? (
-                      <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-ink/75"><MessageCircle aria-hidden="true" className="h-3.5 w-3.5 text-pharma-green" />Recebida pelo WhatsApp</span>
-                    ) : (
+                    {review.source === "purchase" ? (
                       <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-ink/75"><ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 text-pharma-green" />Compra verificada</span>
-                    )}
+                    ) : null}
                   </div>
                   <Quote aria-hidden="true" className="h-6 w-6 shrink-0 text-brand/20" />
                 </div>

@@ -7,7 +7,7 @@ Melhorar as avaliações de clientes e o rodapé usando a referência visual for
 ## Avaliações
 
 - Avatares com iniciais derivadas do nome público já abreviado; nenhuma foto de cliente ou retrato gerado por IA.
-- Avaliações do sistema mantêm compra verificada, nota real, comentário, produto e indicação de incentivo de cashback existente. Relatos externos têm a origem identificada. Não são criadas avaliações, notas ou identidades fictícias em produção.
+- Avaliações do sistema mantêm compra verificada, nota real, comentário, produto e indicação de incentivo de cashback existente. Relatos externos preservam a origem internamente; por pedido do lojista, o canal não aparece na interface. Não são criadas avaliações, notas ou identidades fictícias em produção.
 - A home também publica os 15 relatos reais do WhatsApp enviados pelo lojista, conforme atualização abaixo. Se ambas as fontes estiverem vazias, exibir o convite para avaliar compras, sem exemplos ilustrativos. O link para `/minha-conta/avaliacoes` permanece disponível; elegibilidade e cashback continuam no servidor.
 - Carrossel preservado, com setas, rolagem horizontal e foco visível. Movimento reduzido também é respeitado na rolagem acionada pelas setas.
 
@@ -16,9 +16,11 @@ Melhorar as avaliações de clientes e o rodapé usando a referência visual for
 O lojista forneceu uma imagem com 15 relatos e declarou serem avaliações reais recebidas pelo WhatsApp, solicitando publicação. Os comentários foram transcritos sem reescrever e as cinco estrelas da imagem foram mantidas. A autenticidade é informada pelo lojista; não houve acesso independente às conversas originais.
 
 - Conteúdo editorial em `src/features/reviews/whatsapp-testimonials.ts`, com nomes abreviados pelo padrão público, iniciais e identificadores próprios. A captura original, nomes completos, telefones e conversas não são versionados.
-- O carrossel existente reúne primeiro as avaliações do sistema e depois os relatos do WhatsApp. Cada relato externo mostra `Recebida pelo WhatsApp` e `Sobre o atendimento da Wimifarma.`. O cabeçalho informa as duas origens sem sugerir que todas as compras foram verificadas pelo site.
+- O carrossel existente reúne primeiro as avaliações do sistema e depois os relatos do WhatsApp. Cada relato externo mostra nome abreviado, estrelas, comentário e `Sobre o atendimento da Wimifarma.`. A identificação `Recebida pelo WhatsApp`, inicialmente publicada, foi retirada junto da menção ao canal no subtítulo e no nome acessível do carrossel, conforme pedido posterior do lojista. Nenhum selo de compra verificada foi acrescentado aos relatos externos.
 - Somente avaliações do sistema mantêm o selo `Compra verificada`, o link do produto e eventual aviso de incentivo. Relatos externos não criam registros no banco, não alteram médias/JSON-LD dos produtos e não concedem cashback.
 - Comentários são renderizados como texto React, integralmente, sem HTML ou fotos. Setas, rolagem, foco e preferência de movimento reduzido reutilizam o comportamento existente. Rodapé e suas 128 bolhas permanecem intactos.
+
+Validação da retirada da indicação do canal: build local aprovado, incluindo lint e tipos; `npm.cmd run test:security` com 267/267. Auditoria de produção sem vulnerabilidades; a completa preserva os cinco high conhecidos de desenvolvimento. Alteração restrita à apresentação, sem modificar comentários, estrelas, nomes, origem interna ou regras comerciais.
 
 Conferência local realizada com o componente real, CSS de produção e fixtures em memória, sem banco: 15 comentários/notas/origens e nomes abreviados; carrossel até o último relato e retorno em 320, 390, 768 e 1440 px, sem transbordamento ou erros de página; destino do link de avaliar compras preservado. Com nenhuma avaliação do sistema, aparecem os 15 relatos. Com uma avaliação sintética de compra, aparecem 16 cartões, preservando selo, produto e incentivo somente nesta última. Capturas `outputs/whatsapp-reviews-local-*-2026-10-11.png` ficam fora do Git.
 

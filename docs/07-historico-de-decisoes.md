@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-11 — Avaliações sem indicação do canal
+
+- Por pedido do lojista, retirar `Recebida pelo WhatsApp` dos cartões, a menção ao canal no subtítulo e no nome acessível do carrossel. Preservar os 15 relatos, nomes abreviados e cinco estrelas.
+- Manter a origem registrada internamente, sem atribuir compra verificada aos relatos externos nem alterar produtos, cashback ou dados persistentes. Detalhes em [61](61-avaliacoes-e-rodape.md).
+
 ## 2026-10-11 — Relatos reais recebidos pelo WhatsApp
 
 - Publicar os 15 relatos da imagem enviada pelo lojista, que os identificou como avaliações reais do WhatsApp. Preservar comentários e cinco estrelas informadas, com nomes públicos abreviados e iniciais.
