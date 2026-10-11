@@ -358,7 +358,7 @@ function HeroCarousel() {
           >
             <div className={campaignStyles.signature}><BrandSignature /></div>
             <p className={campaignStyles.eyebrow}>{slide.eyebrow}</p>
-            <h1 className={campaignStyles.title}>{slide.title}</h1>
+            <h2 className={campaignStyles.title}>{slide.title}</h2>
             <p className={campaignStyles.description}>{slide.description}</p>
             <div className={campaignStyles.actions}>
               <a
@@ -960,6 +960,8 @@ export function HomePage({
     <>
       <section className="pharma-clouds bg-white px-4 pb-8 pt-36 sm:px-6 sm:pt-40 lg:px-8 lg:pt-56">
         <div className="mx-auto max-w-7xl">
+          <h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">Farmácia Wimifarma em Ivaté-PR</h1>
+          <p className="mb-5 mt-2 max-w-2xl text-sm leading-6 text-muted">Medicamentos, higiene e beleza na Avenida Minas Gerais, 2263. Consulte produtos, entrega e retirada com nossa equipe.</p>
           <HeroCarousel />
         </div>
       </section>

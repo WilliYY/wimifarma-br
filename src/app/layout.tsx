@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Barlow } from "next/font/google";
 import { Toaster } from "sonner";
+import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 const barlow = Barlow({
@@ -12,13 +13,12 @@ const barlow = Barlow({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://wimifarma.com.br"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Wimifarma | Farmacia em Ivate-PR",
+    default: SITE_TITLE,
     template: "%s | Wimifarma",
   },
-  description:
-    "Farmácia Wimifarma em Ivaté-PR. Medicamentos, higiene, beleza e cuidados para o dia a dia. Consulte produtos, entrega local e atendimento pelo WhatsApp.",
+  description: SITE_DESCRIPTION,
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
   verification: { google: process.env.GOOGLE_SITE_VERIFICATION || undefined },
   icons: {
@@ -27,8 +27,7 @@ export const metadata: Metadata = {
     shortcut: "/favicon.svg",
   },
   openGraph: {
-    description:
-      "Delivery em Ivate e atendimento farmaceutico com a Wimifarma.",
+    description: SITE_DESCRIPTION,
     images: [
       {
         alt: "Wimifarma",
@@ -39,16 +38,15 @@ export const metadata: Metadata = {
     ],
     locale: "pt_BR",
     siteName: "Wimifarma",
-    title: "Wimifarma",
+    title: SITE_TITLE,
     type: "website",
     url: "/",
   },
   twitter: {
     card: "summary_large_image",
-    description:
-      "Delivery em Ivate e atendimento farmaceutico com a Wimifarma.",
+    description: SITE_DESCRIPTION,
     images: ["/banners/faixa-home.webp"],
-    title: "Wimifarma | Farmacia em Ivate-PR",
+    title: SITE_TITLE,
   },
 };
 

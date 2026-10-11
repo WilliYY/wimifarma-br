@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-11 — Identidade da Wimifarma para descoberta no Google
+
+- Reforçar marca, município e endereço reais nos metadados e em um H1 fixo visível na home; títulos rotativos das campanhas passam a H2 com os estilos preservados.
+- Enriquecer os nós institucionais `Pharmacy` e `WebSite`, mantendo uma identidade única, sem inventar horários ou avaliações agregadas. Usar a logo oficial completa em WebP.
+- Search Console confirmou a home indexada, com último rastreamento em 06/10. Isso não garante posição nem permite controlar a correção `wimifarma` para `imifarma`; contrato e validação em [62](62-presenca-google-e-identidade.md).
+
 ## 2026-10-11 — Avaliações sem indicação do canal
 
 - Por pedido do lojista, retirar `Recebida pelo WhatsApp` dos cartões, a menção ao canal no subtítulo e no nome acessível do carrossel. Preservar os 15 relatos, nomes abreviados e cinco estrelas.
