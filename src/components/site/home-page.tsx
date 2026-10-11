@@ -36,6 +36,7 @@ import campaignStyles from "./home-campaign.module.css";
 import { BrandSignature } from "@/components/site/brand-signature";
 import type { RelatedProductCardItem } from "@/components/site/public-product-card";
 import { siteConfig } from "@/lib/site";
+import { whatsappTestimonials, type WhatsAppTestimonial } from "@/features/reviews/whatsapp-testimonials";
 
 const easeOut = [0.16, 1, 0.3, 1] as const;
 
@@ -786,6 +787,10 @@ function reviewInitials(name: string) {
 }
 
 function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
+  const displayedReviews: ((HomeReview & { source: "purchase" }) | WhatsAppTestimonial)[] = [
+    ...reviews.map((review) => ({ ...review, source: "purchase" as const })),
+    ...whatsappTestimonials,
+  ];
   const carouselRef = useRef<HTMLDivElement>(null);
   const [carouselControls, setCarouselControls] = useState({
     next: false,
@@ -842,16 +847,16 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
         <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-pharma-green/20 bg-white px-3 py-1.5 text-xs font-bold text-ink">
-              <ShieldCheck aria-hidden="true" className="h-4 w-4 text-pharma-green" />
-              Experiências de compras verificadas
+              <MessageCircle aria-hidden="true" className="h-4 w-4 text-pharma-green" />
+              Experiências compartilhadas por clientes
             </span>
             <h2 className="mt-3 text-3xl font-black leading-tight text-ink sm:text-4xl" id="customer-reviews-title">
               Avaliações de clientes
             </h2>
-            <p className="mt-3 max-w-xl text-base leading-6 text-muted">Quem compra, compartilha. Sua experiência ajuda outras pessoas a escolher com mais confiança.</p>
+            <p className="mt-3 max-w-xl text-base leading-6 text-muted">Relatos recebidos pelo WhatsApp e avaliações de compras no site. Sua experiência ajuda outras pessoas a escolher com mais confiança.</p>
           </div>
 
-          {reviews.length > 0 ? (
+          {displayedReviews.length > 0 ? (
             <div className="flex shrink-0 items-center gap-2">
               <button
                 aria-controls="customer-reviews-carousel"
@@ -879,9 +884,9 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
           ) : null}
         </div>
 
-        {reviews.length > 0 ? (
+        {displayedReviews.length > 0 ? (
           <div
-            aria-label="Avaliações verificadas de clientes"
+            aria-label="Avaliações de clientes no site e pelo WhatsApp"
             aria-roledescription="carrossel"
             className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-3 motion-reduce:scroll-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             id="customer-reviews-carousel"
@@ -889,9 +894,9 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
             ref={carouselRef}
             role="region"
           >
-            {reviews.map((review, index) => (
+            {displayedReviews.map((review, index) => (
               <article
-                aria-label={`Avaliação ${index + 1} de ${reviews.length}`}
+                aria-label={`Avaliação ${index + 1} de ${displayedReviews.length}`}
                 aria-roledescription="slide"
                 className="relative flex min-h-72 min-w-0 shrink-0 basis-[88%] snap-start flex-col rounded-3xl border border-line bg-white p-6 shadow-sm transition-colors hover:border-brand/30 sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-2rem)/3)]"
                 data-review-card
@@ -904,15 +909,19 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
                   </span>
                   <div className="min-w-0 flex-1">
                     <strong className="block truncate text-sm text-ink">{review.reviewerName}</strong>
-                    <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-ink/75"><ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 text-pharma-green" />Compra verificada</span>
+                    {review.source === "whatsapp" ? (
+                      <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-ink/75"><MessageCircle aria-hidden="true" className="h-3.5 w-3.5 text-pharma-green" />Recebida pelo WhatsApp</span>
+                    ) : (
+                      <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-ink/75"><ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 text-pharma-green" />Compra verificada</span>
+                    )}
                   </div>
                   <Quote aria-hidden="true" className="h-6 w-6 shrink-0 text-brand/20" />
                 </div>
                 <RatingStars rating={review.rating} size="h-4 w-4" />
-                <blockquote className="mb-6 mt-3 line-clamp-4 text-base font-medium leading-7 text-ink">
+                <blockquote className="mb-6 mt-3 break-words text-base font-medium leading-7 text-ink">
                   &ldquo;{review.comment}&rdquo;
                 </blockquote>
-                <div className="mt-auto min-w-0 border-t border-line pt-4">
+                {review.source === "purchase" ? <div className="mt-auto min-w-0 border-t border-line pt-4">
                   <span className="block text-xs text-muted">Sobre o produto</span>
                   <Link
                     className="mt-1 inline-flex min-h-11 max-w-full items-center gap-2 rounded-sm text-sm font-bold text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
@@ -920,8 +929,8 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
                   >
                     <span className="line-clamp-2 break-words">{review.productName}</span><ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0" />
                   </Link>
-                </div>
-                {review.incentivized ? <p className="mt-3 text-xs leading-5 text-muted">Avaliação com incentivo de cashback, independente da nota.</p> : null}
+                </div> : <p className="mt-auto border-t border-line pt-4 text-xs leading-5 text-muted">Sobre o atendimento da Wimifarma.</p>}
+                {review.source === "purchase" && review.incentivized ? <p className="mt-3 text-xs leading-5 text-muted">Avaliação com incentivo de cashback, independente da nota.</p> : null}
               </article>
             ))}
           </div>

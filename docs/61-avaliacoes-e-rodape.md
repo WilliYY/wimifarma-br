@@ -7,9 +7,22 @@ Melhorar as avaliações de clientes e o rodapé usando a referência visual for
 ## Avaliações
 
 - Avatares com iniciais derivadas do nome público já abreviado; nenhuma foto de cliente ou retrato gerado por IA.
-- Cartões com nome, compra verificada, nota real, comentário, produto e indicação de incentivo de cashback existente. Não são criadas avaliações, notas ou identidades fictícias em produção.
-- Quando não há avaliações reais, exibir um convite para avaliar compras e o link para `/minha-conta/avaliacoes`, sem exemplos ou depoimentos ilustrativos. Regras de elegibilidade e concessão de cashback permanecem no servidor.
+- Avaliações do sistema mantêm compra verificada, nota real, comentário, produto e indicação de incentivo de cashback existente. Relatos externos têm a origem identificada. Não são criadas avaliações, notas ou identidades fictícias em produção.
+- A home também publica os 15 relatos reais do WhatsApp enviados pelo lojista, conforme atualização abaixo. Se ambas as fontes estiverem vazias, exibir o convite para avaliar compras, sem exemplos ilustrativos. O link para `/minha-conta/avaliacoes` permanece disponível; elegibilidade e cashback continuam no servidor.
 - Carrossel preservado, com setas, rolagem horizontal e foco visível. Movimento reduzido também é respeitado na rolagem acionada pelas setas.
+
+## Relatos reais do WhatsApp — 11/10/2026
+
+O lojista forneceu uma imagem com 15 relatos e declarou serem avaliações reais recebidas pelo WhatsApp, solicitando publicação. Os comentários foram transcritos sem reescrever e as cinco estrelas da imagem foram mantidas. A autenticidade é informada pelo lojista; não houve acesso independente às conversas originais.
+
+- Conteúdo editorial em `src/features/reviews/whatsapp-testimonials.ts`, com nomes abreviados pelo padrão público, iniciais e identificadores próprios. A captura original, nomes completos, telefones e conversas não são versionados.
+- O carrossel existente reúne primeiro as avaliações do sistema e depois os relatos do WhatsApp. Cada relato externo mostra `Recebida pelo WhatsApp` e `Sobre o atendimento da Wimifarma.`. O cabeçalho informa as duas origens sem sugerir que todas as compras foram verificadas pelo site.
+- Somente avaliações do sistema mantêm o selo `Compra verificada`, o link do produto e eventual aviso de incentivo. Relatos externos não criam registros no banco, não alteram médias/JSON-LD dos produtos e não concedem cashback.
+- Comentários são renderizados como texto React, integralmente, sem HTML ou fotos. Setas, rolagem, foco e preferência de movimento reduzido reutilizam o comportamento existente. Rodapé e suas 128 bolhas permanecem intactos.
+
+Conferência local realizada com o componente real, CSS de produção e fixtures em memória, sem banco: 15 comentários/notas/origens e nomes abreviados; carrossel até o último relato e retorno em 320, 390, 768 e 1440 px, sem transbordamento ou erros de página; destino do link de avaliar compras preservado. Com nenhuma avaliação do sistema, aparecem os 15 relatos. Com uma avaliação sintética de compra, aparecem 16 cartões, preservando selo, produto e incentivo somente nesta última. Capturas `outputs/whatsapp-reviews-local-*-2026-10-11.png` ficam fora do Git.
+
+Revisão independente conferiu transcrição e cinco estrelas com a imagem, tipos, origem visível e separação das regras comerciais, sem achados. `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run build` e `npm.cmd run test:security` passaram, com 267/267 testes de segurança. `npm.cmd audit --omit=dev --json` retornou zero vulnerabilidades. Auditoria completa manteve cinco high de desenvolvimento em `@next/eslint-plugin-next`, `braces`, `eslint-config-next`, `fast-glob` e `micromatch`, sem critical e sem atualização de dependências. O executor temporário da sessão interrompida recusou o marcador de propriedade; os auxiliares foram isolados manualmente no diretório da tarefa, sem modificar o hook. Publicação será registrada após execução.
 
 ## Rodapé e selos
 

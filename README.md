@@ -1,6 +1,6 @@
 # Wimifarma BR
 
-Avaliações com iniciais e rodapé claro com selos próprios, preservando as 128 bolhas. Enquanto não há avaliações reais, a home mostra um convite para avaliar as compras, sem depoimentos ilustrativos: [docs/61-avaliacoes-e-rodape.md](docs/61-avaliacoes-e-rodape.md).
+Avaliações com iniciais e rodapé claro com selos próprios, preservando as 128 bolhas. A home reúne avaliações de compras e 15 relatos reais recebidos pelo WhatsApp, fornecidos pelo lojista e identificados pela origem. Relatos externos não entram nas notas dos produtos ou no cashback: [docs/61-avaliacoes-e-rodape.md](docs/61-avaliacoes-e-rodape.md).
 
 Revisão de segurança de 10/10/2026: permissões ADMIN e auditoria atômica, limites de requisições/IA, uploads e recuperação técnica Asaas em [docs/60-correcao-e-revisao-de-seguranca.md](docs/60-correcao-e-revisao-de-seguranca.md). Revisões financeiras permanecem protegidas; infraestrutura compartilhada tem pendências adiadas pelo titular.
 

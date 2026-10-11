@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-11 — Relatos reais recebidos pelo WhatsApp
+
+- Publicar os 15 relatos da imagem enviada pelo lojista, que os identificou como avaliações reais do WhatsApp. Preservar comentários e cinco estrelas informadas, com nomes públicos abreviados e iniciais.
+- Reutilizar o carrossel da home, identificando cada relato como `Recebida pelo WhatsApp`. Somente avaliações vinculadas a pedidos do sistema recebem `Compra verificada`, link do produto e indicação de incentivo.
+- Manter relatos externos em conteúdo editorial, sem criar clientes, pedidos ou avaliações no banco, alterar médias de produtos ou conceder cashback. Contrato e validação em [61](61-avaliacoes-e-rodape.md).
+
 ## 2026-10-11 — Remoção dos exemplos de avaliações
 
 - Por pedido do lojista, retirar os três cartões ilustrativos da home e restaurar o convite para avaliar compras reais.
