@@ -8,7 +8,7 @@ Melhorar as avaliações de clientes e o rodapé usando a referência visual for
 
 - Avatares com iniciais derivadas do nome público já abreviado; nenhuma foto de cliente ou retrato gerado por IA.
 - Cartões com nome, compra verificada, nota real, comentário, produto e indicação de incentivo de cashback existente. Não são criadas avaliações, notas ou identidades fictícias em produção.
-- Quando não há avaliações reais, exibir os três exemplos de demonstração descritos na atualização abaixo e o link para `/minha-conta/avaliacoes`. Regras de elegibilidade e concessão de cashback permanecem no servidor.
+- Quando não há avaliações reais, exibir um convite para avaliar compras e o link para `/minha-conta/avaliacoes`, sem exemplos ou depoimentos ilustrativos. Regras de elegibilidade e concessão de cashback permanecem no servidor.
 - Carrossel preservado, com setas, rolagem horizontal e foco visível. Movimento reduzido também é respeitado na rolagem acionada pelas setas.
 
 ## Rodapé e selos
@@ -46,12 +46,20 @@ As requisições de mutação foram bloqueadas durante os testes públicos, incl
 
 Cliques reais confirmaram `Avaliar minhas compras` levando o visitante ao login com retorno preservado para `/minha-conta/avaliacoes`, e o link de privacidade do rodapé abrindo a página correta.
 
-## Atualização — exemplos solicitados pelo lojista
+## Histórico — exemplos solicitados pelo lojista
 
-Após a publicação inicial, o lojista pediu alguns exemplos públicos imediatamente. A seção sem avaliações reais agora exibe três cartões de demonstração com iniciais e textos ilustrativos sobre navegação, consulta do produto e contato/entrega. O cabeçalho diz `Exemplos de demonstração`, cada cartão tem a identificação `Demonstração` e o aviso `Texto ilustrativo. Não é uma avaliação real.`. Não são usados nomes de pessoas, fotos, estrelas nem selo de compra verificada.
+Após a publicação inicial, o lojista pediu alguns exemplos públicos imediatamente. A seção sem avaliações reais passou a exibir três cartões de demonstração com iniciais e textos ilustrativos sobre navegação, consulta do produto e contato/entrega. O cabeçalho dizia `Exemplos de demonstração`, cada cartão tinha a identificação `Demonstração` e o aviso `Texto ilustrativo. Não é uma avaliação real.`. Não foram usados nomes de pessoas, fotos, estrelas nem selo de compra verificada. Essa apresentação foi posteriormente removida, conforme atualização abaixo.
 
 Os exemplos são conteúdo de apresentação em `home-page.tsx`, sem inserção em `ProductReview`, pedidos ou contas. Não afetam a média de notas, a página de produto ou o cashback. Assim que existir qualquer avaliação real na consulta da home, os exemplos deixam de aparecer e o carrossel real permanece igual. README e histórico de decisões foram atualizados. Rodapé/bolhas e adiamento do proxy/painéis permanecem intactos.
 
 Validação desta atualização: lint, typecheck, build e `test:security` aprovados; revisão independente sem achados. Auditoria de produção novamente com zero vulnerabilidades; auditoria completa mantém as cinco high de desenvolvimento já descritas acima. Navegador local em 320, 390, 768 e 1440 px confirmou três demonstrações, avisos visíveis, ausência de estrelas/selo de compra verificada/fotos, nenhuma rolagem horizontal e 128 bolhas. Com uma avaliação real sintética, os exemplos desapareceram e o cartão real preservou iniciais, compra verificada e aviso de incentivo. Nenhuma gravação real foi realizada.
 
 Publicação dos exemplos: commit `7911fdd` enviado ao GitHub e aplicado no servidor com pull, build Docker e atualização exclusiva de `app`, sem migration. Imagem anterior guardada em `wimifarma-br-demo-rollback:20261011`. App saudável, zero reinícios, imagem `sha256:c3186fdd7bffc19e0d6470da860f83e7376e8d3b14fd9487793ec430030d8149`; health, home, catálogo, privacidade e login retornaram HTTP 200. O navegador no domínio HTTPS confirmou os três cartões/avisos em 320, 390, 768 e 1440 px, sem estrelas, selo de compra verificada, fotos, transbordamento ou erros de página, com 128 bolhas e o destino de avaliação preservado. Capturas em `outputs/demo-reviews-live-*-2026-10-11.png`, fora do Git. Requisições de mutação foram bloqueadas durante a verificação; não houve compra, cobrança ou inserção de avaliação no banco.
+
+## Atualização — remoção dos exemplos
+
+O lojista solicitou a retirada dos cartões ilustrativos. A home volta a mostrar somente o convite `Sua experiência tem espaço aqui.` quando a consulta de avaliações verificadas estiver vazia. Foram removidos os três textos, nomes e identificações de demonstração. O carrossel de avaliações reais e o link para avaliar compras permanecem iguais; banco, API, média de notas e cashback não foram alterados.
+
+README e histórico atualizados. Não há mudança no rodapé, nas bolhas, nos selos ou nas decisões adiadas de proxy/painéis.
+
+Validação local da remoção: build aprovado, incluindo lint e verificação de tipos; `test:security` com 267/267. Auditoria de produção novamente com zero vulnerabilidades; auditoria completa mantém as cinco high de desenvolvimento já registradas. O diff de `home-page.tsx` e `site-footer.tsx` contra `e2a567e` está vazio: o estado visual anterior aos exemplos e o fluxo de avaliações reais foram restaurados integralmente. Nenhuma dependência ou migration foi alterada.

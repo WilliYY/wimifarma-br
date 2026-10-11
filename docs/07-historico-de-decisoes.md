@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-11 — Remoção dos exemplos de avaliações
+
+- Por pedido do lojista, retirar os três cartões ilustrativos da home e restaurar o convite para avaliar compras reais.
+- Preservar o carrossel das avaliações do sistema, iniciais, notas, indicação de incentivo e selo vinculado à compra confirmada. Nenhuma alteração em banco, API ou cashback.
+- Preservar selos e as 128 bolhas do rodapé. A atualização do proxy e a restrição dos painéis continuam adiadas. Evidências no documento [61](61-avaliacoes-e-rodape.md).
+
 ## 2026-10-11 — Exemplos públicos de avaliações
 
 - Atender ao pedido de publicar exemplos agora com três cartões claramente identificados como demonstração, nomes `Exemplo A./B./C.` e iniciais. Não atribuir estrelas, compra verificada ou identidade de cliente aos exemplos.

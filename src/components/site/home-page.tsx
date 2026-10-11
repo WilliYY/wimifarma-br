@@ -842,13 +842,13 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
         <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-pharma-green/20 bg-white px-3 py-1.5 text-xs font-bold text-ink">
-              {reviews.length > 0 ? <ShieldCheck aria-hidden="true" className="h-4 w-4 text-pharma-green" /> : <Quote aria-hidden="true" className="h-4 w-4 text-brand" />}
-              {reviews.length > 0 ? "Experiências de compras verificadas" : "Exemplos de demonstração"}
+              <ShieldCheck aria-hidden="true" className="h-4 w-4 text-pharma-green" />
+              Experiências de compras verificadas
             </span>
             <h2 className="mt-3 text-3xl font-black leading-tight text-ink sm:text-4xl" id="customer-reviews-title">
-              {reviews.length > 0 ? "Avaliações de clientes" : "Sua experiência tem espaço aqui."}
+              Avaliações de clientes
             </h2>
-            <p className="mt-3 max-w-xl text-base leading-6 text-muted">{reviews.length > 0 ? "Quem compra, compartilha. Sua experiência ajuda outras pessoas a escolher com mais confiança." : "Veja como as avaliações serão exibidas. Os exemplos abaixo são ilustrativos e não representam relatos de clientes."}</p>
+            <p className="mt-3 max-w-xl text-base leading-6 text-muted">Quem compra, compartilha. Sua experiência ajuda outras pessoas a escolher com mais confiança.</p>
           </div>
 
           {reviews.length > 0 ? (
@@ -926,25 +926,12 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
             ))}
           </div>
         ) : (
-          <div aria-label="Exemplos ilustrativos de avaliações" className="grid gap-4 md:grid-cols-3">
-            {[
-              { name: "Exemplo A.", comment: "Encontrei os produtos de cuidado diário que procurava e achei a navegação fácil." },
-              { name: "Exemplo B.", comment: "Gostei de poder consultar os detalhes do produto antes de escolher." },
-              { name: "Exemplo C.", comment: "Foi prático conferir as opções de entrega e falar com a equipe." },
-            ].map((example) => (
-              <article className="flex min-w-0 flex-col rounded-3xl border border-line bg-white p-6 shadow-sm" data-review-demo key={example.name}>
-                <div className="mb-5 flex items-center gap-3">
-                  <span aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-brand/10 bg-brand-soft text-base font-black text-brand">{reviewInitials(example.name)}</span>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-bold text-ink">{example.name}</h3>
-                    <span className="mt-1 inline-flex rounded-full border border-brand/15 bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand">Demonstração</span>
-                  </div>
-                  <Quote aria-hidden="true" className="h-6 w-6 shrink-0 text-brand/20" />
-                </div>
-                <blockquote className="mb-6 text-base font-medium leading-7 text-ink">&ldquo;{example.comment}&rdquo;</blockquote>
-                <p className="mt-auto border-t border-line pt-4 text-xs leading-5 text-muted">Texto ilustrativo. Não é uma avaliação real.</p>
-              </article>
-            ))}
+          <div className="flex flex-col items-start gap-5 rounded-3xl border border-line bg-white p-6 sm:flex-row sm:items-center sm:p-8">
+            <span aria-hidden="true" className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand"><Quote className="h-8 w-8" /></span>
+            <div className="max-w-xl">
+              <h3 className="text-xl font-bold text-ink">Sua experiência tem espaço aqui.</h3>
+              <p className="mt-2 text-sm leading-6 text-muted">Ainda não há avaliações verificadas publicadas. Depois de receber sua compra, conte como foi usar o produto.</p>
+            </div>
           </div>
         )}
         <Link className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-brand/20 bg-white px-5 py-3 text-sm font-bold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2" href="/minha-conta/avaliacoes">Avaliar minhas compras<ChevronRight aria-hidden="true" className="h-4 w-4" /></Link>
