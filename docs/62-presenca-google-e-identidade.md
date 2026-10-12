@@ -41,7 +41,7 @@ Na continuação de 11/10/2026, o lojista autorizou os ajustes e confirmou que o
 - Instagram oficial informado pelo lojista e aceito no campo de redes sociais: `https://www.instagram.com/irisfarma_farmaciapopular/`.
 - Descrições de `Entrega` nas categorias Farmácia e Drogaria, `Medicamento` e `Consulta Farmacêutica` salvas e conferidas ao reabrir cada serviço. A descrição farmacêutica é geral; não afirma agendamento, procedimentos clínicos ou consulta gratuita. Preços existentes foram preservados.
 - Serviço `Retirada na loja` criado como gratuito. Descrição informa endereço, preparo em até 30 minutos de atendimento após confirmação, horário diário de 07:30 a 18:30 e necessidade de aguardar a equipe. O texto e o preço foram conferidos ao reabrir o serviço.
-- Os serviços permaneciam em revisão pelo Google, com aviso de que a publicação pode levar até um dia. Salvar e conferir no editor não equivale a comprovar publicação para todos os clientes.
+- Os serviços inicialmente ficaram em revisão, com aviso de prazo de até um dia. Na conferência final, o painel manteve todos os serviços e já não mostrava o aviso de pendência. Isso confirma o estado aceito no editor; a apresentação para todos os clientes não foi verificada em sessões independentes.
 
 O painel de posts ainda estava vazio. O formulário de Atualização disponibiliza `Programar esta postagem`, com data e hora, mas não cria conteúdo por conta própria. Nenhum post ou rotina recorrente foi publicado nesta etapa. Vincular Instagram não garante importação automática de publicações para uma farmácia no Brasil.
 
