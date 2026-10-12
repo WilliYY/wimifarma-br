@@ -10,6 +10,9 @@ import {
   summarizeProductReviews,
 } from "@/features/products/product-detail";
 import { getPrisma } from "@/lib/prisma";
+import { getPublicCategories } from "@/features/products/storefront";
+import { buildHomeShortcuts } from "@/features/products/home-shortcuts";
+import { siteConfig } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -19,7 +22,7 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const prisma = getPrisma();
-  const [products, catalogProductsData, reviews] = await Promise.all([
+  const [products, catalogProductsData, reviews, categories] = await Promise.all([
     prisma.product.findMany({
       orderBy: { featuredPosition: "asc" },
       select: {
@@ -99,6 +102,7 @@ export default async function Page() {
         product: { status: "ACTIVE" },
       },
     }),
+    getPublicCategories(),
   ]);
   const featuredProducts = products.map(({ reviews: productReviews, ...product }) => {
     const rating = summarizeProductReviews(
@@ -135,6 +139,7 @@ export default async function Page() {
       catalogProducts={catalogProducts}
       customerReviews={customerReviews}
       featuredProducts={featuredProducts}
+      shortcuts={buildHomeShortcuts(categories, siteConfig.phone)}
     />
   );
 }

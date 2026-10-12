@@ -13,7 +13,7 @@ A conta pessoal inicialmente aberta mostra uma ficha `Wimifarma rua maringa` com
 ## Ajustes do site
 
 - Título e descrição institucionais consistentes, com marca, município e endereço reais, reutilizados nos metadados e compartilhamento.
-- Um H1 estável e visível na home identifica `Farmácia Wimifarma em Ivaté-PR`; campanhas passam a H2, preservando estilos e interação.
+- A primeira etapa adicionou o H1 visível `Farmácia Wimifarma em Ivaté-PR` e manteve campanhas como H2. Em 12/10/2026, o lojista pediu a retirada desse bloco visual; a home passou a ter o H1 acessível `Wimifarma`, enquanto a identidade local permanece nos metadados, dados estruturados e informações institucionais. Atalhos circulares e contrato visual em `docs/10-layout-e-experiencia.md`.
 - Nó `Pharmacy` preservado, enriquecido com razão social, CNPJ, descrição e CEP conhecidos. Logo oficial completa em WebP; telefone e localização preservados.
 - Um único nó `WebSite`, vinculado à farmácia, com nome `Wimifarma` e alternativas `Wimifarma Ivaté` e `wimifarma.com.br`.
 - Sem notas agregadas dos depoimentos editoriais, horários inventados, palavras-chave repetidas, novas dependências ou mudanças comerciais.

@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-12 - Atalhos circulares e simplificação da abertura da home
+
+- Decisão: substituir o bloco visual de título/descrição por oito atalhos circulares de compras e serviços, conforme referência enviada pelo lojista. Manter um H1 acessível curto e os dados institucionais de SEO.
+- Motivo: facilitar a navegação por assunto e deixar as campanhas mais próximas dos atalhos, preservando a identidade Wimifarma.
+- Impacto: componente `HomeShortcuts`, mapeamento de categorias reais, consulta pública de categorias na home, fixture de QA, testes e documentação de layout/presença.
+- Cuidados: não inventar slugs, cupons, descontos ou disponibilidade. Categorias ausentes seguem para consulta humana pelo WhatsApp. Foco, teclado, toque, setas e movimento reduzido são preservados. Header, bolhas do rodapé, estoque, checkout e pagamentos não integram a alteração.
+
 ## 2026-10-11 — Previsão de retirada em 30 minutos de atendimento
 
 - Informar o prazo ao selecionar retirada no checkout, considerando o horário aprovado de 7h30 às 18h30 todos os dias e o fuso de Ivaté. Mostrar próxima abertura e espera total fora do atendimento; perto do fechamento, continuar o tempo restante no dia seguinte.

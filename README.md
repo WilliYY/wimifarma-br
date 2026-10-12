@@ -1,6 +1,6 @@
 # Wimifarma BR
 
-Identidade para descoberta no Google: marca e cidade visíveis na home, metadados consistentes e dados estruturados institucionais. Diagnóstico de indexação e limites em [docs/62-presenca-google-e-identidade.md](docs/62-presenca-google-e-identidade.md).
+Home com atalhos circulares para compras e serviços, sem o antigo bloco de título e descrição. Categorias publicadas abrem o catálogo correspondente; assuntos sem categoria abrem uma consulta pelo WhatsApp. Contrato visual em [docs/10-layout-e-experiencia.md](docs/10-layout-e-experiencia.md). Identidade local preservada nos metadados e dados estruturados; diagnóstico de indexação em [docs/62-presenca-google-e-identidade.md](docs/62-presenca-google-e-identidade.md).
 
 Avaliações com iniciais e rodapé claro com selos próprios, preservando as 128 bolhas. A home reúne avaliações de compras e 15 relatos reais recebidos pelo WhatsApp, fornecidos pelo lojista e exibidos sem indicação do canal, conforme solicitado. Relatos externos não entram nas notas dos produtos ou no cashback: [docs/61-avaliacoes-e-rodape.md](docs/61-avaliacoes-e-rodape.md).
 

@@ -32,6 +32,8 @@ import type { CartProduct } from "@/components/site/cart-provider";
 import { HomeProductCarousel } from "@/components/site/home-product-carousel";
 import { PerfumeryCarousel } from "@/components/site/perfumery-carousel";
 import { HeroProductStage } from "@/components/site/hero-product-stage";
+import { HomeShortcuts } from "@/components/site/home-shortcuts";
+import type { HomeShortcutItem } from "@/features/products/home-shortcuts";
 import campaignStyles from "./home-campaign.module.css";
 import { BrandSignature } from "@/components/site/brand-signature";
 import type { RelatedProductCardItem } from "@/components/site/public-product-card";
@@ -951,17 +953,19 @@ export function HomePage({
   catalogProducts,
   customerReviews,
   featuredProducts,
+  shortcuts,
 }: {
   catalogProducts: RelatedProductCardItem[];
   customerReviews: HomeReview[];
   featuredProducts: PublicShowcaseProduct[];
+  shortcuts: HomeShortcutItem[];
 }) {
   return (
     <>
       <section className="pharma-clouds bg-white px-4 pb-8 pt-36 sm:px-6 sm:pt-40 lg:px-8 lg:pt-56">
         <div className="mx-auto max-w-7xl">
-          <h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">Farmácia Wimifarma em Ivaté-PR</h1>
-          <p className="mb-5 mt-2 max-w-2xl text-sm leading-6 text-muted">Medicamentos, higiene e beleza na Avenida Minas Gerais, 2263. Consulte produtos, entrega e retirada com nossa equipe.</p>
+          <h1 className="sr-only">Wimifarma</h1>
+          <HomeShortcuts items={shortcuts} />
           <HeroCarousel />
         </div>
       </section>
