@@ -23,14 +23,39 @@ A conta pessoal inicialmente aberta mostra uma ficha `Wimifarma rua maringa` com
 Após o lojista instalar a extensão no perfil Chrome `wimi`, o Codex conseguiu acessar a conta correta em 11/10/2026. O gerenciador mostrou uma empresa, 100% confirmada, e o painel público confirmou que a conta gerencia a ficha. O nome público e o campo de nome são `Wimifarma`; a indicação `rua maringa` aparece no endereço, não foi acrescentada ao nome comercial.
 
 - Site alterado de `http://wimifarma.com.br/` para `https://wimifarma.com.br/`. O Google inicialmente mostrou revisão pendente e depois exibiu a nova URL como valor atual, sem aviso de pendência nesse campo.
-- Descrição institucional enviada com marca, município, endereço, produtos e atendimento reais. O Google confirmou o envio e mostrou a descrição como pendente de revisão; aprovação pública ainda não foi comprovada.
+- Descrição institucional enviada com marca, município, endereço, produtos e atendimento reais. Inicialmente ficou pendente; na conferência posterior, o editor mostrou o texto como valor atual, sem aviso de pendência nesse campo.
 - Telefone `(44) 98413-4971` e link atual de WhatsApp `https://wa.me/5544984134971` conferidos. Havia uma edição anterior recusada que removia o nono dígito; ela não foi reenviada nem usada como contato atual.
 - Horário de 07:30 a 18:30 todos os dias, inclusive domingo, confirmado pelo lojista e preservado. Horários especiais não foram inventados.
-- Nome, categorias, endereço, acesso e propriedade preservados. A ficha duplicada da conta inicialmente consultada continua fora desta alteração.
+- Na primeira etapa, nome, categorias, endereço, acesso e propriedade foram preservados. Categorias e endereço foram ajustados na etapa abaixo, a pedido do lojista. A ficha duplicada da conta inicialmente consultada continua fora desta alteração.
 
 Descrição enviada:
 
 > A Wimifarma é uma farmácia em Ivaté, Paraná, localizada na Avenida Minas Gerais, 2263. Trabalhamos com medicamentos, genéricos, perfumaria, produtos de higiene, beleza e cuidados para o dia a dia. Oferecemos atendimento presencial e pelo WhatsApp, com orientação farmacêutica. Nosso site oficial reúne o catálogo de produtos e permite fazer pedidos online. Consulte nossa equipe para confirmar disponibilidade, entrega local e retirada na loja.
+
+## Categorias, endereço, Instagram e serviços
+
+Na continuação de 11/10/2026, o lojista autorizou os ajustes e confirmou que o ponto indicado no mapa era o correto. O editor do perfil foi reaberto após salvar para verificar os valores.
+
+- Categoria principal `Farmácia` e adicional `Drogaria` aceitas; `Butique` removida.
+- Endereço atual aceito: `Avenida Minas Gerais, 2263, Ivaté - PR, 87525-000`. A segunda linha que misturava Rua Maringá foi removida. O Google inicialmente exigiu confirmação manual do mapa; o ponto confirmado pelo lojista foi preservado. Ao final, o campo já não mostrava revisão pendente.
+- Instagram oficial informado pelo lojista e aceito no campo de redes sociais: `https://www.instagram.com/irisfarma_farmaciapopular/`.
+- Descrições de `Entrega` nas categorias Farmácia e Drogaria, `Medicamento` e `Consulta Farmacêutica` salvas e conferidas ao reabrir cada serviço. A descrição farmacêutica é geral; não afirma agendamento, procedimentos clínicos ou consulta gratuita. Preços existentes foram preservados.
+- Serviço `Retirada na loja` criado como gratuito. Descrição informa endereço, preparo em até 30 minutos de atendimento após confirmação, horário diário de 07:30 a 18:30 e necessidade de aguardar a equipe. O texto e o preço foram conferidos ao reabrir o serviço.
+- Os serviços permaneciam em revisão pelo Google, com aviso de que a publicação pode levar até um dia. Salvar e conferir no editor não equivale a comprovar publicação para todos os clientes.
+
+O painel de posts ainda estava vazio. O formulário de Atualização disponibiliza `Programar esta postagem`, com data e hora, mas não cria conteúdo por conta própria. Nenhum post ou rotina recorrente foi publicado nesta etapa. Vincular Instagram não garante importação automática de publicações para uma farmácia no Brasil.
+
+## Avaliações reais no Google
+
+O perfil continuava sem avaliações. O painel do proprietário forneceu o link atual `https://g.page/r/CbabY0Td61ZIEBM/review`; ele foi extraído dos controles de compartilhamento do próprio Google. Não derivar ou reutilizar variantes desse identificador sem conferir no painel.
+
+Os depoimentos recebidos pelo WhatsApp não viram avaliações Google automaticamente. Solicitar a opinião de clientes reais pelo link ou QR code, de forma opcional e neutra, e responder às avaliações recebidas. Não pedir somente cinco estrelas, selecionar apenas clientes satisfeitos nem oferecer desconto, cashback ou brindes em troca. O cashback das avaliações internas do site não deve ser aplicado às avaliações Google.
+
+Mensagem sugerida, sem envio automático:
+
+> Olá! Obrigado por escolher a Wimifarma. Se desejar, conte como foi sua experiência no Google: https://g.page/r/CbabY0Td61ZIEBM/review. Sua opinião ajuda a melhorar nosso atendimento.
+
+QR code em PNG e SVG e capturas de conferência foram salvos em `outputs/google-perfil-ajustes-2026-10-11/`, fora do Git. O QR usa o link atual observado no perfil. Nenhuma mensagem foi enviada a clientes.
 
 ## Operação e limites
 
@@ -48,6 +73,10 @@ A indexação já existente não garante destaque por marca. Nenhum ajuste do si
 - [Solicitar novo rastreamento](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl?hl=pt-br).
 - [Ortografia na Pesquisa](https://support.google.com/websearch/answer/134479?hl=pt-BR).
 - [Representar a empresa no Google](https://support.google.com/business/answer/3038177?hl=pt-BR).
+- [Redes sociais no perfil](https://support.google.com/business/answer/13580646?hl=pt-BR).
+- [Criar e programar posts](https://support.google.com/business/answer/7342169?hl=pt-BR).
+- [Pedir avaliações](https://support.google.com/business/answer/3474122?hl=pt-BR).
+- [Política de conteúdo do Maps](https://support.google.com/contributionpolicy/answer/7400114?hl=pt-BR).
 
 ## Validação
 
@@ -61,4 +90,5 @@ A indexação já existente não garante destaque por marca. Nenhum ajuste do si
 - Inspeção visual em desktop de 1280 px e celular de 390 px: sem transbordamento horizontal, H1 único e campanhas preservadas. Animações originais da marca e rodapé mantidas; a nova animação do Miauby foi cancelada pelo lojista.
 - Search Console: teste da URL publicada em 11/10/2026 às 18:25 confirmou “O URL está disponível para o Google”. Uma solicitação de indexação foi enviada e a confirmação “Indexação solicitada” apareceu. Isso confirma a entrada na fila, não novo rastreamento ou mudança de posição.
 - Evidências locais em `outputs/google-presenca-2026-10-11/`: `home-desktop.png`, `home-mobile.png` e `indexacao-solicitada.png`. Capturas permanecem fora do Git.
-- Conferência do Perfil da Empresa correto concluída após conexão da extensão. Capturas `perfil-site-https.png` e `perfil-descricao-enviada.png` registram a URL atual e a descrição pendente. Aprovação da descrição e efeitos futuros na busca dependem do Google.
+- Conferência inicial do Perfil da Empresa correto concluída após conexão da extensão. Capturas `perfil-site-https.png` e `perfil-descricao-enviada.png` registram os estados daquela etapa. A aprovação posterior da descrição e os ajustes seguintes estão registrados acima; efeitos futuros na busca dependem do Google.
+- Na etapa de categorias, endereço, Instagram e serviços, a validação foi feita pela interface do Google, reabrindo os campos salvos. O QR foi gerado com a biblioteca `qrcode` já instalada. A única alteração versionada desta etapa é documental; não houve mudança de aplicação que exigisse repetir build ou testes.
