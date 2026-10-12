@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import { Check, Loader2, MapPin, RotateCw, Store } from "lucide-react";
+import { Check, Clock, Loader2, MapPin, RotateCw, Store } from "lucide-react";
 import type { CheckoutDraft } from "@/features/orders/checkout-draft";
 import { postalAddressSchema } from "@/features/orders/postal-code";
 import { formatPostalCode, getDeliveryAvailability, normalizePostalCode } from "@/features/products/product-detail";
 import { CheckoutShippingOptions } from "./checkout-shipping-options";
 import type { ShippingSelection } from "@/features/shipping/schema";
 import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/features/shipping/delivery-policy";
+import { getPickupEstimate, pickupTimeLabel, pickupWaitLabel, synchronizedPickupTime } from "@/features/orders/pickup-estimate";
 
 type Address = CheckoutDraft["address"];
 type Props = { address: Address; fulfillmentMethod: CheckoutDraft["fulfillmentMethod"]; onAddress: Dispatch<SetStateAction<Address>>; onMethod: (method: CheckoutDraft["fulfillmentMethod"]) => void; shippingSelection?: ShippingSelection; onShipping: (option?: ShippingSelection) => void; compact?: boolean; discountCents?: number; carrierShippingAvailable?: boolean };
@@ -20,6 +21,45 @@ export function CheckoutDeliveryStep({ address, fulfillmentMethod, onAddress, on
   const postalRef = useRef<HTMLInputElement>(null);
   const setterRef = useRef(onAddress);
   useEffect(() => { setterRef.current = onAddress; }, [onAddress]);
+  const [pickupNow, setPickupNow] = useState<number | null>(null);
+  const [pickupClockFailed, setPickupClockFailed] = useState(false);
+  const [pickupRetry, setPickupRetry] = useState(0);
+  useEffect(() => {
+    if (fulfillmentMethod !== "PICKUP") return;
+    let clock: { time: number; started: number } | null = null;
+    let disposed = false;
+    let syncing = false;
+    const controller = new AbortController();
+    setPickupNow(null);
+    setPickupClockFailed(false);
+    const update = () => {
+      if (clock) setPickupNow(clock.time + performance.now() - clock.started);
+    };
+    const sync = async () => {
+      if (syncing) return;
+      syncing = true;
+      const requestedAt = performance.now();
+      try {
+        const response = await fetch("/api/health", { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(5000)]) });
+        const payload = await response.json();
+        if (!response.ok || typeof payload.timestamp !== "string") throw new Error("Pickup clock unavailable");
+        const receivedAt = performance.now();
+        const time = synchronizedPickupTime(payload.timestamp, receivedAt - requestedAt);
+        if (!disposed) { clock = { time, started: receivedAt }; setPickupClockFailed(false); }
+      } catch {
+        if (!disposed) { clock = null; setPickupNow(null); setPickupClockFailed(true); }
+      } finally {
+        syncing = false;
+        if (!disposed) update();
+      }
+    };
+    const onVisibility = () => { if (document.visibilityState === "visible") void sync(); };
+    void sync();
+    const timer = window.setInterval(update, 1000);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { disposed = true; controller.abort(); window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisibility); };
+  }, [fulfillmentMethod, pickupRetry]);
+  const pickupEstimate = pickupNow === null ? null : getPickupEstimate(new Date(pickupNow));
 
   useEffect(() => {
     if (code.length !== 8 || fulfillmentMethod !== "DELIVERY") { setStatus({ loading: false, message: "", failed: false }); return; }
@@ -69,7 +109,17 @@ export function CheckoutDeliveryStep({ address, fulfillmentMethod, onAddress, on
       <div aria-live="polite" className="mt-3 flex min-h-6 flex-wrap items-center gap-2 text-xs text-muted">{status.loading && <Loader2 className="h-4 w-4 animate-spin" />}<span>{status.message}</span>{status.failed && <button className="inline-flex min-h-9 cursor-pointer items-center gap-1 rounded px-2 font-bold text-brand focus-visible:ring-2 focus-visible:ring-brand" onClick={() => setRetry((value) => value + 1)} type="button"><RotateCw className="h-3 w-3" />Tentar novamente</button>}</div>
       {code.length === 8 && !outsideCoverage && <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-xs leading-5 text-emerald-800"><strong className="block">Entrega local · Grátis</strong>Equipe Wimifarma. Prazo e disponibilidade confirmados no atendimento.</div>}
       {outsideCoverage && <CheckoutShippingOptions key={code} postalCode={code} selected={shippingSelection} onSelect={onShipping} discountCents={discountCents} available={carrierShippingAvailable} onPickup={() => onMethod("PICKUP")} />}
-    </> : <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4"><p className="font-bold text-ink">Retirada gratuita na Wimifarma</p><p className="mt-1 text-sm text-muted">Av. Minas Gerais, 2263, Ivate-PR</p><p className="mt-3 flex items-start gap-2 text-xs leading-5 text-pharma-green"><Store className="mt-0.5 h-4 w-4 shrink-0" />Aguarde a equipe confirmar que o pedido esta pronto.</p></div>}
+    </> : <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
+      <p className="font-bold text-ink">Retirada gratuita na Wimifarma</p>
+      <p className="mt-1 text-sm text-muted">Av. Minas Gerais, 2263, Ivate-PR</p>
+      <div className="mt-4 border-t border-emerald-100 pt-4" role="status">
+        <p className="flex items-start gap-2 font-bold text-pharma-green"><Clock aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />{pickupEstimate ? pickupEstimate.openNow && pickupEstimate.readyToday ? "Pronto em até 30 minutos" : `Pronto ${pickupEstimate.readyToday ? "hoje" : "amanhã"} até ${pickupTimeLabel(pickupEstimate.readyAt)}` : pickupClockFailed ? "Consulte com a equipe a previsão de retirada" : "Calculando previsão de retirada..."}</p>
+        {pickupEstimate && (!pickupEstimate.openNow || !pickupEstimate.readyToday) && <p className="mt-2 text-sm font-semibold text-ink">Previsão de espera: {pickupWaitLabel(pickupEstimate.waitMinutes)}.</p>}
+        {pickupClockFailed && <button className="mt-2 inline-flex min-h-9 cursor-pointer items-center gap-1 rounded px-2 text-xs font-bold text-brand focus-visible:ring-2 focus-visible:ring-brand" onClick={() => setPickupRetry(value => value + 1)} type="button"><RotateCw aria-hidden="true" className="h-3 w-3" />Recalcular previsão</button>}
+      </div>
+      <p className="mt-2 text-xs leading-5 text-muted">30 minutos de preparo após a confirmação do pedido, contados no horário de atendimento: todos os dias, das 7h30 às 18h30.</p>
+      <p className="mt-3 flex items-start gap-2 text-xs leading-5 text-pharma-green"><Store aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />Aguarde a equipe confirmar que o pedido está pronto.</p>
+    </div>}
     <p className="mt-4 text-xs leading-5 text-muted">Frete grátis a partir de {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(FREE_SHIPPING_THRESHOLD_CENTS / 100)} em produtos após descontos, inclusive para outras cidades com frete disponível.</p>
   </div>;
 }

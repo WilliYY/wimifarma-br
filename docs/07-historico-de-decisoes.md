@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-11 — Previsão de retirada em 30 minutos de atendimento
+
+- Informar o prazo ao selecionar retirada no checkout, considerando o horário aprovado de 7h30 às 18h30 todos os dias e o fuso de Ivaté. Mostrar próxima abertura e espera total fora do atendimento; perto do fechamento, continuar o tempo restante no dia seguinte.
+- Usar referência de tempo do servidor, atualizada no navegador, preservando confirmação humana de pedido pronto, pagamentos e estados operacionais. Contrato em [32](32-checkout-e-confianca.md).
+
 ## 2026-10-11 — Identidade da Wimifarma para descoberta no Google
 
 - Reforçar marca, município e endereço reais nos metadados e em um H1 fixo visível na home; títulos rotativos das campanhas passam a H2 com os estilos preservados.
