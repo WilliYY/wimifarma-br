@@ -14,6 +14,8 @@ Arquivos: `home-shortcuts.tsx`, `features/products/home-shortcuts.ts` e testes, 
 
 Validação local: 219 testes e 267 testes de segurança aprovados, lint, typecheck e build sem falhas. Revisão independente sem achados acionáveis. Preview com componentes e estilos reais conferido em 1280, 390 e 320 px: oito atalhos, rolagem restrita à faixa, setas até o limite e foco visível por teclado. Auditoria de produção sem vulnerabilidades; auditoria completa mantém cinco alertas altos nas dependências de desenvolvimento, sem alteração de dependências nesta entrega.
 
+Publicação de `bd11dfa`: somente a aplicação foi reconstruída e recriada. App e PostgreSQL saudáveis, zero reinícios inesperados e `/api/health` com HTTP 200 e `ok: true`. No navegador público, desktop e celular exibem os oito atalhos sem o antigo bloco e sem overflow da página; Medicamentos abre `/categorias/medicamento` com dois produtos. Infantil, Vitaminas e suplementos, Dermo e Perfumaria usam a consulta pelo WhatsApp porque não há categoria publicada correspondente. A fonte da logo animada e as 128 bolhas foram conferidas na página. Capturas e relatório local em `outputs/home-shortcuts-2026-10-12/`, fora do versionamento.
+
 ## Atalho administrativo - 2026-09-23
 
 O cabecalho publico inclui **Painel admin** para perfis autorizados, no celular e no desktop. Desde 2026-09-25, o atalho integra o cartao da conta no desktop, com carrinho e Sair alinhados ao centro; no celular ocupa a largura dos controles. Esse acabamento e exclusivo de ADMIN, MANAGER e STAFF: a conta comum permanece igual, sem atalho administrativo. A regra usa a permissao de `/admin/dashboard` no servidor e esta documentada em `docs/17-usuarios-e-acessos.md`. Preservar esse acesso visivel em futuras alteracoes do layout.
