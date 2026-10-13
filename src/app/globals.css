@@ -118,6 +118,55 @@ textarea {
   }
 }
 
+.account-welcome {
+  background: linear-gradient(115deg, var(--surface) 35%, var(--brand-soft));
+}
+
+.account-welcome::before,
+.account-welcome::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 50%;
+  animation: account-welcome-drift 16s ease-in-out infinite alternate;
+}
+
+.account-welcome::before {
+  top: -16rem;
+  right: -7rem;
+  width: 32rem;
+  height: 32rem;
+  border: 60px solid color-mix(in srgb, var(--brand) 5%, transparent);
+}
+
+.account-welcome::after {
+  right: 16%;
+  bottom: -13rem;
+  width: 26rem;
+  height: 26rem;
+  background: radial-gradient(circle, color-mix(in srgb, var(--yellow) 12%, transparent), transparent 70%);
+  animation-duration: 20s;
+  animation-direction: alternate-reverse;
+}
+
+.account-welcome-crown {
+  animation: soft-float 4.5s ease-in-out infinite;
+}
+
+@keyframes account-welcome-drift {
+  from { transform: translate3d(0, 0, 0) scale(0.96); }
+  to { transform: translate3d(22px, 12px, 0) scale(1.03); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-welcome::before,
+  .account-welcome::after,
+  .account-welcome-crown {
+    animation: none !important;
+  }
+}
+
 @keyframes delivery-pull-copy {
   0%,
   100% {

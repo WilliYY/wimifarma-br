@@ -259,23 +259,28 @@ export function CustomerAccountPanel({
     <section className="min-h-screen bg-[#f5f6f8] px-4 pb-16 pt-40 text-ink sm:px-6 sm:pt-44 lg:px-8 lg:pt-60">
       <div className="mx-auto max-w-7xl">
         <nav aria-label="Localização" className="mb-5 flex items-center gap-2 text-xs font-medium text-muted"><Link className="inline-flex min-h-6 items-center hover:text-brand" href="/">Início</Link><ChevronRight aria-hidden="true" className="h-3 w-3" /><span aria-current="page">Minha conta</span></nav>
-        <header className="relative isolate overflow-hidden rounded-3xl bg-[#151e2e] px-5 py-7 text-white sm:p-8 lg:p-10">
-          <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-40 -z-10 h-[32rem] w-[32rem] rounded-full border-[65px] border-white/[0.03]" />
-          <div aria-hidden="true" className="pointer-events-none absolute bottom-0 left-0 -z-10 h-1 w-full bg-brand" />
+        <header className="account-welcome relative isolate overflow-hidden rounded-3xl border border-brand/10 px-5 py-7 text-ink sm:p-8 lg:p-10">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/60">Seu espaço Wimifarma</p><BrandSignature className="px-2.5 py-1.5" />
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted">Seu espaço Wimifarma</p><BrandSignature className="px-2.5 py-1.5" />
           </div>
           <div className="mt-7 flex flex-col justify-between gap-7 lg:flex-row lg:items-end">
             <div className="flex min-w-0 items-center gap-4 sm:gap-5">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/10 text-2xl font-black ring-1 ring-white/20 sm:h-20 sm:w-20">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white text-2xl font-black text-brand ring-1 ring-brand/10 sm:h-20 sm:w-20">
                 {customer.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img alt="Sua foto de perfil" className="h-full w-full object-cover" referrerPolicy="no-referrer" src={customer.imageUrl} />
                 ) : initials(customer.name) || <UserRound className="h-8 w-8" />}
               </div>
-              <div className="min-w-0"><h1 className="break-words text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">Olá, {firstName}<span className="text-brand">.</span></h1><p className="mt-2 text-sm leading-6 text-white/70">Seus pedidos, saldos e benefícios em um só lugar.</p>{club.summary?.member && <button className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-full border border-amber-300/30 bg-amber-200/10 px-3 text-xs font-bold text-amber-200 hover:bg-amber-200/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200" onClick={() => navigateTo("beneficios")} type="button"><Crown aria-hidden="true" className="h-4 w-4" />Participando do Club<ChevronRight aria-hidden="true" className="h-3.5 w-3.5" /></button>}</div>
+              <div className="min-w-0">
+                <h1 className="break-words text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">Olá,{" "}<span className={cn("relative inline-block max-w-full", club.summary?.member && "pt-7 sm:pt-8")}>
+                  {club.summary?.member && <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2"><Crown className="account-welcome-crown h-6 w-6 text-amber-600 sm:h-7 sm:w-7" strokeWidth={1.8} /></span>}
+                  {firstName}<span className="text-brand">.</span>
+                </span></h1>
+                <p className="mt-2 text-sm leading-6 text-muted">Seus pedidos, saldos e benefícios em um só lugar.</p>
+                {club.summary?.member && <button className="mt-3 inline-flex min-h-9 max-w-full items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-bold text-amber-900 hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700" onClick={() => navigateTo("beneficios")} type="button"><BadgeCheck aria-hidden="true" className="h-4 w-4 shrink-0" /><span className="min-w-0 text-left leading-5">Participando do Club</span><ChevronRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0" /></button>}
+              </div>
             </div>
-            <Link className="inline-flex min-h-11 w-fit items-center gap-3 rounded-xl bg-white px-5 py-3 text-sm font-bold text-ink transition-colors hover:bg-brand-soft" href="/catalogo"><ShoppingBag className="h-4 w-4 text-brand" />Continuar comprando <ArrowRight className="h-4 w-4" /></Link>
+            <Link className="inline-flex min-h-11 w-fit items-center gap-3 rounded-xl bg-brand px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href="/catalogo"><ShoppingBag aria-hidden="true" className="h-4 w-4" />Continuar comprando <ArrowRight aria-hidden="true" className="h-4 w-4" /></Link>
           </div>
         </header>
 
