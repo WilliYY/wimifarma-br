@@ -2,13 +2,15 @@
 
 ## Catálogo administrativo enxuto - 2026-10-13
 
-O lojista pediu prioridade ao trabalho com produtos, sem mensagens sobre tarefas automáticas. A listagem de `/admin/produtos` não exibe mais o quadro sobre descoberta no Google, sitemap, fonte Shopping ou sua configuração. Esses processos e suas rotas continuam funcionando; o componente de orientação sem uso foi removido. Diagnósticos e ações manuais permanecem no botão `SEO e marketing` de cada produto.
+O lojista pediu prioridade ao trabalho com produtos, sem mensagens sobre tarefas automáticas. A listagem de `/admin/catalogos` não exibe mais o quadro sobre descoberta no Google, sitemap, fonte Shopping ou sua configuração. Esses processos e suas rotas continuam funcionando; o componente de orientação sem uso foi removido. Diagnósticos e ações manuais permanecem no botão `SEO e marketing` de cada produto.
 
 A abertura reúne ações de cadastro, vitrine e lixeira, seguida por um resumo compacto dos quatro indicadores. Pesquisa, categoria, status e ordenação compartilham uma faixa responsiva. As linhas usam fotos menores, nome, publicação, preço, estoque e ações em duas colunas; estoque zero recebe destaque visual. Carregamento usa travessão nos indicadores para não sugerir uma contagem definitiva antes da resposta.
 
 Direção utilitária: hierarquia curta, tipografia Barlow e cores existentes, com vermelho na ação principal e no contorno superior. Densidade controlada, sem novas animações, fontes ou dependências. DFII: impacto 3, adequação 5, implementação 4, desempenho 4, risco 2; total 14. Permissões, filtros, cadastro, edição, destaque, exclusão confirmada, fotos e dados comerciais preservam os fluxos existentes.
 
 Validação: 219 testes e 267 testes de segurança, lint, typecheck e build aprovados; revisão independente sem achados acionáveis. Preview sintético em 320, 375 e 1440 px conferiu nomes e marcas longos, pesquisa por SKU, categoria/status combinados, menor estoque, criação/edição e cancelamento sem salvar. Nenhum overflow nas linhas ou na página. Auditoria de produção sem vulnerabilidades; cinco alertas altos preexistentes nas dependências de desenvolvimento permanecem registrados. Evidências locais em `outputs/catalog-ui-2026-10-13/`, fora do Git.
+
+Publicado em `2a9fc22`, com reconstrução somente da aplicação. Conferência autenticada em `/admin/catalogos`: quatro produtos, indicadores reais, antigo quadro ausente e busca por Dove retornando um resultado; limpar filtros restaura os quatro itens. Desktop de 1920 px e celular de 375 px sem overflow; imagens visíveis carregadas e ações móveis de pelo menos 44 px. `/api/health`, sitemap e fonte de produtos respondem HTTP 200; app e PostgreSQL saudáveis. Nenhum produto foi salvo, destacado ou excluído. `/admin/produtos` permanece uma rota antiga e não é a listagem do menu atual.
 
 ## Atalhos circulares da home - 2026-10-12
 
