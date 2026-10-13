@@ -11,7 +11,7 @@ export function ClubBanner() {
   const arrow = <ArrowUpRight aria-hidden="true" className="h-5 w-5 shrink-0 motion-safe:transition-transform motion-safe:group-hover:-translate-y-0.5 motion-safe:group-hover:translate-x-0.5" />;
 
   return (
-    <section aria-labelledby="club-banner-title" className="bg-white px-4 py-8 sm:px-6 lg:px-8">
+    <section aria-labelledby="club-banner-title" className="relative z-10 bg-white px-4 py-8 sm:px-6 lg:px-8">
       <div className="relative mx-auto grid max-w-7xl overflow-hidden rounded-2xl bg-brand md:grid-cols-[1.15fr_0.85fr]">
         <div className="relative z-10 min-w-0 px-6 pt-7 sm:px-9 sm:pt-9 md:pb-9 lg:px-12 lg:py-11">
           <p className="flex items-center gap-2.5 text-xs font-bold uppercase tracking-[0.16em] text-white">

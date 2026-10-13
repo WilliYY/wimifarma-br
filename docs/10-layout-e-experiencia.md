@@ -6,6 +6,8 @@ Banner redesenhado como campanha de fidelidade: vermelho sólido da Wimifarma, t
 
 O texto informa produtos participantes, WimiCoins combináveis com cashback e adesão gratuita sem mensalidade. A conversão monetária foi retirada deste banner; regras e valores necessários no checkout permanecem intactos. Membro abre benefícios; visitante segue para login; conta autenticada sem adesão usa confirmação explícita. Estados de consulta, adesão, falha e nova tentativa preservados pelo mesmo hook/API.
 
+O banner tem camada própria para impedir que as nuvens decorativas das seções vizinhas cubram o vermelho. Cabeçalho, menus e diálogos continuam acima dele; as nuvens permanecem nas seções originais.
+
 Somente `src/components/site/club-banner.tsx` muda na aplicação, sem dependências ou imagens novas. Cores usam os tokens existentes, a logo conserva proporções e contorno, e os elementos decorativos não capturam interação. Botões têm foco visível e pelo menos48px; movimento reduzido remove inclinações e deslocamentos de hover. Header e suas animações, 128 bolhas do rodapé, saldos e regras comerciais preservados. QA e publicação registrados no relatório local `outputs/club-campaign-2026-10-13/`.
 
 ## Catálogo administrativo enxuto - 2026-10-13
