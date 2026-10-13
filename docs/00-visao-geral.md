@@ -1,5 +1,7 @@
 # 00 - Visao Geral
 
+Atualização de 13/10/2026: Club gratuito com adesão explícita, WimiCoins por produto configuráveis por ADMIN e uso combinado com cashback implementados e publicados. Ganhos dependem de pedido concluído e pago; regras em [63](63-club-wimicoins.md). Campanhas futuras continuam fora desta etapa.
+
 ## O Que o Sistema Faz
 
 Wimifarma BR e a base de uma plataforma comercial para uma farmacia em Ivate-PR. O sistema combina site publico, chamadas para WhatsApp, catalogo/ofertas, login, painel administrativo, APIs internas, PostgreSQL e modulos preparados para evolucao.

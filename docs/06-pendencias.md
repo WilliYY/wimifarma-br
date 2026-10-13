@@ -1,5 +1,11 @@
 # 06 - Pendencias
 
+## Club e WimiCoins — 13/10/2026
+
+- Adesão gratuita, participantes ADMIN, elegibilidade/percentual por produto, banner, conta e uso combinado no checkout publicados; contrato e provas em [63](63-club-wimicoins.md). Titular inscrito e crédito único de 500 pontos confirmado; não é bônus geral.
+- ADMIN ainda deve escolher os produtos participantes e o percentual comercial; nenhum item foi ativado automaticamente. Indicação, aniversário, campanhas, comunicações e novas regras ficam para aprovação posterior. Não habilitar saque ou transferência.
+- Migração, saldo, concorrência, reserva e estorno validados em PostgreSQL QA; sem compras financeiras reais em produção. Manter as pendências de segurança e infraestrutura já registradas abaixo.
+
 ## Segurança — 10/10/2026
 
 - Correções de permissões/auditoria, limites de leitura/IA e recuperação técnica Asaas no documento 60. O titular adiou a restrição dos painéis e a atualização do proxy compartilhado; manter como pendências, sem alterar outros projetos.
