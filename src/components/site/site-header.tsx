@@ -128,13 +128,13 @@ export async function SiteHeader() {
               <>
                 <Link
                   aria-label="Abrir minha conta"
-                  className={`inline-flex h-11 w-11 ${hasCustomer ? "flex-col min-[390px]:w-auto min-[390px]:max-w-28 min-[390px]:px-2" : ""} items-center justify-center overflow-hidden rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand`}
+                  className={`inline-flex h-11 w-11 ${hasCustomer ? "flex-col min-[480px]:w-auto min-[480px]:max-w-28 min-[480px]:px-2" : ""} items-center justify-center overflow-hidden rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand`}
                   href="/minha-conta"
                   title={displayName}
                 >
                   {hasCustomer ? <>
-                    <UserRound aria-hidden="true" className="h-4 w-4 text-brand min-[390px]:hidden" />
-                    <span className="hidden min-[390px]:contents"><span className="text-xs font-bold">Minha conta</span><CustomerCashbackBalance /></span>
+                    <UserRound aria-hidden="true" className="h-4 w-4 text-brand min-[480px]:hidden" />
+                    <span className="hidden min-[480px]:contents"><CustomerCashbackBalance /></span>
                   </> : userImage ? (
                     <Image
                       alt=""
@@ -223,12 +223,12 @@ export async function SiteHeader() {
           {session?.user ? (
             <div className="ml-2 flex min-w-0 items-center">
               <div className="flex min-w-0 items-center gap-2">
-                <div className={hasAdminAccess ? "flex w-40 shrink-0 flex-col gap-1 rounded-2xl border border-brand/10 bg-white p-1 shadow-[0_6px_20px_rgba(17,24,39,0.06)]" : "contents"}>
+                <div className={hasAdminAccess ? "flex w-44 shrink-0 flex-col gap-0.5 rounded-2xl border border-brand/10 bg-white p-0.5 shadow-[0_6px_20px_rgba(17,24,39,0.06)] lg:w-48" : "contents"}>
                 <Link
                   aria-label={`Abrir conta de ${displayName}`}
                   className={hasAdminAccess
-                    ? "inline-flex h-10 min-w-0 items-center gap-2 rounded-xl px-1 font-body text-sm font-bold text-ink transition-colors hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                    : "inline-flex h-11 min-w-0 max-w-[9rem] items-center justify-start gap-2 rounded-full border border-line bg-white py-2 pl-2 pr-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:max-w-[11rem] xl:pr-4"}
+                    ? "inline-flex h-14 min-w-0 items-center gap-3 rounded-xl px-2 font-body text-sm font-bold text-ink transition-colors hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    : `inline-flex ${hasCustomer ? "h-16 max-w-[11rem]" : "h-11 max-w-[9rem]"} min-w-0 items-center justify-start gap-2 rounded-full border border-line bg-white py-2 pl-2 pr-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:max-w-[11rem] xl:pr-4`}
                   href="/minha-conta"
                   title={displayName}
                 >

@@ -38,5 +38,5 @@ export function CustomerCashbackProvider({ children, enabled }: { children: Reac
 export function CustomerCashbackBalance() {
   const balance = useContext(CustomerCashbackContext);
   const points = useContext(CustomerClubContext);
-  return <><span className="block truncate text-[11px] font-bold leading-4 text-amber-800" title="100 WimiCoins = R$ 1">WimiCoins {points === null ? "..." : `${points.toLocaleString("pt-BR")} · ${formatCurrency(points / 100)}`}</span><span className="block truncate text-[11px] font-bold leading-4 text-emerald-800" title="Cashback liberado">Cashback {balance === null ? "..." : formatCurrency(Number(balance))}</span></>;
+  return <><span className="block truncate text-[11px] font-bold leading-4 text-amber-800">WimiCoins {points === null ? "..." : points.toLocaleString("pt-BR")}</span><span className="block truncate text-[11px] font-bold leading-4 text-emerald-800" title="Cashback liberado">Cashback {balance === null ? "..." : formatCurrency(Number(balance))}</span></>;
 }
