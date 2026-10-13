@@ -260,12 +260,32 @@ export function CustomerAccountPanel({
       <div className="mx-auto max-w-7xl">
         <nav aria-label="Localização" className="mb-5 flex items-center gap-2 text-xs font-medium text-muted"><Link className="inline-flex min-h-6 items-center hover:text-brand" href="/">Início</Link><ChevronRight aria-hidden="true" className="h-3 w-3" /><span aria-current="page">Minha conta</span></nav>
         <header className="account-welcome relative isolate overflow-hidden rounded-3xl border border-brand/10 px-5 py-7 text-ink sm:p-8 lg:p-10">
+          <svg aria-hidden="true" focusable="false" viewBox="0 0 360 180" className="account-welcome-ornament pointer-events-none absolute right-[12%] top-20 -z-10 hidden w-72 text-amber-400 lg:block">
+            <g fill="var(--color-amber-50)" stroke="var(--color-amber-400)">
+              <g transform="rotate(-14 180 90)">
+                <ellipse cx="180" cy="90" rx="39" ry="48" strokeWidth="1.5" />
+                <ellipse cx="180" cy="90" rx="31" ry="40" fill="var(--color-amber-100)" />
+                <path d="M180 66v48" strokeWidth="7" strokeLinecap="round" />
+                <path d="M161 64c-7 8-9 18-9 27" fill="none" stroke="var(--surface)" strokeWidth="3" strokeLinecap="round" />
+              </g>
+              <g opacity="0.7" transform="rotate(18 270 45)">
+                <ellipse cx="270" cy="45" rx="17" ry="22" />
+                <path d="M270 35v20" strokeWidth="3" strokeLinecap="round" />
+              </g>
+              <g opacity="0.55" transform="rotate(-22 85 131)">
+                <ellipse cx="85" cy="131" rx="20" ry="26" />
+                <path d="M85 119v24" strokeWidth="3" strokeLinecap="round" />
+              </g>
+            </g>
+            <g fill="currentColor" opacity="0.55"><circle cx="110" cy="45" r="3" /><circle cx="232" cy="135" r="2.5" /><circle cx="304" cy="95" r="2" /></g>
+            <path d="M240 77v10m-5-5h10M48 80v8m-4-4h8" stroke="var(--brand)" strokeOpacity="0.25" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted">Seu espaço Wimifarma</p><BrandSignature className="px-2.5 py-1.5" />
           </div>
           <div className="mt-7 flex flex-col justify-between gap-7 lg:flex-row lg:items-end">
             <div className="flex min-w-0 items-center gap-4 sm:gap-5">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white text-2xl font-black text-brand ring-1 ring-brand/10 sm:h-20 sm:w-20">
+              <div className={cn("account-welcome-avatar flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white text-2xl font-black text-brand sm:h-20 sm:w-20", club.summary?.member && "account-welcome-avatar-member")}>
                 {customer.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img alt="Sua foto de perfil" className="h-full w-full object-cover" referrerPolicy="no-referrer" src={customer.imageUrl} />

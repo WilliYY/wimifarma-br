@@ -154,6 +154,18 @@ textarea {
   animation: soft-float 4.5s ease-in-out infinite;
 }
 
+.account-welcome-ornament {
+  animation: soft-breathe 8s ease-in-out infinite;
+}
+
+.account-welcome-avatar {
+  box-shadow: 0 0 0 4px var(--surface), 0 0 0 5px color-mix(in srgb, var(--brand) 12%, transparent);
+}
+
+.account-welcome-avatar-member {
+  box-shadow: 0 0 0 4px var(--surface), 0 0 0 5px color-mix(in srgb, var(--yellow) 75%, transparent), 0 10px 24px color-mix(in srgb, var(--yellow) 14%, transparent);
+}
+
 @keyframes account-welcome-drift {
   from { transform: translate3d(0, 0, 0) scale(0.96); }
   to { transform: translate3d(22px, 12px, 0) scale(1.03); }
@@ -162,7 +174,8 @@ textarea {
 @media (prefers-reduced-motion: reduce) {
   .account-welcome::before,
   .account-welcome::after,
-  .account-welcome-crown {
+  .account-welcome-crown,
+  .account-welcome-ornament {
     animation: none !important;
   }
 }

@@ -17,6 +17,8 @@ Direção visual: área pessoal de varejo, com saldos em primeiro plano, dourado
 
 Ajuste posterior solicitado pelo lojista: saudação em fundo claro com rosa suave, texto escuro e botão vermelho. Anéis e luz de fundo se movimentam lentamente por CSS, sem deslocar o conteúdo. Uma coroa dourada acima do nome aparece exclusivamente para `summary.member === true`, com flutuação discreta. A indicação de participação continua como atalho aos benefícios. As novas animações são desativadas em `prefers-reduced-motion: reduce`; marca, cabeçalho público e bolhas do rodapé permanecem preservados.
 
+Ornamentação complementar: moedas douradas em SVG próprio ocupam o espaço livre à direita no desktop, com movimento suave e sem interação ou anúncio para leitores de tela. A foto recebe moldura delicada, dourada somente para membros do Club. No celular, as moedas decorativas grandes ficam ocultas; coroa, nome, marca e controles continuam visíveis. Movimento reduzido também desativa o novo ornamento.
+
 A visão geral separa benefícios e pedidos: WimiCoins e cashback ocupam cartões próprios, com acesso aos respectivos extratos. Os cartões de pedidos ficam em uma linha independente, sem serem esticados pela altura dos benefícios. Em telas estreitas, as áreas se empilham.
 
 O indicador `Participando do Club` aparece no cartão e na saudação somente quando `summary.member` é verdadeiro. A mesma consulta `useClubSummary` abastece saudação, visão geral e aba Benefícios, mantendo o estado após navegar ou confirmar adesão. Loading e falhas de consulta não são apresentados como ausência de adesão; erro oferece atualização explícita. Não existe inscrição automática ou novo bônus.
