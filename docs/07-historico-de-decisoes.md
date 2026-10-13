@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-13 - Catálogo administrativo focado na operação
+
+- Retirar a orientação sobre Google, sitemap e Shopping da abertura do catálogo, conforme pedido do lojista para ocultar processos automáticos.
+- Compactar indicadores, filtros e linhas de produtos para aproximar a lista das ações principais. Manter diagnósticos e divulgação sob demanda por produto.
+- Mudança de apresentação: nenhuma alteração em APIs, persistência, permissões ou regras comerciais; automação de descoberta e fontes públicas preservadas.
+
 ## 2026-10-12 - Atalhos circulares e simplificação da abertura da home
 
 - Decisão: substituir o bloco visual de título/descrição por oito atalhos circulares de compras e serviços, conforme referência enviada pelo lojista. Manter um H1 acessível curto e os dados institucionais de SEO.

@@ -34,7 +34,6 @@ import { CashbackProductFields } from "@/components/admin/cashback-product-field
 import { ProductShippingFields, type ProductShippingFieldsHandle } from "@/components/admin/product-shipping-fields";
 import { ProductMarketingTools } from "@/components/admin/product-marketing-tools";
 import { ProductDeleteButton, ProductTrashDialog } from "@/components/admin/product-trash";
-import { CatalogSeoOverview } from "@/components/admin/catalog-seo-overview";
 import {
   ProductImagePicker,
   type ProductImage,
@@ -744,16 +743,16 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
 
   return (
     <div className="grid gap-5">
-      <section className="flex flex-col gap-5 rounded-lg border border-line bg-white p-5 shadow-sm sm:p-6 lg:flex-row lg:items-center lg:justify-between">
+      <section className="flex flex-col gap-4 rounded-xl border border-line border-t-2 border-t-brand bg-white p-4 sm:p-5 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-brand-soft text-brand">
             <Pill className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-black uppercase text-brand">Gestao de produtos</p>
+            <p className="text-xs font-black uppercase tracking-wide text-brand">Gestão de produtos</p>
             <h2 className="mt-1 text-xl font-black text-ink sm:text-2xl">Produtos / Catálogo</h2>
             <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-muted">
-              Cadastre, publique, organize e escolha os itens que aparecem em Melhores ofertas.
+              Produtos, preços e disponibilidade em um só lugar.
             </p>
           </div>
         </div>
@@ -765,51 +764,33 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
               Organizar vitrine
             </Link>
           </Button>
-          <Button onClick={() => setIsCreateOpen(true)} type="button">
+          <Button className="min-h-11" onClick={() => setIsCreateOpen(true)} type="button">
             <Plus className="h-4 w-4" />
             Novo produto
           </Button>
         </div>
       </section>
 
-      <CatalogSeoOverview products={products} loading={isLoading} />
       <div className="grid gap-5">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Card className="border-brand/15">
-            <CardContent className="p-4">
-              <Pill className="h-5 w-5 text-brand" />
-              <p className="mt-3 text-sm font-bold text-muted">Cadastrados</p>
-              <p className="text-3xl font-black text-ink">{products.length}</p>
-            </CardContent>
-          </Card>
-          <Card className="border-emerald-100">
-            <CardContent className="p-4">
-              <UploadCloud className="h-5 w-5 text-pharma-green" />
-              <p className="mt-3 text-sm font-bold text-muted">Publicados</p>
-              <p className="text-3xl font-black text-ink">{activeProducts}</p>
-            </CardContent>
-          </Card>
-          <Card className="border-amber-200">
-            <CardContent className="p-4">
-              <Star className="h-5 w-5 text-amber-600" />
-              <p className="mt-3 text-sm font-bold text-muted">Em destaque</p>
-              <p className="text-3xl font-black text-ink">{products.filter((product) => isShowcasePosition(product.featuredPosition)).length}</p>
-            </CardContent>
-          </Card>
-          <Card className="border-line">
-            <CardContent className="p-4">
-              <Archive className="h-5 w-5 text-muted" />
-              <p className="mt-3 text-sm font-bold text-muted">Rascunhos</p>
-              <p className="text-3xl font-black text-ink">{products.filter((product) => product.status === "DRAFT").length}</p>
-            </CardContent>
-          </Card>
-        </div>
-        <Card>
-          <CardHeader className="gap-1">
-            <CardTitle>Catalogo de produtos</CardTitle>
+        <dl aria-label="Resumo do catálogo" className="grid grid-cols-2 gap-4 rounded-xl border border-line bg-white py-4 sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-line">
+          {[
+            { label: "Cadastrados", value: products.length, icon: Pill, tone: "text-brand" },
+            { label: "Publicados", value: activeProducts, icon: UploadCloud, tone: "text-pharma-green" },
+            { label: "Em destaque", value: products.filter((product) => isShowcasePosition(product.featuredPosition)).length, icon: Star, tone: "text-amber-600" },
+            { label: "Rascunhos", value: products.filter((product) => product.status === "DRAFT").length, icon: Archive, tone: "text-muted" },
+          ].map(({ label, value, icon: Icon, tone }) => (
+            <div className="min-w-0 px-4 sm:px-5" key={label}>
+              <dt className="flex items-center gap-2 text-xs font-semibold text-muted"><Icon aria-hidden="true" className={cn("h-4 w-4 shrink-0", tone)} />{label}</dt>
+              <dd className="mt-1 pl-6 text-2xl font-black tabular-nums text-ink">{isLoading ? "—" : value}</dd>
+            </div>
+          ))}
+        </dl>
+        <Card className="overflow-hidden rounded-xl">
+          <CardHeader className="gap-1 border-b border-line px-4 py-4 sm:px-5">
+            <CardTitle>Seus produtos</CardTitle>
             <CardDescription>Busque, classifique, edite ou destaque cada item.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-5">
             {isLoading ? (
               <div className="flex min-h-56 items-center justify-center rounded-md border border-dashed border-line text-sm font-semibold text-muted">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -819,7 +800,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
               <div className="flex min-h-56 items-center justify-center rounded-md border border-dashed border-line px-5 text-center text-sm font-semibold text-muted">Nenhum produto cadastrado ainda.</div>
             ) : (
               <div className="grid gap-5">
-                <div className="grid gap-3 rounded-md border border-line bg-surface-subtle p-3">
+                <div className="grid gap-3 rounded-xl bg-surface-subtle p-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
                   <label className="grid gap-1.5 text-xs font-bold text-muted">
                     Buscar produto
                     <span className="relative">
@@ -827,7 +808,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                       <Input className="bg-white pl-9" onChange={(event) => setQuery(event.target.value)} placeholder="Nome, marca, SKU ou EAN" value={query} />
                     </span>
                   </label>
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     <label className="grid gap-1.5 text-xs font-bold text-muted">
                       Categoria
                       <select className="h-11 min-w-0 rounded-md border border-line bg-white px-3 text-sm text-ink shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15" onChange={(event) => setCategoryFilter(event.target.value)} value={categoryFilter}>
@@ -844,17 +825,17 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                         <option value="ARCHIVED">Arquivados</option>
                       </select>
                     </label>
-                    <label className="grid gap-1.5 text-xs font-bold text-muted">
+                    <label className="col-span-2 grid gap-1.5 text-xs font-bold text-muted sm:col-span-1">
                       Classificar por
                       <select className="h-11 min-w-0 rounded-md border border-line bg-white px-3 text-sm text-ink shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15" onChange={(event) => setSort(event.target.value as ProductCatalogSort)} value={sort}>
                         <option value="newest">Mais recentes</option>
                         <option value="name">Nome A-Z</option>
                         <option value="stock">Menor estoque</option>
-                        <option value="price">Menor preco</option>
+                        <option value="price">Menor preço</option>
                       </select>
                     </label>
                   </div>
-                  <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
+                  <div className="flex min-h-9 flex-wrap items-center justify-between gap-2 xl:col-span-2">
                     <p className="text-xs font-semibold text-muted">{visibleProducts.length} de {products.length} produtos</p>
                     {hasActiveFilters ? (
                       <Button onClick={clearFilters} size="sm" type="button" variant="ghost">
@@ -873,21 +854,21 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                       const status = statusInfo[product.status];
                       const isFeatured = isShowcasePosition(product.featuredPosition);
                       return (
-                        <div className="flex flex-col gap-4 rounded-lg border border-line bg-white p-4 shadow-sm sm:flex-row sm:items-center" key={product.id}>
+                        <article className="flex flex-col gap-3 rounded-xl border border-line bg-white p-3 lg:flex-row lg:items-center" key={product.id}>
                           <button
                             aria-label={`Editar ${product.name}`}
-                            className="flex min-w-0 flex-1 cursor-pointer flex-col gap-4 rounded-md p-2 text-left transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 focus-visible:ring-offset-2 sm:flex-row sm:items-center"
+                            className="flex min-w-0 flex-1 cursor-pointer items-start gap-3 rounded-lg p-1 text-left transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 focus-visible:ring-offset-2 sm:items-center"
                             onClick={() => setEditingProduct(product)}
                             type="button"
                           >
                             {product.imageUrl ? (
-                              <Image alt={product.name} className="h-24 w-24 shrink-0 rounded-md border border-line bg-white object-contain" height={96} src={product.imageUrl} unoptimized width={96} />
+                              <Image alt={product.name} className="h-20 w-20 shrink-0 rounded-lg border border-line bg-white object-contain" height={80} src={product.imageUrl} unoptimized width={80} />
                             ) : (
-                              <span className="flex h-24 w-24 shrink-0 items-center justify-center rounded-md bg-surface-subtle text-muted"><ImagePlus className="h-5 w-5" /></span>
+                              <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-surface-subtle text-muted"><ImagePlus aria-hidden="true" className="h-5 w-5" /></span>
                             )}
                             <span className="min-w-0 flex-1">
                               <span className="flex flex-wrap items-center gap-2">
-                                <span className="font-black text-ink">{product.name}</span>
+                                <span className="break-words font-black leading-5 text-ink">{product.name}</span>
                                 <span className={cn("rounded-md px-2.5 py-1 text-xs font-bold", status.className)}>{status.label}</span>
                                 {isFeatured ? (
                                   <Badge>Vitrine {String(product.featuredPosition).padStart(2, "0")}</Badge>
@@ -901,13 +882,13 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                                 </span>
                               ) : null}
                               <span className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold text-muted">
-                                <span>Estoque: <strong className="text-ink">{product.stock}</strong></span>
-                                <span>Preco: <strong className="text-ink">{formatCurrency(Number(product.promotionalPrice ?? product.price))}</strong></span>
+                                <span>Estoque: <strong className={product.stock === 0 ? "text-brand" : "text-ink"}>{product.stock}</strong></span>
+                                <span>Preço: <strong className="tabular-nums text-ink">{formatCurrency(Number(product.promotionalPrice ?? product.price))}</strong></span>
                                 {product.promotionalPrice ? <span className="line-through">{formatCurrency(Number(product.price))}</span> : null}
                               </span>
                             </span>
                           </button>
-                          <div className="grid w-full gap-2 sm:w-auto sm:min-w-40">
+                          <div aria-label={`Ações de ${product.name}`} className="grid w-full grid-cols-2 gap-2 lg:w-72 lg:shrink-0 [&>button]:h-auto [&>button]:min-h-11 [&>button]:whitespace-normal [&>button]:px-2 [&>button]:text-xs" role="group">
                             <ProductMarketingTools product={product} />
                             <Button
                               aria-label={isFeatured ? `Remover ${product.name} dos destaques` : `Destacar ${product.name}`}
@@ -931,7 +912,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                             </Button>
                             <ProductDeleteButton product={product} onChanged={loadProducts} />
                           </div>
-                        </div>
+                        </article>
                       );
                     })}
                   </div>
