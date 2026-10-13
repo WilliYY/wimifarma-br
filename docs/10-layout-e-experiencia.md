@@ -1,5 +1,13 @@
 # 10 - Layout e Experiencia
 
+## Campanha do Club - 2026-10-13
+
+Banner redesenhado como campanha de fidelidade: vermelho sólido da Wimifarma, título curto em Barlow, CTA branco e cartão ilustrativo escuro com a logo oficial completa. Uma moeda dourada com coroa acompanha o cartão; não representa saldo, prêmio automático ou cartão de pagamento. Composição assimétrica e tipografia forte substituem o fundo pastel, a borda dourada e o texto extenso. Direção de varejo contemporâneo; DFII15 (impacto4, adequação5, implementação4, desempenho5, risco3).
+
+O texto informa produtos participantes, WimiCoins combináveis com cashback e adesão gratuita sem mensalidade. A conversão monetária foi retirada deste banner; regras e valores necessários no checkout permanecem intactos. Membro abre benefícios; visitante segue para login; conta autenticada sem adesão usa confirmação explícita. Estados de consulta, adesão, falha e nova tentativa preservados pelo mesmo hook/API.
+
+Somente `src/components/site/club-banner.tsx` muda na aplicação, sem dependências ou imagens novas. Cores usam os tokens existentes, a logo conserva proporções e contorno, e os elementos decorativos não capturam interação. Botões têm foco visível e pelo menos48px; movimento reduzido remove inclinações e deslocamentos de hover. Header e suas animações, 128 bolhas do rodapé, saldos e regras comerciais preservados. QA e publicação registrados no relatório local `outputs/club-campaign-2026-10-13/`.
+
 ## Catálogo administrativo enxuto - 2026-10-13
 
 O lojista pediu prioridade ao trabalho com produtos, sem mensagens sobre tarefas automáticas. A listagem de `/admin/catalogos` não exibe mais o quadro sobre descoberta no Google, sitemap, fonte Shopping ou sua configuração. Esses processos e suas rotas continuam funcionando; o componente de orientação sem uso foi removido. Diagnósticos e ações manuais permanecem no botão `SEO e marketing` de cada produto.

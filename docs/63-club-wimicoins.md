@@ -20,6 +20,8 @@ Identidade deriva da sessão e do vínculo explícito User–Customer; nenhum ca
 
 ## Interface
 
+Campanha atualizada em 13/10/2026: fundo vermelho sólido, headline curto, cartão ilustrativo com logo oficial branca e moeda/coroa de WimiCoins. Adesão gratuita e benefício combinado apresentados de forma direta; a equivalência em reais não aparece no banner. Nenhuma mudança de API, adesão, saldo, resgate ou crédito. Direção e comportamento em `10-layout-e-experiencia.md`.
+
 Ajuste de 13/10/2026 após a conferência do lojista: o cabeçalho mostra apenas a quantidade de WimiCoins, sem equivalente em reais ou tooltip de conversão. Cartão da conta ampliado para evitar aperto e sobreposição; saldos móveis em duas linhas a partir de 480px. Essa alteração é visual: conversão, saldo, resgate e informações necessárias no checkout permanecem com o mesmo contrato.
 
 Banner HTML com logo oficial completa e coroa separada, sem redesenhar a marca; adesão grátis e benefícios por produto. WimiCoins aparecem acima do cashback na conta. Produtos oferecem elegibilidade e percentual. Checkout permite usar ambos, discrimina descontos e aplica teto pelo subtotal restante; frete e cobrança usam o total líquido correto. Painel do Club lista somente adesões reais, sem cartões técnicos de schema/API.
