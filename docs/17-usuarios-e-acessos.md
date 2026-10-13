@@ -22,6 +22,9 @@ O botão `Ver histórico de compras` consulta `/api/admin/pessoas/{id}/compras`,
 
 ### Validacao do atalho
 
+- Ajuste de 13/10/2026 (`b8d4e1d`): 21 cenários CUA com cabeçalho real e dados sintéticos (visitante, CUSTOMER e ADMIN vinculado; 320/390/480/640/768/1024/1440px), sem corte de saldos, controles fora da tela ou alteração de altura entre perfis. Build/tipos, ESLint dirigido, `git diff --check`, 282 testes de segurança e auditoria de produção sem vulnerabilidades aprovados.
+- Publicação somente da aplicação, com imagem anterior preservada como `wimifarma-br-app:header-rollback-20261013`. App e PostgreSQL saudáveis, zero reinícios e health200. Sessão real conferida em320/390/480/768/1440px: WimiCoins500 sem equivalente em reais, cashback separado e Painel admin preservado, sem transbordamento. Sem alteração de dados, credenciais, proxy ou banco.
+
 - Ajuste de 2026-09-25: `node scripts/header-access-audit.mjs` aprovado em 70 cenarios, acrescentando 1280, 1536 e 1920px e verificacoes geometricas do alinhamento entre cartao, carrinho e Sair. Inclui ausencia do atalho no HTML de visitantes, CUSTOMER e perfil desconhecido. `npm.cmd run typecheck`, ESLint dos arquivos alterados e `git diff --check` aprovados.
 - `node scripts/header-access-audit.mjs` apos o build: 49 cenarios aprovados (visitante, CUSTOMER, ADMIN, ADMIN com cliente vinculado, MANAGER, STAFF e perfil desconhecido; larguras 320, 360, 390, 640, 768, 1024 e 1440px).
 - A auditoria renderiza o componente real com sessoes sinteticas: verifica visibilidade, destino, foco de teclado, Minha conta/Sair, altura constante, controles dentro da tela e largura util da busca. Nao acessa banco ou envia requisicoes externas.
