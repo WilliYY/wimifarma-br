@@ -11,6 +11,18 @@
 
 ## Implementação
 
+### Benefícios e participação no Club — 13/10/2026
+
+Direção visual: área pessoal de varejo, com saldos em primeiro plano, dourado para o Club, verde para cashback e cartões compactos para pedidos. Mantém a tipografia, marca oficial e navegação existentes. O destaque vem da hierarquia dos valores e do status de participação, sem novas animações ou dependências (avaliação de design DFII: 14).
+
+A visão geral separa benefícios e pedidos: WimiCoins e cashback ocupam cartões próprios, com acesso aos respectivos extratos. Os cartões de pedidos ficam em uma linha independente, sem serem esticados pela altura dos benefícios. Em telas estreitas, as áreas se empilham.
+
+O indicador `Participando do Club` aparece no cartão e na saudação somente quando `summary.member` é verdadeiro. A mesma consulta `useClubSummary` abastece saudação, visão geral e aba Benefícios, mantendo o estado após navegar ou confirmar adesão. Loading e falhas de consulta não são apresentados como ausência de adesão; erro oferece atualização explícita. Não existe inscrição automática ou novo bônus.
+
+Na visão geral, WimiCoins exibem quantidade; equivalência e regras ficam no detalhe dos benefícios e checkout. Valores disponíveis, pendentes e movimentações mantêm as regras de `63-club-wimicoins.md`. Dados, segurança, histórico e fluxos comerciais permanecem preservados.
+
+Validação desta atualização: build com lint/tipos, ESLint dirigido, Prisma validate, `git diff --check`, 282 testes de segurança e revisão independente aprovados. Conferência CUA com componentes reais e dados sintéticos em 320/390/768/1440px: sem transbordamento, indicador legível, adesão refletida na saudação e extrato, acesso ao cashback e formulário de dados preservados. Carregamento, falha com atualização explícita e saldo extenso conferidos; nenhuma escrita comercial real. Auditoria de produção sem vulnerabilidades; auditoria completa mantém cinco alertas high na cadeia de desenvolvimento ESLint, sem alteração de dependências nesta tarefa.
+
 - `src/components/site/customer-account-panel.tsx`: painel com navegação responsiva, visão geral, progresso dos dados pessoais, cashback, avaliações, suporte e formulários; falhas de rede permitem nova tentativa. Identidade com `BrandSignature` oficial.
 - `src/components/site/customer-order-history.tsx`: fotos, quantidades e valores da compra, etapas, detalhes expansíveis por teclado, filtros, paginação e ajuda pelo WhatsApp com o número do pedido (envio fica a cargo do cliente).
 - `src/features/orders/customer-orders.ts` e `customer-orders-service.ts`: apresentação por modalidade, parâmetros limitados e projeção explícita sem notas internas/dados de contato. Todas as consultas incluem o cliente da sessão; utilizam o índice existente `(customerId, createdAt)`.

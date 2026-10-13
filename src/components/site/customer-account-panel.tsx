@@ -8,6 +8,7 @@ import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import {
   BadgeCheck,
   Coins,
+  Crown,
   Gift,
   Home,
   LockKeyhole,
@@ -36,6 +37,7 @@ import { BrandSignature } from "@/components/site/brand-signature";
 import { CustomerOrderCard, CustomerOrderHistoryPanel } from "@/components/site/customer-order-history";
 import type { CustomerOrderHistory, OrderHistoryFilter } from "@/features/orders/customer-orders";
 import { siteConfig } from "@/lib/site";
+import { useClubSummary } from "@/hooks/use-club-summary";
 
 type CustomerAccount = {
   address: string | null;
@@ -137,6 +139,7 @@ export function CustomerAccountPanel({
   adminAccess?: boolean;
 }) {
   const router = useRouter();
+  const club = useClubSummary();
   const [activeTab, setActiveTab] = useState<TabId>("inicio");
   const [orders, setOrders] = useState(initialOrders);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -270,7 +273,7 @@ export function CustomerAccountPanel({
                   <img alt="Sua foto de perfil" className="h-full w-full object-cover" referrerPolicy="no-referrer" src={customer.imageUrl} />
                 ) : initials(customer.name) || <UserRound className="h-8 w-8" />}
               </div>
-              <div className="min-w-0"><h1 className="break-words text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">Olá, {firstName}<span className="text-brand">.</span></h1><p className="mt-2 text-sm leading-6 text-white/70">Seu cuidado, suas compras, tudo por aqui.</p></div>
+              <div className="min-w-0"><h1 className="break-words text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">Olá, {firstName}<span className="text-brand">.</span></h1><p className="mt-2 text-sm leading-6 text-white/70">Seus pedidos, saldos e benefícios em um só lugar.</p>{club.summary?.member && <button className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-full border border-amber-300/30 bg-amber-200/10 px-3 text-xs font-bold text-amber-200 hover:bg-amber-200/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200" onClick={() => navigateTo("beneficios")} type="button"><Crown aria-hidden="true" className="h-4 w-4" />Participando do Club<ChevronRight aria-hidden="true" className="h-3.5 w-3.5" /></button>}</div>
             </div>
             <Link className="inline-flex min-h-11 w-fit items-center gap-3 rounded-xl bg-white px-5 py-3 text-sm font-bold text-ink transition-colors hover:bg-brand-soft" href="/catalogo"><ShoppingBag className="h-4 w-4 text-brand" />Continuar comprando <ArrowRight className="h-4 w-4" /></Link>
           </div>
@@ -292,10 +295,20 @@ export function CustomerAccountPanel({
 
         <div aria-label={tabs.find(tab => tab.id === activeTab)?.label} className="min-w-0 scroll-mt-40 rounded-2xl outline-none lg:scroll-mt-60" id="account-content" ref={contentRef} role="region" tabIndex={-1}>
           {activeTab === "inicio" && <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <div className="col-span-2 min-w-0 sm:col-span-1"><ClubBenefits compact /><button className="group w-full rounded-2xl border border-emerald-100 bg-[#edf8f2] p-5 text-left transition-colors hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-brand" onClick={() => navigateTo("beneficios")} type="button"><span className="flex items-center justify-between text-xs font-bold text-emerald-800">Seu cashback<Coins className="h-5 w-5" /></span><span className="mt-3 block text-3xl font-black tracking-tight text-emerald-950">{formatCurrency(balance)}</span><span className="mt-2 block text-xs text-emerald-800">Disponível para usar <ArrowRight className="ml-1 inline h-3 w-3" /></span></button></div>
-              <button className="rounded-2xl border border-line bg-white p-5 text-left hover:border-brand/30 focus-visible:outline-2 focus-visible:outline-brand" onClick={() => { navigateTo("pedidos"); void loadOrders("active", 1); }} type="button"><span className="flex items-center justify-between text-xs font-bold text-muted">Em andamento<Truck className="h-5 w-5 text-brand" /></span><span className="mt-3 block text-3xl font-black tracking-tight">{orders.counts.active.toString().padStart(2, "0")}</span><span className="mt-2 block text-xs text-muted">Acompanhar pedidos <ArrowRight className="ml-1 inline h-3 w-3" /></span></button>
-              <button className="rounded-2xl border border-line bg-white p-5 text-left hover:border-brand/30 focus-visible:outline-2 focus-visible:outline-brand" onClick={() => { navigateTo("pedidos"); void loadOrders("all", 1); }} type="button"><span className="flex items-center justify-between text-xs font-bold text-muted">Seu histórico<ShoppingBag className="h-5 w-5 text-brand" /></span><span className="mt-3 block text-3xl font-black tracking-tight">{orders.counts.all.toString().padStart(2, "0")}</span><span className="mt-2 block text-xs text-muted">Ver todas as compras <ArrowRight className="ml-1 inline h-3 w-3" /></span></button>
+            <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-xl font-black tracking-tight">Seus benefícios</h2><button className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand hover:underline focus-visible:outline-2 focus-visible:outline-brand" onClick={() => navigateTo("beneficios")} type="button">Ver extratos<ArrowRight aria-hidden="true" className="h-4 w-4" /></button></div>
+            <div className="grid items-stretch gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+              <ClubBenefits club={club} compact onShowDetails={() => navigateTo("beneficios")} />
+              <section aria-label="Seu cashback" className="flex min-w-0 flex-col rounded-2xl border border-emerald-200 bg-white p-5 sm:p-6">
+                <h2 className="flex items-center gap-2 text-base font-black text-emerald-950"><Coins aria-hidden="true" className="h-5 w-5 text-emerald-700" />Seu cashback</h2>
+                <p className="mt-6 break-all text-4xl font-black leading-none tracking-tight text-emerald-950 sm:text-5xl">{formatCurrency(balance)}</p>
+                <p className="mt-3 text-sm font-bold text-emerald-800">Disponível para usar</p>
+                <p className="mt-3 text-sm leading-6 text-muted">Um desconto para suas próximas compras, que combina com seus WimiCoins.</p>
+                <button className="mt-auto inline-flex min-h-11 w-fit items-center gap-2 pt-4 text-sm font-bold text-emerald-800 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700" onClick={() => navigateTo("beneficios")} type="button">Ver meu cashback<ArrowRight aria-hidden="true" className="h-4 w-4" /></button>
+              </section>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button className="flex min-w-0 items-center gap-3 rounded-2xl border border-line bg-white p-4 text-left transition-colors hover:border-brand/30 focus-visible:outline-2 focus-visible:outline-brand sm:p-5" onClick={() => { navigateTo("pedidos"); void loadOrders("active", 1); }} type="button"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-soft"><Truck aria-hidden="true" className="h-5 w-5 text-brand" /></span><span className="min-w-0 flex-1"><span className="block text-sm font-bold">Em andamento</span><span className="mt-1 block text-xs text-muted">Acompanhar pedidos</span></span><span className="text-3xl font-black tracking-tight">{orders.counts.active.toString().padStart(2, "0")}</span><ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted" /></button>
+              <button className="flex min-w-0 items-center gap-3 rounded-2xl border border-line bg-white p-4 text-left transition-colors hover:border-brand/30 focus-visible:outline-2 focus-visible:outline-brand sm:p-5" onClick={() => { navigateTo("pedidos"); void loadOrders("all", 1); }} type="button"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100"><ShoppingBag aria-hidden="true" className="h-5 w-5 text-ink" /></span><span className="min-w-0 flex-1"><span className="block text-sm font-bold">Seu histórico</span><span className="mt-1 block text-xs text-muted">Ver todas as compras</span></span><span className="text-3xl font-black tracking-tight">{orders.counts.all.toString().padStart(2, "0")}</span><ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted" /></button>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2"><h2 className="text-xl font-black tracking-tight">{orders.activeOrder ? "Acompanhe seu pedido" : "Suas compras"}</h2><button className="inline-flex min-h-11 items-center gap-2 text-xs font-bold text-brand disabled:opacity-50" disabled={ordersLoading} onClick={() => void loadOrders(orders.filter, orders.page)} type="button"><RefreshCw className={cn("h-3.5 w-3.5", ordersLoading && "animate-spin motion-reduce:animate-none")} />{ordersLoading ? "Atualizando…" : "Atualizar andamento"}</button></div>
             {ordersError && <p className="rounded-xl bg-red-50 p-4 text-sm text-red-800" role="alert">{ordersError}</p>}
@@ -462,7 +475,7 @@ export function CustomerAccountPanel({
           ) : null}
 
           {activeTab === "beneficios" ? (
-            <div className="min-w-0"><ClubBenefits />
+            <div className="min-w-0 space-y-5"><ClubBenefits club={club} />
             <div className="grid gap-5 xl:grid-cols-[17rem_minmax(0,1fr)]">
               <div className="rounded-2xl border border-emerald-100 bg-[#edf8f2] p-5">
                 <p className="flex items-center gap-2 text-sm font-black text-brand">
