@@ -10,6 +10,8 @@ O banner tem camada própria para impedir que as nuvens decorativas das seções
 
 Somente `src/components/site/club-banner.tsx` muda na aplicação, sem dependências ou imagens novas. Cores usam os tokens existentes, a logo conserva proporções e contorno, e os elementos decorativos não capturam interação. Botões têm foco visível e pelo menos48px; movimento reduzido remove inclinações e deslocamentos de hover. Header e suas animações, 128 bolhas do rodapé, saldos e regras comerciais preservados. QA e publicação registrados no relatório local `outputs/club-campaign-2026-10-13/`.
 
+Publicação: `53feb66` e correção de camada `4fac43a`, somente app, com imagem anterior preservada em `wimifarma-br-app:club-campaign-rollback-20261013`. Build/tipos, ESLint, diff, 282 testes de segurança e auditoria de produção sem vulnerabilidades aprovados. 24 cenários sintéticos em320/390/768/1440px cobrem membro, visitante, não membro, falha, carregamento e adesão em andamento; adesão explícita e nova tentativa conferidas. Página produtiva validada nas mesmas quatro larguras, com logo carregada, CTA48px e sem overflow. App/PG saudáveis, zero reinícios e health200. Capturas ficam fora do Git; nenhuma adesão, compra ou movimentação de saldo real criada para esta conferência.
+
 ## Catálogo administrativo enxuto - 2026-10-13
 
 O lojista pediu prioridade ao trabalho com produtos, sem mensagens sobre tarefas automáticas. A listagem de `/admin/catalogos` não exibe mais o quadro sobre descoberta no Google, sitemap, fonte Shopping ou sua configuração. Esses processos e suas rotas continuam funcionando; o componente de orientação sem uso foi removido. Diagnósticos e ações manuais permanecem no botão `SEO e marketing` de cada produto.
