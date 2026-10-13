@@ -20,6 +20,8 @@ O botão `Ver histórico de compras` consulta `/api/admin/pessoas/{id}/compras`,
 
 - Ajuste de 13/10/2026: cartão interno com 176px no tablet e 192px no desktop; área da conta com 56px para acomodar nome e os dois saldos sem sobreposição. O cartão completo permanece dentro da altura disponível do cabeçalho. Conta comum vinculada usa 64px para acomodar as três linhas. WimiCoins mostram somente quantidade no cabeçalho, sem equivalente em reais ou dica de conversão; cashback continua em reais. Logo, permissões, atalho, carrinho e saída preservados.
 
+- Símbolo de WimiCoins no cabeçalho: moeda dourada decorativa de 10 × 12px antes da quantidade, com desenho próprio inspirado em moedas de videogame. O SVG é oculto de tecnologias assistivas e não altera o saldo, a conversão ou a altura da linha.
+
 ### Validacao do atalho
 
 - Ajuste de 13/10/2026 (`b8d4e1d`): 21 cenários CUA com cabeçalho real e dados sintéticos (visitante, CUSTOMER e ADMIN vinculado; 320/390/480/640/768/1024/1440px), sem corte de saldos, controles fora da tela ou alteração de altura entre perfis. Build/tipos, ESLint dirigido, `git diff --check`, 282 testes de segurança e auditoria de produção sem vulnerabilidades aprovados.

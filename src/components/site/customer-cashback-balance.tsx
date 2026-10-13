@@ -38,5 +38,16 @@ export function CustomerCashbackProvider({ children, enabled }: { children: Reac
 export function CustomerCashbackBalance() {
   const balance = useContext(CustomerCashbackContext);
   const points = useContext(CustomerClubContext);
-  return <><span className="block truncate text-[11px] font-bold leading-4 text-amber-800">WimiCoins {points === null ? "..." : points.toLocaleString("pt-BR")}</span><span className="block truncate text-[11px] font-bold leading-4 text-emerald-800" title="Cashback liberado">Cashback {balance === null ? "..." : formatCurrency(Number(balance))}</span></>;
+  return <>
+    <span className="block truncate text-[11px] font-bold leading-4 text-amber-800">
+      WimiCoins{" "}
+      <svg aria-hidden="true" focusable="false" viewBox="0 0 12 14" className="inline-block h-3 w-2.5 align-[-1px]">
+        <path d="M4 1h4v1h2v2h1v6h-1v2H8v1H4v-1H2v-2H1V4h1V2h2Z" fill="var(--color-amber-400)" stroke="var(--color-amber-700)" strokeWidth="0.8" />
+        <path d="M4 3H3v2H2v4h1v2h1" fill="none" stroke="var(--color-amber-200)" />
+        <path d="M6 4h1v6H6Z" fill="var(--color-amber-700)" />
+      </svg>{" "}
+      {points === null ? "..." : points.toLocaleString("pt-BR")}
+    </span>
+    <span className="block truncate text-[11px] font-bold leading-4 text-emerald-800" title="Cashback liberado">Cashback {balance === null ? "..." : formatCurrency(Number(balance))}</span>
+  </>;
 }
