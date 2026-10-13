@@ -259,33 +259,14 @@ export function CustomerAccountPanel({
     <section className="min-h-screen bg-[#f5f6f8] px-4 pb-16 pt-40 text-ink sm:px-6 sm:pt-44 lg:px-8 lg:pt-60">
       <div className="mx-auto max-w-7xl">
         <nav aria-label="Localização" className="mb-5 flex items-center gap-2 text-xs font-medium text-muted"><Link className="inline-flex min-h-6 items-center hover:text-brand" href="/">Início</Link><ChevronRight aria-hidden="true" className="h-3 w-3" /><span aria-current="page">Minha conta</span></nav>
-        <header className="account-welcome relative isolate overflow-hidden rounded-3xl border border-brand/10 px-5 py-7 text-ink sm:p-8 lg:p-10">
-          <svg aria-hidden="true" focusable="false" viewBox="0 0 360 180" className="account-welcome-ornament pointer-events-none absolute right-[12%] top-20 -z-10 hidden w-72 text-amber-400 lg:block">
-            <g fill="var(--color-amber-50)" stroke="var(--color-amber-400)">
-              <g transform="rotate(-14 180 90)">
-                <ellipse cx="180" cy="90" rx="39" ry="48" strokeWidth="1.5" />
-                <ellipse cx="180" cy="90" rx="31" ry="40" fill="var(--color-amber-100)" />
-                <path d="M180 66v48" strokeWidth="7" strokeLinecap="round" />
-                <path d="M161 64c-7 8-9 18-9 27" fill="none" stroke="var(--surface)" strokeWidth="3" strokeLinecap="round" />
-              </g>
-              <g opacity="0.7" transform="rotate(18 270 45)">
-                <ellipse cx="270" cy="45" rx="17" ry="22" />
-                <path d="M270 35v20" strokeWidth="3" strokeLinecap="round" />
-              </g>
-              <g opacity="0.55" transform="rotate(-22 85 131)">
-                <ellipse cx="85" cy="131" rx="20" ry="26" />
-                <path d="M85 119v24" strokeWidth="3" strokeLinecap="round" />
-              </g>
-            </g>
-            <g fill="currentColor" opacity="0.55"><circle cx="110" cy="45" r="3" /><circle cx="232" cy="135" r="2.5" /><circle cx="304" cy="95" r="2" /></g>
-            <path d="M240 77v10m-5-5h10M48 80v8m-4-4h8" stroke="var(--brand)" strokeOpacity="0.25" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted">Seu espaço Wimifarma</p><BrandSignature className="px-2.5 py-1.5" />
-          </div>
-          <div className="mt-7 flex flex-col justify-between gap-7 lg:flex-row lg:items-end">
-            <div className="flex min-w-0 items-center gap-4 sm:gap-5">
-              <div className={cn("account-welcome-avatar flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white text-2xl font-black text-brand sm:h-20 sm:w-20", club.summary?.member && "account-welcome-avatar-member")}>
+        <header className="account-welcome relative isolate grid items-center gap-8 overflow-hidden rounded-3xl border border-line px-5 py-6 text-ink sm:p-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-12 lg:p-10">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted">Minha conta</p>
+              <BrandSignature className="px-2 py-1 lg:hidden" />
+            </div>
+            <div className="mt-5 flex min-w-0 items-center gap-4 sm:gap-5">
+              <div className={cn("account-welcome-avatar flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-2xl font-black text-brand sm:h-20 sm:w-20", club.summary?.member && "account-welcome-avatar-member")}>
                 {customer.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img alt="Sua foto de perfil" className="h-full w-full object-cover" referrerPolicy="no-referrer" src={customer.imageUrl} />
@@ -296,11 +277,20 @@ export function CustomerAccountPanel({
                   {club.summary?.member && <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2"><Crown className="account-welcome-crown h-6 w-6 text-amber-600 sm:h-7 sm:w-7" strokeWidth={1.8} /></span>}
                   {firstName}<span className="text-brand">.</span>
                 </span></h1>
-                <p className="mt-2 text-sm leading-6 text-muted">Seus pedidos, saldos e benefícios em um só lugar.</p>
-                {club.summary?.member && <button className="mt-3 inline-flex min-h-9 max-w-full items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-bold text-amber-900 hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700" onClick={() => navigateTo("beneficios")} type="button"><BadgeCheck aria-hidden="true" className="h-4 w-4 shrink-0" /><span className="min-w-0 text-left leading-5">Participando do Club</span><ChevronRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0" /></button>}
+                <p className="mt-2 max-w-sm text-sm leading-6 text-muted">Suas compras e benefícios, sempre por perto.</p>
+                {club.summary?.member && <button className="mt-3 inline-flex min-h-9 max-w-full items-center gap-2 rounded-full border border-amber-200/80 bg-white/80 px-3 text-xs font-bold text-amber-900 hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700" onClick={() => navigateTo("beneficios")} type="button"><BadgeCheck aria-hidden="true" className="h-4 w-4 shrink-0" /><span className="min-w-0 text-left leading-5">Participando do Club</span><ChevronRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0" /></button>}
               </div>
             </div>
-            <Link className="inline-flex min-h-11 w-fit items-center gap-3 rounded-xl bg-brand px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href="/catalogo"><ShoppingBag aria-hidden="true" className="h-4 w-4" />Continuar comprando <ArrowRight aria-hidden="true" className="h-4 w-4" /></Link>
+            <div className="mt-6 sm:pl-[6.25rem]"><Link className="group inline-flex min-h-12 w-full items-center justify-between gap-3 rounded-full bg-brand px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:w-fit sm:gap-5" href="/catalogo"><ShoppingBag aria-hidden="true" className="h-4 w-4 shrink-0" /><span>Continuar comprando</span><ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 motion-safe:transition-transform motion-safe:group-hover:translate-x-1" /></Link></div>
+          </div>
+          <div className="account-club-pass relative hidden min-w-0 flex-col overflow-hidden rounded-2xl border border-white bg-white/90 p-6 lg:flex">
+            <div className="flex items-center justify-between gap-3"><BrandSignature className="bg-transparent p-0 ring-0" /><span className="rounded-full bg-brand-soft px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-brand">Club</span></div>
+            <div className="mt-7 flex items-start justify-between gap-4">
+              <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">Club Wimifarma</p><h2 className="mt-2 text-2xl font-black leading-tight tracking-tight">{club.summary ? club.summary.member ? "Você faz parte." : "Faça parte do Club." : "Seu Club Wimifarma."}</h2></div>
+              <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700">{club.summary?.member ? <Crown className="h-5 w-5" strokeWidth={1.5} /> : <Coins className="h-5 w-5" strokeWidth={1.5} />}</span>
+            </div>
+            <p className="mt-3 text-sm text-muted">WimiCoins + cashback</p>
+            <button className="mt-5 flex min-h-11 items-center justify-between gap-3 border-t border-line pt-4 text-sm font-bold text-brand hover:text-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={() => navigateTo("beneficios")} type="button">Ver benefícios<ArrowRight aria-hidden="true" className="h-4 w-4" /></button>
           </div>
         </header>
 

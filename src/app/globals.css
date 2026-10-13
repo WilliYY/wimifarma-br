@@ -119,7 +119,7 @@ textarea {
 }
 
 .account-welcome {
-  background: linear-gradient(115deg, var(--surface) 35%, var(--brand-soft));
+  background: linear-gradient(120deg, var(--surface) 30%, var(--brand-soft));
 }
 
 .account-welcome::before,
@@ -137,7 +137,7 @@ textarea {
   right: -7rem;
   width: 32rem;
   height: 32rem;
-  border: 60px solid color-mix(in srgb, var(--brand) 5%, transparent);
+  border: 32px solid color-mix(in srgb, var(--brand) 4%, transparent);
 }
 
 .account-welcome::after {
@@ -154,8 +154,20 @@ textarea {
   animation: soft-float 4.5s ease-in-out infinite;
 }
 
-.account-welcome-ornament {
-  animation: soft-breathe 8s ease-in-out infinite;
+.account-club-pass {
+  box-shadow: 0 16px 40px -24px color-mix(in srgb, var(--brand) 24%, transparent), inset 0 0 0 1px var(--line);
+  animation: soft-breathe 10s ease-in-out infinite;
+}
+
+.account-club-pass::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 1.5rem;
+  right: 1.5rem;
+  height: 2px;
+  background: linear-gradient(90deg, var(--brand), var(--yellow));
+  pointer-events: none;
 }
 
 .account-welcome-avatar {
@@ -175,7 +187,7 @@ textarea {
   .account-welcome::before,
   .account-welcome::after,
   .account-welcome-crown,
-  .account-welcome-ornament {
+  .account-club-pass {
     animation: none !important;
   }
 }

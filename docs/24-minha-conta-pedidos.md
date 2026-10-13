@@ -13,11 +13,11 @@
 
 ### Benefícios e participação no Club — 13/10/2026
 
-Direção visual: área pessoal de varejo, com saldos em primeiro plano, dourado para o Club, verde para cashback e cartões compactos para pedidos. Mantém a tipografia, marca oficial e navegação existentes. O destaque vem da hierarquia dos valores e do status de participação, sem novas animações ou dependências (avaliação de design DFII: 14).
+Direção visual: área pessoal de varejo, com saldos em primeiro plano, dourado para o Club, verde para cashback e cartões compactos para pedidos. Mantém a tipografia, marca oficial e navegação existentes. O destaque vem da hierarquia dos valores e do status de participação, sem dependências adicionais (avaliação de design DFII: 14).
 
 Ajuste posterior solicitado pelo lojista: saudação em fundo claro com rosa suave, texto escuro e botão vermelho. Anéis e luz de fundo se movimentam lentamente por CSS, sem deslocar o conteúdo. Uma coroa dourada acima do nome aparece exclusivamente para `summary.member === true`, com flutuação discreta. A indicação de participação continua como atalho aos benefícios. As novas animações são desativadas em `prefers-reduced-motion: reduce`; marca, cabeçalho público e bolhas do rodapé permanecem preservados.
 
-Ornamentação complementar: moedas douradas em SVG próprio ocupam o espaço livre à direita no desktop, com movimento suave e sem interação ou anúncio para leitores de tela. A foto recebe moldura delicada, dourada somente para membros do Club. No celular, as moedas decorativas grandes ficam ocultas; coroa, nome, marca e controles continuam visíveis. Movimento reduzido também desativa o novo ornamento.
+Composição atual refinada: perfil e ação de compra à esquerda, cartão claro do Club à direita no desktop, com logo oficial e acesso aos benefícios. O cartão mostra `Você faz parte` somente após confirmar adesão; sem resposta, usa título neutro. Moedas decorativas avulsas foram substituídas pelo cartão, com filete nas cores da marca e movimento discreto. Foto circular com moldura dourada e coroa acima do nome somente para membros. No celular, o cartão lateral fica oculto e a marca aparece junto ao título da área pessoal; compra, status e acesso aos benefícios permanecem disponíveis. Movimento reduzido desativa a animação do cartão e as demais animações da faixa.
 
 A visão geral separa benefícios e pedidos: WimiCoins e cashback ocupam cartões próprios, com acesso aos respectivos extratos. Os cartões de pedidos ficam em uma linha independente, sem serem esticados pela altura dos benefícios. Em telas estreitas, as áreas se empilham.
 
