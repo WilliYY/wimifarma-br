@@ -27,6 +27,8 @@ export type AdminOrderRecord = {
   onlinePayment?: { environment: string; status: string; statusDetail: string | null; providerOrderId: string | null } | null;
   shippingQuote?: unknown;
   cashbackRedeemedCents?: number;
+  wimicoinsRedeemedPoints?: number;
+  wimicoinsRedemptionState?: string;
   cashbackRedemptionState?: string;
   id: string;
   number: string;
@@ -142,6 +144,8 @@ export function OrdersPanel({ initialOrders }: { initialOrders: AdminOrderRecord
         paymentStatus: payload.data.paymentStatus,
         prescriptionReviewedAt: payload.data.prescriptionReviewedAt,
         cashbackRedeemedCents: payload.data.cashbackRedeemedCents,
+        wimicoinsRedeemedPoints: payload.data.wimicoinsRedeemedPoints,
+        wimicoinsRedemptionState: payload.data.wimicoinsRedemptionState,
         cashbackRedemptionState: payload.data.cashbackRedemptionState,
         updatedAt: payload.data.updatedAt,
       } : order));
@@ -195,6 +199,7 @@ function OrderCard({ order, onUpdate, updating }: { order: AdminOrderRecord; onU
     {online && ["UNKNOWN", "SUBMITTING"].includes(online.status) && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:mx-7">Confirmação pendente. Não cobre novamente nem libere o estoque sem conferir a tentativa no Mercado Pago.</p>}
     {online?.status === "PARTIALLY_REFUNDED" && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:mx-7">Reembolso parcial: conferir valores e benefícios antes de continuar o atendimento.</p>}
     {online?.status === "REVIEW" && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:mx-7">Conferência financeira necessária. Consulte a tentativa no gateway antes de continuar. Não cobre novamente nem libere o estoque enquanto a situação estiver incerta.</p>}
+    {(order.wimicoinsRedeemedPoints ?? 0) > 0 ? <p className="border-b border-line bg-amber-50 px-5 py-3 text-sm text-amber-900">WimiCoins: <strong>{order.wimicoinsRedeemedPoints} pontos · {currency.format((order.wimicoinsRedeemedPoints ?? 0) / 100)}</strong> · {order.wimicoinsRedemptionState === "RETURNED" ? "Devolvidos ao cliente" : order.wimicoinsRedemptionState === "REDEEMED" ? "Utilizados" : "Reservados"}. O total já considera o desconto.</p> : null}
     {(order.cashbackRedeemedCents ?? 0) > 0 ? <p className="border-b border-line bg-emerald-50 px-5 py-3 text-sm text-emerald-900">Desconto de cashback: <strong>{currency.format((order.cashbackRedeemedCents ?? 0) / 100)}</strong> · {order.cashbackRedemptionState === "RETURNED" ? "Devolvido ao cliente" : order.cashbackRedemptionState === "REDEEMED" ? "Utilizado" : "Reservado"}. O total ja considera o desconto.</p> : null}
     <div className="grid gap-7 p-5 sm:p-7 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)]">
       <div><p className="text-xs font-black uppercase text-muted">Cliente</p><p className="mt-2 font-black text-ink">{order.customerName}</p><a className="mt-1 block text-sm font-semibold text-brand" href={`tel:${order.customerPhone}`}>{order.customerPhone}</a>{order.customerEmail ? <p className="mt-1 break-all text-xs font-semibold text-muted">{order.customerEmail}</p> : null}</div>

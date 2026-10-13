@@ -56,7 +56,7 @@ Preservar os padroes ja existentes no projeto, salvo quando houver motivo tecnic
 - Carrinho e checkout registram pedidos; pagamento online habilitado e confirmado exclusivamente pelo gateway. Preparacao e atendimento continuam humanos.
 - Receita comum classificada por ADMIN permite pedido e pagamento online sem upload; o farmaceutico confere a receita antes da dispensacao. Controlados, receita ainda nao classificada e Farmacia Popular seguem atendimento assistido. Contrato em `docs/45-pedido-online-e-conferencia-de-receita.md`.
 - Nao coletar dados de cartao nem marcar pagamento como aprovado sem gateway homologado.
-- Roleta e clube seguem preparados, sem regras comerciais reais ate aprovacao. Cashback por produto tem contrato em `docs/15-cashback-produtos.md`: saldo somente apos pedido concluido e pago. Bonus de avaliacao de 1% e resgate como desconto no checkout aprovados pelo lojista; contrato em `docs/16-cashback-avaliacoes-resgate.md`. Nao habilitar saque ou transferencia.
+- Roleta segue preparada, sem regras comerciais reais ate aprovacao. Club gratuito e WimiCoins foram aprovados pelo lojista em 13/10/2026, conforme `docs/63-club-wimicoins.md`: adesao explicita, elegibilidade/percentual ADMIN por produto, conversao 100 pontos = R$ 1 e uso acumulado com cashback; nenhuma campanha adicional. Cashback por produto tem contrato em `docs/15-cashback-produtos.md`: saldo somente apos pedido concluido e pago. Bonus de avaliacao de 1% e resgate como desconto no checkout aprovados pelo lojista; contrato em `docs/16-cashback-avaliacoes-resgate.md`. Nao habilitar saque ou transferencia.
 - Farmacia Popular nao deve prometer disponibilidade automatica.
 
 ## Regra 7: Atualizacao Obrigatoria da Documentacao

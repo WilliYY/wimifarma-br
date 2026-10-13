@@ -84,6 +84,7 @@ export function CustomerOrderCard({ order, featured = false }: { order: Customer
         <dl className="ml-auto grid max-w-sm gap-2 text-sm">
           <div className="flex justify-between gap-3"><dt className="text-muted">Produtos</dt><dd>{accountMoney(order.subtotalCents)}</dd></div>
           <div className="flex justify-between gap-3"><dt className="text-muted">Entrega</dt><dd>{pickup ? "Retirada na loja" : order.deliveryFeeCents ? accountMoney(order.deliveryFeeCents) : "Sem taxa"}</dd></div>
+          {(order.wimicoinsRedeemedPoints ?? 0) > 0 && <div className="flex justify-between gap-3 text-amber-800"><dt>WimiCoins utilizados</dt><dd>− {accountMoney(order.wimicoinsRedeemedPoints!)}</dd></div>}
           {order.cashbackRedeemedCents > 0 && <div className="flex justify-between gap-3 text-emerald-700"><dt>Desconto de cashback</dt><dd>− {accountMoney(order.cashbackRedeemedCents)}</dd></div>}
           <div className="flex justify-between gap-3 border-t border-line pt-2 text-base font-black"><dt>Total do pedido</dt><dd>{accountMoney(order.totalCents)}</dd></div>
         </dl>

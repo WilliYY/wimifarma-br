@@ -25,7 +25,7 @@ export async function saveRewardedReview(tx: Prisma.TransactionClient, customerI
   const credited = await tx.cashbackTransaction.findUnique({ where: { eventKey }, select: { id: true } });
   const item = order.items[0];
   const cents = credited || product.requiresPrescription || product.isPopularPharmacy || !item
-    ? 0 : reviewRewardCents(item.unitPriceCents, item.quantity, item.cashbackDiscountCents);
+    ? 0 : reviewRewardCents(item.unitPriceCents, item.quantity, item.cashbackDiscountCents + item.wimicoinsDiscountPoints);
   const review = await tx.productReview.create({ data: {
     ...input, customerId, productId, orderId: order.id,
     cashbackRewardCents: cents, cashbackRewardState: cents > 0 ? "CREDITED" : "NONE",

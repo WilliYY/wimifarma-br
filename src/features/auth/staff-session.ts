@@ -1,5 +1,5 @@
-type StaffToken = { id?: unknown; role?: unknown; credentialVersion?: unknown };
-type StaffRecord = { id: string; role: string; isActive: boolean; credentialVersion: string };
+type StaffToken = { id?: unknown; role?: unknown; credentialVersion?: unknown; customerId?: unknown };
+type StaffRecord = { id: string; role: string; isActive: boolean; credentialVersion: string; customerId?: string | null };
 
 export async function refreshStaffToken<T extends StaffToken>(
   token: T,
@@ -14,5 +14,7 @@ export async function refreshStaffToken<T extends StaffToken>(
   if (!user?.isActive || user.id !== token.id || !staffRoles.includes(user.role)) return null;
   if (typeof token.credentialVersion !== "string" || token.credentialVersion !== user.credentialVersion) return null;
 
-  return { ...token, role: user.role };
+  const { customerId: previousCustomerId, ...rest } = token;
+  void previousCustomerId;
+  return { ...rest, role: user.role, ...(user.customerId ? { customerId: user.customerId } : {}) } as T;
 }

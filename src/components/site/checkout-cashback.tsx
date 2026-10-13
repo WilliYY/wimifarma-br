@@ -15,15 +15,19 @@ export function CheckoutCashback({ subtotalCents, selectedCents, onSelect }: { s
     try {
       const response = await fetch("/api/minha-conta/cashback", { cache: "no-store", signal });
       const payload = await response.json();
+      if (signal?.aborted) return;
       const cents = Math.round(Number(payload?.data?.balance) * 100);
       if (!response.ok || !Number.isSafeInteger(cents)) throw new Error("Saldo indisponivel. Atualize ou entre novamente na sua conta.");
       setBalance(Math.max(0, cents));
-    } catch (caught) {
-      if (!signal?.aborted) { setBalance(null); setError(caught instanceof Error ? caught.message : "Saldo indisponivel."); }
+    } catch {
+      if (!signal?.aborted) { setBalance(null); setError("Saldo indisponivel. Atualize ou entre novamente na sua conta."); }
     } finally { if (!signal?.aborted) setLoading(false); }
   }, []);
   useEffect(() => { const controller = new AbortController(); void refresh(controller.signal); return () => controller.abort(); }, [refresh]);
   const available = Math.min(balance ?? 0, subtotalCents);
+  useEffect(() => {
+    if (selectedCents > 0 && (loading || error || selectedCents > available)) onSelect(0);
+  }, [available, error, loading, onSelect, selectedCents]);
   return <section className="mt-6 border-t border-line pt-5" aria-label="Usar cashback">
     <div className="flex items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-base font-black text-ink"><Wallet className="h-5 w-5 text-pharma-green" aria-hidden="true" />Seu cashback</h2><button aria-label="Atualizar saldo de cashback" title="Atualizar saldo" className="grid h-10 w-10 cursor-pointer place-items-center rounded-md text-muted hover:bg-surface-subtle disabled:opacity-50" disabled={loading} onClick={() => { onSelect(0); void refresh(); }} type="button"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /></button></div>
     {error ? <p className="mt-2 text-sm text-brand" role="alert">{error}</p> : !loading && available <= 0 ? <p className="mt-1 text-xs leading-5 text-muted">Sem saldo disponível para este pedido.</p> : <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-md border border-emerald-200 bg-emerald-50 p-4 has-[:checked]:border-pharma-green">

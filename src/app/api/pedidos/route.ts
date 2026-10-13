@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/features/auth/auth";
 import { sessionCustomerId } from "@/features/auth/customer-session";
 import { CashbackRuleError } from "@/features/cashback/wallet";
+import { ClubRuleError } from "@/features/club/wallet";
 import { checkoutRequestSchema } from "@/features/orders/checkout";
 import { createCheckout } from "@/features/orders/create-checkout";
 import { getPrisma } from "@/lib/prisma";
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
     if (error instanceof PaymentError) return NextResponse.json({ error: error.message }, { status: error.status, headers });
     if (error instanceof ShippingError) return NextResponse.json({ error: error.message }, { status: error.status, headers });
     if (error instanceof CashbackRuleError) return NextResponse.json({ error: error.message, code: error.code }, { status: error.status, headers });
+    if (error instanceof ClubRuleError) return NextResponse.json({ error: error.message }, { status: error.status, headers });
     console.error("CHECKOUT_SAVE_FAILED", error && typeof error === "object" && "code" in error ? error.code : "UNKNOWN");
     return NextResponse.json({ error: "Nao foi possivel confirmar o envio. Consulte a equipe antes de tentar novamente." }, { status: 503, headers });
   }

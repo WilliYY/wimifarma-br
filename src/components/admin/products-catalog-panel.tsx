@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CashbackProductFields } from "@/components/admin/cashback-product-fields";
+import { WimiCoinsProductFields } from "@/components/admin/wimicoins-product-fields";
 import { ProductShippingFields, type ProductShippingFieldsHandle } from "@/components/admin/product-shipping-fields";
 import { ProductMarketingTools } from "@/components/admin/product-marketing-tools";
 import { ProductDeleteButton, ProductTrashDialog } from "@/components/admin/product-trash";
@@ -81,6 +82,8 @@ import { cn, formatCurrency } from "@/lib/utils";
 type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 
 type ProductListItem = {
+  wimicoinsEnabled?: boolean;
+  wimicoinsRateBps?: number;
   shippingProfile?: unknown;
   cashbackEnabled: boolean;
   cashbackRateBps: number;
@@ -150,6 +153,10 @@ function productPayload(
     ...(formData.has("cashbackPercent") ? {
       cashbackEnabled: formData.get("cashbackEnabled") === "on",
       cashbackRateBps: Math.round(Number(formData.get("cashbackPercent")) * 100),
+    } : {}),
+    ...(formData.has("wimicoinsPercent") ? {
+      wimicoinsEnabled: formData.get("wimicoinsEnabled") === "on",
+      wimicoinsRateBps: Math.round(Number(formData.get("wimicoinsPercent")) * 100),
     } : {}),
     activeIngredients: parseProductTerms(fieldValue(formData, "activeIngredients")),
     brand: optionalValue("brand"),
@@ -542,6 +549,7 @@ function ProductFormFields({
             <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-brand/20 bg-brand-soft/40 px-3 py-3 text-sm font-bold text-ink"><input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={isShowcasePosition(product?.featuredPosition ?? null)} name="featured" type="checkbox" /><Star className="h-4 w-4 text-brand" />Destacar em Melhores ofertas</label>
 
             {canManageCashback ? <CashbackProductFields enabled={product?.cashbackEnabled} rateBps={product?.cashbackRateBps} /> : null}
+            {canManageCashback ? <WimiCoinsProductFields enabled={product?.wimicoinsEnabled} rateBps={product?.wimicoinsRateBps} /> : null}
 
             <label className="flex items-center gap-3 rounded-md border border-line bg-surface-subtle px-3 py-3 text-sm font-bold text-ink">
               <input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={product?.isPopularPharmacy} name="isPopularPharmacy" type="checkbox" />

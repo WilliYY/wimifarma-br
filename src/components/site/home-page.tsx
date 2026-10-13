@@ -32,6 +32,7 @@ import type { CartProduct } from "@/components/site/cart-provider";
 import { HomeProductCarousel } from "@/components/site/home-product-carousel";
 import { PerfumeryCarousel } from "@/components/site/perfumery-carousel";
 import { HeroProductStage } from "@/components/site/hero-product-stage";
+import { ClubBanner } from "@/components/site/club-banner";
 import { HomeShortcuts } from "@/components/site/home-shortcuts";
 import type { HomeShortcutItem } from "@/features/products/home-shortcuts";
 import campaignStyles from "./home-campaign.module.css";
@@ -969,6 +970,8 @@ export function HomePage({
           <HeroCarousel />
         </div>
       </section>
+
+      <ClubBanner />
 
       <BestOfferCatalog products={featuredProducts} />
 

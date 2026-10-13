@@ -16,6 +16,8 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const productSelect = {
+  wimicoinsEnabled: true,
+  wimicoinsRateBps: true,
   shippingProfile: true,
   cashbackEnabled: true,
   cashbackRateBps: true,
@@ -98,6 +100,12 @@ export async function PATCH(
   if ((parsed.data.cashbackEnabled !== undefined || parsed.data.cashbackRateBps !== undefined) && guard.session?.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Somente o administrador pode configurar cashback." }, { status: 403 });
   }
+  if ((parsed.data.wimicoinsEnabled !== undefined || parsed.data.wimicoinsRateBps !== undefined) && guard.session?.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Somente o administrador pode configurar WimiCoins." }, { status: 403 });
+  }
+  if (parsed.data.wimicoinsEnabled && (parsed.data.requiresPrescription || parsed.data.isPopularPharmacy)) {
+    return NextResponse.json({ error: "WimiCoins não disponíveis para produtos com receita ou Farmácia Popular." }, { status: 422 });
+  }
   if (parsed.data.cashbackEnabled && (parsed.data.requiresPrescription || parsed.data.isPopularPharmacy)) {
     return NextResponse.json({ error: "Cashback nao disponivel para produtos com receita ou Farmacia Popular." }, { status: 422 });
   }
@@ -118,6 +126,8 @@ export async function PATCH(
 
   const { expectedUpdatedAt } = parsed.data;
   const productData = {
+    wimicoinsEnabled: parsed.data.requiresPrescription || parsed.data.isPopularPharmacy ? false : parsed.data.wimicoinsEnabled,
+    wimicoinsRateBps: parsed.data.wimicoinsRateBps,
     shippingProfile: parsed.data.shippingProfile,
     cashbackEnabled: parsed.data.requiresPrescription || parsed.data.isPopularPharmacy ? false : parsed.data.cashbackEnabled,
     cashbackRateBps: parsed.data.cashbackRateBps,
@@ -196,6 +206,8 @@ export async function PATCH(
             shippingDraftUpdated: shippingProfile !== undefined,
             cashbackEnabled: savedProduct.cashbackEnabled,
             cashbackRateBps: savedProduct.cashbackRateBps,
+            wimicoinsEnabled: savedProduct.wimicoinsEnabled,
+            wimicoinsRateBps: savedProduct.wimicoinsRateBps,
             hasImage: Boolean(savedProduct.imageUrl),
             featuredPosition: savedProduct.featuredPosition,
             name: savedProduct.name,

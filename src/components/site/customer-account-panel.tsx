@@ -1,4 +1,5 @@
 "use client";
+import { ClubBenefits } from "@/components/site/club-benefits";
 
 import Link from "next/link";
 
@@ -71,7 +72,7 @@ type CashbackSummary = {
 const tabs = [
   { icon: LayoutDashboard, id: "inicio", label: "Visão geral" },
   { icon: Package, id: "pedidos", label: "Meus pedidos" },
-  { icon: Coins, id: "beneficios", label: "Cashback" },
+  { icon: Coins, id: "beneficios", label: "Benefícios" },
   { icon: UserRound, id: "perfil", label: "Meus dados" },
   { icon: ShieldCheck, id: "seguranca", label: "Segurança" },
 ] as const;
@@ -292,7 +293,7 @@ export function CustomerAccountPanel({
         <div aria-label={tabs.find(tab => tab.id === activeTab)?.label} className="min-w-0 scroll-mt-40 rounded-2xl outline-none lg:scroll-mt-60" id="account-content" ref={contentRef} role="region" tabIndex={-1}>
           {activeTab === "inicio" && <div className="space-y-5">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <button className="group col-span-2 rounded-2xl border border-emerald-100 bg-[#edf8f2] p-5 text-left transition-colors hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-brand sm:col-span-1" onClick={() => navigateTo("beneficios")} type="button"><span className="flex items-center justify-between text-xs font-bold text-emerald-800">Seu cashback<Coins className="h-5 w-5" /></span><span className="mt-3 block text-3xl font-black tracking-tight text-emerald-950">{formatCurrency(balance)}</span><span className="mt-2 block text-xs text-emerald-800">Disponível para usar <ArrowRight className="ml-1 inline h-3 w-3" /></span></button>
+              <div className="col-span-2 min-w-0 sm:col-span-1"><ClubBenefits compact /><button className="group w-full rounded-2xl border border-emerald-100 bg-[#edf8f2] p-5 text-left transition-colors hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-brand" onClick={() => navigateTo("beneficios")} type="button"><span className="flex items-center justify-between text-xs font-bold text-emerald-800">Seu cashback<Coins className="h-5 w-5" /></span><span className="mt-3 block text-3xl font-black tracking-tight text-emerald-950">{formatCurrency(balance)}</span><span className="mt-2 block text-xs text-emerald-800">Disponível para usar <ArrowRight className="ml-1 inline h-3 w-3" /></span></button></div>
               <button className="rounded-2xl border border-line bg-white p-5 text-left hover:border-brand/30 focus-visible:outline-2 focus-visible:outline-brand" onClick={() => { navigateTo("pedidos"); void loadOrders("active", 1); }} type="button"><span className="flex items-center justify-between text-xs font-bold text-muted">Em andamento<Truck className="h-5 w-5 text-brand" /></span><span className="mt-3 block text-3xl font-black tracking-tight">{orders.counts.active.toString().padStart(2, "0")}</span><span className="mt-2 block text-xs text-muted">Acompanhar pedidos <ArrowRight className="ml-1 inline h-3 w-3" /></span></button>
               <button className="rounded-2xl border border-line bg-white p-5 text-left hover:border-brand/30 focus-visible:outline-2 focus-visible:outline-brand" onClick={() => { navigateTo("pedidos"); void loadOrders("all", 1); }} type="button"><span className="flex items-center justify-between text-xs font-bold text-muted">Seu histórico<ShoppingBag className="h-5 w-5 text-brand" /></span><span className="mt-3 block text-3xl font-black tracking-tight">{orders.counts.all.toString().padStart(2, "0")}</span><span className="mt-2 block text-xs text-muted">Ver todas as compras <ArrowRight className="ml-1 inline h-3 w-3" /></span></button>
             </div>
@@ -307,7 +308,7 @@ export function CustomerAccountPanel({
           </div>}
           {activeTab === "pedidos" && <div className="rounded-2xl border border-line bg-white p-4 sm:p-6"><CustomerOrderHistoryPanel error={ordersError} history={orders} loading={ordersLoading} onLoad={(filter, page) => void loadOrders(filter, page)} /></div>}
           <div className={cn(activeTab === "inicio" || activeTab === "pedidos" ? "hidden" : "rounded-2xl border border-line bg-white p-5 sm:p-7")}>
-          {activeTab !== "inicio" && activeTab !== "pedidos" && <div className="mb-6 border-b border-line pb-5"><h2 className="text-2xl font-black tracking-tight">{activeTab === "perfil" ? "Seus dados, sempre em dia" : activeTab === "seguranca" ? "Acesso e segurança" : "Seu cashback"}</h2><p className="mt-2 text-sm leading-6 text-muted">{activeTab === "perfil" ? "Mantenha seu contato e endereço atualizados para facilitar o atendimento." : activeTab === "seguranca" ? "Cuide do acesso à sua conta com uma senha que só você conhece." : "Acompanhe seu saldo e os benefícios das suas compras."}</p></div>}
+          {activeTab !== "inicio" && activeTab !== "pedidos" && <div className="mb-6 border-b border-line pb-5"><h2 className="text-2xl font-black tracking-tight">{activeTab === "perfil" ? "Seus dados, sempre em dia" : activeTab === "seguranca" ? "Acesso e segurança" : "Seus benefícios"}</h2><p className="mt-2 text-sm leading-6 text-muted">{activeTab === "perfil" ? "Mantenha seu contato e endereço atualizados para facilitar o atendimento." : activeTab === "seguranca" ? "Cuide do acesso à sua conta com uma senha que só você conhece." : "Acompanhe seu saldo e os benefícios das suas compras."}</p></div>}
           {activeTab === "perfil" ? (
             <form className="grid gap-5 sm:grid-cols-2 [&_input]:min-h-12 [&_input]:rounded-xl [&_textarea]:rounded-xl" onSubmit={(event) => { event.preventDefault(); void saveProfile(); }}>
               <Field icon={<UserRound className="h-4 w-4" />} label="Nome">
@@ -461,6 +462,7 @@ export function CustomerAccountPanel({
           ) : null}
 
           {activeTab === "beneficios" ? (
+            <div className="min-w-0"><ClubBenefits />
             <div className="grid gap-5 xl:grid-cols-[17rem_minmax(0,1fr)]">
               <div className="rounded-2xl border border-emerald-100 bg-[#edf8f2] p-5">
                 <p className="flex items-center gap-2 text-sm font-black text-brand">
@@ -520,6 +522,7 @@ export function CustomerAccountPanel({
                   )}
                 </div>
               </div>
+            </div>
             </div>
           ) : null}
         </div>

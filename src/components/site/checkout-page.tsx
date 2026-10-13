@@ -10,10 +10,12 @@ import { useCheckoutSession } from "@/hooks/use-checkout-session";
 import { checkoutStepError, type CheckoutDraft } from "@/features/orders/checkout-draft";
 import { CheckoutDeliveryStep } from "./checkout-delivery-step";
 import { CheckoutCashback } from "./checkout-cashback";
+import { CheckoutWimiCoins } from "./checkout-wimicoins";
 import { normalizePostalCode } from "@/features/products/product-detail";
 import { customerShippingFee, FREE_SHIPPING_THRESHOLD_CENTS, isLocalDeliveryAddress } from "@/features/shipping/delivery-policy";
 import { OnlinePayment, type PaymentView } from "./online-payment";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
+import { allocateOrderBenefits } from "@/features/orders/benefits";
 
 type PaymentConfig = { publicKey: string; environment: string; brands: { id: string; name: string; image: string | null }[] } | null;
 type Result = { id: string; number: string; totalCents: number; paymentMethod: string };
@@ -39,12 +41,23 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   const [onlineOrder, setOnlineOrder] = useState<string | null>(null);
   const [initialPayment, setInitialPayment] = useState<PaymentView | null>(null);
   const [cashbackRedeemCents, setCashbackRedeemCents] = useState(0);
+  const [wimicoinsRedeemPoints, setWimicoinsRedeemPoints] = useState(0);
   const sending = useRef(false);
   const requestAttempt = useRef<{ signature: string; id: string } | null>(null);
-  const discountCents = Math.min(cashbackRedeemCents, subtotalCents);
-  const cartKey = JSON.stringify(items.map(item => [item.id, item.quantity, item.unitPriceCents]));
+  const cartKey = JSON.stringify(items.map(item => [item.id, item.quantity, item.unitPriceCents, item.requiresPrescription, item.isPopularPharmacy]));
+  const discountScope = `${draftOwner}:${cartKey}`;
+  const [selectedScope, setSelectedScope] = useState(discountScope);
+  const cashbackDiscountCents = isCustomer && selectedScope === discountScope ? Math.max(0, Math.min(cashbackRedeemCents, subtotalCents)) : 0;
+  const benefitItems = items.map(item => ({ totalCents: item.unitPriceCents * item.quantity, wimicoinsEligible: !item.requiresPrescription && !item.isPopularPharmacy }));
+  const allocation = allocateOrderBenefits(benefitItems, cashbackDiscountCents, 0);
+  const wimicoinsCapPoints = allocation.reduce((sum, item, index) => sum + (benefitItems[index].wimicoinsEligible ? item.paidCents : 0), 0);
+  const wimicoinsDiscountCents = isCustomer && selectedScope === discountScope ? Math.max(0, Math.min(wimicoinsRedeemPoints, wimicoinsCapPoints)) : 0;
+  const discountCents = cashbackDiscountCents + wimicoinsDiscountCents;
   const previousCart = useRef(cartKey);
   const resumeKey = `wimifarma-active-payment:${draftOwner}`;
+  useEffect(() => {
+    setCashbackRedeemCents(0); setWimicoinsRedeemPoints(0); setSelectedScope(discountScope);
+  }, [discountScope]);
   useEffect(() => {
     try { const value = sessionStorage.getItem(resumeKey); if (value && /^[a-zA-Z0-9_-]{1,80}$/.test(value)) setOnlineOrder(value); } catch { /* Cookie authorization still permits the payment URL. */ }
   }, [resumeKey]);
@@ -94,7 +107,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
     try {
       const body = { address: fulfillmentMethod === "DELIVERY" ? address : undefined, customer, fulfillmentMethod,
         items: items.map(item => ({ productId: item.id, quantity: item.quantity, expectedUnitPriceCents: item.unitPriceCents })), notes, paymentMethod, privacyConsent,
-        cashbackRedeemCents: discountCents, shippingToken: fulfillmentMethod === "DELIVERY" ? shippingSelection?.token : undefined,
+        cashbackRedeemCents: cashbackDiscountCents, wimicoinsRedeemPoints: wimicoinsDiscountCents, shippingToken: fulfillmentMethod === "DELIVERY" ? shippingSelection?.token : undefined,
         ...(online ? { onlineMethod: method === "card" ? "card" : "pix", onlineInstallments: method === "card" ? draft.onlineInstallments ?? 1 : 1 } : {}) };
       const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(body)));
       const signature = Array.from(new Uint8Array(bytes), n => n.toString(16).padStart(2, "0")).join("");
@@ -119,7 +132,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
       }
       setOrder(result); requestAttempt.current = null;
       try { sessionStorage.removeItem(storageKey); } catch { /* Optional persistence. */ }
-      window.dispatchEvent(new Event("wimifarma:cashback-updated")); clearDraft(); clearCart();
+      window.dispatchEvent(new Event("wimifarma:cashback-updated")); window.dispatchEvent(new Event("wimifarma:club-updated")); clearDraft(); clearCart();
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Não foi possível enviar o pedido."); throw caught; }
     finally { sending.current = false; setSubmitting(false); }
   }
@@ -168,10 +181,10 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
           <fieldset className="mt-5 grid grid-cols-2 gap-2" disabled={submitting}><legend className="sr-only">Forma de pagamento</legend><PaymentChoice selected={method === "pix"} onSelect={() => selectPayment("pix")} label="Pix" detail="Pagamento à vista" Icon={QrCode} /><PaymentChoice selected={method === "card" || method === "manual-card"} onSelect={() => selectPayment(paymentConfig ? "card" : "manual-card")} label="Cartão" detail={paymentConfig ? "Até 3x sem juros" : "Na maquininha"} Icon={CreditCard} disabled={!paymentConfig && !local} />{local && <div className="col-span-2"><PaymentChoice selected={method === "cash"} onSelect={() => selectPayment("cash")} label={fulfillmentMethod === "PICKUP" ? "Dinheiro na retirada" : "Dinheiro na entrega local"} detail="Pague ao receber" Icon={Banknote} /></div>}</fieldset>
           <p className="mt-3 text-xs leading-5 text-muted">{method === "cash" ? "Apenas retirada ou entrega local em Ivaté e Douradina. Informe o troco nas observações." : method === "manual-card" ? "Pague na maquininha ao receber ou retirar." : !paymentConfig ? "A farmácia enviará os dados do Pix após confirmar o pedido." : method === "pix" ? "QR Code e copia e cola aqui na tela. Você terá 2 horas para pagar." : "Até 3x sem juros. Acima de 3x, juros e total calculados pelo Mercado Pago."}</p>
           {method === "card" && paymentConfig?.brands.length ? <div className="mt-4 flex flex-wrap items-center gap-2" aria-label="Bandeiras disponíveis no Mercado Pago">{paymentConfig.brands.map(brand => <span key={brand.id} className="grid h-7 min-w-10 place-items-center rounded border border-line px-1.5">{brand.image ? <Image unoptimized src={brand.image} alt={brand.name} width={36} height={20} className="h-5 w-auto max-w-12 object-contain" /> : <span className="text-[10px] font-semibold">{brand.name}</span>}</span>)}</div> : null}
-          {isCustomer && <fieldset disabled={submitting}><CheckoutCashback subtotalCents={subtotalCents} selectedCents={discountCents} onSelect={setCashbackRedeemCents} /></fieldset>}
+          {isCustomer && <fieldset disabled={submitting} key={discountScope}><CheckoutWimiCoins capPoints={wimicoinsCapPoints} selectedPoints={wimicoinsRedeemPoints} onSelect={setWimicoinsRedeemPoints} /><CheckoutCashback subtotalCents={subtotalCents} selectedCents={cashbackDiscountCents} onSelect={setCashbackRedeemCents} /></fieldset>}
           <section className="mt-5 overflow-hidden rounded-2xl border border-line bg-surface-subtle/50" aria-label="Resumo da compra">
             <div className="flex items-center gap-2.5 border-b border-line px-4 py-3.5"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-brand"><ShoppingBag className="h-4 w-4" /></span><h3 className="flex-1 text-sm font-black text-ink">Resumo da compra</h3><span className="text-xs text-muted">{itemCount} {itemCount === 1 ? "item" : "itens"}</span></div>
-            <dl className="grid gap-3 px-4 py-4 text-sm"><SummaryLine label="Produtos" value={money(subtotalCents)} /><SummaryLine label={fulfillmentMethod === "PICKUP" ? "Retirada" : shippingSelection ? `${shippingSelection.carrier} · ${shippingSelection.service}` : deliveryKnown ? "Entrega local" : "Frete"} value={!deliveryKnown ? shippingStatus : fee === 0 ? "Grátis" : money(fee)} />{discountCents > 0 && <SummaryLine label="Cashback" value={`− ${money(discountCents)}`} />}</dl>
+            <dl className="grid gap-3 px-4 py-4 text-sm"><SummaryLine label="Produtos" value={money(subtotalCents)} /><SummaryLine label={fulfillmentMethod === "PICKUP" ? "Retirada" : shippingSelection ? `${shippingSelection.carrier} · ${shippingSelection.service}` : deliveryKnown ? "Entrega local" : "Frete"} value={!deliveryKnown ? shippingStatus : fee === 0 ? "Grátis" : money(fee)} />{wimicoinsDiscountCents > 0 && <SummaryLine label="WimiCoins" value={`− ${money(wimicoinsDiscountCents)}`} />}{cashbackDiscountCents > 0 && <SummaryLine label="Cashback" value={`− ${money(cashbackDiscountCents)}`} />}</dl>
             <div className="border-t border-line bg-white px-4 py-4"><div className="flex flex-wrap items-end justify-between gap-2"><span className="text-sm font-bold text-ink">{deliveryKnown ? "Total do pedido" : "Subtotal"}</span><strong className="text-3xl font-black tracking-tight text-brand">{money(total)}</strong></div>{!deliveryKnown && <p className="mt-2 text-xs leading-5 text-muted">O total será atualizado ao escolher uma entrega disponível.</p>}</div>
           </section>
           <FreeShippingProgress eligibleCents={subtotalCents - discountCents} />

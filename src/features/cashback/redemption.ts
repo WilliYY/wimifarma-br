@@ -1,16 +1,19 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { lockCashbackAccount } from "./wallet";
 import { reverseReviewRewards } from "./review-service";
+import { settleOrderWimicoins } from "@/features/club/service";
 
 // O chamador mantem o bloqueio de escrita do pedido durante toda a liquidacao.
 export async function settleOrderBenefits(tx: Prisma.TransactionClient, orderId: string) {
   const order = await tx.order.findUniqueOrThrow({ where: { id: orderId } });
   if (!order.customerId) return;
+  // Todas as operações combinadas bloqueiam cashback antes da carteira WimiCoins.
+  const account = await lockCashbackAccount(tx, order.customerId);
+  await settleOrderWimicoins(tx, orderId);
   const canceled = order.status === "CANCELED" || order.paymentStatus === "CANCELED" || order.paymentStatus === "REFUNDED";
   const completed = order.status === "COMPLETED" && order.paymentStatus === "PAID";
   const state = order.cashbackRedemptionState;
   if (!canceled && !(completed && state === "RESERVED")) return;
-  const account = await lockCashbackAccount(tx, order.customerId);
   if (canceled) await reverseReviewRewards(tx, orderId);
   if (state !== "RESERVED" && state !== "REDEEMED") return;
   const amount = (order.cashbackRedeemedCents / 100).toFixed(2);

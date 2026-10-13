@@ -4,7 +4,7 @@ import { ORDER_HISTORY_PAGE_SIZE, type CustomerOrderHistory, type OrderHistoryQu
 // Explicit customer-facing projection: no internal notes, contact data, or payment credentials.
 const customerOrderSelect = {
   id: true, number: true, status: true, fulfillmentMethod: true, paymentMethod: true, paymentStatus: true,
-  subtotalCents: true, deliveryFeeCents: true, totalCents: true, cashbackRedeemedCents: true,
+  subtotalCents: true, deliveryFeeCents: true, totalCents: true, cashbackRedeemedCents: true, wimicoinsRedeemedPoints: true,
   street: true, addressNumber: true, complement: true, neighborhood: true, city: true, state: true,
   createdAt: true, updatedAt: true,
   requiresPrescriptionReview: true,

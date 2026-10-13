@@ -63,6 +63,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     await settleOrderBenefits(transaction, id);
     const saved = await transaction.order.findUniqueOrThrow({
       select: { id: true, paymentStatus: true, status: true, updatedAt: true, cashbackRedeemedCents: true,
+        wimicoinsRedeemedPoints: true, wimicoinsRedemptionState: true,
         cashbackRedemptionState: true, requiresPrescriptionReview: true, prescriptionReviewedAt: true },
       where: { id },
     });

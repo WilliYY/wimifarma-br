@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-13 - Club gratuito e WimiCoins acumuláveis com cashback
+
+- Ativar adesão explícita gratuita, listagem ADMIN dos participantes e elegibilidade/percentual por produto. Produtos ficam desabilitados até escolha de ADMIN; percentual inicial de 2% editável.
+- Manter carteira e lançamentos próprios de pontos inteiros, com conversão 100 WimiCoins = R$ 1. Descontos são combinados na mesma transação do pedido, com rateio exato e ganhos sobre o preço líquido; WimiCoins não participam em itens com receita ou Farmácia Popular.
+- Liberar ganhos somente em COMPLETED + PAID; devolver reservas e estornar ganhos em cancelamento/reembolso, com bloqueios e chaves únicas. Nenhuma transferência, saque ou campanha adicional.
+- Permitir ao usuário administrativo aderir pela própria identidade vinculada User–Customer, sem mesclar e-mails. Revalidar esse vínculo na sessão. Crédito privado e único de 500 pontos somente para o titular que o solicitou.
+- Banner com logo oficial e coroa separada, saldo acima do cashback, conta/checkout e painel de participantes. Contrato e evidências em [63](63-club-wimicoins.md).
+
 ## 2026-10-13 - Catálogo administrativo focado na operação
 
 - Retirar a orientação sobre Google, sitemap e Shopping da abertura do catálogo, conforme pedido do lojista para ocultar processos automáticos.

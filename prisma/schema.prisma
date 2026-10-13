@@ -116,6 +116,8 @@ model User {
 }
 
 model Product {
+  wimicoinsEnabled Boolean @default(false)
+  wimicoinsRateBps Int @default(200)
   shippingProfile Json?
   cashbackEnabled Boolean @default(false)
   cashbackRateBps Int @default(200)
@@ -259,6 +261,8 @@ model Customer {
   status            CustomerStatus     @default(ACTIVE)
   spinWheelAttempts SpinWheelAttempt[]
   cashbackAccount   CashbackAccount?
+  clubMembership    ClubMembership?
+  wimicoinAccount   WimicoinAccount?
   whatsappContacts  WhatsAppContact[]
   orders            Order[]
   productReviews    ProductReview[]
@@ -272,6 +276,10 @@ model Customer {
 }
 
 model Order {
+  wimicoinsEarnedPoints Int @default(0)
+  wimicoinsState CashbackState @default(NONE)
+  wimicoinsRedeemedPoints Int @default(0)
+  wimicoinsRedemptionState CashbackRedemptionState @default(NONE)
   onlinePayment OnlinePayment?
   shippingQuote Json?
   cashbackRedeemedCents Int @default(0)
@@ -390,6 +398,9 @@ model PaymentWebhookEvent {
 }
 
 model OrderItem {
+  wimicoinsDiscountPoints Int @default(0)
+  wimicoinsRateBps Int @default(0)
+  wimicoinsEarnedPoints Int @default(0)
   cashbackDiscountCents Int @default(0)
   cashbackRateBps Int @default(0)
   cashbackEarnedCents Int @default(0)
@@ -492,6 +503,43 @@ model SpinWheelAttempt {
   @@index([prizeId])
   @@index([customerId])
   @@index([phone, createdAt])
+}
+
+model ClubMembership {
+  id String @id @default(cuid())
+  customerId String @unique
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  active Boolean @default(true)
+  joinedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, joinedAt])
+}
+
+model WimicoinAccount {
+  id String @id @default(cuid())
+  customerId String @unique
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  balancePoints Int @default(0)
+  lifetimeEarnedPoints Int @default(0)
+  lifetimeRedeemedPoints Int @default(0)
+  transactions WimicoinTransaction[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WimicoinTransaction {
+  id String @id @default(cuid())
+  accountId String
+  account WimicoinAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  eventKey String @unique
+  type CashbackTransactionType
+  amountPoints Int
+  description String
+  reference String?
+  createdAt DateTime @default(now())
+
+  @@index([accountId, createdAt])
 }
 
 model CashbackAccount {

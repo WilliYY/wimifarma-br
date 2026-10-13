@@ -44,3 +44,11 @@ test("staff password rotation rejects previous and unversioned sessions", async 
   assert.equal(await refreshStaffToken(token, async () => ({ ...active, credentialVersion: "version-2" })), null);
   assert.equal(await refreshStaffToken({ id: token.id, role: token.role }, async () => active), null);
 });
+
+test("staff wallet identity follows only the current explicit database link", async () => {
+  const stale = { ...token, customerId: "old-customer" };
+  assert.deepEqual(await refreshStaffToken(stale, async () => ({ ...active, customerId: "linked-customer" })), { ...token, customerId: "linked-customer" });
+  assert.deepEqual(await refreshStaffToken(stale, async () => ({ ...active, customerId: null })), token);
+  assert.deepEqual(await refreshStaffToken(token, async () => ({ ...active, customerId: "new-linked-customer" })), { ...token, customerId: "new-linked-customer" });
+  assert.equal(stale.customerId, "old-customer");
+});

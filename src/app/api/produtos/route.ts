@@ -10,6 +10,8 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const productSelect = {
+  wimicoinsEnabled: true,
+  wimicoinsRateBps: true,
   shippingProfile: true,
   cashbackEnabled: true,
   cashbackRateBps: true,
@@ -124,6 +126,12 @@ export async function POST(request: Request) {
   if ((parsed.data.cashbackEnabled !== undefined || parsed.data.cashbackRateBps !== undefined) && guard.session?.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Somente o administrador pode configurar cashback." }, { status: 403 });
   }
+  if ((parsed.data.wimicoinsEnabled !== undefined || parsed.data.wimicoinsRateBps !== undefined) && guard.session?.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Somente o administrador pode configurar WimiCoins." }, { status: 403 });
+  }
+  if (parsed.data.wimicoinsEnabled && (parsed.data.requiresPrescription || parsed.data.isPopularPharmacy)) {
+    return NextResponse.json({ error: "WimiCoins não disponíveis para produtos com receita ou Farmácia Popular." }, { status: 422 });
+  }
   if (parsed.data.cashbackEnabled && (parsed.data.requiresPrescription || parsed.data.isPopularPharmacy)) {
     return NextResponse.json({ error: "Cashback nao disponivel para produtos com receita ou Farmacia Popular." }, { status: 422 });
   }
@@ -175,6 +183,8 @@ export async function POST(request: Request) {
             shippingDraftUpdated: parsed.data.shippingProfile !== undefined,
             cashbackEnabled: product.cashbackEnabled,
             cashbackRateBps: product.cashbackRateBps,
+            wimicoinsEnabled: product.wimicoinsEnabled,
+            wimicoinsRateBps: product.wimicoinsRateBps,
             hasImage: Boolean(product.imageUrl),
             featuredPosition: product.featuredPosition,
             name: product.name,

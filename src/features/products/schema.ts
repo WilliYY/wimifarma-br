@@ -8,6 +8,8 @@ const productFieldsSchema = z.object({
   featured: z.boolean().optional(),
   cashbackEnabled: z.boolean().optional(),
   cashbackRateBps: cashbackRateSchema.optional(),
+  wimicoinsEnabled: z.boolean().optional(),
+  wimicoinsRateBps: cashbackRateSchema.optional(),
   activeIngredients: z.array(z.string().trim().min(2).max(120)).max(20).default([]),
   brand: z.string().max(120).optional(),
   category: z.string().max(120).optional(),

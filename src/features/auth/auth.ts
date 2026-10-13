@@ -299,7 +299,7 @@ export const authConfig = {
       return refreshStaffToken(token, async (id) => {
         const staff = await getPrisma().user.findUnique({
           where: { id },
-          select: { id: true, role: true, isActive: true, passwordHash: true },
+          select: { id: true, role: true, isActive: true, passwordHash: true, customerId: true },
         });
         return staff ? { ...staff, credentialVersion: credentialVersion(staff.passwordHash) } : null;
       });
