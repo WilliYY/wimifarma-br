@@ -40,6 +40,14 @@ test("Club API rejects anonymous joining, forged body and cross-origin mutations
   assert.equal(response.headers.get("cache-control"), "private, no-store");
 });
 
+test("admin member search filters customer name, email and phone before pagination", async () => {
+  const h = await harness({ user: { id: "admin", role: "ADMIN" } }, false, true);
+  assert.equal((await h.get(`?q=${"x".repeat(121)}`)).status, 400);
+  assert.equal((await h.get("?q=Cliente%20Sintetico")).status, 200);
+  const query = JSON.parse(JSON.stringify(h.query()));
+  assert.deepEqual(query.where.customer.OR, ["name", "email", "phone"].map(field => ({ [field]: { contains: "Cliente Sintetico", mode: "insensitive" } })));
+});
+
 test("unlinked staff GET is empty and database failures remain private", async () => {
   const h = await harness({ user: { id: "admin", role: "ADMIN" } });
   const response = await h.get(); assert.equal(response.status, 200); assert.deepEqual(await response.json(), { data: emptyClubSummary() });
