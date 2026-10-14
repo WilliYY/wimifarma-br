@@ -101,11 +101,11 @@ async function main() {
       await page.getByLabel("Nome completo", { exact: true }).fill(customer.name);
       await page.getByLabel("WhatsApp / telefone", { exact: true }).fill("44999990000");
       if (route === "pickup") {
-        await page.getByRole("radio", { name: /Retirar na farmacia/ }).check();
+        await page.getByText("Retirar na farmacia", { exact: true }).click();
         await page.getByRole("checkbox", { name: "Usar saldo de WimiCoins", exact: true }).check();
         await page.getByRole("checkbox", { name: "Usar saldo de cashback", exact: true }).check();
       } else {
-        await page.getByRole("radio", { name: /Receber em casa/ }).check();
+        await page.getByText("Receber em casa", { exact: true }).click();
         await page.getByLabel("CEP", { exact: true }).fill(route === "local" ? "87525000" : "01001000");
         await page.getByLabel("Numero", { exact: true }).fill("123");
         await page.getByLabel("Endereco", { exact: true }).fill("Rua sintética");
@@ -154,7 +154,7 @@ async function main() {
     await db.shippingIntegration.update({ where: { id: "melhor-envio" }, data: { revision: { increment: 1 }, settings: { ...settings, postingLocations: [] } } });
     for (const [role, context] of [["ADMIN", admin], ["STAFF", staff]] as const) {
       const page = await context.newPage();
-      await page.goto(`${base}/admin/pedidos`);
+      await page.goto(`${base}/admin/pedidos`, { waitUntil: "networkidle" });
       for (const order of created) {
         const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: order.number, exact: true }) });
         await expect(card).toBeVisible();
@@ -174,14 +174,18 @@ async function main() {
     const patch = (context: BrowserContext, body: unknown) => context.request.patch(`${base}/api/pedidos/${pickup.id}`, { data: body, headers: { Origin: base } });
     assert.equal((await patch(customerContext, { status: "CONFIRMED" })).status(), 401);
     const operationPage = await staff.newPage();
-    await operationPage.goto(`${base}/admin/pedidos`);
+    await operationPage.goto(`${base}/admin/pedidos`, { waitUntil: "networkidle" });
+    await operationPage.getByRole("textbox", { name: "Buscar pedido", exact: true }).fill(pickup.number);
+    await expect(operationPage.getByRole("article")).toHaveCount(1);
     const operationCard = operationPage.getByRole("article").filter({ has: operationPage.getByRole("heading", { name: pickup.number, exact: true }) });
     for (const [label, value] of [["Andamento", "CONFIRMED"], ["Andamento", "PREPARING"], ["Andamento", "READY"], ["Pagamento", "PAID"], ["Andamento", "COMPLETED"]]) {
-      const pending = operationPage.waitForResponse(response => response.url() === `${base}/api/pedidos/${pickup.id}` && response.request().method() === "PATCH");
-      await operationCard.getByLabel(label, { exact: true }).selectOption(value);
-      const response = await pending;
+      console.log(`STEP STAFF ${label} ${value}`);
+      const [response] = await Promise.all([
+        operationPage.waitForResponse(response => response.url() === `${base}/api/pedidos/${pickup.id}` && response.request().method() === "PATCH"),
+        operationCard.getByLabel(label).selectOption(value, { timeout: 5000 }),
+      ]);
       assert.equal(response.status(), 200, await response.text());
-      await expect(operationCard.getByLabel(label, { exact: true })).toHaveValue(value);
+      await expect(operationCard.getByLabel(label)).toHaveValue(value);
       await expect(operationCard.getByText("Salvando...", { exact: true })).toHaveCount(0);
     }
     const complete = await db.order.findUniqueOrThrow({ where: { id: pickup.id } });
@@ -194,6 +198,13 @@ async function main() {
     check("STAFF completes and settles synthetic order; CUSTOMER cannot operate it; combined benefits settle once");
     await writeFile(`${output}/qa-results.json`, JSON.stringify({ checks, orders: created, fixtures: ["carrier quotes", "CEP"], real: ["Next.js", "PostgreSQL", "Auth.js", "checkout", "ADMIN/STAFF pages", "status updates", "benefits"], charges: 0, messages: 0 }, null, 2));
     console.log(`QA_ORDERS_OK ${checks.length} checks; ${created.length} real isolated orders; zero charges/messages`);
+  } catch (error) {
+    const page = contexts.flatMap(context => context.pages()).find(page => !page.isClosed());
+    if (page) {
+      await page.screenshot({ path: `${output}/qa-failure.png`, fullPage: true }).catch(() => undefined);
+      await writeFile(`${output}/qa-failure.txt`, await page.locator("body").innerText()).catch(() => undefined);
+    }
+    throw error;
   } finally {
     await Promise.all(contexts.map(context => context.close()));
     await browser.close();
