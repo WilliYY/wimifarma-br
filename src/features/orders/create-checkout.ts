@@ -66,8 +66,13 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   const items = prepared.items.map((item, index) => {
     const product = products.find((p) => p.id === item.productId)!;
     const paidUnitCents = Math.floor(discounts[index].paidCents / item.quantity);
-    const earned = customer ? productCashbackCents(product, paidUnitCents, item.quantity) : 0;
-    const earnedPoints = membership?.active ? productWimicoinsPoints(product, paidUnitCents, item.quantity) : 0;
+    const extraCentUnits = discounts[index].paidCents % item.quantity;
+    const baseUnits = item.quantity - extraCentUnits;
+    // Distribui todo o valor líquido antes do arredondamento de cada unidade.
+    const earned = customer ? productCashbackCents(product, paidUnitCents, baseUnits)
+      + (extraCentUnits > 0 ? productCashbackCents(product, paidUnitCents + 1, extraCentUnits) : 0) : 0;
+    const earnedPoints = membership?.active ? productWimicoinsPoints(product, paidUnitCents, baseUnits)
+      + (extraCentUnits > 0 ? productWimicoinsPoints(product, paidUnitCents + 1, extraCentUnits) : 0) : 0;
     return { ...item, cashbackDiscountCents: discounts[index].cashbackDiscountCents, wimicoinsDiscountPoints: discounts[index].wimicoinsDiscountPoints,
       cashbackEarnedCents: earned, cashbackRateBps: earned > 0 ? product.cashbackRateBps : 0,
       wimicoinsEarnedPoints: earnedPoints, wimicoinsRateBps: earnedPoints > 0 ? product.wimicoinsRateBps : 0 };

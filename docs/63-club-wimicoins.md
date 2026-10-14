@@ -10,6 +10,8 @@ ADMIN pode habilitar WimiCoins por produto e escolher o percentual extra, inicia
 
 As compras fotografam adesão e benefício vigente. Recompensas usam o valor líquido efetivamente pago, após os dois descontos, sem frete. Créditos são liberados somente em pedido COMPLETED + PAID; cancelamento/reembolso estorna ganhos e devolve os benefícios reservados/consumidos uma única vez. Nada de saque, transferência, expiração, bônus retroativo ou campanhas adicionais nesta etapa.
 
+O cálculo distribui o valor líquido do item entre as unidades, preservando os centavos restantes antes de arredondar a recompensa de cada unidade. Exemplo: 20 unidades de R$ 10,25, desconto total de um centavo e taxa de 2% geram 419 pontos. A correção de 14/10/2026 afeta somente novos pedidos; snapshots históricos e bônus por avaliação permanecem inalterados.
+
 ## Decisão de arquitetura
 
 Escolhidas adesão explícita, carteira de pontos inteiros e livro de lançamentos separado, preservando o cashback existente. Unificar moedas com cashback reduziria componentes, mas impediria distinguir os dois saldos/seletores exigidos pelo lojista. Integração ocorre na mesma transação do pedido e no mesmo total encaminhado ao gateway.

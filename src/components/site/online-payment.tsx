@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckCircle2, Copy, CreditCard, QrCode, ShieldCheck } from "lucide-react";
 import { readPaymentView, type PaymentView } from "@/features/payments/client-recovery";
+import { cartIdentity } from "@/features/orders/cart-identity";
 import { useCart } from "./cart-provider";
 import { PaymentCardForm } from "./payment-card-form";
 
@@ -48,7 +49,7 @@ export function OnlinePayment({ orderId, embedded = false, initialData = null, i
     if (data?.status !== "PAID" || !hydrated) return;
     try {
       const key = `wimifarma-payment-cart:${orderId}`;
-      if (sessionStorage.getItem(key) === JSON.stringify(items.map(item => [item.id, item.quantity, item.unitPriceCents]))) clearCart();
+      if (sessionStorage.getItem(key) === cartIdentity(items)) clearCart();
       sessionStorage.removeItem(key);
       window.dispatchEvent(new Event("wimifarma:cashback-updated"));
     } catch { /* A confirmação financeira não depende do armazenamento do navegador. */ }

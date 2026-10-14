@@ -15,13 +15,13 @@ async function fixture(kind: "search" | "checkout" | "header", run: (page: Page)
     "@/components/site/announcement-bar": "export const AnnouncementBar=()=>null;",
     "./checkout-delivery-step": "export const CheckoutDeliveryStep=()=>null;",
     "./online-payment": "export const OnlinePayment=()=>null;",
-    "./cart-provider": `import {useState} from 'react';export function useCart(){const [subtotal,setSubtotal]=useState(1000);window.changeCart=setSubtotal;return {hydrated:true,items:[{id:'synthetic',name:'Produto sintético',slug:'synthetic',quantity:1,unitPriceCents:subtotal}],itemCount:1,subtotalCents:subtotal,clearCart:()=>{}};}`,
+    "./cart-provider": `import {useState} from 'react';export function useCart(){const [subtotal,setSubtotal]=useState(1000);window.changeCart=setSubtotal;return {hydrated:true,items:[{id:'synthetic',name:'Produto sintético',slug:'synthetic',quantity:1,unitPriceCents:subtotal,requiresPrescription:false,isPopularPharmacy:false}],itemCount:1,subtotalCents:subtotal,clearCart:()=>{}};}`,
     "@/hooks/use-checkout-session": `import {useState} from 'react';export function useCheckoutSession(initial){const [draft,setDraft]=useState({...initial,fulfillmentMethod:'PICKUP',paymentMethod:'CASH'});return {draft,setDraft,ready:true,clearDraft:()=>{}};}`,
   };
   const entry = kind === "header"
     ? "import {SiteHeader} from './src/components/site/site-header';window.renderHeader=async()=>root.render(await SiteHeader());await window.renderHeader();"
     : kind === "checkout"
-      ? "import {CheckoutPage} from './src/components/site/checkout-page';root.render(<CheckoutPage isCustomer initialCustomer={{name:'Cliente Sintético',phone:'44999999999',email:'test@example.invalid',street:'',neighborhood:''}}/>);"
+      ? "import {CheckoutPage} from './src/components/site/checkout-page';function CheckoutFixture(){const [owner,setOwner]=React.useState('synthetic');window.changeOwner=setOwner;return <CheckoutPage isCustomer draftOwner={owner} initialCustomer={{name:'Cliente Sintético',phone:'44999999999',email:'test@example.invalid',street:'',neighborhood:''}}/>;}root.render(<CheckoutFixture/>);"
       : "import {SiteSearch} from './src/components/site/site-search';root.render(<SiteSearch/>);";
   const bundle = await build({ stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';const root=createRoot(document.getElementById('root'));window.unmount=()=>root.unmount();${entry}`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "esm", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' }, plugins: [{ name: "synthetic-ui", setup(builder) {
     builder.onResolve({ filter: /.*/ }, args => Object.hasOwn(mocks, args.path) ? { path: args.path, namespace: "fixture" } : undefined);
@@ -38,6 +38,7 @@ async function fixture(kind: "search" | "checkout" | "header", run: (page: Page)
       if (url.origin !== origin) return route.abort();
       if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: '<div id="root"></div><script>window.navigations=[];window.session={user:{id:"synthetic",name:"Cliente",role:"CUSTOMER"}};</script><script type="module" src="/fixture.js"></script>' });
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text });
+      if (url.pathname === "/api/minha-conta/club") return route.fulfill({ json: { data: { member: false, joinedAt: null, balancePoints: 0, pendingPoints: 0, lifetimeEarnedPoints: 0, lifetimeRedeemedPoints: 0, transactions: [] } } });
       return route.abort();
     });
     try { await run(page); } catch (error) { if (errors.length) throw new Error(errors.join("; "), { cause: error }); throw error; }
@@ -74,8 +75,10 @@ test("cashback label, summary and order request retain the explicitly selected a
     await page.route("**/api/pedidos", route => { posted = route.request().postDataJSON(); return route.fulfill({ status: 422, json: { error: "Pedido sintético interceptado" } }); });
     await page.goto("http://127.0.0.1:3198");
     await page.getByRole("checkbox", { name: "Usar saldo de cashback" }).check();
+    await expect(page.getByRole("checkbox", { name: "Usar saldo de cashback" })).toBeChecked();
     await page.evaluate("window.changeCart(2000)");
     await expect(page.getByText(/Usar R\$\s*10,00 neste pedido/)).toBeVisible();
+    await expect(page.getByRole("checkbox", { name: "Usar saldo de cashback" })).toBeChecked();
     await expect(page.locator("dl dd").filter({ hasText: /10,00/ })).toHaveText(/− R\$\s*10,00/);
     await page.getByRole("button", { name: "Confirmar pedido", exact: true }).click();
     await expect(page.getByRole("alert")).toHaveText("Pedido sintético interceptado");
@@ -84,6 +87,37 @@ test("cashback label, summary and order request retain the explicitly selected a
     await expect(page.getByText(/Usar R\$\s*5,00 neste pedido/)).toBeVisible();
     await page.getByRole("button", { name: "Atualizar saldo de cashback" }).click();
     await expect(page.getByRole("checkbox", { name: "Usar saldo de cashback" })).not.toBeChecked();
+  });
+});
+
+test("cashback selection does not transfer to another checkout account", async () => {
+  await fixture("checkout", async page => {
+    await page.route("**/api/minha-conta/cashback", route => route.fulfill({ json: { data: { balance: "30.00" } } }));
+    await page.goto("http://127.0.0.1:3198");
+    const checkbox = page.getByRole("checkbox", { name: "Usar saldo de cashback" });
+    await checkbox.check();
+    await expect(checkbox).toBeChecked();
+    await page.evaluate("window.changeOwner('another-synthetic')");
+    await expect(checkbox).not.toBeChecked();
+    await expect(page.locator("dl dt").filter({ hasText: "Cashback" })).toHaveCount(0);
+  });
+});
+
+test("cart changes preserve chosen cashback but require WimiCoins selection again", async () => {
+  await fixture("checkout", async page => {
+    await page.route("**/api/minha-conta/cashback", route => route.fulfill({ json: { data: { balance: "10.00" } } }));
+    await page.route("**/api/minha-conta/club", route => route.fulfill({ json: { data: { member: true, joinedAt: "2026-10-14T00:00:00.000Z", balancePoints: 500, pendingPoints: 0, lifetimeEarnedPoints: 500, lifetimeRedeemedPoints: 0, transactions: [] } } }));
+    await page.goto("http://127.0.0.1:3198");
+    await page.evaluate("window.changeCart(2000)");
+    const cashback = page.getByRole("checkbox", { name: "Usar saldo de cashback" });
+    const coins = page.getByRole("checkbox", { name: "Usar saldo de WimiCoins" });
+    await cashback.check(); await coins.check();
+    await expect(coins).toBeChecked();
+    await page.evaluate("window.changeCart(3000)");
+    await expect(cashback).toBeChecked();
+    await expect(coins).not.toBeChecked();
+    await expect(page.getByText(/Usar R\$\s*10,00 neste pedido/)).toBeVisible();
+    await expect(page.locator("dl dt").filter({ hasText: "WimiCoins" })).toHaveCount(0);
   });
 });
 
