@@ -6,6 +6,7 @@ import { build } from "esbuild";
 import { defaultShippingSettings, type ShippingSelection } from "./schema";
 import { shippingFingerprint, signShippingQuote } from "./rules";
 import { checkoutRequestSchema, type CheckoutRequest } from "@/features/orders/checkout";
+import type { PrescriptionType } from "@/features/products/purchase-policy";
 
 test("medication carrier acceptance is enforced both when quoting and submitting a signed quote", async () => {
   const bundle = await build({ entryPoints: ["src/features/shipping/service.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "isolated-shipping-service", setup(builder) {
@@ -17,8 +18,8 @@ test("medication carrier acceptance is enforced both when quoting and submitting
         : "export const melhorEnvioRequest=async(...args)=>globalThis.fixture.provider(...args);" }));
   } }] });
   const key = "synthetic-shipping-service-key";
-  const profile = { enabled: true, transportReviewed: true, weightGrams: 350, widthCm: 15, heightCm: 10, lengthCm: 20 };
-  const baseProduct = { id: "fixture-product", name: "Produto sintético", slug: "fixture", imageUrl: null, category: "Medicamentos", price: "10.00", promotionalPrice: null, status: "ACTIVE" as const, stock: 10, requiresPrescription: false, isPopularPharmacy: false, shippingProfile: profile, updatedAt: new Date(0) };
+  const profile = { enabled: true, transportReviewed: true, weightGrams: 350, widthCm: 15, heightCm: 10, lengthCm: 20, approvedServiceIds: undefined as number[] | undefined };
+  const baseProduct = { id: "fixture-product", name: "Produto sintético", slug: "fixture", imageUrl: null, category: "Medicamentos", price: "10.00", promotionalPrice: null, status: "ACTIVE" as const, stock: 10, requiresPrescription: false, prescriptionType: undefined as PrescriptionType | undefined, isPopularPharmacy: false, shippingProfile: profile, updatedAt: new Date(0) };
   let products = [baseProduct];
   const integration = { settings: { ...defaultShippingSettings, enabled: true, serviceIds: [1, 2, 3], contactEmail: "shipping@example.invalid" }, revision: 7 };
   const requests: { services: string; volumes: { weight: number }[] }[] = [];
@@ -42,12 +43,25 @@ test("medication carrier acceptance is enforced both when quoting and submitting
   await assert.rejects(loaded.exports.quoteCart("01001000", items), /transporte autorizado/);
   assert.equal(requests.length, 1, "does not ask an incompatible carrier for a quote");
   integration.settings.serviceIds = [1, 2, 3];
+  products = [{ ...baseProduct, category: "Saude", requiresPrescription: true, prescriptionType: "ORDINARY" }];
+  assert.deepEqual(Array.from(await loaded.exports.quoteCart("01001000", items), option => option.serviceId), [1]);
+  assert.equal(requests.at(-1)?.services, "1,2");
+  const ordinaryIncompatible = signShippingQuote({ provider: "melhor-envio", serviceId: 3, carrier: "Outra transportadora", service: "Teste", priceCents: 1000, deliveryDays: 4, postalCode: "01001000", fingerprint: shippingFingerprint(items, products), revision: 7, expiresAt: Date.now() + 900000 }, key);
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, { ...input, shippingToken: ordinaryIncompatible }), /não aceita/);
   products = [{ ...baseProduct, category: "Perfumaria" }];
   assert.deepEqual(Array.from(await loaded.exports.quoteCart("01001000", items), option => option.serviceId), [1, 3]);
   await loaded.exports.validateOrderShipping(tx, { ...input, shippingToken: signShippingQuote({ provider: "melhor-envio", serviceId: 3, carrier: "Outra transportadora", service: "Teste", priceCents: 1000, deliveryDays: 4, postalCode: "01001000", fingerprint: shippingFingerprint(items, products), revision: 7, expiresAt: Date.now() + 900000 }, key) });
+  products = [{ ...baseProduct, category: "Perfumaria", shippingProfile: { ...profile, approvedServiceIds: [1] } }];
+  assert.deepEqual(Array.from(await loaded.exports.quoteCart("01001000", items), option => option.serviceId), [1]);
+  assert.equal(requests.at(-1)?.services, "1");
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, input), /carrinho ou o CEP mudou/, "approval changes invalidate previous quotes even when service remains allowed");
+  const unapproved = signShippingQuote({ provider: "melhor-envio", serviceId: 3, carrier: "Outra transportadora", service: "Teste", priceCents: 1000, deliveryDays: 4, postalCode: "01001000", fingerprint: shippingFingerprint(items, products), revision: 7, expiresAt: Date.now() + 900000 }, key);
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, { ...input, shippingToken: unapproved }), /não aceita/);
+  products = [{ ...baseProduct, category: "Perfumaria", shippingProfile: { ...profile, approvedServiceIds: [] } }];
+  await assert.rejects(loaded.exports.quoteCart("01001000", items), /transporte autorizado/);
   products = [{ ...baseProduct, shippingProfile: { ...profile, enabled: false } }];
   await assert.rejects(loaded.exports.quoteCart("01001000", items), /não foi liberado/);
   products = [{ ...baseProduct, requiresPrescription: true }];
   await assert.rejects(loaded.exports.quoteCart("01001000", items), /atendimento/);
-  assert.equal(requests.length, 2, "drafts and prescription items never reach the provider");
+  assert.equal(requests.length, 4, "drafts and unclassified prescription items never reach the provider");
 });

@@ -47,6 +47,19 @@ test("mixed medication cart restricts carrier services without mutating configur
   assert.deepEqual(configured, [3, 2, 1]);
 });
 
+test("explicit prescription markers restrict generic and mixed categories to PAC/SEDEX", () => {
+  for (const markers of [
+    { requiresPrescription: true, prescriptionType: "ORDINARY" as const },
+    { requiresPrescription: false, prescriptionType: "ORDINARY" as const },
+    { requiresPrescription: false, prescriptionType: "CONTROLLED" as const },
+    { requiresPrescription: true },
+    { isPopularPharmacy: true },
+  ]) {
+    const medicine = { ...product, category: "Saude", ...markers };
+    assert.deepEqual(permittedShippingServices([3, 1, 2], [product, medicine]), [1, 2]);
+  }
+});
+
 test("non-medicine categories do not require pharmacy support but still require approved packaging", () => {
   for (const category of [null, "", "Higiene", "Perfumaria", "Alimentos e chocolates", "Fraldas", "Cosméticos"]) {
     const eligible = { ...product, category };
@@ -54,4 +67,15 @@ test("non-medicine categories do not require pharmacy support but still require 
     assert.deepEqual(validateShippingProduct(eligible), { ...profile, measurementBasis: "measured" });
     assert.throws(() => validateShippingProduct({ ...eligible, shippingProfile: null }), /ainda não foi liberado/);
   }
+});
+
+test("carrier approval intersects every product, medication policy and global configuration", () => {
+  const configured = [1, 2, 3, 12, 35];
+  const approved = (ids: number[]) => ({ ...product, shippingProfile: { ...profile, approvedServiceIds: ids } });
+  assert.deepEqual(permittedShippingServices(configured, [product]), configured, "legacy profile preserves configuration");
+  assert.deepEqual(permittedShippingServices(configured, [approved([1, 3, 35]), approved([2, 3, 12])]), [3]);
+  assert.deepEqual(permittedShippingServices(configured, [product, approved([1, 35])]), [1, 35]);
+  assert.deepEqual(permittedShippingServices(configured, [approved([])]), [], "explicit empty approval never expands");
+  assert.deepEqual(permittedShippingServices(configured, [{ ...approved([1, 3]), category: "Medicamentos" }]), [1]);
+  assert.deepEqual(configured, [1, 2, 3, 12, 35]);
 });

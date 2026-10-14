@@ -18,7 +18,7 @@ export async function quoteCart(postalCode: string, items: CheckoutRequest["item
   const prepared = prepareCheckoutOrder(products.map((p) => ({ ...p, price: p.price.toString(), promotionalPrice: p.promotionalPrice?.toString() ?? null })), items);
   if (!prepared.ok) throw new ShippingError(prepared.message, 409);
   const serviceIds = permittedShippingServices(settings.serviceIds, products);
-  if (!serviceIds.length) throw new ShippingError("Este carrinho precisa de um serviço de transporte autorizado para medicamentos. Consulte a farmácia.", 422);
+  if (!serviceIds.length) throw new ShippingError("Este carrinho precisa de um serviço de transporte autorizado para todos os produtos. Consulte a farmácia.", 422);
   const volumes = items.map((item) => {
     const product = products.find((p) => p.id === item.productId)!;
     const profile = validateShippingProduct(product);

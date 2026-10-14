@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import { normalizeQuotes, shippingFingerprint, signShippingQuote, validateShippingProduct, verifyShippingQuote } from "./rules";
-import { quoteRequestSchema } from "./schema";
+import { quoteRequestSchema, shippingProfileSchema } from "./schema";
+import { shippingDraftSchema, invalidateShippingProfile } from "./product-draft";
 import { createShippingState, readShippingState } from "./oauth";
 import { checkoutRequestSchema } from "@/features/orders/checkout";
 
@@ -45,10 +46,40 @@ test("temporary failure of every selected carrier is distinguished from lack of 
   ];
   assert.throws(() => normalizeQuotes(temporarilyUnavailable, [1, 2], 1), { status: 503 });
   assert.deepEqual(normalizeQuotes([{ id: 1, error: "CEP não atendido" }], [1], 1), []);
+  assert.deepEqual(normalizeQuotes([{ id: 22, error: "Transportadora não atende este trecho." }], [22], 1), []);
   assert.deepEqual(normalizeQuotes([], [1, 2], 1), []);
   const available = { id: 2, name: "SEDEX", price: "12.50", delivery_time: 4, company: { name: "Correios" } };
   assert.deepEqual(normalizeQuotes([temporarilyUnavailable[0], available], [1, 2], 1).map((option) => option.serviceId), [2]);
   assert.deepEqual(normalizeQuotes([{ id: 9, error: "Serviço indisponível no momento" }, available], [2], 1).map((option) => option.serviceId), [2]);
+  assert.deepEqual(normalizeQuotes([{ id: 32, error: "Transportadora não atende este trecho." }, available], [2, 32], 1).map((option) => option.serviceId), [2]);
+});
+
+test("unknown carrier errors remain technical failures while valid partial quotes survive", (context) => {
+  const diagnostics: unknown[][] = [];
+  context.mock.method(console, "warn", (...args: unknown[]) => diagnostics.push(args));
+  const valid = { id: 2, name: "SEDEX", price: "12.50", delivery_time: 4, company: { name: "Correios" } };
+  for (const error of ["Falha interna da transportadora", "Servico temporariamente fora do ar", { message: "synthetic-private-token" }]) {
+    assert.throws(() => normalizeQuotes([{ id: 1, error }], [1], 1), { status: 502 });
+    assert.deepEqual(normalizeQuotes([{ id: 1, error }, valid], [1, 2], 1).map(option => option.serviceId), [2]);
+    assert.throws(() => normalizeQuotes([{ id: 1, error }, { id: 2, error: "CEP não atendido" }], [1, 2], 1), { status: 502 });
+  }
+  assert.ok(diagnostics.length > 0);
+  assert.match(JSON.stringify(diagnostics), /serviceId/);
+  assert.doesNotMatch(JSON.stringify(diagnostics), /synthetic-private-token|Falha interna|fora do ar/);
+  assert.throws(() => normalizeQuotes([{ id: 1, price: "invalid" }], [1], 1), { status: 502 });
+});
+
+test("malformed upstream entries fail safely and single-service responses normalize", (context) => {
+  context.mock.method(console, "warn", () => {});
+  const valid = { id: 1, name: "PAC", price: "12.50", delivery_time: 4, company: { name: "Correios" } };
+  for (const malformed of [null, {}, "upstream failure", { error: "Falha interna" }, { id: "1", error: "Falha interna" }]) {
+    assert.throws(() => normalizeQuotes([malformed], [1], 1), { status: 502 });
+    assert.deepEqual(normalizeQuotes([malformed, valid], [1], 1).map(option => option.serviceId), [1]);
+  }
+  assert.deepEqual(normalizeQuotes(valid, [1], 1).map(option => option.serviceId), [1]);
+  assert.deepEqual(normalizeQuotes(valid, [2], 1), []);
+  assert.deepEqual(normalizeQuotes([valid], [2], 1), []);
+  assert.deepEqual(normalizeQuotes([], [1], 1), []);
 });
 
 test("shipping fails closed without complete packaging and commercial review", () => {
@@ -63,6 +94,18 @@ test("cart fingerprint binds quantity, price and packaging version", () => {
   assert.notEqual(shippingFingerprint([{ ...items[0], expectedUnitPriceCents: 1 }], [product]), fingerprint);
   assert.notEqual(shippingFingerprint(items, [{ ...product, updatedAt: new Date(1) }]), fingerprint);
   assert.notEqual(shippingFingerprint(items, [{ ...product, shippingProfile: { ...profile, weightGrams: 500 } }]), fingerprint);
+  assert.notEqual(shippingFingerprint(items, [{ ...product, shippingProfile: { ...profile, approvedServiceIds: [1, 2] } }]), fingerprint);
+});
+
+test("shipping approvals persist through approved profiles, drafts and invalidation", () => {
+  for (const approvedServiceIds of [[], [1, 2, 35]]) {
+    assert.deepEqual(shippingProfileSchema.parse({ ...profile, approvedServiceIds }).approvedServiceIds, approvedServiceIds);
+    assert.deepEqual(shippingDraftSchema.parse({ ...profile, enabled: false, transportReviewed: false, approvedServiceIds }).approvedServiceIds, approvedServiceIds);
+    assert.deepEqual(invalidateShippingProfile({ ...profile, approvedServiceIds })?.approvedServiceIds, approvedServiceIds);
+  }
+  for (const approvedServiceIds of [[0], [-1], [1.5], ["1"], Array(51).fill(1)]) {
+    assert.equal(shippingProfileSchema.safeParse({ ...profile, approvedServiceIds }).success, false);
+  }
 });
 test("public quote input rejects duplicate products and invalid dimensions of request", () => {
   const item = { productId: "test", quantity: 1, expectedUnitPriceCents: 1200 };

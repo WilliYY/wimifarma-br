@@ -31,6 +31,7 @@ export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
   const reference = suggestion ?? (researched ? null : draft.reference);
   const hasValues = Boolean(reference && fields.some(([key]) => suggestedValue(reference, key) != null));
   const payload: ShippingDraft = {
+    ...(initial?.approvedServiceIds !== undefined ? { approvedServiceIds: initial.approvedServiceIds } : {}),
     enabled: false, transportReviewed: false,
     measurementBasis: draft.measurementBasis,
     ...Object.fromEntries(fields.map(([key]) => [key, draft.values[key] === "" ? null : Number(draft.values[key])])) as Pick<ShippingDraft, keyof Measures>,

@@ -15,8 +15,12 @@ export async function POST(request: Request) {
     if (!parsed.success) throw new ShippingError("Informe CEP, peso em kg, medidas em cm e valor da mercadoria.");
     const { settings } = await readShippingIntegration();
     const { postalCode, ...volume } = parsed.data;
-    const raw = await melhorEnvioRequest(settings, "/api/v2/me/shipment/calculate", await shippingAccessToken(), { from: { postal_code: settings.originPostalCode }, to: { postal_code: postalCode }, volumes: [volume], options: { receipt: false, own_hand: false } });
-    const ids = Array.isArray(raw) ? raw.map((item) => item?.id).filter((id): id is number => typeof id === "number") : [];
-    return NextResponse.json({ data: normalizeQuotes(raw, ids, settings.preparationDays), environment: settings.environment }, { headers: noStore });
+    const accessToken = await shippingAccessToken();
+    const catalog = await melhorEnvioRequest(settings, "/api/v2/me/shipment/services", accessToken);
+    const services = z.array(z.object({ id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER), name: z.string().min(1).max(120).optional(), company: z.object({ name: z.string().min(1).max(120) }).optional() })).min(1).max(50).safeParse(catalog);
+    if (!services.success) throw new ShippingError("O Melhor Envio retornou um catálogo de serviços inválido. Tente novamente.", 502);
+    const ids = [...new Set(services.data.map(service => service.id))];
+    const raw = await melhorEnvioRequest(settings, "/api/v2/me/shipment/calculate", accessToken, { from: { postal_code: settings.originPostalCode }, to: { postal_code: postalCode }, volumes: [volume], services: ids.join(","), options: { receipt: false, own_hand: false } });
+    return NextResponse.json({ data: normalizeQuotes(raw, ids, settings.preparationDays), services: services.data.map(service => ({ serviceId: service.id, service: service.name ?? `Serviço ${service.id}`, carrier: service.company?.name ?? "Transportadora" })), environment: settings.environment }, { headers: noStore });
   } catch (error) { return shippingFailure(error); }
 }

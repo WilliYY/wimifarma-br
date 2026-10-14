@@ -4,26 +4,42 @@ import { requiresPharmacyShippingSupport } from "./eligibility";
 import type { PrescriptionType } from "@/features/products/purchase-policy";
 
 export function normalizeQuotes(raw: unknown, allowed: number[], preparationDays: number): ShippingOption[] {
-  if (!Array.isArray(raw)) throw new ShippingError("O Melhor Envio retornou uma resposta inválida. Tente novamente.", 502);
-  const selected = raw.filter((entry) => entry && typeof entry === "object" && allowed.includes(entry.id));
-  // The provider can return HTTP 200 while every selected service is temporarily down.
-  // Keep that outage distinct from a destination with no available service.
-  if (selected.length && selected.every((entry) => typeof entry.error === "string" && /serviço indisponível no momento/i.test(entry.error))) {
-    throw new ShippingError("As transportadoras estão temporariamente indisponíveis. Aguarde um momento e consulte o frete novamente, ou escolha retirada.", 503);
-  }
+  const entries = Array.isArray(raw) ? raw : [raw];
+  let technicalFailure = false;
+  let temporaryFailure = false;
   const quotes = new Map<number, ShippingOption>();
-  for (const entry of raw) {
-    if (!entry || typeof entry !== "object" || entry.error) continue;
+  for (const entry of entries) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry) || !Number.isSafeInteger(entry.id) || entry.id <= 0) {
+      technicalFailure = true;
+      console.warn("[melhor-envio] quote-service-failed", { reason: "invalid-response" });
+      continue;
+    }
+    if (!allowed.includes(entry.id)) continue;
+    if (entry.error) {
+      const message = typeof entry.error === "string" ? entry.error.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "";
+      const reason = /^(cep nao atendido|transportadora nao atende este trecho)[.!]?$/.test(message) ? "no-coverage"
+        : /^servico indisponivel no momento[.!]?$/.test(message) ? "temporarily-unavailable" : "unknown-error";
+      if (reason === "no-coverage") continue;
+      temporaryFailure ||= reason === "temporarily-unavailable";
+      technicalFailure ||= reason === "unknown-error";
+      console.warn("[melhor-envio] quote-service-failed", { serviceId: entry.id, reason });
+      continue;
+    }
     const price = entry.custom_price ?? entry.price;
     const days = entry.custom_delivery_time ?? entry.delivery_time;
-    if (typeof price !== "string" && typeof price !== "number") continue;
-    if (typeof days !== "number" || !Number.isInteger(days) || days < 0) continue;
     const parsed = shippingOptionSchema.safeParse({
       provider: "melhor-envio", serviceId: entry.id, carrier: entry.company?.name,
-      service: entry.name, priceCents: Math.round(Number(price) * 100), deliveryDays: days + preparationDays,
+      service: entry.name, priceCents: typeof price === "string" || typeof price === "number" ? Math.round(Number(price) * 100) : NaN,
+      deliveryDays: typeof days === "number" && Number.isInteger(days) && days >= 0 ? days + preparationDays : NaN,
     });
-    if (parsed.success && allowed.includes(parsed.data.serviceId)) quotes.set(parsed.data.serviceId, parsed.data);
+    if (parsed.success) quotes.set(parsed.data.serviceId, parsed.data);
+    else {
+      technicalFailure = true;
+      console.warn("[melhor-envio] quote-service-failed", { serviceId: entry.id, reason: "invalid-quote" });
+    }
   }
+  if (!quotes.size && technicalFailure) throw new ShippingError("O Melhor Envio retornou uma falha na consulta às transportadoras. Tente novamente em instantes.", 502);
+  if (!quotes.size && temporaryFailure) throw new ShippingError("As transportadoras estão temporariamente indisponíveis. Aguarde um momento e consulte o frete novamente, ou escolha retirada.", 503);
   return [...quotes.values()].sort((a, b) => a.priceCents - b.priceCents || a.deliveryDays - b.deliveryDays);
 }
 

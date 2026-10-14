@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { shippingReferenceSchema } from "./product-reference";
-import { shippingProfileSchema } from "./schema";
+import { shippingProfileSchema, shippingServiceIdsSchema } from "./schema";
 
 // Catalog saves only an unapproved draft. Only the existing freight workflow may approve it.
 export const shippingDraftSchema = z.object({
+  approvedServiceIds: shippingServiceIdsSchema.optional(),
   enabled: z.literal(false), transportReviewed: z.literal(false),
   measurementBasis: z.enum(["measured", "estimated"]).default("measured"),
   weightGrams: z.number().int().min(1).max(30000).nullable(),

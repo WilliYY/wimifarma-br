@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { shippingReferenceSchema } from "./product-reference";
 
+export const shippingServiceIdsSchema = z.array(z.number().int().positive()).max(50);
 export const shippingSettingsSchema = z.object({
   enabled: z.boolean().default(false),
   environment: z.enum(["production", "sandbox"]).default("production"),
   originPostalCode: z.string().regex(/^\d{8}$/),
   preparationDays: z.number().int().min(0).max(15),
-  serviceIds: z.array(z.number().int().positive()).max(50),
+  serviceIds: shippingServiceIdsSchema,
   contactEmail: z.string().email().max(160),
 });
 export const defaultShippingSettings = {
@@ -15,6 +16,7 @@ export const defaultShippingSettings = {
 };
 export type ShippingSettings = z.infer<typeof shippingSettingsSchema>;
 export const shippingProfileSchema = z.object({
+  approvedServiceIds: shippingServiceIdsSchema.optional(),
   reference: shippingReferenceSchema.nullable().optional(),
   measurementBasis: z.enum(["measured", "estimated"]).default("measured"),
   enabled: z.boolean(),

@@ -99,6 +99,30 @@ Referências oficiais consultadas em 03/10/2026:
 - Correios, restrições e contrato específico para controlados: https://www.correios.com.br/enviar/proibicoes-e-restricoes
 - Aceitação por transportadora: https://centraldeajuda.melhorenvio.com.br/hc/pt-br/articles/31220391789332-Guia-de-produtos-que-podem-ou-n%C3%A3o-ser-enviados-pelo-Melhor-Envio
 
+## Correções de elegibilidade e diagnóstico em 14/10/2026
+
+O filtro PAC/SEDEX usa a política canônica de compra e conferência de receita, além da categoria legada. Receita comum classificada, inclusive em categoria genérica como `Saude`, restringe todo o carrinho aos serviços 1/2. Controlados, receita não classificada e Farmácia Popular continuam sujeitos ao atendimento assistido. Nenhuma transportadora adicional foi autorizada para medicamentos.
+
+Respostas HTTP 200 com erro por serviço não são presumidas como falta de cobertura. As mensagens reconhecidas `CEP não atendido` e `Transportadora não atende este trecho.` resultam em ausência de tarifa; a segunda foi confirmada na API para Buslog e Loggi em 14/10/2026. `Serviço indisponível no momento` indica indisponibilidade temporária. Outros erros e tarifas malformadas indicam falha técnica. Sem tarifa válida, falha desconhecida retorna 502 e indisponibilidade reconhecida retorna 503; tarifas válidas de outras empresas continuam disponíveis em respostas parciais. Array vazio permanece sem opções. Mensagens novas de cobertura precisam de confirmação antes de serem classificadas como tal.
+
+Logs de falha por serviço contêm apenas ID numérico e motivo fixo (`unknown-error`, `temporarily-unavailable` ou `invalid-quote`). Entradas sem identificação numérica válida geram apenas o motivo `invalid-response`, sem reproduzir seu conteúdo. Falhas HTTP registram apenas operação fixa (`calculate`/`services`/`integration`) e status HTTP. Corpo, texto livre do provedor, CEPs, encomenda, tokens e credenciais não são registrados. HTTP 400 continua sendo falha da consulta, sem afirmar ausência de cobertura; o status ajuda a distinguir rejeição operacional de falha HTTP 200 por serviço.
+
+O simulador ADMIN consulta o catálogo em `GET /api/v2/me/shipment/services` e envia explicitamente todos os IDs retornados ao cálculo, sem depender da seleção implícita do provedor. Valida de 1 a 50 entradas com IDs inteiros positivos e seguros, remove duplicados e rejeita catálogo malformado antes de calcular. A seleção salva e as permissões do checkout não são alteradas. Referência: [listar serviços](https://docs.melhorenvio.com.br/reference/listar-servicos).
+
+O normalizador aceita array ou objeto de serviço único. Entradas malformadas, inclusive erros sem ID ou com ID textual, indicam falha técnica em vez de ausência de cobertura. Array vazio e serviços numéricos não selecionados continuam sem opções; tarifas válidas continuam disponíveis em respostas parciais.
+
+Regressões locais reproduziram os defeitos antes das correções. A suíte de frete mais checkout aprovou 79 testes, incluindo restrição na consulta e na finalização de cotação assinada, falhas desconhecidas, erros parciais, resposta de serviço único, consulta explícita ao catálogo e saneamento do diagnóstico HTTP 400. ESLint dirigido ao módulo passou sem diagnósticos. Esses testes usam dados sintéticos e não comprovam cobertura real, postagem ou entrega.
+
+## Aprovação de serviços por produto em 14/10/2026
+
+`shippingProfile.approvedServiceIds` é uma lista opcional de até 50 IDs inteiros positivos, persistida no JSON existente, sem migração. Na consulta e na finalização, a lista global é intersectada com as aprovações de **todos** os produtos e com a restrição PAC/SEDEX dos medicamentos. Não é feita união entre produtos. Lista explícita vazia impede a cotação; perfil legado sem o campo mantém o comportamento anterior. Alterar o perfil invalida a assinatura antiga pelo fingerprint existente, mesmo quando o serviço escolhido continua aprovado.
+
+Em Fretes e entregas, cada produto tem seleção própria. Perfis sem lista iniciam a revisão com PAC/SEDEX; listas existentes, inclusive vazias, são preservadas. A seleção exibe nomes do catálogo carregado na simulação, das tarifas e dos serviços globais; IDs ainda sem nome aparecem identificados até nova simulação. Alterar a seleção remove a revisão/liberação e exige aprovação humana. Salvar o produto não amplia a lista global. Editar medidas pelo catálogo preserva a lista no rascunho desabilitado; a IA não concede aprovação de serviços.
+
+Aceitação da carga e embalagem é específica por transportadora. Uma cotação ou ponto de postagem disponível não aprova alimentos, líquidos, aerossóis ou medicamentos automaticamente. Antes de ampliar a configuração global, o operador precisa salvar listas adequadas nos produtos já liberados, pois a compatibilidade dos perfis legados não cria essa proteção retroativamente.
+
+Regressões locais: interseção de cesta mista, compatibilidade legada, lista vazia, medicamento, finalização com serviço não aprovado, cotação antiga após alteração do perfil, preservação nos schemas/rascunhos e edição real dos seletores/formulário no Chromium. Suíte de frete e checkout: 83/83 aprovados; ESLint dirigido ao módulo, formulários e API de simulação aprovado. Sem alteração de dependências, banco ou permissões.
+
 ## Referências oficiais da API
 
 - https://docs.melhorenvio.com.br/reference/introducao-api-melhor-envio

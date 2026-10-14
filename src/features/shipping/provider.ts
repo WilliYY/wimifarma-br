@@ -18,6 +18,9 @@ export async function melhorEnvioRequest(settings: ShippingSettings, path: strin
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
     if (!response.ok) {
+      const operation = path === "/api/v2/me/shipment/calculate" ? "calculate"
+        : path === "/api/v2/me/shipment/services" ? "services" : "integration";
+      console.warn("[melhor-envio] request-failed", { operation, status: response.status });
       if (response.status === 401 || response.status === 403) throw new ShippingError("Reconecte o Melhor Envio no painel administrativo para renovar as permissões.", 503);
       if (response.status === 429) throw new ShippingError("O serviço de frete está ocupado. Aguarde um momento e tente novamente.", 503);
       throw new ShippingError("O Melhor Envio não conseguiu atender a consulta. Confira os dados e tente novamente.", 502);
