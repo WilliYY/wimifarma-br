@@ -23,6 +23,7 @@ export const siteConfig = {
   address: "Avenida Minas Gerais, 2263 - Ivate, Parana",
   instagramUrl: "https://instagram.com/",
   mapsUrl: "https://maps.app.goo.gl/DFZLnV3ps3Br84PXA",
+  reclameAquiUrl: "https://www.reclameaqui.com.br/empresa/w-y-yoshiura-willian-produtos-farmaceuticos-e-perfumaria/",
   whatsappMessage,
   whatsappUrl: `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(
     whatsappMessage,

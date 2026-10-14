@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-14 - Corrigir benefícios, carrinho e descoberta de transportadoras
+
+- Preservar centavos líquidos por unidade no ganho de cashback/WimiCoins, sem alterar snapshots anteriores ou bônus de avaliação. Compartilhar a identidade do carrinho entre criação e PAID, preservando cestas alteradas.
+- Classificar medicamentos pelos marcadores canônicos, sem depender somente da categoria. Distinguir erros técnicos de ausência de cobertura e aceitar a resposta de serviço único do Melhor Envio.
+- Consultar catálogo dinâmico de serviços no simulador ADMIN e enviá-lo explicitamente ao cálculo; omitir a lista ocultava empresas na conta atual. Não confundir cotação com coleta/postagem ou liberar cargas sem aceitação.
+- Vincular a página pública confirmada do Reclame AQUI como perfil institucional. RA1000, RA Verificada e Ebit continuam dependentes de concessão/homologação; nenhum selo externo foi criado.
+- Registros, regressões, validações e limites em [64](64-correcao-cashback-checkout-e-transportadoras.md).
+
 ## 2026-10-13 - Club gratuito e WimiCoins acumuláveis com cashback
 
 - Ativar adesão explícita gratuita, listagem ADMIN dos participantes e elegibilidade/percentual por produto. Produtos ficam desabilitados até escolha de ADMIN; percentual inicial de 2% editável.

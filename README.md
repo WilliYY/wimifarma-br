@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Correções comerciais de 14/10/2026: rateio exato dos ganhos cashback/WimiCoins, limpeza protegida do carrinho após PAID, classificação de medicamentos e diagnóstico de falhas de frete. Simulador ADMIN consulta o catálogo completo de transportadoras e aceita respostas de serviço único. Sete das oito empresas retornaram preços nos trechos ensaiados; postagem/coleta e aceitação da carga limitam a liberação. Perfil público do Reclame AQUI vinculado no rodapé, sem selo concedido. Evidências e limites em [docs/64-correcao-cashback-checkout-e-transportadoras.md](docs/64-correcao-cashback-checkout-e-transportadoras.md).
+
 Club Wimifarma com adesão gratuita e explícita, participantes no ADMIN e WimiCoins separados do cashback. ADMIN define elegibilidade e percentual por produto; checkout permite acumular e usar os dois saldos. Conversão: 100 WimiCoins = R$ 1. Regras, migração e limites em [docs/63-club-wimicoins.md](docs/63-club-wimicoins.md). O crédito de 500 pontos solicitado pelo titular é único; adesões comuns não recebem bônus automático.
 
 Home com atalhos circulares para compras e serviços, sem o antigo bloco de título e descrição. Categorias publicadas abrem o catálogo correspondente; assuntos sem categoria abrem uma consulta pelo WhatsApp. Contrato visual em [docs/10-layout-e-experiencia.md](docs/10-layout-e-experiencia.md). Identidade local preservada nos metadados e dados estruturados; diagnóstico de indexação em [docs/62-presenca-google-e-identidade.md](docs/62-presenca-google-e-identidade.md).

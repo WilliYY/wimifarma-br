@@ -93,6 +93,7 @@ export function SiteFooter() {
             <a className={linkStyle} href={`tel:+${siteConfig.phone}`}><Phone aria-hidden="true" className="h-4 w-4 shrink-0 text-brand" />{siteConfig.displayPhone}</a>
           </address>
           <a className={`${linkStyle} mt-2 font-semibold underline decoration-brand/30 underline-offset-4`} href={siteConfig.mapsUrl} rel="noopener noreferrer" target="_blank">Encontre a Wimifarma no Google<ArrowUpRight aria-hidden="true" className="h-4 w-4 shrink-0" /></a>
+          <a className={`${linkStyle} mt-1 underline decoration-brand/30 underline-offset-4`} href={siteConfig.reclameAquiUrl} rel="noopener noreferrer" target="_blank">Nosso perfil no Reclame AQUI<ArrowUpRight aria-hidden="true" className="h-4 w-4 shrink-0" /></a>
         </div>
       </div>
 

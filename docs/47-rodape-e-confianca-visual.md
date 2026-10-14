@@ -1,5 +1,9 @@
 # 47 - Rodapé e confiança visual
 
+## Atualização — 14/10/2026
+
+Página pública do Reclame AQUI confirmada pelo CNPJ, descrição e domínio da Wimifarma. Incluído link textual “Nosso perfil no Reclame AQUI” em Nossa farmácia, com proteção de aba externa e estilo existente. Trata-se de acesso institucional, sem selo ou alegação de verificação: perfil ainda não verificado e sem reputação definida. RA1000/RA Verificada e Ebit permanecem sem concessão comprovada. Marca, estrutura e 128 bolhas preservadas. Evidências em [64](64-correcao-cashback-checkout-e-transportadoras.md).
+
 ## Atualização — 11/10/2026
 
 A pedido do lojista, o rodapé passa a ter faixa vermelha de benefícios e corpo branco, com logo oficial colorida e selos gráficos próprios HTTPS/CNPJ/Privacidade. Preservados integralmente as 128 bolhas, tempos, filtro e CSS. Esta direção substitui o fundo escuro do corpo descrito na decisão original; as informações empresariais e limites dos selos externos permanecem. Contrato, avaliações com iniciais e validação em [61-avaliacoes-e-rodape.md](61-avaliacoes-e-rodape.md).
@@ -14,7 +18,7 @@ O rodapé público reúne informações úteis à compra e à identificação da
 - Navegação para catálogo, atendimento, conta/pedidos, entrega, cashback e privacidade. Links de contato utilizam WhatsApp, telefone e mapa existentes.
 - HTTPS é descrito como criptografia da conexão, sem alegação de certificação, auditoria externa ou invulnerabilidade. Pix/cartão são apresentados com consulta das condições no checkout, sem prometer bandeiras ou parcelas não confirmadas.
 - Link “Encontre a Wimifarma no Google” aponta ao mapa da loja já usado no site. Não significa que a solicitação de administração do perfil foi aprovada.
-- Reclame AQUI, RA1000 e Ebit/Diamante continuam fora do rodapé até confirmação da página empresarial e concessão/integração dos respectivos selos. Search Console é ferramenta administrativa e não selo para consumidores. Andamento no documento 46.
+- A página pública confirmada do Reclame AQUI pode receber link institucional. RA1000, RA Verificada e Ebit/Diamante exigem concessão/integração comprovada antes da exibição de selos. Search Console é ferramenta administrativa e não selo para consumidores. Andamento nos documentos 46 e 64.
 - A remoção das bolhas nessa entrega foi revertida a pedido do lojista em 07/10/2026: preservar permanentemente as 128 bolhas, os tempos, trajetórias, filtro SVG e fundo de marca originais. A organização e os links úteis abaixo da animação permanecem. Animação original da logo do cabeçalho preservada. Não há novo JavaScript de cliente, biblioteca ou script externo.
 - Layout empilha no celular, usa duas colunas no tablet e quatro no desktop. Links com alvo mínimo de 44px, foco de teclado visível e ícones decorativos ocultos da leitura assistiva.
 
