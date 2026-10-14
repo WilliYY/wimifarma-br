@@ -57,7 +57,23 @@ Verificação local final: `npm run test:all` 588/588 e `npm run test:security` 
 
 Auditoria de produção: zero vulnerabilidades. Auditoria completa: cinco alertas high na cadeia de desenvolvimento ESLint (`@next/eslint-plugin-next`, `eslint-config-next`, `braces`, `fast-glob`, `micromatch`), sem alertas critical e sem mudança de dependências. Não executar upgrade forçado incompatível.
 
-Build de produção local e validação do schema Prisma aprovados. QA transacional isolada e estado da publicação serão registrados ao concluir a entrega. Não considerar uma cotação como prova de postagem ou entrega, nem teste sintético como recebimento real de pagamento.
+Build de produção local e validação do schema Prisma aprovados. Revisões independentes de comércio e frete aprovadas, incluindo a seleção de cashback preservada e o novo controle por produto.
+
+QA transacional: 21 migrações aplicadas em PostgreSQL 17 descartável, com rede interna exclusiva, sem configuração de gateway ou transporte de mensagens e HTTP externo bloqueado pelo script de auditoria. `npm run audit:club` aprovou sete cenários: banco vazio/proteções, adesão explícita/idempotente e identidade, concessão única sintética, reservas/descontos líquidos combinados/repetição, rejeições com rollback, conclusão/pagamento/avaliação/reembolso uma vez e dois resgates concorrentes do último saldo com um vencedor. Contêiner e rede removidos, com ausência confirmada por label de propriedade. Nenhum saldo de produção foi alterado.
+
+Publicação em 14/10/2026: commits `2bb3c74` (benefícios/carrinho), `0b82544` (fretes e serviços aprovados) e `07f3171` (perfil público/documentação), enviados para `main`. Backup `daily/20261014T133557Z` verificado por checksums, catálogo do dump e leitura do arquivo de uploads. Build de `app`/`migrate` no servidor aprovado; somente `app` recriado, sem migração em produção, seed, alteração de proxy ou reinício do PostgreSQL. Imagem anterior preservada como `wimifarma-br-app:commerce-rollback-20261014`.
+
+App e PostgreSQL saudáveis, zero reinícios. Health, home, catálogo, checkout e login HTTP 200; APIs de frete ADMIN, pagamentos ADMIN, Club da conta e cashback HTTP 401 sem sessão. Uma consulta inicial de saúde usou uma rota Club inexistente (404); a rota real `/api/minha-conta/club` foi localizada no código e confirmou 401. Isso não representou falha da API real.
+
+Configuração produtiva aplicada pelo painel, após salvar as listas dos quatro produtos: revisão 6, serviços globais `[1,2,31,33,4,35,3]` (Correios, Loggi Express, J&T Standard, Jadlog .Com/.Package e Total Express Standard). Produtos: Kit Kat `[1,2,3,4,35]`; Cimegrip, Losartana e Dove `[1,2]`. Loggi/J&T estão preparadas globalmente, sem produto atual autorizado; novas aprovações exigem revisão da carga. Sem liberação de Buslog, LATAM, Azul, Mini Envios ou .Package Centralizado.
+
+Cinco ensaios reais da API pública de cotação retornaram HTTP 200 com opções assinadas: Kit Kat para São Paulo e Salvador com Correios/Jadlog/Total; Cimegrip, Dove e cesta mista Kit Kat+Cimegrip para São Paulo somente com Correios. Valores respeitaram o produto e os volumes; a cesta mista cotou dois volumes. Uma tentativa inicial por endereço HTTP interno foi corretamente rejeitada pela proteção de origem; a validação final usou o endereço HTTPS público e mesma origem, sem alterar a proteção.
+
+Conferência visual no Chrome: nomes e tarifas de sete empresas carregados no simulador, cinco empresas selecionadas na configuração global e link correto do Reclame AQUI no rodapé. Rodapé preserva 128 bolhas e apresentou largura útil/rolável de 375/375 px na inspeção mobile; viewport restaurado. A captura por recorte fora da área visível excedeu o timeout, substituída por capturas normais da tela. Comprovantes em `outputs/correcoes-comerciais-2026-10-14`, fora do Git.
+
+Conferência final: health público HTTP 200 e app/banco saudáveis, zero reinícios. Nos logs recentes, zero ocorrências de TypeError, ReferenceError, erro conhecido Prisma ou rejeição de promise sem tratamento. Uma ocorrência de diagnóstico seguro de serviço de frete veio da consulta administrativa completa, que também recebe serviços recusados; tarifas válidas continuaram disponíveis. A CLI `gh` não está instalada e o conector de status retornou lista vazia para o commit; o resultado do workflow GitHub Actions não foi confirmado por esta consulta. Isso é distinto dos checks locais executados e aprovados.
+
+Para rollback à imagem anterior, reduzir primeiro os serviços globais a PAC/SEDEX: o aplicativo antigo desconhece as listas por produto. Não considerar uma cotação como prova de postagem ou entrega, nem teste sintético como recebimento real de pagamento.
 
 ## Fontes oficiais
 
