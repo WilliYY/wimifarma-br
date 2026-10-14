@@ -13,6 +13,8 @@ Os contadores representam somente os registros carregados pelo painel, não uma 
 
 ## Pagamentos e alertas
 
+Pedidos por transportadora mostram no topo o **local de postagem** registrado na compra, com destaque de deslocamento para Umuarama ou outra cidade. O filtro de cidade ajuda a reunir as encomendas da viagem. Destinatário e postagem são separados; pedidos antigos sem local mostram confirmação pendente. Configuração, histórico e QA em [65](65-postagem-operacao-e-qa.md).
+
 Os cards usam mais espaço para número, total, cliente, atendimento e itens. O estado financeiro permanece no cabeçalho. Referência e detalhes do Mercado Pago ficam recolhidos em **Detalhes do pagamento**, acessível por teclado.
 
 Os avisos de homologação, confirmação incerta (`UNKNOWN`/`SUBMITTING`) e reembolso parcial ficam sempre visíveis. Estados incertos e reembolso parcial não são classificados como cancelamento. Pedidos de teste não podem avançar para preparação; pagamentos online continuam dependentes do provedor e das restrições existentes.

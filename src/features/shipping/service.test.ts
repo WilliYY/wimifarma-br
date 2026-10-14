@@ -3,8 +3,8 @@ import test from "node:test";
 import vm from "node:vm";
 import { createRequire } from "node:module";
 import { build } from "esbuild";
-import { defaultShippingSettings, type ShippingSelection } from "./schema";
-import { shippingFingerprint, signShippingQuote } from "./rules";
+import { defaultShippingSettings, type ShippingSelection, type ShippingSettings } from "./schema";
+import { shippingFingerprint, signShippingQuote, verifyShippingQuote } from "./rules";
 import { checkoutRequestSchema, type CheckoutRequest } from "@/features/orders/checkout";
 import type { PrescriptionType } from "@/features/products/purchase-policy";
 
@@ -21,7 +21,7 @@ test("medication carrier acceptance is enforced both when quoting and submitting
   const profile = { enabled: true, transportReviewed: true, weightGrams: 350, widthCm: 15, heightCm: 10, lengthCm: 20, approvedServiceIds: undefined as number[] | undefined };
   const baseProduct = { id: "fixture-product", name: "Produto sintético", slug: "fixture", imageUrl: null, category: "Medicamentos", price: "10.00", promotionalPrice: null, status: "ACTIVE" as const, stock: 10, requiresPrescription: false, prescriptionType: undefined as PrescriptionType | undefined, isPopularPharmacy: false, shippingProfile: profile, updatedAt: new Date(0) };
   let products = [baseProduct];
-  const integration = { settings: { ...defaultShippingSettings, enabled: true, serviceIds: [1, 2, 3], contactEmail: "shipping@example.invalid" }, revision: 7 };
+  const integration: { settings: ShippingSettings; revision: number } = { settings: { ...defaultShippingSettings, enabled: true, serviceIds: [1, 2, 3], contactEmail: "shipping@example.invalid" }, revision: 7 };
   const requests: { services: string; volumes: { weight: number }[] }[] = [];
   const tx = { product: { findMany: async () => products }, shippingIntegration: { findUnique: async () => integration } };
   const fixture = { tx, integration, provider: async (...args: unknown[]) => {
@@ -36,7 +36,19 @@ test("medication carrier acceptance is enforced both when quoting and submitting
   assert.equal(requests[0].services, "1,2");
   assert.equal(requests[0].volumes[0].weight, 0.35, "uses measured packaged grams, converted to kilograms");
   const input = checkoutRequestSchema.parse({ customer: { name: "Cliente sintético", phone: "44999990000" }, fulfillmentMethod: "DELIVERY", paymentMethod: "PIX", privacyConsent: true, address: { postalCode: "01001000", street: "Rua teste", number: "1", neighborhood: "Teste", city: "São Paulo", state: "SP" }, items, shippingToken: options[0].token });
-  await loaded.exports.validateOrderShipping(tx, input);
+  integration.settings.postingLocations = [{ serviceId: 1, city: "Umuarama", state: "PR", pointName: "Ponto QA" }];
+  const savedQuote = await loaded.exports.validateOrderShipping(tx, input) as { postingLocation: { city: string; requiresTravel: boolean } };
+  assert.equal(savedQuote.postingLocation.city, "Umuarama");
+  assert.equal(savedQuote.postingLocation.requiresTravel, true);
+  const forgedLocation = signShippingQuote({ ...verifyShippingQuote(input.shippingToken!, key), postingLocation: { city: "Cidade indevida", state: "SP", requiresTravel: false } }, key);
+  const authoritative = await loaded.exports.validateOrderShipping(tx, { ...input, shippingToken: forgedLocation }) as typeof savedQuote;
+  assert.equal(authoritative.postingLocation.city, "Umuarama", "server settings override a signed but stale posting plan");
+  integration.revision = 8;
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, input), /opções de entrega mudaram/);
+  integration.revision = 7;
+  integration.settings.postingLocations = [];
+  const unmappedQuote = await loaded.exports.validateOrderShipping(tx, input) as { postingLocation?: unknown };
+  assert.equal(unmappedQuote.postingLocation, undefined, "does not invent a local posting point for unmapped services");
   const incompatible = signShippingQuote({ provider: "melhor-envio", serviceId: 3, carrier: "Outra transportadora", service: "Teste", priceCents: 1000, deliveryDays: 4, postalCode: "01001000", fingerprint: shippingFingerprint(items, products), revision: 7, expiresAt: Date.now() + 900000 }, key);
   await assert.rejects(loaded.exports.validateOrderShipping(tx, { ...input, shippingToken: incompatible }), /não aceita/);
   integration.settings.serviceIds = [3];

@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { getAdminOrderGroup, matchesAdminOrderSearch, type AdminOrderGroup } from "@/features/orders/admin-presentation";
 import { OrderShippingSummary } from "./order-shipping-summary";
+import { orderPostingLocation } from "@/features/shipping/posting";
+import { shippingQuotePayloadSchema } from "@/features/shipping/schema";
 import {
   Banknote,
   ChevronDown,
@@ -115,15 +117,17 @@ export function OrdersPanel({ initialOrders }: { initialOrders: AdminOrderRecord
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"ALL" | OrderStatus>("ALL");
   const [group, setGroup] = useState<"ALL" | AdminOrderGroup>("ALL");
+  const [postingCity, setPostingCity] = useState("ALL");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const visibleOrders = useMemo(() => {
     return orders.filter((order) => {
       const matchesStatus = filter === "ALL" || order.status === filter;
-      return matchesStatus && (group === "ALL" || getAdminOrderGroup(order) === group) && matchesAdminOrderSearch(order, search);
+      return matchesStatus && (postingCity === "ALL" || postingCityKey(order.shippingQuote) === postingCity) && (group === "ALL" || getAdminOrderGroup(order) === group) && matchesAdminOrderSearch(order, search);
     });
-  }, [filter, group, orders, search]);
+  }, [filter, group, orders, search, postingCity]);
+  const postingCities = [...new Set(orders.map(order => postingCityKey(order.shippingQuote)).filter((city): city is string => city !== null))].sort();
 
   const counts = orders.reduce((summary, order) => { summary[getAdminOrderGroup(order)] += 1; return summary; }, { NEW: 0, ACTIVE: 0, COMPLETED: 0, CANCELED: 0 });
 
@@ -169,9 +173,10 @@ export function OrdersPanel({ initialOrders }: { initialOrders: AdminOrderRecord
         <div aria-label="Situação dos pedidos" className="mb-5 flex flex-wrap gap-2">
           {(["ALL", "NEW", "ACTIVE", "COMPLETED", "CANCELED"] as const).map(value => <button aria-pressed={group === value} className={`min-h-11 rounded-xl border px-4 py-2 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${group === value ? "border-brand bg-brand text-white" : "border-line bg-white text-muted hover:bg-surface-subtle"}`} key={value} onClick={() => { setGroup(value); setFilter("ALL"); }} type="button">{value === "ALL" ? "Todos" : groupLabels[value]} <span className="ml-2 tabular-nums">{value === "ALL" ? orders.length : counts[value]}</span></button>)}
         </div>
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_15rem]">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_13rem_15rem]">
           <label className="relative block"><span className="sr-only">Buscar pedido</span><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" /><input className="h-11 w-full rounded-md border border-line pl-10 pr-3 text-sm font-semibold outline-none focus:border-brand focus:ring-2 focus:ring-brand/10" onChange={(event) => setSearch(event.target.value)} placeholder="Número, cliente, telefone ou produto" value={search} /></label>
           <label><span className="sr-only">Filtrar por status</span><select className="h-11 w-full rounded-md border border-line bg-white px-3 text-sm font-bold outline-none focus:border-brand" onChange={(event) => setFilter(event.target.value as "ALL" | OrderStatus)} value={filter}><option value="ALL">Todos os status</option>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label><span className="sr-only">Filtrar por cidade de postagem</span><select aria-label="Filtrar por cidade de postagem" className="h-11 w-full rounded-md border border-line bg-white px-3 text-sm font-bold outline-none focus:border-brand" onChange={event => setPostingCity(event.target.value)} value={postingCity}><option value="ALL">Todas as postagens</option>{postingCities.map(city => <option key={city} value={city}>{city === "PENDING" ? "Confirmação pendente" : city}</option>)}</select></label>
         </div>
         <p aria-live="polite" className="mt-3 text-xs font-semibold text-muted">{visibleOrders.length} de {orders.length} pedidos carregados · {group === "ALL" ? "Todas as situações" : groupLabels[group]}</p>
         {error ? <p className="mt-3 rounded-md bg-brand-soft px-4 py-3 text-sm font-bold text-brand" role="alert">{error}</p> : null}
@@ -184,6 +189,12 @@ export function OrdersPanel({ initialOrders }: { initialOrders: AdminOrderRecord
 
 function Metric({ icon: Icon, label, tone, value }: { icon: typeof ShoppingBag; label: string; tone: "brand" | "green" | "neutral"; value: number }) { const colors = tone === "brand" ? "bg-brand-soft text-brand" : tone === "green" ? "bg-[#e9f9ef] text-pharma-green" : "bg-surface-subtle text-muted"; return <div className="flex items-center gap-4 rounded-lg border border-line bg-white p-5 shadow-sm"><span className={`grid h-11 w-11 place-items-center rounded-md ${colors}`}><Icon className="h-5 w-5" /></span><span><strong className="block text-2xl font-black text-ink">{value}</strong><span className="text-xs font-bold text-muted">{label}</span></span></div>; }
 
+function postingCityKey(quote: unknown) {
+  if (!shippingQuotePayloadSchema.safeParse(quote).success) return null;
+  const location = orderPostingLocation(quote);
+  return location ? `${location.city}/${location.state}` : "PENDING";
+}
+
 function OrderCard({ order, onUpdate, updating }: { order: AdminOrderRecord; onUpdate: (id: string, field: "status" | "paymentStatus" | "prescriptionReviewed", value: string | true) => void; updating: boolean }) {
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const payment = order.paymentMethod === "ONLINE" ? { icon: CreditCard, label: "Mercado Pago" } : order.paymentMethod === "PIX" ? { icon: QrCode, label: "Pix" } : order.paymentMethod === "CARD_ON_DELIVERY" ? { icon: CreditCard, label: "Cartao" } : { icon: Banknote, label: "Dinheiro" };
@@ -195,6 +206,7 @@ function OrderCard({ order, onUpdate, updating }: { order: AdminOrderRecord; onU
   const allowedTransitions = paymentAllowedTransitions.filter(status => !order.requiresPrescriptionReview || order.prescriptionReviewedAt || !["READY", "OUT_FOR_DELIVERY", "COMPLETED"].includes(status));
   return <article className="min-w-0 overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
     <header className="flex flex-col gap-4 border-b border-line p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7"><div className="min-w-0"><div className="flex flex-wrap items-center gap-3"><h2 className="break-all text-lg font-black text-ink sm:text-xl">{order.number}</h2><span className={`rounded-full px-3 py-1.5 text-xs font-bold ${order.status === "PENDING" ? "bg-brand-soft text-brand" : order.status === "COMPLETED" ? "bg-[#e9f9ef] text-pharma-green" : order.status === "CANCELED" ? "bg-slate-100 text-slate-600" : "bg-amber-50 text-amber-700"}`}>{statusLabels[order.status]}</span><span className={`rounded-full px-3 py-1.5 text-xs font-bold ${order.paymentStatus === "PAID" && (!online || online.status === "PAID") ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>{online ? onlineStatusLabels[online.status] ?? online.status : `Pagamento ${paymentStatusLabels[order.paymentStatus].toLowerCase()}`}</span></div><p className="mt-2 text-sm font-medium text-muted">{dateTime.format(new Date(order.createdAt))}</p></div><div className="shrink-0"><p className="text-xs font-semibold text-muted sm:text-right">Total do pedido</p><strong className="text-2xl font-black text-ink">{currency.format(order.totalCents / 100)}</strong></div></header>
+    <OrderShippingSummary quote={order.shippingQuote} />
     {online?.environment === "test" && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 sm:mx-7">HOMOLOGAÇÃO — não separar nem entregar</p>}
     {online && ["UNKNOWN", "SUBMITTING"].includes(online.status) && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:mx-7">Confirmação pendente. Não cobre novamente nem libere o estoque sem conferir a tentativa no Mercado Pago.</p>}
     {online?.status === "PARTIALLY_REFUNDED" && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:mx-7">Reembolso parcial: conferir valores e benefícios antes de continuar o atendimento.</p>}
@@ -203,10 +215,9 @@ function OrderCard({ order, onUpdate, updating }: { order: AdminOrderRecord; onU
     {(order.cashbackRedeemedCents ?? 0) > 0 ? <p className="border-b border-line bg-emerald-50 px-5 py-3 text-sm text-emerald-900">Desconto de cashback: <strong>{currency.format((order.cashbackRedeemedCents ?? 0) / 100)}</strong> · {order.cashbackRedemptionState === "RETURNED" ? "Devolvido ao cliente" : order.cashbackRedemptionState === "REDEEMED" ? "Utilizado" : "Reservado"}. O total ja considera o desconto.</p> : null}
     <div className="grid gap-7 p-5 sm:p-7 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)]">
       <div><p className="text-xs font-black uppercase text-muted">Cliente</p><p className="mt-2 font-black text-ink">{order.customerName}</p><a className="mt-1 block text-sm font-semibold text-brand" href={`tel:${order.customerPhone}`}>{order.customerPhone}</a>{order.customerEmail ? <p className="mt-1 break-all text-xs font-semibold text-muted">{order.customerEmail}</p> : null}</div>
-      <div><p className="text-xs font-black uppercase text-muted">Atendimento</p><p className="mt-2 flex items-center gap-2 text-sm font-bold text-ink"><MethodIcon className="h-4 w-4 text-pharma-green" />{order.fulfillmentMethod === "DELIVERY" ? "Entrega" : "Retirada"}</p>{order.fulfillmentMethod === "DELIVERY" ? <p className="mt-2 flex items-start gap-2 text-xs font-semibold leading-5 text-muted"><MapPin className="mt-0.5 h-4 w-4 shrink-0" />{order.street}, {order.addressNumber}{order.complement ? ` - ${order.complement}` : ""}<br />{order.neighborhood}, {order.city}-{order.state}<br />CEP {order.postalCode}</p> : null}<p className="mt-3 flex items-center gap-2 text-sm font-bold text-ink"><PaymentIcon className="h-4 w-4 text-brand" />{payment.label} · {paymentStatusLabels[order.paymentStatus]}</p></div>
+      <div><p className="text-xs font-black uppercase text-muted">Atendimento</p><p className="mt-2 flex items-center gap-2 text-sm font-bold text-ink"><MethodIcon className="h-4 w-4 text-pharma-green" />{order.fulfillmentMethod === "DELIVERY" ? "Destinatário · entrega" : "Retirada"}</p>{order.fulfillmentMethod === "DELIVERY" ? <p className="mt-2 flex items-start gap-2 text-xs font-semibold leading-5 text-muted"><MapPin className="mt-0.5 h-4 w-4 shrink-0" />{order.street}, {order.addressNumber}{order.complement ? ` - ${order.complement}` : ""}<br />{order.neighborhood}, {order.city}-{order.state}<br />CEP {order.postalCode}</p> : null}<p className="mt-3 flex items-center gap-2 text-sm font-bold text-ink"><PaymentIcon className="h-4 w-4 text-brand" />{payment.label} · {paymentStatusLabels[order.paymentStatus]}</p></div>
       <div><p className="text-xs font-black uppercase text-muted">Itens</p><div className="mt-2 grid gap-2">{order.items.map((item) => <div className="flex justify-between gap-4 text-sm" key={item.id}><span className="font-semibold text-ink">{item.quantity}x {item.productName}</span><strong className="shrink-0 text-ink">{currency.format(item.totalCents / 100)}</strong></div>)}</div>{order.notes ? <p className="mt-4 rounded-md bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-900"><strong>Observacao:</strong> {order.notes}</p> : null}</div>
     </div>
-    <OrderShippingSummary quote={order.shippingQuote} />
     {order.requiresPrescriptionReview && <section aria-label="Conferência de receita" className="border-t border-line bg-amber-50 px-5 py-4 text-sm sm:px-7">
       <p className="font-bold text-amber-900">{order.prescriptionReviewedAt ? `Receita conferida pelo farmacêutico · registro em ${dateTime.format(new Date(order.prescriptionReviewedAt))}` : "Receita pendente de conferência farmacêutica"}</p>
       {!order.prescriptionReviewedAt && !["CANCELED", "COMPLETED"].includes(order.status) && <div className="mt-3 grid gap-3">

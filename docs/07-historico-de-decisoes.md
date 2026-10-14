@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-14 - Registrar cidade de postagem para a operação
+
+- Configurar local por serviço no frete ADMIN e resolver o deslocamento no servidor durante a compra. Persistir no JSON do pedido, sem migração ou alteração de preço/pagamento.
+- Destacar Ivaté, Umuarama ou outra cidade no topo do pedido para ADMIN e STAFF, com filtro operacional. Manter o destinatário separado e sinalizar local desconhecido nos pedidos antigos.
+- Validar o fluxo com aplicação, login e PostgreSQL reais isolados, dados sintéticos e fixtures somente nas consultas externas, sem cobrança nem mensagem. Contrato e limites em [65](65-postagem-operacao-e-qa.md).
+
 ## 2026-10-14 - Corrigir benefícios, carrinho e descoberta de transportadoras
 
 - Preservar centavos líquidos por unidade no ganho de cashback/WimiCoins, sem alterar snapshots anteriores ou bônus de avaliação. Compartilhar a identidade do carrinho entre criação e PAID, preservando cestas alteradas.

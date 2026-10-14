@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ArrowUpRight, CheckCircle2, Link2, Loader2, Package, Truck } from "lucide-react";
-import { defaultShippingSettings, type ShippingOption, type ShippingSettings } from "@/features/shipping/schema";
+import { postingLocationSchema, defaultShippingSettings, type ShippingOption, type ShippingSettings } from "@/features/shipping/schema";
 import { shippingAdminProfileSchema } from "@/features/shipping/product-draft";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
 import type { PrescriptionType } from "@/features/products/purchase-policy";
@@ -41,13 +41,13 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
     event.preventDefault(); const form = event.currentTarget; const values = new FormData(form);
     await run(async () => {
       const clientId = String(values.get("clientId") || "").trim(); const clientSecret = String(values.get("clientSecret") || "").trim();
-      await request("/api/admin/fretes", "PUT", { settings, revision: data?.revision ?? 0, ...(clientId || clientSecret ? { application: { clientId, clientSecret } } : {}) });
+      await request("/api/admin/fretes", "PUT", { settings: { ...settings, postingLocations: settings.postingLocations.filter(location => location.city.trim()).map(location => ({ ...location, city: location.city.trim(), pointName: location.pointName?.trim() || undefined })) }, revision: data?.revision ?? 0, ...(clientId || clientSecret ? { application: { clientId, clientSecret } } : {}) });
       form.reset(); await load(); setMessage("Configuração salva.");
     });
   }
   return <div className="space-y-6">
     <section className="rounded-2xl border border-line bg-white p-5 shadow-sm sm:p-7">
-      <div className="flex flex-wrap items-start justify-between gap-4"><div className="flex items-center gap-3"><span className="rounded-xl bg-brand-soft p-3 text-brand"><Truck className="h-6 w-6" /></span><div><h1 className="text-xl font-black text-ink">Envios da Wimifarma</h1><p className="mt-1 text-sm text-muted">Origem: Av. Minas Gerais, 2263 · Ivaté/PR</p></div></div><span className={`rounded-full px-3 py-2 text-xs font-bold ${data?.connected ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>{data?.connected ? "Melhor Envio conectado" : "Conexão pendente"}</span></div>
+      <div className="flex flex-wrap items-start justify-between gap-4"><div className="flex items-center gap-3"><span className="rounded-xl bg-brand-soft p-3 text-brand"><Truck className="h-6 w-6" /></span><div><h1 className="text-xl font-black text-ink">Envios da Wimifarma</h1><p className="mt-1 text-sm text-muted">Origem: Av. Minas Gerais, 2263 · {settings.originCity}/{settings.originState}</p></div></div><span className={`rounded-full px-3 py-2 text-xs font-bold ${data?.connected ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>{data?.connected ? "Melhor Envio conectado" : "Conexão pendente"}</span></div>
       <p className="mt-5 text-sm leading-6 text-muted">Conecte a conta, confira a embalagem e escolha os serviços de postagem disponíveis para a farmácia. A cotação não compra etiquetas nem realiza cobranças.</p>
       <div className="mt-4 grid gap-2 text-xs text-muted sm:grid-cols-3">{["1. Conectar a conta", "2. Conferir fretes e produtos", "3. Ativar no checkout"].map((text) => <span className="rounded-lg bg-surface-subtle p-3 font-bold" key={text}>{text}</span>)}</div>
     </section>
@@ -57,6 +57,8 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Label text="Ambiente"><select className={field} onChange={(e) => setSettings({ ...settings, enabled: false, environment: e.target.value as ShippingSettings["environment"] })} value={settings.environment}><option value="production">Produção</option><option value="sandbox">Sandbox (teste)</option></select></Label>
         <Label text="CEP de saída"><input className={field} inputMode="numeric" maxLength={8} onChange={(e) => setSettings({ ...settings, originPostalCode: e.target.value.replace(/\D/g, "") })} required value={settings.originPostalCode} /></Label>
+        <Label text="Cidade de origem"><input className={field} maxLength={100} minLength={2} onChange={event => setSettings({ ...settings, originCity: event.target.value })} required value={settings.originCity} /></Label>
+        <Label text="UF de origem"><select className={field} onChange={event => setSettings({ ...settings, originState: event.target.value as ShippingSettings["originState"] })} value={settings.originState}>{postingLocationSchema.shape.state.options.map(state => <option key={state} value={state}>{state}</option>)}</select></Label>
         <Label text="Dias úteis para preparar"><input className={field} max={15} min={0} onChange={(e) => setSettings({ ...settings, preparationDays: Number(e.target.value) })} required type="number" value={settings.preparationDays} /></Label>
         <Label text="E-mail do responsável pela integração"><input className={field} onChange={(e) => setSettings({ ...settings, contactEmail: e.target.value })} required type="email" value={settings.contactEmail} /></Label>
         <Label text="Client ID do aplicativo"><input autoComplete="off" className={field} name="clientId" placeholder={data?.applicationConfigured ? "Já configurado — deixe vazio para manter" : "Informado pelo Melhor Envio"} /></Label>
@@ -66,6 +68,28 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
       <p className="text-xs leading-5 text-muted">Permissões solicitadas: cotar fretes, consultar transportadoras e rastreamento. O aplicativo não recebe permissão para gastar o saldo da carteira.</p>
       {data?.expiresAt && <p className="text-xs text-muted">Acesso válido até {new Date(data.expiresAt).toLocaleDateString("pt-BR")}. A renovação é automática durante o uso; após longa inatividade pode ser necessário reconectar.</p>}
       <label className="flex items-start gap-3 rounded-lg border border-line p-4 text-sm"><input checked={settings.enabled} className="mt-1 h-4 w-4 accent-brand" onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })} type="checkbox" /><span><strong>Exibir frete por transportadora no checkout</strong><span className="mt-1 block text-xs text-muted">Ative após validar a origem, os serviços, a documentação fiscal e as embalagens dos produtos.</span></span></label>
+      <fieldset className="grid min-w-0 gap-4 rounded-xl border border-line p-4"><legend className="px-1 text-sm font-black">Locais de postagem por serviço</legend>
+        <p className="text-xs leading-5 text-muted">Informe o local confirmado de cada serviço selecionado. Deixe a cidade vazia para remover o local e manter a confirmação pendente. O endereço do destinatário é separado. Salvar não altera o local registrado em pedidos anteriores.</p>
+        {settings.serviceIds.length === 0 && <p className="text-sm text-muted">Selecione os serviços na simulação abaixo para configurar a postagem.</p>}
+        {settings.serviceIds.map(serviceId => {
+          const service = [...defaultServices, ...services, ...quotes].find(service => service.serviceId === serviceId);
+          const location = settings.postingLocations.find(location => location.serviceId === serviceId);
+          function updateLocation(patch: Partial<ShippingSettings["postingLocations"][number]>) {
+            setSettings(current => {
+              const existing = current.postingLocations.find(location => location.serviceId === serviceId);
+              return { ...current, postingLocations: [...current.postingLocations.filter(location => location.serviceId !== serviceId), { serviceId, city: "", state: current.originState, ...existing, ...patch }] };
+            });
+          }
+          return <fieldset className="grid min-w-0 gap-3 rounded-lg bg-surface-subtle p-3" key={serviceId}><legend className="px-1 text-xs font-bold">{service ? `${service.carrier} · ${service.service}` : `Serviço ${serviceId}`}</legend>
+            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_6rem_minmax(0,1fr)]">
+              <Label text={`Cidade de postagem · serviço ${serviceId}`}><input className={field} disabled={busy} maxLength={100} minLength={2} onChange={event => updateLocation({ city: event.target.value })} value={location?.city ?? ""} /></Label>
+              <Label text={`UF de postagem · serviço ${serviceId}`}><select className={field} disabled={busy} onChange={event => updateLocation({ state: event.target.value as ShippingSettings["originState"] })} value={location?.state ?? settings.originState}>{postingLocationSchema.shape.state.options.map(state => <option key={state} value={state}>{state}</option>)}</select></Label>
+              <Label text={`Ponto de postagem (opcional) · serviço ${serviceId}`}><input className={field} disabled={busy} maxLength={160} onChange={event => updateLocation({ pointName: event.target.value })} value={location?.pointName ?? ""} /></Label>
+            </div>
+            {!location?.city.trim() && <p className="text-xs font-semibold text-amber-800">Local de postagem: confirmação pendente</p>}
+          </fieldset>;
+        })}
+      </fieldset>
       <div className="flex flex-wrap gap-3"><button className={button} disabled={busy} type="submit">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}Salvar configuração</button><button className={`${button} bg-ink`} disabled={busy || !data?.applicationConfigured} onClick={() => run(async () => { const result = await request("/api/admin/fretes/conectar", "POST", {}); window.location.assign(result.url); })} type="button"><Link2 className="h-4 w-4" />Conectar Melhor Envio</button><a className="inline-flex min-h-11 items-center gap-2 px-3 text-sm font-bold text-brand" href="https://app.melhorenvio.com.br/integracoes/area-dev" rel="noreferrer" target="_blank">Área de aplicativos<ArrowUpRight className="h-4 w-4" /></a></div>
     </form>
     <section className="rounded-2xl border border-line bg-white p-5 sm:p-7"><h2 className="text-lg font-black">Simular e selecionar serviços</h2><p className="mt-2 text-sm leading-6 text-muted">Informe uma encomenda embalada. A simulação consulta preços; não cria envio. Marque apenas serviços com postagem ou coleta viável para Ivaté e aceitação confirmada das mercadorias.</p>

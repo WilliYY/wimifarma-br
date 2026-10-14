@@ -2,16 +2,27 @@ import { z } from "zod";
 import { shippingReferenceSchema } from "./product-reference";
 
 export const shippingServiceIdsSchema = z.array(z.number().int().positive()).max(50);
+const citySchema = z.string().trim().min(2).max(100);
+const stateSchema = z.enum(["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"]);
+export const postingLocationSchema = z.object({
+  city: citySchema, state: stateSchema, pointName: z.string().trim().max(160).optional(),
+});
+export const postingPlanSchema = postingLocationSchema.extend({ requiresTravel: z.boolean() });
 export const shippingSettingsSchema = z.object({
   enabled: z.boolean().default(false),
   environment: z.enum(["production", "sandbox"]).default("production"),
   originPostalCode: z.string().regex(/^\d{8}$/),
+  originCity: citySchema.default("Ivaté"),
+  originState: stateSchema.default("PR"),
+  postingLocations: z.array(postingLocationSchema.extend({ serviceId: z.number().int().positive() })).max(50).default([])
+    .refine(locations => new Set(locations.map(location => location.serviceId)).size === locations.length, "Selecione um local por serviço."),
   preparationDays: z.number().int().min(0).max(15),
   serviceIds: shippingServiceIdsSchema,
   contactEmail: z.string().email().max(160),
 });
 export const defaultShippingSettings = {
   enabled: false, environment: "production" as const, originPostalCode: "87525000",
+  originCity: "Ivaté", originState: "PR" as const, postingLocations: [],
   preparationDays: 1, serviceIds: [], contactEmail: "",
 };
 export type ShippingSettings = z.infer<typeof shippingSettingsSchema>;
@@ -44,6 +55,7 @@ export type ShippingSelection = z.infer<typeof shippingSelectionSchema>;
 export const shippingQuotePayloadSchema = shippingOptionSchema.extend({
   postalCode: z.string().regex(/^\d{8}$/), fingerprint: z.string().length(64),
   revision: z.number().int(), expiresAt: z.number().int(),
+  postingLocation: postingPlanSchema.optional(),
 });
 export type ShippingQuotePayload = z.infer<typeof shippingQuotePayloadSchema>;
 

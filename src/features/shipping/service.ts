@@ -6,6 +6,7 @@ import { melhorEnvioRequest } from "./provider";
 import { normalizeQuotes, shippingFingerprint, signShippingQuote, validateShippingProduct, verifyShippingQuote } from "./rules";
 import { ShippingError, shippingSettingsSchema, type ShippingSelection } from "./schema";
 import { permittedShippingServices } from "./eligibility";
+import { resolvePostingLocation } from "./posting";
 
 export const shippingProductSelect = { id: true, name: true, slug: true, imageUrl: true, category: true, price: true, promotionalPrice: true, status: true, stock: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, shippingProfile: true, updatedAt: true } satisfies Prisma.ProductSelect;
 function signingKey() { const key = process.env.AUTH_SECRET; if (!key) throw new ShippingError("O frete está temporariamente indisponível.", 503); return key; }
@@ -46,5 +47,11 @@ export async function validateOrderShipping(tx: Prisma.TransactionClient, input:
   products.forEach(validateShippingProduct);
   if (!permittedShippingServices(settings.serviceIds, products).includes(payload.serviceId)) throw new ShippingError("O serviço de transporte não aceita os itens deste carrinho. Calcule o frete novamente.", 409);
   if (payload.postalCode !== input.address.postalCode || payload.fingerprint !== shippingFingerprint(input.items, products)) throw new ShippingError("O carrinho ou o CEP mudou. Calcule o frete novamente.", 409);
-  return payload;
+  // Resolve at checkout from server settings; never accept a client-supplied posting plan.
+  // Keep it in the order snapshot so future routing edits cannot rewrite old orders.
+  const quote = { ...payload };
+  delete quote.postingLocation;
+  const postingLocation = resolvePostingLocation(settings, payload.serviceId);
+  if (postingLocation) quote.postingLocation = postingLocation;
+  return quote;
 }
