@@ -3,7 +3,7 @@
 ## Fornecedores e viabilidade — 17/10/2026
 
 - Painel ADMIN manual implementado e validado conforme [66](66-fornecedores-e-viabilidade.md). Automatização e catálogo externo não estão ativos.
-- Confirmar fonte autorizada e durável de preço/saldo por EAN nas três distribuidoras; SantaCruz apresentou restrição financeira da conta. Definir reconfirmação, validade, reserva e cancelamento antes de prometer estoque externo.
+- Confirmar fonte autorizada e durável de preço/saldo por EAN nas três distribuidoras; concluir comparação SantaCruz quando o aplicativo responder. O titular confirmou que compra normalmente apesar do aviso financeiro. Definir reconfirmação, validade, reserva e cancelamento antes de prometer estoque externo.
 - Confirmar tributos com contador, embalagem, taxas de pagamento e custos variáveis; estudar Pix de 3% e frete por margem/peso/destino. Frete de entrada zero confirmado pelo lojista; acréscimo de 60% é exemplo para Losartana, não regra geral.
 - Resolver divergência do PMC dos portais com CMED/apresentação/UF/ICMS. Validar imagens e classificação de receita. Definir corte, feriados, recebimento terça–sábado e postagem, contando o preparo uma única vez no prazo.
 
