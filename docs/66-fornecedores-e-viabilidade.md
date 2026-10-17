@@ -20,7 +20,7 @@ Módulo `src/features/supplier-planning`: centavos inteiros e percentuais em pon
 
 ## Interface
 
-Rota `/admin/fornecedores`, somente ADMIN. Linguagem visual operacional, clara, usando os tokens e componentes existentes; comparação por fornecedor em tabela, custos em formulário e resultado por pedido em destaque. Dados preenchidos nesta etapa são cenários da sessão; não são sincronização nem estoque publicado. Não exibir indicadores falsos de integração conectada.
+Rota `/admin/fornecedores`, somente ADMIN. Linguagem visual operacional, clara, usando os tokens e componentes existentes; comparação por fornecedor em cartões responsivos, custos em formulário e resultado por pedido em destaque. Dados preenchidos nesta etapa são cenários da sessão; não são sincronização nem estoque publicado. Não exibir indicadores falsos de integração conectada.
 
 ## Próximas etapas condicionadas
 
@@ -45,3 +45,7 @@ O calendário final usa corte de compra, recebimento terça–sábado, preparo i
 - Houve divergência entre PMC mostrado nos portais e a lista oficial atual. Nenhum teto legal foi inferido do preço do portal. Dados comerciais privados e evidências de conta permanecem fora do Git.
 
 O desconto Pix de 3%, novos limites de frete, regras automáticas de preço, calendário sob encomenda, importação de imagens e publicação de estoque externo continuam pendentes. O painel permite estudar esses cenários; não os ativa no checkout.
+
+## Publicação conferida em 17/10/2026
+
+Código `fff18d1` publicado após build da imagem e recriação somente de `app`, sem migração ou alteração de serviços compartilhados. Imagem anterior preservada para recuperação. Healthchecks interno e público responderam `ok: true`, contêiner saudável e página anônima respondeu HTTP 307 para login. Sessão ADMIN real abriu a página, conferiu os mesmos resultados sintéticos de R$ 6,00/R$ 5,52 e o shell em 390 px sem transbordamento. Dados descartados ao recarregar, sem gravação comercial. A confirmação posterior do titular sobre SantaCruz foi registrada em `302f7a8`; a integração automática permanece pendente.
