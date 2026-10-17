@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-17 - Simplificar as descrições públicas do piloto
+
+- Retirar CMED, EAN/MS e fontes do texto corrido das quatro losartanas, mantendo marca, dosagem, apresentação e informação de entrega/retirada. A exigência de receita permanece no aviso próprio, sem repetição na descrição.
+- Editar pelo painel autenticado, sem alterar preços, estoque físico, cotas, validade ou classificação. Manter os controles regulatórios internos; não adicionar promessas clínicas ou dispensa sem receita. Contrato em [67](67-catalogo-distribuidores-piloto.md).
+
 ## 2026-10-17 - Piloto comercial por EAN com estoque físico separado
 
 - A pedido do lojista, permitir origem de distribuidor em Produtos/Catálogo e compra pública normal com um dia de preparação, sem a expressão “sob encomenda”. Preservar recebimento terça–sábado, calendário no checkout e estoque físico manual independente.

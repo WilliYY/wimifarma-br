@@ -23,6 +23,12 @@ O preço é custo × 1,60, arredondado ao centavo; preço promocional manual nã
 
 Fotos de medicamentos com receita permanecem fora da renderização pública do piloto, conforme RDC 44/2009, art. 54. Uma foto interna precisa corresponder ao EAN e ter origem autorizada; não há imagem inventada ou associação por nome aproximado. Receita comum classificada permite pedido e pagamento, com conferência farmacêutica antes da dispensação. Controlados, classificação pendente e Farmácia Popular conservam atendimento assistido. Distribuidores ficam fora do feed Shopping nesta etapa.
 
+## Descrições públicas — ajuste de 17/10/2026
+
+As quatro apresentações de losartana do piloto usam texto objetivo com marca, dosagem, quantidade e orientação para consultar entrega/retirada no carrinho. Referências à CMED, códigos EAN/MS e fontes de conferência não compõem a descrição corrida. EAN e teto regulatório continuam nos cadastros e controles internos. Não duplicar a instrução de apresentação de receita na descrição: a página e o checkout mantêm o aviso próprio e a conferência farmacêutica antes da dispensação. A edição de conteúdo não altera a classificação de receita, preços, ofertas, validade, cotas ou estoques. Não usar “venda liberada” como sinônimo de dispensa sem receita nem acrescentar promessas clínicas.
+
+Conteúdo salvo pelo painel ADMIN e relido nas quatro páginas públicas, com botões de compra habilitados e aviso de receita preservado. A conexão com o Chrome voltou a permitir essa conferência. Arquivo privado de entrada atualizado localmente para manter o mesmo texto em novos cadastros; ofertas não foram reconferidas ou renovadas por esta edição. Somente conteúdo persistido e documentação mudaram, sem alteração de código executável, migração ou necessidade de reconstruir a aplicação. Validação: leitura pública real e `git diff --check`; não foi feita compra, cobrança ou envio de mensagem.
+
 ## Preparação e checkout
 
 O objetivo é um dia total para recebimento e conferência. Recebimentos ocorrem terça–sábado, sem domingo/segunda. Corte conservador inicial: 18h30; depois disso o dia efetivo avança. A previsão termina às 18h30 da próxima data de recebimento após o dia efetivo, em `America/Sao_Paulo`. Ex.: sexta antes do corte → sábado; sábado/domingo/segunda → terça; terça após o corte → quinta. Feriados e cortes específicos ainda precisam de fonte confirmada. Não se promete “amanhã” irrestritamente.
