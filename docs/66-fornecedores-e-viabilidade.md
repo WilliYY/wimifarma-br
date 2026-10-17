@@ -6,6 +6,8 @@ Em 17/10/2026, o lojista solicitou comparar ANB, SantaCruz e Profarma por EAN, a
 
 A primeira etapa funcional é um painel exclusivo ADMIN para comparação e simulação. Nenhum resultado altera preço, estoque, prazo público, cobrança ou benefício. Fontes automatizadas, dados fiscais, embalagem, tarifa e calendário de corte ainda precisam de confirmação para liberar vendas de estoque externo.
 
+Evolução posterior autorizada: o piloto comercial persistente de quatro EANs, com estoque próprio separado e prazo de preparação, está documentado em [67](67-catalogo-distribuidores-piloto.md). O painel de simulação descrito aqui continua sem gravação comercial; conectores automáticos ainda não foram ativados.
+
 ## Contrato do domínio
 
 Módulo `src/features/supplier-planning`: centavos inteiros e percentuais em pontos-base; nenhuma requisição externa ou efeito financeiro.
