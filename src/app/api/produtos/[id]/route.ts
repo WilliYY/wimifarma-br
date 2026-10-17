@@ -161,7 +161,7 @@ export async function PATCH(
       const current = await transaction.product.findUnique({ where: { id, deletedAt: null }, select: { inventorySource: true, imageUrl: true, featuredPosition: true, name: true, brand: true, ean: true, shippingProfile: true, requiresPrescription: true, prescriptionType: true } });
       if (!current) return null;
       const canonicalEan = normalizeGtin(parsed.data.ean);
-      if (parsed.data.inventorySource === "DISTRIBUTOR" && !canonicalEan) throw new ProductMutationError("Produtos de distribuidor exigem EAN válido.", 422);
+      if ((parsed.data.inventorySource ?? current.inventorySource) === "DISTRIBUTOR" && !canonicalEan) throw new ProductMutationError("Produtos de distribuidor exigem EAN válido.", 422);
       if (parsed.data.inventorySource !== undefined && guard.session?.user.role !== "ADMIN") throw new ProductMutationError("Somente ADMIN pode alterar a origem do estoque.", 403);
       if (parsed.data.inventorySource && parsed.data.inventorySource !== current.inventorySource && await transaction.orderItem.findFirst({ where: { productId: id, order: { status: { notIn: ["COMPLETED", "CANCELED"] } } }, select: { id: true } })) throw new ProductMutationError("Conclua ou cancele os pedidos deste produto antes de mudar a origem do estoque.", 409);
       if (canonicalEan && await transaction.product.findFirst({ where: { id: { not: id }, OR: [{ eanNormalized: canonicalEan }, { ean: { in: gtinVariants(parsed.data.ean) } }] }, select: { id: true } })) throw new ProductMutationError("Este EAN já pertence a outro cadastro. Revise os produtos antes de alterar.", 409);

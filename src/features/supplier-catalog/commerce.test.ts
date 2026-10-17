@@ -53,4 +53,3 @@ test("receita exige teto CMED e não vende quando o acréscimo ultrapassa o limi
   assert.equal(resolveSupplierOffer({...product,requiresPrescription:true,supplierOffers:[{...offer,retailCeilingCents:1599}]},1,now),null);
   assert.equal(resolveSupplierOffer({...product,requiresPrescription:true},1,now)?.unitPriceCents,1600);
 });
-

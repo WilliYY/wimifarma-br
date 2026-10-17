@@ -9,8 +9,8 @@ import { buildProductSearchText } from "../src/features/products/public-search";
 
 const rowSchema = z.object({
   ean: z.string().refine(value => normalizeGtin(value) !== null),
-  name: z.string().trim().min(5).max(191), slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(160),
-  brand: z.string().trim().min(1).max(150), description: z.string().trim().min(80).max(6000),
+  name: z.string().trim().min(5).max(160), slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(120),
+  brand: z.string().trim().min(1).max(120), description: z.string().trim().min(80).max(800),
   category: z.string().trim().min(1).max(100), activeIngredients: z.array(z.string().max(100)).min(1).max(10),
   prescriptionType: z.literal("ORDINARY"), requiresPrescription: z.literal(true),
   offers: z.array(z.record(z.string(), z.unknown())).min(1).max(3),

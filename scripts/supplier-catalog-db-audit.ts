@@ -54,6 +54,7 @@ async function main() {
     const input = (quantity = 1, online = false) => checkoutRequestSchema.parse({ customer: { name: "Synthetic customer", email: "buyer@example.invalid", phone: "00000000000" }, fulfillmentMethod: "PICKUP", paymentMethod: online ? "ONLINE" : "CASH", privacyConsent: true, checkoutRequestId: crypto.randomUUID(), items: [{ productId: product.id, quantity, expectedUnitPriceCents: 1600 }] });
     const physical = async () => (await db.product.findUniqueOrThrow({ where: { id: product.id } })).stock;
     const reservations = await Promise.allSettled([db.$transaction(tx => createCheckout(tx, input(3))), db.$transaction(tx => createCheckout(tx, input(3)))]);
+    if (!reservations.some(row => row.status === "fulfilled")) console.error("QA_CHECKOUT_REJECTIONS", reservations.map(row => row.status === "rejected" && row.reason instanceof Error ? row.reason.message : row.status));
     assert.equal(reservations.filter(row => row.status === "fulfilled").length, 1, "concurrent checkouts must not exceed allocation or change price");
     assert.equal((await db.supplierCatalogOffer.findUniqueOrThrow({ where: { id: anb.id } })).reservedQuantity, 3);
     assert.equal(await physical(), 3, "physical stock is never the external allocation");

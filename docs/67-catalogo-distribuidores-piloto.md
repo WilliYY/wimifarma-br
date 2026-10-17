@@ -2,7 +2,7 @@
 
 ## Regras aprovadas em 17/10/2026
 
-O lojista autorizou iniciar por losartana potássica 50 mg, comparar ofertas do mesmo EAN em ANB, SantaCruz e Profarma e vender com acréscimo de 60% sobre o custo final. Isso não equivale a margem líquida de 60%; tributos, tarifas, embalagem e frete continuam relevantes. Não foi ativado desconto Pix adicional nem alterado o frete grátis.
+O lojista autorizou iniciar por losartana potássica 50 mg, comparar ofertas do mesmo EAN e vender com acréscimo de 60% sobre o custo final. Na atualização mais recente, restringiu o piloto à ANB e à Profarma; SantaCruz fica reservada para uma próxima etapa. Isso não equivale a margem líquida de 60%; tributos, tarifas, embalagem e frete continuam relevantes. Não foi ativado desconto Pix adicional nem alterado o frete grátis.
 
 Na loja pública o produto aparece disponível para compra normal, sem a expressão “sob encomenda”. A origem é uma distinção operacional no ADMIN. O cliente vê o prazo de preparação antes de comprar; não há alegação de estoque físico nem de reserva no distribuidor. A farmácia compra externamente quando necessário, confere e dispensa. Não há compra automática em distribuidoras.
 
