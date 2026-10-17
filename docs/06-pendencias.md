@@ -1,5 +1,12 @@
 # 06 - Pendencias
 
+## Fornecedores e viabilidade — 17/10/2026
+
+- Painel ADMIN manual implementado e validado conforme [66](66-fornecedores-e-viabilidade.md). Automatização e catálogo externo não estão ativos.
+- Confirmar fonte autorizada e durável de preço/saldo por EAN nas três distribuidoras; SantaCruz apresentou restrição financeira da conta. Definir reconfirmação, validade, reserva e cancelamento antes de prometer estoque externo.
+- Confirmar tributos com contador, embalagem, taxas de pagamento e custos variáveis; estudar Pix de 3% e frete por margem/peso/destino. Frete de entrada zero confirmado pelo lojista; acréscimo de 60% é exemplo para Losartana, não regra geral.
+- Resolver divergência do PMC dos portais com CMED/apresentação/UF/ICMS. Validar imagens e classificação de receita. Definir corte, feriados, recebimento terça–sábado e postagem, contando o preparo uma única vez no prazo.
+
 ## Club e WimiCoins — 13/10/2026
 
 - Adesão gratuita, participantes ADMIN, elegibilidade/percentual por produto, banner, conta e uso combinado no checkout publicados; contrato e provas em [63](63-club-wimicoins.md). Titular inscrito e crédito único de 500 pontos confirmado; não é bônus geral.

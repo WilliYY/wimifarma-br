@@ -6,6 +6,8 @@ A arquitetura organiza a plataforma em camadas para evitar mistura entre site pu
 
 ## Camadas
 
+Planejamento de fornecedores usa domínio puro `src/features/supplier-planning` e página exclusiva ADMIN `/admin/fornecedores`. Ofertas manuais e cenários ficam na memória da sessão, sem API, persistência, conexão de fornecedor ou efeito no checkout. Valores usam centavos inteiros e pontos-base. Contrato em [66](66-fornecedores-e-viabilidade.md).
+
 Club e WimiCoins usam domínio `src/features/club`, adesão `ClubMembership` e carteira/livro próprios `WimicoinAccount`/`WimicoinTransaction`. O checkout fotografa elegibilidade/percentual e rateia os dois descontos na mesma transação; liquidação segue os hooks existentes de pedidos/pagamentos. Bloquear cashback antes de WimiCoins e preservar identidade User–Customer revalidada. Contrato em [63](63-club-wimicoins.md).
 
 Alertas comerciais da Miauby usam outbox PostgreSQL no BR e ponte autenticada exclusiva no serviço WhatsApp existente. Os dois projetos conservam bancos, regras e tokens internos separados. Somente seus serviços de aplicação participam da rede externa `wimifarma-miauby-bridge-network`. Contrato em `30-miauby-whatsapp-comercio.md`.

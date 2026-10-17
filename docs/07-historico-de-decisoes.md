@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-17 - Comparar fornecedores e simular contribuição antes de publicar estoque externo
+
+- Criar painel exclusivo ADMIN sem gravação comercial, com ofertas manuais por EAN exato, validade e saldo conferidos. Saldo desconhecido e embalagem não comprovam disponibilidade para compra.
+- Calcular contribuição com centavos inteiros, custos ausentes explícitos, Pix, frete e benefícios atuais, sem ativar descontos, preço, estoque ou catálogo automaticamente.
+- Não inferir PMC legal do portal: exigir conferência da apresentação e UF/alíquota. Fontes automatizadas, calendário, reserva, fotos e política comercial ficam para etapas posteriores comprovadas. Contrato em [66](66-fornecedores-e-viabilidade.md).
+
 ## 2026-10-14 - Registrar cidade de postagem para a operação
 
 - Configurar local por serviço no frete ADMIN e resolver o deslocamento no servidor durante a compra. Persistir no JSON do pedido, sem migração ou alteração de preço/pagamento.
