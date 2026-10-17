@@ -51,9 +51,10 @@ async function main() {
     const offerData = { productId: product.id, eanNormalized: product.eanNormalized!, available: true, allocationQuantity: 5, observedAt: new Date(Date.now() - 1000), validUntil: new Date(Date.now() + 3600000) };
     const anb = await db.supplierCatalogOffer.create({ data: { ...offerData, supplier: "ANB", externalCode: "synthetic-a", unitCostCents: 1000 } });
     const profarma = await db.supplierCatalogOffer.create({ data: { ...offerData, supplier: "PROFARMA", externalCode: "synthetic-p", unitCostCents: 1200 } });
-    const input = (quantity = 1, online = false) => checkoutRequestSchema.parse({ customer: { name: "Synthetic customer", email: "buyer@example.invalid", phone: "00000000000" }, fulfillmentMethod: "PICKUP", paymentMethod: online ? "ONLINE" : "CASH", privacyConsent: true, checkoutRequestId: crypto.randomUUID(), items: [{ productId: product.id, quantity, expectedUnitPriceCents: 1600 }] });
+    const input = (quantity = 1, online = false) => checkoutRequestSchema.parse({ customer: { name: "Synthetic customer", email: "buyer@example.invalid", phone: "11999990000" }, fulfillmentMethod: "PICKUP", paymentMethod: online ? "ONLINE" : "CASH", privacyConsent: true, checkoutRequestId: crypto.randomUUID(), items: [{ productId: product.id, quantity, expectedUnitPriceCents: 1600 }] });
     const physical = async () => (await db.product.findUniqueOrThrow({ where: { id: product.id } })).stock;
-    const reservations = await Promise.allSettled([db.$transaction(tx => createCheckout(tx, input(3))), db.$transaction(tx => createCheckout(tx, input(3)))]);
+    const concurrentInputs = [input(3), input(3)];
+    const reservations = await Promise.allSettled(concurrentInputs.map(request => db.$transaction(tx => createCheckout(tx, request))));
     if (!reservations.some(row => row.status === "fulfilled")) console.error("QA_CHECKOUT_REJECTIONS", reservations.map(row => row.status === "rejected" && row.reason instanceof Error ? row.reason.message : row.status));
     assert.equal(reservations.filter(row => row.status === "fulfilled").length, 1, "concurrent checkouts must not exceed allocation or change price");
     assert.equal((await db.supplierCatalogOffer.findUniqueOrThrow({ where: { id: anb.id } })).reservedQuantity, 3);
