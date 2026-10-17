@@ -28,6 +28,7 @@ export default async function Page() {
     privacyConsentAt: order.privacyConsentAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
     prescriptionReviewedAt: order.prescriptionReviewedAt?.toISOString() ?? null,
+    preparationReadyAt: order.preparationReadyAt?.toISOString() ?? null,
     items: order.items.map((item) => ({
       ...item,
       createdAt: item.createdAt.toISOString(),

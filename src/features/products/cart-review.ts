@@ -4,6 +4,7 @@ import { requiresPurchaseAssistance } from "./purchase-policy";
 
 export const cartReviewRequestSchema = z.object({ productIds: z.array(z.string().trim().min(1).max(64)).min(1).max(30) }).strict().refine(input => new Set(input.productIds).size === input.productIds.length);
 const productSchema = z.object({
+  inventorySource: z.enum(["PHARMACY", "DISTRIBUTOR"]).optional(),
   id: z.string().min(1).max(64), slug: z.string(), name: z.string(),
   imageUrl: z.string().nullable(), category: z.string().nullable(),
   unitPriceCents: z.number().int().positive().max(1_000_000), originalPriceCents: z.number().int().nonnegative().nullable(),

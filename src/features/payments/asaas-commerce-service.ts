@@ -5,6 +5,7 @@ import { moneyToCents } from "@/features/orders/checkout";
 import { requiresPrescriptionReview, requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 import { settleOrderCashback } from "@/features/cashback/service";
 import { settleOrderBenefits } from "@/features/cashback/redemption";
+import { comparePaymentInventoryItems, validateSupplierPayment } from "@/features/supplier-catalog/inventory";
 import { queueCommerceOrder } from "@/features/miauby/commerce-service";
 import { readAsaasIntegration } from "./asaas-integration";
 import { assertAsaasPaymentBinding, createAsaasCheckout, createAsaasPix, listAsaasPayments, retrieveAsaasPayment,
@@ -68,9 +69,16 @@ export async function startAsaasCommercePayment(orderId: string, input: PaymentI
     if (Date.now() - order.createdAt.getTime() > 30 * 60_000) throw new PaymentError("A reserva de preço expirou. Cancele este pedido e refaça o checkout.");
     if (input.method === "hosted-card" && current.amountCents < ASAAS_MIN_CARD_AMOUNT_CENTS) throw new PaymentError("O cartão Asaas exige um valor mínimo de R$ 5,00.", 422);
     if (input.method === "pix" && !integration.secrets.pixAddressKey) throw new PaymentError("Confira a chave Pix da loja.", 503);
-    for (const item of [...order.items].sort((a, b) => (a.productId ?? "").localeCompare(b.productId ?? ""))) {
+    for (const item of [...order.items].sort(comparePaymentInventoryItems)) {
       if (!item.productId) throw new PaymentError("Um produto não está mais disponível.");
       const product = await tx.product.findUnique({ where: { id: item.productId } });
+      if ((product?.inventorySource ?? "PHARMACY") !== (item.inventorySource ?? "PHARMACY")) throw new PaymentError("A origem do produto mudou. Revise o pedido.", 409);
+      if (item.inventorySource === "DISTRIBUTOR") {
+        if (!product || product.status !== "ACTIVE" || requiresPurchaseAssistance(product)) throw new PaymentError("Produto indisponível para compra.", 409);
+        if (requiresPrescriptionReview(product) && !order.requiresPrescriptionReview) throw new PaymentError("A exigência de receita mudou. Refaça o checkout.");
+        await validateSupplierPayment(tx, item, product);
+        continue;
+      }
       if (!product || product.status !== "ACTIVE" || requiresPurchaseAssistance(product) || product.stock < item.quantity
         || moneyToCents((product.promotionalPrice ?? product.price).toString()) !== item.unitPriceCents) {
         throw new PaymentError("Preço, disponibilidade ou estoque mudou. Cancele este pedido e atualize o carrinho.");
@@ -170,7 +178,7 @@ export async function refreshAsaasCommercePayment(orderId: string, checkoutEvent
     const terminal = ["PAID", "PARTIALLY_REFUNDED", "REFUNDED", "DISPUTED", "FAILED", "CANCELED"].includes(next);
     const failed = ["FAILED", "CANCELED"].includes(next);
     if (failed && current.stockReserved) {
-      for (const item of [...current.order.items].sort((a, b) => (a.productId ?? "").localeCompare(b.productId ?? ""))) if (item.productId) await tx.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } });
+      for (const item of [...current.order.items].sort((a, b) => (a.productId ?? "").localeCompare(b.productId ?? ""))) if (item.productId && item.inventorySource !== "DISTRIBUTOR") await tx.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } });
     }
     const changed = next !== current.status;
     const fundsAvailable = snapshot.fundsAvailable || (next === "PAID" && current.status === "PAID" && current.fundsAvailable);

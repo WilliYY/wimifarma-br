@@ -9,12 +9,13 @@ import { build } from "esbuild";
 type Data = Record<string, any>;
 const bundle = build({ entryPoints: ["src/features/payments/maintenance.ts"], bundle: true, write: false,
   platform: "node", format: "cjs", packages: "external", plugins: [{ name: "maintenance-fixture", setup(builder) {
-    builder.onResolve({ filter: /(?:lib\/prisma|\/service|\/fee-settings|\/asaas-service|\/asaas-webhook)$/ }, args => ({ path: args.path, namespace: "fixture" }));
+    builder.onResolve({ filter: /(?:lib\/prisma|\/service|\/fee-settings|\/asaas-service|\/asaas-webhook|supplier-catalog\/maintenance)$/ }, args => ({ path: args.path, namespace: "fixture" }));
     builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("prisma")
       ? "export const getPrisma=()=>fixture.prisma;"
       : args.path.endsWith("/service") ? "export const refreshPayment=id=>fixture.refresh(id); export const cancelUnsubmittedPayment=id=>fixture.cancel(id);"
       : args.path.endsWith("asaas-service") ? "export const refreshAsaasSandboxPayment=id=>fixture.sandbox(id);"
       : args.path.endsWith("asaas-webhook") ? "export const processAsaasWebhookInbox=async()=>({});"
+      : args.path.endsWith("supplier-catalog/maintenance") ? "export const expireSupplierOrders=async()=>{};"
       : "export const synchronizeFeeSettings=async()=>{};" }));
   } }] });
 

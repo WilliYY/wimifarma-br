@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-17 - Piloto comercial por EAN com estoque físico separado
+
+- A pedido do lojista, permitir origem de distribuidor em Produtos/Catálogo e compra pública normal com um dia de preparação, sem a expressão “sob encomenda”. Preservar recebimento terça–sábado, calendário no checkout e estoque físico manual independente.
+- Escolher a oferta válida mais barata do mesmo GTIN e aplicar acréscimo de 60% sobre o custo. Exigir teto CMED conferido para receita; não conceder desconto Pix adicional nem alterar frete. Cota interna conservadora não é reserva do fornecedor.
+- Persistir ofertas e reservas, revalidar preço/identidade antes da cobrança e liquidar cancelamentos/benefícios sem alterar estoque próprio. Manter fotos Rx fora da renderização pública e aquisição humana. Migração aditiva e contrato em [67](67-catalogo-distribuidores-piloto.md); conectores automáticos continuam pendentes.
+
 ## 2026-10-17 - Comparar fornecedores e simular contribuição antes de publicar estoque externo
 
 - Criar painel exclusivo ADMIN sem gravação comercial, com ofertas manuais por EAN exato, validade e saldo conferidos. Saldo desconhecido e embalagem não comprovam disponibilidade para compra.

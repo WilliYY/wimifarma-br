@@ -9,6 +9,7 @@ import type { PublicProductSearchItem } from "@/features/products/public-search"
 import { formatCurrency } from "@/lib/utils";
 
 export type RelatedProductCardItem = PublicProductSearchItem & {
+  inventorySource?: "PHARMACY" | "DISTRIBUTOR";
   isPopularPharmacy: boolean;
   stock: number;
 };
@@ -23,6 +24,7 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
     ? Math.round(((normalPrice - currentPrice) / normalPrice) * 100)
     : 0;
   const cartProduct = {
+    inventorySource: product.inventorySource,
     category: product.category,
     id: product.id,
     imageUrl: product.imageUrl,
@@ -40,7 +42,7 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
     <article
       className="group relative flex h-full min-h-[22rem] min-w-0 flex-col overflow-hidden rounded-md border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_18px_40px_rgba(17,24,39,0.11)] motion-reduce:transform-none"
     >
-      <ProductShippingBadge />
+      {product.inventorySource === "DISTRIBUTOR" ? <span className="absolute left-3 top-3 z-10 rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-ink">1 dia de preparação</span> : <ProductShippingBadge />}
       <div
         className="relative flex h-40 items-center justify-center overflow-hidden bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
       >

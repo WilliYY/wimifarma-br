@@ -1,6 +1,9 @@
 .git
 .next
 node_modules
+.codex
+.omx
+outputs
 npm-debug.log*
 .env
 .env.*

@@ -173,6 +173,7 @@ function buildBestOfferItems(products: PublicShowcaseProduct[]): BestOfferItem[]
         prescriptionType: product.prescriptionType,
         slug: product.slug,
         stock: product.stock,
+        inventorySource: product.inventorySource,
         unitPriceCents: Math.round(currentPrice * 100),
       },
     };

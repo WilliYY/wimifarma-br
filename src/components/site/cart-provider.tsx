@@ -15,6 +15,7 @@ import { reviewedCartItems, type CartReviewProposal } from "@/features/products/
 const STORAGE_KEY = "wimifarma-cart-v1";
 
 export type CartProduct = {
+  inventorySource?: "PHARMACY" | "DISTRIBUTOR";
   id: string;
   slug: string;
   name: string;

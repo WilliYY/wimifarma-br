@@ -12,9 +12,13 @@ import { queueCommerceOrder } from "@/features/miauby/commerce-service";
 import { customerShippingFee } from "@/features/shipping/delivery-policy";
 import { requiresPrescriptionReview } from "@/features/products/purchase-policy";
 import { checkoutPaymentConnections, resolveCheckoutPayment } from "@/features/payments/routing";
+import { resolveSupplierOffer, supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
+import { reserveSupplierInventory } from "@/features/supplier-catalog/inventory";
+import { getSupplierPreparationEstimate } from "@/features/supplier-catalog/preparation";
 
 const orderResultSelect = {
   id: true,
+  preparationReadyAt: true, preparationDays: true,
   requiresPrescriptionReview: true,
   cashbackEarnedCents: true, cashbackState: true, cashbackRedeemedCents: true,
   cashbackRedemptionState: true, createdAt: true, fulfillmentMethod: true,
@@ -43,12 +47,20 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   }
   const membership = customer ? await tx.clubMembership.findUnique({ where: { customerId: customer.id }, select: { active: true } }) : null;
   if (coins > 0 && !membership?.active) throw new ClubRuleError("Entre no Club para usar WimiCoins.");
-  const products = await tx.product.findMany({
-    select: { cashbackEnabled: true, cashbackRateBps: true, wimicoinsEnabled: true, wimicoinsRateBps: true, id: true, imageUrl: true, isPopularPharmacy: true, name: true, price: true, promotionalPrice: true, requiresPrescription: true, prescriptionType: true, slug: true, status: true, stock: true },
+  const loadProducts = () => tx.product.findMany({
+    select: { ...supplierOfferInclude, ean: true, inventorySource: true, cashbackEnabled: true, cashbackRateBps: true, wimicoinsEnabled: true, wimicoinsRateBps: true, id: true, imageUrl: true, isPopularPharmacy: true, name: true, price: true, promotionalPrice: true, requiresPrescription: true, prescriptionType: true, slug: true, status: true, stock: true },
     where: { id: { in: input.items.map((item) => item.productId) } },
   });
-  const prepared = prepareCheckoutOrder(products.map((p) => ({ ...p, price: p.price.toString(), promotionalPrice: p.promotionalPrice?.toString() ?? null })), input.items);
+  let products = await loadProducts();
+  const supplierProductIds = products.filter(p => p.inventorySource === "DISTRIBUTOR").map(p => p.id).sort();
+  for (const id of supplierProductIds) await tx.$queryRaw`SELECT id FROM "Product" WHERE id = ${id} FOR UPDATE`;
+  // Serializa identidade/origem com a edição ADMIN e relê ofertas após obter os locks.
+  if (supplierProductIds.length) products = await loadProducts();
+  const prepared = prepareCheckoutOrder(products.map(p => toSaleProduct(p)), input.items);
   if (!prepared.ok) throw new CashbackRuleError(prepared.message, prepared.code === "NOT_FOUND" ? 404 : 409, prepared.code);
+  const hasSupplierItems = products.some(p => p.inventorySource === "DISTRIBUTOR");
+  if (isTest && hasSupplierItems) throw new PaymentError("Na homologação use produtos locais sintéticos, sem comprometer cotas de distribuidores.", 422);
+  const preparation = hasSupplierItems ? getSupplierPreparationEstimate(new Date()) : null;
   const shippingQuote = await validateOrderShipping(tx, input);
   const carrierPriceCents = shippingQuote?.priceCents ?? prepared.deliveryFeeCents;
   const deliveryFeeCents = customerShippingFee(carrierPriceCents, prepared.subtotalCents, input.cashbackRedeemCents + coins);
@@ -73,7 +85,10 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
       + (extraCentUnits > 0 ? productCashbackCents(product, paidUnitCents + 1, extraCentUnits) : 0) : 0;
     const earnedPoints = membership?.active ? productWimicoinsPoints(product, paidUnitCents, baseUnits)
       + (extraCentUnits > 0 ? productWimicoinsPoints(product, paidUnitCents + 1, extraCentUnits) : 0) : 0;
-    return { ...item, cashbackDiscountCents: discounts[index].cashbackDiscountCents, wimicoinsDiscountPoints: discounts[index].wimicoinsDiscountPoints,
+    const supplier = product.inventorySource === "DISTRIBUTOR" ? resolveSupplierOffer(product, item.quantity) : null;
+    if (product.inventorySource === "DISTRIBUTOR" && !supplier) throw new PaymentError("A disponibilidade do distribuidor mudou. Revise o carrinho.", 409);
+    return { ...item, inventorySource: product.inventorySource ?? "PHARMACY", supplierOfferId: supplier?.id, supplierCode: supplier?.supplier,
+      cashbackDiscountCents: discounts[index].cashbackDiscountCents, wimicoinsDiscountPoints: discounts[index].wimicoinsDiscountPoints,
       cashbackEarnedCents: earned, cashbackRateBps: earned > 0 ? product.cashbackRateBps : 0,
       wimicoinsEarnedPoints: earnedPoints, wimicoinsRateBps: earnedPoints > 0 ? product.wimicoinsRateBps : 0 };
   });
@@ -87,6 +102,7 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   const integration = selected?.integration;
   const address = input.fulfillmentMethod === "DELIVERY" ? input.address : undefined;
   const order = await tx.order.create({ data: {
+    ...(preparation ? { preparationReadyAt: preparation.readyAt, preparationDays: preparation.preparationDays } : {}),
     requiresPrescriptionReview: products.some(requiresPrescriptionReview),
     cashbackEarnedCents, cashbackState: cashbackEarnedCents > 0 ? "PENDING" : "NONE",
     cashbackRedeemedCents: redeem, cashbackRedemptionState: redeem > 0 ? "RESERVED" : "NONE",
@@ -105,6 +121,10 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
       method: onlineMethod, installments: integration.id === "asaas" && onlineMethod === "card" ? 1 : null, environment: integration.environment,
       integrationRevision: integration.revision, accountId: integration.accountId, amountCents: totalCents } } } : {}),
   } });
+  if (hasSupplierItems) {
+    const supplierItems = await tx.orderItem.findMany({ where: { orderId: order.id, inventorySource: "DISTRIBUTOR" }, orderBy: [{ supplierOfferId: "asc" }, { id: "asc" }] });
+    for (const item of supplierItems) await reserveSupplierInventory(tx, item);
+  }
   if (selected) await tx.auditLog.create({ data: { action: "PAYMENT_ROUTE_SELECTED", entity: "Order", entityId: order.id,
     metadata: { ...selected.route, integrationRevision: selected.integration.revision, method: onlineMethod, amountCents: totalCents } } });
   if (redeem > 0 && account) {

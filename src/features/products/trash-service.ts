@@ -22,7 +22,8 @@ export async function restoreTrashedProduct(tx: Prisma.TransactionClient, id: st
 
 export async function purgeExpiredProducts(tx: Prisma.TransactionClient, now = new Date()) {
   await lockProductCatalog(tx);
-  const where = { deletedAt: { not: null }, purgeAt: { lte: now }, status: "ARCHIVED" as const };
+  // Ofertas e reservas externas preservam rastreabilidade; não impedem limpar os demais produtos.
+  const where = { deletedAt: { not: null }, purgeAt: { lte: now }, status: "ARCHIVED" as const, supplierOffers: { none: {} } };
   const products = await tx.product.findMany({ where, select: { id: true }, orderBy: [{ purgeAt: "asc" }, { id: "asc" }], take: 100 });
   if (!products.length) return 0;
   const result = await tx.product.deleteMany({ where: { ...where, id: { in: products.map(product => product.id) } } });

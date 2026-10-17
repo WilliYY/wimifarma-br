@@ -7,11 +7,13 @@ import {
   type PublicProductSearchItem,
 } from "@/features/products/public-search";
 import { getPrisma } from "@/lib/prisma";
+import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const productSelect = {
+  ...supplierOfferInclude, ean: true, inventorySource: true, stock: true,
   cashbackEnabled: true,
   cashbackRateBps: true,
   activeIngredients: true,
@@ -31,7 +33,8 @@ const productSelect = {
 
 type SearchProduct = Prisma.ProductGetPayload<{ select: typeof productSelect }>;
 
-function serializeProduct(product: SearchProduct): PublicProductSearchItem {
+function serializeProduct(raw: SearchProduct): PublicProductSearchItem {
+  const product = toSaleProduct(raw);
   return {
     cashbackEnabled: product.cashbackEnabled,
     cashbackRateBps: product.cashbackRateBps,

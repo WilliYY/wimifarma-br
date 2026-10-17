@@ -2,9 +2,10 @@ import { cache } from "react";
 import type { Prisma } from "@/generated/prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { categorySlug } from "@/lib/seo";
+import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 
 export const PAGE_SIZE = 24;
-const storefrontSelect = { id: true, name: true, slug: true, brand: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, activeIngredients: true, searchTerms: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, cashbackEnabled: true, cashbackRateBps: true } satisfies Prisma.ProductSelect;
+const storefrontSelect = { ...supplierOfferInclude, ean: true, inventorySource: true, id: true, name: true, slug: true, brand: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, activeIngredients: true, searchTerms: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, cashbackEnabled: true, cashbackRateBps: true } satisfies Prisma.ProductSelect;
 export const getPublicCategories = cache(async () => {
   const products = await getPrisma().product.findMany({ where: { status: "ACTIVE", category: { not: null } }, distinct: ["category"], select: { category: true }, orderBy: { category: "asc" } });
   const categories = new Map<string, { name: string; slug: string; names: string[] }>();
@@ -27,5 +28,5 @@ export async function getStorefrontProducts({ page = 1, categories, offers = fal
     prisma.product.findMany({ where, select: storefrontSelect, take: PAGE_SIZE, skip: (page - 1) * PAGE_SIZE, orderBy: [{ name: "asc" }, { id: "asc" }] }),
     prisma.product.count({ where }),
   ]);
-  return { count, products: rows.map(item => ({ ...item, price: item.price.toString(), promotionalPrice: item.promotionalPrice?.toString() ?? null })) };
+  return { count, products: rows.map(item => toSaleProduct(item)) };
 }

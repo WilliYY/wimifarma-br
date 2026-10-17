@@ -3,6 +3,7 @@ import { cancelUnsubmittedPayment, refreshPayment } from "./service";
 import { synchronizeFeeSettings } from "./fee-settings";
 import { refreshAsaasSandboxPayment } from "./asaas-service";
 import { processAsaasWebhookInbox } from "./asaas-webhook";
+import { expireSupplierOrders } from "@/features/supplier-catalog/maintenance";
 
 let started = false; let running = false;
 // Webhooks are primary. This bounded recovery loop handles abandoned tabs and network failures.
@@ -10,6 +11,7 @@ export async function reconcilePendingPayments() {
   if (running) return;
   running = true;
   try {
+    await expireSupplierOrders().catch(() => console.warn("SUPPLIER_RESERVATION_RECOVERY_PENDING"));
     await processAsaasWebhookInbox().catch(() => console.warn("ASAAS_WEBHOOK_RECOVERY_PENDING"));
     await processAsaasWebhookInbox(10, "production").catch(() => console.warn("ASAAS_PRODUCTION_WEBHOOK_RECOVERY_PENDING"));
     const payments = await getPrisma().onlinePayment.findMany({

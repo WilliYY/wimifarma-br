@@ -4,6 +4,7 @@ import { shippingDraftSchema } from "@/features/shipping/product-draft";
 import { prescriptionClassificationIsConsistent, prescriptionTypes } from "./purchase-policy";
 
 const productFieldsSchema = z.object({
+  inventorySource: z.enum(["PHARMACY", "DISTRIBUTOR"]).optional(),
   shippingProfile: shippingDraftSchema.optional(),
   featured: z.boolean().optional(),
   cashbackEnabled: z.boolean().optional(),

@@ -6,7 +6,8 @@ const select = { id: true, slug: true, name: true, brand: true, category: true, 
 
 // Only publicly displayed information. Keyset pagination keeps memory bounded as the catalog grows.
 export async function createMerchantFeedStream(db: Pick<PrismaClient, "product">) {
-  const read = (after?: string) => db.product.findMany({ where: { status: "ACTIVE", deletedAt: null, ...(after ? { id: { gt: after } } : {}) }, select, orderBy: { id: "asc" }, take: PAGE_SIZE });
+  // O piloto sob encomenda ainda não tem contrato de disponibilidade no Shopping.
+  const read = (after?: string) => db.product.findMany({ where: { status: "ACTIVE", deletedAt: null, inventorySource: "PHARMACY", ...(after ? { id: { gt: after } } : {}) }, select, orderBy: { id: "asc" }, take: PAGE_SIZE });
   let rows = await read(); // Fail before sending a 200 when the database is unavailable.
   let canceled = false;
   const encoder = new TextEncoder();

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Minus, PackageOpen, Plus, ShieldCheck, Trash2 } from "lucide-react";
 import { useCart } from "@/components/site/cart-provider";
+import { SupplierPreparationNotice } from "@/components/site/supplier-preparation-notice";
 import { requestCartReview, reviewedCartItems, type CartReviewProposal } from "@/features/products/cart-review";
 
 const currency = new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" });
@@ -54,6 +55,7 @@ export function CartPage() {
       <div className="mx-auto max-w-7xl">
         <p className="text-xs font-black uppercase text-brand">Sua compra</p>
         <h1 className="mt-2 text-3xl font-black text-ink sm:text-4xl">Carrinho</h1>
+        {hydrated && items.some(item => item.inventorySource === "DISTRIBUTOR") && <div className="mt-5"><SupplierPreparationNotice /></div>}
         {reviewMessage && <p role="status" className="mt-4 rounded-lg border border-line bg-white p-4 text-sm text-ink">{reviewMessage}</p>}
 
         {!hydrated ? (

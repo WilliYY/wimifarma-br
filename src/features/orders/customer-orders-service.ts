@@ -6,14 +6,14 @@ const customerOrderSelect = {
   id: true, number: true, status: true, fulfillmentMethod: true, paymentMethod: true, paymentStatus: true,
   subtotalCents: true, deliveryFeeCents: true, totalCents: true, cashbackRedeemedCents: true, wimicoinsRedeemedPoints: true,
   street: true, addressNumber: true, complement: true, neighborhood: true, city: true, state: true,
-  createdAt: true, updatedAt: true,
+  createdAt: true, updatedAt: true, preparationReadyAt: true, preparationDays: true,
   requiresPrescriptionReview: true,
   items: { orderBy: { createdAt: "asc" }, select: {
     id: true, productName: true, productImageUrl: true, quantity: true, unitPriceCents: true, totalCents: true,
   } },
 } satisfies Prisma.OrderSelect;
 type SelectedOrder = Prisma.OrderGetPayload<{ select: typeof customerOrderSelect }>;
-const serialize = (order: SelectedOrder) => ({ ...order, createdAt: order.createdAt.toISOString(), updatedAt: order.updatedAt.toISOString() });
+const serialize = (order: SelectedOrder) => ({ ...order, preparationReadyAt: order.preparationReadyAt?.toISOString() ?? null, createdAt: order.createdAt.toISOString(), updatedAt: order.updatedAt.toISOString() });
 
 export async function getCustomerOrders(prisma: Pick<PrismaClient, "order">, customerId: string, query: OrderHistoryQuery): Promise<CustomerOrderHistory> {
   if (!customerId) throw new Error("Customer session required");

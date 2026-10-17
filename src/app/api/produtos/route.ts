@@ -5,11 +5,13 @@ import { buildProductSearchText } from "@/features/products/public-search";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
 import { lockProductCatalog, ProductMutationError, resolveFeaturedPosition } from "@/features/products/mutations";
+import { gtinVariants, normalizeGtin } from "@/features/supplier-catalog/commerce";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const productSelect = {
+  inventorySource: true,
   wimicoinsEnabled: true,
   wimicoinsRateBps: true,
   shippingProfile: true,
@@ -118,6 +120,8 @@ export async function POST(request: Request) {
   if (parsed.data.shippingProfile !== undefined && guard.session?.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Somente o administrador pode configurar a embalagem de frete." }, { status: 403 });
   }
+  if (parsed.data.inventorySource === "DISTRIBUTOR" && guard.session?.user.role !== "ADMIN") return NextResponse.json({ error: "Somente ADMIN pode cadastrar estoque de distribuidor." }, { status: 403 });
+  if (parsed.data.inventorySource === "DISTRIBUTOR" && !normalizeGtin(parsed.data.ean)) return NextResponse.json({ error: "Produtos de distribuidor exigem EAN válido." }, { status: 422 });
   if (parsed.data.prescriptionType !== undefined && guard.session?.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Somente o administrador pode classificar o tipo de receita." }, { status: 403 });
   }
@@ -154,6 +158,8 @@ export async function POST(request: Request) {
   try {
     const product = await prisma.$transaction(async transaction => {
       await lockProductCatalog(transaction);
+      const canonicalEan = normalizeGtin(parsed.data.ean);
+      if (canonicalEan && await transaction.product.findFirst({ where: { OR: [{ eanNormalized: canonicalEan }, { ean: { in: gtinVariants(parsed.data.ean) } }] }, select: { id: true } })) throw new ProductMutationError("Este EAN já está cadastrado. Edite o produto existente para manter uma única apresentação.", 409);
       if (imageAsset && !await transaction.productImage.findUnique({ where: { id: imageAsset.id }, select: { id: true } })) {
         throw new ProductMutationError("A foto foi removida da biblioteca. Selecione outra foto.", 409);
       }
@@ -165,6 +171,7 @@ export async function POST(request: Request) {
           brand: normalizeOptional(parsed.data.brand),
           category: normalizeOptional(parsed.data.category),
           ean: normalizeOptional(parsed.data.ean),
+          eanNormalized: canonicalEan,
           imageAssetId: imageAsset?.id,
           imageUrl: imageAsset?.url ?? normalizeOptional(parsed.data.imageUrl),
           searchText: buildProductSearchText(parsed.data),

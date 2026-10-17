@@ -4,6 +4,7 @@ import { auth } from "@/features/auth/auth";
 import { sessionCustomerId } from "@/features/auth/customer-session";
 import { settleOrderCashback } from "@/features/cashback/service";
 import { settleOrderBenefits } from "@/features/cashback/redemption";
+import { comparePaymentInventoryItems, validateSupplierPayment } from "@/features/supplier-catalog/inventory";
 import { getPrisma } from "@/lib/prisma";
 import { decryptValue, encryptValue } from "@/lib/secret-vault";
 import { moneyToCents } from "@/features/orders/checkout";
@@ -49,9 +50,16 @@ export async function startPayment(orderId: string, input: PaymentInput) {
     const connection = await tx.paymentIntegration.findUnique({ where: { id: "mercado-pago" } });
     if (!connection || connection.accountId !== current.accountId || connection.environment !== current.environment || (current.environment === "production" && !connection.enabled)) throw new PaymentError("Pagamento online indisponível agora.", 503);
     if (current.environment === "test" && !input.email.endsWith("@testuser.com")) throw new PaymentError("Use o e-mail de um comprador de teste.");
-    for (const item of [...order.items].sort((a, b) => (a.productId ?? "").localeCompare(b.productId ?? ""))) {
+    for (const item of [...order.items].sort(comparePaymentInventoryItems)) {
       if (!item.productId) throw new PaymentError("Um produto não está mais disponível.");
       const product = await tx.product.findUnique({ where: { id: item.productId } });
+      if ((product?.inventorySource ?? "PHARMACY") !== (item.inventorySource ?? "PHARMACY")) throw new PaymentError("A origem do produto mudou. Revise o pedido.", 409);
+      if (item.inventorySource === "DISTRIBUTOR") {
+        if (!product || product.status !== "ACTIVE" || requiresPurchaseAssistance(product)) throw new PaymentError("Produto indisponível para compra.", 409);
+        if (requiresPrescriptionReview(product) && !order.requiresPrescriptionReview) throw new PaymentError("A exigência de receita mudou. Refaça o checkout.");
+        await validateSupplierPayment(tx, item, product);
+        continue;
+      }
       if (!product || product.status !== "ACTIVE" || requiresPurchaseAssistance(product) || product.stock < item.quantity || moneyToCents((product.promotionalPrice ?? product.price).toString()) !== item.unitPriceCents) throw new PaymentError("Preço, disponibilidade ou estoque mudou. Cancele este pedido e atualize o carrinho.");
       if (requiresPrescriptionReview(product) && !order.requiresPrescriptionReview) throw new PaymentError("A exigência de receita mudou. Cancele este pedido e refaça o checkout.");
       if (current.environment === "production") {
@@ -114,7 +122,7 @@ export async function applyProviderOrder(remote: ProviderOrder) {
     if (current.status === "PARTIALLY_REFUNDED" && !["PARTIALLY_REFUNDED", "REFUNDED", "DISPUTED"].includes(next)) return;
     const failed = ["FAILED", "CANCELED"].includes(next);
     if (failed && current.stockReserved) {
-      for (const item of [...current.order.items].sort((a, b) => (a.productId ?? "").localeCompare(b.productId ?? ""))) if (item.productId) await tx.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } });
+      for (const item of [...current.order.items].sort((a, b) => (a.productId ?? "").localeCompare(b.productId ?? ""))) if (item.productId && item.inventorySource !== "DISTRIBUTOR") await tx.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } });
     }
     const terminal = ["PAID", "PARTIALLY_REFUNDED", "REFUNDED", "DISPUTED", "FAILED", "CANCELED"].includes(next);
     await tx.onlinePayment.update({ where: { id: current.id }, data: {

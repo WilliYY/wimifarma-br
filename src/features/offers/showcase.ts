@@ -3,6 +3,7 @@ import { z } from "zod";
 export const SHOWCASE_SLOT_COUNT = 10;
 
 export type PublicShowcaseProduct = {
+  inventorySource?: "PHARMACY" | "DISTRIBUTOR";
   cashbackEnabled?: boolean;
   cashbackRateBps?: number;
   brand: string | null;

@@ -4,6 +4,8 @@ export type OrderHistoryQuery = { page: number; filter: OrderHistoryFilter };
 export const ORDER_HISTORY_PAGE_SIZE = 8;
 
 export type CustomerOrder = {
+  preparationReadyAt?: string | null;
+  preparationDays?: number;
   id: string;
   number: string;
   status: CustomerOrderStatus;

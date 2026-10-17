@@ -13,6 +13,7 @@ import { getPrisma } from "@/lib/prisma";
 import { getPublicCategories } from "@/features/products/storefront";
 import { buildHomeShortcuts } from "@/features/products/home-shortcuts";
 import { siteConfig } from "@/lib/site";
+import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -26,6 +27,7 @@ export default async function Page() {
     prisma.product.findMany({
       orderBy: { featuredPosition: "asc" },
       select: {
+        ...supplierOfferInclude, ean: true, inventorySource: true,
         brand: true,
         category: true,
         description: true,
@@ -52,6 +54,7 @@ export default async function Page() {
         featuredPosition: { gte: 1, lte: SHOWCASE_SLOT_COUNT },
         imageUrl: { not: null },
         status: "ACTIVE",
+        NOT: { inventorySource: "DISTRIBUTOR", requiresPrescription: true },
       },
     }),
     prisma.product.findMany({
@@ -62,6 +65,7 @@ export default async function Page() {
       ],
       select: {
         activeIngredients: true,
+        ...supplierOfferInclude, ean: true, inventorySource: true,
         brand: true,
         category: true,
         id: true,
@@ -110,11 +114,9 @@ export default async function Page() {
     );
 
     return {
-      ...product,
+      ...toSaleProduct(product),
       featuredPosition: product.featuredPosition as number,
       imageUrl: product.imageUrl as string,
-      price: product.price.toString(),
-      promotionalPrice: product.promotionalPrice?.toString() ?? null,
       ratingAverage: rating.average,
       ratingCount: rating.count,
     };
@@ -128,11 +130,7 @@ export default async function Page() {
     rating: review.rating,
     reviewerName: publicReviewerName(review.customer.name),
   })) satisfies HomeReview[];
-  const catalogProducts = catalogProductsData.map((product) => ({
-    ...product,
-    price: product.price.toString(),
-    promotionalPrice: product.promotionalPrice?.toString() ?? null,
-  })) satisfies RelatedProductCardItem[];
+  const catalogProducts = catalogProductsData.map(product => toSaleProduct(product)) satisfies RelatedProductCardItem[];
 
   return (
     <HomePage

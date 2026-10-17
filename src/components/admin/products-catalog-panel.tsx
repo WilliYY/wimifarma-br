@@ -32,6 +32,7 @@ import {
 import { toast } from "sonner";
 import { CashbackProductFields } from "@/components/admin/cashback-product-fields";
 import { WimiCoinsProductFields } from "@/components/admin/wimicoins-product-fields";
+import { SupplierProductOffers } from "@/components/admin/supplier-product-offers";
 import { ProductShippingFields, type ProductShippingFieldsHandle } from "@/components/admin/product-shipping-fields";
 import { ProductMarketingTools } from "@/components/admin/product-marketing-tools";
 import { ProductDeleteButton, ProductTrashDialog } from "@/components/admin/product-trash";
@@ -82,6 +83,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 
 type ProductListItem = {
+  inventorySource?: "PHARMACY" | "DISTRIBUTOR";
   wimicoinsEnabled?: boolean;
   wimicoinsRateBps?: number;
   shippingProfile?: unknown;
@@ -149,6 +151,7 @@ function productPayload(
     clearEmptyFields ? fieldValue(formData, key) || null : optionalField(formData, key);
 
   return {
+    ...(formData.has("inventorySource") ? { inventorySource: fieldValue(formData, "inventorySource") } : {}),
     ...(formData.has("shippingDraft") ? { shippingProfile: JSON.parse(fieldValue(formData, "shippingDraft")) as unknown } : {}),
     ...(formData.has("cashbackPercent") ? {
       cashbackEnabled: formData.get("cashbackEnabled") === "on",
@@ -522,6 +525,8 @@ function ProductFormFields({
         </div>
         <div className="grid min-w-0 gap-5">
           <ProductFormSection id={`${sectionId}-commercial`} number="04" title="Preços, estoque e publicação" description="Defina os valores, o estoque e como o produto aparece na loja.">
+            {canManageCashback && <label className="grid gap-2 text-sm font-semibold text-ink">Origem da venda<select name="inventorySource" defaultValue={product?.inventorySource ?? "PHARMACY"} className="h-11 rounded-md border border-line bg-white px-3"><option value="PHARMACY">Estoque da farmácia</option><option value="DISTRIBUTOR">Produto de distribuidor</option></select><span className="text-xs font-normal leading-5 text-muted">O estoque físico abaixo fica separado. No distribuidor, a venda usa a oferta válida mais barata do mesmo EAN, com acréscimo de 60%.</span></label>}
+            {canManageCashback && product?.inventorySource === "DISTRIBUTOR" && <SupplierProductOffers productId={product.id} ean={product.ean ?? ""} />}
             <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
               <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
                 Preco normal
@@ -534,7 +539,7 @@ function ProductFormFields({
             </div>
             <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
               <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
-                Estoque
+                Estoque físico da farmácia
                 <Input defaultValue={product?.stock ?? 0} min="0" name="stock" required type="number" />
               </label>
               <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
@@ -890,7 +895,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                                 </span>
                               ) : null}
                               <span className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold text-muted">
-                                <span>Estoque: <strong className={product.stock === 0 ? "text-brand" : "text-ink"}>{product.stock}</strong></span>
+                                <span>{product.inventorySource === "DISTRIBUTOR" ? "Distribuidor · estoque próprio: " : "Estoque da farmácia: "}<strong className={product.stock === 0 ? "text-brand" : "text-ink"}>{product.stock}</strong></span>
                                 <span>Preço: <strong className="tabular-nums text-ink">{formatCurrency(Number(product.promotionalPrice ?? product.price))}</strong></span>
                                 {product.promotionalPrice ? <span className="line-through">{formatCurrency(Number(product.price))}</span> : null}
                               </span>

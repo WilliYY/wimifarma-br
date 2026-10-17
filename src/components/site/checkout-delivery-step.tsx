@@ -9,11 +9,15 @@ import { CheckoutShippingOptions } from "./checkout-shipping-options";
 import type { ShippingSelection } from "@/features/shipping/schema";
 import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/features/shipping/delivery-policy";
 import { getPickupEstimate, pickupTimeLabel, pickupWaitLabel, synchronizedPickupTime } from "@/features/orders/pickup-estimate";
+import { useCart } from "./cart-provider";
+import { SupplierPreparationNotice } from "./supplier-preparation-notice";
 
 type Address = CheckoutDraft["address"];
 type Props = { address: Address; fulfillmentMethod: CheckoutDraft["fulfillmentMethod"]; onAddress: Dispatch<SetStateAction<Address>>; onMethod: (method: CheckoutDraft["fulfillmentMethod"]) => void; shippingSelection?: ShippingSelection; onShipping: (option?: ShippingSelection) => void; compact?: boolean; discountCents?: number; carrierShippingAvailable?: boolean };
 
 export function CheckoutDeliveryStep({ address, fulfillmentMethod, onAddress, onMethod, shippingSelection, onShipping, compact = false, discountCents = 0, carrierShippingAvailable = false }: Props) {
+  const { items } = useCart();
+  const supplierOrder = items.some(item => item.inventorySource === "DISTRIBUTOR");
   const [status, setStatus] = useState({ loading: false, message: "", failed: false });
   const [retry, setRetry] = useState(0);
   const code = normalizePostalCode(address.postalCode);
@@ -93,6 +97,7 @@ export function CheckoutDeliveryStep({ address, fulfillmentMethod, onAddress, on
     return <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink"><span>{compact && key === "complement" ? <>Complemento<span className="sr-only"> (opcional)</span></> : label}</span><input autoComplete={autoComplete} className={fieldClass} maxLength={maxLength} name={key} onChange={(event) => onAddress((current) => ({ ...current, [key]: key === "state" ? event.target.value.replace(/[^a-z]/gi, "").toUpperCase() : event.target.value }))} placeholder={placeholder} ref={key === "number" ? numberRef : undefined} required={key !== "complement"} value={address[key]} /></label>;
   }
   return <div className={compact ? "checkout-delivery-compact" : undefined}>
+    {supplierOrder && <div className="mb-4"><SupplierPreparationNotice /></div>}
     {!compact && <><h2 className="text-lg font-black text-ink">Como deseja receber?</h2><p className="mt-2 text-sm leading-6 text-muted">Consulte a entrega pelo CEP ou retire na Wimifarma.</p></>}
     <fieldset className={`${compact ? "mt-0" : "mt-6 sm:grid-cols-2"} grid gap-3`}><legend className="sr-only">Entrega ou retirada</legend>
       {([{ value: "DELIVERY", label: "Receber em casa", detail: "Consulte a cobertura pelo CEP", Icon: MapPin }, { value: "PICKUP", label: "Retirar na farmacia", detail: "Av. Minas Gerais, 2263", Icon: Store }] as const).map(({ value, label, detail, Icon }) => <label className={`relative flex ${compact ? "min-h-20" : "min-h-24"} cursor-pointer items-center gap-3 rounded-xl border p-4 transition focus-within:ring-2 focus-within:ring-brand ${fulfillmentMethod === value ? "border-brand bg-brand-soft" : "border-line hover:border-brand/40 hover:bg-surface-subtle/50"}`} key={value}><input checked={fulfillmentMethod === value} className="sr-only" name="fulfillment" onChange={() => onMethod(value)} type="radio" value={value} /><span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white"><Icon className="h-4 w-4 text-brand" /></span><span className="min-w-0"><strong className="block text-sm text-ink">{label}</strong><span className="mt-1 block text-xs leading-5 text-muted">{detail}</span></span>{fulfillmentMethod === value && <Check className="ml-auto h-4 w-4 shrink-0 text-brand" />}</label>)}
@@ -112,12 +117,12 @@ export function CheckoutDeliveryStep({ address, fulfillmentMethod, onAddress, on
     </> : <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
       <p className="font-bold text-ink">Retirada gratuita na Wimifarma</p>
       <p className="mt-1 text-sm text-muted">Av. Minas Gerais, 2263, Ivate-PR</p>
-      <div className="mt-4 border-t border-emerald-100 pt-4" role="status">
+      {!supplierOrder && <><div className="mt-4 border-t border-emerald-100 pt-4" role="status">
         <p className="flex items-start gap-2 font-bold text-pharma-green"><Clock aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />{pickupEstimate ? pickupEstimate.openNow && pickupEstimate.readyToday ? "Pronto em até 30 minutos" : `Pronto ${pickupEstimate.readyToday ? "hoje" : "amanhã"} até ${pickupTimeLabel(pickupEstimate.readyAt)}` : pickupClockFailed ? "Consulte com a equipe a previsão de retirada" : "Calculando previsão de retirada..."}</p>
         {pickupEstimate && (!pickupEstimate.openNow || !pickupEstimate.readyToday) && <p className="mt-2 text-sm font-semibold text-ink">Previsão de espera: {pickupWaitLabel(pickupEstimate.waitMinutes)}.</p>}
         {pickupClockFailed && <button className="mt-2 inline-flex min-h-9 cursor-pointer items-center gap-1 rounded px-2 text-xs font-bold text-brand focus-visible:ring-2 focus-visible:ring-brand" onClick={() => setPickupRetry(value => value + 1)} type="button"><RotateCw aria-hidden="true" className="h-3 w-3" />Recalcular previsão</button>}
       </div>
-      <p className="mt-2 text-xs leading-5 text-muted">30 minutos de preparo após a confirmação do pedido, contados no horário de atendimento: todos os dias, das 7h30 às 18h30.</p>
+      <p className="mt-2 text-xs leading-5 text-muted">30 minutos de preparo após a confirmação do pedido, contados no horário de atendimento: todos os dias, das 7h30 às 18h30.</p></>}
       <p className="mt-3 flex items-start gap-2 text-xs leading-5 text-pharma-green"><Store aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />Aguarde a equipe confirmar que o pedido está pronto.</p>
     </div>}
     <p className="mt-4 text-xs leading-5 text-muted">Frete grátis a partir de {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(FREE_SHIPPING_THRESHOLD_CENTS / 100)} em produtos após descontos, inclusive para outras cidades com frete disponível.</p>

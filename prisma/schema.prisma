@@ -115,7 +115,70 @@ model User {
   @@index([isActive])
 }
 
+enum InventorySource {
+  PHARMACY
+  DISTRIBUTOR
+}
+
+enum SupplierCode {
+  ANB
+  SANTA_CRUZ
+  PROFARMA
+}
+
+enum SupplierReservationStatus {
+  ACTIVE
+  CONSUMED
+  RELEASED
+}
+
+model SupplierCatalogOffer {
+  id String @id @default(cuid())
+  supplier SupplierCode
+  productId String
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  externalCode String
+  eanNormalized String
+  unitCostCents Int
+  retailCeilingCents Int?
+  available Boolean @default(false)
+  stockQuantity Int?
+  allocationQuantity Int @default(5)
+  reservedQuantity Int @default(0)
+  committedQuantity Int @default(0)
+  observedAt DateTime
+  validUntil DateTime
+  commercialCondition String?
+  sourceUrl String?
+  revision Int @default(1)
+  orderItems OrderItem[]
+  reservations SupplierInventoryReservation[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, supplier])
+  @@index([eanNormalized, available, validUntil])
+}
+
+model SupplierInventoryReservation {
+  id String @id @default(cuid())
+  orderItemId String @unique
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  offerId String
+  offer SupplierCatalogOffer @relation(fields: [offerId], references: [id], onDelete: Restrict)
+  quantity Int
+  unitCostCents Int
+  status SupplierReservationStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([offerId, status])
+}
+
 model Product {
+  inventorySource InventorySource @default(PHARMACY)
+  eanNormalized String? @unique
+  supplierOffers SupplierCatalogOffer[]
   wimicoinsEnabled Boolean @default(false)
   wimicoinsRateBps Int @default(200)
   shippingProfile Json?
@@ -276,6 +339,8 @@ model Customer {
 }
 
 model Order {
+  preparationReadyAt DateTime?
+  preparationDays Int @default(0)
   wimicoinsEarnedPoints Int @default(0)
   wimicoinsState CashbackState @default(NONE)
   wimicoinsRedeemedPoints Int @default(0)
@@ -398,6 +463,11 @@ model PaymentWebhookEvent {
 }
 
 model OrderItem {
+  inventorySource InventorySource @default(PHARMACY)
+  supplierOfferId String?
+  supplierOffer SupplierCatalogOffer? @relation(fields: [supplierOfferId], references: [id], onDelete: SetNull)
+  supplierCode String?
+  supplierReservation SupplierInventoryReservation?
   wimicoinsDiscountPoints Int @default(0)
   wimicoinsRateBps Int @default(0)
   wimicoinsEarnedPoints Int @default(0)

@@ -26,6 +26,8 @@ type FulfillmentMethod = "DELIVERY" | "PICKUP";
 type PaymentMethod = "PIX" | "CARD_ON_DELIVERY" | "CASH" | "ONLINE";
 
 export type AdminOrderRecord = {
+  preparationReadyAt?: string | null;
+  preparationDays?: number;
   onlinePayment?: { environment: string; status: string; statusDetail: string | null; providerOrderId: string | null } | null;
   shippingQuote?: unknown;
   cashbackRedeemedCents?: number;
@@ -59,6 +61,8 @@ export type AdminOrderRecord = {
   createdAt: string;
   updatedAt: string;
   items: Array<{
+    inventorySource?: "PHARMACY" | "DISTRIBUTOR";
+    supplierCode?: string | null;
     id: string;
     orderId: string;
     productId: string | null;
@@ -207,6 +211,7 @@ function OrderCard({ order, onUpdate, updating }: { order: AdminOrderRecord; onU
   return <article className="min-w-0 overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
     <header className="flex flex-col gap-4 border-b border-line p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7"><div className="min-w-0"><div className="flex flex-wrap items-center gap-3"><h2 className="break-all text-lg font-black text-ink sm:text-xl">{order.number}</h2><span className={`rounded-full px-3 py-1.5 text-xs font-bold ${order.status === "PENDING" ? "bg-brand-soft text-brand" : order.status === "COMPLETED" ? "bg-[#e9f9ef] text-pharma-green" : order.status === "CANCELED" ? "bg-slate-100 text-slate-600" : "bg-amber-50 text-amber-700"}`}>{statusLabels[order.status]}</span><span className={`rounded-full px-3 py-1.5 text-xs font-bold ${order.paymentStatus === "PAID" && (!online || online.status === "PAID") ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>{online ? onlineStatusLabels[online.status] ?? online.status : `Pagamento ${paymentStatusLabels[order.paymentStatus].toLowerCase()}`}</span></div><p className="mt-2 text-sm font-medium text-muted">{dateTime.format(new Date(order.createdAt))}</p></div><div className="shrink-0"><p className="text-xs font-semibold text-muted sm:text-right">Total do pedido</p><strong className="text-2xl font-black text-ink">{currency.format(order.totalCents / 100)}</strong></div></header>
     <OrderShippingSummary quote={order.shippingQuote} />
+    {order.preparationReadyAt && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950"><strong>Pedido com itens de distribuidor.</strong> Previsão de preparo: {new Date(order.preparationReadyAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })}. Providencie a compra e conferência antes de liberar a retirada ou o envio.</p>}
     {online?.environment === "test" && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 sm:mx-7">HOMOLOGAÇÃO — não separar nem entregar</p>}
     {online && ["UNKNOWN", "SUBMITTING"].includes(online.status) && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:mx-7">Confirmação pendente. Não cobre novamente nem libere o estoque sem conferir a tentativa no Mercado Pago.</p>}
     {online?.status === "PARTIALLY_REFUNDED" && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:mx-7">Reembolso parcial: conferir valores e benefícios antes de continuar o atendimento.</p>}

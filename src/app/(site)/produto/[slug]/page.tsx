@@ -38,10 +38,12 @@ import {
 } from "@/features/products/public-search";
 import { getPrisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
+import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 
 export const dynamic = "force-dynamic";
 
 const productSelect = {
+  ...supplierOfferInclude, inventorySource: true,
   cashbackEnabled: true,
   cashbackRateBps: true,
   activeIngredients: true,
@@ -65,9 +67,11 @@ const productSelect = {
 
 type ProductRecord = Prisma.ProductGetPayload<{ select: typeof productSelect }>;
 
-function serializeProduct(product: ProductRecord): RelatedProductCardItem {
+function serializeProduct(raw: ProductRecord): RelatedProductCardItem {
+  const product = toSaleProduct(raw);
   return {
     cashbackEnabled: product.cashbackEnabled,
+    inventorySource: product.inventorySource,
     cashbackRateBps: product.cashbackRateBps,
     activeIngredients: product.activeIngredients,
     brand: product.brand,
@@ -104,10 +108,11 @@ function RatingStars({ rating, size = "h-4 w-4" }: { rating: number | null; size
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const product = await getPrisma().product.findFirst({
-    select: { brand: true, description: true, imageUrl: true, name: true },
+    select: { brand: true, description: true, imageUrl: true, name: true, inventorySource: true, requiresPrescription: true },
     where: { slug, status: "ACTIVE" },
   });
   if (!product) return {};
+  if (product.inventorySource === "DISTRIBUTOR" && product.requiresPrescription) product.imageUrl = null;
   const description = buildProductMetaDescription(product);
   const productUrl = `/produto/${encodeURIComponent(slug)}`;
   return {
@@ -133,11 +138,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const prisma = getPrisma();
-  const product = await prisma.product.findFirst({
+  const record = await prisma.product.findFirst({
     select: productSelect,
     where: { slug, status: "ACTIVE" },
   });
-  if (!product) notFound();
+  if (!record) notFound();
+  const product = toSaleProduct(record);
 
   const relationFilters: Prisma.ProductWhereInput[] = [
     ...product.activeIngredients.map((ingredient) => ({ searchText: { contains: normalizeProductSearch(ingredient) } })),
@@ -202,6 +208,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     stock: product.stock,
   });
   const cartProduct = {
+    inventorySource: product.inventorySource,
     category: product.category,
     id: product.id,
     imageUrl: product.imageUrl,

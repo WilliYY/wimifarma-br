@@ -7,8 +7,10 @@ import { normalizeQuotes, shippingFingerprint, signShippingQuote, validateShippi
 import { ShippingError, shippingSettingsSchema, type ShippingSelection } from "./schema";
 import { permittedShippingServices } from "./eligibility";
 import { resolvePostingLocation } from "./posting";
+import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
+import { getSupplierPreparationEstimate } from "@/features/supplier-catalog/preparation";
 
-export const shippingProductSelect = { id: true, name: true, slug: true, imageUrl: true, category: true, price: true, promotionalPrice: true, status: true, stock: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, shippingProfile: true, updatedAt: true } satisfies Prisma.ProductSelect;
+export const shippingProductSelect = { ...supplierOfferInclude, ean: true, inventorySource: true, id: true, name: true, slug: true, imageUrl: true, category: true, price: true, promotionalPrice: true, status: true, stock: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, shippingProfile: true, updatedAt: true } satisfies Prisma.ProductSelect;
 function signingKey() { const key = process.env.AUTH_SECRET; if (!key) throw new ShippingError("O frete está temporariamente indisponível.", 503); return key; }
 
 export async function quoteCart(postalCode: string, items: CheckoutRequest["items"]): Promise<ShippingSelection[]> {
@@ -16,7 +18,7 @@ export async function quoteCart(postalCode: string, items: CheckoutRequest["item
   const { settings } = integration;
   if (!settings.enabled || settings.environment !== "production" || !settings.serviceIds.length) throw new ShippingError("O envio para outras cidades ainda está em preparação. Consulte a farmácia ou escolha retirada.", 503);
   const products = await getPrisma().product.findMany({ where: { id: { in: items.map((i) => i.productId) } }, select: shippingProductSelect });
-  const prepared = prepareCheckoutOrder(products.map((p) => ({ ...p, price: p.price.toString(), promotionalPrice: p.promotionalPrice?.toString() ?? null })), items);
+  const prepared = prepareCheckoutOrder(products.map(p => toSaleProduct(p)), items);
   if (!prepared.ok) throw new ShippingError(prepared.message, 409);
   const serviceIds = permittedShippingServices(settings.serviceIds, products);
   if (!serviceIds.length) throw new ShippingError("Este carrinho precisa de um serviço de transporte autorizado para todos os produtos. Consulte a farmácia.", 422);
@@ -33,7 +35,8 @@ export async function quoteCart(postalCode: string, items: CheckoutRequest["item
   });
   const fingerprint = shippingFingerprint(items, products);
   const expiresAt = Date.now() + 15 * 60 * 1000;
-  return normalizeQuotes(raw, serviceIds, settings.preparationDays).map((option) => ({ ...option, token: signShippingQuote({ ...option, postalCode, fingerprint, expiresAt, revision: integration.revision }, signingKey()) }));
+  const preparationDays = products.some(p => p.inventorySource === "DISTRIBUTOR") ? Math.max(settings.preparationDays, getSupplierPreparationEstimate(new Date()).preparationDays) : settings.preparationDays;
+  return normalizeQuotes(raw, serviceIds, preparationDays).map((option) => ({ ...option, token: signShippingQuote({ ...option, preparationDays, postalCode, fingerprint, expiresAt, revision: integration.revision }, signingKey()) }));
 }
 
 export async function validateOrderShipping(tx: Prisma.TransactionClient, input: CheckoutRequest) {
@@ -47,6 +50,8 @@ export async function validateOrderShipping(tx: Prisma.TransactionClient, input:
   products.forEach(validateShippingProduct);
   if (!permittedShippingServices(settings.serviceIds, products).includes(payload.serviceId)) throw new ShippingError("O serviço de transporte não aceita os itens deste carrinho. Calcule o frete novamente.", 409);
   if (payload.postalCode !== input.address.postalCode || payload.fingerprint !== shippingFingerprint(input.items, products)) throw new ShippingError("O carrinho ou o CEP mudou. Calcule o frete novamente.", 409);
+  const preparationDays = products.some(p => p.inventorySource === "DISTRIBUTOR") ? Math.max(settings.preparationDays, getSupplierPreparationEstimate(new Date()).preparationDays) : settings.preparationDays;
+  if ((payload.preparationDays ?? (products.some(p => p.inventorySource === "DISTRIBUTOR") ? -1 : settings.preparationDays)) < preparationDays) throw new ShippingError("O prazo de preparação mudou. Calcule o frete novamente.", 409);
   // Resolve at checkout from server settings; never accept a client-supplied posting plan.
   // Keep it in the order snapshot so future routing edits cannot rewrite old orders.
   const quote = { ...payload };

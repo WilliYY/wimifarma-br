@@ -13,7 +13,7 @@ test("automatic feed includes future pages even after a full page of ineligible 
   assert.equal((xml.match(/<item>/g) ?? []).length, 1);
   assert.match(xml, /Chocolate &amp; wafer/);
   assert.ok(xml.endsWith("</channel></rss>"));
-  assert.deepEqual(queries.map(query => query.where), [{ status: "ACTIVE", deletedAt: null }, { status: "ACTIVE", deletedAt: null, id: { gt: "0499" } }]);
+  assert.deepEqual(queries.map(query => query.where), [{ status: "ACTIVE", deletedAt: null, inventorySource: "PHARMACY" }, { status: "ACTIVE", deletedAt: null, inventorySource: "PHARMACY", id: { gt: "0499" } }]);
   assert.ok(queries.every(query => query.take === 500));
 });
 

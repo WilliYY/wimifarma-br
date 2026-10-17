@@ -53,6 +53,7 @@ export const shippingSelectionSchema = shippingOptionSchema.extend({ token: z.st
 export type ShippingOption = z.infer<typeof shippingOptionSchema>;
 export type ShippingSelection = z.infer<typeof shippingSelectionSchema>;
 export const shippingQuotePayloadSchema = shippingOptionSchema.extend({
+  preparationDays: z.number().int().min(0).max(15).optional(),
   postalCode: z.string().regex(/^\d{8}$/), fingerprint: z.string().length(64),
   revision: z.number().int(), expiresAt: z.number().int(),
   postingLocation: postingPlanSchema.optional(),

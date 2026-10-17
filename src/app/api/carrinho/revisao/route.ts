@@ -4,6 +4,7 @@ import { cartReviewRequestSchema } from "@/features/products/cart-review";
 import { moneyToCents } from "@/features/orders/checkout";
 import { limitPaymentRequest, paymentHeaders, paymentJson } from "@/features/payments/http";
 import { PaymentError } from "@/features/payments/schema";
+import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -15,13 +16,13 @@ export async function POST(request: Request) {
     if (!parsed.success) throw new PaymentError("Informe até 30 produtos diferentes para revisar o carrinho.", 422);
     const products = await getPrisma().product.findMany({
       where: { id: { in: parsed.data.productIds }, status: "ACTIVE", deletedAt: null },
-      select: { id: true, name: true, slug: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true },
+      select: { ...supplierOfferInclude, ean: true, inventorySource: true, id: true, name: true, slug: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true },
     });
-    return NextResponse.json({ data: { products: products.map(product => ({
+    return NextResponse.json({ data: { products: products.map(p => toSaleProduct(p)).map(product => ({
       id: product.id, name: product.name, slug: product.slug, category: product.category, imageUrl: product.imageUrl,
       unitPriceCents: moneyToCents((product.promotionalPrice ?? product.price).toString()),
       originalPriceCents: product.promotionalPrice ? moneyToCents(product.price.toString()) : null,
-      stock: product.stock, requiresPrescription: product.requiresPrescription,
+      inventorySource: product.inventorySource, stock: product.stock, requiresPrescription: product.requiresPrescription,
       prescriptionType: product.prescriptionType, isPopularPharmacy: product.isPopularPharmacy,
     })) } }, { headers: paymentHeaders });
   } catch (error) {

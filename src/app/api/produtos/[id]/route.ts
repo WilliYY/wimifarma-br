@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { gtinVariants, normalizeGtin } from "@/features/supplier-catalog/commerce";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireAdminApi } from "@/features/auth/permissions";
 import { productUpdateSchema } from "@/features/products/schema";
@@ -16,6 +17,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const productSelect = {
+  inventorySource: true,
   wimicoinsEnabled: true,
   wimicoinsRateBps: true,
   shippingProfile: true,
@@ -126,6 +128,7 @@ export async function PATCH(
 
   const { expectedUpdatedAt } = parsed.data;
   const productData = {
+    inventorySource: parsed.data.inventorySource,
     wimicoinsEnabled: parsed.data.requiresPrescription || parsed.data.isPopularPharmacy ? false : parsed.data.wimicoinsEnabled,
     wimicoinsRateBps: parsed.data.wimicoinsRateBps,
     shippingProfile: parsed.data.shippingProfile,
@@ -153,10 +156,17 @@ export async function PATCH(
   try {
     const product = await prisma.$transaction(async (transaction) => {
       await lockProductCatalog(transaction);
+      await transaction.$queryRaw`SELECT id FROM "Product" WHERE id = ${id} FOR UPDATE`;
       if (imageAsset && !await transaction.productImage.findUnique({ where: { id: imageAsset.id }, select: { id: true } })) throw new ProductMutationError("A foto foi removida da biblioteca. Selecione outra foto.", 409);
-      const current = await transaction.product.findUnique({ where: { id, deletedAt: null }, select: { imageUrl: true, featuredPosition: true, name: true, brand: true, ean: true, shippingProfile: true, requiresPrescription: true, prescriptionType: true } });
+      const current = await transaction.product.findUnique({ where: { id, deletedAt: null }, select: { inventorySource: true, imageUrl: true, featuredPosition: true, name: true, brand: true, ean: true, shippingProfile: true, requiresPrescription: true, prescriptionType: true } });
       if (!current) return null;
+      const canonicalEan = normalizeGtin(parsed.data.ean);
+      if (parsed.data.inventorySource === "DISTRIBUTOR" && !canonicalEan) throw new ProductMutationError("Produtos de distribuidor exigem EAN válido.", 422);
+      if (parsed.data.inventorySource !== undefined && guard.session?.user.role !== "ADMIN") throw new ProductMutationError("Somente ADMIN pode alterar a origem do estoque.", 403);
+      if (parsed.data.inventorySource && parsed.data.inventorySource !== current.inventorySource && await transaction.orderItem.findFirst({ where: { productId: id, order: { status: { notIn: ["COMPLETED", "CANCELED"] } } }, select: { id: true } })) throw new ProductMutationError("Conclua ou cancele os pedidos deste produto antes de mudar a origem do estoque.", 409);
+      if (canonicalEan && await transaction.product.findFirst({ where: { id: { not: id }, OR: [{ eanNormalized: canonicalEan }, { ean: { in: gtinVariants(parsed.data.ean) } }] }, select: { id: true } })) throw new ProductMutationError("Este EAN já pertence a outro cadastro. Revise os produtos antes de alterar.", 409);
       const identityChanged = productIdentityKey({ name: current.name, brand: current.brand ?? "", ean: current.ean ?? "" }) !== productIdentityKey({ name: productData.name, brand: productData.brand ?? "", ean: productData.ean ?? "" });
+      if (current.inventorySource === "DISTRIBUTOR" && identityChanged && await transaction.orderItem.findFirst({ where: { productId: id, order: { status: { notIn: ["COMPLETED", "CANCELED"] } } }, select: { id: true } })) throw new ProductMutationError("Há pedidos em aberto. Preserve EAN, apresentação e fabricante até concluir ou cancelar esses pedidos.", 409);
       const prescriptionType = resolvePrescriptionType(current.prescriptionType, parsed.data.prescriptionType, identityChanged);
       if (current.requiresPrescription && !productData.requiresPrescription && guard.session?.user.role !== "ADMIN") throw new ProductMutationError("Somente o administrador pode retirar a exigência de receita.", 403);
       if (!prescriptionClassificationIsConsistent({ requiresPrescription: productData.requiresPrescription, prescriptionType })) throw new ProductMutationError("Atualize o tipo de receita antes de retirar a exigência de receita.", 422);
@@ -172,6 +182,7 @@ export async function PATCH(
           category: normalizeOptional(productData.category) ?? null,
           description: normalizeOptional(productData.description) ?? null,
           ean: normalizeOptional(productData.ean) ?? null,
+          eanNormalized: canonicalEan,
           featuredPosition,
           imageAssetId: imageAsset
             ? imageAsset.id
