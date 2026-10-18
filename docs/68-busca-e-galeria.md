@@ -22,6 +22,8 @@ Os títulos visíveis das apresentações simples de losartana conferidas usam n
 
 Aplicado em cards/correlatos, autocomplete, lateral da busca, detalhe, dock, vitrine, carrinho e checkout. Regressões verificam marca, dose, 30/60 comprimidos e preservação de nomes fora do formato. Validação: 709 testes gerais e 324 de segurança, lint, typecheck, Prisma e build passaram; auditoria de produção sem vulnerabilidades. Os cinco alertas high de desenvolvimento anteriormente documentados permanecem, sem mudança de dependências.
 
+Publicado `71b134e`, com reconstrução somente da aplicação e imagem anterior preservada. Hashes completos de produtos e ofertas e contagem de pedidos permaneceram iguais. Conferência real validou três títulos H1, descrição técnica, nomes integrais da API, busca e health; Chrome confirmou os onze títulos e ausência de transbordamento em 1920 e 390 px. Viewport temporário restaurado. Nenhum cadastro, preço, foto, estoque ou pedido foi alterado por esta etapa.
+
 Composição editorial comercial, com identidade vermelha da Wimifarma, tipografia e tokens existentes. Título com termo pesquisado, respiro entre seções, navegação por âncoras e lateral compacta em desktop; no celular a lateral vem após os resultados. Sem animações adicionais. DFII de referência: impacto 4 + adequação 4 + viabilidade 4 + desempenho 4 − risco de consistência 3 = 13.
 
 ## Fotos
