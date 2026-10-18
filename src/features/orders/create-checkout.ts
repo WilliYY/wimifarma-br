@@ -123,7 +123,7 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   } });
   if (hasSupplierItems) {
     const supplierItems = await tx.orderItem.findMany({ where: { orderId: order.id, inventorySource: "DISTRIBUTOR" }, orderBy: [{ supplierOfferId: "asc" }, { id: "asc" }] });
-    for (const item of supplierItems) await reserveSupplierInventory(tx, item);
+    for (const item of supplierItems) await reserveSupplierInventory(tx, item, products.find(product => product.id === item.productId));
   }
   if (selected) await tx.auditLog.create({ data: { action: "PAYMENT_ROUTE_SELECTED", entity: "Order", entityId: order.id,
     metadata: { ...selected.route, integrationRevision: selected.integration.revision, method: onlineMethod, amountCents: totalCents } } });

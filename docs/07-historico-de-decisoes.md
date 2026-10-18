@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-18 - Organização do catálogo e preço rápido
+
+- Classificação administrativa separa tipo, classe do medicamento, segmento ético e MIP/OTC; não altera a política de receita. Sete EANs genéricos e três similares do piloto conferidos na fonte oficial.
+- Acréscimo por produto de distribuidor, padrão 60%, compartilhado por catálogo, frete, checkout, reservas, pagamento e rotina. Ajustes exclusivos ADMIN, auditados e protegidos por versão/locks; percentual bloqueado com pedidos em aberto. Custos/percentuais não aparecem no DTO público ou de MANAGER.
+- Pesquisa comprova rotas Profarma API/FTP/EDI e SantaCruz ERP por arquivos, com habilitação comercial ainda pendente; ANB sem contrato público localizado. Nenhum conector ativado. Contrato, fontes e limites em [69](69-catalogo-classificacao-e-integracoes.md).
+
 ## 2026-10-18 - Títulos compactos de losartana
 
 - Nome visível mais curto, mantendo marca/referência, dose e quantidade. Sal e revestimento permanecem na descrição e no cadastro técnico.

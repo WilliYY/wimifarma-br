@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Catálogo administrativo com filtros de classificação, ajuste rápido de preços e percentual por distribuidor: [docs/69-catalogo-classificacao-e-integracoes.md](docs/69-catalogo-classificacao-e-integracoes.md). Inclui pesquisa oficial de API/EDI/arquivos Profarma, SantaCruz e ANB; conexões automáticas ainda dependem de habilitação.
+
 Busca por nome, marca e dose com página de resultados, associações identificadas e galeria de até seis fotos: [docs/68-busca-e-galeria.md](docs/68-busca-e-galeria.md).
 
 Planejamento comercial ADMIN em `/admin/fornecedores`: comparação manual por EAN de ANB, SantaCruz, Profarma e GAM e simulação de contribuição, Pix e frete. Esse simulador não altera preços ou estoques; contrato em [docs/66-fornecedores-e-viabilidade.md](docs/66-fornecedores-e-viabilidade.md). O piloto persistente usa somente ANB e Profarma, com origem de distribuidor, acréscimo de 60%, preparação e estoque físico separado. Fotos Rx internas ficam protegidas e leves; a rotina Codex às 8h, 12h e 17h depende do computador e navegador conectados. Regras em [docs/67-catalogo-distribuidores-piloto.md](docs/67-catalogo-distribuidores-piloto.md) e operação/limites em [docs/68-rotina-piloto-fornecedores.md](docs/68-rotina-piloto-fornecedores.md). Não há conector de portais independente na VPS.

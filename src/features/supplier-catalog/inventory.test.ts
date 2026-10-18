@@ -45,6 +45,17 @@ test("pagamento exige a mesma oferta válida e o preço fotografado",async()=>{
   f.offer.unitCostCents=1100;await assert.rejects(validateSupplierPayment(f.tx,f.item));
   f.offer.unitCostCents=1000;f.offer.validUntil=new Date(0);await assert.rejects(validateSupplierPayment(f.tx,f.item));
 });
+
+test("reserva e pagamento usam markup configurado e rejeitam mudança posterior", async () => {
+  const f = fixture();
+  const item = { ...f.item, unitPriceCents: 1400 };
+  const product = { eanNormalized: f.offer.eanNormalized, supplierMarkupBps: 4000 };
+  await reserveSupplierInventory(f.tx, item, product);
+  await validateSupplierPayment(f.tx, item, product);
+  await assert.rejects(validateSupplierPayment(f.tx, item, { ...product, supplierMarkupBps: 6000 }), /Preço|condição/);
+  assert.equal(f.records[0].unitCostCents, 1000);
+  assert.equal(item.unitPriceCents, 1400);
+});
 test("cancelamento libera uma vez; pagamento consome e estorno não inventa reposição",async()=>{
   const f=fixture();await reserveSupplierInventory(f.tx,f.item);
   await settleSupplierOrder(f.tx,"order-test","CANCELED","CANCELED");await settleSupplierOrder(f.tx,"order-test","CANCELED","CANCELED");

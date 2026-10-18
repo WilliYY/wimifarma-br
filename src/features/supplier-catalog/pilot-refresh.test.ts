@@ -28,6 +28,10 @@ test("out-of-stock update disables an existing supplier without inventing a repl
   assert.equal(plan.best, null);
   assert.equal(plan.updates[0].available, false);
 });
+
+test("rotina preserva percentual escolhido pelo ADMIN", () => {
+  assert.equal(planPilotRefresh(ean, [input()], [], now, 4000).best?.unitPriceCents, 420);
+});
 test("expired, future, older or changed-identity observations fail closed", () => {
   assert.throws(() => planPilotRefresh(ean, [input()], [], now + 86_400_000), /current/);
   assert.throws(() => planPilotRefresh(ean, [input()], [], now - 7_200_000), /performed/);

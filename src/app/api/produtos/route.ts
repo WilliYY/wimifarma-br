@@ -5,13 +5,16 @@ import { buildProductSearchText } from "@/features/products/public-search";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
 import { lockProductCatalog, ProductMutationError, resolveProductGallery, resolveFeaturedPosition } from "@/features/products/mutations";
-import { gtinVariants, normalizeGtin } from "@/features/supplier-catalog/commerce";
+import { gtinVariants, normalizeGtin, resolveSupplierOffer } from "@/features/supplier-catalog/commerce";
+import { classificationIsConsistent } from "@/features/products/catalog-operations";
 import { privateSupplierImageAllowed } from "@/features/product-images/private-supplier-policy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const productSelect = {
+  catalogClassification: true,
+  supplierMarkupBps: true,
   inventorySource: true,
   wimicoinsEnabled: true,
   wimicoinsRateBps: true,
@@ -78,9 +81,11 @@ async function uniqueSlug(baseSlug: string) {
   return candidate;
 }
 
-function serializeProduct(product: Awaited<ReturnType<typeof getProducts>>[number]) {
+function serializeProduct(product: Omit<Awaited<ReturnType<typeof getProducts>>[number], "supplierOffers">, admin = false) {
+  const { supplierMarkupBps, ...safe } = product;
   return {
-    ...product,
+    ...safe,
+    ...(admin ? { supplierMarkupBps } : {}),
     createdAt: product.createdAt.toISOString(),
     price: product.price.toString(),
     promotionalPrice: product.promotionalPrice?.toString() ?? null,
@@ -94,7 +99,7 @@ async function getProducts() {
   return prisma.product.findMany({
     where: { deletedAt: null },
     orderBy: { createdAt: "desc" },
-    select: productSelect,
+    select: { ...productSelect, supplierOffers: true },
     take: 100,
   });
 }
@@ -103,9 +108,15 @@ export async function GET() {
   const guard = await requireAdminApi();
   if (guard.response) return guard.response;
 
+  const admin = guard.session?.user.role === "ADMIN";
   const products = await getProducts();
 
-  return NextResponse.json({ data: products.map(serializeProduct) });
+  return NextResponse.json({ data: products.map(product => {
+    const { supplierOffers: _offers, ...safe } = product;
+    void _offers;
+    const best = product.inventorySource === "DISTRIBUTOR" ? resolveSupplierOffer(product) : null;
+    return { ...serializeProduct(safe, admin), ...(best ? { price: (best.unitPriceCents / 100).toFixed(2) } : {}), supplierPricing: best ? { supplier: best.supplier, ...(admin ? { unitCostCents: best.unitCostCents } : {}), unitPriceCents: best.unitPriceCents, purchaseLimit: best.purchaseLimit, validUntil: new Date(best.validUntil).toISOString() } : null };
+  }) }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
 export async function POST(request: Request) {
@@ -118,6 +129,8 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 });
   }
+  if ((parsed.data.catalogClassification !== undefined || parsed.data.supplierMarkupBps !== undefined) && guard.session?.user.role !== "ADMIN") return NextResponse.json({ error: "Somente ADMIN pode configurar classificação e acréscimo." }, { status: 403 });
+  if (parsed.data.catalogClassification && !classificationIsConsistent(parsed.data.catalogClassification, parsed.data)) return NextResponse.json({ error: "Classificação incompatível com o cadastro de receita." }, { status: 422 });
 
   if (parsed.data.shippingProfile !== undefined && guard.session?.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Somente o administrador pode configurar a embalagem de frete." }, { status: 403 });
@@ -202,6 +215,8 @@ export async function POST(request: Request) {
             hasImage: Boolean(product.imageUrl),
             featuredPosition: product.featuredPosition,
             name: product.name,
+            catalogClassification: product.catalogClassification,
+            supplierMarkupBps: product.supplierMarkupBps,
             prescriptionAfter: { requiresPrescription: product.requiresPrescription, type: product.prescriptionType },
             slug: product.slug,
             status: product.status,
@@ -212,7 +227,7 @@ export async function POST(request: Request) {
       return product;
     });
 
-    return NextResponse.json({ data: serializeProduct(product) }, { status: 201 });
+    return NextResponse.json({ data: serializeProduct(product, guard.session?.user.role === "ADMIN") }, { status: 201 });
   } catch (error) {
     if (error instanceof ProductMutationError) return NextResponse.json({ error: error.message }, { status: error.status });
     if (typeof error === "object" && error && "code" in error && error.code === "P2002") return NextResponse.json({ error: "Ja existe um produto com este SKU ou endereco. Confira o cadastro e tente novamente." }, { status: 409 });

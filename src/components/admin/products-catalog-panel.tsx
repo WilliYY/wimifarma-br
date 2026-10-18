@@ -33,6 +33,9 @@ import { toast } from "sonner";
 import { CashbackProductFields } from "@/components/admin/cashback-product-fields";
 import { WimiCoinsProductFields } from "@/components/admin/wimicoins-product-fields";
 import { SupplierProductOffers } from "@/components/admin/supplier-product-offers";
+import { ProductQuickControls } from "@/components/admin/product-quick-controls";
+import { catalogKindLabels, classificationLabels, medicineClassLabels, readClassification } from "@/features/products/catalog-operations";
+import { productDisplayName } from "@/features/products/display-name";
 import { ProductShippingFields, type ProductShippingFieldsHandle } from "@/components/admin/product-shipping-fields";
 import { ProductMarketingTools } from "@/components/admin/product-marketing-tools";
 import { ProductDeleteButton, ProductTrashDialog } from "@/components/admin/product-trash";
@@ -78,11 +81,14 @@ import type {
 import { parseProductTerms } from "@/features/products/public-search";
 import { isValidGtin, productIdentityKey } from "@/features/products/identity";
 import { buildProductMetaDescription } from "@/features/products/product-detail";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 
 type ProductListItem = {
+  catalogClassification?: unknown;
+  supplierMarkupBps?: number;
+  supplierPricing?: { supplier: string; unitCostCents: number; unitPriceCents: number; purchaseLimit: number; validUntil: string } | null;
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
   wimicoinsEnabled?: boolean;
   wimicoinsRateBps?: number;
@@ -152,6 +158,7 @@ function productPayload(
     clearEmptyFields ? fieldValue(formData, key) || null : optionalField(formData, key);
 
   return {
+    ...(formData.has("supplierMarkupPercent") ? { supplierMarkupBps: Math.round(Number(fieldValue(formData, "supplierMarkupPercent")) * 100) } : {}),
     ...(formData.has("inventorySource") ? { inventorySource: fieldValue(formData, "inventorySource") } : {}),
     ...(formData.has("shippingDraft") ? { shippingProfile: JSON.parse(fieldValue(formData, "shippingDraft")) as unknown } : {}),
     ...(formData.has("cashbackPercent") ? {
@@ -528,12 +535,13 @@ function ProductFormFields({
         </div>
         <div className="grid min-w-0 gap-5">
           <ProductFormSection id={`${sectionId}-commercial`} number="04" title="Preços, estoque e publicação" description="Defina os valores, o estoque e como o produto aparece na loja.">
-            {canManageCashback && <label className="grid gap-2 text-sm font-semibold text-ink">Origem da venda<select name="inventorySource" value={inventorySource} onChange={event => setInventorySource(event.target.value as "PHARMACY" | "DISTRIBUTOR")} className="h-11 rounded-md border border-line bg-white px-3"><option value="PHARMACY">Estoque da farmácia</option><option value="DISTRIBUTOR">Produto de distribuidor</option></select><span className="text-xs font-normal leading-5 text-muted">O estoque físico abaixo fica separado. No distribuidor, a venda usa a oferta válida mais barata do mesmo EAN, com acréscimo de 60%.</span></label>}
+            {canManageCashback && <label className="grid gap-2 text-sm font-semibold text-ink">Origem da venda<select name="inventorySource" value={inventorySource} onChange={event => setInventorySource(event.target.value as "PHARMACY" | "DISTRIBUTOR")} className="h-11 rounded-md border border-line bg-white px-3"><option value="PHARMACY">Estoque da farmácia</option><option value="DISTRIBUTOR">Produto de distribuidor</option></select><span className="text-xs font-normal leading-5 text-muted">O estoque físico fica separado. No distribuidor, a venda usa a oferta válida mais barata do mesmo EAN.</span></label>}
+            {canManageCashback && inventorySource === "DISTRIBUTOR" && <label className="grid gap-2 text-sm font-bold">Acréscimo sobre o custo (%)<Input defaultValue={(product?.supplierMarkupBps ?? 6000) / 100} min="0" max="100" step="0.01" type="number" name="supplierMarkupPercent" required /><span className="text-xs font-normal leading-5 text-muted">Aplicado automaticamente ao custo válido. Não representa margem líquida.</span></label>}
             {canManageCashback && product?.inventorySource === "DISTRIBUTOR" && <SupplierProductOffers productId={product.id} ean={product.ean ?? ""} />}
             <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
               <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
-                Preco normal
-                <Input defaultValue={product?.price} min="0.01" name="price" placeholder="0,00" required step="0.01" type="number" />
+                {inventorySource === "DISTRIBUTOR" ? "Preço atual (automático)" : "Preço normal"}
+                <Input defaultValue={product?.price} min="0.01" name="price" placeholder="0,00" readOnly={inventorySource === "DISTRIBUTOR"} required step="0.01" type="number" />
               </label>
               <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
                 Preco promocional
@@ -588,6 +596,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | ProductStatus>("ALL");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [classificationFilter, setClassificationFilter] = useState("");
   const [sort, setSort] = useState<ProductCatalogSort>("newest");
 
   async function loadProducts() {
@@ -690,19 +699,27 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
   const activeProducts = products.filter((product) => product.status === "ACTIVE").length;
   const categoryOptions = useMemo(() => getProductCategories(products), [products]);
   const visibleProducts = useMemo(
-    () => filterAndSortProducts(products, {
+    () => filterAndSortProducts(products.filter(product => {
+      if (!classificationFilter) return true;
+      const item = readClassification(product.catalogClassification);
+      if (classificationFilter === "ETHICAL") return item.kind === "MEDICINE" && item.ethical;
+      if (classificationFilter === "OTC") return item.kind === "MEDICINE" && item.otc;
+      if (classificationFilter.startsWith("CLASS:")) return item.kind === "MEDICINE" && item.medicineClass === classificationFilter.slice(6);
+      return item.kind === classificationFilter;
+    }), {
       category: categoryFilter,
       query,
       sort,
       status: statusFilter,
     }),
-    [categoryFilter, products, query, sort, statusFilter],
+    [categoryFilter, classificationFilter, products, query, sort, statusFilter],
   );
-  const hasActiveFilters = Boolean(query || categoryFilter || statusFilter !== "ALL" || sort !== "newest");
+  const hasActiveFilters = Boolean(query || categoryFilter || classificationFilter || statusFilter !== "ALL" || sort !== "newest");
 
   function clearFilters() {
     setQuery("");
     setCategoryFilter("");
+    setClassificationFilter("");
     setStatusFilter("ALL");
     setSort("newest");
   }
@@ -817,6 +834,9 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
               <div className="flex min-h-56 items-center justify-center rounded-md border border-dashed border-line px-5 text-center text-sm font-semibold text-muted">Nenhum produto cadastrado ainda.</div>
             ) : (
               <div className="grid gap-5">
+                <div className="flex flex-wrap gap-2" aria-label="Tipos de produto">
+                  {[["", "Todos"], ["MEDICINE", "Medicamentos"], ["CLASS:GENERIC", "Genéricos"], ["CLASS:SIMILAR", "Similares"], ["CLASS:REFERENCE", "Referência"], ["ETHICAL", "Éticos"], ["OTC", "MIP / OTC"], ["PERFUMERY", "Perfumaria"], ["UNCLASSIFIED", "A classificar"]].map(([value, label]) => <button key={value} type="button" aria-pressed={classificationFilter === value} onClick={() => setClassificationFilter(value)} className={cn("min-h-10 rounded-full border px-4 text-xs font-bold transition-colors", classificationFilter === value ? "border-brand bg-brand text-white" : "border-line bg-white text-muted hover:border-brand/30 hover:text-brand")}>{label}</button>)}
+                </div>
                 <div className="grid gap-3 rounded-xl bg-surface-subtle p-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
                   <label className="grid gap-1.5 text-xs font-bold text-muted">
                     Buscar produto
@@ -825,7 +845,8 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                       <Input className="bg-white pl-9" onChange={(event) => setQuery(event.target.value)} placeholder="Nome, marca, SKU ou EAN" value={query} />
                     </span>
                   </label>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <label className="grid gap-1.5 text-xs font-bold text-muted">Tipo<select className="h-11 min-w-0 rounded-md border border-line bg-white px-3 text-sm text-ink" value={classificationFilter} onChange={event => setClassificationFilter(event.target.value)}><option value="">Todos os tipos</option>{Object.entries(catalogKindLabels).map(([key,label]) => <option key={key} value={key}>{label}</option>)}{Object.entries(medicineClassLabels).filter(([key]) => key !== "UNCLASSIFIED").map(([key,label]) => <option key={key} value={`CLASS:${key}`}>{label}</option>)}<option value="ETHICAL">Ético</option><option value="OTC">MIP / OTC</option></select></label>
                     <label className="grid gap-1.5 text-xs font-bold text-muted">
                       Categoria
                       <select className="h-11 min-w-0 rounded-md border border-line bg-white px-3 text-sm text-ink shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15" onChange={(event) => setCategoryFilter(event.target.value)} value={categoryFilter}>
@@ -871,7 +892,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                       const status = statusInfo[product.status];
                       const isFeatured = isShowcasePosition(product.featuredPosition);
                       return (
-                        <article className="flex flex-col gap-3 rounded-xl border border-line bg-white p-3 lg:flex-row lg:items-center" key={product.id}>
+                        <article className="grid min-w-0 gap-3 rounded-xl border border-line bg-white p-4 lg:grid-cols-[minmax(0,1fr)_16rem]" key={product.id}>
                           <button
                             aria-label={`Editar ${product.name}`}
                             className="flex min-w-0 flex-1 cursor-pointer items-start gap-3 rounded-lg p-1 text-left transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 focus-visible:ring-offset-2 sm:items-center"
@@ -885,7 +906,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                             )}
                             <span className="min-w-0 flex-1">
                               <span className="flex flex-wrap items-center gap-2">
-                                <span className="break-words font-black leading-5 text-ink">{product.name}</span>
+                                <span className="break-words font-black leading-5 text-ink">{productDisplayName(product.name)}</span>
                                 <span className={cn("rounded-md px-2.5 py-1 text-xs font-bold", status.className)}>{status.label}</span>
                                 {isFeatured ? (
                                   <Badge>Vitrine {String(product.featuredPosition).padStart(2, "0")}</Badge>
@@ -893,6 +914,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                                 {product.isPopularPharmacy ? <Badge variant="muted">Farmacia Popular</Badge> : null}
                               </span>
                               <span className="mt-1 block text-sm font-semibold text-muted">{[product.brand, product.category].filter(Boolean).join(" - ") || "Sem categoria"}</span>
+                              <span className="mt-2 flex flex-wrap gap-1.5">{classificationLabels(product.catalogClassification).map(label => <span key={label} className="rounded-md border border-line bg-surface-subtle px-2 py-1 text-[11px] font-bold text-muted">{label}</span>)}</span>
                               {product.activeIngredients.length > 0 ? (
                                 <span className="mt-1 block line-clamp-1 text-xs font-semibold text-muted">
                                   Principios ativos: {product.activeIngredients.join(", ")}
@@ -900,12 +922,11 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                               ) : null}
                               <span className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold text-muted">
                                 <span>{product.inventorySource === "DISTRIBUTOR" ? "Distribuidor · estoque próprio: " : "Estoque da farmácia: "}<strong className={product.stock === 0 ? "text-brand" : "text-ink"}>{product.stock}</strong></span>
-                                <span>Preço: <strong className="tabular-nums text-ink">{formatCurrency(Number(product.promotionalPrice ?? product.price))}</strong></span>
-                                {product.promotionalPrice ? <span className="line-through">{formatCurrency(Number(product.price))}</span> : null}
                               </span>
                             </span>
                           </button>
-                          <div aria-label={`Ações de ${product.name}`} className="grid w-full grid-cols-2 gap-2 lg:w-72 lg:shrink-0 [&>button]:h-auto [&>button]:min-h-11 [&>button]:whitespace-normal [&>button]:px-2 [&>button]:text-xs" role="group">
+                          <ProductQuickControls product={product} canEdit={canManageCashback} onSaved={loadProducts} />
+                          <div aria-label={`Ações de ${product.name}`} className="grid w-full grid-cols-2 gap-2 border-t border-line pt-3 sm:grid-cols-4 lg:col-span-2 [&>button]:h-auto [&>button]:min-h-10 [&>button]:whitespace-normal [&>button]:px-2 [&>button]:text-xs" role="group">
                             <ProductMarketingTools product={product} />
                             <Button
                               aria-label={isFeatured ? `Remover ${product.name} dos destaques` : `Destacar ${product.name}`}

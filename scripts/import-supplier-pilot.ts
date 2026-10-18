@@ -58,7 +58,7 @@ async function main() {
         if (current && (current.name !== row.name || current.brand !== row.brand || !current.requiresPrescription || current.prescriptionType !== "ORDINARY")) throw new Error(`Identity mismatch for ${row.ean}; manual review required.`);
         if (current) await tx.$queryRaw`SELECT id FROM "SupplierCatalogOffer" WHERE "productId" = ${current.id} ORDER BY id FOR UPDATE`;
         const previous = current ? await tx.supplierCatalogOffer.findMany({ where: { productId: current.id } }) : [];
-        const { best, updates } = planPilotRefresh(eanNormalized, parsedOffers, previous);
+        const { best, updates } = planPilotRefresh(eanNormalized, parsedOffers, previous, Date.now(), current?.supplierMarkupBps ?? 6000);
         if (!current && !best) throw new Error(`No current, permitted offer for ${row.ean}.`);
         const summary = { ean: row.ean, name: row.name, slug: current?.slug ?? row.slug, priceCents: best?.unitPriceCents ?? null,
           available: Boolean(best), action: current ? "UPDATE_OFFERS" : "CREATE", publicPhoto: false, internalPhoto: images.has(eanNormalized) };

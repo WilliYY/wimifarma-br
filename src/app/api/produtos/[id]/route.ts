@@ -13,11 +13,15 @@ import { moveProductToTrash } from "@/features/products/trash-service";
 import { productIdentityKey } from "@/features/products/identity";
 import { invalidateShippingProfile } from "@/features/shipping/product-draft";
 import { privateSupplierImageAllowed } from "@/features/product-images/private-supplier-policy";
+import { classificationIsConsistent, emptyClassification, readClassification } from "@/features/products/catalog-operations";
+import { validateSupplierMarkupChange } from "@/features/products/catalog-operations-service";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const productSelect = {
+  catalogClassification: true,
+  supplierMarkupBps: true,
   inventorySource: true,
   wimicoinsEnabled: true,
   wimicoinsRateBps: true,
@@ -60,9 +64,11 @@ function normalizeOptional(value?: string | null) {
   return normalized || undefined;
 }
 
-function serializeProduct(product: ProductRecord) {
+function serializeProduct(product: ProductRecord, admin = false) {
+  const { supplierMarkupBps, ...safe } = product;
   return {
-    ...product,
+    ...safe,
+    ...(admin ? { supplierMarkupBps } : {}),
     createdAt: product.createdAt.toISOString(),
     price: product.price.toString(),
     promotionalPrice: product.promotionalPrice?.toString() ?? null,
@@ -93,6 +99,7 @@ export async function PATCH(
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 });
   }
+  if ((parsed.data.catalogClassification !== undefined || parsed.data.supplierMarkupBps !== undefined) && guard.session?.user.role !== "ADMIN") return NextResponse.json({ error: "Somente ADMIN pode configurar classificação e acréscimo." }, { status: 403 });
 
   if (parsed.data.shippingProfile !== undefined && guard.session?.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Somente o administrador pode configurar a embalagem de frete." }, { status: 403 });
@@ -130,6 +137,7 @@ export async function PATCH(
 
   const { expectedUpdatedAt } = parsed.data;
   const productData = {
+    supplierMarkupBps: parsed.data.supplierMarkupBps,
     inventorySource: parsed.data.inventorySource,
     wimicoinsEnabled: parsed.data.requiresPrescription || parsed.data.isPopularPharmacy ? false : parsed.data.wimicoinsEnabled,
     wimicoinsRateBps: parsed.data.wimicoinsRateBps,
@@ -160,7 +168,7 @@ export async function PATCH(
       await lockProductCatalog(transaction);
       await transaction.$queryRaw`SELECT id FROM "Product" WHERE id = ${id} FOR UPDATE`;
       if (imageAsset && !await transaction.productImage.findUnique({ where: { id: imageAsset.id }, select: { id: true } })) throw new ProductMutationError("A foto foi removida da biblioteca. Selecione outra foto.", 409);
-      const current = await transaction.product.findUnique({ where: { id, deletedAt: null }, select: { inventorySource: true, imageUrl: true, imageUrls: true, featuredPosition: true, name: true, brand: true, ean: true, shippingProfile: true, requiresPrescription: true, prescriptionType: true } });
+      const current = await transaction.product.findUnique({ where: { id, deletedAt: null }, include: { supplierOffers: true } });
       if (!current) return null;
       const canonicalEan = normalizeGtin(parsed.data.ean);
       if ((parsed.data.inventorySource ?? current.inventorySource) === "DISTRIBUTOR" && !canonicalEan) throw new ProductMutationError("Produtos de distribuidor exigem EAN válido.", 422);
@@ -170,6 +178,9 @@ export async function PATCH(
       const identityChanged = productIdentityKey({ name: current.name, brand: current.brand ?? "", ean: current.ean ?? "" }) !== productIdentityKey({ name: productData.name, brand: productData.brand ?? "", ean: productData.ean ?? "" });
       if (current.inventorySource === "DISTRIBUTOR" && identityChanged && await transaction.orderItem.findFirst({ where: { productId: id, order: { status: { notIn: ["COMPLETED", "CANCELED"] } } }, select: { id: true } })) throw new ProductMutationError("Há pedidos em aberto. Preserve EAN, apresentação e fabricante até concluir ou cancelar esses pedidos.", 409);
       const prescriptionType = resolvePrescriptionType(current.prescriptionType, parsed.data.prescriptionType, identityChanged);
+      const catalogClassification = identityChanged ? emptyClassification : readClassification(parsed.data.catalogClassification ?? current.catalogClassification);
+      if (!classificationIsConsistent(catalogClassification, { ...productData, prescriptionType })) throw new ProductMutationError("Classificação incompatível com o cadastro de receita. Revise a classificação antes de salvar.");
+      await validateSupplierMarkupChange(transaction, current, parsed.data.supplierMarkupBps);
       if (current.requiresPrescription && !productData.requiresPrescription && guard.session?.user.role !== "ADMIN") throw new ProductMutationError("Somente o administrador pode retirar a exigência de receita.", 403);
       if (!prescriptionClassificationIsConsistent({ requiresPrescription: productData.requiresPrescription, prescriptionType })) throw new ProductMutationError("Atualize o tipo de receita antes de retirar a exigência de receita.", 422);
       const shippingProfile = productData.shippingProfile ?? (identityChanged ? invalidateShippingProfile(current.shippingProfile) : undefined);
@@ -182,6 +193,7 @@ export async function PATCH(
       const updated = await transaction.product.updateMany({
         data: {
           ...productData,
+          catalogClassification,
           prescriptionType,
           shippingProfile,
           brand: normalizeOptional(productData.brand) ?? null,
@@ -229,6 +241,10 @@ export async function PATCH(
             hasImage: Boolean(savedProduct.imageUrl),
             featuredPosition: savedProduct.featuredPosition,
             name: savedProduct.name,
+            classificationBefore: current.catalogClassification,
+            classificationAfter: savedProduct.catalogClassification,
+            supplierMarkupBefore: current.supplierMarkupBps,
+            supplierMarkupAfter: savedProduct.supplierMarkupBps,
             prescriptionBefore: { requiresPrescription: current.requiresPrescription, type: current.prescriptionType },
             prescriptionAfter: { requiresPrescription: savedProduct.requiresPrescription, type: savedProduct.prescriptionType },
             status: savedProduct.status,
@@ -256,7 +272,7 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json({ data: serializeProduct(product) });
+    return NextResponse.json({ data: serializeProduct(product, guard.session?.user.role === "ADMIN") });
   } catch (error) {
     if (error instanceof ProductMutationError) return NextResponse.json({ error: error.message }, { status: error.status });
     if (isUniqueConstraintError(error)) {

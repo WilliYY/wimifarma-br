@@ -1,7 +1,7 @@
 import { publicProductImageUrl, publicProductImageUrls } from "@/features/product-images/private-supplier-policy";
 import { priceWithMarkup } from "@/features/supplier-planning/planning";
 
-export const supplierOfferInclude = { supplierOffers: true } as const;
+export const supplierOfferInclude = { supplierOffers: true, supplierMarkupBps: true } as const;
 
 export type SupplierCommerceOffer = {
   id: string;
@@ -19,6 +19,7 @@ export type SupplierCommerceOffer = {
 };
 
 export type CommerceProduct = {
+  supplierMarkupBps?: number;
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
   ean?: string | null;
   eanNormalized?: string | null;
@@ -49,8 +50,10 @@ export function gtinVariants(raw: unknown): string[] {
   return [8, 12, 13, 14].filter(size => /^0*$/.test(canonical.slice(0, 14 - size))).map(size => canonical.slice(-size));
 }
 
-export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "eanNormalized" | "supplierOffers" | "requiresPrescription">, quantity = 1, now = Date.now()) {
+export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "eanNormalized" | "supplierOffers" | "requiresPrescription" | "supplierMarkupBps">, quantity = 1, now = Date.now()) {
   if (!Number.isSafeInteger(quantity) || quantity < 1 || !Number.isFinite(now)) return null;
+  const markup = product.supplierMarkupBps ?? 6000;
+  if (!Number.isSafeInteger(markup) || markup < 0 || markup > 10000) return null;
   const ean = normalizeGtin(product.eanNormalized ?? product.ean);
   if (!ean) return null;
   return (product.supplierOffers ?? []).flatMap(offer => {
@@ -62,7 +65,7 @@ export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "ean
       validUntil <= observedAt || validUntil - observedAt > 86_400_000 ||
       [offer.allocationQuantity, offer.reservedQuantity, offer.committedQuantity].some(value => !Number.isSafeInteger(value) || value < 0) ||
       (offer.stockQuantity !== null && (!Number.isSafeInteger(offer.stockQuantity) || offer.stockQuantity < 0))) return [];
-    const unitPriceCents = priceWithMarkup(offer.unitCostCents, 6000);
+    const unitPriceCents = priceWithMarkup(offer.unitCostCents, markup);
     if (product.requiresPrescription && (!Number.isSafeInteger(offer.retailCeilingCents) || offer.retailCeilingCents! < 1)) return [];
     if (offer.retailCeilingCents != null && (!Number.isSafeInteger(offer.retailCeilingCents) || unitPriceCents > offer.retailCeilingCents)) return [];
     const purchaseLimit = Math.max(0, Math.min(offer.allocationQuantity, offer.stockQuantity ?? offer.allocationQuantity) - offer.reservedQuantity - offer.committedQuantity);
@@ -71,12 +74,12 @@ export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "ean
   }).sort((a, b) => a.unitCostCents - b.unitCostCents || a.supplier.localeCompare(b.supplier) || a.id.localeCompare(b.id))[0] ?? null;
 }
 
-export function withCommerceAvailability<T extends CommerceProduct>(product: T, now = Date.now()): Omit<T, "supplierOffers" | "price" | "promotionalPrice" | "inventorySource" | "imageUrl" | "imageUrls" | "imageAsset"> & {
+export function withCommerceAvailability<T extends CommerceProduct>(product: T, now = Date.now()): Omit<T, "supplierMarkupBps" | "supplierOffers" | "price" | "promotionalPrice" | "inventorySource" | "imageUrl" | "imageUrls" | "imageAsset"> & {
   inventorySource: "PHARMACY" | "DISTRIBUTOR"; price: string; promotionalPrice: string | null;
   purchaseLimit: number; availableForPurchase: boolean; imageUrl: string | null; imageUrls: string[]; imageAsset?: unknown;
 } {
-  const { supplierOffers: _privateOffers, price: _price, promotionalPrice: _promo, inventorySource: _source, imageUrl: _image, imageUrls: _images, imageAsset: _asset, ...safe } = product;
-  void [_privateOffers, _price, _promo, _source, _image, _images, _asset];
+  const { supplierMarkupBps: _markup, supplierOffers: _privateOffers, price: _price, promotionalPrice: _promo, inventorySource: _source, imageUrl: _image, imageUrls: _images, imageAsset: _asset, ...safe } = product;
+  void [_markup, _privateOffers, _price, _promo, _source, _image, _images, _asset];
   const inventorySource = product.inventorySource ?? "PHARMACY";
   const imageUrl = publicProductImageUrl(product);
   if (inventorySource === "PHARMACY") return {

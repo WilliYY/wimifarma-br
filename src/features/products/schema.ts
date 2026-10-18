@@ -2,8 +2,11 @@ import { z } from "zod";
 import { cashbackRateSchema } from "@/features/cashback/rules";
 import { shippingDraftSchema } from "@/features/shipping/product-draft";
 import { prescriptionClassificationIsConsistent, prescriptionTypes } from "./purchase-policy";
+import { catalogClassificationSchema, supplierMarkupSchema } from "./catalog-operations";
 
 const productFieldsSchema = z.object({
+  catalogClassification: catalogClassificationSchema.optional(),
+  supplierMarkupBps: supplierMarkupSchema.optional(),
   inventorySource: z.enum(["PHARMACY", "DISTRIBUTOR"]).optional(),
   shippingProfile: shippingDraftSchema.optional(),
   featured: z.boolean().optional(),

@@ -176,6 +176,8 @@ model SupplierInventoryReservation {
 }
 
 model Product {
+  catalogClassification Json?
+  supplierMarkupBps Int @default(6000)
   inventorySource InventorySource @default(PHARMACY)
   eanNormalized String? @unique
   supplierOffers SupplierCatalogOffer[]
