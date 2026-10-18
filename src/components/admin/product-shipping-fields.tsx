@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { shippingDraftSchema, type ShippingDraft } from "@/features/shipping/product-draft";
 import { shippingProfileSchema } from "@/features/shipping/schema";
 import type { ShippingReference } from "@/features/shipping/product-reference";
+import { estimateBaseShipping } from "@/features/shipping/base-estimate";
 
 const fields = [["weightGrams", "Peso embalado (g)"], ["lengthCm", "Comprimento (cm)"], ["widthCm", "Largura (cm)"], ["heightCm", "Altura (cm)"]] as const;
 type Measures = Record<typeof fields[number][0], string>;
@@ -18,7 +19,8 @@ export type ProductShippingFieldsHandle = { applySuggestion: (reference: Shippin
 export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
   initialProfile?: unknown; identityKey: string; suggestion?: ShippingReference | null; researched: boolean;
   canEdit: boolean; medicine: boolean; integrated?: boolean;
-}>(function ProductShippingFields({ initialProfile, identityKey, suggestion, researched, canEdit, medicine, integrated = false }, ref) {
+  productIdentity?: Parameters<typeof estimateBaseShipping>[0];
+}>(function ProductShippingFields({ initialProfile, identityKey, suggestion, researched, canEdit, medicine, integrated = false, productIdentity }, ref) {
   const parsed = shippingProfileSchema.or(shippingDraftSchema).safeParse(initialProfile);
   const initial = parsed.success ? parsed.data : null;
   const [draft, setDraft] = useState(() => ({
@@ -30,6 +32,8 @@ export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
   if (draft.identityKey !== identityKey) setDraft({ ...draft, identityKey, reference: null, values: Object.fromEntries(fields.map(([key]) => [key, draft.copiedKeys.includes(key) ? "" : draft.values[key]])) as Measures, copiedKeys: [] });
   const reference = suggestion ?? (researched ? null : draft.reference);
   const hasValues = Boolean(reference && fields.some(([key]) => suggestedValue(reference, key) != null));
+  const baseEstimate = productIdentity ? estimateBaseShipping(productIdentity) : null;
+  const hasEmptyMeasure = fields.some(([key]) => !draft.values[key].trim());
   const payload: ShippingDraft = {
     ...(initial?.approvedServiceIds !== undefined ? { approvedServiceIds: initial.approvedServiceIds } : {}),
     enabled: false, transportReviewed: false,
@@ -49,6 +53,14 @@ export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
     return copiedKeys.length;
   }
   useImperativeHandle(ref, () => ({ applySuggestion: copyReference }));
+  function applyBaseEstimate() {
+    if (!canEdit || !baseEstimate) return;
+    const copiedKeys = fields.filter(([key]) => !draft.values[key].trim()).map(([key]) => key);
+    if (!copiedKeys.length) return;
+    setDraft({ ...draft, dirty: true, reference: null, measurementBasis: "estimated",
+      copiedKeys: [...new Set([...draft.copiedKeys, ...copiedKeys])],
+      values: Object.fromEntries(fields.map(([key]) => [key, draft.values[key] || String(baseEstimate.draft[key])])) as Measures });
+  }
   return <section aria-label="Peso e medidas para frete" className={`min-w-0 overflow-hidden bg-white ${integrated ? "" : "rounded-xl border border-line"}`}>
     <div className={`flex flex-wrap items-start justify-between gap-3 ${integrated ? "px-4 pt-4 sm:px-6 sm:pt-6" : "bg-surface-subtle p-4"}`}>
       <div className="flex min-w-0 gap-3"><span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-xs font-black text-brand">{integrated ? "03" : <Package className="h-5 w-5" />}</span><div><h3 className="text-base font-black">Peso e medidas para frete</h3><p className="mt-1 text-xs leading-5 text-muted">Mesma pesquisa, com fontes e estimativas identificadas para conferência.</p></div></div>
@@ -79,6 +91,10 @@ export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
       </div>}
       {!reference && <p className="rounded-lg border border-dashed border-line p-3 text-xs leading-5 text-muted">{researched ? "A pesquisa não encontrou referência ou comparação utilizável. Confira a apresentação/EAN ou preencha as medidas reais abaixo." : "Informe nome, marca, versão e quantidade ou o EAN. A pesquisa procura a ficha exata e, se necessário, uma embalagem semelhante com dados comprovados."}</p>}
       {canEdit ? <>
+        {baseEstimate && <div className="grid gap-2 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-bold text-amber-950">Base estimada · {number.format(baseEstimate.draft.weightGrams!)} g com embalagem</span><button className="rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-bold text-amber-950 disabled:opacity-50" disabled={!hasEmptyMeasure} onClick={applyBaseEstimate} type="button">Preencher campos vazios</button></div>
+          <p className="text-xs leading-5 text-amber-950">{baseEstimate.explanation}</p>
+        </div>}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{fields.map(([key, label]) => <label className="grid min-w-0 gap-2 text-xs font-semibold" key={key}>{label}<Input aria-label={label} className="min-w-0" inputMode="decimal" min={key === "weightGrams" ? 1 : 0.01} max={key === "weightGrams" ? 30000 : 200} step={key === "weightGrams" ? 1 : "any"} placeholder="Não informado" type="number" value={draft.values[key]} onChange={event => setDraft({ ...draft, dirty: true, copiedKeys: draft.copiedKeys.filter(copied => copied !== key), values: { ...draft.values, [key]: event.target.value } })} />{draft.reference?.[key] == null && draft.reference?.estimate?.[key] && Number(draft.values[key]) === draft.reference.estimate[key].max && <span className="text-[10px] font-bold text-amber-800">Limite superior estimado</span>}</label>)}</div>
         {draft.dirty && <input name="shippingDraft" type="hidden" value={JSON.stringify(payload)} />}
         <p className="text-xs leading-5 text-muted">{draft.dirty ? "Ao salvar, estas medidas ficarão como rascunho e o frete deste produto precisará de nova revisão." : initial?.enabled ? "Este produto já possui embalagem liberada. Alterar medidas exige nova revisão." : "Salvar medidas não libera o frete automaticamente."} Confira o volume final em <Link className="font-bold text-brand underline" href="/admin/fretes" target="_blank" rel="noreferrer">Fretes e entregas</Link>.</p>

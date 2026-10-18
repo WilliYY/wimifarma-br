@@ -2,7 +2,8 @@
 
 ## Piloto de fornecedores — 18/10/2026
 
-- Atualização e fotos internas protegidas em validação conforme [68](68-rotina-piloto-fornecedores.md). Apenas ANB/Profarma são fontes comerciais; GAM/SantaCruz são referências. Rotina Codex às 8h/12h/17h criada, dependente de PC/navegador; falta integração independente na VPS por fonte autorizada.
+- Dez apresentações publicadas e cinco fotos internas protegidas verificadas em produção conforme [68](68-rotina-piloto-fornecedores.md). Apenas ANB/Profarma são fontes comerciais; GAM/SantaCruz são referências. Rotina Codex às 8h/12h/17h criada, dependente de PC/navegador; falta integração independente na VPS por fonte autorizada.
+- Titular autorizou base estimada para envio sem balança; regras limitadas por família e rascunhos logísticos em implementação, sem aprovação automática da transportadora. Confirmar aceitação da carga e documentos fiscais antes de liberar envio de medicamentos; cotação não comprova aceitação. Cotações diagnósticas de peso/volume já foram realizadas sem compra de etiqueta.
 - Não renovar cotas consumidas automaticamente. Confirmar autorização de uso comercial e versão gráfica atual das fotos; Biosintética/Nova Química não carregaram imagem e placeholders ANB foram recusados. Conferir EAN do Teuto físico antes de vinculá-lo, sem duplicar ou mudar seu estoque.
 - Acesso GAM e catálogo SantaCruz ainda não foram comprovados nesta consulta. O navegador local ficou desabilitado no Work antes da tentativa com a credencial atualizada. Não contornar esse bloqueio.
 

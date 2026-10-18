@@ -523,7 +523,7 @@ function ProductFormFields({
               {!seo.name && <p className="text-xs leading-5 text-muted">Informe o nome do produto para visualizar a prévia de busca.</p>}
             </div>
           </ProductFormSection>
-          <div id={`${sectionId}-shipping`} className="min-w-0 scroll-mt-4"><ProductShippingFields integrated ref={shippingFieldsRef} initialProfile={product?.shippingProfile} identityKey={productIdentityKey(photoIdentity)} suggestion={suggestion?.shipping} researched={Boolean(suggestion)} canEdit={canManageShipping} medicine={typeHint === "medicine"} /></div>
+          <div id={`${sectionId}-shipping`} className="min-w-0 scroll-mt-4"><ProductShippingFields integrated ref={shippingFieldsRef} initialProfile={product?.shippingProfile} identityKey={productIdentityKey(photoIdentity)} suggestion={suggestion?.shipping} researched={Boolean(suggestion)} canEdit={canManageShipping} medicine={typeHint === "medicine"} productIdentity={{ name: photoIdentity.name, category: categoryHint, requiresPrescription: product?.requiresPrescription ?? typeHint === "medicine", prescriptionType: product?.prescriptionType, isPopularPharmacy: product?.isPopularPharmacy ?? false }} /></div>
         </div>
         <div className="grid min-w-0 gap-5">
           <ProductFormSection id={`${sectionId}-commercial`} number="04" title="Preços, estoque e publicação" description="Defina os valores, o estoque e como o produto aparece na loja.">

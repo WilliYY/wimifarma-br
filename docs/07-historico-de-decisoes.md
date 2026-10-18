@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-18 - Base operacional estimada para logística
+
+- O titular informou não possuir balança/medidas e autorizou uma base calculada. Implementada estimativa limitada por família/apresentação, com folga de embalagem, marcação `estimated` e bloqueio de casos perigosos/ambíguos. Dosagem não é peso.
+- Cadastro preenche somente vazios e mantém o transporte desabilitado até revisão. CLI restrita às dez losartanas grava rascunhos ausentes com ADMIN ativo, lock/releitura e auditoria, sem tocar estoque/preço/cotas.
+- Cotações diagnósticas reais confirmaram variação por peso. Restrições oficiais de medicamento impedem tratar cálculo como aceitação da carga. Regras, bases, limites e valores observados em [68](68-rotina-piloto-fornecedores.md).
+
 ## 2026-10-18 - Atualizar o piloto e proteger fotos de medicamentos
 
 - Decisão: manter somente ANB e Profarma como fontes comerciais; GAM/SantaCruz são referências de identificação e fotos. GAM entra no simulador manual, sem nova migração ou oferta persistente. A API e o importador recusam fontes fora do piloto autorizado.
