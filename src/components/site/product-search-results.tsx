@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ImageIcon, Loader2, Pill, SearchX, Sparkles } from "lucide-react";
+import { ArrowRight, Loader2, Pill, SearchX, Sparkles } from "lucide-react";
+import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import { productSearchHref, type PublicProductSearchItem } from "@/features/products/public-search";
 import { cn, formatCurrency } from "@/lib/utils";
 
@@ -62,7 +63,7 @@ function ResultItem({
             width={56}
           />
         ) : (
-          <ImageIcon className="h-5 w-5 text-muted" />
+          <ProductImagePlaceholder category={item.category} requiresPrescription={item.requiresPrescription} className="h-full w-full p-1" />
         )}
       </span>
 

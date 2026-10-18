@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-18 - Ilustração de medicamento sem foto
+
+- Arte institucional fornecida pelo titular, com fundo transparente e sem quantidade, usada somente no fallback visual de medicamentos. Correção do titular preserva os outros textos e elementos da arte original.
+- Componente compartilhado e classificação visual por categoria/flags existentes; fotos reais, dados de catálogo, classificação de receita e privacidade Rx preservados. Não preencher `imageUrl` de produtos com uma ilustração.
+- Busca, vitrine, detalhe e fluxos de compra reaproveitam a mesma arte leve, conforme `68-busca-e-galeria.md`.
+
 ## 2026-10-18 - Resultados de busca e galeria de produtos
 
 - Enter passa a abrir uma página paginada com nome, marca, dose e componentes relacionados. Associações ficam identificadas; doses decimais e identidades completas impedem correlações indevidas. A lateral usa vendas concluídas/pagas reais ou assume o título de relevantes.

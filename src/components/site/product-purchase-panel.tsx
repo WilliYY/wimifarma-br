@@ -13,6 +13,7 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import { useCart, type CartProduct } from "@/components/site/cart-provider";
+import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import { formatCurrency } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { requiresPrescriptionReview, requiresPurchaseAssistance } from "@/features/products/purchase-policy";
@@ -197,7 +198,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
                     src={product.imageUrl}
                   />
                 </span>
-              ) : null}
+              ) : <ProductImagePlaceholder name={product.name} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-14 w-14 shrink-0 p-1" showLabel={false} />}
               <div className="min-w-0">
                 <span className="block text-xs font-bold uppercase text-muted">
                   {product.category ?? "Produto"}

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ImageIcon } from "lucide-react";
+import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import { ProductCardActions } from "@/components/site/product-card-actions";
 import { ProductShippingBadge } from "@/components/site/product-shipping-badge";
 import { ProductCashback } from "@/components/site/product-cashback";
@@ -55,7 +55,7 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
             width={240}
           />
         ) : (
-          <ImageIcon className="h-7 w-7 text-muted" />
+          <ProductImagePlaceholder category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" showLabel />
         )}
         {hasPromotion ? (
           <span className="absolute left-3 top-3 rounded-sm bg-brand-soft px-2 py-1 text-[0.68rem] font-black text-brand">

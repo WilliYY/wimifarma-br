@@ -85,7 +85,6 @@ export default async function Page() {
       take: 10,
       where: {
         category: { contains: "medic", mode: "insensitive" },
-        imageUrl: { not: null },
         status: "ACTIVE",
       },
     }),

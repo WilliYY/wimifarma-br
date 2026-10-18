@@ -26,6 +26,18 @@ O servidor deduplica e confere extras na biblioteca sob a trava do catálogo. Um
 
 Fotos de distribuidores Rx continuam privadas conforme `67-catalogo-distribuidores-piloto.md`. Extras não aceitam URLs privadas e os DTOs públicos removem todos os arrays Rx; HTML e metadados não os expõem. Fotos adicionais só aparecem quando cadastradas e permitidas para publicação.
 
+### Ilustração institucional para medicamentos sem foto
+
+Em 18/10/2026 o titular forneceu arte de caixa Wimifarma e pediu fundo transparente e remoção da indicação `30 comprimidos`. Após correção expressa, os demais elementos foram preservados: logo completa, G/Genérico, texto de receita, instruções laterais e cores. Foi usado o editor de imagens integrado; o resultado escolhido foi convertido para WebP de 640 × 533 px, com alpha, em `public/brand/medicamento-sem-foto.webp`. Prompt final: preservar a arte original, retirar somente a linha de quantidade e extrair a caixa com transparência. A apresentação SVG recorta a silhueta para impedir halos periféricos, sem redesenhar a logo.
+
+`ProductImagePlaceholder` e `image-placeholder.ts` centralizam o fallback exclusivamente visual. Categoria de medicamento, genérico, ético ou Farmácia Popular e flags administrativas já existentes identificam quando usar a caixa. Perfumaria, higiene, suplementos e classificação ausente mantêm o ícone neutro. Cards e detalhe identificam a arte como `Imagem ilustrativa`; os textos do desenho não substituem a classificação, embalagem ou conservação do item vendido. Informações do produto continuam no cadastro/descrição.
+
+Aplicado na lista, correlatos, autocomplete, lateral da busca, detalhe, carrinho, checkout, dock de compra, avaliações da conta e sugestões da Miauby. Fotos reais continuam prioritárias; se todas as fotos da galeria falharem, o detalhe usa a ilustração. A seção de medicamentos da home aceita cadastros sem foto; regras de destaque e separação de imagens privadas permanecem.
+
+A ilustração não é gravada em `Product.imageUrl` nem vira foto de produto em metadados, feed ou pedidos. Imagens Rx reais continuam privadas. Não altera compras, saldos, cotas, estoques ou classificação de receita.
+
+Validação da ilustração: 699 testes gerais, 324 de segurança, lint, typecheck, Prisma e build passaram; revisão independente sem achado pendente. WebP com alpha validado, 35.132 bytes. Auditoria de dependências de produção sem vulnerabilidades; os cinco alertas de desenvolvimento já documentados permanecem fora desta alteração visual.
+
 ## Verificação e operação
 
 - Regressões: consulta com dose/marca/decimal, URL de Enter, identidade de componentes, parametrização/paginação, ranking lateral e privacidade; CRUD/galeria/exclusão e proteções comerciais existentes.

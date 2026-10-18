@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
+import { isMedicineImagePlaceholder, type ProductImageIdentity } from "@/features/products/image-placeholder";
 import { productGalleryImages } from "@/features/products/gallery";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Expand, ImageIcon, Minus, Plus, RotateCcw } from "lucide-react";
@@ -13,7 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-export function ProductImageViewer({ imageUrl, imageUrls = [], name }: { imageUrl: string | null; imageUrls?: string[]; name: string }) {
+export function ProductImageViewer({ imageUrl, imageUrls = [], name, ...identity }: { imageUrl: string | null; imageUrls?: string[]; name: string } & ProductImageIdentity) {
   const [zoom, setZoom] = useState(1);
   const [failedUrls, setFailedUrls] = useState<string[]>([]);
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
@@ -40,8 +42,8 @@ export function ProductImageViewer({ imageUrl, imageUrls = [], name }: { imageUr
   if (!currentImage) {
     return (
       <div className="flex aspect-square max-h-[32rem] flex-col items-center justify-center gap-4 rounded-3xl border border-line bg-white text-muted">
-        <ImageIcon className="h-16 w-16" aria-hidden="true" />
-        <span className="text-sm font-semibold">Imagem indisponível</span>
+        <ProductImagePlaceholder {...identity} className="h-64 w-full max-w-xs sm:h-80" showLabel />
+        {!isMedicineImagePlaceholder(identity) ? <span className="text-sm font-semibold">Imagem indisponível</span> : null}
       </div>
     );
   }

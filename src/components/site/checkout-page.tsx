@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState, type SetStateAction } from "react";
 import { ArrowLeft, ArrowRight, Banknote, Check, CreditCard, Loader2, LockKeyhole, PackageCheck, QrCode, ShoppingBag, Truck, UserRound } from "lucide-react";
 import { useCart } from "./cart-provider";
+import { ProductImagePlaceholder } from "./product-image-placeholder";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { useCheckoutSession } from "@/hooks/use-checkout-session";
 import { checkoutStepError, type CheckoutDraft } from "@/features/orders/checkout-draft";
@@ -170,7 +171,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
           <summary className="cursor-pointer text-sm font-bold text-ink focus-visible:outline-2 focus-visible:outline-brand">Sua cesta · {itemCount} {itemCount === 1 ? "item" : "itens"}</summary>
           <div className="mt-4 grid gap-4">{items.map(item => <div className="flex min-w-0 items-center gap-3" key={item.id}>
             <div className="relative grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-line bg-white p-1.5">
-              {item.imageUrl ? <Image src={item.imageUrl} alt={item.name} width={56} height={56} sizes="56px" className="h-full w-full object-contain" /> : <ShoppingBag className="h-5 w-5 text-muted" />}
+              {item.imageUrl ? <Image src={item.imageUrl} alt={item.name} width={56} height={56} sizes="56px" className="h-full w-full object-contain" /> : <ProductImagePlaceholder name={item.name} category={item.category} requiresPrescription={item.requiresPrescription} isPopularPharmacy={item.isPopularPharmacy} className="h-full w-full" showLabel={false} />}
               <span className="absolute -right-1.5 -top-1.5 grid min-h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-[10px] font-bold text-white" aria-label={`${item.quantity} unidades`}>{item.quantity}</span>
             </div>
             <div className="min-w-0 flex-1"><p className="text-xs font-medium leading-5 text-ink">{item.name}</p><strong className="mt-1 block text-sm font-black text-ink">{money(item.unitPriceCents * item.quantity)}</strong></div>

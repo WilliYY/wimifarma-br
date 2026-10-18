@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -265,7 +266,7 @@ export function FloatingWhatsApp() {
                                 width={72}
                               />
                             ) : (
-                              <Bot className="h-5 w-5 text-muted" />
+                              <ProductImagePlaceholder category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" />
                             )}
                           </span>
                           <span className="min-w-0 flex-1">
