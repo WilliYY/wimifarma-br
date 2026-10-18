@@ -37,7 +37,7 @@ ENV PORT=3000
 RUN groupadd --system --gid 1001 nodejs && \
   useradd --system --uid 1001 --gid nodejs nextjs
 
-COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 RUN mkdir -p /app/public/uploads/products /app/var/private-supplier-images && \

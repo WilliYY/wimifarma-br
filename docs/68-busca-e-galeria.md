@@ -38,6 +38,8 @@ A ilustração não é gravada em `Product.imageUrl` nem vira foto de produto em
 
 Validação da ilustração: 699 testes gerais, 324 de segurança, lint, typecheck, Prisma e build passaram; revisão independente sem achado pendente. WebP com alpha validado, 35.132 bytes. Auditoria de dependências de produção sem vulnerabilidades; os cinco alertas de desenvolvimento já documentados permanecem fora desta alteração visual.
 
+A conferência por GET real detectou que o arquivo novo, criado com modo `600`, havia sido copiado para o runner como root: HEAD retornava 200, mas a leitura da imagem pelo usuário `nextjs` falhava com 400. Ajustado `COPY public` para `--chown=nextjs:nodejs`, mantendo a aplicação sem root; a correção imediata limitou-se ao proprietário desse arquivo. A validação deve ler os bytes como usuário da aplicação e fazer GET, não confiar somente em HEAD.
+
 ## Verificação e operação
 
 - Regressões: consulta com dose/marca/decimal, URL de Enter, identidade de componentes, parametrização/paginação, ranking lateral e privacidade; CRUD/galeria/exclusão e proteções comerciais existentes.
