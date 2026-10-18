@@ -40,6 +40,8 @@ Validação da ilustração: 699 testes gerais, 324 de segurança, lint, typeche
 
 A conferência por GET real detectou que o arquivo novo, criado com modo `600`, havia sido copiado para o runner como root: HEAD retornava 200, mas a leitura da imagem pelo usuário `nextjs` falhava com 400. Ajustado `COPY public` para `--chown=nextjs:nodejs`, mantendo a aplicação sem root; a correção imediata limitou-se ao proprietário desse arquivo. A validação deve ler os bytes como usuário da aplicação e fazer GET, não confiar somente em HEAD.
 
+Publicada a ilustração em `701e8b4` e reconstruído o runner com a correção permanente de proprietário em `b98530f`. No container novo, o UID 1001 leu os 35.132 bytes; GET público da arte e de sete imagens referenciadas respondeu 200. Dez rotas principais responderam 200, incluindo carrinho, checkout e health; seis resultados da API de busca passaram também pela revisão de preço/estoque do carrinho. Conferência visual no Chrome confirmou a ilustração no produto Medley, preservou a foto real do Teuto e não encontrou transbordamento horizontal no celular de 390 px. Hashes dos produtos e ofertas e contagem de pedidos permaneceram iguais antes e depois do deploy. Esta etapa não aplicou migração, criou pedido nem realizou cobrança.
+
 ## Verificação e operação
 
 - Regressões: consulta com dose/marca/decimal, URL de Enter, identidade de componentes, parametrização/paginação, ranking lateral e privacidade; CRUD/galeria/exclusão e proteções comerciais existentes.
