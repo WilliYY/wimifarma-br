@@ -100,6 +100,7 @@ type ProductListItem = {
   imageAssetId: string | null;
   imageAsset?: { width: number; height: number; originalName: string } | null;
   imageUrl: string | null;
+  imageUrls?: string[];
   isPopularPharmacy: boolean;
   name: string;
   price: string;
@@ -566,7 +567,7 @@ function ProductFormFields({
             {canManageShipping ? <input name="prescriptionType" type="hidden" value={product && productIdentityKey({ name: product.name, brand: product.brand ?? "", ean: product.ean ?? "" }) === productIdentityKey(photoIdentity) ? product.prescriptionType ?? "UNREVIEWED" : "UNREVIEWED"} /> : null}
           </ProductFormSection>
           <ProductFormSection className="[&_button]:h-auto [&_button]:min-h-11 [&_button]:whitespace-normal [&_button]:py-2.5" id={`${sectionId}-photos`} number="05" title="Fotos do produto" description="Envie uma foto, use a biblioteca e confira o resultado antes de salvar.">
-            <ProductImagePicker identity={photoIdentity} initialImageAssetId={product?.imageAssetId} initialImageUrl={product?.imageUrl} key={`${product?.id ?? "new"}-${privateSupplierPhoto}`} privateSupplier={privateSupplierPhoto} ref={imagePickerRef} />
+            <ProductImagePicker identity={photoIdentity} initialImageAssetId={product?.imageAssetId} initialImageUrl={product?.imageUrl} initialImageUrls={product?.imageUrls} key={`${product?.id ?? "new"}-${privateSupplierPhoto}`} privateSupplier={privateSupplierPhoto} ref={imagePickerRef} />
           </ProductFormSection>
         </div>
       </div>
@@ -624,7 +625,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
       if (!imageAsset) throw new Error("Selecione a imagem do produto.");
 
       const response = await fetch("/api/produtos", {
-        body: JSON.stringify(productPayload(formData, imageAsset)),
+        body: JSON.stringify({ ...productPayload(formData, imageAsset), imageUrls: imagePickerRef.current?.resolveImageUrls() ?? [] }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
       });
@@ -659,6 +660,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
       const response = await fetch(`/api/produtos/${editingProduct.id}`, {
         body: JSON.stringify({
           ...productPayload(formData, imageAsset, true),
+          imageUrls: editImagePickerRef.current?.resolveImageUrls() ?? [],
           expectedUpdatedAt: editingProduct.updatedAt,
         }),
         headers: { "Content-Type": "application/json" },

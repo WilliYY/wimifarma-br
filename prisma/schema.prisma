@@ -198,6 +198,7 @@ model Product {
   price                Decimal       @db.Decimal(10, 2)
   promotionalPrice     Decimal?      @db.Decimal(10, 2)
   imageUrl             String?
+  imageUrls            String[] @default([])
   imageAssetId         String?
   imageAsset           ProductImage? @relation(fields: [imageAssetId], references: [id], onDelete: SetNull)
   isPopularPharmacy    Boolean       @default(false)

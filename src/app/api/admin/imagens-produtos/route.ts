@@ -26,11 +26,16 @@ export async function GET() {
     take: 100,
   });
 
+  const galleryProducts = await getPrisma().product.findMany({
+    where: { imageUrls: { hasSome: images.map(image => image.url) } },
+    select: { imageUrls: true, imageAssetId: true },
+  });
+
   return NextResponse.json({
     data: images.map(({ _count, createdAt, ...image }) => ({
       ...image,
       createdAt: createdAt.toISOString(),
-      usageCount: _count.products,
+      usageCount: _count.products + galleryProducts.filter(product => product.imageAssetId !== image.id && product.imageUrls.includes(image.url)).length,
     })),
     meta: { backgroundRemovalAvailable: isBackgroundRemovalAvailable() },
   });

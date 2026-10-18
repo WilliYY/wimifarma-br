@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 import { ProductImageEditor } from "@/components/admin/product-image-editor";
 import { ProductPhotoSuggestions, type PhotoSource } from "@/components/admin/product-photo-suggestions";
+import { MAX_PRODUCT_IMAGES, productGalleryImages } from "@/features/products/gallery";
 import type { PhotoIdentity } from "@/features/product-images/suggestion-types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ export type ProductImage = {
 export type ProductImagePickerHandle = {
   refresh: () => Promise<void>;
   reset: () => void;
+  resolveImageUrls: () => string[];
   resolveImage: (options?: { optional?: boolean }) => Promise<ProductImage | null | undefined>;
 };
 
@@ -57,6 +59,7 @@ type ProductImagePickerProps = {
   identity?: PhotoIdentity;
   initialImageAssetId?: string | null;
   initialImageUrl?: string | null;
+  initialImageUrls?: string[];
   disabled?: boolean;
   privateSupplier?: boolean;
 };
@@ -73,9 +76,10 @@ function formatFileSize(bytes: number) {
 }
 
 export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductImagePickerProps>(
-  function ProductImagePicker({ initialImageAssetId, initialImageUrl, identity, disabled = false, privateSupplier = false }: ProductImagePickerProps, ref) {
+  function ProductImagePicker({ initialImageAssetId, initialImageUrl, initialImageUrls = [], identity, disabled = false, privateSupplier = false }: ProductImagePickerProps, ref) {
     const imageInputRef = useRef<HTMLInputElement>(null);
     const uploadPromise = useRef<Promise<ProductImage> | null>(null);
+    const [galleryUrls, setGalleryUrls] = useState<string[]>(initialImageUrls.filter(url => !isPrivateSupplierImageUrl(url)));
     const [hasChosenImage, setHasChosenImage] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [failedImages, setFailedImages] = useState<string[]>([]);
@@ -155,6 +159,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
     const reset = useCallback(() => {
       clearPreview();
       setSelectedImage(null);
+      setGalleryUrls([]);
       setRemoveBackground(false);
       setImageMode("upload");
       setImageSearch("");
@@ -198,6 +203,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
 
     useImperativeHandle(ref, () => ({
       refresh: loadImages,
+      resolveImageUrls: () => privateSupplier ? [] : galleryUrls,
       reset,
       resolveImage: async (options) => {
         if (selectedFile || uploadPromise.current) return processSelection();
@@ -208,7 +214,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
         if (options?.optional) return hasChosenImage ? null : undefined;
         throw new Error("Envie uma foto ou escolha uma imagem da biblioteca.");
       },
-    }), [loadImages, reset, selectedFile, selectedImage, processSelection, hasChosenImage, privateSupplier]);
+    }), [loadImages, reset, selectedFile, selectedImage, processSelection, hasChosenImage, privateSupplier, galleryUrls]);
 
     const filteredImages = useMemo(() => {
       const query = imageSearch.trim().toLocaleLowerCase("pt-BR");
@@ -423,6 +429,13 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
                           </span>
                         </span>
                       </button>
+                      <button
+                        aria-pressed={galleryUrls.includes(image.url)}
+                        className="mt-1 min-h-11 w-full rounded-md border border-line px-2 text-xs font-semibold disabled:opacity-40"
+                        disabled={selectedImage?.url === image.url || (!galleryUrls.includes(image.url) && productGalleryImages(selectedImage?.url ?? initialImageUrl, galleryUrls).length >= MAX_PRODUCT_IMAGES)}
+                        onClick={() => setGalleryUrls(current => current.includes(image.url) ? current.filter(url => url !== image.url) : [...current, image.url])}
+                        type="button"
+                      >{galleryUrls.includes(image.url) ? "Retirar da galeria" : "Adicionar à galeria"}</button>
                       {image.usageCount === 0 ? (
                         <button
                           aria-label={`Excluir ${image.originalName}`}
@@ -454,6 +467,16 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
             ) : null}
           </div>
         )}
+        {!privateSupplier && <div className="grid gap-2 rounded-md border border-line p-3">
+          <p className="text-sm font-semibold">Galeria: até seis fotos, incluindo a capa</p>
+          <p className="text-xs text-muted">Escolha a capa acima. Adicione outras fotos pela biblioteca; elas aparecem na ordem escolhida.</p>
+          <div className="flex flex-wrap gap-2">
+            {galleryUrls.map((url, index) => <div className="relative" key={url}>
+              <Image alt={`Foto adicional ${index + 1}`} className="h-20 w-20 rounded-md border border-line object-contain" height={80} src={url} unoptimized width={80} />
+              <button aria-label={`Retirar foto adicional ${index + 1}`} className="absolute right-0 top-0 rounded-full border border-line bg-white p-1" onClick={() => setGalleryUrls(current => current.filter(item => item !== url))} type="button"><X className="h-4 w-4" /></button>
+            </div>)}
+          </div>
+        </div>}
         {!privateSupplier && suggestionSource && identity && <ProductPhotoSuggestions disabled={disabled || isProcessing} identity={identity} onChoose={(file) => {
           setHasChosenImage(true); setSelectedImage(null); setSelectedFile(file); setImageMode("upload"); setRemoveBackground(false);
           setImagePreview(URL.createObjectURL(file)); setEditorSource(URL.createObjectURL(file));

@@ -1,3 +1,4 @@
+import { publicProductImageUrl, publicProductImageUrls } from "@/features/product-images/private-supplier-policy";
 import { priceWithMarkup } from "@/features/supplier-planning/planning";
 
 export const supplierOfferInclude = { supplierOffers: true } as const;
@@ -26,6 +27,7 @@ export type CommerceProduct = {
   promotionalPrice?: unknown;
   requiresPrescription?: boolean;
   imageUrl?: string | null;
+  imageUrls?: string[];
   imageAsset?: unknown;
   supplierOffers?: SupplierCommerceOffer[];
 };
@@ -69,20 +71,20 @@ export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "ean
   }).sort((a, b) => a.unitCostCents - b.unitCostCents || a.supplier.localeCompare(b.supplier) || a.id.localeCompare(b.id))[0] ?? null;
 }
 
-export function withCommerceAvailability<T extends CommerceProduct>(product: T, now = Date.now()): Omit<T, "supplierOffers" | "price" | "promotionalPrice" | "inventorySource" | "imageUrl" | "imageAsset"> & {
+export function withCommerceAvailability<T extends CommerceProduct>(product: T, now = Date.now()): Omit<T, "supplierOffers" | "price" | "promotionalPrice" | "inventorySource" | "imageUrl" | "imageUrls" | "imageAsset"> & {
   inventorySource: "PHARMACY" | "DISTRIBUTOR"; price: string; promotionalPrice: string | null;
-  purchaseLimit: number; availableForPurchase: boolean; imageUrl: string | null; imageAsset?: unknown;
+  purchaseLimit: number; availableForPurchase: boolean; imageUrl: string | null; imageUrls: string[]; imageAsset?: unknown;
 } {
-  const { supplierOffers: _privateOffers, price: _price, promotionalPrice: _promo, inventorySource: _source, imageUrl: _image, imageAsset: _asset, ...safe } = product;
-  void [_privateOffers, _price, _promo, _source, _image, _asset];
+  const { supplierOffers: _privateOffers, price: _price, promotionalPrice: _promo, inventorySource: _source, imageUrl: _image, imageUrls: _images, imageAsset: _asset, ...safe } = product;
+  void [_privateOffers, _price, _promo, _source, _image, _images, _asset];
   const inventorySource = product.inventorySource ?? "PHARMACY";
   if (inventorySource === "PHARMACY") return {
-    ...safe, inventorySource, imageUrl: product.imageUrl ?? null, imageAsset: product.imageAsset, purchaseLimit: Math.max(0, product.stock), availableForPurchase: product.stock > 0,
+    ...safe, inventorySource, imageUrl: publicProductImageUrl(product), imageUrls: publicProductImageUrls(product), imageAsset: product.imageAsset, purchaseLimit: Math.max(0, product.stock), availableForPurchase: product.stock > 0,
     price: String(product.price), promotionalPrice: product.promotionalPrice == null ? null : String(product.promotionalPrice),
   };
   const offer = resolveSupplierOffer(product, 1, now);
   return {
-    ...safe, inventorySource, imageUrl: product.imageUrl ?? null, imageAsset: product.imageAsset, purchaseLimit: offer?.purchaseLimit ?? 0, availableForPurchase: Boolean(offer),
+    ...safe, inventorySource, imageUrl: publicProductImageUrl(product), imageUrls: publicProductImageUrls(product), imageAsset: product.imageAsset, purchaseLimit: offer?.purchaseLimit ?? 0, availableForPurchase: Boolean(offer),
     price: offer ? (offer.unitPriceCents / 100).toFixed(2) : String(product.price), promotionalPrice: null,
     ...(product.requiresPrescription ? { imageUrl: null, imageAsset: null } : {}),
   };

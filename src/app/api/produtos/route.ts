@@ -4,7 +4,7 @@ import { productCreateSchema } from "@/features/products/schema";
 import { buildProductSearchText } from "@/features/products/public-search";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
-import { lockProductCatalog, ProductMutationError, resolveFeaturedPosition } from "@/features/products/mutations";
+import { lockProductCatalog, ProductMutationError, resolveProductGallery, resolveFeaturedPosition } from "@/features/products/mutations";
 import { gtinVariants, normalizeGtin } from "@/features/supplier-catalog/commerce";
 import { privateSupplierImageAllowed } from "@/features/product-images/private-supplier-policy";
 
@@ -29,6 +29,7 @@ const productSelect = {
   imageAssetId: true,
   imageAsset: { select: { width: true, height: true, originalName: true } },
   imageUrl: true,
+  imageUrls: true,
   isPopularPharmacy: true,
   name: true,
   price: true,
@@ -167,11 +168,13 @@ export async function POST(request: Request) {
       if (imageAsset && !await transaction.productImage.findUnique({ where: { id: imageAsset.id }, select: { id: true } })) {
         throw new ProductMutationError("A foto foi removida da biblioteca. Selecione outra foto.", 409);
       }
+      const imageUrls = await resolveProductGallery(transaction, imageAsset?.url ?? fields.imageUrl, fields.imageUrls ?? []);
       const featuredPosition = await resolveFeaturedPosition(transaction, { featured, status: fields.status, imageUrl: imageAsset?.url ?? fields.imageUrl });
       const product = await transaction.product.create({
         data: {
           ...fields,
           featuredPosition,
+          imageUrls,
           brand: normalizeOptional(parsed.data.brand),
           category: normalizeOptional(parsed.data.category),
           ean: normalizeOptional(parsed.data.ean),

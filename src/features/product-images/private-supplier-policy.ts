@@ -19,3 +19,8 @@ export function publicProductImageUrl(product: { imageUrl?: string | null; inven
   return isPrivateSupplierImageUrl(product.imageUrl) || (product.inventorySource === "DISTRIBUTOR" && product.requiresPrescription)
     ? null : product.imageUrl ?? null;
 }
+
+export function publicProductImageUrls(product: { imageUrls?: readonly string[]; inventorySource?: string; requiresPrescription?: boolean }) {
+  if (product.inventorySource === "DISTRIBUTOR" && product.requiresPrescription) return [];
+  return [...new Set((product.imageUrls ?? []).filter(url => !isPrivateSupplierImageUrl(url)))];
+}

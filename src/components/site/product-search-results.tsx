@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ImageIcon, Loader2, Pill, SearchX, Sparkles } from "lucide-react";
-import type { PublicProductSearchItem } from "@/features/products/public-search";
+import { ArrowRight, ImageIcon, Loader2, Pill, SearchX, Sparkles } from "lucide-react";
+import { productSearchHref, type PublicProductSearchItem } from "@/features/products/public-search";
 import { cn, formatCurrency } from "@/lib/utils";
 
 type ProductSearchResultsProps = {
@@ -71,11 +71,6 @@ function ResultItem({
           <span className="truncate font-body text-sm font-black text-ink">
             {item.name}
           </span>
-          {item.requiresPrescription ? (
-            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[0.62rem] font-black uppercase text-amber-700">
-              Receita
-            </span>
-          ) : null}
         </span>
         <span className="mt-1 block truncate font-body text-xs font-semibold text-muted">
           {item.activeIngredients.length > 0
@@ -125,9 +120,8 @@ export function ProductSearchResults({
   return (
     <div
       className="max-h-[min(34rem,calc(100vh-11rem))] overflow-y-auto rounded-lg border border-line bg-white p-2 shadow-[0_24px_60px_rgba(17,24,39,0.24)] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2 motion-safe:duration-200"
-      id={id}
-      role="listbox"
     >
+      <div id={id} role="listbox">
       {trimmedQuery.length < 2 ? (
         <div className="flex min-h-24 items-center gap-3 rounded-md bg-surface-subtle px-4 py-3 text-sm font-semibold text-muted">
           <Sparkles className="h-5 w-5 shrink-0 text-brand" />
@@ -146,7 +140,7 @@ export function ProductSearchResults({
       ) : products.length === 0 ? (
         <div className="flex min-h-24 items-center gap-3 rounded-md bg-surface-subtle px-4 py-3 text-sm font-semibold text-muted">
           <SearchX className="h-5 w-5 shrink-0" />
-          Nenhum produto publicado encontrado. Pressione Enter para consultar no WhatsApp.
+          Nenhum resultado direto. Pressione Enter para abrir a página de busca.
         </div>
       ) : (
         <div className="grid gap-2">
@@ -197,6 +191,12 @@ export function ProductSearchResults({
           </p>
         </div>
       )}
+      </div>
+      {trimmedQuery.length >= 2 ? (
+        <Link className="mt-2 flex min-h-11 items-center justify-between gap-3 rounded-md bg-brand-soft px-3 py-3 text-sm font-bold text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" href={productSearchHref(trimmedQuery)} onClick={onChoose}>
+          Ver todos os resultados <ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0" />
+        </Link>
+      ) : null}
     </div>
   );
 }

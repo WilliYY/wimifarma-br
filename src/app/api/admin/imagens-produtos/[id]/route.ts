@@ -34,7 +34,7 @@ export async function DELETE(
       });
 
       if (!image) throw new ProductMutationError("Imagem nao encontrada.", 404);
-      if (image._count.products > 0 || await transaction.product.count({ where: { imageUrl: image.url } })) {
+      if (image._count.products > 0 || await transaction.product.count({ where: { OR: [{ imageUrl: image.url }, { imageUrls: { has: image.url } }] } })) {
         throw new ProductMutationError("Esta imagem esta em uso. Retire ou substitua a foto do produto antes de excluir da biblioteca.", 409);
       }
 

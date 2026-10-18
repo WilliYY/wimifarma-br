@@ -47,7 +47,7 @@ async function fixture(kind: "search" | "checkout" | "header", run: (page: Page)
 
 const product = (name: string) => ({ id: name, name, slug: name.toLowerCase(), activeIngredients: [], price: "10.00", imageUrl: null });
 
-test("search never submits stale results during debounce; keyboard selects the completed current query", async () => {
+test("Enter opens current search immediately, including during debounce and after arrow selection", async () => {
   await fixture("search", async page => {
     await page.route("**/api/produtos/busca?*", route => {
       const query = new URL(route.request().url()).searchParams.get("q");
@@ -59,12 +59,13 @@ test("search never submits stale results during debounce; keyboard selects the c
     await input.fill("Dove"); await page.clock.runFor(250);
     await expect(page.getByRole("option", { name: /Dove/ })).toBeVisible();
     await input.fill("Nivea"); await input.press("Enter");
-    assert.deepEqual(await page.evaluate("window.navigations"), []);
+    assert.deepEqual(await page.evaluate("window.navigations"), ["/busca?q=Nivea"]);
     await expect(page.getByRole("option", { name: /Dove/ })).toHaveCount(0);
+    await input.press("Tab"); await input.click();
     await page.clock.runFor(250);
     await expect(page.getByRole("option", { name: /Nivea/ })).toBeVisible();
     await input.press("ArrowDown"); await input.press("Enter");
-    assert.deepEqual(await page.evaluate("window.navigations"), ["/produto/segundo"]);
+    assert.deepEqual(await page.evaluate("window.navigations"), ["/busca?q=Nivea", "/busca?q=Nivea"]);
   });
 });
 
@@ -146,13 +147,14 @@ test("search ignores an abandoned delayed response after the current query compl
     await input.fill("Dove"); await page.clock.runFor(250);
     await expect.poll(() => previousStarted).toBe(true);
     await input.fill("Nivea"); await input.press("Enter");
-    assert.deepEqual(await page.evaluate("window.navigations"), []);
+    assert.deepEqual(await page.evaluate("window.navigations"), ["/busca?q=Nivea"]);
+    await input.press("Tab"); await input.click();
     await page.clock.runFor(250);
     await expect(page.getByRole("option", { name: /Nivea/ })).toBeVisible();
     releasePrevious(); await previousFinished;
     await expect(page.getByRole("option", { name: /Dove/ })).toHaveCount(0);
     await input.press("Enter");
-    assert.deepEqual(await page.evaluate("window.navigations"), ["/produto/nivea"]);
+    assert.deepEqual(await page.evaluate("window.navigations"), ["/busca?q=Nivea", "/busca?q=Nivea"]);
   });
 });
 

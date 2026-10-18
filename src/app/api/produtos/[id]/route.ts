@@ -7,7 +7,7 @@ import { prescriptionClassificationIsConsistent, resolvePrescriptionType } from 
 import { buildProductSearchText } from "@/features/products/public-search";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
-import { lockProductCatalog, ProductMutationError, resolveFeaturedPosition } from "@/features/products/mutations";
+import { lockProductCatalog, ProductMutationError, resolveProductGallery, resolveFeaturedPosition } from "@/features/products/mutations";
 import { productTrashMutationSchema } from "@/features/products/trash-policy";
 import { moveProductToTrash } from "@/features/products/trash-service";
 import { productIdentityKey } from "@/features/products/identity";
@@ -34,6 +34,7 @@ const productSelect = {
   id: true,
   imageAssetId: true,
   imageUrl: true,
+  imageUrls: true,
   isPopularPharmacy: true,
   name: true,
   price: true,
@@ -159,7 +160,7 @@ export async function PATCH(
       await lockProductCatalog(transaction);
       await transaction.$queryRaw`SELECT id FROM "Product" WHERE id = ${id} FOR UPDATE`;
       if (imageAsset && !await transaction.productImage.findUnique({ where: { id: imageAsset.id }, select: { id: true } })) throw new ProductMutationError("A foto foi removida da biblioteca. Selecione outra foto.", 409);
-      const current = await transaction.product.findUnique({ where: { id, deletedAt: null }, select: { inventorySource: true, imageUrl: true, featuredPosition: true, name: true, brand: true, ean: true, shippingProfile: true, requiresPrescription: true, prescriptionType: true } });
+      const current = await transaction.product.findUnique({ where: { id, deletedAt: null }, select: { inventorySource: true, imageUrl: true, imageUrls: true, featuredPosition: true, name: true, brand: true, ean: true, shippingProfile: true, requiresPrescription: true, prescriptionType: true } });
       if (!current) return null;
       const canonicalEan = normalizeGtin(parsed.data.ean);
       if ((parsed.data.inventorySource ?? current.inventorySource) === "DISTRIBUTOR" && !canonicalEan) throw new ProductMutationError("Produtos de distribuidor exigem EAN válido.", 422);
@@ -176,6 +177,7 @@ export async function PATCH(
       if (!privateSupplierImageAllowed(imageUrl, parsed.data.inventorySource ?? current.inventorySource, productData.requiresPrescription)) {
         throw new ProductMutationError("Fotos internas exigem produto de distribuidor com receita. Selecione uma foto pública para outra origem.", 422);
       }
+      const imageUrls = await resolveProductGallery(transaction, imageUrl, parsed.data.imageUrls ?? current.imageUrls);
       const featuredPosition = await resolveFeaturedPosition(transaction, { featured: parsed.data.featured, currentPosition: current.featuredPosition, status: productData.status, imageUrl });
       const updated = await transaction.product.updateMany({
         data: {
@@ -194,6 +196,7 @@ export async function PATCH(
               ? null
               : undefined,
           imageUrl,
+          imageUrls,
           promotionalPrice: productData.promotionalPrice ?? null,
           searchText: buildProductSearchText(productData),
           sku: normalizeOptional(productData.sku) ?? null,

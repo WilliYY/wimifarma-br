@@ -13,8 +13,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2, Search, X } from "lucide-react";
 import { ProductSearchResults } from "@/components/site/product-search-results";
-import type { PublicProductSearchItem } from "@/features/products/public-search";
-import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { productSearchHref, type PublicProductSearchItem } from "@/features/products/public-search";
 
 type SearchResponse = {
   data?: {
@@ -147,19 +146,8 @@ export function SiteSearch() {
       return;
     }
 
-    if (isLoading) return;
-
-    const selectedProduct =
-      items.find((item) => item.id === activeId) ?? results.products[0];
-
-    if (selectedProduct) {
-      closeSearch();
-      router.push(`/produto/${selectedProduct.slug}`);
-      return;
-    }
-
-    const message = `Ola, tudo bem? Gostaria de consultar disponibilidade e preco de: ${trimmedQuery}`;
-    window.open(buildWhatsAppUrl(message), "_blank", "noopener,noreferrer");
+    closeSearch();
+    router.push(productSearchHref(trimmedQuery));
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -361,7 +349,7 @@ export function SiteSearch() {
                   <X className="h-4 w-4" />
                 </button>
               ) : null}
-              <button aria-label="Abrir produto encontrado" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-white" type="submit">
+              <button aria-label="Ver todos os resultados" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-white" type="submit">
                 <ArrowRight className="h-5 w-5" />
               </button>
             </form>

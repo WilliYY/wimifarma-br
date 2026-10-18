@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { productGalleryImages } from "@/features/products/gallery";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Expand, ImageIcon, Minus, Plus, RotateCcw } from "lucide-react";
 import {
@@ -12,9 +13,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-export function ProductImageViewer({ imageUrl, name }: { imageUrl: string | null; name: string }) {
+export function ProductImageViewer({ imageUrl, imageUrls = [], name }: { imageUrl: string | null; imageUrls?: string[]; name: string }) {
   const [zoom, setZoom] = useState(1);
-  const [failed, setFailed] = useState(false);
+  const [failedUrls, setFailedUrls] = useState<string[]>([]);
+  const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
+  const availableImages = productGalleryImages(imageUrl, imageUrls).filter(url => !failedUrls.includes(url));
+  const currentImage = selectedUrl && availableImages.includes(selectedUrl) ? selectedUrl : availableImages[0];
+  const currentIndex = availableImages.indexOf(currentImage);
+  function chooseImage(url: string) { setSelectedUrl(url); setZoom(1); }
+  function failImage(url: string) { setFailedUrls(current => [...new Set([...current, url])]); setZoom(1); }
   const viewportRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -29,8 +36,8 @@ export function ProductImageViewer({ imageUrl, name }: { imageUrl: string | null
     if (viewport.firstElementChild) observer.observe(viewport.firstElementChild);
     centerImage();
     return () => observer.disconnect();
-  }, [zoom]);
-  if (!imageUrl || failed) {
+  }, [zoom, currentImage]);
+  if (!currentImage) {
     return (
       <div className="flex aspect-square max-h-[32rem] flex-col items-center justify-center gap-4 rounded-3xl border border-line bg-white text-muted">
         <ImageIcon className="h-16 w-16" aria-hidden="true" />
@@ -44,7 +51,7 @@ export function ProductImageViewer({ imageUrl, name }: { imageUrl: string | null
       <div className="overflow-hidden rounded-3xl border border-line bg-white">
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4 text-xs font-semibold text-muted">
           <span className="flex items-center gap-2"><ImageIcon className="h-4 w-4" aria-hidden="true" />Imagem do produto</span>
-          <span>1 imagem</span>
+          <span aria-live="polite">{currentIndex + 1} de {availableImages.length} {availableImages.length === 1 ? "imagem" : "imagens"}</span>
         </div>
         <DialogTrigger asChild>
           <button
@@ -56,9 +63,10 @@ export function ProductImageViewer({ imageUrl, name }: { imageUrl: string | null
               alt={name}
               className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
               height={760}
+              key={currentImage}
               priority
-              onError={() => setFailed(true)}
-              src={imageUrl}
+              onError={() => failImage(currentImage)}
+              src={currentImage}
               unoptimized
               width={760}
             />
@@ -68,6 +76,16 @@ export function ProductImageViewer({ imageUrl, name }: { imageUrl: string | null
             </span>
           </button>
         </DialogTrigger>
+        {availableImages.length > 1 && <div aria-label="Fotos do produto" className="flex gap-2 overflow-x-auto border-t border-line p-3" onKeyDown={event => {
+          const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+          if (!step && event.key !== "Home" && event.key !== "End") return;
+          event.preventDefault();
+          const index = event.key === "Home" ? 0 : event.key === "End" ? availableImages.length - 1 : (currentIndex + step + availableImages.length) % availableImages.length;
+          chooseImage(availableImages[index]);
+          (event.currentTarget.children[index] as HTMLButtonElement)?.focus();
+        }}>
+          {availableImages.map((url, index) => <button aria-label={`Ver foto ${index + 1} de ${name}`} aria-pressed={url === currentImage} className={`h-20 w-20 shrink-0 rounded-xl border-2 bg-white p-1 focus-visible:outline-brand ${url === currentImage ? "border-brand" : "border-line"}`} key={url} onClick={() => chooseImage(url)} type="button"><Image alt={`Foto ${index + 1} de ${name}`} className="h-full w-full object-contain" height={80} onError={() => failImage(url)} src={url} unoptimized width={80} /></button>)}
+        </div>}
         <p className="border-t border-line px-5 py-3 text-center text-xs leading-5 text-muted">A embalagem pode variar conforme o lote do fabricante.</p>
       </div>
 
@@ -83,7 +101,7 @@ export function ProductImageViewer({ imageUrl, name }: { imageUrl: string | null
           <button aria-label="Restaurar tamanho da imagem" className="flex h-11 w-11 items-center justify-center rounded-full border border-line focus-visible:ring-2 focus-visible:ring-brand" onClick={() => setZoom(1)} type="button"><RotateCcw className="h-4 w-4" aria-hidden="true" /></button>
         </div>
         <div className="h-[min(55dvh,32rem)] overflow-auto rounded-xl border border-line bg-white focus-visible:outline-brand" ref={viewportRef} data-lenis-prevent tabIndex={0} role="region" aria-label="Imagem ampliada do produto">
-          <div className="flex items-center justify-center p-4" style={{ width: `${zoom * 100}%`, height: `${zoom * 100}%` }}><Image alt={name} className="h-full w-full object-contain" height={1200} src={imageUrl} unoptimized width={1200} /></div>
+          <div className="flex items-center justify-center p-4" style={{ width: `${zoom * 100}%`, height: `${zoom * 100}%` }}><Image alt={name} className="h-full w-full object-contain" height={1200} onError={() => failImage(currentImage)} src={currentImage} unoptimized width={1200} /></div>
         </div>
       </DialogContent>
     </Dialog>

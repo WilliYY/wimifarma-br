@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-18 - Resultados de busca e galeria de produtos
+
+- Enter passa a abrir uma página paginada com nome, marca, dose e componentes relacionados. Associações ficam identificadas; doses decimais e identidades completas impedem correlações indevidas. A lateral usa vendas concluídas/pagas reais ou assume o título de relevantes.
+- Removidos apenas selos visuais de receita, sem alterar classificação, compra ou dispensação. Galeria admite até seis fotos públicas validadas da biblioteca, preserva capa e bloqueia vazamento de fotos privadas Rx em arrays/metadados.
+- Migração aditiva `20261018120000_product_gallery`; preços, cotas e estoque não mudam. Contrato e verificação em `68-busca-e-galeria.md`.
+
 ## 2026-10-18 - Base operacional estimada para logística
 
 - O titular informou não possuir balança/medidas e autorizou uma base calculada. Implementada estimativa limitada por família/apresentação, com folga de embalagem, marcação `estimated` e bloqueio de casos perigosos/ambíguos. Dosagem não é peso.

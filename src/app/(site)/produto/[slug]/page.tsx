@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { publicProductImageUrl, publicProductImageUrls } from "@/features/product-images/private-supplier-policy";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { breadcrumbData, categoryPath } from "@/lib/seo";
@@ -53,6 +54,7 @@ const productSelect = {
   ean: true,
   id: true,
   imageUrl: true,
+  imageUrls: true,
   isPopularPharmacy: true,
   name: true,
   price: true,
@@ -108,11 +110,12 @@ function RatingStars({ rating, size = "h-4 w-4" }: { rating: number | null; size
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const product = await getPrisma().product.findFirst({
-    select: { brand: true, description: true, imageUrl: true, name: true, inventorySource: true, requiresPrescription: true },
+    select: { brand: true, description: true, imageUrl: true, imageUrls: true, name: true, inventorySource: true, requiresPrescription: true },
     where: { slug, status: "ACTIVE" },
   });
   if (!product) return {};
-  if (product.inventorySource === "DISTRIBUTOR" && product.requiresPrescription) product.imageUrl = null;
+  product.imageUrl = publicProductImageUrl(product);
+  product.imageUrls = publicProductImageUrls(product);
   const description = buildProductMetaDescription(product);
   const productUrl = `/produto/${encodeURIComponent(slug)}`;
   return {
@@ -120,7 +123,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description,
     openGraph: {
       description,
-      images: product.imageUrl ? [{ alt: product.name, url: product.imageUrl }] : undefined,
+      images: product.imageUrl ? [product.imageUrl, ...product.imageUrls].map(url => ({ alt: product.name, url })) : undefined,
       title: product.name,
       type: "website",
       url: productUrl,
@@ -129,7 +132,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     twitter: {
       card: "summary_large_image",
       description,
-      images: product.imageUrl ? [product.imageUrl] : undefined,
+      images: product.imageUrl ? [product.imageUrl, ...product.imageUrls] : undefined,
       title: product.name,
     },
   };
@@ -244,7 +247,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-start lg:gap-10">
             <div className="grid min-w-0 gap-4 lg:sticky lg:top-52">
-              <ProductImageViewer imageUrl={product.imageUrl} key={product.id} name={product.name} />
+              <ProductImageViewer imageUrls={product.imageUrls} imageUrl={product.imageUrl} key={product.id} name={product.name} />
               <div className="flex items-center gap-3 px-2 text-sm text-muted">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-brand"><Headphones className="h-5 w-5" aria-hidden="true" /></span>
                 <p><strong className="block font-bold text-ink">Cuidado de perto, também online.</strong><span className="text-xs">Atendimento pela equipe da Wimifarma em Ivaté.</span></p>
@@ -277,7 +280,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <div className="mt-3 flex flex-wrap gap-2">
                   {product.category ? <span className="rounded-full bg-surface-subtle px-3 py-1.5 text-xs font-semibold text-muted">{product.category}</span> : null}
                   {product.isPopularPharmacy ? <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800">Farmácia Popular</span> : null}
-                  {product.requiresPrescription ? <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800">Exige receita</span> : null}
                   {product.sku ? <span className="self-center text-xs text-muted">Cód. {product.sku}</span> : null}
                 </div>
 
