@@ -12,7 +12,7 @@ Evolução posterior autorizada: o piloto comercial persistente de quatro EANs, 
 
 Módulo `src/features/supplier-planning`: centavos inteiros e percentuais em pontos-base; nenhuma requisição externa ou efeito financeiro.
 
-- `SupplierOffer`: fornecedor ANB/SANTA_CRUZ/PROFARMA, EAN exato com dígito válido, custo unitário, disponibilidade, saldo quantitativo opcional, conferência e expiração. Caixa de embalagem não representa saldo.
+- `SupplierOffer`: fornecedor ANB/SANTA_CRUZ/PROFARMA/GAM, EAN exato com dígito válido, custo unitário, disponibilidade, saldo quantitativo opcional, conferência e expiração. Caixa de embalagem não representa saldo.
 - `compareSupplierOffers({ean, quantity, offers}, now)`: compara somente a mesma apresentação. Oferta desconhecida, expirada, futura, indisponível ou com saldo insuficiente/desconhecido não recebe recomendação de compra. A validade máxima aceita é de 24 horas; isso limita o dado de entrada, não garante reserva.
 - `priceWithMarkup(costCents, markupBps)`: aplica acréscimo sobre custo, arredondado ao centavo. Acréscimo de 60% corresponde a margem bruta teórica de 37,5% antes de descontos e custos.
 - `simulateOrder(input)`: calcula cenários com e sem Pix, frete, taxa do meio de pagamento, tributos informados, entrada, embalagem, outros custos e ganhos de cashback/WimiCoins. Campos de custo desconhecidos permanecem nulos; contribuição definitiva fica indisponível enquanto houver pendência. Taxa incide no total cobrado; base tributária simplificada e explícita é a receita líquida dos produtos, sujeita a validação do contador.
@@ -23,6 +23,8 @@ Módulo `src/features/supplier-planning`: centavos inteiros e percentuais em pon
 ## Interface
 
 Rota `/admin/fornecedores`, somente ADMIN. Linguagem visual operacional, clara, usando os tokens e componentes existentes; comparação por fornecedor em cartões responsivos, custos em formulário e resultado por pedido em destaque. Dados preenchidos nesta etapa são cenários da sessão; não são sincronização nem estoque publicado. Não exibir indicadores falsos de integração conectada.
+
+Em 18/10/2026, GAM foi incluída somente na comparação manual. A decisão mais recente do lojista mantém apenas ANB e Profarma abastecendo o piloto persistente. GAM e SantaCruz podem fornecer referências de identidade, descrição e foto; suas ofertas não são aceitas pela API ou pelo importador comercial nesta etapa. Não há conector automático ou consulta fictícia: custos, saldos e validade dependem de conferência real por EAN, com gravação e auditoria exclusivas de ADMIN. O estoque físico permanece separado.
 
 ## Próximas etapas condicionadas
 

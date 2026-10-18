@@ -107,6 +107,30 @@ test("offer POST rechecks actor after lock and refuses a revoked ADMIN without w
   assert.equal(f.calls.audits.length, 0);
 });
 
+test("ADMIN can persist only the two approved commercial pilot suppliers", async () => {
+  for (const supplier of ["ANB", "PROFARMA"]) {
+    const f = await harness();
+    assert.equal((await f.run("POST", input({ supplier }))).status, 200, supplier);
+    assert.equal(f.calls.writes[0].create.supplier, supplier);
+    assert.equal(f.calls.writes[0].create.eanNormalized, "07891234567895");
+    assert.equal(f.calls.writes[0].where.productId_supplier.supplier, supplier);
+    assert.equal(f.calls.audits[0].data.metadata.supplier, supplier);
+  }
+});
+
+test("reference-only supplier codes and non-ADMIN writes never reach persistence", async () => {
+  for (const supplier of ["GAM", "SANTA_CRUZ", "OTHER", "gam", "", "GAM "]) {
+    const f = await harness();
+    assert.equal((await f.run("POST", input({ supplier }))).status, 422, supplier);
+    assert.equal(f.calls.database, 0);
+  }
+  for (const role of [null, "CUSTOMER", "STAFF", "MANAGER"]) {
+    const f = await harness({ role });
+    assert.equal((await f.run("POST", input({ supplier: "ANB" }))).status, 401);
+    assert.equal(f.calls.database, 0);
+  }
+});
+
 test("offer POST requires an existing distributor product with the same GTIN", async () => {
   for (const product of [null, { id: "synthetic-product", inventorySource: "PHARMACY", ean: "7891234567895" },
     { id: "synthetic-product", inventorySource: "DISTRIBUTOR", ean: "4006381333931" }]) {

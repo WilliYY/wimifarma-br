@@ -44,6 +44,7 @@ services:
     restart: unless-stopped
     volumes:
       - wimifarma-br-uploads:/app/public/uploads
+      - wimifarma-br-private-supplier-images:/app/var/private-supplier-images
 
   background-removal:
     build:
@@ -167,3 +168,5 @@ volumes:
     name: wimifarma-br-postgres-data
   wimifarma-br-uploads:
     name: wimifarma-br-uploads
+  wimifarma-br-private-supplier-images:
+    name: wimifarma-br-private-supplier-images

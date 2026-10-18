@@ -1,5 +1,7 @@
 # Catálogo de distribuidores — piloto por EAN
 
+Atualização de 18/10/2026: apenas ANB e Profarma permanecem como fontes comerciais. GAM/SantaCruz servem somente de referência. Atualização conserva cotas/reservas, fotos Rx são privadas e leves, e rotina Codex diária às 8h/12h/17h depende de PC/navegador. Procedimento e evidências atuais em [68](68-rotina-piloto-fornecedores.md); a seção de 17/10 abaixo é histórico da primeira entrega.
+
 ## Regras aprovadas em 17/10/2026
 
 O lojista autorizou iniciar por losartana potássica 50 mg, comparar ofertas do mesmo EAN e vender com acréscimo de 60% sobre o custo final. Na atualização mais recente, restringiu o piloto à ANB e à Profarma; SantaCruz fica reservada para uma próxima etapa. Isso não equivale a margem líquida de 60%; tributos, tarifas, embalagem e frete continuam relevantes. Não foi ativado desconto Pix adicional nem alterado o frete grátis.

@@ -229,6 +229,8 @@ function ProductFormFields({
   const researchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastResearchKey = useRef(product ? productIdentityKey({ name: product.name, brand: product.brand ?? "", ean: product.ean ?? "" }) : "");
   const [automatic, setAutomatic] = useState(true);
+  const [inventorySource, setInventorySource] = useState(product?.inventorySource ?? "PHARMACY");
+  const privateSupplierPhoto = inventorySource === "DISTRIBUTOR" && Boolean(product?.requiresPrescription);
   const [seo, setSeo] = useState({ name: product?.name ?? "", brand: product?.brand ?? "", description: product?.description ?? "" });
   const [photoIdentity, setPhotoIdentity] = useState({ name: product?.name ?? "", brand: product?.brand ?? "", ean: product?.ean ?? "" });
   const [categoryHint, setCategoryHint] = useState(product?.category ?? "");
@@ -525,7 +527,7 @@ function ProductFormFields({
         </div>
         <div className="grid min-w-0 gap-5">
           <ProductFormSection id={`${sectionId}-commercial`} number="04" title="Preços, estoque e publicação" description="Defina os valores, o estoque e como o produto aparece na loja.">
-            {canManageCashback && <label className="grid gap-2 text-sm font-semibold text-ink">Origem da venda<select name="inventorySource" defaultValue={product?.inventorySource ?? "PHARMACY"} className="h-11 rounded-md border border-line bg-white px-3"><option value="PHARMACY">Estoque da farmácia</option><option value="DISTRIBUTOR">Produto de distribuidor</option></select><span className="text-xs font-normal leading-5 text-muted">O estoque físico abaixo fica separado. No distribuidor, a venda usa a oferta válida mais barata do mesmo EAN, com acréscimo de 60%.</span></label>}
+            {canManageCashback && <label className="grid gap-2 text-sm font-semibold text-ink">Origem da venda<select name="inventorySource" value={inventorySource} onChange={event => setInventorySource(event.target.value as "PHARMACY" | "DISTRIBUTOR")} className="h-11 rounded-md border border-line bg-white px-3"><option value="PHARMACY">Estoque da farmácia</option><option value="DISTRIBUTOR">Produto de distribuidor</option></select><span className="text-xs font-normal leading-5 text-muted">O estoque físico abaixo fica separado. No distribuidor, a venda usa a oferta válida mais barata do mesmo EAN, com acréscimo de 60%.</span></label>}
             {canManageCashback && product?.inventorySource === "DISTRIBUTOR" && <SupplierProductOffers productId={product.id} ean={product.ean ?? ""} />}
             <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
               <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
@@ -564,7 +566,7 @@ function ProductFormFields({
             {canManageShipping ? <input name="prescriptionType" type="hidden" value={product && productIdentityKey({ name: product.name, brand: product.brand ?? "", ean: product.ean ?? "" }) === productIdentityKey(photoIdentity) ? product.prescriptionType ?? "UNREVIEWED" : "UNREVIEWED"} /> : null}
           </ProductFormSection>
           <ProductFormSection className="[&_button]:h-auto [&_button]:min-h-11 [&_button]:whitespace-normal [&_button]:py-2.5" id={`${sectionId}-photos`} number="05" title="Fotos do produto" description="Envie uma foto, use a biblioteca e confira o resultado antes de salvar.">
-            <ProductImagePicker identity={photoIdentity} initialImageAssetId={product?.imageAssetId} initialImageUrl={product?.imageUrl} key={product?.id ?? "new"} ref={imagePickerRef} />
+            <ProductImagePicker identity={photoIdentity} initialImageAssetId={product?.imageAssetId} initialImageUrl={product?.imageUrl} key={`${product?.id ?? "new"}-${privateSupplierPhoto}`} privateSupplier={privateSupplierPhoto} ref={imagePickerRef} />
           </ProductFormSection>
         </div>
       </div>

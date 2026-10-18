@@ -6,6 +6,7 @@ import { MessageSquareText } from "lucide-react";
 import { auth } from "@/features/auth/auth";
 import { sessionCustomerId } from "@/features/auth/customer-session";
 import { getPrisma } from "@/lib/prisma";
+import { publicProductImageUrl } from "@/features/product-images/private-supplier-policy";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Avaliar minhas compras", robots: { index: false, follow: false } };
@@ -17,11 +18,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
   const db = getPrisma();
   if (!await db.customer.findFirst({ where: { id: customerId, status: "ACTIVE" }, select: { id: true } })) redirect("/login");
   const page = Math.max(1, Math.min(10000, Number.parseInt((await searchParams).page ?? "1", 10) || 1));
-  const products = await db.product.findMany({
+  const products = (await db.product.findMany({
     where: { status: "ACTIVE", orderItems: { some: { order: { customerId, status: "COMPLETED", paymentStatus: "PAID" } } } },
-    select: { id: true, name: true, slug: true, imageUrl: true, requiresPrescription: true, isPopularPharmacy: true, reviews: { where: { customerId }, select: { id: true } } },
+    select: { id: true, name: true, slug: true, imageUrl: true, inventorySource: true, requiresPrescription: true, isPopularPharmacy: true, reviews: { where: { customerId }, select: { id: true } } },
     orderBy: [{ name: "asc" }, { id: "asc" }], skip: (page - 1) * 24, take: 25,
-  });
+  })).map(product => ({ ...product, imageUrl: publicProductImageUrl(product) }));
   return <section className="bg-white px-4 pb-16 pt-40 sm:px-6 lg:pt-52"><div className="mx-auto max-w-6xl">
     <Link className="text-sm font-bold text-muted underline" href="/minha-conta">Minha conta</Link>
     <h1 className="mt-5 text-3xl font-black text-ink">Avaliar minhas compras</h1>

@@ -6,6 +6,7 @@ import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
 import { lockProductCatalog, ProductMutationError, resolveFeaturedPosition } from "@/features/products/mutations";
 import { gtinVariants, normalizeGtin } from "@/features/supplier-catalog/commerce";
+import { privateSupplierImageAllowed } from "@/features/product-images/private-supplier-policy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -155,6 +156,9 @@ export async function POST(request: Request) {
   }
 
   const { featured, ...fields } = parsed.data;
+  if (!privateSupplierImageAllowed(imageAsset?.url ?? fields.imageUrl, fields.inventorySource, fields.requiresPrescription)) {
+    return NextResponse.json({ error: "Fotos internas exigem produto de distribuidor com receita. Selecione uma foto pública para outra origem." }, { status: 422 });
+  }
   try {
     const product = await prisma.$transaction(async transaction => {
       await lockProductCatalog(transaction);

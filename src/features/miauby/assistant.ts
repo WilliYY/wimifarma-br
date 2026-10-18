@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { normalizeProductSearch } from "@/features/products/public-search";
+import { publicProductImageUrl } from "@/features/product-images/private-supplier-policy";
 
 export const miaubyHistoryMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -14,6 +15,7 @@ export const miaubyRequestSchema = z.object({
 export type MiaubyHistoryMessage = z.infer<typeof miaubyHistoryMessageSchema>;
 
 export type MiaubyCatalogSource = {
+  inventorySource?: "PHARMACY" | "DISTRIBUTOR";
   activeIngredients: string[];
   brand: string | null;
   category: string | null;
@@ -96,7 +98,7 @@ export function miaubyReplyProducts(
   message: string,
   products: MiaubyCatalogProduct[],
 ) {
-  return keepMiaubyQuestionLocal(message) ? [] : products;
+  return keepMiaubyQuestionLocal(message) ? [] : products.map(product => ({ ...product, imageUrl: publicProductImageUrl(product) }));
 }
 
 export function rankMiaubyCatalogProducts(
@@ -139,7 +141,7 @@ export function rankMiaubyCatalogProducts(
       brand: product.brand,
       category: product.category,
       id: product.id,
-      imageUrl: product.imageUrl,
+      imageUrl: publicProductImageUrl(product),
       isPopularPharmacy: product.isPopularPharmacy,
       name: product.name,
       price: product.price,
@@ -151,7 +153,7 @@ export function rankMiaubyCatalogProducts(
 
 export function buildMiaubySystemPrompt(products: MiaubyCatalogProduct[]) {
   const catalog = products.length
-    ? JSON.stringify(products)
+    ? JSON.stringify(products.map(product => ({ ...product, imageUrl: publicProductImageUrl(product) })))
     : "Nenhum produto relacionado foi encontrado no catalogo publicado.";
 
   return `Voce e Miauby, assistente virtual simpatica da Wimifarma, farmacia local em Ivate-PR.

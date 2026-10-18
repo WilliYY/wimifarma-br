@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-18 - Atualizar o piloto e proteger fotos de medicamentos
+
+- Decisão: manter somente ANB e Profarma como fontes comerciais; GAM/SantaCruz são referências de identificação e fotos. GAM entra no simulador manual, sem nova migração ou oferta persistente. A API e o importador recusam fontes fora do piloto autorizado.
+- Atualização recorrente mantém cotas existentes, reservas e unidades consumidas, rejeita observações inválidas e pode indisponibilizar item existente. Estoque próprio não é convertido nem duplicado. Dados negociados permanecem fora do Git.
+- Fotos Rx do distribuidor ficam em volume privado, WebP até 352 px/100 KB e acesso ADMIN/MANAGER sem cache público. Produto não pode mover a URL privada para uma origem pública; Miauby, prompt externo e avaliações removem essas URLs. Revisão independente encontrou dois problemas, corrigidos e novamente aprovados, com regressões.
+- Rotina solicitada e criada no Codex para 8h, 12h e 17h de Brasília. Depende de PC/navegador conectados; não equivale a um coletor autônomo na VPS. Falha de consulta não renova validade. Operação, fotos conferidas e pendências em [68](68-rotina-piloto-fornecedores.md).
+
 ## 2026-10-17 - Simplificar as descrições públicas do piloto
 
 - Retirar CMED, EAN/MS e fontes do texto corrido das quatro losartanas, mantendo marca, dosagem, apresentação e informação de entrega/retirada. A exigência de receita permanece no aviso próprio, sem repetição na descrição.

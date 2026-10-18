@@ -1,5 +1,11 @@
 # 06 - Pendencias
 
+## Piloto de fornecedores — 18/10/2026
+
+- Atualização e fotos internas protegidas em validação conforme [68](68-rotina-piloto-fornecedores.md). Apenas ANB/Profarma são fontes comerciais; GAM/SantaCruz são referências. Rotina Codex às 8h/12h/17h criada, dependente de PC/navegador; falta integração independente na VPS por fonte autorizada.
+- Não renovar cotas consumidas automaticamente. Confirmar autorização de uso comercial e versão gráfica atual das fotos; Biosintética/Nova Química não carregaram imagem e placeholders ANB foram recusados. Conferir EAN do Teuto físico antes de vinculá-lo, sem duplicar ou mudar seu estoque.
+- Acesso GAM e catálogo SantaCruz ainda não foram comprovados nesta consulta. O navegador local ficou desabilitado no Work antes da tentativa com a credencial atualizada. Não contornar esse bloqueio.
+
 ## Fornecedores e viabilidade — 17/10/2026
 
 - Painel ADMIN manual implementado e validado conforme [66](66-fornecedores-e-viabilidade.md). Piloto de quatro EANs de losartana publicado, com migração, concorrência isolada e respostas públicas validadas conforme [67](67-catalogo-distribuidores-piloto.md). Fontes atuais: Profarma e ANB; SantaCruz fica para depois. Automatização dos portais, renovação das conferências e fotos internas autorizadas permanecem pendentes.

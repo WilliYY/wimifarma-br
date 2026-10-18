@@ -8,8 +8,8 @@ import { decimalToMinorUnits, quantityFromText } from "@/features/supplier-plann
 import { compareSupplierOffers, priceWithMarkup, simulateOrder } from "@/features/supplier-planning/planning";
 import { SupplierOfferSchema, type SupplierOffer } from "@/features/supplier-planning/schema";
 
-const suppliers = ["ANB", "SANTA_CRUZ", "PROFARMA"] as const;
-const names = { ANB: "ANB", SANTA_CRUZ: "SantaCruz", PROFARMA: "Profarma" };
+const suppliers = ["ANB", "SANTA_CRUZ", "PROFARMA", "GAM"] as const;
+const names = { ANB: "ANB", SANTA_CRUZ: "SantaCruz", PROFARMA: "Profarma", GAM: "GAM" };
 const money = (value: number | null) => value === null ? "Pendente" : (value / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const section = "rounded-xl border border-line bg-white p-4 shadow-sm sm:p-6";
 const select = "h-11 w-full rounded-md border border-line bg-white px-3 text-sm text-ink focus:outline-brand";

@@ -12,6 +12,7 @@ import { productTrashMutationSchema } from "@/features/products/trash-policy";
 import { moveProductToTrash } from "@/features/products/trash-service";
 import { productIdentityKey } from "@/features/products/identity";
 import { invalidateShippingProfile } from "@/features/shipping/product-draft";
+import { privateSupplierImageAllowed } from "@/features/product-images/private-supplier-policy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -172,6 +173,9 @@ export async function PATCH(
       if (!prescriptionClassificationIsConsistent({ requiresPrescription: productData.requiresPrescription, prescriptionType })) throw new ProductMutationError("Atualize o tipo de receita antes de retirar a exigência de receita.", 422);
       const shippingProfile = productData.shippingProfile ?? (identityChanged ? invalidateShippingProfile(current.shippingProfile) : undefined);
       const imageUrl = imageAsset?.url ?? (clearImage ? null : normalizedImageUrl ?? current.imageUrl);
+      if (!privateSupplierImageAllowed(imageUrl, parsed.data.inventorySource ?? current.inventorySource, productData.requiresPrescription)) {
+        throw new ProductMutationError("Fotos internas exigem produto de distribuidor com receita. Selecione uma foto pública para outra origem.", 422);
+      }
       const featuredPosition = await resolveFeaturedPosition(transaction, { featured: parsed.data.featured, currentPosition: current.featuredPosition, status: productData.status, imageUrl });
       const updated = await transaction.product.updateMany({
         data: {

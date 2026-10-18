@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { isPrivateSupplierImageUrl } from "@/features/product-images/private-supplier-policy";
 
 type ImageMode = "library" | "upload";
 
@@ -57,6 +58,7 @@ type ProductImagePickerProps = {
   initialImageAssetId?: string | null;
   initialImageUrl?: string | null;
   disabled?: boolean;
+  privateSupplier?: boolean;
 };
 
 function errorMessage(error: unknown, fallback: string) {
@@ -71,7 +73,7 @@ function formatFileSize(bytes: number) {
 }
 
 export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductImagePickerProps>(
-  function ProductImagePicker({ initialImageAssetId, initialImageUrl, identity, disabled = false }: ProductImagePickerProps, ref) {
+  function ProductImagePicker({ initialImageAssetId, initialImageUrl, identity, disabled = false, privateSupplier = false }: ProductImagePickerProps, ref) {
     const imageInputRef = useRef<HTMLInputElement>(null);
     const uploadPromise = useRef<Promise<ProductImage> | null>(null);
     const [hasChosenImage, setHasChosenImage] = useState(false);
@@ -93,6 +95,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
     const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
 
     const loadImages = useCallback(async () => {
+      if (privateSupplier) { setImages([]); setBackgroundRemovalAvailable(false); setIsLibraryLoading(false); return; }
       try {
         setIsLibraryLoading(true);
         const response = await fetch("/api/admin/imagens-produtos", { cache: "no-store" });
@@ -106,14 +109,14 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
           throw new Error(errorMessage(payload.error, "Nao foi possivel carregar a biblioteca."));
         }
 
-        setImages(payload.data ?? []);
+        setImages((payload.data ?? []).filter(image => !isPrivateSupplierImageUrl(image.url)));
         setBackgroundRemovalAvailable(Boolean(payload.meta?.backgroundRemovalAvailable));
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Nao foi possivel carregar a biblioteca.");
       } finally {
         setIsLibraryLoading(false);
       }
-    }, []);
+    }, [privateSupplier]);
 
     useEffect(() => {
       void loadImages();
@@ -164,7 +167,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
       formData.set("image", file);
       formData.set("removeBackground", String(removeBackground));
 
-      const response = await fetch("/api/admin/uploads/produtos", {
+      const response = await fetch(privateSupplier ? "/api/admin/fornecedores/imagens" : "/api/admin/uploads/produtos", {
         body: formData,
         method: "POST",
       });
@@ -175,14 +178,14 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
       }
 
       const uploaded = { ...payload.data, usageCount: 0 };
-      setImages((current) => [uploaded, ...current]);
+      if (!privateSupplier) setImages((current) => [uploaded, ...current]);
       clearPreview();
       setSelectedImage(uploaded);
       setHasChosenImage(true);
-      setImageMode("library");
+      setImageMode(privateSupplier ? "upload" : "library");
       setRemoveBackground(false);
       return uploaded;
-    }, [removeBackground, clearPreview]);
+    }, [removeBackground, clearPreview, privateSupplier]);
 
     const processSelection = useCallback(async () => {
       if (uploadPromise.current) return uploadPromise.current;
@@ -198,11 +201,14 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
       reset,
       resolveImage: async (options) => {
         if (selectedFile || uploadPromise.current) return processSelection();
-        if (selectedImage) return selectedImage;
+        if (selectedImage) {
+          if (!privateSupplier && isPrivateSupplierImageUrl(selectedImage.url)) throw new Error("Escolha uma foto pública para este produto.");
+          return selectedImage;
+        }
         if (options?.optional) return hasChosenImage ? null : undefined;
         throw new Error("Envie uma foto ou escolha uma imagem da biblioteca.");
       },
-    }), [loadImages, reset, selectedFile, selectedImage, processSelection, hasChosenImage]);
+    }), [loadImages, reset, selectedFile, selectedImage, processSelection, hasChosenImage, privateSupplier]);
 
     const filteredImages = useMemo(() => {
       const query = imageSearch.trim().toLocaleLowerCase("pt-BR");
@@ -289,14 +295,18 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
       }
     }
 
+    const currentPreview = imagePreview || (privateSupplier ? selectedImage?.url : null) ||
+      (!hasChosenImage && (privateSupplier || !isPrivateSupplierImageUrl(initialImageUrl)) ? initialImageUrl : null);
+
     return (
       <fieldset className="grid min-w-0 grid-cols-1 gap-3" disabled={disabled || isProcessing}>
         <input accept="image/jpeg,image/png,image/webp,image/avif" aria-label="Arquivo da foto do produto" className="sr-only" onChange={handleImageChange} ref={imageInputRef} tabIndex={-1} type="file" />
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-sm font-semibold text-ink">Imagem do produto</span>
-          <div className="flex items-center gap-2"><Badge variant="muted">{images.length} na biblioteca</Badge>
+          <span className="text-sm font-semibold text-ink">{privateSupplier ? "Foto interna do distribuidor" : "Imagem do produto"}</span>
+          <div className="flex items-center gap-2"><Badge variant="muted">{privateSupplier ? "Acesso restrito" : `${images.length} na biblioteca`}</Badge>
           {(selectedFile || selectedImage || (!hasChosenImage && initialImageUrl)) && <Button aria-label="Retirar foto do produto" onClick={reset} size="icon" title="Retirar foto do produto (preserva a biblioteca)" type="button" variant="ghost"><X className="h-4 w-4" /></Button>}</div>
         </div>
+        {privateSupplier && <p className="text-xs text-muted">Foto de conferência interna. A imagem não aparece na loja nem na biblioteca pública.</p>}
         <div className="grid grid-cols-2 gap-1 rounded-md bg-surface-subtle p-1">
           <Button
             className="w-full"
@@ -315,6 +325,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
             onClick={() => {
               setImageMode("library");
             }}
+            disabled={privateSupplier}
             size="sm"
             type="button"
             variant={imageMode === "library" ? "default" : "ghost"}
@@ -349,9 +360,9 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
                 {backgroundRemovalAvailable ? "Fundo branco" : "Configurar"}
               </Badge>
             </label>
-            {imagePreview || (!hasChosenImage && initialImageUrl) ? (
+            {currentPreview ? (
               <div className="flex flex-wrap items-center gap-3 rounded-md border border-line bg-surface-subtle p-3">
-                <Image alt="Previa da imagem do produto" className="h-24 w-24 shrink-0 rounded-md border border-line bg-white object-contain" height={96} src={imagePreview || initialImageUrl!} unoptimized width={96} />
+                <Image alt="Previa da imagem do produto" className="h-24 w-24 shrink-0 rounded-md border border-line bg-white object-contain" height={96} src={currentPreview} unoptimized width={96} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-ink">Pronta para otimizar</p>
                   <p className="mt-1 text-xs font-semibold text-muted">WebP com compressao inteligente</p>
@@ -443,7 +454,7 @@ export const ProductImagePicker = forwardRef<ProductImagePickerHandle, ProductIm
             ) : null}
           </div>
         )}
-        {suggestionSource && identity && <ProductPhotoSuggestions disabled={disabled || isProcessing} identity={identity} onChoose={(file) => {
+        {!privateSupplier && suggestionSource && identity && <ProductPhotoSuggestions disabled={disabled || isProcessing} identity={identity} onChoose={(file) => {
           setHasChosenImage(true); setSelectedImage(null); setSelectedFile(file); setImageMode("upload"); setRemoveBackground(false);
           setImagePreview(URL.createObjectURL(file)); setEditorSource(URL.createObjectURL(file));
         }} source={suggestionSource} />}

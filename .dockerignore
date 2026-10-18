@@ -4,6 +4,7 @@ node_modules
 .codex
 .omx
 outputs
+var/private-supplier-images
 npm-debug.log*
 .env
 .env.*

@@ -12,6 +12,19 @@ const input: OrderSimulationInput = { unitCostCents: 1000, unitSaleCents: 1600, 
   walletDiscountCents: 0, pixDiscountBps: 300, freeShippingThresholdCents: 9900, freeShippingBeforePix: false,
   pmcRequired: false, pmcCeilingCents: null };
 
+test("compares GAM with existing suppliers and rejects unsupported supplier codes", () => {
+  const gam = SupplierOfferSchema.parse({ ...offer, supplier: "GAM", unitCostCents: 800 });
+  const result = compareSupplierOffers({ ean: offer.ean, quantity: 2, offers: [offer, gam] }, now);
+  assert.equal(result.best?.supplier, "GAM");
+  assert.equal(result.options[0].totalCostCents, 1600);
+  for (const supplier of ["ANB", "SANTA_CRUZ", "PROFARMA"]) {
+    assert.equal(SupplierOfferSchema.safeParse({ ...offer, supplier }).success, true);
+  }
+  for (const supplier of ["OTHER", "gam", "", "GAM "]) {
+    assert.equal(SupplierOfferSchema.safeParse({ ...offer, supplier }).success, false);
+  }
+});
+
 test("validates GTIN lengths and check digits without dropping leading zeros", () => {
   for (const ean of ["96385074", "012345678905", "7891234567895", "10012345678902"]) {
     assert.equal(SupplierOfferSchema.parse({ ...offer, ean }).ean, ean);

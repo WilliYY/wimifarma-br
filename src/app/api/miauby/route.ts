@@ -15,6 +15,7 @@ import {
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
 import { acquireMiaubyInference, limitMiaubyRequest } from "@/features/miauby/request-limits";
+import { publicProductImageUrl } from "@/features/product-images/private-supplier-policy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -32,6 +33,7 @@ type GeminiResponse = {
 };
 
 const productSelect = {
+  inventorySource: true,
   activeIngredients: true,
   brand: true,
   category: true,
@@ -55,7 +57,7 @@ function serializeCatalogProduct(product: CatalogProduct): MiaubyCatalogSource {
     brand: product.brand,
     category: product.category,
     id: product.id,
-    imageUrl: product.imageUrl,
+    imageUrl: publicProductImageUrl(product),
     isPopularPharmacy: product.isPopularPharmacy,
     name: product.name,
     price: product.price.toString(),

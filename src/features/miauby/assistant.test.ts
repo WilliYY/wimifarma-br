@@ -11,6 +11,23 @@ import {
   sanitizeMiaubyHistory,
 } from "./assistant";
 
+test("Miauby never exposes private or prescription distributor photos to clients or Gemini", () => {
+  const base = { activeIngredients: [], brand: null, category: null, id: "synthetic", imageUrl: "/public.webp", isPopularPharmacy: false,
+    name: "Produto sintético", price: "10.00", promotionalPrice: null, requiresPrescription: false, searchTerms: [], searchText: "produto sintetico", slug: "produto-sintetico" };
+  const privateUrl = "/api/admin/fornecedores/imagens/00000000-0000-4000-8000-000000000000.webp";
+  const unsafe = [
+    { ...base, imageUrl: privateUrl },
+    { ...base, imageUrl: "/legacy-rx-photo.webp", inventorySource: "DISTRIBUTOR" as const, requiresPrescription: true },
+  ];
+  for (const product of unsafe) {
+    const ranked = rankMiaubyCatalogProducts("Produto sintético", [product]);
+    assert.equal(ranked[0].imageUrl, null);
+    assert.equal(miaubyReplyProducts("Produto sintético", [product])[0].imageUrl, null);
+    assert.doesNotMatch(buildMiaubySystemPrompt([product]), /imagens\/00000000|legacy-rx-photo/);
+  }
+  assert.equal(rankMiaubyCatalogProducts("Produto sintético", [base])[0].imageUrl, "/public.webp");
+});
+
 test("valida a pergunta e limita o historico curto da Miauby", () => {
   const parsed = miaubyRequestSchema.safeParse({
     history: [
