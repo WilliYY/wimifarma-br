@@ -22,7 +22,7 @@ WORKDIR /app
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY . .
+COPY --chown=1001:1001 . .
 
 RUN npm run prisma:generate
 
