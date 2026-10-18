@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-18 - Títulos compactos de losartana
+
+- Nome visível mais curto, mantendo marca/referência, dose e quantidade. Sal e revestimento permanecem na descrição e no cadastro técnico.
+- Helper de apresentação limitado às apresentações simples conhecidas; não altera identidade, EAN, URL, indexação, importação ou pedido. Associações e liberação especial não são simplificadas. Contrato em `68-busca-e-galeria.md`.
+
 ## 2026-10-18 - Fotos públicas conferidas e prazo fora da vitrine
 
 - Após explicação do art. 54 da RDC 44/2009, o titular determinou publicar fotos reais conferidas das losartanas. Registrada a ressalva regulatória, sem alegar conformidade sanitária. Capas públicas passam pelos DTOs; URLs e originais internos continuam privados.

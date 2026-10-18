@@ -7,6 +7,7 @@ import { ProductCashback } from "@/components/site/product-cashback";
 import type { CartProduct } from "@/components/site/cart-provider";
 import type { PublicProductSearchItem } from "@/features/products/public-search";
 import { formatCurrency } from "@/lib/utils";
+import { productDisplayName } from "@/features/products/display-name";
 
 export type RelatedProductCardItem = PublicProductSearchItem & {
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
@@ -69,11 +70,11 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
           {product.category || product.brand || "Produto"}
         </span>
         <Link
-          aria-label={`Ver ${product.name}`}
+          aria-label={`Ver ${productDisplayName(product.name)}`}
           className="mt-1 line-clamp-2 min-h-10 text-sm font-bold leading-5 text-ink after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand"
           href={`/produto/${product.slug}`}
         >
-          {product.name}
+          {productDisplayName(product.name)}
         </Link>
         <span className="mt-2 block line-clamp-1 min-h-4 text-xs font-semibold text-muted">
           {product.activeIngredients.join(" + ") || "Consulte os detalhes"}

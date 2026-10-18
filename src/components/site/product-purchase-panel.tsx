@@ -15,6 +15,7 @@ import {
 import { useCart, type CartProduct } from "@/components/site/cart-provider";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import { formatCurrency } from "@/lib/utils";
+import { productDisplayName } from "@/features/products/display-name";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { requiresPrescriptionReview, requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 
@@ -201,7 +202,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
                   {product.category ?? "Produto"}
                 </span>
                 <strong className="block truncate text-sm text-ink">
-                  {product.name}
+                  {productDisplayName(product.name)}
                 </strong>
               </div>
             </div>

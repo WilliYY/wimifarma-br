@@ -16,6 +16,12 @@ A lateral usa produtos disponíveis encontrados na consulta. O título `Mais ven
 
 ## Direção visual
 
+### Títulos mais curtos — 18/10/2026
+
+Os títulos visíveis das apresentações simples de losartana conferidas usam nome/marca, dose e quantidade, por exemplo `Losartana 50 mg · 30 comprimidos · Germed` e `Aradois 50 mg · 60 comprimidos`. `Potássica` e `revestidos` continuam no nome técnico e na descrição. A transformação é somente de apresentação: banco, EAN, slugs, busca, metadados, importadores e nomes persistidos nos pedidos não mudam. Associações, formulações especiais, fabricantes não reconhecidos e outros produtos conservam o nome completo, evitando apagar diferenças importantes.
+
+Aplicado em cards/correlatos, autocomplete, lateral da busca, detalhe, dock, vitrine, carrinho e checkout. Regressões verificam marca, dose, 30/60 comprimidos e preservação de nomes fora do formato. Validação: 709 testes gerais e 324 de segurança, lint, typecheck, Prisma e build passaram; auditoria de produção sem vulnerabilidades. Os cinco alertas high de desenvolvimento anteriormente documentados permanecem, sem mudança de dependências.
+
 Composição editorial comercial, com identidade vermelha da Wimifarma, tipografia e tokens existentes. Título com termo pesquisado, respiro entre seções, navegação por âncoras e lateral compacta em desktop; no celular a lateral vem após os resultados. Sem animações adicionais. DFII de referência: impacto 4 + adequação 4 + viabilidade 4 + desempenho 4 − risco de consistência 3 = 13.
 
 ## Fotos

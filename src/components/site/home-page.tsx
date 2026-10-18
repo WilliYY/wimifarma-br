@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { productDisplayName } from "@/features/products/display-name";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -712,11 +713,11 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
                     <h3 className="min-h-10 text-sm font-bold leading-5 text-ink">
                       {productHref ? (
                         <Link
-                          aria-label={`Ver ${item.name}`}
+                          aria-label={`Ver ${productDisplayName(item.name)}`}
                           className="line-clamp-2 after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand"
                           href={productHref}
                         >
-                          {item.name}
+                          {productDisplayName(item.name)}
                         </Link>
                       ) : (
                         item.name

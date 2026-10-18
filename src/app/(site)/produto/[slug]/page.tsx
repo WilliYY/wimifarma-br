@@ -39,6 +39,7 @@ import {
 } from "@/features/products/public-search";
 import { getPrisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
+import { productDisplayName } from "@/features/products/display-name";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 
 export const dynamic = "force-dynamic";
@@ -242,7 +243,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
               </>
             ) : null}
-            <span aria-current="page" className="truncate text-ink">{product.name}</span>
+            <span aria-current="page" className="truncate text-ink">{productDisplayName(product.name)}</span>
           </nav>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-start lg:gap-10">
@@ -261,7 +262,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   <ProductShareButton key={product.id} name={product.name} />
                 </div>
 
-                <h1 className="mt-4 text-[1.65rem] font-bold leading-[1.15] tracking-tight text-ink sm:text-3xl lg:text-[2.15rem]">{product.name}</h1>
+                <h1 className="mt-4 text-[1.65rem] font-bold leading-[1.15] tracking-tight text-ink sm:text-3xl lg:text-[2.15rem]">{productDisplayName(product.name)}</h1>
                 <p className="mt-3 flex items-center gap-1.5 text-xs text-muted"><BadgeCheck className="h-4 w-4 text-brand" aria-hidden="true" />Vendido e atendido por <strong className="font-bold text-ink">Wimifarma</strong></p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   {ratingSummary.count > 0 ? (

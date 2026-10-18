@@ -7,6 +7,7 @@ import { ArrowRight, Minus, PackageOpen, Plus, ShieldCheck, Trash2 } from "lucid
 import { useCart } from "@/components/site/cart-provider";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import { SupplierPreparationNotice } from "@/components/site/supplier-preparation-notice";
+import { productDisplayName } from "@/features/products/display-name";
 import { requestCartReview, reviewedCartItems, type CartReviewProposal } from "@/features/products/cart-review";
 
 const currency = new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" });
@@ -81,7 +82,7 @@ export function CartPage() {
                   </Link>
                   <div className="min-w-0">
                     {item.category ? <p className="text-xs font-bold uppercase text-muted">{item.category}</p> : null}
-                    <Link className="mt-1 block text-base font-black text-ink transition hover:text-brand" href={`/produto/${item.slug}`}>{item.name}</Link>
+                    <Link className="mt-1 block text-base font-black text-ink transition hover:text-brand" href={`/produto/${item.slug}`}>{productDisplayName(item.name)}</Link>
                     <strong className="mt-3 block text-xl font-black text-brand">{currency.format(item.unitPriceCents / 100)}</strong>
                     {item.originalPriceCents && item.originalPriceCents > item.unitPriceCents ? <span className="text-xs font-semibold text-muted line-through">{currency.format(item.originalPriceCents / 100)}</span> : null}
                   </div>

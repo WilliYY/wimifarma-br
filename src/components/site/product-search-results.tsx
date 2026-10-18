@@ -4,6 +4,7 @@ import { ArrowRight, Loader2, Pill, SearchX, Sparkles } from "lucide-react";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import { productSearchHref, type PublicProductSearchItem } from "@/features/products/public-search";
 import { cn, formatCurrency } from "@/lib/utils";
+import { productDisplayName } from "@/features/products/display-name";
 
 type ProductSearchResultsProps = {
   activeId: string | null;
@@ -70,7 +71,7 @@ function ResultItem({
       <span className="min-w-0">
         <span className="flex flex-wrap items-center gap-1.5">
           <span className="truncate font-body text-sm font-black text-ink">
-            {item.name}
+            {productDisplayName(item.name)}
           </span>
         </span>
         <span className="mt-1 block truncate font-body text-xs font-semibold text-muted">

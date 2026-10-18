@@ -13,6 +13,7 @@ import { CheckoutDeliveryStep } from "./checkout-delivery-step";
 import { CheckoutCashback } from "./checkout-cashback";
 import { CheckoutWimiCoins } from "./checkout-wimicoins";
 import { normalizePostalCode } from "@/features/products/product-detail";
+import { productDisplayName } from "@/features/products/display-name";
 import { customerShippingFee, FREE_SHIPPING_THRESHOLD_CENTS, isLocalDeliveryAddress } from "@/features/shipping/delivery-policy";
 import { OnlinePayment, type PaymentView } from "./online-payment";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
@@ -174,7 +175,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
               {item.imageUrl ? <Image src={item.imageUrl} alt={item.name} width={56} height={56} sizes="56px" className="h-full w-full object-contain" /> : <ProductImagePlaceholder name={item.name} category={item.category} requiresPrescription={item.requiresPrescription} isPopularPharmacy={item.isPopularPharmacy} className="h-full w-full" showLabel={false} />}
               <span className="absolute -right-1.5 -top-1.5 grid min-h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-[10px] font-bold text-white" aria-label={`${item.quantity} unidades`}>{item.quantity}</span>
             </div>
-            <div className="min-w-0 flex-1"><p className="text-xs font-medium leading-5 text-ink">{item.name}</p><strong className="mt-1 block text-sm font-black text-ink">{money(item.unitPriceCents * item.quantity)}</strong></div>
+            <div className="min-w-0 flex-1"><p className="text-xs font-medium leading-5 text-ink">{productDisplayName(item.name)}</p><strong className="mt-1 block text-sm font-black text-ink">{money(item.unitPriceCents * item.quantity)}</strong></div>
           </div>)}</div>
           <Link href="/carrinho" className="mt-4 inline-flex min-h-8 items-center gap-1 text-xs font-bold text-brand hover:underline">Editar minha cesta<ArrowRight className="h-3 w-3" /></Link>
         </details>}
