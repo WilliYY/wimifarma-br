@@ -34,3 +34,11 @@ Fotos de distribuidores Rx continuam privadas conforme `67-catalogo-distribuidor
 - Para catálogo amplo, acompanhar latência e plano de consulta; índices especializados de texto permanecem evolução futura quando o volume justificar.
 
 Verificações locais desta entrega: 697 testes gerais, 324 de segurança e 15 regressões de busca passaram. Lint, typecheck, Prisma e build passaram. A revisão independente confirmou as correções de dose decimal, identidade de substâncias e SKU. Auditoria de dependências de produção sem vulnerabilidades; auditoria completa conserva cinco alertas high em ferramentas de desenvolvimento, sem alteração de dependências nesta tarefa. O build inicial revelou duas frases em codificação inválida no seletor; arquivo normalizado para UTF-8 antes da repetição bem-sucedida.
+
+## Implantação e conferência real
+
+Código `f9b465d`, enviado ao GitHub e construído na VPS em 18/10/2026. Backup PostgreSQL validado antes da migração; imagem anterior preservada para rollback. Migração aplicada e aplicação saudável em `/api/health`. Hashes dos produtos (desconsiderando o novo campo vazio) e das ofertas permaneceram iguais; a contagem de pedidos não mudou.
+
+Auditoria somente leitura encontrou 11 produtos para `losartana 50mg`, um para `losartana 50 mg (corus)` e oito relacionados para `corus`; sondas de doses decimais passaram também no PostgreSQL real. Não há apresentação de losartana + hidroclorotiazida publicada neste catálogo, portanto a consulta retorna zero até cadastro e validação próprios.
+
+Chrome real: selo visual ausente no detalhe, Adicionar/Comprar disponíveis; Enter do header abriu os 11 resultados; Enter da busca móvel abriu Corus e outras apresentações. Lateral apresentou `Relevantes para sua busca`, sem inventar vendas. Em viewport 390 × 844, documento de 375 px, sem transbordamento horizontal; dimensão temporária restaurada. Galeria múltipla recebeu teste interativo com dados sintéticos, sem acrescentar imagens ou produtos fictícios em produção. Nenhum pedido, cobrança, envio ou postagem foi realizado.
