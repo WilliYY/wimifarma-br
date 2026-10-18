@@ -24,8 +24,8 @@ test("resolve menor custo elegível e respeita cota, saldo real e validade", () 
   assert.equal(best?.id, "a");
 });
 
-test("DTO público oculta custos e imagem Rx, preservando estoque físico", () => {
-  const dto = withCommerceAvailability({ ...product, requiresPrescription: true, imageUrl: "private.jpg", imageAsset: { id: "img" } }, now);
+test("DTO público oculta custos e imagem interna, preservando estoque físico", () => {
+  const dto = withCommerceAvailability({ ...product, requiresPrescription: true, imageUrl: "/api/admin/fornecedores/imagens/00000000-0000-4000-8000-000000000000.webp", imageAsset: { id: "img" } }, now);
   assert.equal(dto.stock, 17);
   assert.equal(dto.price, "16.00");
   assert.equal(dto.promotionalPrice, null);
@@ -37,6 +37,14 @@ test("DTO público oculta custos e imagem Rx, preservando estoque físico", () =
   const expired = withCommerceAvailability(product, now + 2000);
   assert.equal(expired.purchaseLimit, 0);
   assert.equal(expired.availableForPurchase, false);
+});
+
+test("foto pública aprovada permanece visível no distribuidor Rx sem expor relação interna", () => {
+  const dto = withCommerceAvailability({ ...product, requiresPrescription: true, imageUrl: "/uploads/products/approved.webp", imageAsset: { originalName: "internal-source.png" } }, now);
+  assert.equal(dto.imageUrl, "/uploads/products/approved.webp");
+  assert.equal(dto.imageAsset, null);
+  assert.equal(dto.price, "16.00");
+  assert.equal(dto.purchaseLimit, 5);
 });
 
 test("produto físico legado mantém preço e estoque", () => {

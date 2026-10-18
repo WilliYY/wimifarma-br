@@ -17,7 +17,6 @@ import { ProductImagePlaceholder } from "@/components/site/product-image-placeho
 import { formatCurrency } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { requiresPrescriptionReview, requiresPurchaseAssistance } from "@/features/products/purchase-policy";
-import { getSupplierPreparationEstimate } from "@/features/supplier-catalog/preparation";
 
 function QuantitySelector({
   maxQuantity,
@@ -63,7 +62,6 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
   const purchasePanelRef = useRef<HTMLDivElement>(null);
   const requiresAssistance = requiresPurchaseAssistance(product);
   const maxQuantity = Math.min(product.stock, 20);
-  const preparation = product.inventorySource === "DISTRIBUTOR" ? getSupplierPreparationEstimate(new Date()) : null;
 
   useEffect(() => {
     let animationFrame: number | null = null;
@@ -140,7 +138,6 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
         className="mt-5 border-t border-line pt-5"
         ref={purchasePanelRef}
       >
-        {preparation && <p className="mb-4 rounded-xl border border-line bg-surface p-3 text-sm leading-6 text-ink"><strong>1 dia de preparação · previsão até {preparation.readyDateLabel}.</strong><br />O calendário considera recebimentos de terça a sábado. Avisaremos quando estiver pronto para retirada ou envio.</p>}
         {requiresPrescriptionReview(product) ? <p className="mb-4 rounded-xl bg-surface-subtle p-3 text-xs leading-5 text-muted">Compre online. Apresente a receita à farmácia para conferência antes da entrega ou retirada. Não é necessário enviar um arquivo neste checkout.</p> : null}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>

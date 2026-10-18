@@ -55,7 +55,7 @@ test("product update cannot expose an existing private image by changing source 
 });
 
 test("prescription distributor private photos and normal public photos retain successful product saves", async () => {
-  for (const [inventorySource, requiresPrescription, imageUrl] of [["DISTRIBUTOR", true, privateUrl], ["PHARMACY", false, "/uploads/products/synthetic.webp"]] as const) {
+  for (const [inventorySource, requiresPrescription, imageUrl] of [["DISTRIBUTOR", true, privateUrl], ["DISTRIBUTOR", true, "/uploads/products/synthetic.webp"], ["PHARMACY", false, "/uploads/products/synthetic.webp"]] as const) {
     const h = await harness({ inventorySource, requiresPrescription, imageUrl });
     assert.equal((await h.create({ inventorySource, requiresPrescription, imageUrl })).status, 201);
     assert.equal((await h.update({ requiresPrescription, imageUrl })).status, 200);

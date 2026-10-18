@@ -20,11 +20,25 @@ Composição editorial comercial, com identidade vermelha da Wimifarma, tipograf
 
 ## Fotos
 
+### Revisão solicitada pelo titular em 18/10/2026
+
+O titular determinou exibir fotos reais conferidas também no piloto de losartana, após ser informado da restrição do art. 54 da RDC 44/2009. Essa decisão de publicação não equivale a confirmação de conformidade sanitária nem substitui a revisão do responsável técnico. A regra anterior que ocultava qualquer foto de `DISTRIBUTOR` Rx foi retirada; URLs do armazenamento interno continuam protegidas e nunca entram nos DTOs públicos. A publicação usa cópias públicas distintas, vinculadas à biblioteca e auditadas por EAN, fonte e hash, sem abrir o endpoint privado ou sobrescrever os originais.
+
+Fotos públicas aprovadas têm prioridade em cards, busca, detalhe e compra. A caixa institucional fica somente nos itens sem foto pública validada ou, no detalhe, quando todas as fotos falham. Não usar imagens de outra dose, quantidade, fabricante ou placeholders de distribuidora. A imagem Geolab 50 mg/30 comprimidos foi conferida na página da Riomed pelo EAN `7899095236639`; as cinco fotos anteriores vêm da Profarma. Não foi confirmada a data da arte de cada embalagem.
+
+Por solicitação do titular, removidos o selo `1 dia de preparação` dos cards e o quadro do detalhe. O calendário operacional, a previsão no carrinho/checkout e os prazos do frete e do pedido permanecem. A retirada de texto não transforma estoque externo em físico nem promete retirada em 30 minutos.
+
+Operação: `scripts/publish-pilot-product-images.ts --file <manifesto privado> --actor-id <ADMIN ativo>` faz dry-run; `--apply` publica. Executar pela ferramenta `tsx`, como UID 1001 no contêiner de ferramentas e com o volume de uploads montado. Manifesto `images` contém `ean`, `filePath`, `mimeType`, `sourceUrl` HTTPS sem credenciais e `sha256` da fonte local. Apenas apresentações já revisadas do piloto são aceitas, com nome/marca/classificação exatos relidos após lock. Saída WebP até 640 px e 100 KB, sem ampliar nem inventar conteúdo; biblioteca e auditoria são atômicas na transação, com remoção dos arquivos novos se houver falha. Capa pública existente é preservada em repetições; originais internos não são removidos. Fonte/hash e antes/depois ficam no registro administrativo. O script altera somente os campos de capa e vínculo da imagem.
+
+Conferência de fontes desta rodada: ANB apresenta caixa genérica de distribuidora para Biosintética; Profarma mostra placeholder para Biosintética, Nova Química e EMS, e não retornou imagem para os EANs Geolab/Sandoz na busca atual. EMS oficial também usa placeholder. Não associar essas ilustrações como fotos reais. Para Biosintética, Nova Química, EMS e Sandoz permanece a caixa institucional até uma foto exata ser validada.
+
+Validação local desta revisão: 706 testes gerais e 324 de segurança passaram, incluindo publicação sem escrita no dry-run, identidade/hash/fonte, rollback de arquivo e preservação de capa existente. Lint, typecheck, Prisma e build passaram; revisão independente aprovou sem achados. Auditoria de produção sem vulnerabilidades; auditoria completa mantém os cinco alertas high preexistentes de desenvolvimento.
+
 `Product.imageUrl` continua sendo a capa usada pelos cards e checkout. A migração aditiva `20261018120000_product_gallery` cria `imageUrls`, inicialmente vazio, para extras ordenadas. O cadastro pode ter até seis fotos distintas no total. O painel reutiliza a biblioteca pública; não busca nem inventa fotos extras automaticamente.
 
 O servidor deduplica e confere extras na biblioteca sob a trava do catálogo. Uma foto usada somente como extra também impede exclusão da biblioteca. Omissão preserva extras na edição; `[]` remove. Galeria com miniaturas, seleção por teclado, ampliação e falha isolada por URL: uma foto quebrada não impede as demais.
 
-Fotos de distribuidores Rx continuam privadas conforme `67-catalogo-distribuidores-piloto.md`. Extras não aceitam URLs privadas e os DTOs públicos removem todos os arrays Rx; HTML e metadados não os expõem. Fotos adicionais só aparecem quando cadastradas e permitidas para publicação.
+URLs de fotos internas de distribuidores continuam privadas conforme `67-catalogo-distribuidores-piloto.md`. Extras não aceitam URLs privadas e os DTOs públicos filtram essas URLs, inclusive em arrays; HTML e metadados não as expõem. Fotos públicas aprovadas seguem a revisão acima.
 
 ### Ilustração institucional para medicamentos sem foto
 
@@ -34,7 +48,7 @@ Em 18/10/2026 o titular forneceu arte de caixa Wimifarma e pediu fundo transpare
 
 Aplicado na lista, correlatos, autocomplete, lateral da busca, detalhe, carrinho, checkout, dock de compra, avaliações da conta e sugestões da Miauby. Fotos reais continuam prioritárias; se todas as fotos da galeria falharem, o detalhe usa a ilustração. A seção de medicamentos da home aceita cadastros sem foto; regras de destaque e separação de imagens privadas permanecem.
 
-A ilustração não é gravada em `Product.imageUrl` nem vira foto de produto em metadados, feed ou pedidos. Imagens Rx reais continuam privadas. Não altera compras, saldos, cotas, estoques ou classificação de receita.
+A ilustração não é gravada em `Product.imageUrl` nem vira foto de produto em metadados, feed ou pedidos. Os originais no armazenamento interno continuam privados. Não altera compras, saldos, cotas, estoques ou classificação de receita.
 
 Validação da ilustração: 699 testes gerais, 324 de segurança, lint, typecheck, Prisma e build passaram; revisão independente sem achado pendente. WebP com alpha validado, 35.132 bytes. Auditoria de dependências de produção sem vulnerabilidades; os cinco alertas de desenvolvimento já documentados permanecem fora desta alteração visual.
 

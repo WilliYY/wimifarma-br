@@ -78,15 +78,15 @@ export function withCommerceAvailability<T extends CommerceProduct>(product: T, 
   const { supplierOffers: _privateOffers, price: _price, promotionalPrice: _promo, inventorySource: _source, imageUrl: _image, imageUrls: _images, imageAsset: _asset, ...safe } = product;
   void [_privateOffers, _price, _promo, _source, _image, _images, _asset];
   const inventorySource = product.inventorySource ?? "PHARMACY";
+  const imageUrl = publicProductImageUrl(product);
   if (inventorySource === "PHARMACY") return {
-    ...safe, inventorySource, imageUrl: publicProductImageUrl(product), imageUrls: publicProductImageUrls(product), imageAsset: product.imageAsset, purchaseLimit: Math.max(0, product.stock), availableForPurchase: product.stock > 0,
+    ...safe, inventorySource, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: imageUrl ? product.imageAsset : null, purchaseLimit: Math.max(0, product.stock), availableForPurchase: product.stock > 0,
     price: String(product.price), promotionalPrice: product.promotionalPrice == null ? null : String(product.promotionalPrice),
   };
   const offer = resolveSupplierOffer(product, 1, now);
   return {
-    ...safe, inventorySource, imageUrl: publicProductImageUrl(product), imageUrls: publicProductImageUrls(product), imageAsset: product.imageAsset, purchaseLimit: offer?.purchaseLimit ?? 0, availableForPurchase: Boolean(offer),
+    ...safe, inventorySource, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: null, purchaseLimit: offer?.purchaseLimit ?? 0, availableForPurchase: Boolean(offer),
     price: offer ? (offer.unitPriceCents / 100).toFixed(2) : String(product.price), promotionalPrice: null,
-    ...(product.requiresPrescription ? { imageUrl: null, imageAsset: null } : {}),
   };
 }
 

@@ -6,7 +6,7 @@ import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { build } from "esbuild";
 
-test("customer review page omits private and prescription distributor photos while keeping public photos", async () => {
+test("customer review page omits private URLs while keeping approved public prescription photos", async () => {
   const bundle = await build({ entryPoints: ["src/app/(site)/minha-conta/avaliacoes/page.tsx"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", jsx: "automatic", plugins: [{ name: "private-review-fixtures", setup(builder) {
     builder.onResolve({ filter: /^react$/ }, () => ({ path: "react", external: true }));
     builder.onResolve({ filter: /features\/auth\/auth$|lib\/prisma$|^next\/(image|link|navigation)$/ }, args => ({ path: args.path, namespace: "fixture" }));
@@ -26,6 +26,7 @@ test("customer review page omits private and prescription distributor photos whi
   vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL,
     fixture: { db: { customer: { findFirst: async () => ({ id: "synthetic-customer" }) }, product: { findMany: async () => products } } } });
   const html = renderToStaticMarkup(await loaded.exports.default({ searchParams: Promise.resolve({}) }));
-  assert.doesNotMatch(html, /api\/admin\/fornecedores\/imagens|legacy-rx-photo/);
+  assert.doesNotMatch(html, /api\/admin\/fornecedores\/imagens/);
+  assert.match(html, /legacy-rx-photo.webp/);
   assert.match(html, /public-product.webp/);
 });

@@ -28,6 +28,8 @@ Não transmitir pedidos, efetuar pagamentos, enviar mensagens, substituir fabric
 
 ## Fotos internas
 
+Revisão posterior em 18/10/2026: o titular solicitou publicação de cópias das fotos validadas, após esclarecimento da restrição sanitária. O contrato atual está em `68-busca-e-galeria.md`; a descrição abaixo registra o armazenamento interno que continua protegido. Rotinas de preço devem preservar capas públicas já aprovadas: omitir `internalImage` e não recolocar URL interna sobre a capa pública. Nenhum original privado ou endpoint administrativo passa a ser público.
+
 Conferir marca, dosagem e quantidade visíveis na embalagem antes de associar ao EAN. URL do distribuidor não comprova autorização comercial nem que a arte é a versão mais recente; registrar a origem e não afirmar atualidade gráfica sem comprovação. Não gerar ou redesenhar embalagem de medicamento.
 
 As fotos de medicamentos com receita deste piloto ficam **somente no ADMIN/MANAGER**, fora de `public`, por regra sanitária já documentada no catálogo. O site público mantém representação neutra e a compra normal de receita comum, com conferência farmacêutica antes da dispensação. URLs internas também são removidas das respostas públicas, avaliações e dados enviados à IA.

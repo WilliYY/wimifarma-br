@@ -1,6 +1,6 @@
 # Catálogo de distribuidores — piloto por EAN
 
-Atualização de 18/10/2026: apenas ANB e Profarma permanecem como fontes comerciais. GAM/SantaCruz servem somente de referência. Atualização conserva cotas/reservas, fotos Rx são privadas e leves, e rotina Codex diária às 8h/12h/17h depende de PC/navegador. Procedimento e evidências atuais em [68](68-rotina-piloto-fornecedores.md); a seção de 17/10 abaixo é histórico da primeira entrega.
+Atualização de 18/10/2026: apenas ANB e Profarma permanecem como fontes comerciais. GAM/SantaCruz servem somente de referência. Atualização conserva cotas/reservas e a rotina Codex diária às 8h/12h/17h depende de PC/navegador. Revisão posterior do titular autorizou cópias públicas de fotos conferidas; os originais internos seguem protegidos e a caixa é fallback. O prazo deixa de aparecer nos cards/detalhe, permanecendo no carrinho/checkout. Decisão e ressalva regulatória em [busca e galeria](68-busca-e-galeria.md). Procedimento em [rotina](68-rotina-piloto-fornecedores.md); a seção de 17/10 abaixo é histórico da primeira entrega.
 
 ## Regras aprovadas em 17/10/2026
 

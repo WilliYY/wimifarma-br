@@ -25,11 +25,12 @@ test("galeria resolve somente imagens públicas existentes e limita seis fotos t
 });
 
 test("DTO de distribuidor Rx remove arrays e metadados de imagens privadas", () => {
-  const raw = { inventorySource: "DISTRIBUTOR" as const, requiresPrescription: true, stock: 0, price: 10, imageUrl: "/cover.webp", imageUrls: ["/back.webp"], imageAsset: { url: "/private.webp" } };
+  const privateUrl = "/api/admin/fornecedores/imagens/00000000-0000-4000-8000-000000000000.webp";
+  const raw = { inventorySource: "DISTRIBUTOR" as const, requiresPrescription: true, stock: 0, price: 10, imageUrl: privateUrl, imageUrls: [privateUrl, "/back.webp", "/back.webp"], imageAsset: { url: privateUrl } };
   const safe = withCommerceAvailability(raw);
   assert.equal(safe.imageUrl, null);
-  assert.deepEqual(safe.imageUrls, []);
+  assert.deepEqual(safe.imageUrls, ["/back.webp"]);
   assert.equal(safe.imageAsset, null);
-  assert.doesNotMatch(JSON.stringify(safe), /back.webp|cover.webp|private.webp/);
+  assert.doesNotMatch(JSON.stringify(safe), /api\/admin\/fornecedores\/imagens/);
   assert.deepEqual(withCommerceAvailability({ ...raw, inventorySource: "PHARMACY" as const }).imageUrls, ["/back.webp"]);
 });

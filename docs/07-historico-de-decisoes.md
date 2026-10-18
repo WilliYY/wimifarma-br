@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-18 - Fotos públicas conferidas e prazo fora da vitrine
+
+- Após explicação do art. 54 da RDC 44/2009, o titular determinou publicar fotos reais conferidas das losartanas. Registrada a ressalva regulatória, sem alegar conformidade sanitária. Capas públicas passam pelos DTOs; URLs e originais internos continuam privados.
+- Publicação em cópias leves da biblioteca, por EAN/apresentação e com fonte/hash/auditoria; sem substituição por embalagem aproximada e sem alterar ofertas, preços, cotas, estoque físico ou classificação de receita. Caixa institucional somente como fallback.
+- Removido `1 dia de preparação` de cards e detalhe, preservando calendário e informação de prazo no carrinho e checkout. Contrato e verificação em `68-busca-e-galeria.md`.
+
 ## 2026-10-18 - Ilustração de medicamento sem foto
 
 - Arte institucional fornecida pelo titular, com fundo transparente e sem quantidade, usada somente no fallback visual de medicamentos. Correção do titular preserva os outros textos e elementos da arte original.
