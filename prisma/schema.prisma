@@ -502,6 +502,7 @@ model PaymentWebhookEvent {
 }
 
 model OrderItem {
+  supplierDemandAllowed Boolean @default(false)
   inventorySource InventorySource @default(PHARMACY)
   supplierOfferId String?
   supplierOffer SupplierCatalogOffer? @relation(fields: [supplierOfferId], references: [id], onDelete: SetNull)

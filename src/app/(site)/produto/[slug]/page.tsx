@@ -214,6 +214,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     stock: product.stock,
   });
   const cartProduct = {
+    supplierDemandAllowed: product.supplierDemandAllowed,
     inventorySource: product.inventorySource,
     category: product.category,
     id: product.id,

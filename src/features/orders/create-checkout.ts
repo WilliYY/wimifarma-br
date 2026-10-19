@@ -98,9 +98,9 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
       + (extraCentUnits > 0 ? productCashbackCents(product, paidUnitCents + 1, extraCentUnits) : 0) : 0;
     const earnedPoints = membership?.active ? productWimicoinsPoints(product, paidUnitCents, baseUnits)
       + (extraCentUnits > 0 ? productWimicoinsPoints(product, paidUnitCents + 1, extraCentUnits) : 0) : 0;
-    const supplier = product.inventorySource === "DISTRIBUTOR" ? resolveSupplierOffer(product, item.quantity) : null;
+    const supplier = product.inventorySource === "DISTRIBUTOR" ? resolveSupplierOffer({ ...product, supplierDemandAllowed: true }, item.quantity) : null;
     if (product.inventorySource === "DISTRIBUTOR" && !supplier) throw new PaymentError("A disponibilidade do distribuidor mudou. Revise o carrinho.", 409);
-    return { ...item, inventorySource: product.inventorySource ?? "PHARMACY", supplierOfferId: supplier?.id, supplierCode: supplier?.supplier,
+    return { ...item, supplierDemandAllowed: product.inventorySource === "DISTRIBUTOR", inventorySource: product.inventorySource ?? "PHARMACY", supplierOfferId: supplier?.id, supplierCode: supplier?.supplier,
       cashbackDiscountCents: discounts[index].cashbackDiscountCents, wimicoinsDiscountPoints: discounts[index].wimicoinsDiscountPoints,
       cashbackEarnedCents: earned, cashbackRateBps: earned > 0 ? product.cashbackRateBps : 0,
       wimicoinsEarnedPoints: earnedPoints, wimicoinsRateBps: earnedPoints > 0 ? product.wimicoinsRateBps : 0 };

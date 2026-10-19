@@ -9,7 +9,7 @@ export async function validateSupplierMarkupChange(tx: Prisma.TransactionClient,
   if (await tx.orderItem.findFirst({ where: { productId: current.id, order: { status: { notIn: ["COMPLETED", "CANCELED"] } } }, select: { id: true } })) {
     throw new ProductMutationError("Conclua ou cancele os pedidos em aberto deste produto antes de alterar o acréscimo.", 409);
   }
-  if (current.inventorySource === "DISTRIBUTOR" && resolveSupplierOffer(current) && !resolveSupplierOffer({ ...current, supplierMarkupBps: requested })) {
+  if (current.inventorySource === "DISTRIBUTOR" && resolveSupplierOffer({ ...current, supplierDemandAllowed: true }) && !resolveSupplierOffer({ ...current, supplierDemandAllowed: true, supplierMarkupBps: requested })) {
     throw new ProductMutationError("Este acréscimo ultrapassa o teto de venda conferido. Reduza o percentual.");
   }
 }

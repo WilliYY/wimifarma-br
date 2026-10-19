@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-19 — Catálogo compacto, vitrines com foto e demanda de distribuidor
+
+- Decisão: separar visualmente origens, permitir edição explícita de até 50 produtos com revisão e transação atômica, e montar coleções diárias somente com fotografias públicas válidas e classificação adequada.
+- Decisão comercial do titular: aceitar pagamento de novos pedidos de distribuidor acima da quantidade observada. A política é persistida por item; pedidos antigos mantêm cotas, e estoque físico, validade, custos, tetos e receita permanecem protegidos.
+- Impacto: API de lote, painel, homepage/categorias, login, carrinho/checkout e migração aditiva de `OrderItem`. Guarda técnica finita e limitação de volumes nacionais documentadas em [75](75-catalogo-vitrines-e-compra-distribuidor.md).
+
 ## 2026-10-19 - Avisos de disponibilidade por produto
 
 - Produtos publicados indisponíveis permanecem visíveis. Cliente autenticado escolhe WhatsApp/e-mail e autoriza um aviso por até 30 dias; não há inscrição automática nem reserva. Disponibilidade reutiliza as ofertas/cotas e o estoque físico existentes, sem modificar dados comerciais.

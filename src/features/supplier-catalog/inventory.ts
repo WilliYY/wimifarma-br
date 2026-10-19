@@ -2,7 +2,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { PaymentError } from "@/features/payments/schema";
 import { resolveSupplierOffer } from "./commerce";
 
-type Item = { id: string; productId: string | null; supplierOfferId?: string | null; quantity: number; unitPriceCents: number };
+type Item = { id: string; productId: string | null; supplierOfferId?: string | null; supplierDemandAllowed?: boolean; quantity: number; unitPriceCents: number };
 type PricingProduct = { ean?: string | null; eanNormalized?: string | null; requiresPrescription?: boolean; supplierMarkupBps?: number };
 
 /** Physical rows first by product, then distributor rows by offer: identical global lock order. */
@@ -27,7 +27,7 @@ export async function reserveSupplierInventory(tx: Prisma.TransactionClient, ite
     if (previous.status !== "ACTIVE" || previous.offerId !== item.supplierOfferId || previous.quantity !== item.quantity) throw new PaymentError("A reserva deste item mudou.", 409);
     return;
   }
-  const selected = offer && offer.productId === item.productId ? resolveSupplierOffer({ eanNormalized: offer.eanNormalized, ...product, supplierOffers: [offer] }, item.quantity) : null;
+  const selected = offer && offer.productId === item.productId ? resolveSupplierOffer({ eanNormalized: offer.eanNormalized, ...product, supplierDemandAllowed: item.supplierDemandAllowed === true, supplierOffers: [offer] }, item.quantity) : null;
   if (!selected || selected.unitPriceCents !== item.unitPriceCents) throw new PaymentError("A oferta do distribuidor mudou. Revise o carrinho.", 409);
   await tx.supplierCatalogOffer.update({ where: { id: offer!.id }, data: { reservedQuantity: { increment: item.quantity } } });
   await tx.supplierInventoryReservation.create({ data: { orderItemId: item.id, offerId: offer!.id, quantity: item.quantity, unitCostCents: offer!.unitCostCents, status: "ACTIVE" } });
@@ -39,10 +39,10 @@ export async function validateSupplierPayment(tx: Prisma.TransactionClient, item
   const reservation = await tx.supplierInventoryReservation.findUnique({ where: { orderItemId: item.id } });
   if (!offer || offer.productId !== item.productId || !reservation || reservation.status !== "ACTIVE" || reservation.offerId !== offer.id || reservation.quantity !== item.quantity) throw new PaymentError("Reserva do distribuidor indisponível. Revise o pedido.", 409);
   // Add only this order's allocation back for validation; other orders remain counted.
-  const selected = resolveSupplierOffer({ eanNormalized: offer.eanNormalized, ...product, supplierOffers: [{ ...offer, reservedQuantity: offer.reservedQuantity - reservation.quantity }] }, item.quantity);
+  const selected = resolveSupplierOffer({ eanNormalized: offer.eanNormalized, ...product, supplierDemandAllowed: item.supplierDemandAllowed === true, supplierOffers: [{ ...offer, reservedQuantity: offer.reservedQuantity - reservation.quantity }] }, item.quantity);
   if (!selected || selected.unitPriceCents !== item.unitPriceCents || reservation.unitCostCents !== offer.unitCostCents) throw new PaymentError("Preço ou disponibilidade do distribuidor mudou. Revise o pedido antes de pagar.", 409);
   const offers = await tx.supplierCatalogOffer.findMany({ where: { productId: item.productId! } });
-  const best = resolveSupplierOffer({ ...(product ?? { eanNormalized: offer.eanNormalized }), supplierOffers: offers.map(row => row.id === offer.id ? { ...row, reservedQuantity: row.reservedQuantity - reservation.quantity } : row) }, item.quantity);
+  const best = resolveSupplierOffer({ ...(product ?? { eanNormalized: offer.eanNormalized }), supplierDemandAllowed: item.supplierDemandAllowed === true, supplierOffers: offers.map(row => row.id === offer.id ? { ...row, reservedQuantity: row.reservedQuantity - reservation.quantity } : row) }, item.quantity);
   if (!best || best.unitPriceCents !== item.unitPriceCents) throw new PaymentError("Há uma nova condição para este produto. Cancele o pedido e atualize o carrinho antes de pagar.", 409);
 }
 

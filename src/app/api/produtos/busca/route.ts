@@ -7,6 +7,7 @@ export const runtime = "nodejs";
 
 function serializeProduct(product: SearchCatalogProduct): PublicProductSearchItem {
   return {
+    supplierDemandAllowed: product.supplierDemandAllowed,
     cashbackEnabled: product.cashbackEnabled, cashbackRateBps: product.cashbackRateBps,
     activeIngredients: product.activeIngredients, brand: product.brand, category: product.category,
     catalogClassification: product.catalogClassification,

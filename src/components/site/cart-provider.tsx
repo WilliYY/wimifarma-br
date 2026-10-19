@@ -13,9 +13,11 @@ import {
 import { requiresPurchaseAssistance, type PrescriptionType } from "@/features/products/purchase-policy";
 import { publicProductImageUrl } from "@/features/product-images/private-supplier-policy";
 import { reviewedCartItems, type CartReviewProposal } from "@/features/products/cart-review";
+import { orderQuantityLimit } from "@/features/products/quantity";
 const STORAGE_KEY = "wimifarma-cart-v1";
 
 export type CartProduct = {
+  supplierDemandAllowed?: boolean;
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
   catalogClassification?: unknown;
   id: string;
@@ -107,7 +109,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     product = { ...product, imageUrl: publicProductImageUrl(product) };
-    const safeQuantity = Math.min(Math.max(Math.trunc(quantity), 1), product.stock, 20);
+    const safeQuantity = Math.min(Math.max(Math.trunc(quantity), 1), orderQuantityLimit(product));
 
     setItems((current) => {
       const existing = current.find((item) => item.id === product.id);
@@ -117,7 +119,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           ? {
               ...item,
               ...product,
-              quantity: Math.min(item.quantity + safeQuantity, product.stock, 20),
+              quantity: Math.min(item.quantity + safeQuantity, orderQuantityLimit(product)),
             }
           : item,
       );
@@ -130,7 +132,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       current
         .map((item) =>
           item.id === productId
-            ? { ...item, quantity: Math.min(Math.max(Math.trunc(quantity), 0), item.stock, 20) }
+            ? { ...item, quantity: Math.min(Math.max(Math.trunc(quantity), 0), orderQuantityLimit(item)) }
             : item,
         )
         .filter((item) => item.quantity > 0),
@@ -194,6 +196,6 @@ function isCartItem(value: unknown): value is CartItem {
     typeof item.isPopularPharmacy === "boolean" &&
     Number.isSafeInteger(item.quantity) &&
     Number(item.quantity) > 0 &&
-    Number(item.quantity) <= Math.min(Number(item.stock), 20)
+    Number(item.quantity) <= orderQuantityLimit({ stock: Number(item.stock), inventorySource: typeof item.inventorySource === "string" ? item.inventorySource : undefined, supplierDemandAllowed: item.supplierDemandAllowed === true })
   );
 }

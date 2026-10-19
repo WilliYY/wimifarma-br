@@ -22,6 +22,8 @@ export async function quoteCart(postalCode: string, items: CheckoutRequest["item
   if (!prepared.ok) throw new ShippingError(prepared.message, 409);
   const serviceIds = permittedShippingServices(settings.serviceIds, products);
   if (!serviceIds.length) throw new ShippingError("Este carrinho precisa de um serviço de transporte autorizado para todos os produtos. Consulte a farmácia.", 422);
+  // Reject before allocating one object per unit; quantity can exceed 20 now.
+  if (items.reduce((sum, item) => sum + item.quantity, 0) > 20) throw new ShippingError("Este pedido precisa de uma embalagem consolidada. Consulte a farmácia para calcular o frete.");
   const volumes = items.map((item) => {
     const product = products.find((p) => p.id === item.productId)!;
     const profile = validateShippingProduct(product);

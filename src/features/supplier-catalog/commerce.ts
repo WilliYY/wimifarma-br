@@ -1,5 +1,6 @@
 import { publicProductImageUrl, publicProductImageUrls } from "@/features/product-images/private-supplier-policy";
 import { priceWithMarkup } from "@/features/supplier-planning/planning";
+import { MAX_ORDER_ITEM_QUANTITY } from "@/features/products/quantity";
 
 export const supplierOfferInclude = { supplierOffers: true, supplierMarkupBps: true, catalogClassification: true } as const;
 
@@ -19,6 +20,7 @@ export type SupplierCommerceOffer = {
 };
 
 export type CommerceProduct = {
+  supplierDemandAllowed?: boolean;
   catalogClassification?: unknown;
   imageAssetId?: string | null;
   supplierMarkupBps?: number;
@@ -52,8 +54,8 @@ export function gtinVariants(raw: unknown): string[] {
   return [8, 12, 13, 14].filter(size => /^0*$/.test(canonical.slice(0, 14 - size))).map(size => canonical.slice(-size));
 }
 
-export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "eanNormalized" | "supplierOffers" | "requiresPrescription" | "supplierMarkupBps">, quantity = 1, now = Date.now()) {
-  if (!Number.isSafeInteger(quantity) || quantity < 1 || !Number.isFinite(now)) return null;
+export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "eanNormalized" | "supplierOffers" | "requiresPrescription" | "supplierMarkupBps" | "supplierDemandAllowed">, quantity = 1, now = Date.now()) {
+  if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > MAX_ORDER_ITEM_QUANTITY || !Number.isFinite(now)) return null;
   const markup = product.supplierMarkupBps ?? 6000;
   if (!Number.isSafeInteger(markup) || markup < 0 || markup > 10000) return null;
   const ean = normalizeGtin(product.eanNormalized ?? product.ean);
@@ -70,14 +72,17 @@ export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "ean
     const unitPriceCents = priceWithMarkup(offer.unitCostCents, markup);
     if (product.requiresPrescription && (!Number.isSafeInteger(offer.retailCeilingCents) || offer.retailCeilingCents! < 1)) return [];
     if (offer.retailCeilingCents != null && (!Number.isSafeInteger(offer.retailCeilingCents) || unitPriceCents > offer.retailCeilingCents)) return [];
-    const purchaseLimit = Math.max(0, Math.min(offer.allocationQuantity, offer.stockQuantity ?? offer.allocationQuantity) - offer.reservedQuantity - offer.committedQuantity);
+    // The owner accepts supplier fulfilment above observed quantities. Keep the
+    // observation and accounting intact; this limit bounds protocol/money only.
+    if (product.supplierDemandAllowed && offer.stockQuantity === 0) return [];
+    const purchaseLimit = product.supplierDemandAllowed ? MAX_ORDER_ITEM_QUANTITY : Math.max(0, Math.min(offer.allocationQuantity, offer.stockQuantity ?? offer.allocationQuantity) - offer.reservedQuantity - offer.committedQuantity);
     if (purchaseLimit < quantity) return [];
     return [{ ...offer, purchaseLimit, unitPriceCents }];
   }).sort((a, b) => a.unitCostCents - b.unitCostCents || a.supplier.localeCompare(b.supplier) || a.id.localeCompare(b.id))[0] ?? null;
 }
 
 export function withCommerceAvailability<T extends CommerceProduct>(product: T, now = Date.now()): Omit<T, "supplierMarkupBps" | "supplierOffers" | "price" | "promotionalPrice" | "inventorySource" | "imageUrl" | "imageUrls" | "imageAsset" | "imageAssetId"> & {
-  inventorySource: "PHARMACY" | "DISTRIBUTOR"; price: string; promotionalPrice: string | null;
+  inventorySource: "PHARMACY" | "DISTRIBUTOR"; supplierDemandAllowed?: boolean; price: string; promotionalPrice: string | null;
   purchaseLimit: number; availableForPurchase: boolean; imageUrl: string | null; imageUrls: string[]; imageAsset?: unknown;
 } {
   const { supplierMarkupBps: _markup, supplierOffers: _privateOffers, price: _price, promotionalPrice: _promo, inventorySource: _source, imageUrl: _image, imageUrls: _images, imageAsset: _asset, imageAssetId: _assetId, ...safe } = product;
@@ -85,12 +90,12 @@ export function withCommerceAvailability<T extends CommerceProduct>(product: T, 
   const inventorySource = product.inventorySource ?? "PHARMACY";
   const imageUrl = publicProductImageUrl(product);
   if (inventorySource === "PHARMACY") return {
-    ...safe, inventorySource, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: imageUrl && !product.requiresPrescription ? product.imageAsset : null, purchaseLimit: Math.max(0, product.stock), availableForPurchase: product.stock > 0,
+    ...safe, inventorySource, supplierDemandAllowed: false, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: imageUrl && !product.requiresPrescription ? product.imageAsset : null, purchaseLimit: Math.max(0, product.stock), availableForPurchase: product.stock > 0,
     price: String(product.price), promotionalPrice: product.promotionalPrice == null ? null : String(product.promotionalPrice),
   };
-  const offer = resolveSupplierOffer(product, 1, now);
+  const offer = resolveSupplierOffer({ ...product, supplierDemandAllowed: true }, 1, now);
   return {
-    ...safe, inventorySource, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: null, purchaseLimit: offer?.purchaseLimit ?? 0, availableForPurchase: Boolean(offer),
+    ...safe, inventorySource, supplierDemandAllowed: true, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: null, purchaseLimit: offer?.purchaseLimit ?? 0, availableForPurchase: Boolean(offer),
     price: offer ? (offer.unitPriceCents / 100).toFixed(2) : String(product.price), promotionalPrice: null,
   };
 }

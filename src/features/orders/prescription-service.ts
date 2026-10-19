@@ -1,3 +1,4 @@
+import { MAX_ORDER_ITEM_QUANTITY } from "@/features/products/quantity";
 import { randomUUID } from "node:crypto";
 import sharp from "sharp";
 import { z } from "zod";
@@ -5,7 +6,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 import { encryptPrescription, prescriptionCartFingerprint, prescriptionMime, PrescriptionError, PRESCRIPTION_MAX_BYTES, PRESCRIPTION_TTL_MS } from "./prescription-upload";
 
-export const prescriptionCartSchema = z.array(z.object({ productId: z.string().min(1).max(64), quantity: z.number().int().min(1).max(20) }).strict()).min(1).max(30)
+export const prescriptionCartSchema = z.array(z.object({ productId: z.string().min(1).max(64), quantity: z.number().int().min(1).max(MAX_ORDER_ITEM_QUANTITY) }).strict()).min(1).max(30)
   .refine(items => new Set(items.map(item => item.productId)).size === items.length);
 
 // A customer row serializes attempts, quota and cleanup across all app instances.

@@ -1,9 +1,11 @@
+import { orderQuantityLimit } from "./quantity";
 import { z } from "zod";
 import type { CartItem, CartProduct } from "@/components/site/cart-provider";
 import { requiresPurchaseAssistance } from "./purchase-policy";
 
 export const cartReviewRequestSchema = z.object({ productIds: z.array(z.string().trim().min(1).max(64)).min(1).max(30) }).strict().refine(input => new Set(input.productIds).size === input.productIds.length);
 const productSchema = z.object({
+  supplierDemandAllowed: z.boolean().optional(),
   catalogClassification: z.unknown().optional(),
   inventorySource: z.enum(["PHARMACY", "DISTRIBUTOR"]).optional(),
   id: z.string().min(1).max(64), slug: z.string(), name: z.string(),
@@ -26,7 +28,7 @@ export function createCartReviewProposal(source: CartItem[], products: CartProdu
     if (!product) return { before, after: null, reason: "UNAVAILABLE" };
     if (requiresPurchaseAssistance(product)) return { before, after: null, reason: "ASSISTED" };
     if (product.stock < 1) return { before, after: null, reason: "OUT_OF_STOCK" };
-    return { before, after: { ...product, quantity: Math.min(before.quantity, product.stock, 20) }, reason: null };
+    return { before, after: { ...product, quantity: Math.min(before.quantity, orderQuantityLimit(product)) }, reason: null };
   });
   return { source, entries, items: entries.flatMap(entry => entry.after ? [entry.after] : []) };
 }

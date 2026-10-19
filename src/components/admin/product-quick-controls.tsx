@@ -16,7 +16,7 @@ export type CatalogQuickProduct = {
   id: string; name: string; updatedAt: string; inventorySource?: "PHARMACY" | "DISTRIBUTOR";
   catalogClassification?: unknown; supplierMarkupBps?: number; price: string; promotionalPrice: string | null;
   requiresPrescription: boolean;
-  supplierPricing?: { supplier: string; unitCostCents?: number; unitPriceCents: number; purchaseLimit: number; validUntil: string } | null;
+  supplierPricing?: { supplier: string; unitCostCents?: number; unitPriceCents: number; purchaseLimit: number; demandAllowed?: boolean; validUntil: string } | null;
 };
 const selectStyle = "h-11 min-w-0 rounded-lg border border-line bg-white px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/30";
 
@@ -92,7 +92,7 @@ export function ProductQuickControls({ product, canEdit, onSaved }: { product: C
         <div><p className="text-[11px] font-bold uppercase tracking-wide text-muted">Preço de venda</p><p className="mt-1 text-xl font-black tabular-nums text-ink">{currentPrice === null ? "Indisponível" : formatCurrency(currentPrice)}</p></div>
         {distributor && canEdit && <span className="rounded-lg border border-brand/15 bg-white px-2 py-1 text-sm font-black tabular-nums text-brand">+{(product.supplierMarkupBps ?? 6000) / 100}%</span>}
       </div>
-      {distributor && <p className="mt-1 text-xs leading-5 text-muted">{pricing ? `${pricing.supplier} · ${pricing.purchaseLimit} disponíveis${canEdit && pricing.unitCostCents !== undefined ? ` · custo ${formatCurrency(pricing.unitCostCents / 100)}` : ""}` : "Sem oferta válida para venda"}</p>}
+      {distributor && <p className="mt-1 text-xs leading-5 text-muted">{pricing ? `${pricing.supplier} · ${pricing.demandAllowed ? "quantidade a conferir com o distribuidor" : `${pricing.purchaseLimit} disponíveis`}${canEdit && pricing.unitCostCents !== undefined ? ` · custo ${formatCurrency(pricing.unitCostCents / 100)}` : ""}` : "Sem oferta válida para venda"}</p>}
       {canEdit && <Button className="mt-3 min-h-10 w-full" onClick={openEditor} size="sm" type="button" variant="secondary"><SlidersHorizontal className="h-4 w-4" />Preço e classificação</Button>}
     </div>
     <Dialog open={open} onOpenChange={value => { if (!busy) setOpen(value); }}>

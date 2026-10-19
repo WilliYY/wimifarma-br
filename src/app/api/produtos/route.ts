@@ -114,8 +114,8 @@ export async function GET() {
   return NextResponse.json({ data: products.map(product => {
     const { supplierOffers: _offers, ...safe } = product;
     void _offers;
-    const best = product.inventorySource === "DISTRIBUTOR" ? resolveSupplierOffer(product) : null;
-    return { ...serializeProduct(safe, admin), ...(best ? { price: (best.unitPriceCents / 100).toFixed(2) } : {}), supplierPricing: best ? { supplier: best.supplier, ...(admin ? { unitCostCents: best.unitCostCents } : {}), unitPriceCents: best.unitPriceCents, purchaseLimit: best.purchaseLimit, validUntil: new Date(best.validUntil).toISOString() } : null };
+    const best = product.inventorySource === "DISTRIBUTOR" ? resolveSupplierOffer({ ...product, supplierDemandAllowed: true }) : null;
+    return { ...serializeProduct(safe, admin), ...(best ? { price: (best.unitPriceCents / 100).toFixed(2) } : {}), supplierPricing: best ? { supplier: best.supplier, ...(admin ? { unitCostCents: best.unitCostCents } : {}), unitPriceCents: best.unitPriceCents, purchaseLimit: best.purchaseLimit, demandAllowed: true, validUntil: new Date(best.validUntil).toISOString() } : null };
   }) }, { headers: { "Cache-Control": "private, no-store" } });
 }
 

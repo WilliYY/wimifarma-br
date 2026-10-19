@@ -1,5 +1,9 @@
 # 01 - Arquitetura
 
+## Evolução de catálogo — 19/10/2026
+
+`features/products/catalog-bulk*` implementa lote transacional com versão, locks e auditoria. `home-collections` monta coleções por classificação/preço e dia de Brasília; `home-photos` verifica arquivos públicos antes da exibição. `OrderItem.supplierDemandAllowed` fotografa a nova política de demanda de distribuidor, preservando pedidos anteriores. Contrato, limites e APIs em [75](75-catalogo-vitrines-e-compra-distribuidor.md).
+
 Avisos de disponibilidade usam `RestockInterest`, separado de produtos, estoque e pedidos. As APIs privadas de cliente e ADMIN/MANAGER compartilham a disponibilidade canônica do catálogo de fornecedores. O envio permanece manual por canal; a ponte de alertas do proprietário e pagamentos não participam desse fluxo. Contrato em [74](74-avisos-de-disponibilidade.md).
 
 ## O Que Esta Parte Faz

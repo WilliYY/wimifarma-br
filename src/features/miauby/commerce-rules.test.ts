@@ -14,7 +14,8 @@ test("cart identity is signed, expires and deduplicates a ten-minute window", ()
 });
 test("cart accepts only product ids and bounded quantities, never customer details or client prices", () => {
   assert.equal(cartRequestSchema.safeParse({ items: [{ productId: "fixture", quantity: 1 }] }).success, true);
-  for (const input of [{ items: [{ productId: "fixture", quantity: 21 }] }, { items: [{ productId: "fixture", quantity: 1, price: 1 }] }, { items: [], phone: "+5500000000000" }]) assert.equal(cartRequestSchema.safeParse(input).success, false);
+  assert.equal(cartRequestSchema.safeParse({ items: [{ productId: "fixture", quantity: 150 }] }).success, true);
+  for (const input of [{ items: [{ productId: "fixture", quantity: 1000 }] }, { items: [{ productId: "fixture", quantity: 1, price: 1 }] }, { items: [], phone: "+5500000000000" }]) assert.equal(cartRequestSchema.safeParse(input).success, false);
 });
 test("purchase alerts distinguish payment and avoid personal data or card details", () => {
   const input = { id: "fixture", number: "TEST-123", totalCents: 499, fulfillmentMethod: "PICKUP", items: [{ name: "Produto sintético\n*novo título*", quantity: 1 }] };

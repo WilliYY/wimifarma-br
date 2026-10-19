@@ -115,7 +115,7 @@ test("invalid item quantities show a correction message without requesting freig
   const fetch = context.mock.method(globalThis, "fetch", async () => Response.json({ data: [option] }));
   const states: { busy: boolean; message: string; options: unknown[] }[] = [];
   const quote = createCheckoutQuote();
-  quote.schedule({ ...request, items: [{ ...request.items[0], quantity: 21 }] }, state => states.push(state));
+  quote.schedule({ ...request, items: [{ ...request.items[0], quantity: 1000 }] }, state => states.push(state));
   assert.equal(fetch.mock.callCount(), 0);
   assert.equal(states.at(-1)?.busy, false);
   assert.match(states.at(-1)?.message ?? "", /quantidade/);

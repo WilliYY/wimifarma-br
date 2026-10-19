@@ -12,6 +12,7 @@ export type ProductSearchSource = {
 };
 
 export type PublicProductSearchItem = {
+  supplierDemandAllowed?: boolean;
   cashbackEnabled?: boolean;
   catalogClassification?: unknown;
   cashbackRateBps?: number;

@@ -318,6 +318,8 @@ docker network connect wimifarma-br-network nginx-proxy-manager-app-1
 
 ## Documentacao
 
+- `docs/75-catalogo-vitrines-e-compra-distribuidor.md`: catálogo compacto e edição em massa, vitrines com fotografias, login e política de demanda por item de distribuidor.
+
 - `docs/59-banners-pessoas-e-produtos.md`: campanhas com pessoas, propagandas por marca, referências oficiais, prompts, assets e validação responsiva.
 - `docs/58-banners-varejo-wimifarma.md`: banners da home e perfumaria com logo oficial, produtos reais, navegação clara e validação responsiva.
 - `docs/57-correcoes-da-auditoria.md`: correções de busca, cashback, estoque e limite de frete; regressões completas na CI e alertas sem patch.

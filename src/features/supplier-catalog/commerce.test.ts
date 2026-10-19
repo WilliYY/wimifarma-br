@@ -29,7 +29,7 @@ test("DTO público oculta custos e imagem interna, preservando estoque físico",
   assert.equal(dto.stock, 17);
   assert.equal(dto.price, "16.00");
   assert.equal(dto.promotionalPrice, null);
-  assert.equal(dto.purchaseLimit, 5);
+  assert.equal(dto.purchaseLimit, 999);
   assert.equal(dto.availableForPurchase, true);
   assert.equal(dto.imageUrl, "/brand/medicamento-ilustrativo.webp");
   assert.equal(dto.imageAsset, null);
@@ -44,7 +44,7 @@ test("foto pública Rx permanece interna e o DTO usa ilustração sem alterar co
   assert.equal(dto.imageUrl, "/brand/medicamento-ilustrativo.webp");
   assert.equal(dto.imageAsset, null);
   assert.equal(dto.price, "16.00");
-  assert.equal(dto.purchaseLimit, 5);
+  assert.equal(dto.purchaseLimit, 999);
 });
 
 test("produto físico legado mantém preço e estoque", () => {

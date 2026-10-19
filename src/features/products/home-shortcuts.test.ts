@@ -24,9 +24,9 @@ test("atalhos preservam a ordem e os slugs fornecidos pelo catálogo", () => {
     { id: "delivery", label: "Delivery" },
   ]);
   assert.deepEqual(shortcuts.map(item => item.href), [
-    "/ofertas", "/categorias/linha-bebe-real", "/categorias/medicamentos-publicados",
-    "/categorias/vitaminas%20%26%20suplementos", "/categorias/cuidados-reais",
-    "/categorias/perfumaria-real", "/farmacia-popular", "/delivery",
+    "/ofertas", "/catalogo?grupo=baby&ordem=preco-asc", "/catalogo?grupo=medicines&ordem=preco-asc",
+    "/catalogo?grupo=vitamins&ordem=preco-asc", "/catalogo?grupo=dermo&ordem=preco-asc",
+    "/catalogo?grupo=beauty&ordem=preco-asc", "/farmacia-popular", "/delivery",
   ]);
   assert.ok(shortcuts.every(item => !item.external));
 });
@@ -40,20 +40,20 @@ test("nomes com acentos, caixa e sinônimos identificam categorias coerentes", (
     { name: "Higiene e beleza", slug: "beleza" },
   ], phone);
   assert.deepEqual(shortcuts.slice(1, 6).map(item => item.href), [
-    "/categorias/bebe", "/categorias/remedios", "/categorias/suplementos",
-    "/categorias/dermocosmeticos", "/categorias/beleza",
+    "/catalogo?grupo=baby&ordem=preco-asc", "/catalogo?grupo=medicines&ordem=preco-asc", "/catalogo?grupo=vitamins&ordem=preco-asc",
+    "/catalogo?grupo=dermo&ordem=preco-asc", "/catalogo?grupo=beauty&ordem=preco-asc",
   ]);
 });
 
-test("categoria exata tem prioridade sobre correspondência parcial", () => {
+test("atalhos agrupam categorias exatas e relacionadas", () => {
   const shortcuts = buildHomeShortcuts([
     { name: "Medicamentos naturais", slug: "naturais" },
     { name: "Medicamentos", slug: "todos-medicamentos" },
     { name: "Vitaminas", slug: "vitaminas" },
     { name: "Vitaminas e suplementos", slug: "grupo-completo" },
   ], phone);
-  assert.equal(shortcuts[2].href, "/categorias/todos-medicamentos");
-  assert.equal(shortcuts[3].href, "/categorias/grupo-completo");
+  assert.equal(shortcuts[2].href, "/catalogo?grupo=medicines&ordem=preco-asc");
+  assert.equal(shortcuts[3].href, "/catalogo?grupo=vitamins&ordem=preco-asc");
 });
 
 test("categorias ausentes consultam o assunto pelo WhatsApp sem promessas comerciais", () => {

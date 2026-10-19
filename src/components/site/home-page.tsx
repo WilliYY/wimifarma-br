@@ -1,9 +1,6 @@
 "use client";
 
-import { productImageAlt } from "@/features/products/image-placeholder";
 
-import Image from "next/image";
-import { productDisplayName } from "@/features/products/display-name";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -19,28 +16,16 @@ import {
   Play,
   Quote,
   ShieldCheck,
-  ShoppingBasket,
-  Sparkles,
   Star,
 } from "lucide-react";
-import {
-  arrangeShowcaseProducts,
-  type PublicShowcaseProduct,
-} from "@/features/offers/showcase";
-import { ProductCardActions } from "@/components/site/product-card-actions";
-import { ProductShippingBadge } from "@/components/site/product-shipping-badge";
-import { ProductCashback } from "@/components/site/product-cashback";
-import type { CashbackProduct } from "@/features/cashback/rules";
-import type { CartProduct } from "@/components/site/cart-provider";
 import { HomeProductCarousel } from "@/components/site/home-product-carousel";
-import { PerfumeryCarousel } from "@/components/site/perfumery-carousel";
 import { HeroProductStage } from "@/components/site/hero-product-stage";
 import { ClubBanner } from "@/components/site/club-banner";
 import { HomeShortcuts } from "@/components/site/home-shortcuts";
 import type { HomeShortcutItem } from "@/features/products/home-shortcuts";
 import campaignStyles from "./home-campaign.module.css";
 import { BrandSignature } from "@/components/site/brand-signature";
-import type { RelatedProductCardItem } from "@/components/site/public-product-card";
+import type { HomeCollections } from "@/features/products/home-collections";
 import { siteConfig } from "@/lib/site";
 import { whatsappTestimonials, type WhatsAppTestimonial } from "@/features/reviews/whatsapp-testimonials";
 
@@ -55,22 +40,6 @@ const entrance = {
   },
 };
 
-type BestOfferItem = {
-  brand: string;
-  id: string;
-  label: string;
-  name: string;
-  oldPrice?: string;
-  price: string;
-  accent: string;
-  soft: string;
-  imageUrl?: string;
-  isReserved: boolean;
-  product?: CartProduct & CashbackProduct;
-  ratingAverage: number | null;
-  ratingCount: number;
-};
-
 export type HomeReview = {
   comment: string;
   id: string;
@@ -80,17 +49,6 @@ export type HomeReview = {
   reviewerName: string;
   incentivized?: boolean;
 };
-
-const offerPalette = { accent: "#c8102e", soft: "#fff1f2" };
-
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-  currency: "BRL",
-  style: "currency",
-});
-
-function formatProductPrice(value: string) {
-  return currencyFormatter.format(Number(value));
-}
 
 const heroSlides = [
   {
@@ -125,101 +83,6 @@ const heroSlides = [
     title: "Carinho em cada cuidado.",
   },
 ] as const;
-
-function buildBestOfferItems(products: PublicShowcaseProduct[]): BestOfferItem[] {
-  return arrangeShowcaseProducts(products).map((product, index) => {
-    if (!product) {
-      return {
-        ...offerPalette,
-        brand: "Wimifarma",
-        id: `reserved-${index + 1}`,
-        isReserved: true,
-        label: "Espaco disponivel",
-        name: "Consulte outros produtos",
-        price: "Consulte",
-        ratingAverage: null,
-        ratingCount: 0,
-      };
-    }
-
-    const regularPrice = Number(product.price);
-    const currentPrice = Number(product.promotionalPrice ?? product.price);
-    const hasPromotion = Boolean(
-      product.promotionalPrice && currentPrice < regularPrice,
-    );
-    const discount = hasPromotion
-      ? Math.round(((regularPrice - currentPrice) / regularPrice) * 100)
-      : null;
-
-    return {
-      ...offerPalette,
-      brand: product.brand ?? product.category ?? "Wimifarma",
-      id: product.id,
-      imageUrl: product.imageUrl,
-      isReserved: false,
-      label: discount ? `${discount}% OFF` : "Melhor oferta",
-      name: product.name,
-      oldPrice: hasPromotion ? formatProductPrice(product.price) : undefined,
-      price: formatProductPrice(product.promotionalPrice ?? product.price),
-      ratingAverage: product.ratingAverage,
-      ratingCount: product.ratingCount,
-      product: {
-        catalogClassification: product.catalogClassification,
-        cashbackEnabled: product.cashbackEnabled,
-        cashbackRateBps: product.cashbackRateBps,
-        category: product.category,
-        id: product.id,
-        imageUrl: product.imageUrl,
-        isPopularPharmacy: product.isPopularPharmacy,
-        name: product.name,
-        originalPriceCents: hasPromotion ? Math.round(regularPrice * 100) : null,
-        requiresPrescription: product.requiresPrescription,
-        prescriptionType: product.prescriptionType,
-        slug: product.slug,
-        stock: product.stock,
-        inventorySource: product.inventorySource,
-        unitPriceCents: Math.round(currentPrice * 100),
-      },
-    };
-  });
-}
-
-function buildOfferWhatsAppUrl(productName: string) {
-  return `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent(
-    `Ola, gostaria de saber mais sobre ${productName} da Melhor oferta.`,
-  )}`;
-}
-
-function parsePrice(value?: string) {
-  if (!value?.startsWith("R$")) {
-    return null;
-  }
-
-  const parsed = Number(value.replace("R$", "").replace(".", "").replace(",", ".").trim());
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function getDiscountLabel(item: BestOfferItem) {
-  const oldPrice = parsePrice(item.oldPrice);
-  const price = parsePrice(item.price);
-
-  if (!oldPrice || !price || price >= oldPrice) {
-    return null;
-  }
-
-  return `${Math.round(((oldPrice - price) / oldPrice) * 100)}% OFF`;
-}
-
-function getSavingLabel(item: BestOfferItem) {
-  const oldPrice = parsePrice(item.oldPrice);
-  const price = parsePrice(item.price);
-
-  if (!oldPrice || !price || price >= oldPrice) {
-    return null;
-  }
-
-  return `Economize R$ ${(oldPrice - price).toFixed(2).replace(".", ",")}`;
-}
 
 function RatingStars({ rating, size = "h-4 w-4" }: { rating: number; size?: string }) {
   const roundedRating = Math.round(rating);
@@ -441,354 +304,6 @@ function HeroCarousel() {
   );
 }
 
-function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
-  const catalogChips = [
-    "Ofertas da semana",
-    "Leve mais por menos",
-    "Farmacia Popular",
-    "Retire ou entregue",
-  ];
-  const bestOfferItems = buildBestOfferItems(products);
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const dragState = useRef({
-    moved: false,
-    pointerId: null as number | null,
-    scrollLeft: 0,
-    startX: 0,
-  });
-  const [carouselControls, setCarouselControls] = useState({
-    next: false,
-    previous: false,
-  });
-
-  const updateCarouselControls = useCallback(() => {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-
-    const maximumScroll = Math.max(0, carousel.scrollWidth - carousel.clientWidth);
-    setCarouselControls({
-      next: carousel.scrollLeft < maximumScroll - 2,
-      previous: carousel.scrollLeft > 2,
-    });
-  }, []);
-
-  useEffect(() => {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-
-    const animationFrame = window.requestAnimationFrame(updateCarouselControls);
-    const resizeObserver = new ResizeObserver(updateCarouselControls);
-    resizeObserver.observe(carousel);
-
-    return () => {
-      window.cancelAnimationFrame(animationFrame);
-      resizeObserver.disconnect();
-    };
-  }, [updateCarouselControls]);
-
-  function scrollOffers(direction: -1 | 1) {
-    const carousel = carouselRef.current;
-    const firstCard = carousel?.querySelector<HTMLElement>("[data-offer-card]");
-    if (!carousel || !firstCard) return;
-
-    const styles = window.getComputedStyle(carousel);
-    const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0;
-    const cardStep = firstCard.offsetWidth + gap;
-    const visibleCards = Math.max(
-      1,
-      Math.round((carousel.clientWidth + gap) / cardStep),
-    );
-
-    carousel.scrollBy({
-      behavior: "smooth",
-      left: direction * visibleCards * cardStep,
-    });
-  }
-
-  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
-    if (!event.isPrimary) return;
-    dragState.current.moved = false;
-    if (event.pointerType !== "mouse" || event.button !== 0) return;
-    if (
-      event.target instanceof Element &&
-      event.target.closest("button, input, select, textarea, label, [data-product-controls]")
-    ) {
-      return;
-    }
-
-    dragState.current = {
-      moved: false,
-      pointerId: event.pointerId,
-      scrollLeft: event.currentTarget.scrollLeft,
-      startX: event.clientX,
-    };
-  }
-
-  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
-    const drag = dragState.current;
-    if (drag.pointerId !== event.pointerId) return;
-    if (event.buttons !== 1) { finishPointerDrag(event); return; }
-
-    const movement = event.clientX - drag.startX;
-    if (Math.abs(movement) > 6 && !drag.moved) {
-      drag.moved = true;
-      event.currentTarget.dataset.dragging = "true";
-      event.currentTarget.setPointerCapture(event.pointerId);
-    }
-    if (!drag.moved) return;
-    event.preventDefault();
-    event.currentTarget.scrollLeft = drag.scrollLeft - movement;
-  }
-
-  function finishPointerDrag(event: React.PointerEvent<HTMLDivElement>) {
-    const drag = dragState.current;
-    if (drag.pointerId !== event.pointerId) return;
-
-    drag.pointerId = null;
-    delete event.currentTarget.dataset.dragging;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-  }
-
-  function cancelPointerDrag(event: React.PointerEvent<HTMLDivElement>) {
-    finishPointerDrag(event);
-    dragState.current.moved = false;
-  }
-
-  function preventClickAfterDrag(event: React.MouseEvent<HTMLDivElement>) {
-    if (!dragState.current.moved || event.detail === 0) return;
-    event.preventDefault();
-    event.stopPropagation();
-    dragState.current.moved = false;
-  }
-
-  return (
-    <section id="melhores-ofertas" className="pharma-clouds scroll-mt-40 bg-white px-4 pb-12 pt-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div>
-          <div className="mb-5 overflow-hidden rounded-lg border border-line/80 bg-white shadow-[0_22px_70px_rgba(17,24,39,0.08)]">
-            <div className="h-1 bg-[linear-gradient(90deg,#c8102e,#25d366,#2563eb)]" />
-            <div className="flex flex-col gap-5 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full bg-brand px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_12px_28px_rgba(200,16,46,0.18)]">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Catalogo
-                </span>
-                <h2 className="mt-3 text-3xl font-black leading-none text-ink sm:text-4xl lg:text-5xl">
-                  Melhores ofertas
-                </h2>
-              </div>
-
-              <a
-                className="soft-breathe inline-flex self-start items-center justify-center gap-2 rounded-md bg-[#25d366] px-5 py-3 text-sm font-black text-white shadow-[0_14px_30px_rgba(37,211,102,0.22)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#1ebe57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25d366] focus-visible:ring-offset-2 lg:self-auto"
-                href={siteConfig.whatsappUrl}
-                rel="noreferrer"
-                target="_blank"
-              >
-                <MessageCircle className="h-4 w-4" />
-                WhatsApp
-              </a>
-            </div>
-          </div>
-
-          <div className="mb-4 flex items-end justify-between gap-3">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full bg-ink px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-white">
-                <Sparkles className="h-3.5 w-3.5" />
-                Destaques da vitrine
-              </span>
-              {catalogChips.map((chip) => (
-                <span
-                  className="rounded-full border border-line bg-white px-3 py-1.5 text-xs font-bold text-muted shadow-sm"
-                  key={chip}
-                >
-                  {chip}
-                </span>
-              ))}
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <button
-                aria-controls="best-offers-carousel"
-                aria-label="Ver ofertas anteriores"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35"
-                disabled={!carouselControls.previous}
-                onClick={() => scrollOffers(-1)}
-                title="Ofertas anteriores"
-                type="button"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button
-                aria-controls="best-offers-carousel"
-                aria-label="Ver proximas ofertas"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35"
-                disabled={!carouselControls.next}
-                onClick={() => scrollOffers(1)}
-                title="Proximas ofertas"
-                type="button"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-
-          <div
-            aria-label="Melhores ofertas"
-            aria-roledescription="carrossel"
-            className="flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-3 select-none motion-safe:scroll-smooth data-[dragging=true]:cursor-grabbing data-[dragging=true]:snap-none data-[dragging=true]:scroll-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_img]:pointer-events-none data-[dragging=true]:[&_a]:cursor-grabbing"
-            id="best-offers-carousel"
-            onClickCapture={preventClickAfterDrag}
-            onDragStart={(event) => event.preventDefault()}
-            onPointerCancel={cancelPointerDrag}
-            onLostPointerCapture={finishPointerDrag}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={finishPointerDrag}
-            onScroll={updateCarouselControls}
-            ref={carouselRef}
-            role="region"
-          >
-            {bestOfferItems.map((item, index) => {
-              const discountLabel = getDiscountLabel(item);
-              const savingLabel = getSavingLabel(item);
-              const isReserved = item.isReserved;
-              const productHref = item.product
-                ? `/produto/${item.product.slug}`
-                : null;
-
-              return (
-                <article
-                  aria-label={`Oferta ${index + 1} de ${bestOfferItems.length}`}
-                  aria-roledescription="slide"
-                  className="group relative flex min-h-[23.5rem] min-w-0 shrink-0 basis-[86%] snap-start flex-col overflow-hidden rounded-md border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.07)] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_20px_44px_rgba(17,24,39,0.12)] sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-2rem)/3)] xl:basis-[calc((100%-4rem)/5)]"
-                  data-offer-card
-                  key={item.id}
-                  role="group"
-                  style={
-                    {
-                      "--offer-accent": item.accent,
-                      "--offer-soft": item.soft,
-                    } as CSSProperties
-                  }
-                >
-                  {item.product ? <ProductShippingBadge /> : <div className="flex min-h-9 items-start px-3 pt-3">
-                    <span className="inline-flex min-h-7 max-w-full items-center rounded-sm bg-brand-soft px-2.5 text-[0.68rem] font-bold leading-none text-brand">
-                      {item.label}
-                    </span>
-                  </div>}
-
-                  {productHref ? (
-                    <div
-                      className={`relative mx-3 mt-2 grid h-40 place-items-center overflow-hidden rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
-                      item.imageUrl
-                        ? "bg-white"
-                        : "bg-surface-subtle"
-                    }`}
-                    >
-                      <Image
-                        alt={productImageAlt(item.name, item.imageUrl)}
-                        className="object-contain object-center p-2 transition duration-300 group-hover:scale-105"
-                        fill
-                        sizes="(min-width: 1280px) 230px, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
-                        src={item.imageUrl as string}
-                      />
-                      {discountLabel ? (
-                        <span className="absolute right-2 top-2 rounded-sm bg-white px-2 py-1 text-[0.68rem] font-black text-brand shadow-sm">
-                          {discountLabel}
-                        </span>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <div className="relative mx-3 mt-2 grid h-40 place-items-center overflow-hidden rounded-sm bg-surface-subtle">
-                      <div className="relative flex aspect-[0.78] w-24 items-center justify-center rounded-[1rem_1rem_0.5rem_0.5rem] border-2 border-white bg-[linear-gradient(180deg,#fff_0_34%,var(--offer-soft)_34%_56%,var(--offer-accent)_56%_100%)] shadow-[0_20px_34px_rgba(17,24,39,0.18)] ring-1 ring-black/10 transition duration-300 group-hover:rotate-[-2deg] group-hover:scale-105">
-                        <span className="absolute top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[var(--offer-accent)] shadow-inner">
-                          <ShoppingBasket className="h-4 w-4" />
-                        </span>
-                        <strong className="absolute bottom-3 text-xs font-black uppercase text-white/90">
-                          novo
-                        </strong>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex flex-1 flex-col px-4 pb-4 pt-3">
-                    <h3 className="min-h-10 text-sm font-bold leading-5 text-ink">
-                      {productHref ? (
-                        <Link
-                          aria-label={`Ver ${productDisplayName(item.name)}`}
-                          className="line-clamp-2 after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand"
-                          href={productHref}
-                        >
-                          {productDisplayName(item.name)}
-                        </Link>
-                      ) : (
-                        item.name
-                      )}
-                    </h3>
-
-                    <div className="mt-1 flex min-h-5 items-center gap-1.5 text-[0.7rem] font-semibold text-muted">
-                      {item.ratingAverage !== null && item.ratingCount > 0 ? (
-                        <>
-                          <RatingStars rating={item.ratingAverage} size="h-3.5 w-3.5" />
-                          <span>({item.ratingCount})</span>
-                        </>
-                      ) : isReserved ? (
-                        <span>Atendimento pelo WhatsApp</span>
-                      ) : (
-                        <span>Novo</span>
-                      )}
-                    </div>
-
-                    <p className="mt-2 truncate text-xs font-black uppercase text-ink">
-                      {item.brand}
-                    </p>
-
-                    <div className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-3">
-                      <div className="min-w-0">
-                        {item.oldPrice ? (
-                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.68rem]">
-                            <span className="font-semibold text-muted line-through">
-                              {item.oldPrice}
-                            </span>
-                            {savingLabel ? (
-                              <span className="font-bold text-brand">
-                                {savingLabel}
-                              </span>
-                            ) : null}
-                          </div>
-                        ) : null}
-                        <strong className="mt-1 block text-2xl font-black leading-none text-brand">
-                          {item.price}
-                        </strong>
-                      </div>
-
-                      {isReserved || !item.product ? (
-                        <a
-                          aria-label={`Consultar ${item.name} pelo WhatsApp`}
-                          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-[0_10px_22px_rgba(200,16,46,0.2)] transition hover:-translate-y-0.5 hover:bg-[#a80d27] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-                          href={buildOfferWhatsAppUrl(item.name)}
-                          rel="noreferrer"
-                          target="_blank"
-                          title={`Consultar ${item.name}`}
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                        </a>
-                      ) : null}
-                    </div>
-                    {item.product ? <ProductCashback product={item.product} unitPriceCents={item.product.unitPriceCents} /> : null}
-                    {item.product ? <ProductCardActions product={item.product} /> : null}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function reviewInitials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   return `${parts[0]?.[0] ?? "C"}${parts.length > 1 ? parts.at(-1)?.[0] ?? "" : ""}`.toLocaleUpperCase("pt-BR");
@@ -956,14 +471,12 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
 }
 
 export function HomePage({
-  catalogProducts,
+  collections,
   customerReviews,
-  featuredProducts,
   shortcuts,
 }: {
-  catalogProducts: RelatedProductCardItem[];
+  collections: HomeCollections;
   customerReviews: HomeReview[];
-  featuredProducts: PublicShowcaseProduct[];
   shortcuts: HomeShortcutItem[];
 }) {
   return (
@@ -978,11 +491,9 @@ export function HomePage({
 
       <ClubBanner />
 
-      <BestOfferCatalog products={featuredProducts} />
-
-      <PerfumeryCarousel />
-
-      <HomeProductCarousel products={catalogProducts} />
+      <HomeProductCarousel products={collections.care} id="home-care" title="Cuidados para o seu dia a dia" eyebrow="Beleza, higiene e bem-estar" href="/catalogo?grupo=beauty&ordem=preco-asc" />
+      <HomeProductCarousel products={collections.otc} id="home-otc" title="Medicamentos isentos de prescrição" eyebrow="MIP / OTC" href="/catalogo?grupo=medicines&ordem=preco-asc" />
+      <HomeProductCarousel products={collections.affordable} id="home-affordable" title="Menores preços para aproveitar" eyebrow="Economia no seu cuidado" href="/catalogo?ordem=preco-asc" />
 
       <CustomerReviews reviews={customerReviews} />
 

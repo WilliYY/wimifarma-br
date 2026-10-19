@@ -1,3 +1,4 @@
+import { MAX_ORDER_ITEM_QUANTITY } from "@/features/products/quantity";
 import { z } from "zod";
 import { isLocalDeliveryAddress } from "@/features/shipping/delivery-policy";
 import { normalizeBrazilianPhone } from "@/lib/brazilian-phone";
@@ -54,7 +55,7 @@ export const checkoutRequestSchema = z
       .array(
         z.object({
           productId: z.string().trim().min(1).max(64),
-          quantity: z.coerce.number().int().min(1).max(20),
+          quantity: z.coerce.number().int().min(1).max(MAX_ORDER_ITEM_QUANTITY),
           expectedUnitPriceCents: z.coerce.number().int().positive().max(1_000_000),
         }),
       )
@@ -184,7 +185,7 @@ export type CheckoutPreparation =
     }
   | {
       ok: false;
-      code: "NOT_FOUND" | "UNAVAILABLE" | "RESTRICTED" | "OUT_OF_STOCK" | "PRICE_CHANGED";
+      code: "NOT_FOUND" | "UNAVAILABLE" | "RESTRICTED" | "OUT_OF_STOCK" | "PRICE_CHANGED" | "TOTAL_LIMIT";
       message: string;
     };
 
@@ -240,6 +241,7 @@ export function prepareCheckoutOrder(
   }
 
   const subtotalCents = items.reduce((total, item) => total + item.totalCents, 0);
+  if (!Number.isSafeInteger(subtotalCents) || subtotalCents > 600_000_000) return { ok: false, code: "TOTAL_LIMIT", message: "Este pedido precisa de uma cotação da equipe. Entre em contato com a farmácia." };
 
   return {
     ok: true,

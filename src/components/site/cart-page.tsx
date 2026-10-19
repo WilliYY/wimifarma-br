@@ -1,4 +1,5 @@
 "use client";
+import { orderQuantityLimit } from "@/features/products/quantity";
 
 import { productImageAlt } from "@/features/products/image-placeholder";
 
@@ -92,7 +93,7 @@ export function CartPage() {
                     <div className="grid h-11 grid-cols-[2.5rem_2.75rem_2.5rem] overflow-hidden rounded-md border border-line bg-white">
                       <button aria-label={`Diminuir quantidade de ${item.name}`} className="grid place-items-center text-muted transition hover:bg-surface-subtle hover:text-brand" onClick={() => updateQuantity(item.id, item.quantity - 1)} type="button"><Minus className="h-4 w-4" /></button>
                       <span aria-live="polite" className="grid place-items-center border-x border-line text-sm font-black text-ink">{item.quantity}</span>
-                      <button aria-label={`Aumentar quantidade de ${item.name}`} className="grid place-items-center text-muted transition hover:bg-surface-subtle hover:text-brand disabled:opacity-35" disabled={item.quantity >= Math.min(item.stock, 20)} onClick={() => updateQuantity(item.id, item.quantity + 1)} type="button"><Plus className="h-4 w-4" /></button>
+                      <button aria-label={`Aumentar quantidade de ${item.name}`} className="grid place-items-center text-muted transition hover:bg-surface-subtle hover:text-brand disabled:opacity-35" disabled={item.quantity >= orderQuantityLimit(item)} onClick={() => updateQuantity(item.id, item.quantity + 1)} type="button"><Plus className="h-4 w-4" /></button>
                     </div>
                     <button aria-label={`Remover ${item.name}`} className="inline-flex h-10 items-center gap-2 px-2 text-xs font-bold text-muted transition hover:text-brand" onClick={() => removeProduct(item.id)} type="button"><Trash2 className="h-4 w-4" /> Remover</button>
                   </div>

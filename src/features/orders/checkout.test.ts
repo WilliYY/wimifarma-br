@@ -108,6 +108,24 @@ test("calcula o pedido com o preco promocional atual", () => {
   assert.equal(result.totalCents, 1998);
 });
 
+test("quantidade técnica permite pedidos grandes e o estoque físico continua limitado", () => {
+  const items = [{ ...baseRequest.items[0], quantity: 150 }];
+  assert.equal(checkoutRequestSchema.safeParse({ ...baseRequest, items }).success, true);
+  assert.equal(checkoutRequestSchema.safeParse({ ...baseRequest, items: [{ ...items[0], quantity: 1000 }] }).success, false);
+  const unavailable = prepareCheckoutOrder([product], items);
+  assert.equal(unavailable.ok, false);
+  if (!unavailable.ok) assert.equal(unavailable.code, "OUT_OF_STOCK");
+  assert.equal(prepareCheckoutOrder([{ ...product, stock: 999 }], items).ok, true);
+});
+
+test("subtotal grande é recusado antes de ultrapassar os limites financeiros", () => {
+  const records = ["a", "b", "c"].map(id => ({ ...product, id, stock: 999, promotionalPrice: null, price: "9999.99" }));
+  const items = records.map(item => ({ productId: item.id, quantity: 999, expectedUnitPriceCents: 999999 }));
+  const result = prepareCheckoutOrder(records, items);
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.equal(result.code, "TOTAL_LIMIT");
+});
+
 test("confere CEP e cidade juntos sem ampliar a cobertura", () => {
   const request = { ...baseRequest, fulfillmentMethod: "DELIVERY", address: { postalCode: "87525-000", street: "Rua Teste", number: "10", neighborhood: "Centro", city: "Ivate", state: "PR" } };
   assert.equal(checkoutRequestSchema.safeParse(request).success, true);

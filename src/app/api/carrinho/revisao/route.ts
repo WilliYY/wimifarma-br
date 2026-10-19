@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       id: product.id, name: product.name, slug: product.slug, category: product.category, imageUrl: product.imageUrl,
       unitPriceCents: moneyToCents((product.promotionalPrice ?? product.price).toString()),
       originalPriceCents: product.promotionalPrice ? moneyToCents(product.price.toString()) : null,
-      inventorySource: product.inventorySource, stock: product.stock, requiresPrescription: product.requiresPrescription,
+      inventorySource: product.inventorySource, supplierDemandAllowed: product.supplierDemandAllowed, stock: product.stock, requiresPrescription: product.requiresPrescription,
       prescriptionType: product.prescriptionType, isPopularPharmacy: product.isPopularPharmacy,
     })) } }, { headers: paymentHeaders });
   } catch (error) {

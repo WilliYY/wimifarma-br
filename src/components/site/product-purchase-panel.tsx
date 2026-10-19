@@ -16,11 +16,12 @@ import {
 } from "lucide-react";
 import { useCart, type CartProduct } from "@/components/site/cart-provider";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
+import { orderQuantityLimit } from "@/features/products/quantity";
 import { RestockButton } from "@/components/site/restock-button";
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import { requiresPrescriptionReview, requiresPurchaseAssistance } from "@/features/products/purchase-policy";
+import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 
 function QuantitySelector({
   maxQuantity,
@@ -42,9 +43,7 @@ function QuantitySelector({
       >
         <Minus className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" aria-hidden="true" />
       </button>
-      <span aria-live="polite" className="text-center text-sm font-black text-ink">
-        {quantity}
-      </span>
+      <input aria-label="Quantidade desejada" className="min-w-0 bg-transparent text-center text-sm font-black text-ink outline-brand [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" inputMode="numeric" max={maxQuantity} min={1} onChange={event => { const value = Number(event.target.value); if (Number.isSafeInteger(value) && value >= 1) onChange(Math.min(value, maxQuantity)); }} type="number" value={quantity} />
       <button
         aria-label="Aumentar quantidade"
         className="group flex h-full cursor-pointer items-center justify-center text-brand transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand disabled:cursor-not-allowed disabled:opacity-35"
@@ -65,7 +64,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
   const [showPurchaseDock, setShowPurchaseDock] = useState(false);
   const purchasePanelRef = useRef<HTMLDivElement>(null);
   const requiresAssistance = requiresPurchaseAssistance(product);
-  const maxQuantity = Math.min(product.stock, 20);
+  const maxQuantity = orderQuantityLimit(product);
 
   useEffect(() => {
     let animationFrame: number | null = null;
@@ -142,7 +141,6 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
         className="mt-5 border-t border-line pt-5"
         ref={purchasePanelRef}
       >
-        {requiresPrescriptionReview(product) ? <p className="mb-4 rounded-xl bg-surface-subtle p-3 text-xs leading-5 text-muted">Compre online. Apresente a receita à farmácia para conferência antes da entrega ou retirada. Não é necessário enviar um arquivo neste checkout.</p> : null}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="mb-2 text-xs font-semibold text-muted">Quantidade</p>

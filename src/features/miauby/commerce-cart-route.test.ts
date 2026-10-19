@@ -152,7 +152,7 @@ test("cart accepts active ordinary prescription and non-prescription items using
 });
 test("invalid quantities, duplicate ids, excessive items and stock shortage never enqueue", async () => {
   const f = await harness();
-  for (const quantity of [0, -1, 1.5, 21]) assert.equal((await f.post(cart(quantity))).status, 422);
+  for (const quantity of [0, -1, 1.5, 1000]) assert.equal((await f.post(cart(quantity))).status, 422);
   assert.equal((await f.post({ items: [cart().items[0], cart().items[0]] })).status, 422);
   assert.equal((await f.post({ items: Array.from({ length: 31 }, (_, index) => ({ productId: `product-${index}`, quantity: 1 })) })).status, 422);
   const scarce = await harness({ products: [{ ...baseProduct, stock: 1 }] }); assert.equal((await scarce.post(cart(2))).status, 409);

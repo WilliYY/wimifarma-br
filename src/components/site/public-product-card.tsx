@@ -26,6 +26,7 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
     ? Math.round(((normalPrice - currentPrice) / normalPrice) * 100)
     : 0;
   const cartProduct = {
+    supplierDemandAllowed: product.supplierDemandAllowed,
     inventorySource: product.inventorySource,
     category: product.category,
     id: product.id,

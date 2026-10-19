@@ -46,6 +46,24 @@ test("pagamento exige a mesma oferta válida e o preço fotografado",async()=>{
   f.offer.unitCostCents=1000;f.offer.validUntil=new Date(0);await assert.rejects(validateSupplierPayment(f.tx,f.item));
 });
 
+test("demanda fotografada no item ultrapassa cotas sem alterar a política dos pedidos antigos", async () => {
+  const legacy = fixture();
+  await assert.rejects(reserveSupplierInventory(legacy.tx, { ...legacy.item, quantity: 150 }));
+  assert.equal(legacy.records.length, 0);
+  const current = fixture();
+  Object.assign(current.offer, { stockQuantity: 100 });
+  const item = { ...current.item, quantity: 150, supplierDemandAllowed: true };
+  await reserveSupplierInventory(current.tx, item);
+  await validateSupplierPayment(current.tx, item);
+  assert.equal(current.offer.reservedQuantity, 150);
+  assert.equal(current.offer.allocationQuantity, 5);
+  assert.equal(current.offer.stockQuantity, 100);
+  await settleSupplierOrder(current.tx, "order-test", "CANCELED", "CANCELED");
+  await settleSupplierOrder(current.tx, "order-test", "CANCELED", "CANCELED");
+  assert.equal(current.offer.reservedQuantity, 0);
+  assert.equal(current.records[0].status, "RELEASED");
+});
+
 test("reserva e pagamento usam markup configurado e rejeitam mudança posterior", async () => {
   const f = fixture();
   const item = { ...f.item, unitPriceCents: 1400 };

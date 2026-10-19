@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
 import { HomePage, type HomeReview } from "@/components/site/home-page";
-import type { RelatedProductCardItem } from "@/components/site/public-product-card";
-import {
-  SHOWCASE_SLOT_COUNT,
-  type PublicShowcaseProduct,
-} from "@/features/offers/showcase";
 import {
   publicReviewerName,
-  summarizeProductReviews,
 } from "@/features/products/product-detail";
 import { getPrisma } from "@/lib/prisma";
 import { getPublicCategories } from "@/features/products/storefront";
 import { buildHomeShortcuts } from "@/features/products/home-shortcuts";
+import { buildHomeCollections } from "@/features/products/home-collections";
+import { validatedHomePhotos } from "@/features/products/home-photos";
 import { siteConfig } from "@/lib/site";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 
@@ -23,70 +19,16 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const prisma = getPrisma();
-  const [products, catalogProductsData, reviews, categories] = await Promise.all([
+  const [products, reviews, categories] = await Promise.all([
     prisma.product.findMany({
-      orderBy: { featuredPosition: "asc" },
       select: {
         ...supplierOfferInclude, ean: true, inventorySource: true,
-        brand: true,
-        category: true,
-        description: true,
-        featuredPosition: true,
-        id: true,
-        imageUrl: true,
-        isPopularPharmacy: true,
-        name: true,
-        price: true,
-        promotionalPrice: true,
-        cashbackEnabled: true,
-        cashbackRateBps: true,
-        requiresPrescription: true,
-        prescriptionType: true,
-        reviews: {
-          select: { rating: true },
-          where: { isPublished: true, order: { status: "COMPLETED" } },
-        },
-        slug: true,
-        stock: true,
+        id: true, name: true, slug: true, brand: true, category: true,
+        imageUrl: true, price: true, promotionalPrice: true, stock: true,
+        activeIngredients: true, searchTerms: true, requiresPrescription: true,
+        prescriptionType: true, isPopularPharmacy: true, cashbackEnabled: true, cashbackRateBps: true,
       },
-      take: SHOWCASE_SLOT_COUNT,
-      where: {
-        featuredPosition: { gte: 1, lte: SHOWCASE_SLOT_COUNT },
-        imageUrl: { not: null },
-        status: "ACTIVE",
-        NOT: { inventorySource: "DISTRIBUTOR", requiresPrescription: true },
-      },
-    }),
-    prisma.product.findMany({
-      orderBy: [
-        { featuredPosition: "asc" },
-        { sortOrder: "asc" },
-        { createdAt: "desc" },
-      ],
-      select: {
-        activeIngredients: true,
-        ...supplierOfferInclude, ean: true, inventorySource: true,
-        brand: true,
-        category: true,
-        id: true,
-        imageUrl: true,
-        isPopularPharmacy: true,
-        name: true,
-        price: true,
-        promotionalPrice: true,
-        cashbackEnabled: true,
-        cashbackRateBps: true,
-        requiresPrescription: true,
-        prescriptionType: true,
-        searchTerms: true,
-        slug: true,
-        stock: true,
-      },
-      take: 10,
-      where: {
-        category: { contains: "medic", mode: "insensitive" },
-        status: "ACTIVE",
-      },
+      where: { status: "ACTIVE", imageUrl: { not: null }, requiresPrescription: false },
     }),
     prisma.productReview.findMany({
       orderBy: { createdAt: "desc" },
@@ -107,20 +49,10 @@ export default async function Page() {
     }),
     getPublicCategories(),
   ]);
-  const featuredProducts = products.map(({ reviews: productReviews, ...product }) => {
-    const sale = toSaleProduct(product);
-    const rating = summarizeProductReviews(
-      productReviews.map((review) => review.rating),
-    );
-
-    return {
-      ...sale,
-      featuredPosition: product.featuredPosition as number,
-      imageUrl: sale.imageUrl as string,
-      ratingAverage: rating.average,
-      ratingCount: rating.count,
-    };
-  }) satisfies PublicShowcaseProduct[];
+  const now = new Date();
+  const saleProducts = products.map(product => toSaleProduct(product, now.getTime()));
+  const photos = await validatedHomePhotos(saleProducts.map(product => product.imageUrl));
+  const collections = buildHomeCollections(saleProducts, photos, now);
   const customerReviews = reviews.map((review) => ({
     incentivized: review.cashbackRewardCents > 0,
     comment: review.comment,
@@ -130,13 +62,11 @@ export default async function Page() {
     rating: review.rating,
     reviewerName: publicReviewerName(review.customer.name),
   })) satisfies HomeReview[];
-  const catalogProducts = catalogProductsData.map(product => toSaleProduct(product)) satisfies RelatedProductCardItem[];
 
   return (
     <HomePage
-      catalogProducts={catalogProducts}
+      collections={collections}
       customerReviews={customerReviews}
-      featuredProducts={featuredProducts}
       shortcuts={buildHomeShortcuts(categories, siteConfig.phone)}
     />
   );

@@ -1,3 +1,4 @@
+import { MAX_ORDER_ITEM_QUANTITY } from "@/features/products/quantity";
 import { z } from "zod";
 import { shippingReferenceSchema } from "./product-reference";
 
@@ -39,7 +40,7 @@ export const shippingProfileSchema = z.object({
   transportReviewed: z.literal(true),
 });
 export const shippingItemsSchema = z.array(z.object({
-  productId: z.string().min(1).max(64), quantity: z.number().int().min(1).max(20),
+  productId: z.string().min(1).max(64), quantity: z.number().int().min(1).max(MAX_ORDER_ITEM_QUANTITY),
   expectedUnitPriceCents: z.number().int().positive().max(1_000_000),
 })).min(1).max(30).refine((items) => new Set(items.map((item) => item.productId)).size === items.length, "Produto repetido.");
 export const quoteRequestSchema = z.object({ postalCode: z.string().regex(/^\d{8}$/), items: shippingItemsSchema });
