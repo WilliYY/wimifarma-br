@@ -6,6 +6,8 @@ A faixa circular da home reúne somente Ofertas, Infantil, Medicamentos, Vitamin
 
 `buildHomeShortcuts()` não depende mais do telefone nem da existência momentânea de produtos. A home também dispensa a consulta de categorias que alimentava esse fallback. Componente, ícones e rótulo acessível foram ajustados para os seis destinos; arraste, setas e movimento reduzido mantêm o comportamento existente. Regressões verificam todos os destinos internos, os grupos reconhecidos e a ausência dos dois serviços e de links externos.
 
+Publicado em `677d440`: quatro testes de atalhos/agrupamento/ordenação, 385 testes de segurança, TypeScript, ESLint dos arquivos alterados e build Docker aprovados; auditoria de dependências de produção sem alertas. Os seis links retornaram HTTP 200 no site publicado, inclusive categorias vazias. Conferência no Chrome confirmou seis destinos internos na mesma aba e ausência de transbordamento horizontal. App saudável, com imagem anterior preservada; não houve migração, edição de estoque/preço, pedido ou pagamento. README, documento 75 e fixtures de QA acompanham a mudança. Evidências HTTP locais em `outputs/atalhos-categorias-2026-10-19/live-results.json`.
+
 ## Campanha do Club - 2026-10-13
 
 Banner redesenhado como campanha de fidelidade: vermelho sólido da Wimifarma, título curto em Barlow, CTA branco e cartão ilustrativo escuro com a logo oficial completa. Uma moeda dourada com coroa acompanha o cartão; não representa saldo, prêmio automático ou cartão de pagamento. Composição assimétrica e tipografia forte substituem o fundo pastel, a borda dourada e o texto extenso. Direção de varejo contemporâneo; DFII15 (impacto4, adequação5, implementação4, desempenho5, risco3).
