@@ -6,6 +6,15 @@ import { cancelRestock, cleanupRestockInterests, getAdminRestock, getCustomerRes
 const now = new Date("2026-10-19T12:00:00.000Z");
 const session = { user: { id: "customer", role: "CUSTOMER" } };
 const input = { productId: "product", whatsapp: true, email: false, consent: true as const };
+function assertValidIncludes(value: unknown): void {
+  if (!value || typeof value !== "object") return;
+  for (const [key, nested] of Object.entries(value)) {
+    if (key === "include" && nested && typeof nested === "object") {
+      for (const scalar of ["supplierMarkupBps", "catalogClassification"]) assert.equal(scalar in nested, false, `Invalid scalar field ${scalar} for include statement on model Product`);
+    }
+    assertValidIncludes(nested);
+  }
+}
 function fixture() {
   const calls: { method: string; input: unknown }[] = [];
   const customer = { id: "customer", status: "ACTIVE", name: "Synthetic", phone: "44999990000", email: "test@example.test" };
@@ -14,12 +23,12 @@ function fixture() {
   const database = {
     $queryRaw: async () => { calls.push({ method: "lock", input: null }); return [{ id: customer.id }]; },
     customer: { findUnique: async (arg: unknown) => { calls.push({ method: "customer", input: arg }); return customer; } },
-    product: { findUnique: async () => product },
+    product: { findUnique: async (arg: unknown) => { assertValidIncludes(arg); return product; } },
     restockInterest: {
-      findMany: async (arg: unknown) => { void arg; return [] as typeof row[]; },
-      findUnique: async (arg: unknown) => { void arg; return row as typeof row | null; },
+      findMany: async (arg: unknown) => { assertValidIncludes(arg); return [] as typeof row[]; },
+      findUnique: async (arg: unknown) => { assertValidIncludes(arg); return row as typeof row | null; },
       findUniqueOrThrow: async () => row,
-      findFirst: async (arg: unknown) => { void arg; return row as typeof row | null; },
+      findFirst: async (arg: unknown) => { assertValidIncludes(arg); return row as typeof row | null; },
       count: async () => 0,
       upsert: async (arg: unknown) => { calls.push({ method: "upsert", input: arg }); return row; },
       update: async (arg: { data: object }) => { calls.push({ method: "update", input: arg }); return { ...row, ...arg.data }; },
@@ -58,7 +67,7 @@ test("50 waiting limit blocks a new interest but permits renewal of same active 
 });
 test("cancellation scopes lookup to current customer, erases contacts and rejects another owner", async () => {
   const f = fixture();
-  f.database.restockInterest.findFirst = async arg => { assert.deepEqual(arg, { where: { id: "other", customerId: "customer" }, include: { product: { include: { supplierOffers: true, supplierMarkupBps: true, catalogClassification: true } } } }); return null; };
+  f.database.restockInterest.findFirst = async arg => { assert.deepEqual(arg, { where: { id: "other", customerId: "customer" }, include: { product: { include: { supplierOffers: true } } } }); return null; };
   await assert.rejects(cancelRestock(f.tx, session, "other", now), /não localizado/);
   f.database.restockInterest.findFirst = async () => f.row;
   const result = await cancelRestock(f.tx, session, "interest", now);

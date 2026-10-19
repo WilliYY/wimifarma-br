@@ -1,13 +1,14 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { sessionCustomerId } from "@/features/auth/customer-session";
 import { restockContactLinks } from "@/features/communications/restock-contact";
-import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
+import { toSaleProduct } from "@/features/supplier-catalog/commerce";
 import { RestockError, type NotificationInput, type RestockInterestDto, type SubscribeInput } from "./contracts";
 import { assertSubscription, contactChannels, currentContacts, restockAvailability, restockContactsMatch } from "./rules";
 
 type Session = { user?: { id?: string; role?: string; customerId?: string } } | null;
 type Tx = Prisma.TransactionClient;
-const include = { product: { include: supplierOfferInclude } } as const;
+const productInclude = { supplierOffers: true } satisfies Prisma.ProductInclude;
+const include = { product: { include: productInclude } } as const;
 type Interest = Prisma.RestockInterestGetPayload<{ include: typeof include }>;
 const retention = 30 * 24 * 60 * 60 * 1000;
 
@@ -59,7 +60,7 @@ export async function getCustomerRestock(tx: Tx, session: Session, productId?: s
   await cleanupRestockInterests(tx, now);
   if (productId) {
     const row = await tx.restockInterest.findUnique({ where: { customerId_productId: { customerId: customer.id, productId } }, include });
-    const product = await tx.product.findUnique({ where: { id: productId }, include: supplierOfferInclude });
+    const product = await tx.product.findUnique({ where: { id: productId }, include: productInclude });
     if (!product || !restockAvailability(product, now.getTime()).eligible) throw new RestockError("Produto indisponível para avisos.", 404);
     return { contact: currentContacts(customer), interest: row ? dto(await refreshContactConsent(tx, row, customer, now), now) : null, available: restockAvailability(product, now.getTime()).available };
   }
@@ -76,7 +77,7 @@ export async function getCustomerRestock(tx: Tx, session: Session, productId?: s
 export async function subscribeRestock(tx: Tx, session: Session, input: SubscribeInput, now = new Date()) {
   const customer = await customerForSession(tx, session, true);
   await cleanupRestockInterests(tx, now);
-  const product = await tx.product.findUnique({ where: { id: input.productId }, include: supplierOfferInclude });
+  const product = await tx.product.findUnique({ where: { id: input.productId }, include: productInclude });
   if (!product) throw new RestockError("Produto indisponível para avisos.", 404);
   assertSubscription(product, now.getTime());
   const contacts = contactChannels(customer, input);
