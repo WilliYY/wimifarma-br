@@ -1,8 +1,7 @@
 export type HomeShortcutItem = {
-  id: "offers" | "baby" | "medicines" | "vitamins" | "dermo" | "beauty" | "popular" | "delivery";
+  id: "offers" | CatalogGroup;
   label: string;
   href: string;
-  external: boolean;
 };
 
 export const categoryShortcuts = [
@@ -26,25 +25,9 @@ export function groupCategoryNames(categories: readonly { name: string; names?: 
   return categories.filter(category => shortcut.names.some(name => ` ${normalizeName(category.name)} `.includes(` ${name} `))).flatMap(category => category.names ?? [category.name]);
 }
 
-export function buildHomeShortcuts(categories: readonly { name: string; slug: string }[], phone: string): HomeShortcutItem[] {
-  const availableCategories = categories.map(category => ({ ...category, normalizedName: normalizeName(category.name) }));
-  const items: HomeShortcutItem[] = [{ id: "offers", label: "Ofertas", href: "/ofertas", external: false }];
-
-  for (const shortcut of categoryShortcuts) {
-    const category = availableCategories.find(candidate => shortcut.names.some(name => ` ${candidate.normalizedName} `.includes(` ${name} `)));
-    items.push({
-      id: shortcut.id,
-      label: shortcut.label,
-      href: category
-        ? `/catalogo?grupo=${shortcut.id}&ordem=preco-asc`
-        : `https://wa.me/${phone}?text=${encodeURIComponent(`Olá! Gostaria de consultar a equipe sobre ${shortcut.label.toLowerCase()}.`)}`,
-      external: !category,
-    });
-  }
-
-  items.push(
-    { id: "popular", label: "Farmácia Popular", href: "/farmacia-popular", external: false },
-    { id: "delivery", label: "Delivery", href: "/delivery", external: false },
-  );
-  return items;
+export function buildHomeShortcuts(): HomeShortcutItem[] {
+  return [
+    { id: "offers", label: "Ofertas", href: "/ofertas" },
+    ...categoryShortcuts.map(({ id, label }) => ({ id, label, href: `/catalogo?grupo=${id}&ordem=preco-asc` })),
+  ];
 }

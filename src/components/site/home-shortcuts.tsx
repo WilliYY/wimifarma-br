@@ -8,11 +8,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Droplets,
-  HeartHandshake,
   Leaf,
   Pill,
   SprayCan,
-  Truck,
 } from "lucide-react";
 import type { HomeShortcutItem } from "@/features/products/home-shortcuts";
 
@@ -23,8 +21,6 @@ const shortcutIcons = {
   vitamins: Leaf,
   dermo: Droplets,
   beauty: SprayCan,
-  popular: HeartHandshake,
-  delivery: Truck,
 };
 
 export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
@@ -60,7 +56,7 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
   }
 
   return (
-    <nav aria-label="Atalhos de compras e serviços" className="relative mb-7 px-11 sm:mb-9 sm:px-12">
+    <nav aria-label="Categorias de produtos" className="relative mb-7 px-11 sm:mb-9 sm:px-12">
       <button
         aria-controls="home-shortcuts"
         aria-label="Ver atalhos anteriores"
@@ -84,12 +80,9 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
           return (
             <li className="w-24 shrink-0 snap-start sm:w-28" key={item.id}>
               <Link
-                aria-label={item.external ? `Consultar ${item.label} pelo WhatsApp (abre em nova aba)` : item.label}
+                aria-label={item.label}
                 className="group flex flex-col items-center gap-3 rounded-xl text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
                 href={item.href}
-                rel={item.external ? "noreferrer" : undefined}
-                target={item.external ? "_blank" : undefined}
-                title={item.external ? `Consultar ${item.label} pelo WhatsApp` : undefined}
               >
                 <span className="flex h-20 w-20 items-center justify-center rounded-full bg-surface-subtle text-brand ring-1 ring-transparent transition duration-200 group-hover:-translate-y-1 group-hover:bg-brand-soft group-hover:ring-brand/20 motion-reduce:transform-none motion-reduce:transition-none sm:h-24 sm:w-24">
                   <Icon aria-hidden="true" className="h-9 w-9 sm:h-10 sm:w-10" strokeWidth={1.6} />

@@ -4,11 +4,9 @@ import {
   publicReviewerName,
 } from "@/features/products/product-detail";
 import { getPrisma } from "@/lib/prisma";
-import { getPublicCategories } from "@/features/products/storefront";
 import { buildHomeShortcuts } from "@/features/products/home-shortcuts";
 import { buildHomeCollections } from "@/features/products/home-collections";
 import { validatedHomePhotos } from "@/features/products/home-photos";
-import { siteConfig } from "@/lib/site";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +17,7 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const prisma = getPrisma();
-  const [products, reviews, categories] = await Promise.all([
+  const [products, reviews] = await Promise.all([
     prisma.product.findMany({
       select: {
         ...supplierOfferInclude, ean: true, inventorySource: true,
@@ -47,7 +45,6 @@ export default async function Page() {
         product: { status: "ACTIVE" },
       },
     }),
-    getPublicCategories(),
   ]);
   const now = new Date();
   const saleProducts = products.map(product => toSaleProduct(product, now.getTime()));
@@ -67,7 +64,7 @@ export default async function Page() {
     <HomePage
       collections={collections}
       customerReviews={customerReviews}
-      shortcuts={buildHomeShortcuts(categories, siteConfig.phone)}
+      shortcuts={buildHomeShortcuts()}
     />
   );
 }

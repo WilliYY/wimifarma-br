@@ -1,5 +1,11 @@
 # 10 - Layout e Experiencia
 
+## Atalhos exclusivos de catálogo — 2026-10-19
+
+A faixa circular da home reúne somente Ofertas, Infantil, Medicamentos, Vitaminas e suplementos, Dermo e Perfumaria. Ofertas abre `/ofertas`; os demais links usam `/catalogo?grupo=...&ordem=preco-asc`, preservando agrupamento por categoria, preço crescente e paginação. Uma categoria ainda vazia abre o estado vazio do próprio catálogo, sem WhatsApp ou nova aba. Farmácia Popular e Delivery foram retirados somente dessa faixa; suas páginas e demais acessos continuam disponíveis.
+
+`buildHomeShortcuts()` não depende mais do telefone nem da existência momentânea de produtos. A home também dispensa a consulta de categorias que alimentava esse fallback. Componente, ícones e rótulo acessível foram ajustados para os seis destinos; arraste, setas e movimento reduzido mantêm o comportamento existente. Regressões verificam todos os destinos internos, os grupos reconhecidos e a ausência dos dois serviços e de links externos.
+
 ## Campanha do Club - 2026-10-13
 
 Banner redesenhado como campanha de fidelidade: vermelho sólido da Wimifarma, título curto em Barlow, CTA branco e cartão ilustrativo escuro com a logo oficial completa. Uma moeda dourada com coroa acompanha o cartão; não representa saldo, prêmio automático ou cartão de pagamento. Composição assimétrica e tipografia forte substituem o fundo pastel, a borda dourada e o texto extenso. Direção de varejo contemporâneo; DFII15 (impacto4, adequação5, implementação4, desempenho5, risco3).

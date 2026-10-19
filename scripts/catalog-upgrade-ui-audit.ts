@@ -29,9 +29,8 @@ import {HomePage} from "@/components/site/home-page";
 import {CartProvider} from "@/components/site/cart-provider";
 import {BrandSignature} from "@/components/site/brand-signature";
 import {buildHomeShortcuts} from "@/features/products/home-shortcuts";
-import {siteConfig} from "@/lib/site";
 const mode=location.pathname;
-createRoot(document.getElementById("root")).render(<><div className="fixed bottom-0 right-0 z-[100] rounded-tl-lg bg-slate-900 px-3 py-1 text-xs font-bold text-white">QA SINTÉTICO</div>{mode==="/login"?<CustomerAuthPage/>:mode==="/admin/catalogos"?<main className="min-h-screen bg-surface-subtle p-4 sm:p-8"><ProductsCatalogPanel canManageCashback canManageShipping/></main>:<CartProvider><header className="absolute left-0 right-0 top-0 z-30 flex h-24 items-center justify-between border-b border-line bg-white px-4 sm:px-8"><BrandSignature/><span className="text-xs font-semibold text-muted">Vitrine sintética</span></header><main><HomePage shortcuts={buildHomeShortcuts([],siteConfig.phone)} customerReviews={[]} collections={window.__qa.collections}/></main></CartProvider>}<Toaster/></>);
+createRoot(document.getElementById("root")).render(<><div className="fixed bottom-0 right-0 z-[100] rounded-tl-lg bg-slate-900 px-3 py-1 text-xs font-bold text-white">QA SINTÉTICO</div>{mode==="/login"?<CustomerAuthPage/>:mode==="/admin/catalogos"?<main className="min-h-screen bg-surface-subtle p-4 sm:p-8"><ProductsCatalogPanel canManageCashback canManageShipping/></main>:<CartProvider><header className="absolute left-0 right-0 top-0 z-30 flex h-24 items-center justify-between border-b border-line bg-white px-4 sm:px-8"><BrandSignature/><span className="text-xs font-semibold text-muted">Vitrine sintética</span></header><main><HomePage shortcuts={buildHomeShortcuts()} customerReviews={[]} collections={window.__qa.collections}/></main></CartProvider>}<Toaster/></>);
 `;
 
 async function bundleFixture() {
