@@ -1,5 +1,7 @@
 # Rotina do piloto de fornecedores
 
+Atualização de 19/10/2026: rotina ampliada para **45 EANs publicados de distribuidor**, após conferência e publicação do lote de anlodipino descrito em [72](72-lote-anlodipino-2026-10-19.md). Mantém 8h/12h/17h, percentuais atuais, manifesto v1 e todas as restrições abaixo. Os 20 EANs novos estão listados em 72; os 25 anteriores continuam autorizados. A rotina não pode publicar outros EANs nem renovar cotas. Acesso normal a ANB/Profarma restabelecido nesta rodada, sem garantia de sessão permanente.
+
 Atualização posterior de 18/10/2026: a rotina passou a abranger 25 EANs aprovados, incluindo os 15 novos produtos do [lote do relatório](70-expansao-catalogo-relatorio.md). As dez losartanas passaram para 50% de acréscimo pelo novo pedido do titular. A rotina preserva o percentual ADMIN atual de cada produto; lotes mistos usam `manifestVersion:1`. Não incluir novos EANs sem conferência própria. Horários mantidos: 8h, 12h e 17h de Brasília, dependentes do PC/navegador.
 
 ## Escopo aprovado em 18/10/2026

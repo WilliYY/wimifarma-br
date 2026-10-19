@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-19 - Primeiro lote comercial por família de anlodipino
+
+- Retomadas consultas normais ANB/Profarma por família, com confirmação dos EANs ausentes na pesquisa de nome. Manifesto v1 revisado publicou 20 produtos e atualizou somente a oferta do Geolab existente, sem duplicar apresentações. Nove genéricos e doze similares na rodada; três diferenças de laboratório e um indisponível ficaram fora. Detalhes em [72](72-lote-anlodipino-2026-10-19.md).
+- Menor custo final elegível com ST: 17 ANB e quatro Profarma. Percentuais escolhidos por apresentação, sem nova regra global de faixa ou reclassificação de similares como éticos. Ilustrações Rx existentes e rascunhos logísticos sem transporte aprovado.
+- Revisão independente, 342 testes de segurança, regressões do gerador, PostgreSQL isolado, dry-run/aplicação auditada e 21 verificações públicas por EAN/página/carrinho. Hashes preservam produtos anteriores, ofertas alheias, cotas/reservas/consumo, pedidos e clientes. Corrigido apenas auxiliar privado de QA para manter o guard de fetch no processo executor; nenhuma mudança no código da aplicação ou dependências.
+- Rotina existente atualizada para 45 EANs publicados, mantendo horários, silêncio sem novidade e limites de acesso/validade/cota. Relatórios, preços negociados, manifestos e backups permanecem fora do Git; nenhum pedido de fornecedor, pagamento ou etiqueta foi transmitido.
+
 ## 2026-10-19 - Inventário integral e receita de antimicrobianos
 
 - Separados todos os 6.290 códigos internos FAR, com nomes/detalhes intactos, totais reconciliados, dois registros avulsos fora das 6.288 prioridades e 65 códigos Nivea/Dove. Índices oficiais acrescentam 379 páginas de produto para conferência; nenhum EAN/estoque/custo é confirmado só por nome ou URL.
