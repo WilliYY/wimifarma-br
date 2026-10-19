@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+App Android na Google Play e iOS na App Store: levantamento de paridade, dados compartilhados, arquitetura proposta e pendências das contas em [docs/76-app-android-ios.md](docs/76-app-android-ios.md). Ainda não há aplicativo compilado ou publicado.
+
 Avise-me por WhatsApp/e-mail para produtos publicados indisponíveis, com consentimento, cancelamento na conta e fila de contato pela equipe. Não há disparo automático conectado. Contrato em [docs/74-avisos-de-disponibilidade.md](docs/74-avisos-de-disponibilidade.md).
 
 Novo lote do relatório publicado em 19/10/2026: 23 produtos de glibenclamida, espironolactona, furosemida e Dove, totalizando 73 produtos. Lista e validações em [docs/73-lote-familias-e-dove-2026-10-19.md](docs/73-lote-familias-e-dove-2026-10-19.md). A automação cobre 68 EANs de distribuidor, mas foi encontrada pausada e permaneceu assim.

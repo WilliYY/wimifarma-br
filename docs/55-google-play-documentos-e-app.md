@@ -1,5 +1,7 @@
 # 55 — Google Play: documentos e preparação do app
 
+Atualização de 19/10/2026: o titular confirmou Android **e iOS**, nas duas lojas. A Play Console foi conferida novamente: conta pessoal, sem primeiro app, com verificação do telefone de contato pendente. O plano atual e os limites de sincronização estão em [76 - App Android e iOS](76-app-android-ios.md); a avaliação PWA/TWA abaixo é histórica e não atende sozinha ao escopo iOS.
+
 Verificação em 08/10/2026. Nenhum documento pessoal foi copiado para o repositório, enviado pelo agente ou incluído neste guia.
 
 ## Situação encontrada

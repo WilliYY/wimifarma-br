@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-19 — Escopo do app Android e iOS
+
+- Titular confirmou app da farmácia nas lojas Google Play e App Store, com os mesmos produtos e funções do site. Dados e regras devem ter uma fonte única; paridade de telas/recursos exige manutenção e distribuição coordenadas.
+- Levantadas lacunas de APIs, sessão móvel, carrinho entre dispositivos, exclusão de conta, pagamento e receitas. React Native/Expo é proposta técnica, sem dependências instaladas ou alteração da arquitetura em execução. TWA permanece alternativa Android e não entrega iOS.
+- Play Console observada com conta pessoal, sem primeiro app e com telefone de contato pendente; o titular informou possuir somente conta Google. Nenhum cadastro, documento, contrato, pagamento ou submissão foi realizado. Plano e fontes oficiais em [76](76-app-android-ios.md).
+
 ## 2026-10-19 — Catálogo compacto, vitrines com foto e demanda de distribuidor
 
 - Decisão: separar visualmente origens, permitir edição explícita de até 50 produtos com revisão e transação atômica, e montar coleções diárias somente com fotografias públicas válidas e classificação adequada.

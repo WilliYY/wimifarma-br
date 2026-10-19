@@ -1,5 +1,11 @@
 # 06 - Pendencias
 
+## App Android e iOS — 19/10/2026
+
+- Levantamento preparado em [76](76-app-android-ios.md), sem app compilado/publicado. Fonte única de dados/regras confirmada; React Native/Expo é proposta a validar.
+- Play Console conferida: conta pessoal sem app, com telefone de contato pendente. Titular informou possuir somente conta Google; preparar Apple Developer e conferir enquadramento/organização da farmácia antes da distribuição.
+- Faltam contratos completos de cliente, autenticação móvel, exclusão de conta, revisão do fluxo de receitas para as lojas, definição de sincronização do carrinho e homologação de pagamento/upload/retomada Android/iOS. Não relaxar permissões ou regras comerciais para implementar o app.
+
 ## Catálogo e vitrines — 19/10/2026
 
 - Edição em massa, coleções com fotos e demanda de distribuidor publicadas no código `02ecef6`, com PostgreSQL sintético, backup, preservação de dados e conferência pública conforme [75](75-catalogo-vitrines-e-compra-distribuidor.md). Interface ADMIN foi validada em QA; não foi concluída a conferência autenticada na conta produtiva.

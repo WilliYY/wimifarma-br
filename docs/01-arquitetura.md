@@ -1,5 +1,9 @@
 # 01 - Arquitetura
 
+## Aplicativos Android e iOS — levantamento de 19/10/2026
+
+Requisito confirmado: compartilhar dados e regras com o site, com distribuição na Google Play e App Store. Proposta ainda sem implementação: React Native/Expo consumindo APIs do backend atual, com contratos/tokens compartilhados e compatibilidade de versões. Telas nativas exigem manutenção coordenada; mudanças no site não atualizam automaticamente o binário. Matriz, alternativas e etapas em [76](76-app-android-ios.md).
+
 ## Evolução de catálogo — 19/10/2026
 
 `features/products/catalog-bulk*` implementa lote transacional com versão, locks e auditoria. `home-collections` monta coleções por classificação/preço e dia de Brasília; `home-photos` verifica arquivos públicos antes da exibição. `OrderItem.supplierDemandAllowed` fotografa a nova política de demanda de distribuidor, preservando pedidos anteriores. Contrato, limites e APIs em [75](75-catalogo-vitrines-e-compra-distribuidor.md).
