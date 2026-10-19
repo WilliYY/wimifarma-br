@@ -26,6 +26,7 @@ type FulfillmentMethod = "DELIVERY" | "PICKUP";
 type PaymentMethod = "PIX" | "CARD_ON_DELIVERY" | "CASH" | "ONLINE";
 
 export type AdminOrderRecord = {
+  prescriptionUpload?: { id: string } | null;
   preparationReadyAt?: string | null;
   preparationDays?: number;
   onlinePayment?: { environment: string; status: string; statusDetail: string | null; providerOrderId: string | null } | null;
@@ -224,6 +225,7 @@ function OrderCard({ order, onUpdate, updating }: { order: AdminOrderRecord; onU
       <div><p className="text-xs font-black uppercase text-muted">Itens</p><div className="mt-2 grid gap-2">{order.items.map((item) => <div className="flex justify-between gap-4 text-sm" key={item.id}><span className="font-semibold text-ink">{item.quantity}x {item.productName}</span><strong className="shrink-0 text-ink">{currency.format(item.totalCents / 100)}</strong></div>)}</div>{order.notes ? <p className="mt-4 rounded-md bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-900"><strong>Observacao:</strong> {order.notes}</p> : null}</div>
     </div>
     {order.requiresPrescriptionReview && <section aria-label="Conferência de receita" className="border-t border-line bg-amber-50 px-5 py-4 text-sm sm:px-7">
+      {order.prescriptionUpload && <div className="mb-3"><a href={`/api/admin/receitas/${order.prescriptionUpload.id}`} className="font-bold underline">Baixar receita para pré-análise</a><p className="mt-2 text-sm">Foto não substitui o original. Valide a receita física ou o PDF original, retenção e escrituração antes de registrar a conferência. Pagamento não autoriza dispensação.</p></div>}
       <p className="font-bold text-amber-900">{order.prescriptionReviewedAt ? `Receita conferida pelo farmacêutico · registro em ${dateTime.format(new Date(order.prescriptionReviewedAt))}` : "Receita pendente de conferência farmacêutica"}</p>
       {!order.prescriptionReviewedAt && !["CANCELED", "COMPLETED"].includes(order.status) && <div className="mt-3 grid gap-3">
         <p className="text-sm text-amber-900">Registre somente após o farmacêutico responsável conferir a receita. O pagamento não libera a dispensação.</p>

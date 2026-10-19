@@ -1,14 +1,18 @@
 # Pedido online e conferência de receita
 
+## Atualização de 19/10/2026
+
+Antimicrobianos passam a ter classificação explícita `ANTIMICROBIAL` e envio privado obrigatório de receita no checkout, com conta ativa, pré-análise humana e vínculo transacional ao pedido. Receita comum mantém o fluxo sem upload. Controlados continuam assistidos e impedidos de compra/pagamento online, conforme RDC 812/2023. O arquivo não comprova original, assinatura, retenção ou escrituração. Contrato, fontes atuais e verificação em [71](71-inventario-completo-e-receitas.md).
+
 ## Regra aprovada em 06/10/2026
 
-O lojista solicitou compra normal, sem envio de receita no checkout. Medicamentos de receita comum podem receber pedidos e pagamentos online. A apresentação e avaliação da receita pelo farmacêutico continuam necessárias antes da dispensação, conforme RDC 44/2009, arts. 43–45 e 52–53. O checkout não recebe arquivos de receita.
+O lojista solicitou compra normal, sem envio de receita no checkout. Medicamentos de receita comum podem receber pedidos e pagamentos online. A apresentação e avaliação da receita pelo farmacêutico continuam necessárias antes da dispensação, conforme RDC 44/2009, arts. 43–45 e 52–53. O fluxo de receita comum não recebe arquivos; a atualização de 19/10 acrescenta o fluxo específico de antimicrobianos.
 
 Medicamentos sob controle especial não podem ter compra e venda pela internet, embora sua entrega remota tenha regras próprias. Esses itens, Farmácia Popular e medicamentos de receita ainda não classificados seguem atendimento assistido. A afirmação de disponibilidade comercial não transforma um medicamento em isento de prescrição.
 
 ## Cadastro e catálogo
 
-- `Product.prescriptionType`: `UNREVIEWED` por padrão, `ORDINARY` para receita comum ou `CONTROLLED` para controle especial. Somente ADMIN envia uma classificação explícita.
+- `Product.prescriptionType`: `UNREVIEWED` por padrão, `ORDINARY` para receita comum, `ANTIMICROBIAL` para antimicrobiano com envio privado ou `CONTROLLED` para controle especial assistido. Somente ADMIN envia uma classificação explícita; não inferir pelo nome ou por uma foto.
 - `requiresPrescription` permanece verdadeiro para comum/controlado. Schemas, validação da atualização com os dados persistidos e um CHECK no banco impedem a combinação contraditória.
 - Nome, marca ou EAN alterados resetam a classificação para não revisado, salvo nova escolha explícita por ADMIN. O seletor acompanha a identidade do formulário e a API aplica a mesma regra.
 - Criação e atualização registram o estado de prescrição na auditoria; atualização registra antes/depois e operador. A pesquisa da IA não preenche essa classificação.

@@ -64,6 +64,7 @@ enum PrescriptionType {
   UNREVIEWED
   ORDINARY
   CONTROLLED
+  ANTIMICROBIAL
 }
 
 enum OrderStatus {
@@ -309,6 +310,8 @@ model Lead {
 }
 
 model Customer {
+  prescriptionUploads PrescriptionUpload[]
+  prescriptionUploadQuota PrescriptionUploadQuota?
   id                String             @id @default(cuid())
   name              String
   phone             String?            @unique
@@ -342,6 +345,7 @@ model Customer {
 }
 
 model Order {
+  prescriptionUpload PrescriptionUpload?
   preparationReadyAt DateTime?
   preparationDays Int @default(0)
   wimicoinsEarnedPoints Int @default(0)
@@ -778,4 +782,30 @@ model MiaubyEvent {
   @@index([status, availableAt])
   @@index([sessionId, status])
   @@index([createdAt])
+}
+
+model PrescriptionUpload {
+  id String @id @default(uuid())
+  customerId String
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  orderId String? @unique
+  order Order? @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  submissionId String
+  cartFingerprint String
+  mimeType String
+  ciphertext Bytes
+  iv Bytes
+  tag Bytes
+  sizeBytes Int
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([customerId, expiresAt])
+}
+
+model PrescriptionUploadQuota {
+  customerId String @id
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  windowStartedAt DateTime
+  count Int
 }

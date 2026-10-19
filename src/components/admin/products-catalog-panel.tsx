@@ -112,7 +112,7 @@ type ProductListItem = {
   price: string;
   promotionalPrice: string | null;
   requiresPrescription: boolean;
-  prescriptionType?: "UNREVIEWED" | "ORDINARY" | "CONTROLLED";
+  prescriptionType?: "UNREVIEWED" | "ORDINARY" | "CONTROLLED" | "ANTIMICROBIAL";
   searchTerms: string[];
   sku: string | null;
   slug: string;
@@ -571,8 +571,14 @@ function ProductFormFields({
               <input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={product?.isPopularPharmacy} name="isPopularPharmacy" type="checkbox" />
               Farmacia Popular
             </label>
-            <input name="requiresPrescription" type="hidden" value={product?.requiresPrescription ? "on" : "off"} />
-            {canManageShipping ? <input name="prescriptionType" type="hidden" value={product && productIdentityKey({ name: product.name, brand: product.brand ?? "", ean: product.ean ?? "" }) === productIdentityKey(photoIdentity) ? product.prescriptionType ?? "UNREVIEWED" : "UNREVIEWED"} /> : null}
+            {canManageShipping ? <>
+              <label className="flex items-center gap-3 text-sm font-bold"><input type="checkbox" name="requiresPrescription" defaultChecked={product?.requiresPrescription} />Exige receita</label>
+              <label className="grid gap-2 text-sm font-bold">Classificação de receita (ADMIN)
+                <select name="prescriptionType" className="min-h-11 rounded-md border border-line px-3" key={productIdentityKey(photoIdentity)} defaultValue={product && productIdentityKey({ name: product.name, brand: product.brand ?? "", ean: product.ean ?? "" }) === productIdentityKey(photoIdentity) ? product.prescriptionType ?? "UNREVIEWED" : "UNREVIEWED"}>
+                  <option value="UNREVIEWED">Pendente de classificação</option><option value="ORDINARY">Receita comum</option><option value="ANTIMICROBIAL">Antimicrobiano · receita para pré-análise</option><option value="CONTROLLED">Controle especial · atendimento assistido</option>
+                </select>
+              </label>
+            </> : <input name="requiresPrescription" type="hidden" value={product?.requiresPrescription ? "on" : "off"} />}
           </ProductFormSection>
           <ProductFormSection className="[&_button]:h-auto [&_button]:min-h-11 [&_button]:whitespace-normal [&_button]:py-2.5" id={`${sectionId}-photos`} number="05" title="Fotos do produto" description="Envie uma foto, use a biblioteca e confira o resultado antes de salvar.">
             <ProductImagePicker identity={photoIdentity} initialImageAssetId={product?.imageAssetId} initialImageUrl={product?.imageUrl} initialImageUrls={product?.imageUrls} key={`${product?.id ?? "new"}-${privateSupplierPhoto}`} privateSupplier={privateSupplierPhoto} ref={imagePickerRef} />

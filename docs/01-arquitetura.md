@@ -6,6 +6,8 @@ A arquitetura organiza a plataforma em camadas para evitar mistura entre site pu
 
 ## Camadas
 
+Receitas de antimicrobianos usam `PrescriptionUpload` e `PrescriptionUploadQuota` no PostgreSQL, com bytes cifrados de contexto próprio, fora de `ProductImage` e de diretórios públicos. `POST /api/minha-conta/receitas` exige cliente ativo e carrinho com classificação explícita; `GET /api/admin/receitas/[id]` exige ADMIN ativo e anexo vinculado. O checkout associa o arquivo na transação e os gateways revalidam a exigência atual sob locks. ORDINARY mantém conferência sem upload; CONTROLLED permanece assistido. Contrato regulatório, retenção e limites em [71](71-inventario-completo-e-receitas.md).
+
 Planejamento de fornecedores usa domínio puro `src/features/supplier-planning` e página exclusiva ADMIN `/admin/fornecedores`. Ofertas manuais e cenários ficam na memória da sessão, sem API, persistência, conexão de fornecedor ou efeito no checkout. Valores usam centavos inteiros e pontos-base. Contrato em [66](66-fornecedores-e-viabilidade.md).
 
 Club e WimiCoins usam domínio `src/features/club`, adesão `ClubMembership` e carteira/livro próprios `WimicoinAccount`/`WimicoinTransaction`. O checkout fotografa elegibilidade/percentual e rateia os dois descontos na mesma transação; liquidação segue os hooks existentes de pedidos/pagamentos. Bloquear cashback antes de WimiCoins e preservar identidade User–Customer revalidada. Contrato em [63](63-club-wimicoins.md).

@@ -57,7 +57,7 @@ export async function createAsaasSandboxPayment(input: z.infer<typeof asaasTestC
       throw new PaymentError("Há um ensaio aguardando conferência. Consulte-o antes de criar outro.", 409);
     }
     const product = await tx.product.findUnique({ where: { id: data.productId } });
-    if (!product || product.status !== "ACTIVE" || product.stock < 1 || requiresPurchaseAssistance(product)) {
+    if (!product || product.status !== "ACTIVE" || product.stock < 1 || product.prescriptionType === "ANTIMICROBIAL" || requiresPurchaseAssistance(product)) {
       throw new PaymentError("Escolha um produto disponível para o ensaio.", 409);
     }
     const amountCents = moneyToCents((product.promotionalPrice ?? product.price).toString());
@@ -164,7 +164,7 @@ export async function getAsaasHomologationState() {
   const attempts = await prisma.onlinePayment.findMany({ where: { provider: "asaas", environment: "test", integrationId: ASAAS_SANDBOX_INTEGRATION_ID },
     take: 100, orderBy: { createdAt: "desc" }, select: { orderId: true } });
   return { prepared: Boolean(integration), revision: integration?.revision ?? 0, webhookReady: Boolean(integration?.secrets.webhookId),
-    products: products.filter(product => !requiresPurchaseAssistance(product)).map(product => ({ id: product.id, name: product.name,
+    products: products.filter(product => product.prescriptionType !== "ANTIMICROBIAL" && !requiresPurchaseAssistance(product)).map(product => ({ id: product.id, name: product.name,
       priceCents: moneyToCents((product.promotionalPrice ?? product.price).toString()) })).filter(product => product.priceCents > 0 && product.priceCents <= 10_000),
     attempts: await Promise.all(attempts.map(payment => asaasSandboxPaymentView(payment.orderId))) };
 }

@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-19 - Inventário integral e receita de antimicrobianos
+
+- Separados todos os 6.290 códigos internos FAR, com nomes/detalhes intactos, totais reconciliados, dois registros avulsos fora das 6.288 prioridades e 65 códigos Nivea/Dove. Índices oficiais acrescentam 379 páginas de produto para conferência; nenhum EAN/estoque/custo é confirmado só por nome ou URL.
+- `ANTIMICROBIAL` é uma classificação ADMIN explícita e distinta de receita comum/controlados. Checkout exige anexo privado vinculado ao cliente, carrinho e envio, com armazenamento cifrado e acesso ADMIN ativo. Arquivo é pré-análise; a conferência humana, retenção do original e escrituração permanecem obrigatórias. ORDINARY continua sem upload e com conferência antes da dispensação.
+- CONTROLLED segue atendimento assistido: a RDC 812/2023 veda compra/venda pela internet, mesmo com arquivo enviado. Ilustrações identificam o tipo explícito sem mudar classe ou permissão. Fontes e limites em [71](71-inventario-completo-e-receitas.md).
+
 ## 2026-10-18 - Expansão por relatório e ilustrações Rx
 
 - Relatório FAR usado para priorização local, sem converter códigos internos em EAN. Novos lotes exigem conferência exata na ANB/Profarma, evidência, classificação e percentual; contratos em [70](70-expansao-catalogo-relatorio.md).

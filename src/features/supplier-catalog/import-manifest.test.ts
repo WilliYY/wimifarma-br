@@ -12,6 +12,20 @@ const mixed = () => ({ manifestVersion: 1, products: [{ ...row, supplierMarkupBp
   catalogClassification: { kind: "MEDICINE", medicineClass: "GENERIC", ethical: false, otc: false },
   evidence: { identity: { ...evidence }, classification: { ...evidence } } }] });
 
+test("explicit antimicrobial imports retain the prescription type and never become ordinary or controlled", () => {
+  const antimicrobial = { ...mixed().products[0], prescriptionType: "ANTIMICROBIAL" };
+  const parsed = supplierImportManifestSchema.parse({ manifestVersion: 1, products: [antimicrobial] }).products[0];
+  assert.equal(persistedPrescriptionType(parsed), "ANTIMICROBIAL");
+  assert.doesNotThrow(() => assertImportTarget(parsed, { ...antimicrobial, inventorySource: "DISTRIBUTOR", deletedAt: null, isPopularPharmacy: false }));
+  assert.throws(() => assertImportTarget(parsed, { ...antimicrobial, prescriptionType: "ORDINARY", inventorySource: "DISTRIBUTOR", deletedAt: null, isPopularPharmacy: false }));
+  for (const patch of [
+    { requiresPrescription: false }, { prescriptionType: "CONTROLLED" },
+    { activeIngredients: [] }, { offers: [offer] },
+    { catalogClassification: { ...antimicrobial.catalogClassification, otc: true } },
+  ]) assert.equal(supplierImportManifestSchema.safeParse({ manifestVersion: 1, products: [{ ...antimicrobial, ...patch }] }).success, false);
+  assert.equal(supplierImportManifestSchema.safeParse({ products: [{ ...row, prescriptionType: "ANTIMICROBIAL" }] }).success, false);
+});
+
 test("legacy prescription files retain 60% and explicit mixed entries require evidence and markup", () => {
   assert.equal(supplierImportManifestSchema.parse({ products: [row] }).products[0].supplierMarkupBps, 6000);
   assert.equal(supplierImportManifestSchema.parse(mixed()).products[0].supplierMarkupBps, 3500);

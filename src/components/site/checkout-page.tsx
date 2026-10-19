@@ -14,6 +14,7 @@ import { checkoutStepError, type CheckoutDraft } from "@/features/orders/checkou
 import { CheckoutDeliveryStep } from "./checkout-delivery-step";
 import { CheckoutCashback } from "./checkout-cashback";
 import { CheckoutWimiCoins } from "./checkout-wimicoins";
+import { CheckoutPrescriptionUpload, type CheckoutPrescription } from "./checkout-prescription";
 import { normalizePostalCode } from "@/features/products/product-detail";
 import { productDisplayName } from "@/features/products/display-name";
 import { customerShippingFee, FREE_SHIPPING_THRESHOLD_CENTS, isLocalDeliveryAddress } from "@/features/shipping/delivery-policy";
@@ -31,17 +32,19 @@ const panelClass = "min-w-0 overflow-hidden rounded-2xl border border-line bg-wh
 
 export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer = false, paymentConfig = null, carrierShippingAvailable = false }: Props) {
   const { clearCart, hydrated, items, itemCount, subtotalCents } = useCart();
+  const needsPrescription = items.some(item => item.prescriptionType === "ANTIMICROBIAL");
   const { draft, setDraft, ready, clearDraft } = useCheckoutSession({
     customer: { name: initialCustomer.name, phone: initialCustomer.phone, email: initialCustomer.email },
     address: { postalCode: "", street: initialCustomer.street, number: "", complement: "", neighborhood: initialCustomer.neighborhood, city: "", state: "" },
     fulfillmentMethod: "DELIVERY", paymentMethod: paymentConfig ? "ONLINE" : "PIX", onlineMethod: "pix", notes: "",
-  }, draftOwner, true);
+  }, draftOwner, true, !needsPrescription);
   const { customer, fulfillmentMethod, address, notes, shippingSelection: storedShippingSelection } = draft;
   const requiresShippingSupport = items.some(requiresPharmacyShippingSupport);
   const shippingSelection = carrierShippingAvailable && !requiresShippingSupport ? storedShippingSelection : undefined;
   const [privacyConsent, setPrivacyConsent] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [prescription, setPrescription] = useState<CheckoutPrescription | null>(null);
   const [order, setOrder] = useState<Result | null>(null);
   const [onlineOrder, setOnlineOrder] = useState<string | null>(null);
   const [initialPayment, setInitialPayment] = useState<PaymentView | null>(null);
@@ -50,6 +53,8 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   const sending = useRef(false);
   const requestAttempt = useRef<{ signature: string; id: string } | null>(null);
   const cartKey = cartIdentity(items);
+  const prescriptionScope = `${draftOwner}:${cartKey}`;
+  const prescriptionAttachment = needsPrescription && prescription?.scope === prescriptionScope ? prescription : null;
   const discountScope = `${draftOwner}:${cartKey}`;
   const [cashbackOwner, setCashbackOwner] = useState(draftOwner);
   const [selectedScope, setSelectedScope] = useState(discountScope);
@@ -106,6 +111,10 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   }
   async function submitOrder() {
     if (sending.current) throw new Error("Já estamos enviando este pedido.");
+    if (needsPrescription && (!isCustomer || !prescriptionAttachment)) {
+      const message = "Entre na sua conta e envie a receita do antimicrobiano antes de concluir.";
+      setError(message); throw new Error(message);
+    }
     const carrierBlocked = fulfillmentMethod === "DELIVERY" && carrierDestination && !shippingSelection && (!carrierShippingAvailable || requiresShippingSupport);
     const invalid = checkoutStepError(0, draft) || (carrierBlocked ? requiresShippingSupport ? "Este carrinho precisa de atendimento farmacêutico. Escolha retirada ou fale com a equipe." : "A entrega por transportadora está indisponível. Escolha retirada ou fale com a equipe." : checkoutStepError(1, { ...draft, shippingSelection }));
     if (invalid || (online && !customer.email.trim()) || !privacyConsent) {
@@ -115,6 +124,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
     sending.current = true; setSubmitting(true); setError("");
     try {
       const body = { address: fulfillmentMethod === "DELIVERY" ? address : undefined, customer, fulfillmentMethod,
+        ...(prescriptionAttachment ? { prescriptionUploadId: prescriptionAttachment.id } : {}),
         items: items.map(item => ({ productId: item.id, quantity: item.quantity, expectedUnitPriceCents: item.unitPriceCents })), notes, paymentMethod, privacyConsent,
         cashbackRedeemCents: cashbackDiscountCents, wimicoinsRedeemPoints: wimicoinsDiscountCents, shippingToken: fulfillmentMethod === "DELIVERY" ? shippingSelection?.token : undefined,
         ...(online ? { onlineMethod: method === "card" ? "card" : "pix", onlineInstallments: method === "card" ? draft.onlineInstallments ?? 1 : 1 } : {}) };
@@ -122,7 +132,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
       const signature = Array.from(new Uint8Array(bytes), n => n.toString(16).padStart(2, "0")).join("");
       const storageKey = `wimifarma-checkout-attempt:${draftOwner}`;
       try { const saved = JSON.parse(sessionStorage.getItem(storageKey) ?? "null"); if (saved?.signature === signature && typeof saved.id === "string") requestAttempt.current = saved; } catch { /* In-memory attempt remains idempotent. */ }
-      if (requestAttempt.current?.signature !== signature) requestAttempt.current = { signature, id: crypto.randomUUID() };
+      if (requestAttempt.current?.signature !== signature) requestAttempt.current = { signature, id: prescriptionAttachment?.submissionId ?? crypto.randomUUID() };
       try { sessionStorage.setItem(storageKey, JSON.stringify(requestAttempt.current)); } catch { /* Optional persistence. */ }
       const response = await fetch("/api/pedidos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, checkoutRequestId: requestAttempt.current.id }) });
       const payload = await response.json().catch(() => null);
@@ -186,6 +196,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
       <section className={`${panelClass} relative md:col-span-2 min-[86.25rem]:col-span-1`} data-checkout-panel="payment">
         <div aria-hidden="true" className="absolute inset-x-0 top-0 h-0.5 bg-brand" />
         <PanelTitle number="3" Icon={CreditCard} title="Pagamento" description="Confira o total e finalize com segurança." />
+        {needsPrescription && !onlineOrder && <div className="mt-4"><CheckoutPrescriptionUpload key={prescriptionScope} customer={isCustomer} scope={prescriptionScope} items={items.map(item => ({ productId: item.id, quantity: item.quantity }))} attachment={prescriptionAttachment} disabled={submitting} onUpload={setPrescription} /></div>}
         {onlineOrder ? <><OnlinePayment embedded orderId={onlineOrder} initialData={initialPayment} initialMethod={draft.onlineMethod ?? "pix"} onPaid={finishPayment} onTerminal={forgetActivePayment} onReview={resetPayment} />{error && <p className="mt-4 rounded-lg bg-brand-soft p-3 text-sm text-brand" role="alert">{error}</p>}</> : <>
           <fieldset className="mt-5 grid grid-cols-2 gap-2" disabled={submitting}><legend className="sr-only">Forma de pagamento</legend><PaymentChoice selected={method === "pix"} onSelect={() => selectPayment("pix")} label="Pix" detail="Pagamento à vista" Icon={QrCode} /><PaymentChoice selected={method === "card" || method === "manual-card"} onSelect={() => selectPayment(paymentConfig ? "card" : "manual-card")} label="Cartão" detail={paymentConfig ? "Até 3x sem juros" : "Na maquininha"} Icon={CreditCard} disabled={!paymentConfig && !local} />{local && <div className="col-span-2"><PaymentChoice selected={method === "cash"} onSelect={() => selectPayment("cash")} label={fulfillmentMethod === "PICKUP" ? "Dinheiro na retirada" : "Dinheiro na entrega local"} detail="Pague ao receber" Icon={Banknote} /></div>}</fieldset>
           <p className="mt-3 text-xs leading-5 text-muted">{method === "cash" ? "Apenas retirada ou entrega local em Ivaté e Douradina. Informe o troco nas observações." : method === "manual-card" ? "Pague na maquininha ao receber ou retirar." : !paymentConfig ? "A farmácia enviará os dados do Pix após confirmar o pedido." : method === "pix" ? "QR Code e copia e cola aqui na tela. Você terá 2 horas para pagar." : "Até 3x sem juros. Acima de 3x, juros e total calculados pelo Mercado Pago."}</p>

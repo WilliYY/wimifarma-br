@@ -20,7 +20,7 @@ const bundle = build({ entryPoints: ["src/features/payments/service.ts"], bundle
   }));
 } }] });
 
-async function harness(overrides: Record<string, unknown> = {}, options: { environment?: string; reservationCount?: number; ageMinutes?: number; providerFailure?: boolean; requiresPrescriptionReview?: boolean } = {}) {
+async function harness(overrides: Record<string, unknown> = {}, options: { environment?: string; reservationCount?: number; ageMinutes?: number; providerFailure?: boolean; requiresPrescriptionReview?: boolean; prescriptionAttachment?: boolean; customerActive?: boolean; reclassifyAtLock?: boolean; deactivateAtLock?: boolean } = {}) {
   const environment = options.environment ?? "production";
   const product = { id: "synthetic-product", name: "Produto sintético", status: "ACTIVE", requiresPrescription: true,
     prescriptionType: "ORDINARY", isPopularPharmacy: false, stock: 5, price: "7.98", promotionalPrice: null, updatedAt: new Date(), ...overrides };
@@ -28,13 +28,19 @@ async function harness(overrides: Record<string, unknown> = {}, options: { envir
     idempotencyKey: "synthetic-key", stockReserved: false, providerOrderId: null, providerUpdatedAt: null, createdAt: new Date(), lastCheckedAt: null,
     method: null as string | null, installments: null as number | null,
     pixCode: null, pixExpiresAt: null, requestCiphertext: null, requestIv: null, requestTag: null };
-  const order = { id: payment.orderId, number: "SYNTHETIC", customerEmail: "synthetic@testuser.com", status: "PENDING", paymentStatus: "PENDING",
+  const order = { id: payment.orderId, customerId: options.prescriptionAttachment === undefined ? null : "customer-synthetic", number: "SYNTHETIC", customerEmail: "synthetic@testuser.com", status: "PENDING", paymentStatus: "PENDING",
     requiresPrescriptionReview: options.requiresPrescriptionReview ?? true, prescriptionReviewedAt: null, createdAt: new Date(Date.now() - (options.ageMinutes ?? 0) * 60_000), onlinePayment: payment,
     items: [{ productId: product.id, quantity: 1, unitPriceCents: 798 }] };
   const calls = { reserved: 0, submitted: [] as { body: Record<string, unknown>; key: string }[], audit: [] as string[], locks: 0 };
   const connection = { environment, accountId: payment.accountId, enabled: true, publicKey: "synthetic-public-key", secrets: { accessToken: "synthetic-token" } };
   const tx = {
-    $queryRaw: async () => { calls.locks++; },
+    customer: { findFirst: async () => options.customerActive === false ? null : { id: "customer-synthetic" } },
+    prescriptionUpload: { findFirst: async ({ where }: { where: { orderId: string; customerId: string } }) => options.prescriptionAttachment && where.orderId === payment.orderId && where.customerId === "customer-synthetic" ? { id: "synthetic-upload", expiresAt: new Date(0) } : null },
+    $queryRaw: async (strings: TemplateStringsArray) => {
+      calls.locks++;
+      if (strings.join("").includes('FROM "Product"') && options.reclassifyAtLock) product.prescriptionType = "ANTIMICROBIAL";
+      if (strings.join("").includes('FROM "Customer"') && options.deactivateAtLock) options.customerActive = false;
+    },
     order: { findUniqueOrThrow: async () => order, update: async ({ data }: { data: object }) => Object.assign(order, data) },
     paymentIntegration: { findUnique: async () => connection },
     product: { findUnique: async () => product, updateMany: async ({ where, data }: { where: { stock: { gte: number }; updatedAt: Date }; data: { stock: { decrement: number } } }) => {
@@ -130,6 +136,27 @@ test("pagamento não ignora expiração nem corrida de reserva", async () => {
   assert.equal(concurrent.calls.submitted.length, 0);
   assert.equal(concurrent.payment.status, "NEW");
   assert.equal(concurrent.product.stock, 5);
+});
+
+test("a prescription becoming antimicrobial cannot be paid without its checkout attachment", async () => {
+  for (const options of [{}, { prescriptionAttachment: false }, { prescriptionAttachment: true, customerActive: false }]) {
+    const fixture = await harness({ prescriptionType: "ANTIMICROBIAL" }, options);
+    await assert.rejects(fixture.run(), /receita do antimicrobiano/);
+    assert.equal(fixture.calls.reserved, 0);
+    assert.equal(fixture.calls.submitted.length, 0);
+    assert.equal(fixture.payment.status, "NEW");
+  }
+  const linked = await harness({ prescriptionType: "ANTIMICROBIAL" }, { prescriptionAttachment: true });
+  await linked.run(); assert.equal(linked.calls.submitted.length, 1);
+});
+
+test("payment rereads classification and active customer after their concurrent row locks", async () => {
+  const changed = await harness({}, { reclassifyAtLock: true, prescriptionAttachment: false });
+  await assert.rejects(changed.run(), /receita do antimicrobiano/);
+  assert.equal(changed.calls.submitted.length, 0);
+  const blocked = await harness({ prescriptionType: "ANTIMICROBIAL" }, { prescriptionAttachment: true, deactivateAtLock: true });
+  await assert.rejects(blocked.run(), /conta ativa/);
+  assert.equal(blocked.calls.reserved, 0); assert.equal(blocked.calls.submitted.length, 0);
 });
 
 test("mudança de isento para receita comum após o pedido exige refazer o checkout", async () => {

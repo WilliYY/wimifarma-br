@@ -10,7 +10,7 @@ const productSchema = z.object({
   imageUrl: z.string().nullable(), category: z.string().nullable(),
   unitPriceCents: z.number().int().positive().max(1_000_000), originalPriceCents: z.number().int().nonnegative().nullable(),
   stock: z.number().int().nonnegative(), requiresPrescription: z.boolean(),
-  prescriptionType: z.enum(["UNREVIEWED", "ORDINARY", "CONTROLLED"]), isPopularPharmacy: z.boolean(),
+  prescriptionType: z.enum(["UNREVIEWED", "ORDINARY", "CONTROLLED", "ANTIMICROBIAL"]), isPopularPharmacy: z.boolean(),
 });
 const responseSchema = z.object({ data: z.object({ products: z.array(productSchema).max(30) }) });
 

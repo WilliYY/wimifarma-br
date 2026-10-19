@@ -1,5 +1,7 @@
 # 70 — Expansão do catálogo com relatório de vendas
 
+Atualização de 19/10/2026: inventário completo, referências das marcas, manifesto v1 com antimicrobiano explícito e seu envio privado de receita são descritos em [71](71-inventario-completo-e-receitas.md). O registro de 18/10 abaixo permanece como evidência da entrega anterior; não implica publicação automática dos novos candidatos.
+
 ## Autorização e origem — 18/10/2026
 
 O titular forneceu relatório FAR de 01/10/2023 a 18/10/2026, 17h15, e autorizou iniciar novos cadastros com ofertas reais de ANB e Profarma. A extração local encontrou 1.388 páginas, 83.229 linhas e 6.290 códigos internos. O documento não contém EAN: os códigos internos não podem virar GTIN nem identificar automaticamente a apresentação do distribuidor. Os arquivos e valores comerciais do relatório permanecem em evidências privadas locais, fora do Git e dos serviços de pesquisa.

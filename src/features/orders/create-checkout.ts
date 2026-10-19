@@ -15,6 +15,7 @@ import { checkoutPaymentConnections, resolveCheckoutPayment } from "@/features/p
 import { resolveSupplierOffer, supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 import { reserveSupplierInventory } from "@/features/supplier-catalog/inventory";
 import { getSupplierPreparationEstimate } from "@/features/supplier-catalog/preparation";
+import { prescriptionCartFingerprint, validatePrescriptionAttachment, PrescriptionError } from "./prescription-upload";
 
 const orderResultSelect = {
   id: true,
@@ -31,6 +32,8 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   const connections = input.paymentMethod === "ONLINE" ? await checkoutPaymentConnections(tx, isAdmin) : null;
   const isTest = connections?.rows.some(row => row.environment === "test") ?? false;
   if (isTest && (!isAdmin || input.cashbackRedeemCents > 0 || coins > 0 || !input.customer.email?.endsWith("@testuser.com"))) throw new PaymentError("Na homologação, use apenas dados fictícios e e-mail de comprador de teste, sem cashback ou WimiCoins.");
+  // Customer precedes wallet/product locks, including FK locks acquired by wallet creation.
+  if (sessionCustomerId && !isTest) await tx.$queryRaw`SELECT id FROM "Customer" WHERE id = ${sessionCustomerId} FOR UPDATE`;
   const customer = sessionCustomerId && !isTest ? await tx.customer.findFirst({ where: { id: sessionCustomerId, status: "ACTIVE" }, select: { id: true } }) : null;
   if (input.cashbackRedeemCents > 0 && !customer) throw new CashbackRuleError("Entre na sua conta de cliente para usar cashback.", 401);
   if (coins > 0 && !customer) throw new ClubRuleError("Entre na sua conta para usar WimiCoins.", 401);
@@ -52,10 +55,20 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
     where: { id: { in: input.items.map((item) => item.productId) } },
   });
   let products = await loadProducts();
-  const supplierProductIds = products.filter(p => p.inventorySource === "DISTRIBUTOR").map(p => p.id).sort();
-  for (const id of supplierProductIds) await tx.$queryRaw`SELECT id FROM "Product" WHERE id = ${id} FOR UPDATE`;
+  // Classification may change while a checkout waits. Lock every identity before re-reading.
+  const productIds = products.map(p => p.id).sort();
+  for (const id of productIds) await tx.$queryRaw`SELECT id FROM "Product" WHERE id = ${id} FOR UPDATE`;
   // Serializa identidade/origem com a edição ADMIN e relê ofertas após obter os locks.
-  if (supplierProductIds.length) products = await loadProducts();
+  if (productIds.length) products = await loadProducts();
+  const needsPrescriptionUpload = products.some(p => p.prescriptionType === "ANTIMICROBIAL");
+  if (needsPrescriptionUpload && (!customer || !input.prescriptionUploadId || !requestId)) throw new PrescriptionError("Entre na sua conta e envie a receita do antimicrobiano antes de concluir.");
+  if (!needsPrescriptionUpload && input.prescriptionUploadId) throw new PrescriptionError("Este carrinho não recebe anexo de receita.");
+  if (needsPrescriptionUpload) {
+    if (!await tx.customer.findFirst({ where: { id: customer!.id, status: "ACTIVE" }, select: { id: true } })) throw new PrescriptionError("Conta de cliente indisponível.", 401);
+    await tx.$queryRaw`SELECT id FROM "PrescriptionUpload" WHERE id = ${input.prescriptionUploadId!} FOR UPDATE`;
+    const attachment = await tx.prescriptionUpload.findUnique({ where: { id: input.prescriptionUploadId }, select: { customerId: true, orderId: true, expiresAt: true, cartFingerprint: true, submissionId: true } });
+    validatePrescriptionAttachment(attachment, customer!.id, prescriptionCartFingerprint(products, input.items), requestId!);
+  }
   const prepared = prepareCheckoutOrder(products.map(p => toSaleProduct(p)), input.items);
   if (!prepared.ok) throw new CashbackRuleError(prepared.message, prepared.code === "NOT_FOUND" ? 404 : 409, prepared.code);
   const hasSupplierItems = products.some(p => p.inventorySource === "DISTRIBUTOR");
@@ -121,6 +134,10 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
       method: onlineMethod, installments: integration.id === "asaas" && onlineMethod === "card" ? 1 : null, environment: integration.environment,
       integrationRevision: integration.revision, accountId: integration.accountId, amountCents: totalCents } } } : {}),
   } });
+  if (needsPrescriptionUpload) {
+    const linked = await tx.prescriptionUpload.updateMany({ where: { id: input.prescriptionUploadId, customerId: customer!.id, orderId: null }, data: { orderId: order.id } });
+    if (linked.count !== 1) throw new PrescriptionError("Esta receita já foi usada em outro pedido.", 409);
+  }
   if (hasSupplierItems) {
     const supplierItems = await tx.orderItem.findMany({ where: { orderId: order.id, inventorySource: "DISTRIBUTOR" }, orderBy: [{ supplierOfferId: "asc" }, { id: "asc" }] });
     for (const item of supplierItems) await reserveSupplierInventory(tx, item, products.find(product => product.id === item.productId));

@@ -48,6 +48,7 @@ export const checkoutRequestSchema = z
     cashbackRedeemCents: z.number().int().min(0).max(600_000_000).default(0),
     wimicoinsRedeemPoints: z.number().int().min(0).max(600_000_000).default(0),
     checkoutRequestId: z.string().uuid().optional(),
+    prescriptionUploadId: z.string().uuid().optional(),
     shippingToken: z.string().min(1).max(8000).optional(),
     items: z
       .array(
@@ -159,7 +160,7 @@ export type CheckoutProductRecord = {
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
   stock: number;
   requiresPrescription: boolean;
-  prescriptionType?: "UNREVIEWED" | "ORDINARY" | "CONTROLLED";
+  prescriptionType?: "UNREVIEWED" | "ORDINARY" | "CONTROLLED" | "ANTIMICROBIAL";
   isPopularPharmacy: boolean;
 };
 

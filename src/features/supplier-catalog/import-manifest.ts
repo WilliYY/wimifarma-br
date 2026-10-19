@@ -25,7 +25,7 @@ const rowSchema = z.object({
   name: z.string().trim().min(5).max(160), slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(120),
   brand: z.string().trim().min(1).max(120), description: z.string().trim().min(80).max(800),
   category: z.string().trim().min(1).max(100), activeIngredients: z.array(z.string().trim().min(1).max(100)).max(10).default([]),
-  prescriptionType: z.enum(["ORDINARY", "NONE"]), requiresPrescription: z.boolean(),
+  prescriptionType: z.enum(["ORDINARY", "ANTIMICROBIAL", "NONE"]), requiresPrescription: z.boolean(),
   catalogClassification: catalogClassificationSchema.optional(), supplierMarkupBps: supplierMarkupSchema.optional(),
   evidence: z.object({ identity: evidenceSchema, classification: evidenceSchema }).strict().optional(),
   shippingProfile: shippingDraftSchema.extend({ measurementBasis: z.literal("estimated") }).strict().optional(),
@@ -42,7 +42,7 @@ export const supplierImportManifestSchema = z.object({ manifestVersion: z.litera
       const gtin = normalizeGtin(row.ean)!;
       if (seen.has(gtin)) issue("Duplicate GTIN in import file.");
       seen.add(gtin);
-      if (row.requiresPrescription !== (row.prescriptionType === "ORDINARY")) issue("Explicit prescription flags must agree.");
+      if (row.requiresPrescription !== (row.prescriptionType !== "NONE")) issue("Explicit prescription flags must agree.");
       if (row.requiresPrescription && (row.activeIngredients.length === 0 || row.offers.some(offer => offer.retailCeilingCents === null))) issue("Prescription entries require active ingredients and verified retail ceilings.");
       if (new Set(row.offers.map(offer => offer.supplier)).size !== row.offers.length) issue("Duplicate supplier offer.");
       if (row.offers.some(offer => offer.replenishAllocation)) issue("Routine imports cannot replenish allocation.");
@@ -65,15 +65,15 @@ export const supplierImportManifestSchema = z.object({ manifestVersion: z.litera
         }
       };
       checkSources(row.shippingProfile);
-      if (row.internalImage && (!row.requiresPrescription || normalizeGtin(row.internalImage.ean) !== gtin)) issue("Internal images require the exact ordinary-prescription presentation.");
+      if (row.internalImage && (!row.requiresPrescription || normalizeGtin(row.internalImage.ean) !== gtin)) issue("Internal images require the exact classified prescription presentation.");
     });
   }).transform(input => ({ ...input, products: input.products.map(row => ({ ...row, supplierMarkupBps: row.supplierMarkupBps ?? 6000 })) }));
 
 export type SupplierImportRow = z.infer<typeof supplierImportManifestSchema>["products"][number];
 
 /** NONE is manifest-only: existing storage uses UNREVIEWED together with requiresPrescription=false. */
-export function persistedPrescriptionType(row: { requiresPrescription: boolean }): "ORDINARY" | "UNREVIEWED" {
-  return row.requiresPrescription ? "ORDINARY" : "UNREVIEWED";
+export function persistedPrescriptionType(row: { requiresPrescription: boolean; prescriptionType?: string }): "ORDINARY" | "ANTIMICROBIAL" | "UNREVIEWED" {
+  return row.requiresPrescription ? row.prescriptionType === "ANTIMICROBIAL" ? "ANTIMICROBIAL" : "ORDINARY" : "UNREVIEWED";
 }
 
 export function assertImportTarget(row: SupplierImportRow, current: {

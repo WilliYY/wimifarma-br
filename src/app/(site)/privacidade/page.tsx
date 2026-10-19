@@ -35,6 +35,10 @@ const sections = [
     text: "Somente clientes autenticados com pedido concluido podem avaliar um produto comprado. Na pagina publica exibimos a nota, o comentario, a data e o primeiro nome com o sobrenome abreviado; o vinculo com a conta e o pedido permanece restrito a equipe autorizada.",
   },
   {
+    title: "Receitas de antimicrobianos",
+    text: "Quando um pedido contiver antimicrobiano classificado pela farmácia, o checkout solicitará uma receita para análise da equipe responsável. O arquivo pode conter dados sensíveis de saúde e é tratado para o atendimento farmacêutico e o cumprimento das obrigações sanitárias aplicáveis, conforme a LGPD. O envio exige uma conta ativa. O arquivo fica cifrado, fora da biblioteca pública de fotos, com acesso administrativo restrito e registro de consulta. Não enviamos receitas à inteligência artificial, às distribuidoras, às transportadoras ou aos avisos automáticos. Uma foto permite a análise inicial, mas não substitui a apresentação e a retenção do original físico ou de uma prescrição eletrônica válida. O envio não significa aprovação. Arquivos não vinculados deixam de ser aceitos após 24 horas e aguardam a limpeza operacional; documentos vinculados são conservados para cumprir as obrigações legais, inclusive a guarda regulatória de dois anos quando aplicável. Solicitações sobre esses dados podem ser feitas pelo canal de privacidade da loja.",
+  },
+  {
     title: "Assistente virtual Miauby",
     text: "Quando voce usa a Miauby, a pergunta e ate seis mensagens recentes da conversa sao enviadas ao Google Gemini para gerar a resposta, junto de dados publicos de produtos relacionados. O site nao grava esse historico no banco nesta fase. Nao envie CPF, cartao, senha, receita, laudo ou outros dados sensiveis no chat; o processamento pelo provedor segue os termos aplicaveis ao servico.",
   },
@@ -60,7 +64,7 @@ export default function Page() {
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-md bg-brand-soft text-brand"><ShieldCheck className="h-5 w-5" /></span>
           <h1 className="mt-5 text-3xl font-black text-ink sm:text-4xl">Politica de Privacidade</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Transparencia sobre os dados usados pela Wimifarma no site, na conta e nos pedidos.</p>
-          <p className="mt-3 text-xs font-bold text-muted">Atualizada em 3 de outubro de 2026.</p>
+          <p className="mt-3 text-xs font-bold text-muted">Atualizada em 19 de outubro de 2026.</p>
         </div>
 
         <div className="grid gap-8 py-8">

@@ -11,6 +11,7 @@ import { PaymentError } from "@/features/payments/schema";
 import { paymentAccessToken } from "@/features/payments/rules";
 import { paymentCookieName } from "@/features/payments/service";
 import { limitPaymentRequest, paymentJson } from "@/features/payments/http";
+import { PrescriptionError } from "@/features/orders/prescription-upload";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
     if (order.paymentMethod === "ONLINE" && parsed.data.checkoutRequestId) response.cookies.set(paymentCookieName(order.id), paymentAccessToken(order.id, parsed.data.checkoutRequestId), { httpOnly: true, secure: new URL(process.env.AUTH_URL || request.url).protocol === "https:", sameSite: "lax", path: "/", maxAge: 86400 });
     return response;
   } catch (error) {
+    if (error instanceof PrescriptionError) return NextResponse.json({ error: error.message }, { status: error.status, headers });
     if (error instanceof PaymentError) return NextResponse.json({ error: error.message }, { status: error.status, headers });
     if (error instanceof ShippingError) return NextResponse.json({ error: error.message }, { status: error.status, headers });
     if (error instanceof CashbackRuleError) return NextResponse.json({ error: error.message, code: error.code }, { status: error.status, headers });

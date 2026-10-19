@@ -1,5 +1,10 @@
 # 06 - Pendencias
 
+## Inventário integral e antimicrobianos — 19/10/2026
+
+- Inventário de 6.290 códigos e planilha de revisão concluídos; 6.288 apresentações candidatas após separar dois registros avulsos. Nivea/Dove têm 65 códigos históricos e 379 páginas oficiais candidatas. Conferir EAN/apresentação, fotos e ofertas reais antes de publicar; navegador local continua negado pelo Work, sem contorno ou renovação fictícia.
+- Fluxo privado de receita em validação conforme [71](71-inventario-completo-e-receitas.md). Não classificar antibiótico/controlado por nome ou usar cópia de receita como original eletrônico. Responsável técnico deve cumprir licenciamento, avaliação, retenção, escrituração e regras SNCR vigentes. Controlados permanecem fora do checkout automático.
+
 ## Expansão por relatório — 18/10/2026
 
 - Quinze novos produtos publicados e rotina ampliada para 25 EANs, conforme [70](70-expansao-catalogo-relatorio.md). Preço preserva percentual ADMIN; dez losartanas atualizadas para 50% pelo pedido posterior do titular. Fotos Rx públicas substituídas na apresentação por ilustrações, sem apagar originais.

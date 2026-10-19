@@ -101,11 +101,12 @@ test("uncertain financial submission is never repeated by refresh, same request 
 });
 
 test("test preparation rejects real environment, absent webhook, assisted items and stale prices without POST", async () => {
-  for (const mutation of ["production", "webhook", "controlled", "stock", "price"] as const) {
+  for (const mutation of ["production", "webhook", "controlled", "antimicrobial", "stock", "price"] as const) {
     const f = await harness();
     if (mutation === "production") f.connection.environment = "production";
     if (mutation === "webhook") f.connection.secrets.webhookId = "";
     if (mutation === "controlled") f.product.prescriptionType = "CONTROLLED";
+    if (mutation === "antimicrobial") f.product.prescriptionType = "ANTIMICROBIAL";
     if (mutation === "stock") f.product.stock = 0;
     if (mutation === "price") f.product.price = "101.00";
     await assert.rejects(f.createAsaasSandboxPayment(f.input, "synthetic-admin")); assert.equal(f.calls.posts, 0);

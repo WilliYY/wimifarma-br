@@ -4,6 +4,7 @@ import { build } from "esbuild";
 import vm from "node:vm";
 import { createRequire } from "node:module";
 import { webcrypto } from "node:crypto";
+import { prescriptionCartFingerprint } from "./prescription-upload";
 
 const bundle = build({ entryPoints: ["src/features/orders/create-checkout.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "isolated-create-order", setup(builder) {
   builder.onResolve({ filter: /features\/cashback\/(rules|review-rewards|wallet)$|features\/shipping\/service$|features\/payments\/(schema|routing)$|features\/miauby\/commerce-service$/ }, args => ({ path: args.path, namespace: "fixture" }));
@@ -23,6 +24,7 @@ async function createFixture(prescriptionType: "ORDINARY" | "CONTROLLED" | "UNRE
   const product = { id: "product-test", name: "Produto sintético", slug: "produto-sintetico", imageUrl: null, price: "10.00", promotionalPrice: null,
     status: "ACTIVE", stock: 5, requiresPrescription, prescriptionType, isPopularPharmacy: false, cashbackEnabled: false, cashbackRateBps: 0 };
   const tx = {
+    $queryRaw: async () => [],
     product: { findMany: async ({ select }: { select: Record<string, unknown> }) => { selected = select; return [product]; } },
     order: { create: async ({ data }: { data: Record<string, unknown> }) => { saved = { ...data, id: "order-test" }; return saved; }, findUniqueOrThrow: async () => saved },
   };
@@ -72,6 +74,7 @@ async function rewardSnapshot(cashback: number, coins: number, options: { quanti
     status: "ACTIVE", stock: 100, requiresPrescription: false, prescriptionType: "ORDINARY", isPopularPharmacy: false,
     cashbackEnabled: true, cashbackRateBps: 200, wimicoinsEnabled: true, wimicoinsRateBps: 200, ...options };
   const tx = {
+    $queryRaw: async () => [],
     $executeRaw: async () => 0,
     customer: { findFirst: async () => ({ id: "customer-test" }) },
     clubMembership: { findUnique: async () => ({ active: options.member !== false }) },
@@ -109,4 +112,43 @@ test("recompensas mantêm exclusões, adesão e compra sem desconto", async () =
   const noMember = await rewardSnapshot(0, 0, { member: false, quantity: 1 });
   assert.equal(noMember.cashbackEarnedCents, 21);
   assert.equal(noMember.wimicoinsEarnedPoints, 0);
+});
+
+async function prescriptionCheckout(options: { type?: string; attachment?: Record<string, unknown>; uploadId?: boolean; signedOut?: boolean; mutateToAntimicrobial?: boolean } = {}) {
+  let order: Record<string, unknown> | null = null; let reads = 0; let links = 0;
+  const product = { id: "synthetic-antimicrobial", ean: "7890000000015", name: "Produto sintético", slug: "synthetic", imageUrl: null, price: "10.00", promotionalPrice: null, stock: 10, status: "ACTIVE", requiresPrescription: true, prescriptionType: options.type ?? "ANTIMICROBIAL", isPopularPharmacy: false, cashbackEnabled: false, cashbackRateBps: 0, wimicoinsEnabled: false, wimicoinsRateBps: 0 };
+  const items = [{ productId: product.id, quantity: 1, expectedUnitPriceCents: 1000 }];
+  const attachment = { customerId: "customer-test", orderId: null as string | null, expiresAt: new Date(Date.now() + 60_000), cartFingerprint: prescriptionCartFingerprint([product], items), submissionId: "synthetic-request", ...options.attachment };
+  const tx = {
+    $queryRaw: async () => [], $executeRaw: async () => 0,
+    customer: { findFirst: async () => ({ id: "customer-test" }) },
+    clubMembership: { findUnique: async () => null },
+    product: { findMany: async () => { reads++; return [{ ...product, prescriptionType: options.mutateToAntimicrobial && reads > 1 ? "ANTIMICROBIAL" : product.prescriptionType }]; } },
+    prescriptionUpload: { findUnique: async () => attachment, updateMany: async () => { links++; attachment.orderId = "synthetic-order"; return { count: 1 }; } },
+    order: { findUnique: async () => order, create: async ({ data }: { data: Record<string, unknown> }) => (order = { ...data, id: "synthetic-order" }), findUniqueOrThrow: async () => order },
+  };
+  const loaded = { exports: {} as { createCheckout: (tx: unknown, input: unknown, customer?: string) => Promise<unknown> } };
+  vm.runInNewContext((await rewardsBundle).outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), crypto: webcrypto, console });
+  const input = { checkoutRequestId: "synthetic-request", prescriptionUploadId: options.uploadId === false ? undefined : "synthetic-upload", customer: { name: "Cliente sintético", email: "synthetic@example.com", phone: "44999999999" }, fulfillmentMethod: "PICKUP", paymentMethod: "CASH", cashbackRedeemCents: 0, privacyConsent: true, items };
+  return { attachment, order: () => order, links: () => links, run: () => loaded.exports.createCheckout(tx, input, options.signedOut ? undefined : "customer-test") };
+}
+
+test("antimicrobial checkout associates private attachment once and retry survives its TTL", async () => {
+  const f = await prescriptionCheckout(); await f.run();
+  assert.equal(f.order()?.requiresPrescriptionReview, true); assert.equal(f.links(), 1);
+  assert.equal(f.order()?.prescriptionReviewedAt, undefined);
+  assert.equal(JSON.stringify(f.order()).includes("ciphertext"), false);
+  f.attachment.expiresAt = new Date(0);
+  await f.run(); assert.equal(f.links(), 1);
+});
+
+test("checkout rejects missing/foreign/expired/reused/cart-mismatched/submission-mismatched attachments", async () => {
+  for (const options of [{ uploadId: false }, { signedOut: true }, { attachment: { customerId: "other" } }, { attachment: { orderId: "other-order" } }, { attachment: { expiresAt: new Date(0) } }, { attachment: { cartFingerprint: "changed" } }, { attachment: { submissionId: "changed" } }, { type: "ORDINARY" }]) {
+    const f = await prescriptionCheckout(options); await assert.rejects(f.run); assert.equal(f.order(), null); assert.equal(f.links(), 0);
+  }
+});
+
+test("classification becoming antimicrobial while checkout waits cannot bypass upload", async () => {
+  const f = await prescriptionCheckout({ type: "ORDINARY", uploadId: false, mutateToAntimicrobial: true });
+  await assert.rejects(f.run, /envie a receita/); assert.equal(f.order(), null);
 });

@@ -9,6 +9,18 @@ const photo = "/uploads/products/synthetic-real.webp";
 const privateUrl = "/api/admin/fornecedores/imagens/00000000-0000-4000-8000-000000000000.webp";
 const classification = (medicineClass: string, ethical = false) => ({ kind: "MEDICINE", medicineClass, ethical, otc: false });
 
+test("retained-prescription illustrations use an explicit type without changing medicine class or purchase rules", () => {
+  for (const [prescriptionType, asset] of [["ANTIMICROBIAL", "antibiotico"], ["CONTROLLED", "controlado"]]) {
+    const raw = { requiresPrescription: true, prescriptionType, imageUrl: photo, catalogClassification: classification("GENERIC") };
+    const expected = `/brand/medicamento-${asset}-ilustrativo.webp`;
+    assert.equal(medicineIllustrationUrl(raw), expected);
+    assert.equal(publicProductImageUrl(raw), expected);
+    assert.match(productImageAlt("Produto sintético", expected), /Imagem ilustrativa/);
+    assert.equal(raw.catalogClassification.medicineClass, "GENERIC");
+  }
+  assert.equal(medicineIllustrationUrl({ requiresPrescription: true, prescriptionType: "ORDINARY", catalogClassification: classification("GENERIC") }), "/brand/medicamento-sem-foto.webp");
+});
+
 test("institutional illustrations use explicit class, never brand or ethical as reference", () => {
   for (const [medicineClass, expected] of [["GENERIC", "medicamento-sem-foto"], ["SIMILAR", "medicamento-similar-ilustrativo"], ["REFERENCE", "medicamento-etico-ilustrativo"], ["UNCLASSIFIED", "medicamento-ilustrativo"]]) {
     assert.equal(medicineIllustrationUrl({ catalogClassification: classification(medicineClass) }), `/brand/${expected}.webp`);

@@ -1,4 +1,4 @@
-export const prescriptionTypes = ["UNREVIEWED", "ORDINARY", "CONTROLLED"] as const;
+export const prescriptionTypes = ["UNREVIEWED", "ORDINARY", "CONTROLLED", "ANTIMICROBIAL"] as const;
 export type PrescriptionType = (typeof prescriptionTypes)[number];
 
 export type ProductPurchaseRules = {
@@ -11,11 +11,11 @@ export type ProductPurchaseRules = {
 // stay assisted until classified; the model cannot grant purchase permission.
 export function requiresPurchaseAssistance(product: ProductPurchaseRules): boolean {
   return product.isPopularPharmacy || product.prescriptionType === "CONTROLLED" ||
-    (product.requiresPrescription && product.prescriptionType !== "ORDINARY");
+    (product.requiresPrescription && product.prescriptionType !== "ORDINARY" && product.prescriptionType !== "ANTIMICROBIAL");
 }
 
 export function requiresPrescriptionReview(product: ProductPurchaseRules): boolean {
-  return (product.requiresPrescription || product.prescriptionType === "ORDINARY") && !requiresPurchaseAssistance(product);
+  return (product.requiresPrescription || product.prescriptionType === "ORDINARY" || product.prescriptionType === "ANTIMICROBIAL") && !requiresPurchaseAssistance(product);
 }
 
 export function prescriptionClassificationIsConsistent(product: { requiresPrescription: boolean; prescriptionType?: PrescriptionType }): boolean {

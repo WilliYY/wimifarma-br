@@ -6,6 +6,12 @@ import { validateShippingProduct } from "./rules";
 const profile = { enabled: true, transportReviewed: true, weightGrams: 200, widthCm: 15, heightCm: 10, lengthCm: 20 };
 const product = { id: "synthetic-product", name: "Produto teste", category: null as string | null, requiresPrescription: false, isPopularPharmacy: false, shippingProfile: profile, updatedAt: new Date(0) };
 
+test("antimicrobial checkout does not automatically authorize carrier transport", () => {
+  const antimicrobial = { ...product, requiresPrescription: true, prescriptionType: "ANTIMICROBIAL" as const };
+  assert.equal(requiresPharmacyShippingSupport(antimicrobial), true);
+  assert.throws(() => validateShippingProduct(antimicrobial), /o envio precisa de atendimento da farmácia/);
+});
+
 test("prescription and Popular Pharmacy restrictions still require pharmacist support", () => {
   for (const category of ["Farmácia Popular", "FARMACIA POPULAR", "Farma\u0301cia Popular"]) {
     const restricted = { ...product, category };

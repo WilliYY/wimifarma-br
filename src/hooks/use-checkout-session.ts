@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { allowedCheckoutStep, CHECKOUT_DRAFT_KEY, checkoutSteps, readCheckoutDraft, type CheckoutDraft, type CheckoutStep } from "@/features/orders/checkout-draft";
 
-export function useCheckoutSession(initial: CheckoutDraft, owner: string, singlePage = false) {
+export function useCheckoutSession(initial: CheckoutDraft, owner: string, singlePage = false, persist = true) {
   const [draft, setDraft] = useState(initial);
   const [step, setStep] = useState<CheckoutStep>(0);
   const [ready, setReady] = useState(false);
@@ -13,7 +13,7 @@ export function useCheckoutSession(initial: CheckoutDraft, owner: string, single
   useEffect(() => {
     let restored = initial;
     try {
-      const saved = readCheckoutDraft(sessionStorage.getItem(CHECKOUT_DRAFT_KEY), owner);
+      const saved = persist ? readCheckoutDraft(sessionStorage.getItem(CHECKOUT_DRAFT_KEY), owner) : null;
       if (saved) restored = saved;
       else sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
     } catch { /* Storage can be disabled; checkout still works in memory. */ }
@@ -39,14 +39,14 @@ export function useCheckoutSession(initial: CheckoutDraft, owner: string, single
     return () => window.removeEventListener("popstate", onPopState);
     // The identity is fixed for this mounted checkout. Initial props are only defaults.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [owner, singlePage]);
+  }, [owner, singlePage, persist]);
 
   useEffect(() => {
     latest.current = draft;
-    if (!ready || completed.current) return;
+    if (!ready || completed.current || !persist) return;
     try { sessionStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify({ owner, savedAt: Date.now(), data: draft })); }
     catch { /* Keep the current form usable without persistence. */ }
-  }, [draft, owner, ready]);
+  }, [draft, owner, ready, persist]);
 
   const goToStep = useCallback((requested: number) => {
     const next = allowedCheckoutStep(requested, latest.current);

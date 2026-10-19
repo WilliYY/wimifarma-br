@@ -190,7 +190,7 @@ function isCartItem(value: unknown): value is CartItem {
     Number.isSafeInteger(item.stock) &&
     Number(item.stock) > 0 &&
     typeof item.requiresPrescription === "boolean" &&
-    (item.prescriptionType === undefined || (typeof item.prescriptionType === "string" && ["UNREVIEWED", "ORDINARY", "CONTROLLED"].includes(item.prescriptionType))) &&
+    (item.prescriptionType === undefined || (typeof item.prescriptionType === "string" && ["UNREVIEWED", "ORDINARY", "CONTROLLED", "ANTIMICROBIAL"].includes(item.prescriptionType))) &&
     typeof item.isPopularPharmacy === "boolean" &&
     Number.isSafeInteger(item.quantity) &&
     Number(item.quantity) > 0 &&

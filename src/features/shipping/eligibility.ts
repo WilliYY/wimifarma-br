@@ -7,7 +7,7 @@ export function requiresPharmacyShippingSupport(product: {
   prescriptionType?: PrescriptionType;
   isPopularPharmacy: boolean;
 }): boolean {
-  return requiresPurchaseAssistance(product) || /farmacia\s*popular/.test(normalizedCategory(product.category));
+  return product.prescriptionType === "ANTIMICROBIAL" || requiresPurchaseAssistance(product) || /farmacia\s*popular/.test(normalizedCategory(product.category));
 }
 
 function normalizedCategory(category: string | null): string {

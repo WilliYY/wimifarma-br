@@ -4,11 +4,14 @@ export type ProductImageIdentity = {
   catalogClassification?: unknown;
   category?: string | null;
   requiresPrescription?: boolean;
+  prescriptionType?: string;
   isPopularPharmacy?: boolean;
 };
 
 /** Explicit visual identity only; ethical is independent of reference status. */
 export function medicineIllustrationUrl(product: ProductImageIdentity) {
+  if (product.prescriptionType === "ANTIMICROBIAL") return "/brand/medicamento-antibiotico-ilustrativo.webp";
+  if (product.prescriptionType === "CONTROLLED") return "/brand/medicamento-controlado-ilustrativo.webp";
   const value = product.catalogClassification;
   const classification = value && typeof value === "object" && !Array.isArray(value)
     ? value as { medicineClass?: unknown; ethical?: unknown } : null;
@@ -19,7 +22,7 @@ export function medicineIllustrationUrl(product: ProductImageIdentity) {
 }
 
 export function productImageAlt(name: string, imageUrl?: string | null) {
-  return imageUrl && [MEDICINE_PLACEHOLDER_URL, "/brand/medicamento-similar-ilustrativo.webp", "/brand/medicamento-etico-ilustrativo.webp", "/brand/medicamento-ilustrativo.webp"].includes(imageUrl)
+  return imageUrl && [MEDICINE_PLACEHOLDER_URL, "/brand/medicamento-similar-ilustrativo.webp", "/brand/medicamento-etico-ilustrativo.webp", "/brand/medicamento-ilustrativo.webp", "/brand/medicamento-antibiotico-ilustrativo.webp", "/brand/medicamento-controlado-ilustrativo.webp"].includes(imageUrl)
     ? `Imagem ilustrativa de medicamento, não representa a embalagem de ${name}` : name;
 }
 
