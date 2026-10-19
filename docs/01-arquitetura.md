@@ -1,5 +1,7 @@
 # 01 - Arquitetura
 
+Avisos de disponibilidade usam `RestockInterest`, separado de produtos, estoque e pedidos. As APIs privadas de cliente e ADMIN/MANAGER compartilham a disponibilidade canônica do catálogo de fornecedores. O envio permanece manual por canal; a ponte de alertas do proprietário e pagamentos não participam desse fluxo. Contrato em [74](74-avisos-de-disponibilidade.md).
+
 ## O Que Esta Parte Faz
 
 A arquitetura organiza a plataforma em camadas para evitar mistura entre site publico, painel administrativo, APIs, modulos de negocio e banco.

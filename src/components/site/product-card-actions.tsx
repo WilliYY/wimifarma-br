@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useCart, type CartProduct } from "@/components/site/cart-provider";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
+import { RestockButton } from "@/components/site/restock-button";
 
 export function ProductCardActions({ product }: { product: CartProduct }) {
   const { addProduct, hydrated, items, updateQuantity } = useCart();
@@ -23,7 +24,7 @@ export function ProductCardActions({ product }: { product: CartProduct }) {
   }
 
   return <div className="relative z-20 mt-3 grid min-h-[5.5rem] gap-2" data-product-controls>
-    {restricted ? <a className={`${button} h-auto min-h-[5.5rem] border border-pharma-green/30 text-pharma-green hover:bg-emerald-50`} href={buildWhatsAppUrl(`Ola, gostaria de consultar ${product.name}.`)} rel="noreferrer" target="_blank"><MessageCircle className="h-4 w-4 shrink-0" />Consultar no WhatsApp</a> : product.stock < 1 ? <button className={`${button} h-auto min-h-[5.5rem] bg-surface-subtle text-muted`} disabled>Indisponivel</button> : <>
+    {restricted ? <a className={`${button} h-auto min-h-[5.5rem] border border-pharma-green/30 text-pharma-green hover:bg-emerald-50`} href={buildWhatsAppUrl(`Ola, gostaria de consultar ${product.name}.`)} rel="noreferrer" target="_blank"><MessageCircle className="h-4 w-4 shrink-0" />Consultar no WhatsApp</a> : product.stock < 1 ? <><span className="flex items-center justify-center text-xs font-semibold text-muted">Indisponível no momento</span><RestockButton compact product={product} /></> : <>
       {quantity > 0 ? <div aria-label={`Quantidade de ${product.name}`} className="grid h-10 grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center rounded-md border border-line bg-white" role="group">
         <button aria-label={`Diminuir ${product.name}`} className={`${button} px-0 text-brand hover:bg-brand-soft`} onClick={() => updateQuantity(product.id, quantity - 1)} type="button"><Minus className="h-4 w-4" /></button>
         <output aria-live="polite" className="text-center text-sm font-black text-ink">{quantity}</output>

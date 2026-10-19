@@ -48,3 +48,7 @@ dev-server.*.log
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Private task evidence and local Codex files are not application source.
+/outputs/
+/.codex/

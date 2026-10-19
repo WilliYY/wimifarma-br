@@ -1,5 +1,10 @@
 # 06 - Pendencias
 
+## Avise-me — 19/10/2026
+
+- Solicitação por produto/canal, cancelamento na conta e fila ADMIN/MANAGER preparados conforme [74](74-avisos-de-disponibilidade.md). Contato é feito pela equipe; não há disparo automático conectado.
+- Para automatizar a entrega, faltam remetente de e-mail e canal WhatsApp de clientes com verificação, supressão, limites e controle de entrega. A ponte atual da Miauby conserva o destino de alertas ao proprietário.
+
 ## Continuação das famílias e Dove — 19/10/2026
 
 - Publicados 23 produtos adicionais, com comparação de 29 EANs ANB/Profarma, duas fotos oficiais e preservação dos 50 produtos anteriores, ofertas, estoques físicos, percentuais, cotas/reservas/consumo e pedidos/clientes. Lista e evidências em [73](73-lote-familias-e-dove-2026-10-19.md). Catálogo atual: 73 produtos, 68 de distribuidor.

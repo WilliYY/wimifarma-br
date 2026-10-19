@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   BadgePercent,
+  Bell,
   Boxes,
   Bot,
   ChartNoAxesCombined,
@@ -29,6 +30,7 @@ import {
 import { siteConfig } from "@/lib/site";
 
 const adminNav = [
+  { href: "/admin/avisos-estoque", icon: Bell, label: "Avise-me", roles: adminRoutePermissions["/admin/avisos-estoque"] },
   { href: "/admin/usuarios", icon: Users, label: "Usuarios", roles: adminRoutePermissions["/admin/usuarios"] },
   {
     href: "/admin/catalogos",

@@ -16,6 +16,7 @@ export const adminRoutePermissions = {
   "/admin/catalogos": ["ADMIN", "MANAGER", "STAFF"],
   "/admin/clientes": ["ADMIN", "MANAGER", "STAFF"],
   "/admin/club-wimifarma": ["ADMIN"],
+  "/admin/avisos-estoque": ["ADMIN", "MANAGER"],
   "/admin/configuracoes": ["ADMIN"],
   "/admin/criar-adm": ["ADMIN"],
   "/admin/criar-colaborador": ["ADMIN"],

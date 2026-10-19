@@ -177,6 +177,7 @@ model SupplierInventoryReservation {
 }
 
 model Product {
+  restockInterests RestockInterest[]
   catalogClassification Json?
   supplierMarkupBps Int @default(6000)
   inventorySource InventorySource @default(PHARMACY)
@@ -310,6 +311,7 @@ model Lead {
 }
 
 model Customer {
+  restockInterests RestockInterest[]
   prescriptionUploads PrescriptionUpload[]
   prescriptionUploadQuota PrescriptionUploadQuota?
   id                String             @id @default(cuid())
@@ -342,6 +344,36 @@ model Customer {
   @@index([status])
   @@index([city])
   @@index([lastLoginAt])
+}
+
+enum RestockInterestStatus {
+  WAITING
+  NOTIFIED
+  CANCELED
+  EXPIRED
+}
+
+model RestockInterest {
+  id String @id @default(cuid())
+  customerId String
+  productId String
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  status RestockInterestStatus @default(WAITING)
+  whatsapp Boolean @default(false)
+  emailEnabled Boolean @default(false)
+  phone String?
+  email String?
+  consentAt DateTime
+  whatsappNotifiedAt DateTime?
+  emailNotifiedAt DateTime?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([customerId, productId])
+  @@index([status, expiresAt])
+  @@index([productId, status])
 }
 
 model Order {

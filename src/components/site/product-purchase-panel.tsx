@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useCart, type CartProduct } from "@/components/site/cart-provider";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
+import { RestockButton } from "@/components/site/restock-button";
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
@@ -120,7 +121,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
         <button className="min-h-12 w-full cursor-not-allowed rounded-xl bg-surface-subtle px-5 text-sm font-bold text-muted" disabled type="button">
           Produto indisponível
         </button>
-        <p className="mt-3 text-center text-xs leading-5 text-muted">Consulte a equipe sobre a disponibilidade deste produto.</p>
+        <div className="mt-3"><RestockButton product={product} /></div>
         <a className="mt-2 flex min-h-11 items-center justify-center gap-2 text-sm font-bold text-brand underline-offset-4 hover:underline focus-visible:outline-brand" href={buildWhatsAppUrl(`Ola, gostaria de consultar a disponibilidade de ${product.name}.`)} rel="noreferrer" target="_blank"><MessageCircle className="h-4 w-4" aria-hidden="true" />Consultar disponibilidade</a>
       </div>
     );

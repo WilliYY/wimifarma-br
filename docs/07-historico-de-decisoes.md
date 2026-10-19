@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-19 - Avisos de disponibilidade por produto
+
+- Produtos publicados indisponíveis permanecem visíveis. Cliente autenticado escolhe WhatsApp/e-mail e autoriza um aviso por até 30 dias; não há inscrição automática nem reserva. Disponibilidade reutiliza as ofertas/cotas e o estoque físico existentes, sem modificar dados comerciais.
+- Persistência separada, limite por cliente serializado, cancelamento próprio, expiração e remoção dos snapshots de contato. Fila restrita a ADMIN/MANAGER; contato manual por canal com controle de versão e nova validação. Links apenas preparam mensagens; nenhuma entrega automática foi ativada ou simulada como enviada. Contrato em [74](74-avisos-de-disponibilidade.md).
+
 ## 2026-10-19 - Continuação comercial por famílias e Dove
 
 - Vinte e três novas apresentações publicadas após conferir 29 EANs nas duas distribuidoras: 17 genéricos, dois similares, dois referência e dois Dove; menor oferta elegível, percentuais individuais e tetos preservados. Classe referência Aldactone comprovada pela Anvisa, sem inferir a partir de Novo. Detalhes em [73](73-lote-familias-e-dove-2026-10-19.md).

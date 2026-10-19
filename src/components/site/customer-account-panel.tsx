@@ -1,5 +1,6 @@
 "use client";
 import { ClubBenefits } from "@/components/site/club-benefits";
+import { CustomerRestockPanel } from "@/components/site/customer-restock-panel";
 
 import Link from "next/link";
 
@@ -7,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import {
   BadgeCheck,
+  Bell,
   Coins,
   Crown,
   Gift,
@@ -75,6 +77,7 @@ const tabs = [
   { icon: LayoutDashboard, id: "inicio", label: "Visão geral" },
   { icon: Package, id: "pedidos", label: "Meus pedidos" },
   { icon: Coins, id: "beneficios", label: "Benefícios" },
+  { icon: Bell, id: "avisos", label: "Meus avisos" },
   { icon: UserRound, id: "perfil", label: "Meus dados" },
   { icon: ShieldCheck, id: "seguranca", label: "Segurança" },
 ] as const;
@@ -141,6 +144,15 @@ export function CustomerAccountPanel({
   const router = useRouter();
   const club = useClubSummary();
   const [activeTab, setActiveTab] = useState<TabId>("inicio");
+  useEffect(() => {
+    const readTab = () => {
+      const tab = window.location.hash.slice(1);
+      if (tabs.some(item => item.id === tab)) setActiveTab(tab as TabId);
+    };
+    readTab();
+    window.addEventListener("hashchange", readTab);
+    return () => window.removeEventListener("hashchange", readTab);
+  }, []);
   const [orders, setOrders] = useState(initialOrders);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState<string | null>(null);
@@ -335,8 +347,9 @@ export function CustomerAccountPanel({
             <a className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-line bg-white p-3 text-sm font-bold text-ink lg:hidden" href={supportUrl} target="_blank" rel="noopener noreferrer"><MessageCircle className="h-4 w-4 text-emerald-600" />Precisa de ajuda? Fale com a equipe</a>
           </div>}
           {activeTab === "pedidos" && <div className="rounded-2xl border border-line bg-white p-4 sm:p-6"><CustomerOrderHistoryPanel error={ordersError} history={orders} loading={ordersLoading} onLoad={(filter, page) => void loadOrders(filter, page)} /></div>}
-          <div className={cn(activeTab === "inicio" || activeTab === "pedidos" ? "hidden" : "rounded-2xl border border-line bg-white p-5 sm:p-7")}>
-          {activeTab !== "inicio" && activeTab !== "pedidos" && <div className="mb-6 border-b border-line pb-5"><h2 className="text-2xl font-black tracking-tight">{activeTab === "perfil" ? "Seus dados, sempre em dia" : activeTab === "seguranca" ? "Acesso e segurança" : "Seus benefícios"}</h2><p className="mt-2 text-sm leading-6 text-muted">{activeTab === "perfil" ? "Mantenha seu contato e endereço atualizados para facilitar o atendimento." : activeTab === "seguranca" ? "Cuide do acesso à sua conta com uma senha que só você conhece." : "Acompanhe seu saldo e os benefícios das suas compras."}</p></div>}
+          {activeTab === "avisos" && <CustomerRestockPanel />}
+          <div className={cn(activeTab === "inicio" || activeTab === "pedidos" || activeTab === "avisos" ? "hidden" : "rounded-2xl border border-line bg-white p-5 sm:p-7")}>
+          {activeTab !== "inicio" && activeTab !== "pedidos" && activeTab !== "avisos" && <div className="mb-6 border-b border-line pb-5"><h2 className="text-2xl font-black tracking-tight">{activeTab === "perfil" ? "Seus dados, sempre em dia" : activeTab === "seguranca" ? "Acesso e segurança" : "Seus benefícios"}</h2><p className="mt-2 text-sm leading-6 text-muted">{activeTab === "perfil" ? "Mantenha seu contato e endereço atualizados para facilitar o atendimento." : activeTab === "seguranca" ? "Cuide do acesso à sua conta com uma senha que só você conhece." : "Acompanhe seu saldo e os benefícios das suas compras."}</p></div>}
           {activeTab === "perfil" ? (
             <form className="grid gap-5 sm:grid-cols-2 [&_input]:min-h-12 [&_input]:rounded-xl [&_textarea]:rounded-xl" onSubmit={(event) => { event.preventDefault(); void saveProfile(); }}>
               <Field icon={<UserRound className="h-4 w-4" />} label="Nome">

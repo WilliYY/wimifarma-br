@@ -11,6 +11,10 @@ export const metadata = createPublicPageMetadata({
 
 const sections = [
   {
+    title: "Avisos de disponibilidade",
+    text: "O Avise-me é opcional e exige sua autorização para cada produto e canal escolhido. Usamos o telefone e/ou e-mail da sua conta para a equipe avisar sobre disponibilidade, sem cadastrar você em campanhas. O aviso vale por 30 dias, não reserva estoque nem garante preço. Você pode cancelá-lo em Minha conta > Meus avisos. Os contatos guardados no aviso são removidos ao cancelar, expirar ou concluir todos os canais; registros operacionais mínimos permanecem restritos. O conteúdo da solicitação fica acessível somente a você e à equipe autorizada. WhatsApp e seu aplicativo de e-mail são abertos pela equipe para preparar o contato; não há disparo automático de clientes conectado.",
+  },
+  {
     title: "Dados que usamos",
     text: "Podemos tratar nome, telefone, e-mail, dados de conta e endereço. Nos pedidos, registramos produtos, quantidades, valores e entrega ou retirada. Ao pagar online, o formulário seguro do Mercado Pago coleta os dados do cartão; a Wimifarma recebe um token, sem armazenar número completo nem CVV. E-mail e, quando necessário, CPF/CNPJ do pagador são usados para processar a cobrança. Nunca solicitamos senha bancária.",
   },
