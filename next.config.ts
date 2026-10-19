@@ -79,6 +79,13 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0" }],
       })),
       {
+        source: "/api/admin/receitas/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: "sandbox; default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+      },
+      {
         headers: [{ key: "Content-Security-Policy", value: paymentSecurityPolicy }, { key: "Referrer-Policy", value: "no-referrer" }],
         source: "/checkout",
       },

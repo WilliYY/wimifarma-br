@@ -2,6 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import nextConfig from "../../next.config";
 
+test("prescription downloads override the general CSP with a sandbox policy", async () => {
+  const rules = await nextConfig.headers!();
+  const index = rules.findIndex(rule => rule.source === "/api/admin/receitas/:path*");
+  assert.ok(index > rules.findIndex(rule => rule.source === "/:path*"));
+  const policy = rules[index].headers.find(header => header.key.toLowerCase() === "content-security-policy")?.value;
+  assert.match(policy || "", /(?:^|;\s*)sandbox(?:;|$)/);
+  assert.match(policy || "", /default-src 'none'/);
+  assert.equal(policy?.includes("unsafe-inline"), false);
+});
+
 test("private APIs including the credential vault prohibit browser and intermediary storage", async () => {
   const rules = await nextConfig.headers!();
   for (const source of ["/api/admin/:path*", "/api/minha-conta/:path*"]) {
