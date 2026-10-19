@@ -2,7 +2,7 @@
 
 ## Catálogo e vitrines — 19/10/2026
 
-- Contrato da edição em massa, coleções com fotos e demanda de distribuidor em [75](75-catalogo-vitrines-e-compra-distribuidor.md). Aguardar validação final e publicação desta rodada antes de tratar como produtivo.
+- Edição em massa, coleções com fotos e demanda de distribuidor publicadas no código `02ecef6`, com PostgreSQL sintético, backup, preservação de dados e conferência pública conforme [75](75-catalogo-vitrines-e-compra-distribuidor.md). Interface ADMIN foi validada em QA; não foi concluída a conferência autenticada na conta produtiva.
 - Mais fotografias e classificações MIP confirmadas são necessárias para completar três coleções de 15 itens sem repetição. Produtos sem foto permanecem pesquisáveis.
 - Cotação nacional acima de 20 volumes unitários exige embalagem consolidada e análise da equipe; não foi criada cubagem fictícia.
 - SantaCruz: solicitação confirmada e enviada, aguardando atendimento. Profarma: resposta não localizada no Gmail consultado. DM: identificar portal correto; nenhuma integração comercial adicional foi ativada.

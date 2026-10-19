@@ -45,3 +45,17 @@ Validação local concluída: 819 testes gerais e 385 de segurança aprovados; a
 Arquivos principais: `products-catalog-panel`, `product-bulk-editor`, `customer-auth-page`, `home-page`, `home-product-carousel`, `home-collections`, `home-photos`, `storefront`, API de lote, `quantity`, carrinho/checkout e inventário de fornecedor. Schema/migração, testes e scripts QA acompanham os fluxos. README, arquitetura, pendências e histórico de decisões referenciam este contrato.
 
 Comandos: `npm.cmd run test:all`, `test:security`, `typecheck`, `lint`, `prisma:validate`, `build`; `npm.cmd audit --omit=dev --json` e auditoria completa. Auditoria visual usa componentes reais, CSS compilado e dados sintéticos em 390/1.280 px, com chamadas externas e escritas bloqueadas; não demonstra envio de e-mail, pagamento ou estoque reais.
+
+## Publicação — 19/10/2026
+
+Código `02ecef6` enviado ao GitHub e aplicado no servidor oficial. Builds Docker `app` e `migrate` concluídos, backup validado e imagem anterior preservada. Todas as migrações passaram primeiro no banco sintético dedicado. O primeiro acesso ao QA foi recusado pela guarda de URL por parâmetros extras de conexão; o bootstrap passou a remover esses parâmetros somente da URL derivada do QA. Nenhuma migração produtiva foi aplicada nessa tentativa recusada.
+
+O ensaio PostgreSQL seguinte aprovou lote atômico, conflitos de versão, permissões, auditoria com falha SQL, reserva de 150 unidades sobre observação de 100/cota 5, política histórica e cancelamento idempotente. Executou também `createCheckout` real no banco sintético: 150 unidades, política persistida no item, preço correto e pagamento pendente, sem gateway ou fila de mensagem. Fixtures foram revertidas e o banco dedicado foi removido após conferir seu nome e marcador de propriedade.
+
+A migração produtiva acrescentou o campo com padrão `false`; o app foi recriado e está saudável. Hashes antes/depois confirmaram preservação de produtos, ofertas, pedidos, itens anteriores, clientes e reservas. O hash de itens exclui apenas a coluna nova; consulta separada confirmou que nenhum item histórico recebeu a nova política.
+
+Seis rotas públicas retornaram HTTP 200; a API de lote anônima retornou 401 com `private, no-store` e `noindex`, sem expor custos nos resultados públicos. Home e login novos foram conferidos no Chrome conectado. A home real apresentou **7 itens em Cuidados e 9 em Menores preços**, sem imagem carregada quebrada, erro JavaScript ou transbordamento horizontal. Não havia MIP/OTC com foto e classificação elegíveis; a respectiva coleção permanece preparada, sem criar itens artificiais.
+
+O script visual aprovou 14 capturas em 390/1.280 px, com imagens sintéticas claramente identificadas, UTF-8 e CSS atual. O aviso automático de carrinho foi abortado no fixture; nenhuma escrita de rede ou requisição externa foi concluída. Artefatos locais estão em `outputs/catalogo-vitrine-2026-10-19/` e não foram versionados.
+
+Limite da evidência: a credencial disponível não foi aceita para a entrada ADMIN no BR; a tentativa de usar uma sessão já aberta no outro perfil do Chrome encontrou timeout de acesso. Não houve troca de senha nem alteração de conta. O fluxo administrativo autenticado foi comprovado em QA, e suas proteções anônimas foram conferidas em produção; não foi alegada edição real de produtos na conta produtiva. Não houve pedido, pagamento, etiqueta ou comunicação real para testar a entrega.
