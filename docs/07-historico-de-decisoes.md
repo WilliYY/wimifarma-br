@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-19 - Continuação comercial por famílias e Dove
+
+- Vinte e três novas apresentações publicadas após conferir 29 EANs nas duas distribuidoras: 17 genéricos, dois similares, dois referência e dois Dove; menor oferta elegível, percentuais individuais e tetos preservados. Classe referência Aldactone comprovada pela Anvisa, sem inferir a partir de Novo. Detalhes em [73](73-lote-familias-e-dove-2026-10-19.md).
+- Duas fotos oficiais de higiene conferidas e publicadas com fonte/hash/auditoria; Rx permanece institucional. Perfis logísticos são estimados/desabilitados. Origem física, 50 produtos/68 ofertas anteriores e dados comerciais/clientes preservados por hashes; 23 páginas/buscas/revisões de carrinho passaram, sem pedidos ou pagamentos de teste reais.
+- Revisão independente, 33 regressões, 342 testes de segurança, auditoria de produção sem alertas, QA PostgreSQL isolado e dry-run produtivo antes da aplicação. Código da aplicação, dependências e infraestrutura sem mudanças. Auditoria completa conserva cinco high da cadeia de desenvolvimento.
+- Automação existente ampliada aos 68 EANs, mantendo PAUSED encontrado na configuração e a grade 8h/12h/17h; não reativada, sem coletor na VPS ou renovação de validade sem observação.
+
 ## 2026-10-19 - Primeiro lote comercial por família de anlodipino
 
 - Retomadas consultas normais ANB/Profarma por família, com confirmação dos EANs ausentes na pesquisa de nome. Manifesto v1 revisado publicou 20 produtos e atualizou somente a oferta do Geolab existente, sem duplicar apresentações. Nove genéricos e doze similares na rodada; três diferenças de laboratório e um indisponível ficaram fora. Detalhes em [72](72-lote-anlodipino-2026-10-19.md).

@@ -1,5 +1,10 @@
 # 06 - Pendencias
 
+## Continuação das famílias e Dove — 19/10/2026
+
+- Publicados 23 produtos adicionais, com comparação de 29 EANs ANB/Profarma, duas fotos oficiais e preservação dos 50 produtos anteriores, ofertas, estoques físicos, percentuais, cotas/reservas/consumo e pedidos/clientes. Lista e evidências em [73](73-lote-familias-e-dove-2026-10-19.md). Catálogo atual: 73 produtos, 68 de distribuidor.
+- Cinco apresentações ficaram sem oferta elegível e uma excedeu o teto conservador. Demais famílias/marcas e o candidato Lasix ainda exigem conferência. Perfis de envio permanecem estimados/desabilitados, sem aprovação de transporte nacional. A rotina foi encontrada PAUSED; escopo atualizado para 68 EANs, sem reativação ou prolongamento de ofertas.
+
 ## Lote por família de anlodipino — 19/10/2026
 
 - Acesso normal restabelecido na ANB e Profarma. Vinte novos produtos publicados, uma oferta existente atualizada e rotina ampliada aos 45 EANs de distribuidor, conforme [72](72-lote-anlodipino-2026-10-19.md). Produtos físicos, percentuais manuais, fotos, cotas/reservas/consumo, pedidos e clientes preservados. Os relatos de bloqueio abaixo descrevem as fases anteriores.

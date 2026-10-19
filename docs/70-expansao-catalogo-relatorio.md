@@ -1,5 +1,7 @@
 # 70 — Expansão do catálogo com relatório de vendas
 
+Continuação de 19/10/2026: 23 produtos adicionais publicados por famílias e dois Dove, com 73 produtos totais e preservação das bases anteriores. Relação completa, exclusões e verificação em [73](73-lote-familias-e-dove-2026-10-19.md). Escopo da rotina ampliado para 68 EANs; estado PAUSED encontrado foi preservado.
+
 Rodada posterior de 19/10/2026: 20 apresentações novas de anlodipino publicadas e rotina ampliada aos 45 EANs de distribuidor, com comparação nas duas fontes e preservação produtiva comprovada. O estado mais recente está em [72](72-lote-anlodipino-2026-10-19.md); o relato abaixo conserva a entrega anterior.
 
 Atualização de 19/10/2026: inventário completo, referências das marcas, manifesto v1 com antimicrobiano explícito e seu envio privado de receita são descritos em [71](71-inventario-completo-e-receitas.md). O registro de 18/10 abaixo permanece como evidência da entrega anterior; não implica publicação automática dos novos candidatos.

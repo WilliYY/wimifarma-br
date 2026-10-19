@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Novo lote do relatório publicado em 19/10/2026: 23 produtos de glibenclamida, espironolactona, furosemida e Dove, totalizando 73 produtos. Lista e validações em [docs/73-lote-familias-e-dove-2026-10-19.md](docs/73-lote-familias-e-dove-2026-10-19.md). A automação cobre 68 EANs de distribuidor, mas foi encontrada pausada e permaneceu assim.
+
 Lote de anlodipino por família publicado em 19/10/2026: 20 produtos novos, comparação ANB/Profarma e rotina dos 45 EANs de distribuidor, com estoque físico preservado. Evidências e limites em [docs/72-lote-anlodipino-2026-10-19.md](docs/72-lote-anlodipino-2026-10-19.md).
 
 Inventário completo do relatório, referências Nivea/Dove e fluxo privado de receita para antimicrobianos, preservando o atendimento assistido de controlados: [docs/71-inventario-completo-e-receitas.md](docs/71-inventario-completo-e-receitas.md). Candidatos do relatório e dos fabricantes não viram estoque/preço sem conferência autenticada na ANB/Profarma.
