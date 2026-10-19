@@ -4,6 +4,7 @@
 
 - Produtos publicados indisponíveis permanecem visíveis. Cliente autenticado escolhe WhatsApp/e-mail e autoriza um aviso por até 30 dias; não há inscrição automática nem reserva. Disponibilidade reutiliza as ofertas/cotas e o estoque físico existentes, sem modificar dados comerciais.
 - Persistência separada, limite por cliente serializado, cancelamento próprio, expiração e remoção dos snapshots de contato. Fila restrita a ADMIN/MANAGER; contato manual por canal com controle de versão e nova validação. Links apenas preparam mensagens; nenhuma entrega automática foi ativada ou simulada como enviada. Contrato em [74](74-avisos-de-disponibilidade.md).
+- Publicado após corrigir consulta Prisma detectada no banco isolado: 794 testes gerais, 368 de segurança, build, auditoria produtiva sem alertas, revisão independente e QA PostgreSQL passaram. Migração aditiva, app saudável e hashes dos dados comerciais preservados. Contato automático permanece pendente; avisos atuais são operados pela equipe.
 
 ## 2026-10-19 - Continuação comercial por famílias e Dove
 

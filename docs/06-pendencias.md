@@ -2,7 +2,7 @@
 
 ## Avise-me — 19/10/2026
 
-- Solicitação por produto/canal, cancelamento na conta e fila ADMIN/MANAGER preparados conforme [74](74-avisos-de-disponibilidade.md). Contato é feito pela equipe; não há disparo automático conectado.
+- Solicitação por produto/canal, cancelamento na conta e fila ADMIN/MANAGER publicados e validados conforme [74](74-avisos-de-disponibilidade.md). Contato é feito pela equipe; não há disparo automático conectado.
 - Para automatizar a entrega, faltam remetente de e-mail e canal WhatsApp de clientes com verificação, supressão, limites e controle de entrega. A ponte atual da Miauby conserva o destino de alertas ao proprietário.
 
 ## Continuação das famílias e Dove — 19/10/2026
