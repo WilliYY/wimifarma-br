@@ -1,5 +1,10 @@
 # 06 - Pendencias
 
+## Expansão por relatório — 18/10/2026
+
+- Quinze novos produtos publicados e rotina ampliada para 25 EANs, conforme [70](70-expansao-catalogo-relatorio.md). Preço preserva percentual ADMIN; dez losartanas atualizadas para 50% pelo pedido posterior do titular. Fotos Rx públicas substituídas na apresentação por ilustrações, sem apagar originais.
+- Próximos lotes do relatório/essenciais ainda exigem EAN, disponibilidade/custo e apresentação conferidos, classificação e foto aplicável. As medidas são estimadas; revisão de carga/embalagem/transportadora continua pendente. O navegador foi desabilitado depois das consultas desta etapa; sem nova observação, as ofertas expiram normalmente.
+
 ## Piloto de fornecedores — 18/10/2026
 
 - Dez apresentações publicadas e cinco fotos internas protegidas verificadas em produção conforme [68](68-rotina-piloto-fornecedores.md). Apenas ANB/Profarma são fontes comerciais; GAM/SantaCruz são referências. Rotina Codex às 8h/12h/17h criada, dependente de PC/navegador; falta integração independente na VPS por fonte autorizada.

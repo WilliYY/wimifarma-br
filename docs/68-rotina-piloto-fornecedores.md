@@ -1,10 +1,12 @@
 # Rotina do piloto de fornecedores
 
+Atualização posterior de 18/10/2026: a rotina passou a abranger 25 EANs aprovados, incluindo os 15 novos produtos do [lote do relatório](70-expansao-catalogo-relatorio.md). As dez losartanas passaram para 50% de acréscimo pelo novo pedido do titular. A rotina preserva o percentual ADMIN atual de cada produto; lotes mistos usam `manifestVersion:1`. Não incluir novos EANs sem conferência própria. Horários mantidos: 8h, 12h e 17h de Brasília, dependentes do PC/navegador.
+
 ## Escopo aprovado em 18/10/2026
 
 Somente ANB e Profarma abastecem o catálogo neste piloto de losartana potássica 50 mg. GAM e SantaCruz são referências opcionais de identidade, descrição e imagem; não fornecem ofertas comerciais nesta etapa. A API e o importador recusam essas referências como fornecedores ativos. O simulador manual permite comparar GAM sem publicar seus dados.
 
-O catálogo usa um produto por GTIN/apresentação, acréscimo de 60% sobre o custo final unitário e teto conservador conferido na tabela oficial. Não confundir acréscimo com margem líquida. Embalagem de distribuição não é quantidade disponível. Sinais como `+100` não são convertidos em saldo exato. A cota do piloto permanece em até cinco unidades por oferta, descontando reservas e unidades consumidas, sem renovação automática.
+O catálogo usa um produto por GTIN/apresentação, acréscimo ADMIN por produto sobre o custo final unitário e teto conservador conferido para medicamentos. O padrão inicial de 60% foi substituído nos itens revistos conforme o documento 70. Não confundir acréscimo com margem líquida. Embalagem de distribuição não é quantidade disponível. Sinais como `+100` não são convertidos em saldo exato. A cota do piloto permanece em até cinco unidades por oferta, descontando reservas e unidades consumidas, sem renovação automática.
 
 Produtos físicos continuam `PHARMACY`; importação não altera seus preços, fotos ou estoque e recusa EAN que já pertença a essa origem. O Teuto físico existente deve ser preservado até revisão manual de seu EAN, sem criar cópia externa. Não publicar Legrand ou Eurofarma com indisponibilidade observada em ambas as fontes.
 
@@ -28,7 +30,7 @@ Não transmitir pedidos, efetuar pagamentos, enviar mensagens, substituir fabric
 
 ## Fotos internas
 
-Revisão posterior em 18/10/2026: o titular solicitou publicação de cópias das fotos validadas, após esclarecimento da restrição sanitária. O contrato atual está em `68-busca-e-galeria.md`; a descrição abaixo registra o armazenamento interno que continua protegido. Rotinas de preço devem preservar capas públicas já aprovadas: omitir `internalImage` e não recolocar URL interna sobre a capa pública. Nenhum original privado ou endpoint administrativo passa a ser público.
+Direção mais recente do titular em 18/10/2026: Rx público usa ilustração institucional por classe; MIP/OTC e perfumaria mantêm fotos reais conferidas, conforme o documento 70. Isso substitui a solicitação anterior de exibir cópias públicas Rx. Capas/originais existentes continuam cadastrados no painel e não são apagados. A descrição abaixo registra o armazenamento interno protegido. Rotinas de preço omitem `internalImage`, não publicam fotos e não substituem capas. Nenhum original privado ou endpoint administrativo passa a ser público.
 
 Conferir marca, dosagem e quantidade visíveis na embalagem antes de associar ao EAN. URL do distribuidor não comprova autorização comercial nem que a arte é a versão mais recente; registrar a origem e não afirmar atualidade gráfica sem comprovação. Não gerar ou redesenhar embalagem de medicamento.
 
