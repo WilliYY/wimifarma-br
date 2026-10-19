@@ -31,7 +31,7 @@ test("DTO público oculta custos e imagem interna, preservando estoque físico",
   assert.equal(dto.promotionalPrice, null);
   assert.equal(dto.purchaseLimit, 5);
   assert.equal(dto.availableForPurchase, true);
-  assert.equal(dto.imageUrl, null);
+  assert.equal(dto.imageUrl, "/brand/medicamento-ilustrativo.webp");
   assert.equal(dto.imageAsset, null);
   assert.equal("supplierOffers" in dto, false);
   const expired = withCommerceAvailability(product, now + 2000);
@@ -39,9 +39,9 @@ test("DTO público oculta custos e imagem interna, preservando estoque físico",
   assert.equal(expired.availableForPurchase, false);
 });
 
-test("foto pública aprovada permanece visível no distribuidor Rx sem expor relação interna", () => {
+test("foto pública Rx permanece interna e o DTO usa ilustração sem alterar compra", () => {
   const dto = withCommerceAvailability({ ...product, requiresPrescription: true, imageUrl: "/uploads/products/approved.webp", imageAsset: { originalName: "internal-source.png" } }, now);
-  assert.equal(dto.imageUrl, "/uploads/products/approved.webp");
+  assert.equal(dto.imageUrl, "/brand/medicamento-ilustrativo.webp");
   assert.equal(dto.imageAsset, null);
   assert.equal(dto.price, "16.00");
   assert.equal(dto.purchaseLimit, 5);

@@ -1,7 +1,7 @@
 import { publicProductImageUrl, publicProductImageUrls } from "@/features/product-images/private-supplier-policy";
 import { priceWithMarkup } from "@/features/supplier-planning/planning";
 
-export const supplierOfferInclude = { supplierOffers: true, supplierMarkupBps: true } as const;
+export const supplierOfferInclude = { supplierOffers: true, supplierMarkupBps: true, catalogClassification: true } as const;
 
 export type SupplierCommerceOffer = {
   id: string;
@@ -19,6 +19,8 @@ export type SupplierCommerceOffer = {
 };
 
 export type CommerceProduct = {
+  catalogClassification?: unknown;
+  imageAssetId?: string | null;
   supplierMarkupBps?: number;
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
   ean?: string | null;
@@ -74,16 +76,16 @@ export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "ean
   }).sort((a, b) => a.unitCostCents - b.unitCostCents || a.supplier.localeCompare(b.supplier) || a.id.localeCompare(b.id))[0] ?? null;
 }
 
-export function withCommerceAvailability<T extends CommerceProduct>(product: T, now = Date.now()): Omit<T, "supplierMarkupBps" | "supplierOffers" | "price" | "promotionalPrice" | "inventorySource" | "imageUrl" | "imageUrls" | "imageAsset"> & {
+export function withCommerceAvailability<T extends CommerceProduct>(product: T, now = Date.now()): Omit<T, "supplierMarkupBps" | "supplierOffers" | "price" | "promotionalPrice" | "inventorySource" | "imageUrl" | "imageUrls" | "imageAsset" | "imageAssetId"> & {
   inventorySource: "PHARMACY" | "DISTRIBUTOR"; price: string; promotionalPrice: string | null;
   purchaseLimit: number; availableForPurchase: boolean; imageUrl: string | null; imageUrls: string[]; imageAsset?: unknown;
 } {
-  const { supplierMarkupBps: _markup, supplierOffers: _privateOffers, price: _price, promotionalPrice: _promo, inventorySource: _source, imageUrl: _image, imageUrls: _images, imageAsset: _asset, ...safe } = product;
-  void [_markup, _privateOffers, _price, _promo, _source, _image, _images, _asset];
+  const { supplierMarkupBps: _markup, supplierOffers: _privateOffers, price: _price, promotionalPrice: _promo, inventorySource: _source, imageUrl: _image, imageUrls: _images, imageAsset: _asset, imageAssetId: _assetId, ...safe } = product;
+  void [_markup, _privateOffers, _price, _promo, _source, _image, _images, _asset, _assetId];
   const inventorySource = product.inventorySource ?? "PHARMACY";
   const imageUrl = publicProductImageUrl(product);
   if (inventorySource === "PHARMACY") return {
-    ...safe, inventorySource, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: imageUrl ? product.imageAsset : null, purchaseLimit: Math.max(0, product.stock), availableForPurchase: product.stock > 0,
+    ...safe, inventorySource, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: imageUrl && !product.requiresPrescription ? product.imageAsset : null, purchaseLimit: Math.max(0, product.stock), availableForPurchase: product.stock > 0,
     price: String(product.price), promotionalPrice: product.promotionalPrice == null ? null : String(product.promotionalPrice),
   };
   const offer = resolveSupplierOffer(product, 1, now);

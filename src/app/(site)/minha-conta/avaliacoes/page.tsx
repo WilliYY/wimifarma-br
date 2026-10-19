@@ -1,3 +1,4 @@
+import { productImageAlt } from "@/features/products/image-placeholder";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
@@ -20,7 +21,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
   const page = Math.max(1, Math.min(10000, Number.parseInt((await searchParams).page ?? "1", 10) || 1));
   const products = (await db.product.findMany({
     where: { status: "ACTIVE", orderItems: { some: { order: { customerId, status: "COMPLETED", paymentStatus: "PAID" } } } },
-    select: { id: true, name: true, slug: true, imageUrl: true, category: true, inventorySource: true, requiresPrescription: true, isPopularPharmacy: true, reviews: { where: { customerId }, select: { id: true } } },
+    select: { catalogClassification: true, id: true, name: true, slug: true, imageUrl: true, category: true, inventorySource: true, requiresPrescription: true, isPopularPharmacy: true, reviews: { where: { customerId }, select: { id: true } } },
     orderBy: [{ name: "asc" }, { id: "asc" }], skip: (page - 1) * 24, take: 25,
   })).map(product => ({ ...product, imageUrl: publicProductImageUrl(product) }));
   return <section className="bg-white px-4 pb-16 pt-40 sm:px-6 lg:pt-52"><div className="mx-auto max-w-6xl">
@@ -29,7 +30,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
     <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Primeira avaliacao de cada produto elegivel: 1% de cashback sobre uma unidade paga, independente da nota. <Link className="font-bold text-pharma-green underline" href="/cashback">Ver regras</Link></p>
     <div className="mt-8 divide-y divide-line border-y border-line">
       {products.slice(0, 24).map((product) => <div className="flex items-center gap-4 py-5" key={product.id}>
-        {product.imageUrl ? <Image alt={product.name} className="h-20 w-20 shrink-0 object-contain" height={80} width={80} src={product.imageUrl} /> : <ProductImagePlaceholder name={product.name} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-20 w-20 shrink-0" showLabel={false} />}
+        {product.imageUrl ? <Image alt={productImageAlt(product.name, product.imageUrl)} className="h-20 w-20 shrink-0 object-contain" height={80} width={80} src={product.imageUrl} /> : <ProductImagePlaceholder catalogClassification={product.catalogClassification} name={product.name} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-20 w-20 shrink-0" showLabel={false} />}
         <div className="min-w-0 flex-1"><h2 className="break-words text-sm font-bold text-ink">{product.name}</h2><p className="mt-1 text-xs text-muted">{product.reviews.length ? "Avaliacao enviada · editar nao gera novo bonus" : product.requiresPrescription || product.isPopularPharmacy ? "Compra verificada · sem bonus" : "Ganhe 1% na primeira avaliacao"}</p></div>
         <Link className="inline-flex min-h-11 shrink-0 items-center rounded-md border border-brand px-3 text-sm font-bold text-brand hover:bg-brand-soft" href={`/produto/${product.slug}#avaliacoes`}>{product.reviews.length ? "Editar" : "Avaliar"}</Link>
       </div>)}

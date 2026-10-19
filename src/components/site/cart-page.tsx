@@ -1,5 +1,7 @@
 "use client";
 
+import { productImageAlt } from "@/features/products/image-placeholder";
+
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -78,7 +80,7 @@ export function CartPage() {
               {items.map((item) => (
                 <article className="grid gap-4 rounded-lg border border-line bg-white p-4 shadow-sm sm:grid-cols-[7rem_minmax(0,1fr)_auto] sm:items-center" key={item.id}>
                   <Link className="relative mx-auto aspect-square w-28 overflow-hidden rounded-md border border-line bg-white" href={`/produto/${item.slug}`}>
-                    {item.imageUrl ? <Image alt={item.name} className="object-contain p-2" fill sizes="112px" src={item.imageUrl} /> : <ProductImagePlaceholder name={item.name} category={item.category} requiresPrescription={item.requiresPrescription} isPopularPharmacy={item.isPopularPharmacy} className="h-full w-full p-2" showLabel={false} />}
+                    {item.imageUrl ? <Image alt={productImageAlt(item.name, item.imageUrl)} className="object-contain p-2" fill sizes="112px" src={item.imageUrl} /> : <ProductImagePlaceholder catalogClassification={item.catalogClassification} name={item.name} category={item.category} requiresPrescription={item.requiresPrescription} isPopularPharmacy={item.isPopularPharmacy} className="h-full w-full p-2" showLabel={false} />}
                   </Link>
                   <div className="min-w-0">
                     {item.category ? <p className="text-xs font-bold uppercase text-muted">{item.category}</p> : null}

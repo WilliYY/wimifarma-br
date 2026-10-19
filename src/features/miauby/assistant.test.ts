@@ -26,8 +26,8 @@ test("Miauby never exposes private image URLs and preserves approved public phot
   }
   assert.equal(rankMiaubyCatalogProducts("Produto sintético", [base])[0].imageUrl, "/public.webp");
   const approved = { ...base, imageUrl: "/uploads/products/approved.webp", inventorySource: "DISTRIBUTOR" as const, requiresPrescription: true };
-  assert.equal(rankMiaubyCatalogProducts("Produto sintético", [approved])[0].imageUrl, approved.imageUrl);
-  assert.equal(miaubyReplyProducts("Produto sintético", [approved])[0].imageUrl, approved.imageUrl);
+  assert.equal(rankMiaubyCatalogProducts("Produto sintético", [approved])[0].imageUrl, "/brand/medicamento-ilustrativo.webp");
+  assert.equal(miaubyReplyProducts("Produto sintético", [approved])[0].imageUrl, "/brand/medicamento-ilustrativo.webp");
 });
 
 test("valida a pergunta e limita o historico curto da Miauby", () => {

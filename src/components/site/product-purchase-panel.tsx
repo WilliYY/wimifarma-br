@@ -1,5 +1,7 @@
 "use client";
 
+import { productImageAlt } from "@/features/products/image-placeholder";
+
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -189,14 +191,14 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
               {product.imageUrl ? (
                 <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-sm border border-line bg-white">
                   <Image
-                    alt=""
+                    alt={productImageAlt(product.name, product.imageUrl)}
                     className="object-contain p-1"
                     fill
                     sizes="56px"
                     src={product.imageUrl}
                   />
                 </span>
-              ) : <ProductImagePlaceholder name={product.name} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-14 w-14 shrink-0 p-1" showLabel={false} />}
+              ) : <ProductImagePlaceholder catalogClassification={product.catalogClassification} name={product.name} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-14 w-14 shrink-0 p-1" showLabel={false} />}
               <div className="min-w-0">
                 <span className="block text-xs font-bold uppercase text-muted">
                   {product.category ?? "Produto"}

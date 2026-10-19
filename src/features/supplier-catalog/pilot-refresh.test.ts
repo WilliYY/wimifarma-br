@@ -38,3 +38,21 @@ test("expired, future, older or changed-identity observations fail closed", () =
   assert.throws(() => planPilotRefresh(ean, [input()], [previous({ observedAt: "2026-10-18T11:30:00Z" })], now), /newer/);
   assert.throws(() => planPilotRefresh(ean, [input({ externalCode: "other" })], [previous()], now), /identity/);
 });
+
+test("OTC explicitly accepts missing ceiling and chosen markup; Rx remains the default", () => {
+  const otc = input({ retailCeilingCents: null });
+  assert.equal(planPilotRefresh(ean, [otc], [], now, 2500, false).best?.unitPriceCents, 375);
+  assert.throws(() => planPilotRefresh(ean, [otc], [], now), /ceiling/);
+  const stored = previous({ reservedQuantity: 1, committedQuantity: 1, allocationQuantity: 4 });
+  const plan = planPilotRefresh(ean, [otc], [stored], now, 4000, false);
+  assert.equal(plan.updates[0].allocationQuantity, 4);
+  assert.equal(plan.best?.purchaseLimit, 2);
+  assert.equal(plan.best?.unitPriceCents, 420);
+});
+
+test("refresh rejects mismatched EAN, duplicate supplier and validity exceeding 24 hours", () => {
+  assert.throws(() => planPilotRefresh(ean, [input({ eanNormalized: "7896181915638" })], [], now), /identity/);
+  assert.throws(() => planPilotRefresh(ean, [input(), input()], [], now), /Duplicate/);
+  const invalid = { ...input(), observedAt: "2026-10-17T10:00:00Z", validUntil: "2026-10-19T11:00:00Z" };
+  assert.throws(() => planPilotRefresh(ean, [invalid], [], now), /24 hours/);
+});

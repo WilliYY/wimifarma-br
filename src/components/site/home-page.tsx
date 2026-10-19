@@ -1,5 +1,7 @@
 "use client";
 
+import { productImageAlt } from "@/features/products/image-placeholder";
+
 import Image from "next/image";
 import { productDisplayName } from "@/features/products/display-name";
 import Link from "next/link";
@@ -162,6 +164,7 @@ function buildBestOfferItems(products: PublicShowcaseProduct[]): BestOfferItem[]
       ratingAverage: product.ratingAverage,
       ratingCount: product.ratingCount,
       product: {
+        catalogClassification: product.catalogClassification,
         cashbackEnabled: product.cashbackEnabled,
         cashbackRateBps: product.cashbackRateBps,
         category: product.category,
@@ -684,7 +687,7 @@ function BestOfferCatalog({ products }: { products: PublicShowcaseProduct[] }) {
                     }`}
                     >
                       <Image
-                        alt={item.name}
+                        alt={productImageAlt(item.name, item.imageUrl)}
                         className="object-contain object-center p-2 transition duration-300 group-hover:scale-105"
                         fill
                         sizes="(min-width: 1280px) 230px, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"

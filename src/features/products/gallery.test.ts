@@ -28,9 +28,9 @@ test("DTO de distribuidor Rx remove arrays e metadados de imagens privadas", () 
   const privateUrl = "/api/admin/fornecedores/imagens/00000000-0000-4000-8000-000000000000.webp";
   const raw = { inventorySource: "DISTRIBUTOR" as const, requiresPrescription: true, stock: 0, price: 10, imageUrl: privateUrl, imageUrls: [privateUrl, "/back.webp", "/back.webp"], imageAsset: { url: privateUrl } };
   const safe = withCommerceAvailability(raw);
-  assert.equal(safe.imageUrl, null);
-  assert.deepEqual(safe.imageUrls, ["/back.webp"]);
+  assert.equal(safe.imageUrl, "/brand/medicamento-ilustrativo.webp");
+  assert.deepEqual(safe.imageUrls, []);
   assert.equal(safe.imageAsset, null);
   assert.doesNotMatch(JSON.stringify(safe), /api\/admin\/fornecedores\/imagens/);
-  assert.deepEqual(withCommerceAvailability({ ...raw, inventorySource: "PHARMACY" as const }).imageUrls, ["/back.webp"]);
+  assert.deepEqual(withCommerceAvailability({ ...raw, inventorySource: "PHARMACY" as const }).imageUrls, []);
 });

@@ -16,6 +16,7 @@ export type MiaubyHistoryMessage = z.infer<typeof miaubyHistoryMessageSchema>;
 
 export type MiaubyCatalogSource = {
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
+  catalogClassification?: unknown;
   activeIngredients: string[];
   brand: string | null;
   category: string | null;
@@ -35,6 +36,17 @@ export type MiaubyCatalogProduct = Omit<
   MiaubyCatalogSource,
   "activeIngredients" | "searchTerms" | "searchText"
 >;
+
+function publicMiaubyProduct(product: MiaubyCatalogProduct): MiaubyCatalogProduct {
+  return {
+    inventorySource: product.inventorySource,
+    catalogClassification: product.catalogClassification,
+    brand: product.brand, category: product.category, id: product.id,
+    imageUrl: publicProductImageUrl(product), isPopularPharmacy: product.isPopularPharmacy,
+    name: product.name, price: product.price, promotionalPrice: product.promotionalPrice,
+    requiresPrescription: product.requiresPrescription, slug: product.slug,
+  };
+}
 
 const stopWords = new Set([
   "a",
@@ -98,7 +110,7 @@ export function miaubyReplyProducts(
   message: string,
   products: MiaubyCatalogProduct[],
 ) {
-  return keepMiaubyQuestionLocal(message) ? [] : products.map(product => ({ ...product, imageUrl: publicProductImageUrl(product) }));
+  return keepMiaubyQuestionLocal(message) ? [] : products.map(publicMiaubyProduct);
 }
 
 export function rankMiaubyCatalogProducts(
@@ -142,6 +154,7 @@ export function rankMiaubyCatalogProducts(
       category: product.category,
       id: product.id,
       imageUrl: publicProductImageUrl(product),
+      catalogClassification: product.catalogClassification,
       isPopularPharmacy: product.isPopularPharmacy,
       name: product.name,
       price: product.price,
@@ -153,7 +166,7 @@ export function rankMiaubyCatalogProducts(
 
 export function buildMiaubySystemPrompt(products: MiaubyCatalogProduct[]) {
   const catalog = products.length
-    ? JSON.stringify(products.map(product => ({ ...product, imageUrl: publicProductImageUrl(product) })))
+    ? JSON.stringify(products.map(publicMiaubyProduct))
     : "Nenhum produto relacionado foi encontrado no catalogo publicado.";
 
   return `Voce e Miauby, assistente virtual simpatica da Wimifarma, farmacia local em Ivate-PR.

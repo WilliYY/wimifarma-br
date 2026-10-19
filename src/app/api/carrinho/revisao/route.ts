@@ -19,6 +19,7 @@ export async function POST(request: Request) {
       select: { ...supplierOfferInclude, ean: true, inventorySource: true, id: true, name: true, slug: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true },
     });
     return NextResponse.json({ data: { products: products.map(p => toSaleProduct(p)).map(product => ({
+      catalogClassification: product.catalogClassification,
       id: product.id, name: product.name, slug: product.slug, category: product.category, imageUrl: product.imageUrl,
       unitPriceCents: moneyToCents((product.promotionalPrice ?? product.price).toString()),
       originalPriceCents: product.promotionalPrice ? moneyToCents(product.price.toString()) : null,

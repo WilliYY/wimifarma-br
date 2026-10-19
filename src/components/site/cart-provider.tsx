@@ -11,11 +11,13 @@ import {
 } from "react";
 
 import { requiresPurchaseAssistance, type PrescriptionType } from "@/features/products/purchase-policy";
+import { publicProductImageUrl } from "@/features/product-images/private-supplier-policy";
 import { reviewedCartItems, type CartReviewProposal } from "@/features/products/cart-review";
 const STORAGE_KEY = "wimifarma-cart-v1";
 
 export type CartProduct = {
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
+  catalogClassification?: unknown;
   id: string;
   slug: string;
   name: string;
@@ -57,7 +59,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (saved) {
         const parsed: unknown = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          setItems(parsed.filter(isCartItem).slice(0, 30));
+          setItems(parsed.filter(isCartItem).slice(0, 30).map(item => ({ ...item, imageUrl: publicProductImageUrl(item) })));
         }
       }
     } catch {
@@ -104,6 +106,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    product = { ...product, imageUrl: publicProductImageUrl(product) };
     const safeQuantity = Math.min(Math.max(Math.trunc(quantity), 1), product.stock, 20);
 
     setItems((current) => {

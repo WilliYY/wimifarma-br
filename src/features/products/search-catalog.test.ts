@@ -35,7 +35,9 @@ test("busca pagina no banco, preserva ordem e não expõe foto privada/ofertas",
   const result = await service.getSearchCatalog("losartana 50 mg (Corus)", { page: 2 });
   assert.equal(result.count, 30);
   assert.deepEqual(Array.from(result.products, row => row.id), ["b", "a"]);
-  assert.equal(result.products[0].imageUrl, null);
+  assert.equal(result.products[0].imageUrl, "/brand/medicamento-ilustrativo.webp");
+  assert.equal(result.products[1].imageUrl, "/brand/medicamento-ilustrativo.webp");
+  assert.doesNotMatch(JSON.stringify(result.products), /\/public\.webp|\/api\/admin\/fornecedores\/imagens\//);
   assert.equal("supplierOffers" in result.products[0], false);
   assert.match(queries[0].text, /LIMIT \$\d+ OFFSET \$\d+/);
   assert.deepEqual(queries[0].values.slice(-2), [24, 24]);

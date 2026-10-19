@@ -13,6 +13,7 @@ export type ProductSearchSource = {
 
 export type PublicProductSearchItem = {
   cashbackEnabled?: boolean;
+  catalogClassification?: unknown;
   cashbackRateBps?: number;
   activeIngredients: string[];
   brand: string | null;

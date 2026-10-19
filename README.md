@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Expansão gradual por relatório de vendas, lotes aprovados por EAN, percentuais por produto, fotos não-Rx e ilustrações institucionais por classe: [docs/70-expansao-catalogo-relatorio.md](docs/70-expansao-catalogo-relatorio.md). As atualizações preservam percentuais manuais, estoque físico, cotas e reservas; nenhum conector autônomo foi ativado.
+
 Catálogo administrativo com filtros de classificação, ajuste rápido de preços e percentual por distribuidor: [docs/69-catalogo-classificacao-e-integracoes.md](docs/69-catalogo-classificacao-e-integracoes.md). Inclui pesquisa oficial de API/EDI/arquivos Profarma, SantaCruz e ANB; conexões automáticas ainda dependem de habilitação.
 
 Busca por nome, marca e dose com página de resultados, associações identificadas e galeria de até seis fotos: [docs/68-busca-e-galeria.md](docs/68-busca-e-galeria.md).

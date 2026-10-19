@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { productImageAlt } from "@/features/products/image-placeholder";
 import { publicProductImageUrl, publicProductImageUrls } from "@/features/product-images/private-supplier-policy";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -81,6 +82,7 @@ function serializeProduct(raw: ProductRecord): RelatedProductCardItem {
     category: product.category,
     id: product.id,
     imageUrl: product.imageUrl,
+    catalogClassification: product.catalogClassification,
     isPopularPharmacy: product.isPopularPharmacy,
     name: product.name,
     price: product.price.toString(),
@@ -111,7 +113,7 @@ function RatingStars({ rating, size = "h-4 w-4" }: { rating: number | null; size
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const product = await getPrisma().product.findFirst({
-    select: { brand: true, description: true, imageUrl: true, imageUrls: true, name: true, inventorySource: true, requiresPrescription: true },
+    select: { catalogClassification: true, brand: true, description: true, imageUrl: true, imageUrls: true, name: true, inventorySource: true, requiresPrescription: true },
     where: { slug, status: "ACTIVE" },
   });
   if (!product) return {};
@@ -124,7 +126,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description,
     openGraph: {
       description,
-      images: product.imageUrl ? [product.imageUrl, ...product.imageUrls].map(url => ({ alt: product.name, url })) : undefined,
+      images: product.imageUrl ? [product.imageUrl, ...product.imageUrls].map(url => ({ alt: productImageAlt(product.name, url), url })) : undefined,
       title: product.name,
       type: "website",
       url: productUrl,
@@ -216,6 +218,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     category: product.category,
     id: product.id,
     imageUrl: product.imageUrl,
+    catalogClassification: product.catalogClassification,
     isPopularPharmacy: product.isPopularPharmacy,
     name: product.name,
     originalPriceCents: hasPromotion ? Math.round(normalPrice * 100) : null,
@@ -248,7 +251,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-start lg:gap-10">
             <div className="grid min-w-0 gap-4 lg:sticky lg:top-52">
-              <ProductImageViewer category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} imageUrls={product.imageUrls} imageUrl={product.imageUrl} key={product.id} name={product.name} />
+              <ProductImageViewer catalogClassification={product.catalogClassification} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} imageUrls={product.imageUrls} imageUrl={product.imageUrl} key={product.id} name={product.name} />
               <div className="flex items-center gap-3 px-2 text-sm text-muted">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-brand"><Headphones className="h-5 w-5" aria-hidden="true" /></span>
                 <p><strong className="block font-bold text-ink">Cuidado de perto, também online.</strong><span className="text-xs">Atendimento pela equipe da Wimifarma em Ivaté.</span></p>

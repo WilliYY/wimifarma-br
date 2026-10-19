@@ -1,3 +1,4 @@
+import { productImageAlt } from "@/features/products/image-placeholder";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Loader2, Pill, SearchX, Sparkles } from "lucide-react";
@@ -56,7 +57,7 @@ function ResultItem({
       <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-md border border-line bg-white">
         {item.imageUrl ? (
           <Image
-            alt=""
+            alt={productImageAlt(item.name, item.imageUrl)}
             className="h-full w-full object-contain p-1"
             height={56}
             src={item.imageUrl}
@@ -64,7 +65,7 @@ function ResultItem({
             width={56}
           />
         ) : (
-          <ProductImagePlaceholder category={item.category} requiresPrescription={item.requiresPrescription} className="h-full w-full p-1" />
+          <ProductImagePlaceholder catalogClassification={item.catalogClassification} category={item.category} requiresPrescription={item.requiresPrescription} className="h-full w-full p-1" />
         )}
       </span>
 

@@ -34,6 +34,7 @@ type GeminiResponse = {
 
 const productSelect = {
   inventorySource: true,
+  catalogClassification: true,
   activeIngredients: true,
   brand: true,
   category: true,
@@ -58,6 +59,7 @@ function serializeCatalogProduct(product: CatalogProduct): MiaubyCatalogSource {
     category: product.category,
     id: product.id,
     imageUrl: publicProductImageUrl(product),
+    catalogClassification: product.catalogClassification,
     isPopularPharmacy: product.isPopularPharmacy,
     name: product.name,
     price: product.price.toString(),

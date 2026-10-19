@@ -108,14 +108,15 @@ export default async function Page() {
     getPublicCategories(),
   ]);
   const featuredProducts = products.map(({ reviews: productReviews, ...product }) => {
+    const sale = toSaleProduct(product);
     const rating = summarizeProductReviews(
       productReviews.map((review) => review.rating),
     );
 
     return {
-      ...toSaleProduct(product),
+      ...sale,
       featuredPosition: product.featuredPosition as number,
-      imageUrl: product.imageUrl as string,
+      imageUrl: sale.imageUrl as string,
       ratingAverage: rating.average,
       ratingCount: rating.count,
     };

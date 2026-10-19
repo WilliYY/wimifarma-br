@@ -1,3 +1,4 @@
+import { productImageAlt } from "@/features/products/image-placeholder";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
@@ -90,7 +91,7 @@ export default async function SearchPage({ searchParams }: Props) {
             <ol className="divide-y divide-line px-4">{sidebar.products.map((product, index) => <li key={product.id}>
               <Link className="group flex min-h-28 items-center gap-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" href={`/produto/${product.slug}`}>
                 <span aria-hidden="true" className="self-start pt-1 text-xs font-bold text-muted">{String(index + 1).padStart(2, "0")}</span>
-                <span className="flex h-16 w-14 shrink-0 items-center justify-center">{product.imageUrl ? <Image alt="" className="h-full w-full object-contain" height={64} src={product.imageUrl} width={56} /> : <ProductImagePlaceholder category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" />}</span>
+                <span className="flex h-16 w-14 shrink-0 items-center justify-center">{product.imageUrl ? <Image alt={productImageAlt(product.name, product.imageUrl)} className="h-full w-full object-contain" height={64} src={product.imageUrl} width={56} /> : <ProductImagePlaceholder catalogClassification={product.catalogClassification} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" />}</span>
                 <span className="min-w-0"><span className="line-clamp-3 text-xs font-semibold leading-5 text-ink group-hover:text-brand">{productDisplayName(product.name)}</span><strong className="mt-2 block text-base text-brand">{formatCurrency(Number(product.promotionalPrice ?? product.price))}</strong></span>
               </Link>
             </li>)}</ol>

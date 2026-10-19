@@ -1,5 +1,7 @@
 "use client";
 
+import { productImageAlt } from "@/features/products/image-placeholder";
+
 import Image from "next/image";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import Link from "next/link";
@@ -16,6 +18,7 @@ import type { FormEvent } from "react";
 import { siteConfig } from "@/lib/site";
 
 type MiaubyProduct = {
+  catalogClassification?: unknown;
   brand: string | null;
   category: string | null;
   id: string;
@@ -259,14 +262,14 @@ export function FloatingWhatsApp() {
                           <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white">
                             {product.imageUrl ? (
                               <Image
-                                alt=""
+                                alt={productImageAlt(product.name, product.imageUrl)}
                                 className="h-full w-full object-contain"
                                 height={72}
                                 src={product.imageUrl}
                                 width={72}
                               />
                             ) : (
-                              <ProductImagePlaceholder category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" />
+                              <ProductImagePlaceholder catalogClassification={product.catalogClassification} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" />
                             )}
                           </span>
                           <span className="min-w-0 flex-1">

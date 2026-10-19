@@ -39,7 +39,7 @@ export function ProductImageViewer({ imageUrl, imageUrls = [], name, ...identity
     centerImage();
     return () => observer.disconnect();
   }, [zoom, currentImage]);
-  if (!currentImage) {
+  if (identity.requiresPrescription || !currentImage) {
     return (
       <div className="flex aspect-square max-h-[32rem] flex-col items-center justify-center gap-4 rounded-3xl border border-line bg-white text-muted">
         <ProductImagePlaceholder {...identity} className="h-64 w-full max-w-xs sm:h-80" showLabel />

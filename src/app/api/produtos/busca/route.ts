@@ -9,6 +9,7 @@ function serializeProduct(product: SearchCatalogProduct): PublicProductSearchIte
   return {
     cashbackEnabled: product.cashbackEnabled, cashbackRateBps: product.cashbackRateBps,
     activeIngredients: product.activeIngredients, brand: product.brand, category: product.category,
+    catalogClassification: product.catalogClassification,
     id: product.id, imageUrl: product.imageUrl, name: product.name,
     price: product.price, promotionalPrice: product.promotionalPrice,
     requiresPrescription: product.requiresPrescription, prescriptionType: product.prescriptionType,

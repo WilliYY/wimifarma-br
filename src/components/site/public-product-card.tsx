@@ -1,3 +1,4 @@
+import { productImageAlt } from "@/features/products/image-placeholder";
 import Image from "next/image";
 import Link from "next/link";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
@@ -29,6 +30,7 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
     category: product.category,
     id: product.id,
     imageUrl: product.imageUrl,
+    catalogClassification: product.catalogClassification,
     isPopularPharmacy: product.isPopularPharmacy,
     name: product.name,
     originalPriceCents: hasPromotion ? Math.round(normalPrice * 100) : null,
@@ -49,14 +51,14 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
       >
         {product.imageUrl ? (
           <Image
-            alt={product.name}
+            alt={productImageAlt(product.name, product.imageUrl)}
             className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
             height={240}
             src={product.imageUrl}
             width={240}
           />
         ) : (
-          <ProductImagePlaceholder category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" showLabel />
+          <ProductImagePlaceholder catalogClassification={product.catalogClassification} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" showLabel />
         )}
         {hasPromotion ? (
           <span className="absolute left-3 top-3 rounded-sm bg-brand-soft px-2 py-1 text-[0.68rem] font-black text-brand">

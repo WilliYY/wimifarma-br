@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-18 - Expansão por relatório e ilustrações Rx
+
+- Relatório FAR usado para priorização local, sem converter códigos internos em EAN. Novos lotes exigem conferência exata na ANB/Profarma, evidência, classificação e percentual; contratos em [70](70-expansao-catalogo-relatorio.md).
+- Acréscimos escolhidos por apresentação: Dove/Nivea 20%, genéricos/similares baratos 50%, segmento ético 10%; caros são avaliados individualmente. Refresh preserva percentual manual, estoque físico, cotas, reservas e histórico.
+- Direção visual anterior substituída pelo titular: Rx público usa ilustração institucional por classe, sem apagar fotos originais do banco/painel. MIP/perfumaria continuam com fotos verificadas. Frete estimado permanece rascunho sem aprovação automática.
+
 ## 2026-10-18 - Organização do catálogo e preço rápido
 
 - Classificação administrativa separa tipo, classe do medicamento, segmento ético e MIP/OTC; não altera a política de receita. Sete EANs genéricos e três similares do piloto conferidos na fonte oficial.
