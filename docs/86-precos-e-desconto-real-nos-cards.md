@@ -36,6 +36,14 @@ A condição unitária não deve ser multiplicada para reconstruir o total do pe
 - Revisão independente aprovou os dois arquivos sem achados acionáveis. Captura inicial do card inspecionada.
 - `npm.cmd run test:security`: 420/420; `git diff --check` passou.
 - `npm.cmd audit --omit=dev --audit-level=high --json`: zero vulnerabilidades. A auditoria completa continua com cinco alertas altos já existentes no ferramental de desenvolvimento (`@next/eslint-plugin-next`, `eslint-config-next`, `braces`, `fast-glob`, `micromatch`), zero críticos. Nenhuma dependência foi alterada.
-- Build Linux com lint/TypeScript e conferência publicada serão registrados após a execução.
+- Build Linux de produção (`npm run build` dentro do Docker) aprovado, incluindo lint e verificação TypeScript; 39 páginas estáticas geradas. Não foram repetidos lint/typecheck completos no Windows nesta etapa.
+
+## Publicação e conferência
+
+- Código em `61a90e3dd8fc235e88e2635f3e949e863957f44a` (`feat(catalog): highlight real Pix savings on product cards`), enviado ao GitHub e publicado apenas no app. Imagem anterior preservada para reversão.
+- Container `wimifarma-br-app` saudável, com revisão OCI igual ao commit do código. Imagem `sha256:aa4986a71cf3ae8783b127d2ca87c7303b0cb959fdc6d55ec795a9ba94a8329e`.
+- Conferência real em `https://wimifarma.com.br/catalogo?marca=Nivea&ordem=preco-asc`: os cinco primeiros sabonetes mostram referência de R$ 3,44, preço de R$ 3,34 no Pix, selo de 3%, preço sem desconto Pix e condição para uma unidade. O preço de R$ 3,44 também foi observado no site antes da atualização.
+- Inspeção visual publicada em 1280 px (quatro colunas atuais do catálogo) e 390 px (duas colunas), sem transbordamento horizontal. Capturas `precos-publicados.png` e `precos-publicados-390.png`. Outros itens conferidos exibem R$ 4,80 por R$ 4,66 e R$ 9,78 por R$ 9,49 no Pix.
+- Conferência pública somente de leitura: nenhum item adicionado ao carrinho, pedido, cobrança ou mensagem real. A preservação dos valores do carrinho e o arredondamento foram comprovados nos ensaios sintéticos.
 
 Capturas ficam em `outputs/precos-2026-10-20`, fora do Git. Ensaios usam dados sintéticos e rede interceptada, sem pedidos, cobranças ou mensagens reais. O hook não forneceu um novo escopo temporário; foi criado um escopo exclusivo com `task_cleanup.py init`, usado pelo executor e destinado à limpeza explícita ao concluir.

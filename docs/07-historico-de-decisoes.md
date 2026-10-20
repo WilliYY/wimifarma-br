@@ -4,6 +4,7 @@
 
 - Referências vêm do preço normal/promocional cadastrado, sem inverter o acréscimo de fornecedor ou fabricar preço anterior. Cards compráveis destacam o Pix real de 3%, com preço sem Pix e condição para uma unidade.
 - Carrinho conserva a base antes do Pix; checkout aplica a redução uma única vez no subtotal. Itens assistidos/indisponíveis mantêm seus fluxos. Contrato, limites de arredondamento e validação em [86](86-precos-e-desconto-real-nos-cards.md).
+- Publicado no app em `61a90e3`, com build Linux/lint/TypeScript aprovados, 420 testes de segurança e conferência real dos sabonetes NIVEA em desktop e celular. Auditoria de produção sem vulnerabilidades; cinco alertas altos de desenvolvimento permanecem registrados no documento 86.
 
 ## 2026-10-20 — Pagamentos e consultas no rodapé
 
