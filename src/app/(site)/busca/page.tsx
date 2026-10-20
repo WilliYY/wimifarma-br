@@ -6,8 +6,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, ChevronLeft, ChevronRight, Search, SearchX, TrendingUp } from "lucide-react";
 import { PublicProductCard } from "@/components/site/public-product-card";
+import { PrescriptionSearchDetails } from "@/components/site/prescription-search-details";
 import { getSearchCatalog, getSearchSidebar, SEARCH_PAGE_SIZE } from "@/features/products/search-catalog";
-import { isProductAssociation, productSearchHref } from "@/features/products/public-search";
+import { isPrescriptionSearchProduct, isProductAssociation, productSearchHref, productSearchPlan } from "@/features/products/public-search";
 import { catalogPageNumber } from "@/features/products/storefront";
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
@@ -29,10 +30,11 @@ export default async function SearchPage({ searchParams }: Props) {
   const query = searchQuery(params.q);
   const page = catalogPageNumber(params.pagina);
   const result = await getSearchCatalog(query, { page });
+  const topicSearch = productSearchPlan(query).topics.length > 0;
   if (page > 1 && !result.products.length) notFound();
   const singles = result.products.filter(product => !isProductAssociation(product));
   const associations = result.products.filter(isProductAssociation);
-  const sidebar = await getSearchSidebar([...result.products, ...result.relatedProducts]);
+  const sidebar = await getSearchSidebar([...result.products, ...result.relatedProducts], { topicSearch });
   const pages = Math.max(1, Math.ceil(result.count / SEARCH_PAGE_SIZE));
   const sections = [
     { id: "resultados", title: "Produtos encontrados", products: singles, description: null },
@@ -68,7 +70,9 @@ export default async function SearchPage({ searchParams }: Props) {
               <section className="scroll-mt-44" id={section.id} key={section.id}>
                 <h2 className="text-xl font-black text-ink">{section.title}</h2>
                 {section.description ? <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">{section.description}</p> : null}
-                <div className="mt-5 grid grid-cols-1 gap-4 min-[400px]:grid-cols-2 md:grid-cols-3">{section.products.map(product => <PublicProductCard key={product.id} product={product} />)}</div>
+                <div className="mt-5 grid grid-cols-1 gap-4 min-[400px]:grid-cols-2 md:grid-cols-3">{section.products.map(product => topicSearch && isPrescriptionSearchProduct(product)
+                  ? <Link className="col-span-full rounded-xl border border-line bg-white p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" href={`/produto/${product.slug}`} key={product.id}><PrescriptionSearchDetails item={product} /></Link>
+                  : <PublicProductCard key={product.id} product={product} />)}</div>
               </section>
             )) : (
               <div className="rounded-2xl border border-line bg-white px-6 py-12 sm:px-10">
@@ -83,7 +87,7 @@ export default async function SearchPage({ searchParams }: Props) {
               <span className="text-sm text-muted">Página {page} de {pages}</span>
               {page < pages ? <Link className="inline-flex min-h-11 items-center gap-1 rounded-full border border-line bg-white px-4 text-sm font-semibold" href={productSearchHref(query, page + 1)}>Próxima <ChevronRight className="h-4 w-4" /></Link> : null}
             </nav> : null}
-            {sections.some(section => section.id !== "resultados") ? <p className="text-xs leading-6 text-muted">Produtos relacionados ajudam a encontrar apresentações e marcas. A escolha ou troca de medicamento deve seguir a orientação do profissional de saúde.</p> : null}
+            {topicSearch || sections.some(section => section.id !== "resultados") ? <p className="text-xs leading-6 text-muted">A escolha ou troca de medicamento deve seguir a orientação do profissional de saúde.</p> : null}
           </div>
 
           <aside aria-label={sidebar.title} className="min-w-0 rounded-2xl border border-line bg-white lg:sticky lg:top-40">

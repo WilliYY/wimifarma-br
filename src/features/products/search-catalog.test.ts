@@ -78,3 +78,32 @@ test("sem vendas reais a lateral se identifica como relevantes", async () => {
   assert.equal((await service.getSearchSidebar([product("a")] as never)).title, "Relevantes para sua busca");
   assert.equal((await service.getSearchSidebar([])).products.length, 0);
 });
+
+test("assuntos usam identidades completas parametrizadas e não trazem alternativas fora do filtro", async () => {
+  const queries: Prisma.Sql[] = [];
+  const service = await fixture({
+    $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return [{ id: "a", total: 1 }]; },
+    product: { findMany: async () => [product("a")] },
+  });
+  await service.getSearchCatalog("pressão alta 50mg");
+  assert.equal(queries.length, 1);
+  assert.match(queries[0].text, /unnest\(p\."activeIngredients"\)/);
+  assert.match(queries[0].text, /unnest\(p\."searchTerms"\)/);
+  assert.ok(queries[0].values.includes("losartana potassica"));
+  assert.ok(queries[0].values.includes("besilato de anlodipino"));
+  assert.ok(queries[0].values.includes("(^| )50 ?mg($| )"));
+  assert.equal(queries[0].values.includes("(^| )pressao"), false);
+  assert.doesNotMatch(queries[0].text, /losartana|pressao|anlodipino/);
+  await service.getSearchCatalog("diabetes tipo 2");
+  assert.equal(queries[1].values.some(value => String(value).includes("[^0-9.,])2")), false);
+  const before = queries.length;
+  await service.getSearchCatalog("não quero para pressão");
+  assert.equal(queries.length, before);
+});
+
+test("relação por assunto exclui Rx da lateral promocional, conservando a busca literal", async () => {
+  const service = await fixture({ orderItem: { groupBy: async () => [] } });
+  const rx = product("rx");
+  assert.equal((await service.getSearchSidebar([rx] as never, { topicSearch: true })).products.length, 0);
+  assert.equal((await service.getSearchSidebar([rx] as never)).products.length, 1);
+});

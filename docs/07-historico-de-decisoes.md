@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-20 — Busca por assuntos e termos populares
+
+- Mapa revisado de relações de busca por sintomas/condições, usando ingredientes completos, termos explícitos e nomes; sem IA externa ou inferência a partir de advertências.
+- Mesmo serviço paginado para autocomplete e resultados; condições específicas, dose e SKU preservados. Rx por assunto usa relação neutra, sem imagens ou promoções; busca literal mantém apresentação autorizada.
+- Não muda catálogo, estoque, preço, receita ou compra. Fontes, precisão e limite regulatório em `93-busca-por-assuntos.md`.
+
 ## 2026-10-20 — Crédito opcional por falta na distribuidora
 
 - ADMIN pode propor crédito para unidades indisponíveis de pedido pago, mantendo ao menos uma unidade entregável. O cliente escolhe aceitar crédito ou solicitar reembolso. Nenhum crédito é imposto ou emitido automaticamente.

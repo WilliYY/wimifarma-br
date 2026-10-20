@@ -1,4 +1,5 @@
 import type { PrescriptionType } from "./purchase-policy";
+import { searchTopics, type SearchTopic } from "./search-topics";
 
 export type ProductSearchSource = {
   activeIngredients: string[];
@@ -34,6 +35,11 @@ export type SearchRankableProduct = {
   id: string;
   name: string;
   searchText: string;
+  activeIngredients?: string[];
+  searchTerms?: string[];
+  category?: string | null;
+  catalogClassification?: unknown;
+  sku?: string | null;
 };
 
 export type RelatedProduct = {
@@ -86,6 +92,55 @@ export function productSearchHref(query: string, page = 1) {
   return `/busca?${params.toString()}`;
 }
 
+export function isPrescriptionSearchProduct(product: { requiresPrescription: boolean; prescriptionType?: PrescriptionType }) {
+  return product.requiresPrescription || Boolean(product.prescriptionType && product.prescriptionType !== "UNREVIEWED");
+}
+
+export function productSearchPlan(query: string) {
+  let remaining = query.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const topics: SearchTopic[] = [];
+  // Longest phrase wins: "pressao baixa" and "diabetes tipo 1" cannot fall
+  // through to the generic topic. Preserve original punctuation for doses.
+  const aliases = searchTopics.flatMap(topic => topic.aliases.map(alias => ({ topic, alias })))
+    .sort((a, b) => b.alias.length - a.alias.length);
+  for (const { topic, alias } of aliases) {
+    const pattern = new RegExp(`(^|[^a-z0-9])${alias.replace(/ /g, "[\\s-]+")}(?=$|[^a-z0-9])`, "g");
+    if (!pattern.test(remaining)) continue;
+    remaining = remaining.replace(pattern, "$1 ");
+    if (!topics.includes(topic)) topics.push(topic);
+  }
+  const normalized = normalizeProductSearch(query);
+  const blocked = topics.length > 0 && (
+    /\b(nao|sem|contraindic[a-z]*|alerg[a-z]*|gravida|gravidez|gestante|infantil|crianca|criancas|bebe)\b/.test(normalized) ||
+    /\btipo\s*[013456789]\b/.test(normalizeProductSearch(remaining)) ||
+    (topics.some(topic => topic.id === "high-pressure") && /\bbaixa\b/.test(normalized)) ||
+    (topics.some(topic => topic.id === "cholesterol") && /\bbaixo\b/.test(normalized))
+  );
+  return { topics, blocked, patterns: productSearchPatterns(remaining), dosePatterns: productDosePatterns(remaining) };
+}
+
+function isMedicineSearchProduct(product: SearchRankableProduct) {
+  const classification = product.catalogClassification;
+  if (classification && typeof classification === "object" && "kind" in classification) {
+    return classification.kind === "MEDICINE";
+  }
+  return /^medicamentos?$/.test(normalizeProductSearch(product.category ?? ""));
+}
+
+export function matchesSearchTopic(product: SearchRankableProduct, topic: SearchTopic) {
+  const terms = (product.searchTerms ?? []).map(normalizeProductSearch);
+  if (terms.some(term => topic.aliases.includes(term))) return true;
+  if (new RegExp(topicNamePattern(topic)).test(normalizeProductSearch(product.name))) return true;
+  if (!isMedicineSearchProduct(product)) return false;
+  if (topic.namePattern && new RegExp(topic.namePattern).test(normalizeProductSearch(product.name))) return true;
+  const ingredients = (product.activeIngredients ?? []).flatMap(value => value.split("+").map(normalizeProductSearch));
+  return ingredients.some(ingredient => topic.ingredients.includes(ingredient));
+}
+
+export function topicNamePattern(topic: SearchTopic) {
+  return `(^| )(${topic.aliases.join("|")})($| )`;
+}
+
 export function ingredientSearchIdentities(ingredients: string[]) {
   return [...new Set(ingredients.flatMap(ingredient => ingredient.split("+").map(part => {
     const normalized = normalizeProductSearch(part);
@@ -133,12 +188,14 @@ export function rankProductsForQuery<T extends SearchRankableProduct>(
   query: string,
 ) {
   const normalizedQuery = normalizeProductSearch(query);
-  const patterns = productSearchPatterns(query).map(pattern => new RegExp(pattern));
-  const doses = productDosePatterns(query).map(pattern => new RegExp(pattern, "i"));
-  if (!patterns.length) return [];
+  const plan = productSearchPlan(query);
+  const patterns = plan.patterns.map(pattern => new RegExp(pattern));
+  const doses = plan.dosePatterns.map(pattern => new RegExp(pattern, "i"));
+  if (plan.blocked || (!patterns.length && !plan.topics.length)) return [];
 
   return products
-    .filter((product) => patterns.every(pattern => pattern.test(product.searchText)) && doses.every(dose => dose.test(product.name)))
+    .filter((product) => (product.sku && normalizeProductSearch(product.sku) === normalizedQuery) ||
+      (plan.topics.every(topic => matchesSearchTopic(product, topic)) && patterns.every(pattern => pattern.test(product.searchText)) && doses.every(dose => dose.test(product.name))))
     .map((product) => {
       const normalizedName = normalizeProductSearch(product.name);
       let score = 0;

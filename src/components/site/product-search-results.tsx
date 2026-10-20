@@ -3,7 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Loader2, Pill, SearchX, Sparkles } from "lucide-react";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
-import { productSearchHref, type PublicProductSearchItem } from "@/features/products/public-search";
+import { isPrescriptionSearchProduct, productSearchHref, productSearchPlan, type PublicProductSearchItem } from "@/features/products/public-search";
+import { PrescriptionSearchDetails } from "./prescription-search-details";
 import { cn, formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
 
@@ -27,6 +28,7 @@ function ResultItem({
   onActiveChange,
   onChoose,
   optionIdPrefix,
+  topicSearch,
 }: {
   activeId: string | null;
   item: PublicProductSearchItem;
@@ -34,7 +36,15 @@ function ResultItem({
   onActiveChange: (id: string) => void;
   onChoose: () => void;
   optionIdPrefix: string;
+  topicSearch: boolean;
 }) {
+  if (topicSearch && isPrescriptionSearchProduct(item)) return (
+    <Link aria-selected={activeId === item.id} className={cn("block rounded-md px-3 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/35", activeId === item.id ? "bg-surface-subtle" : "hover:bg-surface-subtle")}
+      href={`/produto/${item.slug}`} id={`${optionIdPrefix}-${item.id}`} onClick={onChoose}
+      onFocus={() => onActiveChange(item.id)} onMouseMove={() => onActiveChange(item.id)} role="option">
+      <PrescriptionSearchDetails item={item} />
+    </Link>
+  );
   const currentPrice = Number(item.promotionalPrice ?? item.price);
   const hasPromotion = Boolean(
     item.promotionalPrice && Number(item.promotionalPrice) < Number(item.price),
@@ -119,6 +129,7 @@ export function ProductSearchResults({
   relatedProducts,
 }: ProductSearchResultsProps) {
   const trimmedQuery = query.trim();
+  const topicSearch = productSearchPlan(trimmedQuery).topics.length > 0;
 
   return (
     <div
@@ -162,6 +173,7 @@ export function ProductSearchResults({
                   onActiveChange={onActiveChange}
                   onChoose={onChoose}
                   optionIdPrefix={optionIdPrefix}
+                  topicSearch={topicSearch}
                 />
               ))}
             </div>
@@ -183,6 +195,7 @@ export function ProductSearchResults({
                     onActiveChange={onActiveChange}
                     onChoose={onChoose}
                     optionIdPrefix={optionIdPrefix}
+                    topicSearch={topicSearch}
                   />
                 ))}
               </div>

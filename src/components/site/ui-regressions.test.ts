@@ -48,6 +48,28 @@ async function fixture(kind: "search" | "checkout" | "header", run: (page: Page)
 
 const product = (name: string) => ({ id: name, name, slug: name.toLowerCase(), activeIngredients: [], price: "10.00", imageUrl: null });
 
+test("busca por assunto apresenta Rx sem foto/promoção e mantém a navegação do autocomplete", async () => {
+  await fixture("search", async page => {
+    const rx = { ...product("Losartana 50mg"), brand: "Fabricante", requiresPrescription: true, prescriptionType: "ORDINARY", imageUrl: "/rx.webp", promotionalPrice: "8.00" };
+    await page.route("**/api/produtos/busca?*", route => route.fulfill({ json: { data: { products: [rx], relatedProducts: [] } } }));
+    await page.clock.install();
+    await page.goto("http://127.0.0.1:3198");
+    const input = page.getByRole("combobox");
+    await input.fill("pressão"); await page.clock.runFor(250);
+    const result = page.getByRole("option", { name: /Losartana/ });
+    await expect(result).toBeVisible();
+    await expect(result.locator("[data-prescription-search]")).toHaveCount(1);
+    await expect(result.locator("img")).toHaveCount(0);
+    await expect(result).not.toContainText(/10,00|OFF|cashback|Pix|frete/i);
+    await input.press("ArrowDown");
+    assert.equal(await input.getAttribute("aria-activedescendant"), await result.getAttribute("id"));
+    await input.press("Enter");
+    assert.deepEqual(await page.evaluate("window.navigations"), ["/busca?q=press%C3%A3o"]);
+    await input.click(); await input.fill("losartana"); await page.clock.runFor(250);
+    await expect(page.getByRole("option", { name: /Losartana/ }).locator("img")).toHaveCount(1);
+  });
+});
+
 test("Enter opens current search immediately, including during debounce and after arrow selection", async () => {
   await fixture("search", async page => {
     await page.route("**/api/produtos/busca?*", route => {

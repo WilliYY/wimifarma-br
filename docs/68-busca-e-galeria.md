@@ -1,5 +1,9 @@
 # Busca de produtos e galeria
 
+## Evolução de 20/10/2026
+
+Busca por assuntos adicionada ao mesmo serviço de autocomplete/resultados. Relações revisadas por princípio ativo, separação de condições diferentes, precisão de dose e relação neutra de Rx somente nas consultas por assunto. Contrato, fontes e validação em [93-busca-por-assuntos.md](93-busca-por-assuntos.md). Substitui a ausência de sinônimos clínicos do escopo de 18/10; busca literal e publicação de fotos anteriormente autorizada permanecem.
+
 ## Escopo de 18/10/2026
 
 - Removidos os selos visuais `Exige receita` no detalhe e `Receita` no autocomplete. A classificação, a compra normal de receita comum e a conferência farmacêutica antes da dispensação continuam conforme `45-pedido-online-e-conferencia-de-receita.md`. Controlados e produtos assistidos conservam suas regras.

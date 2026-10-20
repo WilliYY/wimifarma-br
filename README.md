@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Busca por assuntos e termos populares, com precisão de dose e relações revisadas: [documento 93](docs/93-busca-por-assuntos.md).
+
 Crédito opcional por unidade indisponível na distribuidora, com aceite do cliente, extrato e uso no checkout: [documento 92](docs/92-creditos-por-itens-faltantes.md).
 
 Comparação ADMIN de transportadoras por etiqueta, viagem rateada, coleta, seguro externo e provisão de retorno, com aceitação da carga e pendências explícitas: [documento 91](docs/91-comparacao-transportadoras-custos.md).

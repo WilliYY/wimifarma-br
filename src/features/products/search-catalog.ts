@@ -1,7 +1,7 @@
 import { Prisma } from "@/generated/prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
-import { ingredientSearchIdentities, normalizeProductSearch, productDosePatterns, productSearchPatterns } from "./public-search";
+import { ingredientSearchIdentities, isPrescriptionSearchProduct, normalizeProductSearch, productSearchPlan, topicNamePattern } from "./public-search";
 
 export const SEARCH_PAGE_SIZE = 24;
 
@@ -15,14 +15,36 @@ const searchSelect = {
 } satisfies Prisma.ProductSelect;
 
 function queryCondition(query: string) {
-  const patterns = productSearchPatterns(query);
+  const plan = productSearchPlan(query);
+  if (plan.blocked) return Prisma.sql`FALSE`;
   const clauses = [
-    ...patterns.map(pattern => Prisma.sql`p."searchText" ~ ${pattern}`),
-    ...productDosePatterns(query).map(pattern => Prisma.sql`p."name" ~* ${pattern}`),
+    ...plan.patterns.map(pattern => Prisma.sql`p."searchText" ~ ${pattern}`),
+    ...plan.dosePatterns.map(pattern => Prisma.sql`p."name" ~* ${pattern}`),
+    ...plan.topics.map(topic => {
+      const ingredient = topic.ingredients.length ? Prisma.sql`EXISTS (
+        SELECT 1 FROM unnest(p."activeIngredients") ingredient,
+          regexp_split_to_table(ingredient, '\\+') component
+        WHERE ${normalizedField(Prisma.sql`component`)} IN (${Prisma.join(topic.ingredients)}))` : Prisma.sql`FALSE`;
+      const name = topic.namePattern ? Prisma.sql`lower(p."name") ~ ${topic.namePattern}` : Prisma.sql`FALSE`;
+      return Prisma.sql`(
+        EXISTS (SELECT 1 FROM unnest(p."searchTerms") term
+          WHERE ${normalizedField(Prisma.sql`term`)} IN (${Prisma.join(topic.aliases)}))
+        OR ${normalizedField(Prisma.sql`p."name"`)} ~ ${topicNamePattern(topic)}
+        OR ((CASE WHEN p."catalogClassification" ? 'kind'
+          THEN p."catalogClassification"->>'kind' = 'MEDICINE'
+          ELSE ${normalizedField(Prisma.sql`p."category"`)} IN ('medicamento', 'medicamentos') END)
+          AND (${ingredient} OR ${name})))`;
+    }),
   ];
-  return patterns.length
+  const condition = clauses.length
     ? Prisma.sql`(${Prisma.join(clauses, " AND ")})`
     : Prisma.sql`FALSE`;
+  return plan.topics.length ? Prisma.sql`(${condition} OR ${normalizedField(Prisma.sql`p."sku"`)} = ${normalizeProductSearch(query)})` : condition;
+}
+
+function normalizedField(field: Prisma.Sql) {
+  return Prisma.sql`trim(regexp_replace(translate(lower(${field}),
+    'áàâãäéèêëíìîïóòôõöúùûüç', 'aaaaaeeeeiiiiooooouuuuc'), '[^a-z0-9]+', ' ', 'g'))`;
 }
 
 function searchOrder(query: string) {
@@ -36,7 +58,8 @@ function searchOrder(query: string) {
 
 export async function getSearchCatalog(query: string, { page = 1, pageSize = SEARCH_PAGE_SIZE, relatedLimit = 8 } = {}) {
   const cleanQuery = query.trim();
-  if (cleanQuery.length < 2 || cleanQuery.length > 80 || !productSearchPatterns(cleanQuery).length) {
+  const plan = productSearchPlan(cleanQuery);
+  if (cleanQuery.length < 2 || cleanQuery.length > 80 || plan.blocked || (!plan.patterns.length && !plan.topics.length)) {
     return { products: [], relatedProducts: [], count: 0 };
   }
   const prisma = getPrisma();
@@ -57,7 +80,7 @@ export async function getSearchCatalog(query: string, { page = 1, pageSize = SEA
   // Medical relationships come from registered ingredients, never category alone.
   const identities = ingredientSearchIdentities(products.slice(0, 4).flatMap(product => product.activeIngredients));
   const aliases = identities.slice(0, 8).flatMap(identity => identity === "losartana" ? ["losartana", "losartana potassica"] : [identity]);
-  const relatedIds = aliases.length && relatedLimit > 0
+  const relatedIds = !plan.topics.length && aliases.length && relatedLimit > 0
     ? await prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
       SELECT p."id" FROM "Product" p WHERE p."status" = 'ACTIVE' AND NOT ${condition}
       AND EXISTS (SELECT 1 FROM unnest(p."activeIngredients") ingredient,
@@ -75,8 +98,8 @@ export async function getSearchCatalog(query: string, { page = 1, pageSize = SEA
 
 export type SearchCatalogProduct = Awaited<ReturnType<typeof getSearchCatalog>>["products"][number];
 
-export async function getSearchSidebar(products: SearchCatalogProduct[]) {
-  const available = products.filter(product => product.stock > 0);
+export async function getSearchSidebar(products: SearchCatalogProduct[], { topicSearch = false } = {}) {
+  const available = products.filter(product => product.stock > 0 && (!topicSearch || !isPrescriptionSearchProduct(product)));
   if (!available.length) return { title: "Explore o catálogo", products: [] };
   const sales = await getPrisma().orderItem.groupBy({
     by: ["productId"],
