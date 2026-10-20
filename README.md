@@ -336,6 +336,8 @@ docker network connect wimifarma-br-network nginx-proxy-manager-app-1
 
 ## Documentacao
 
+- `docs/87-lote-enalapril-sinvastatina-atenolol-2026-10-20.md`: 54 novas apresentações conferidas, exclusões por identidade, comparação ANB/Profarma e contagem de 488 produtos ativos.
+
 - `docs/75-catalogo-vitrines-e-compra-distribuidor.md`: catálogo compacto e edição em massa, vitrines com fotografias, login e política de demanda por item de distribuidor.
 
 - `docs/59-banners-pessoas-e-produtos.md`: campanhas com pessoas, propagandas por marca, referências oficiais, prompts, assets e validação responsiva.

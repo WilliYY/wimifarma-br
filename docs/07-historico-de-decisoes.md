@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-20 — Catálogo por famílias e apresentação total
+
+- Publicadas 54 apresentações de enalapril, sinvastatina e atenolol, incluindo associações, com 77 ofertas elegíveis ANB/Profarma. Catálogo de 434 para 488 ativos; estoque físico, registros antigos e dados comerciais anteriores preservados.
+- Dois EANs foram excluídos antes da aplicação por conflito de dose/quantidade entre portais e a linha CMED selecionada. Conferência exige composição, forma e total de unidades, inclusive múltiplos blísteres; EAN/registro isolados não resolvem contradição.
+- Receita comum e ilustrações institucionais por classe preservadas; nenhuma foto nova, transportadora ou rotina de coleta habilitada. Fontes, validações, limites e pendências em [87](87-lote-enalapril-sinvastatina-atenolol-2026-10-20.md).
+
 ## 2026-10-20 — Comparação verdadeira de preços nos cards
 
 - Referências vêm do preço normal/promocional cadastrado, sem inverter o acréscimo de fornecedor ou fabricar preço anterior. Cards compráveis destacam o Pix real de 3%, com preço sem Pix e condição para uma unidade.
