@@ -56,6 +56,24 @@ A documentação atual mudou em 02/04/2026; não copiar automaticamente o aviso 
 - `npm.cmd audit --omit=dev --audit-level=high --json`: zero vulnerabilidades. Auditoria completa com nível moderate encontrou cinco alertas altos já existentes no ferramental de desenvolvimento (`@next/eslint-plugin-next`, `eslint-config-next`, `braces`, `fast-glob`, `micromatch`), zero críticos. Nenhuma dependência foi adicionada ou atualizada nesta tarefa.
 - `npm.cmd run prisma:validate` passou. Primeira publicação `ea18562`: build Linux passou e container ficou saudável; a conferência real identificou o bloqueio de imagens descrito acima.
 - RED do logo oficial e da CSP confirmado; após a correção, 17/17 testes focados passaram, incluindo imagem carregada, fallback e responsividade sob a política real. Revisão independente aprovou a permissão mínima e o SVG local, sem achados.
-- Rodada final de `npm.cmd run test:security`: 420/420 após o ajuste das imagens/CSP. Novo build e conferência pública dos logos serão registrados após execução. A suíte completa de todas as áreas não foi repetida para esta alteração de apresentação; a verificação financeira foi focada e a suíte obrigatória de segurança foi executada.
+- Rodada final de `npm.cmd run test:security`: 420/420 após o ajuste das imagens/CSP. A suíte completa de todas as áreas não foi repetida para esta alteração de apresentação; a verificação financeira foi focada e a suíte obrigatória de segurança foi executada.
+
+## Publicação e conferência final
+
+- Código final `0fb68a4541665b4798681650229f68e9778370fc`, após a implementação `ea18562`, enviado ao GitHub e atualizado no servidor por fast-forward. Build Linux de produção passou, incluindo lint e TypeScript; somente o app foi recriado, sem migração ou alteração de banco/proxy.
+- Container `wimifarma-br-app` saudável, com label da revisão final. Imagem `sha256:e90b3e8628dd98ea452a2b0d6bbfd199603bb0851e0cc051bcb7251a04e0f407`. Imagem anterior preservada em `wimifarma-br-app:pre-footer-0fb68a454166`.
+- Conferência real anônima na home e no produto de referência: seis bandeiras do catálogo, com logos carregados; símbolo Pix e marca Wimifarma também carregados (oito imagens do rodapé com `complete` e largura natural positiva).
+- Desktop padrão e celular de 390 px sem transbordamento horizontal, 128 bolhas preservadas e links corretos para Anvisa, Reclame AQUI e Google. O viewport temporário do navegador foi restaurado. Nenhum pedido, cobrança, avaliação ou cadastro externo foi criado.
+- Capturas finais inspecionadas: `outputs/footer-2026-10-20/footer-publicado.png` e `footer-publicado-390.png`, fora do Git. O build foi feito antes da troca, com guarda de revisão/imagem e recuperação da imagem anterior em caso de falha de saúde.
+
+## Arquivos e comandos principais
+
+- Interface: `site-footer.tsx`, `footer-payment-methods.tsx`, `footer-payment-methods-content.tsx`, `footer-payment-brand.tsx` e `site-footer.test.ts`, em `src/components/site`.
+- Catálogo/cache: `src/features/payments/integration.ts`, `payment-brands.ts`, `payment-brands.test.ts` e `integration-display.test.ts`.
+- Política de imagens: `next.config.ts` e `src/lib/security-headers.test.ts`; símbolo local em `public/payments/pix-symbol.svg`.
+- Documentação: `README.md`, documentos 07, 10, 47, 61 e este documento 84.
+- Comandos: runner `tsx --test` nos testes focados, `npm.cmd run test:security`, `lint`, `typecheck`, `prisma:validate`, auditorias NPM completa/produção, `git diff --check`, commit/push/pull, `docker build --target runner` e `docker compose up -d --no-deps --no-build app`. Comandos locais que geram temporários passaram pelo executor de limpeza da tarefa.
+
+Pendências desta pesquisa: eventual concessão oficial de selos, conferência sanitária vigente e decisão futura sobre proteção contra robôs. Nenhuma foi representada como já concluída. Os cinco alertas altos de desenvolvimento permanecem documentados acima; produção segue sem vulnerabilidades na auditoria executada.
 
 Capturas e logs ficam em `outputs` ou no escopo temporário da tarefa, fora do Git. Os ensaios não criam pedidos, cobranças, avaliações ou cadastros externos.
