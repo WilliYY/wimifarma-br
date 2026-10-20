@@ -4,7 +4,7 @@
 
 O titular pediu fotos reais para os dermocosméticos e itens de higiene/perfumaria sem imagem, incluindo os próximos cadastros, e autorizou comparar ofertas comerciais do eGAM. ANB e Profarma continuam prioritárias para consulta; DM e GAM também podem concorrer pelo menor custo elegível do **mesmo EAN/apresentação**. SantaCruz permanece referência de identidade/imagem nesta etapa.
 
-O lote preparado contém as 44 imagens que faltavam na ampliação do documento 77: 36 fontes oficiais Nivea e oito arquivos Profarma vinculados por EAN a Vichy, La Roche-Posay, Neutrogena e ISDIN. Revisão visual, fonte, horário e hashes ficam nos artefatos privados da operação e na auditoria de publicação. O publicador gera WebP de até 640 px, sem ampliar, limitado a 100 KB; imagens já existentes não são substituídas.
+O lote publicado contém as 44 imagens que faltavam na ampliação do documento 77: 36 fontes oficiais Nivea e oito arquivos Profarma vinculados por EAN a Vichy, La Roche-Posay, Neutrogena e ISDIN. Revisão visual, fonte, horário e hashes ficam nos artefatos privados da operação e na auditoria de publicação. O publicador gera WebP de até 640 px, sem ampliar, limitado a 100 KB; imagens já existentes não são substituídas.
 
 ### Apresentações e atualidade
 
@@ -33,4 +33,16 @@ Não foi instalado coletor independente, enviado pedido ou ativado transporte. A
 
 ## Verificação e implantação
 
-Implementação e lote passam por regressões de publicação/galeria/identidade/permissões, suíte de fornecedores, segurança, lint, typecheck, Prisma e build. A execução usa ADMIN ativo, dry-run antes de aplicar, backup e comparação dos dados protegidos. Evidências finais da publicação são acrescentadas após a validação em produção.
+Código `b6453ea` publicado em 19/10/2026, com migração aditiva GAM e aplicação por ADMIN ativo após backup, QA sintético e dry-run sem escrita. Revisão independente aprovou as correções de aprovação incidental, mudança de identidade e troca de galeria. As 44 fotos, oito ofertas e uma correção de título produziram 53 registros auditados.
+
+A conferência de produção preservou por hashes todos os preços-base e percentuais, estoque físico, ofertas anteriores (inclusive datas/cotas), pedidos, usuários, clientes, reservas, assets e auditorias preexistentes. O total permanece **377 produtos, 375 ativos**. Os **304 itens da ampliação agora têm capa pública**. O banco QA sintético foi removido após conferir seu nome e marcador exclusivos; evidências privadas foram preservadas. Nenhum pedido, pagamento, etiqueta ou mensagem comercial foi criado.
+
+Validação fresca:
+
+- `npm.cmd run test:catalog-photos`: 35 testes; `test:suppliers`: 99; `test:security`: 400. Algumas regressões de foto também fazem parte da suíte de segurança; as contagens não representam testes únicos somados.
+- `npm.cmd run lint`, `typecheck`, `prisma:validate`, `build` e `git diff --check`: aprovados. Build Docker da versão exata também aprovado.
+- Auditoria `npm.cmd audit --omit=dev --audit-level=high`: zero alertas. Auditoria completa conserva cinco alertas high de desenvolvimento em `braces`, `micromatch`, `fast-glob`, `@next/eslint-plugin-next` e `eslint-config-next`, já registrados anteriormente; não foram ocultados nem corrigidos fora deste escopo.
+- HTTP público: 44/44 arquivos WebP retornaram 200 e tamanho permitido; 44 páginas de produto contêm a capa correta. Revisão de carrinho para os 44 itens retornou imagem e preço esperados. Home e catálogo retornaram 200. Nivea Men Defende 200 ml passou de R$21,22 registrado para **R$20,02**, com o percentual ADMIN preservado.
+- A revisão visual dos arquivos foi concluída. A conferência visual final no Chrome ficou limitada por falhas da conexão da extensão; a confirmação pública acima é por HTTP/renderização HTML e API de revisão do carrinho, sem alegar sessão visual concluída.
+
+Arquivos principais: `photo-publication-policy.ts` e regressões, APIs de produtos, serviços de publicação em massa/classificação, importador/publicador e seus testes, schema/migração Prisma e configuração de fornecedor ADMIN. Contratos atualizados em README, documentos 07, 68 e este documento. Os artefatos de fonte, custo e operação em `outputs/fotos-gam-2026-10-19/` ficam fora do Git e do build.
