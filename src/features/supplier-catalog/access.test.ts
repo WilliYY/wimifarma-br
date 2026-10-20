@@ -107,8 +107,8 @@ test("offer POST rechecks actor after lock and refuses a revoked ADMIN without w
   assert.equal(f.calls.audits.length, 0);
 });
 
-test("ADMIN can persist only the two approved commercial pilot suppliers", async () => {
-  for (const supplier of ["ANB", "PROFARMA"]) {
+test("ADMIN can persist only the three approved commercial pilot suppliers", async () => {
+  for (const supplier of ["ANB", "PROFARMA", "DM"]) {
     const f = await harness();
     assert.equal((await f.run("POST", input({ supplier }))).status, 200, supplier);
     assert.equal(f.calls.writes[0].create.supplier, supplier);

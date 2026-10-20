@@ -2,7 +2,7 @@ import { z } from "zod";
 import { normalizeGtin } from "./commerce";
 
 export const SupplierCatalogOfferSchema = z.object({
-  supplier: z.enum(["ANB", "PROFARMA"]),
+  supplier: z.enum(["ANB", "PROFARMA", "DM"]),
   productId: z.string().trim().min(1).max(100),
   externalCode: z.string().trim().min(1).max(150),
   eanNormalized: z.string().transform(value => normalizeGtin(value)).refine(value => value !== null, "EAN inválido."),

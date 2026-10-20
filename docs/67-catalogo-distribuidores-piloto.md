@@ -1,5 +1,7 @@
 # Catálogo de distribuidores — piloto por EAN
 
+Atualização de 19/10/2026: DM Paraná autorizada como terceira fonte comercial, mantendo ANB/Profarma como consultas preferenciais. Comparação restrita ao mesmo GTIN e apresentação, com menor custo final elegível. Ofertas de GAM/SantaCruz continuam recusadas no importador. Migração aditiva do enum, lote de dermocosméticos e situação de publicação em [77](77-expansao-dermocosmeticos-e-dm.md). As seções de 17/18 abaixo são históricas; não representam retirada da autorização atual da DM.
+
 Atualização de 18/10/2026: apenas ANB e Profarma permanecem como fontes comerciais. GAM/SantaCruz servem somente de referência. Atualização conserva cotas/reservas e a rotina Codex diária às 8h/12h/17h depende de PC/navegador. Revisão posterior do titular autorizou cópias públicas de fotos conferidas; os originais internos seguem protegidos e a caixa é fallback. O prazo deixa de aparecer nos cards/detalhe, permanecendo no carrinho/checkout. Decisão e ressalva regulatória em [busca e galeria](68-busca-e-galeria.md). Procedimento em [rotina](68-rotina-piloto-fornecedores.md); a seção de 17/10 abaixo é histórico da primeira entrega.
 
 ## Regras aprovadas em 17/10/2026

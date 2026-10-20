@@ -17,11 +17,21 @@ test("compares GAM with existing suppliers and rejects unsupported supplier code
   const result = compareSupplierOffers({ ean: offer.ean, quantity: 2, offers: [offer, gam] }, now);
   assert.equal(result.best?.supplier, "GAM");
   assert.equal(result.options[0].totalCostCents, 1600);
-  for (const supplier of ["ANB", "SANTA_CRUZ", "PROFARMA"]) {
+  for (const supplier of ["ANB", "SANTA_CRUZ", "PROFARMA", "DM"]) {
     assert.equal(SupplierOfferSchema.safeParse({ ...offer, supplier }).success, true);
   }
   for (const supplier of ["OTHER", "gam", "", "GAM "]) {
     assert.equal(SupplierOfferSchema.safeParse({ ...offer, supplier }).success, false);
+  }
+});
+
+test("DM competes on total eligible cost without changing reference suppliers", () => {
+  const dm = SupplierOfferSchema.parse({ ...offer, supplier: "DM", unitCostCents: 700, inboundUnitCostCents: 100 });
+  const result = compareSupplierOffers({ ean: offer.ean, quantity: 2, offers: [offer, dm] }, now);
+  assert.equal(result.best?.supplier, "DM");
+  assert.equal(result.options[0].totalCostCents, 1600);
+  for (const changes of [{ ean: "96385074" }, { validUntil: new Date(now).toISOString() }, { stockQuantity: 0 }, { availability: "UNAVAILABLE" as const }]) {
+    assert.equal(compareSupplierOffers({ ean: offer.ean, quantity: 2, offers: [offer, { ...dm, ...changes }] }, now).best?.supplier, "ANB");
   }
 });
 

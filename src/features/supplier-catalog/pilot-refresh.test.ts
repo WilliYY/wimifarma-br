@@ -11,6 +11,28 @@ const input = (extra = {}) => SupplierCatalogOfferSchema.parse({ supplier: "ANB"
 const previous = (extra = {}) => ({ ...input(), id: "stored", reservedQuantity: 1, committedQuantity: 1,
   allocationQuantity: 2, ...extra });
 
+test("DM refresh chooses the lowest valid cost and repeats without restoring consumed allocation", () => {
+  const dm = input({ supplier: "DM", unitCostCents: 200, sourceUrl: "https://portal.dmparana.com.br/" });
+  const stored = previous({ supplier: "DM", id: "dm-stored", allocationQuantity: 4 });
+  const other = previous({ supplier: "PROFARMA", id: "profarma-stored", allocationQuantity: 5 });
+  const before = structuredClone([stored, other]);
+  const first = planPilotRefresh(ean, [dm], [stored, other], now, 4000);
+  const refreshed = { ...stored, ...first.updates[0] };
+  const repeated = planPilotRefresh(ean, [dm], [refreshed, other], now, 4000);
+  assert.deepEqual(repeated, first);
+  assert.equal(first.best?.id, "dm-stored");
+  assert.equal(first.best?.unitPriceCents, 280);
+  assert.equal(first.best?.purchaseLimit, 2);
+  assert.equal(first.best?.reservedQuantity, 1);
+  assert.equal(first.best?.committedQuantity, 1);
+  assert.equal(first.updates[0].allocationQuantity, 4);
+  assert.deepEqual([stored, other], before);
+  assert.throws(() => planPilotRefresh(ean, [input({ supplier: "DM", eanNormalized: "7896181915638" })], [], now), /identity/);
+  assert.throws(() => planPilotRefresh(ean, [dm], [], now + 86_400_000), /current/);
+  assert.throws(() => planPilotRefresh(ean, [input({ supplier: "DM", retailCeilingCents: null })], [], now), /ceiling/);
+  assert.equal(planPilotRefresh(ean, [input({ supplier: "DM", retailCeilingCents: 279, unitCostCents: 200 })], [], now, 4000).best, null);
+});
+
 test("routine refresh cannot restore consumed quota or disregard reservations", () => {
   const plan = planPilotRefresh(ean, [input()], [previous()], now);
   assert.equal(plan.updates[0].allocationQuantity, 2);

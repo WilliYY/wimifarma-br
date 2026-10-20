@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-19 — DM Paraná e expansão de dermocosméticos
+
+- Titular autorizou DM como terceira fonte comercial, com consultas preferenciais ANB/Profarma e menor custo elegível por EAN. Enum aditivo, importador de até três ofertas e painéis reutilizam as regras de validade, markup, estoque físico separado e auditoria.
+- Acréscimo de 20% confirmado também para outras marcas de dermocosméticos. Propostas e fotos têm revisão própria; divergências de apresentação/unidade não são resolvidas por aproximação.
+- Não foi ativado coletor na VPS nem retomada a rotina pausada. Situação da publicação, evidências e limites em [77](77-expansao-dermocosmeticos-e-dm.md).
+
 ## 2026-10-19 — Escopo do app Android e iOS
 
 - Titular confirmou app da farmácia nas lojas Google Play e App Store, com os mesmos produtos e funções do site. Dados e regras devem ter uma fonte única; paridade de telas/recursos exige manutenção e distribuição coordenadas.

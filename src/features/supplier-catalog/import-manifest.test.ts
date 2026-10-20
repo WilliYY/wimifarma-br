@@ -12,6 +12,18 @@ const mixed = () => ({ manifestVersion: 1, products: [{ ...row, supplierMarkupBp
   catalogClassification: { kind: "MEDICINE", medicineClass: "GENERIC", ethical: false, otc: false },
   evidence: { identity: { ...evidence }, classification: { ...evidence } } }] });
 
+test("manifest accepts three distinct approved suppliers and rejects references or duplicate DM", () => {
+  const input = mixed();
+  const offers = ["ANB", "PROFARMA", "DM"].map(supplier => ({ ...row.offers[0], supplier }));
+  const manifest = (rows: typeof offers) => ({ ...input, products: [{ ...input.products[0], offers: rows }] });
+  assert.deepEqual(supplierImportManifestSchema.parse(manifest(offers)).products[0].offers.map(item => item.supplier), ["ANB", "PROFARMA", "DM"]);
+  for (const supplier of ["GAM", "SANTA_CRUZ", "OTHER", "dm", "DM "]) {
+    assert.equal(supplierImportManifestSchema.safeParse(manifest([{ ...offers[0], supplier }])).success, false);
+  }
+  assert.equal(supplierImportManifestSchema.safeParse(manifest([offers[2], offers[2]])).success, false);
+  assert.equal(supplierImportManifestSchema.safeParse(manifest([...offers, offers[2]])).success, false);
+});
+
 test("explicit antimicrobial imports retain the prescription type and never become ordinary or controlled", () => {
   const antimicrobial = { ...mixed().products[0], prescriptionType: "ANTIMICROBIAL" };
   const parsed = supplierImportManifestSchema.parse({ manifestVersion: 1, products: [antimicrobial] }).products[0];

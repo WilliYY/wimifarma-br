@@ -125,6 +125,7 @@ enum SupplierCode {
   ANB
   SANTA_CRUZ
   PROFARMA
+  DM
 }
 
 enum SupplierReservationStatus {

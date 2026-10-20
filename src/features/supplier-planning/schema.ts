@@ -13,7 +13,7 @@ const ean = z.string().regex(/^(?:\d{8}|\d{12}|\d{13}|\d{14})$/).refine(value =>
 }, "EAN inválido.");
 
 export const SupplierOfferSchema = z.object({
-  supplier: z.enum(["ANB", "SANTA_CRUZ", "PROFARMA", "GAM"]),
+  supplier: z.enum(["ANB", "SANTA_CRUZ", "PROFARMA", "GAM", "DM"]),
   ean,
   unitCostCents: positiveMoney,
   inboundUnitCostCents: money.default(0),

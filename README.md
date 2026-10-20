@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Ampliação de dermocosméticos com acréscimo de 20%, comparação ANB/Profarma e suporte autorizado à DM Paraná: [docs/77-expansao-dermocosmeticos-e-dm.md](docs/77-expansao-dermocosmeticos-e-dm.md). Consulte o estado de entrega no documento; propostas não equivalem a produtos publicados.
+
 App Android na Google Play e iOS na App Store: levantamento de paridade, dados compartilhados, arquitetura proposta e pendências das contas em [docs/76-app-android-ios.md](docs/76-app-android-ios.md). Ainda não há aplicativo compilado ou publicado.
 
 Avise-me por WhatsApp/e-mail para produtos publicados indisponíveis, com consentimento, cancelamento na conta e fila de contato pela equipe. Não há disparo automático conectado. Contrato em [docs/74-avisos-de-disponibilidade.md](docs/74-avisos-de-disponibilidade.md).

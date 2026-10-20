@@ -24,6 +24,26 @@ test("resolve menor custo elegível e respeita cota, saldo real e validade", () 
   assert.equal(best?.id, "a");
 });
 
+test("DM menor custo usa o mesmo markup e preserva o produto físico e a oferta anterior", () => {
+  const dm = { ...offer, id: "dm", supplier: "DM", unitCostCents: 900 };
+  const current = { ...product, supplierOffers: [offer, dm] };
+  const before = structuredClone(current);
+  assert.equal(resolveSupplierOffer(current, 1, now)?.supplier, "DM");
+  const dto = withCommerceAvailability(current, now);
+  assert.equal(dto.price, "14.40");
+  assert.equal(dto.stock, 17);
+  assert.equal("supplierOffers" in dto, false);
+  assert.deepEqual(current, before);
+  for (const changes of [{ eanNormalized: "11234567890125" }, { validUntil: new Date(now) },
+    { retailCeilingCents: 1439 }, { available: false }, { stockQuantity: 0 }]) {
+    assert.equal(resolveSupplierOffer({ ...current, supplierOffers: [offer, { ...dm, ...changes }] }, 1, now)?.supplier, "ANB");
+  }
+  const physical = withCommerceAvailability({ ...current, inventorySource: "PHARMACY" }, now);
+  assert.equal(physical.stock, 17);
+  assert.equal(physical.price, "99.00");
+  assert.equal(physical.promotionalPrice, "98.00");
+});
+
 test("DTO público oculta custos e imagem interna, preservando estoque físico", () => {
   const dto = withCommerceAvailability({ ...product, requiresPrescription: true, imageUrl: "/api/admin/fornecedores/imagens/00000000-0000-4000-8000-000000000000.webp", imageAsset: { id: "img" } }, now);
   assert.equal(dto.stock, 17);

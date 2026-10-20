@@ -1,5 +1,7 @@
 # 66 — Fornecedores e viabilidade comercial
 
+Atualização de 19/10/2026: o titular autorizou DM Paraná como terceira fonte comercial, priorizando consultas ANB/Profarma e comparando o mesmo EAN na DM quando houver acesso. O menor custo final elegível determina o preço, sem prioridade fixa por nome de fornecedor. O código aceita três ofertas distintas; GAM/SantaCruz continuam referências. Ampliação e limites em [77](77-expansao-dermocosmeticos-e-dm.md). Os relatos anteriores abaixo preservam o escopo de cada data; não há conector automático ativado.
+
 ## Objetivo e escopo aprovado
 
 Em 17/10/2026, o lojista solicitou comparar ANB, SantaCruz e Profarma por EAN, atualizar ofertas e estudar catálogo sob encomenda, PMC, frete grátis próximo de R$ 99 e desconto Pix de 3%. Informou frete de entrada zero e citou acréscimo de 60% sobre o custo da Losartana como cenário, sem definir essa regra para todo o catálogo. Recebimento: terça a sábado, sem mercadoria domingo/segunda.
@@ -12,7 +14,7 @@ Evolução posterior autorizada: o piloto comercial persistente de quatro EANs, 
 
 Módulo `src/features/supplier-planning`: centavos inteiros e percentuais em pontos-base; nenhuma requisição externa ou efeito financeiro.
 
-- `SupplierOffer`: fornecedor ANB/SANTA_CRUZ/PROFARMA/GAM, EAN exato com dígito válido, custo unitário, disponibilidade, saldo quantitativo opcional, conferência e expiração. Caixa de embalagem não representa saldo.
+- `SupplierOffer`: fornecedor ANB/SANTA_CRUZ/PROFARMA/GAM/DM no simulador; ANB/PROFARMA/DM no importador comercial. EAN exato com dígito válido, custo unitário, disponibilidade, saldo quantitativo opcional, conferência e expiração. Caixa de embalagem não representa saldo.
 - `compareSupplierOffers({ean, quantity, offers}, now)`: compara somente a mesma apresentação. Oferta desconhecida, expirada, futura, indisponível ou com saldo insuficiente/desconhecido não recebe recomendação de compra. A validade máxima aceita é de 24 horas; isso limita o dado de entrada, não garante reserva.
 - `priceWithMarkup(costCents, markupBps)`: aplica acréscimo sobre custo, arredondado ao centavo. Acréscimo de 60% corresponde a margem bruta teórica de 37,5% antes de descontos e custos.
 - `simulateOrder(input)`: calcula cenários com e sem Pix, frete, taxa do meio de pagamento, tributos informados, entrada, embalagem, outros custos e ganhos de cashback/WimiCoins. Campos de custo desconhecidos permanecem nulos; contribuição definitiva fica indisponível enquanto houver pendência. Taxa incide no total cobrado; base tributária simplificada e explícita é a receita líquida dos produtos, sujeita a validação do contador.
