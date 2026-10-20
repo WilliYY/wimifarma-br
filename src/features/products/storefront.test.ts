@@ -8,7 +8,7 @@ import { groupCategoryNames, catalogGroup } from "./home-shortcuts";
 async function fixture(rows: object[], brands: { brand: string | null }[] = []) {
   let query: Record<string, unknown> = {};
   const queries: Record<string, unknown>[] = [];
-  const db = { product: { findMany: async (input: Record<string, unknown>) => { queries.push(input); if ((input.select as { brand?: boolean }).brand && input.distinct) return brands; query = input; return rows; } } };
+  const db = { product: { fields: { price: "fixture-price" }, count: async () => rows.length, findMany: async (input: Record<string, unknown>) => { queries.push(input); if ((input.select as { brand?: boolean }).brand && input.distinct) return brands; query = input; return input.take ? rows.slice(Number(input.skip ?? 0), Number(input.skip ?? 0) + Number(input.take)) : rows; } } };
   const bundle = await build({ entryPoints: ["src/features/products/storefront.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "storefront-db", setup(builder) {
     builder.onResolve({ filter: /lib\/prisma$/ }, args => ({ path: args.path, namespace: "fixture" }));
     builder.onLoad({ filter: /.*/, namespace: "fixture" }, () => ({ contents: "export const getPrisma=()=>fixture.db;" }));
@@ -57,4 +57,47 @@ test("ordenação resolve preço comercial antes da paginação e DTO não expõ
   assert.ok(Number(second.products[0].price) > Number(first.products.at(-1)!.price));
   assert.equal(service.catalogPageHref("/catalogo?grupo=medicines&ordem=preco-asc", 2), "/catalogo?grupo=medicines&ordem=preco-asc&pagina=2");
   assert.equal(service.catalogPageHref("/catalogo?grupo=medicines&ordem=preco-asc&pagina=2", 1), "/catalogo?grupo=medicines&ordem=preco-asc");
+});
+
+test("catálogo inteiro coloca disponíveis antes dos indisponíveis, inclusive entre páginas", async () => {
+  const unavailable = Array.from({ length: 5 }, (_, i) => ({ id: `a-${i}`, name: `A indisponível ${i}`, stock: 0, price: "1.00", promotionalPrice: null }));
+  const available = Array.from({ length: 27 }, (_, i) => ({ id: `z-${i}`, name: `Z disponível ${String(i).padStart(2, "0")}`, stock: 2, price: "10.00", promotionalPrice: null }));
+  const { service } = await fixture([...unavailable, ...available]);
+  const first = await service.getStorefrontProducts();
+  const second = await service.getStorefrontProducts({ page: 2 });
+  assert.equal(first.count, 32);
+  assert.equal(second.count, 32);
+  assert.equal(first.products.length, 24);
+  assert.equal(second.products.length, 8);
+  assert.deepEqual(first.products.map(product => product.id), available.slice(0, 24).map(product => product.id));
+  assert.deepEqual(second.products.map(product => product.id), [...available.slice(24), ...unavailable].map(product => product.id));
+});
+
+test("disponibilidade comercial e validade da oferta prevalecem sobre saldo bruto e preço", async () => {
+  const now = Date.now();
+  const offer = { id: "synthetic-offer", supplier: "ANB", eanNormalized: "01234567890128", unitCostCents: 1000, retailCeilingCents: null, available: true, stockQuantity: null, allocationQuantity: 5, reservedQuantity: 0, committedQuantity: 0, observedAt: new Date(now - 60_000), validUntil: new Date(now + 3_600_000) };
+  const rows = [
+    { id: "expired", name: "A oferta vencida", inventorySource: "DISTRIBUTOR", ean: "1234567890128", stock: 100, price: "0.50", promotionalPrice: null, supplierOffers: [{ ...offer, validUntil: new Date(now - 1) }] },
+    { id: "fresh", name: "Z oferta válida", inventorySource: "DISTRIBUTOR", ean: "1234567890128", stock: 0, price: "99.00", promotionalPrice: null, supplierOffers: [offer] },
+    { id: "physical", name: "B estoque físico", inventorySource: "PHARMACY", stock: 2, price: "40.00", promotionalPrice: "20.00" },
+  ];
+  const { service, query } = await fixture(rows, [{ brand: "Marca sintética" }]);
+  for (const options of [{ sort: "preco-asc" as const }, { categories: ["Perfumaria"] }, { group: "beauty" as const }, { brand: "Marca sintética" }]) {
+    const result = await service.getStorefrontProducts(options);
+    assert.deepEqual(result.products.map(product => product.id), ["fresh", "physical", "expired"]);
+    assert.deepEqual(result.products.map(product => product.stock > 0), [true, true, false]);
+    assert.equal(result.count, 3);
+    assert.equal(query().take, undefined);
+  }
+  const offers = await service.getStorefrontProducts({ offers: true });
+  assert.deepEqual(offers.products.map(product => product.id), ["physical", "fresh", "expired"]);
+  assert.equal(JSON.stringify(query().where), JSON.stringify({ status: "ACTIVE", promotionalPrice: { lt: "fixture-price" } }));
+});
+
+test("indisponíveis continuam visíveis e página fora do catálogo fica vazia", async () => {
+  const { service } = await fixture([{ id: "a", name: "A", stock: 0, price: "1", promotionalPrice: null }, { id: "b", name: "B", stock: 0, price: "2", promotionalPrice: null }]);
+  const result = await service.getStorefrontProducts();
+  assert.equal(result.count, 2);
+  assert.deepEqual(result.products.map(product => product.id), ["a", "b"]);
+  assert.equal((await service.getStorefrontProducts({ page: 2 })).products.length, 0);
 });

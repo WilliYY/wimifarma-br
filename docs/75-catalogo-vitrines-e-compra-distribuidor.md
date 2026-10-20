@@ -16,6 +16,14 @@ Esta entrega não importa novos EANs, não altera percentuais existentes, não r
 
 ## Loja e login
 
+### Disponíveis primeiro no catálogo — 19/10/2026
+
+O catálogo público, categorias, grupos, marcas e ofertas exibem primeiro os produtos disponíveis e deixam os indisponíveis nas últimas posições. A disponibilidade vem do DTO comercial existente: estoque físico ou oferta válida da distribuidora, sem reaproveitar o saldo bruto quando a oferta venceu. Dentro de cada grupo de disponibilidade, preserva-se a ordenação existente por nome ou preço comercial/promocional, com desempate estável por nome e ID.
+
+A prioridade é aplicada ao resultado filtrado completo antes de paginar em 24 itens, para que indisponíveis não apareçam nas primeiras páginas enquanto ainda existirem disponíveis nas seguintes. Os indisponíveis continuam publicados e acessíveis com o fluxo de aviso existente; contagem e filtros permanecem os mesmos. A consulta sem ordenação por preço também passa a resolver os resultados no servidor antes da paginação; eventual otimização para acervos maiores deve preservar a validade comercial, que não equivale ao campo de estoque do banco. Não há mudança de estoque, oferta, preço ou permissão de compra.
+
+### Vitrines e login
+
 As coleções **Cuidados**, **MIP/OTC** e **Menores preços** comportam até 15 itens, com arraste e setas. Exigem foto pública local que exista e decodifique, disponibilidade válida e preço comercial positivo. Ilustração institucional, arquivo ausente/corrompido, receita e Farmácia Popular ficam fora das vitrines. MIP exige classificação explícita consistente; não é inferido pelo nome. Produtos sem fotografia continuam nas pesquisas e categorias.
 
 A rotação é determinística pelo dia de Brasília. Na revisão de 19/10, o lojista pediu produtos diferentes entre as vitrines: cada produto agora aparece em uma única coleção da home. Os cinco menores preços promocionais/comerciais são reservados para **Menores preços**; em acervos com menos de dez produtos elegíveis, a reserva usa metade dos itens, arredondada para baixo, para manter outra vitrine quando possível. MIP/OTC e Cuidados selecionam os demais itens sem repetição; MIP já selecionado não é reutilizado em Cuidados. Menores preços completa até 15 posições com os itens mais baratos ainda livres, mantendo os cinco iniciais prioritários e a rotação diária dos demais. Acervo escasso gera menos itens; um único MIP permanece na coleção específica. A página não inventa fotos nem classificações para completar posições.

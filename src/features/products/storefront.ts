@@ -37,16 +37,14 @@ export async function getStorefrontProducts({ page = 1, categories, offers = fal
   const groupedNames = group ? groupCategoryNames(await getPublicCategories(), group) : undefined;
   const brandNames = brand !== undefined ? matchingBrandNames(await getPublicBrandRecords(), brand) : undefined;
   const where: Prisma.ProductWhereInput = { status: "ACTIVE", ...(categories ? { category: { in: categories } } : {}), ...(brandNames ? { brand: { in: brandNames } } : {}), ...(offers ? { promotionalPrice: { lt: prisma.product.fields.price } } : {}), ...(group ? { OR: [{ category: { in: groupedNames } }, ...(group === "medicines" ? [{ catalogClassification: { path: ["kind"], equals: "MEDICINE" } }] : [])] } : {}) };
-  // Supplier sale prices and promotions must be resolved before sorting and pagination.
-  if (sort === "preco-asc" || categories || group || brand !== undefined) {
-    const rows = await prisma.product.findMany({ where, select: storefrontSelect });
-    const now = Date.now();
-    const products = rows.map(item => toSaleProduct(item, now)).sort((a, b) => commercialPrice(a) - commercialPrice(b) || a.name.localeCompare(b.name, "pt-BR") || a.id.localeCompare(b.id));
-    return { count: products.length, products: products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) };
-  }
-  const [rows, count] = await Promise.all([
-    prisma.product.findMany({ where, select: storefrontSelect, take: PAGE_SIZE, skip: (page - 1) * PAGE_SIZE, orderBy: [{ name: "asc" }, { id: "asc" }] }),
-    prisma.product.count({ where }),
-  ]);
-  return { count, products: rows.map(item => toSaleProduct(item)) };
+  // Resolve supplier availability before sorting the full result and paginating.
+  const rows = await prisma.product.findMany({ where, select: storefrontSelect });
+  const now = Date.now();
+  const byPrice = sort === "preco-asc" || categories || group || brand !== undefined;
+  const products = rows.map(item => toSaleProduct(item, now)).sort((a, b) =>
+    Number(b.stock > 0) - Number(a.stock > 0) ||
+    (byPrice ? commercialPrice(a) - commercialPrice(b) : 0) ||
+    a.name.localeCompare(b.name, "pt-BR") || a.id.localeCompare(b.id),
+  );
+  return { count: products.length, products: products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) };
 }
