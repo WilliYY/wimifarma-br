@@ -5,6 +5,7 @@
 - Titular autorizou DM como terceira fonte comercial, com consultas preferenciais ANB/Profarma e menor custo elegível por EAN. Enum aditivo, importador de até três ofertas e painéis reutilizam as regras de validade, markup, estoque físico separado e auditoria.
 - Acréscimo de 20% confirmado também para outras marcas de dermocosméticos. Propostas e fotos têm revisão própria; divergências de apresentação/unidade não são resolvidas por aproximação.
 - Não foi ativado coletor na VPS nem retomada a rotina pausada. Situação da publicação, evidências e limites em [77](77-expansao-dermocosmeticos-e-dm.md).
+- Entrega: código `2d13975` publicado com migração aditiva, 304 novos produtos/313 ofertas e 260 fotos auditadas; total 377. QA sintético, preservação por hashes e leitura pública passaram. Vinte e quatro apresentações divergentes ficaram fora, 44 fotos e revisão logística permanecem pendentes. Não houve compra, pedido, cobrança ou mensagem.
 
 ## 2026-10-19 — Escopo do app Android e iOS
 

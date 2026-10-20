@@ -1,5 +1,12 @@
 # 06 - Pendencias
 
+## Expansão de dermocosméticos e DM — 19/10/2026
+
+- Publicados 304 produtos e 260 fotos, totalizando 377 produtos, com preservação dos dados antigos e conferência pública. Evidências em [77](77-expansao-dermocosmeticos-e-dm.md).
+- Faltam 44 fotos, nova conferência das 24 apresentações conflitantes e sessão DM válida. DM já é aceita pelo domínio/importador; não houve oferta comercial DM publicada nesta rodada.
+- 58 perfis estimados desabilitados e 246 itens sem medidas; frete nacional dos novos produtos exige embalagem/aceitação revisadas. Nenhuma transportadora foi habilitada por estimativa.
+- Rotina Codex continua pausada com 68 EANs anteriores. Novas ofertas expiram em até 24 horas sem nova observação real; não há atualização autônoma na VPS nem lista ampliada na automação.
+
 ## App Android e iOS — 19/10/2026
 
 - Levantamento preparado em [76](76-app-android-ios.md), sem app compilado/publicado. Fonte única de dados/regras confirmada; React Native/Expo é proposta a validar.
