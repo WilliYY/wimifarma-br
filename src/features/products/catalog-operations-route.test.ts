@@ -90,3 +90,14 @@ test("lista administrativa mostra preço atual sem custo nem markup para MANAGER
     assert.equal("unitCostCents" in row.supplierPricing, role === "ADMIN");
   }
 });
+
+test("classificação de distribuidor ativo sem foto não contorna a revisão de publicação", async () => {
+  const f = await harness("ADMIN", { distributor: true });
+  Object.assign(f.product, { status: "ACTIVE", requiresPrescription: false, prescriptionType: "UNREVIEWED",
+    imageUrl: null, imageAssetId: null });
+  const response = await f.run({ expectedUpdatedAt: version,
+    catalogClassification: { kind: "HYGIENE", medicineClass: "UNCLASSIFIED", ethical: false, otc: false } });
+  assert.equal(response.status, 422);
+  assert.equal(f.writes.length, 0);
+  assert.equal((await f.run({ expectedUpdatedAt: version, supplierMarkupBps: 6000 })).status, 200);
+});

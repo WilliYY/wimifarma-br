@@ -55,6 +55,31 @@ test("catalog photo dry-run validates identity and image without creating files 
   } finally { await f.cleanup(); }
 });
 
+test("draft photo publication promotes only on explicit approval and records the status transition", async () => {
+  for (const approval of [false, true]) {
+    const f = await fixture();
+    try {
+      f.change({ status: "DRAFT" });
+      Object.assign(f.input.images[0], { publishOnApproval: approval });
+      await f.run(true);
+      const write = f.writes.find(write => write.kind === "product")!.data;
+      assert.equal(write.status, approval ? "ACTIVE" : undefined);
+      const metadata = f.audits[0].metadata as { before: { status: string }; after: { status?: string } };
+      assert.equal(metadata.before.status, "DRAFT");
+      assert.equal(metadata.after.status, approval ? "ACTIVE" : undefined);
+    } finally { await f.cleanup(); }
+  }
+});
+
+test("image manifests default to no activation and reject non-boolean approval", async () => {
+  const f = await fixture();
+  try {
+    assert.equal(catalogImageManifestSchema.parse(f.input).images[0].publishOnApproval, false);
+    Object.assign(f.input.images[0], { publishOnApproval: "true" });
+    assert.equal(catalogImageManifestSchema.safeParse(f.input).success, false);
+  } finally { await f.cleanup(); }
+});
+
 test("publication preserves originals, creates bounded readable WebP and audits provenance", async () => {
   const f = await fixture();
   try {
@@ -74,6 +99,10 @@ test("publication preserves originals, creates bounded readable WebP and audits 
     assert.equal(audit.sourceUrl, f.input.images[0].sourceUrl);
     assert.equal(audit.publishedSha256, createHash("sha256").update(output).digest("hex"));
     assert.equal(audit.sourceKind, "DISTRIBUTOR");
+    const review = audit.photoReview as { identityKey: string; imageAssetId: string; imageUrls: string[] };
+    assert.equal(review.identityKey, JSON.stringify([f.product.name.toLowerCase(), f.product.brand!.toLowerCase(), f.product.ean]));
+    assert.equal(review.imageAssetId, "asset");
+    assert.deepEqual(review.imageUrls, []);
     assert.equal((await f.run(true)).images[0].action, "PRESERVE_EXISTING_IMAGES");
     assert.equal((await readdir(f.directory)).length, 1);
   } finally { await f.cleanup(); }

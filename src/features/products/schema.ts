@@ -57,6 +57,7 @@ export const productUpdateSchema = productFieldsSchema
     description: z.string().max(800).nullable().optional(),
     ean: z.string().max(32).nullable().optional(),
     expectedUpdatedAt: z.iso.datetime(),
+    photoReviewConfirmed: z.boolean().optional(),
     imageAssetId: z.string().max(40).nullable().optional(),
     imageUrl: z.string().max(300).nullable().optional(),
     promotionalPrice: z.coerce.number().positive().nullable().optional(),

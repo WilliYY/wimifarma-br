@@ -107,19 +107,22 @@ test("offer POST rechecks actor after lock and refuses a revoked ADMIN without w
   assert.equal(f.calls.audits.length, 0);
 });
 
-test("ADMIN can persist only the three approved commercial pilot suppliers", async () => {
-  for (const supplier of ["ANB", "PROFARMA", "DM"]) {
+test("ADMIN can persist the four approved commercial pilot suppliers", async () => {
+  for (const supplier of ["ANB", "PROFARMA", "DM", "GAM"]) {
     const f = await harness();
     assert.equal((await f.run("POST", input({ supplier }))).status, 200, supplier);
     assert.equal(f.calls.writes[0].create.supplier, supplier);
     assert.equal(f.calls.writes[0].create.eanNormalized, "07891234567895");
     assert.equal(f.calls.writes[0].where.productId_supplier.supplier, supplier);
     assert.equal(f.calls.audits[0].data.metadata.supplier, supplier);
+    assert.equal(f.calls.writes[0].create.allocationQuantity, 5);
+    assert.equal(f.calls.writes[0].update.reservedQuantity, undefined);
+    assert.equal(f.calls.writes[0].update.committedQuantity, undefined);
   }
 });
 
 test("reference-only supplier codes and non-ADMIN writes never reach persistence", async () => {
-  for (const supplier of ["GAM", "SANTA_CRUZ", "OTHER", "gam", "", "GAM "]) {
+  for (const supplier of ["eGAM", "SANTA_CRUZ", "OTHER", "gam", "", "GAM "]) {
     const f = await harness();
     assert.equal((await f.run("POST", input({ supplier }))).status, 422, supplier);
     assert.equal(f.calls.database, 0);

@@ -2,6 +2,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { validateSupplierMarkupChange } from "./catalog-operations-service";
 import { bulkRequiresAdmin, type BulkProductUpdate } from "./catalog-bulk";
 import { lockProductCatalog, ProductMutationError } from "./mutations";
+import { validatePhotoPublication } from "./photo-publication-policy";
 
 export async function updateCatalogBulk(tx: Prisma.TransactionClient, input: BulkProductUpdate, actorId: string) {
   await lockProductCatalog(tx);
@@ -20,6 +21,7 @@ export async function updateCatalogBulk(tx: Prisma.TransactionClient, input: Bul
     if (changes.supplierMarkupBps !== undefined && current.inventorySource !== "DISTRIBUTOR") throw new ProductMutationError("Selecione somente produtos de distribuidoras para alterar o acréscimo.");
     if ((changes.cashbackEnabled || changes.wimicoinsEnabled) && (current.requiresPrescription || current.isPopularPharmacy)) throw new ProductMutationError("Benefícios não podem ser ativados em produtos com receita ou Farmácia Popular.");
     await validateSupplierMarkupChange(tx, current, changes.supplierMarkupBps);
+    await validatePhotoPublication(tx, current, { ...current, status: changes.status ?? current.status });
     validated.push(current);
   }
   const result = [];

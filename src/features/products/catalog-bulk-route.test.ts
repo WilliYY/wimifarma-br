@@ -9,10 +9,11 @@ const bundle = build({ entryPoints: ["src/app/api/admin/produtos/lote/route.ts"]
   builder.onResolve({ filter: /features\/auth\/auth$|lib\/prisma$/ }, args => ({ path: args.path, namespace: "fixture" }));
   builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("auth") ? "export const auth=fixture.auth;" : "export const getPrisma=()=>fixture.db;" }));
 } }] });
-type Options = { role?: string | null; revoked?: boolean; stale?: boolean; missing?: boolean; pending?: boolean; distributor?: boolean; prescription?: boolean; auditFails?: boolean };
+type Options = { role?: string | null; revoked?: boolean; stale?: boolean; missing?: boolean; pending?: boolean; distributor?: boolean; prescription?: boolean; auditFails?: boolean; draft?: boolean };
 async function harness(options: Options = {}) {
   const role = options.role === undefined ? "ADMIN" : options.role;
   const products = ["b", "a"].map(id => ({ id, name: "Synthetic", updatedAt: new Date(version), status: "ACTIVE", category: "Original", inventorySource: options.distributor ? "DISTRIBUTOR" : "PHARMACY", supplierMarkupBps: 6000, supplierOffers: [], requiresPrescription: options.prescription ?? false, isPopularPharmacy: false, featuredPosition: 2, cashbackEnabled: false, cashbackRateBps: 200, wimicoinsEnabled: false, wimicoinsRateBps: 200 }));
+  if (options.draft) for (const product of products) product.status = "DRAFT";
   const writes: { id: string; data: Record<string, unknown> }[] = [], audits: unknown[] = [], locks: string[] = [];
   let dbReads = 0;
   const tx = { $queryRaw: async (parts: TemplateStringsArray, ...values: unknown[]) => { dbReads++; if (parts.join("").includes('"Product"')) locks.push(String(values[0])); return []; },
@@ -63,4 +64,13 @@ test("bulk: preserva origem, receitas e benefícios incompatíveis; status remov
 });
 test("bulk: falha de auditoria reverte o lote sem expor detalhes", async () => {
   const f = await harness({ auditFails: true }); const response = await f.run({ status: "DRAFT" }); assert.equal(response.status, 503); assert.equal(f.writes.length, 0); assert.equal((await response.text()).includes("private SQL"), false);
+});
+
+test("bulk: não publica distribuidor sem foto e preserva edição do legado ativo", async () => {
+  const draft = await harness({ distributor: true, draft: true });
+  assert.equal((await draft.run({ status: "ACTIVE" })).status, 422);
+  assert.equal(draft.writes.length, 0);
+  const legacy = await harness({ distributor: true });
+  assert.equal((await legacy.run({ supplierMarkupBps: 6000 })).status, 200);
+  assert.equal((await legacy.run({ status: "DRAFT" })).status, 200);
 });

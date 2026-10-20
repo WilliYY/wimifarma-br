@@ -2,6 +2,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { resolveSupplierOffer, type CommerceProduct } from "@/features/supplier-catalog/commerce";
 import { classificationIsConsistent, type QuickProductUpdate } from "./catalog-operations";
 import { lockProductCatalog, ProductMutationError } from "./mutations";
+import { validatePhotoPublication } from "./photo-publication-policy";
 
 /** Product row is locked by caller, also serializing checkout creation. */
 export async function validateSupplierMarkupChange(tx: Prisma.TransactionClient, current: CommerceProduct & { id: string }, requested?: number) {
@@ -33,6 +34,7 @@ export async function updateCatalogOperations(tx: Prisma.TransactionClient, id: 
   const promo = input.promotionalPrice === undefined ? current.promotionalPrice === null ? null : Number(current.promotionalPrice) : input.promotionalPrice;
   if (promo !== null && promo > price) throw new ProductMutationError("O preço promocional não pode superar o preço normal.");
   await validateSupplierMarkupChange(tx, current, input.supplierMarkupBps);
+  await validatePhotoPublication(tx, current, { ...current, catalogClassification: input.catalogClassification ?? current.catalogClassification });
   const saved = await tx.product.update({ where: { id }, data: {
     catalogClassification: input.catalogClassification,
     supplierMarkupBps: input.supplierMarkupBps,

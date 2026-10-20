@@ -9,6 +9,7 @@ import { lockProductCatalog } from "../src/features/products/mutations";
 import { gtinVariants, normalizeGtin } from "../src/features/supplier-catalog/commerce";
 import { importSourceSchema } from "../src/features/supplier-catalog/import-manifest";
 import { productUploadsDirectory } from "../src/features/product-images/storage";
+import { productPhotoReview } from "../src/features/products/photo-publication-policy";
 import { preparePilotImage } from "./publish-pilot-product-images";
 
 // Each presentation and reuse authorization is reviewed explicitly before publication.
@@ -23,6 +24,7 @@ export const catalogImageManifestSchema = z.object({ images: z.array(z.object({
   sourceObservedAt: z.iso.datetime({ offset: true }).refine(value => Date.parse(value) <= Date.now(), "Source must already have been observed."),
   sourceEvidence: z.string().trim().min(8).max(400),
   presentationVerified: z.literal(true), eanVerified: z.literal(true), reuseAuthorized: z.literal(true),
+  publishOnApproval: z.boolean().default(false),
 }).strict().refine(row => {
   const classification = row.catalogClassification;
   return ["MEDICINE", "PERFUMERY", "HYGIENE"].includes(classification.kind) &&
@@ -37,7 +39,7 @@ function validateIdentity(product: Product | null, row: ImageRow): asserts produ
   const classification = catalogClassificationSchema.safeParse(product?.catalogClassification);
   const ean = normalizeGtin(row.ean);
   if (!product || normalizeGtin(product.ean ?? "") !== ean || (product.eanNormalized && product.eanNormalized !== ean) ||
-    product.name !== row.name || product.brand !== row.brand || product.deletedAt || product.status !== "ACTIVE" ||
+    product.name !== row.name || product.brand !== row.brand || product.deletedAt || !["ACTIVE", "DRAFT"].includes(product.status) ||
     product.inventorySource !== "DISTRIBUTOR" || product.requiresPrescription || product.prescriptionType !== "UNREVIEWED" ||
     product.isPopularPharmacy || !classification.success ||
     Object.entries(row.catalogClassification).some(([key, value]) => classification.data[key as keyof typeof classification.data] !== value)) {
@@ -80,7 +82,9 @@ export async function publishCatalogProductImages(db: Pick<PrismaClient, "$trans
           continue;
         }
         const image = prepared.get(normalizeGtin(row.ean)!)!;
-        plans.push({ ean: row.ean, action: "PUBLISH_IMAGE", width: image.width, height: image.height, sizeBytes: image.sizeBytes });
+        const publish = product.status === "DRAFT" && row.publishOnApproval;
+        plans.push({ ean: row.ean, action: "PUBLISH_IMAGE", publishOnApproval: row.publishOnApproval,
+          statusAfter: publish ? "ACTIVE" : product.status, width: image.width, height: image.height, sizeBytes: image.sizeBytes });
         if (!apply) continue;
         await mkdir(directory, { recursive: true, mode: 0o700 });
         const fileName = `product-${randomUUID()}.webp`;
@@ -91,7 +95,7 @@ export async function publishCatalogProductImages(db: Pick<PrismaClient, "$trans
         const url = `/uploads/products/${fileName}`;
         const asset = await tx.productImage.create({ data: { url, originalName: `catalog-${row.ean}.webp`, mimeType: "image/webp",
           width: image.width, height: image.height, sizeBytes: image.sizeBytes, backgroundRemoved: false, createdById: actorId } });
-        const after = { imageUrl: url, imageAssetId: asset.id };
+        const after = { imageUrl: url, imageAssetId: asset.id, ...(publish ? { status: "ACTIVE" as const } : {}) };
         await tx.product.update({ where: { id: product.id }, data: after });
         await tx.auditLog.create({ data: { action: "SUPPLIER_CATALOG_IMAGE_PUBLISHED", entity: "Product", entityId: product.id, userId: actorId,
           metadata: { ean: row.ean, eanNormalized: normalizeGtin(row.ean), name: row.name, brand: row.brand,
@@ -99,7 +103,9 @@ export async function publishCatalogProductImages(db: Pick<PrismaClient, "$trans
             sourceObservedAt: row.sourceObservedAt, sourceEvidence: row.sourceEvidence,
             presentationVerified: true, eanVerified: true, reuseAuthorized: true,
             sourceSha256: row.sha256, publishedSha256: createHash("sha256").update(image.buffer).digest("hex"),
-            before: { imageUrl: product.imageUrl, imageAssetId: product.imageAssetId, imageUrls: product.imageUrls }, after,
+            publishOnApproval: row.publishOnApproval,
+            photoReview: productPhotoReview({ ...product, ...after }),
+            before: { status: product.status, imageUrl: product.imageUrl, imageAssetId: product.imageAssetId, imageUrls: product.imageUrls }, after,
             width: image.width, height: image.height, sizeBytes: image.sizeBytes } } });
       }
       return { applied: apply, images: plans };

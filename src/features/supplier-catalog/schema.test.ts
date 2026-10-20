@@ -7,8 +7,9 @@ const offer = { supplier: "DM", productId: "synthetic", externalCode: "synthetic
 
 test("catalog schema accepts DM and retains GTIN, cost and 24-hour validity constraints", () => {
   assert.equal(SupplierCatalogOfferSchema.parse(offer).eanNormalized, "07896004708539");
+  assert.equal(SupplierCatalogOfferSchema.parse({ ...offer, supplier: "GAM" }).supplier, "GAM");
   for (const patch of [{ eanNormalized: "7896004708530" }, { unitCostCents: 0 }, { validUntil: offer.observedAt },
-    { validUntil: "2026-10-19T10:00:01Z" }, { supplier: "GAM" }, { supplier: "SANTA_CRUZ" }, { supplier: "dm" }]) {
+    { validUntil: "2026-10-19T10:00:01Z" }, { supplier: "eGAM" }, { supplier: "SANTA_CRUZ" }, { supplier: "dm" }]) {
     assert.equal(SupplierCatalogOfferSchema.safeParse({ ...offer, ...patch }).success, false);
   }
 });

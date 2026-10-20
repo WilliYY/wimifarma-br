@@ -29,7 +29,7 @@ const rowSchema = z.object({
   catalogClassification: catalogClassificationSchema.optional(), supplierMarkupBps: supplierMarkupSchema.optional(),
   evidence: z.object({ identity: evidenceSchema, classification: evidenceSchema }).strict().optional(),
   shippingProfile: shippingDraftSchema.extend({ measurementBasis: z.literal("estimated") }).strict().optional(),
-  offers: z.array(offerSchema).min(1).max(3),
+  offers: z.array(offerSchema).min(1).max(4),
   internalImage: z.object({ filePath: z.string().min(1).max(2000), mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/avif"]),
     sourceUrl: importSourceSchema, ean: gtinSchema }).strict().optional(),
 }).strict();

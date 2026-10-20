@@ -1,5 +1,7 @@
 # Rotina do piloto de fornecedores
 
+Direção posterior de 19/10/2026: GAM também foi autorizada como fonte comercial, conforme [81 — fotos e GAM](81-fotos-publicas-e-gam.md). Usar `GAM`, com custo **Líquido + Imposto**, EAN/apresentação exatos e sem desconto condicionado não atingido. Manifestos aceitam até quatro fontes distintas: ANB, PROFARMA, DM e GAM. SantaCruz permanece referência. A rotina segue **PAUSED**; este registro não amplia automaticamente sua lista nem renova ofertas. Fotos exigem revisão própria e nunca entram em atualização de preço.
+
 Atualização de 19/10/2026: aplicar [78 — ST observado](78-st-observado-profarma.md). Para medicamentos Profarma, registrar `substitutionTaxCents` da mesma observação: traço/ausência = `null`, zero somente se explícito. Sem cálculo, a oferta não concorre; comparar outra fonte do mesmo EAN. Higiene/fraldas/perfumaria não são bloqueadas por esse campo ausente. Preço final já inclui ST: não somar novamente. Não preencher o ST de observação antiga nem renovar sua data por inferência.
 
 Atualização comercial de 19/10/2026: ANB, Profarma e DM Paraná são fontes autorizadas, nesta ordem de preferência para consulta, sem sobrepor o menor custo elegível do mesmo EAN. GAM/SantaCruz continuam referências. A nova ampliação tem registro próprio em [77](77-expansao-dermocosmeticos-e-dm.md). A rotina existente foi encontrada **PAUSED** e continua pausada; esta alteração não amplia sua lista nem ativa um coletor. Contagens anteriores abaixo são históricas.

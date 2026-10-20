@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-19 — Fotos conferidas como requisito e ofertas eGAM
+
+- Novos itens de distribuidor sem receita entram em rascunho até revisão explícita de foto por ADMIN; higiene/perfumaria físicas também exigem foto ao publicar. A prova liga identidade, classificação, capa e galeria: editar preço não aprova imagem, e mudar apresentação invalida revisão anterior. Preços/estoques legados continuam editáveis.
+- GAM passa a quarta fonte comercial autorizada; oito ofertas Nivea conferidas por EAN, custo Líquido + Imposto e observação real. Preservar percentuais ADMIN, ofertas anteriores, cotas e estoque físico; rotina pausada permanece assim.
+- Lote de 44 fotos pendentes revisado, com correção factual do esfoliante Nivea para204g conforme rótulo oficial. Fontes e limites de atualidade, regressões e implantação em [81](81-fotos-publicas-e-gam.md).
+
 ## 2026-10-19 — Descrições públicas mais atraentes
 
 - Substituir na apresentação pública os textos vazios e o template completo da importação por textos em parágrafos, contextualizados pelo tipo de produto. Descrições editoriais preservadas; cadastro e dados comerciais não são regravados.

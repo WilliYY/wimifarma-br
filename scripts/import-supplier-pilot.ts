@@ -9,6 +9,7 @@ import { planPilotRefresh } from "../src/features/supplier-catalog/pilot-refresh
 import { preparePrivateSupplierImage, storePrivateSupplierImage } from "../src/features/product-images/private-supplier-storage";
 import { lockProductCatalog } from "../src/features/products/mutations";
 import { buildProductSearchText } from "../src/features/products/public-search";
+import { importedProductStatus } from "../src/features/products/photo-publication-policy";
 import { supplierImportManifestSchema, assertImportTarget, persistedPrescriptionType } from "../src/features/supplier-catalog/import-manifest";
 
 async function main() {
@@ -55,12 +56,13 @@ async function main() {
         if (!current && !best) throw new Error(`No current, permitted offer for ${row.ean}.`);
         const summary = { ean: row.ean, name: row.name, slug: current?.slug ?? row.slug, priceCents: best?.unitPriceCents ?? null,
           available: Boolean(best), action: current ? "UPDATE_OFFERS" : "CREATE", supplierMarkupBps: markup,
+          status: current?.status ?? importedProductStatus(row),
           publicPhoto: false, internalPhoto: !current && images.has(eanNormalized), shippingDraft: !current && Boolean(row.shippingProfile) };
         plans.push(summary);
         if (!args.includes("--apply")) continue;
         const { offers: _offers, internalImage: _image, evidence: _evidence, ...identity } = row;
         void [_offers, _image, _evidence];
-        const product = current ?? await tx.product.create({ data: { ...identity, prescriptionType: persistedPrescriptionType(row), eanNormalized, inventorySource: "DISTRIBUTOR", status: "ACTIVE", stock: 0,
+        const product = current ?? await tx.product.create({ data: { ...identity, prescriptionType: persistedPrescriptionType(row), eanNormalized, inventorySource: "DISTRIBUTOR", status: importedProductStatus(row), stock: 0,
           price: (best!.unitPriceCents / 100).toFixed(2), cashbackEnabled: false, wimicoinsEnabled: false, searchText: buildProductSearchText({ ...identity, searchTerms: [] }) } });
         for (const offer of updates) {
           const { replenishAllocation: _replenish, ...fields } = offer;
@@ -79,7 +81,7 @@ async function main() {
         }
         await tx.auditLog.create({ data: { action: "SUPPLIER_PILOT_IMPORTED", entity: "Product", entityId: product.id, userId: actor.id,
           metadata: { ean: row.ean, suppliers: parsedOffers.map(offer => offer.supplier), supplierTaxes: parsedOffers.map(offer => ({ supplier: offer.supplier, substitutionTaxCents: offer.substitutionTaxCents })), created: !current,
-            manifestVersion: input.manifestVersion ?? 0, supplierMarkupBps: markup,
+            manifestVersion: input.manifestVersion ?? 0, supplierMarkupBps: markup, status: product.status,
             ...(row.evidence ? { evidence: row.evidence } : {}),
             ...(!current && row.catalogClassification ? { catalogClassification: row.catalogClassification } : {}),
             shippingDraftCreated: !current && Boolean(row.shippingProfile), publicPhoto: false } } });

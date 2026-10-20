@@ -126,6 +126,7 @@ enum SupplierCode {
   SANTA_CRUZ
   PROFARMA
   DM
+  GAM
 }
 
 enum SupplierReservationStatus {

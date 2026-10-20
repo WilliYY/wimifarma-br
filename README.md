@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Fotos conferidas para os 44 itens de higiene/perfumaria/dermo pendentes, publicação dos próximos cadastros condicionada à revisão de capa/galeria e comparação de oito ofertas eGAM: [documento 81](docs/81-fotos-publicas-e-gam.md). Preserva percentuais ADMIN, estoque físico e validade real das outras fontes; a rotina permanece pausada.
+
 Descrições públicas com linguagem de cuidado por tipo de produto, preservando textos editoriais e informações confirmadas: [documento 80](docs/80-descricoes-publicas-produtos.md).
 
 Regra de elegibilidade de medicamentos Profarma e conferência do ST: [documento 78](docs/78-st-observado-profarma.md).

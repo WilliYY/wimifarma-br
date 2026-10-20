@@ -24,6 +24,26 @@ test("resolve menor custo elegível e respeita cota, saldo real e validade", () 
   assert.equal(best?.id, "a");
 });
 
+test("GAM concorre pelo custo final do mesmo EAN sem alterar percentual, cotas ou estoque físico", () => {
+  const gam = { ...offer, id: "gam", supplier: "GAM", unitCostCents: 800, reservedQuantity: 1, committedQuantity: 1 };
+  const current = { ...product, supplierMarkupBps: 2000, supplierOffers: [offer,
+    { ...offer, id: "dm", supplier: "DM", unitCostCents: 900 },
+    { ...offer, id: "pf", supplier: "PROFARMA", unitCostCents: 500 }, gam] };
+  const before = structuredClone(current);
+  const best = resolveSupplierOffer(current, 3, now);
+  assert.equal(best?.supplier, "GAM");
+  assert.equal(best?.unitPriceCents, 960);
+  assert.equal(best?.purchaseLimit, 3);
+  assert.equal(resolveSupplierOffer(current, 4, now)?.supplier, "DM");
+  for (const patch of [{ eanNormalized: "11234567890125" }, { validUntil: new Date(now) }, { available: false }]) {
+    assert.equal(resolveSupplierOffer({ ...current, supplierOffers: [offer, { ...gam, ...patch }] }, 1, now)?.supplier, "ANB");
+  }
+  const physical = withCommerceAvailability({ ...current, inventorySource: "PHARMACY" }, now);
+  assert.equal(physical.price, "99.00");
+  assert.equal(physical.stock, 17);
+  assert.deepEqual(current, before);
+});
+
 test("DM menor custo usa o mesmo markup e preserva o produto físico e a oferta anterior", () => {
   const dm = { ...offer, id: "dm", supplier: "DM", unitCostCents: 900 };
   const current = { ...product, supplierOffers: [offer, dm] };

@@ -15,6 +15,7 @@ import { invalidateShippingProfile } from "@/features/shipping/product-draft";
 import { privateSupplierImageAllowed } from "@/features/product-images/private-supplier-policy";
 import { classificationIsConsistent, emptyClassification, readClassification } from "@/features/products/catalog-operations";
 import { validateSupplierMarkupChange } from "@/features/products/catalog-operations-service";
+import { validatePhotoPublication } from "@/features/products/photo-publication-policy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -189,6 +190,14 @@ export async function PATCH(
         throw new ProductMutationError("Fotos internas exigem produto de distribuidor com receita. Selecione uma foto pública para outra origem.", 422);
       }
       const imageUrls = await resolveProductGallery(transaction, imageUrl, parsed.data.imageUrls ?? current.imageUrls);
+      const nextImageAssetId = imageAsset ? imageAsset.id : clearImage || normalizedImageUrl ? null : current.imageAssetId;
+      const galleryChanged = JSON.stringify(current.imageUrls) !== JSON.stringify(imageUrls);
+      const explicitlyReviewed = guard.session?.user.role === "ADMIN" &&
+        (parsed.data.photoReviewConfirmed === true || Boolean(imageAsset && imageAsset.id !== current.imageAssetId) || galleryChanged);
+      if (parsed.data.photoReviewConfirmed && guard.session?.user.role !== "ADMIN") throw new ProductMutationError("Somente ADMIN pode confirmar a revisão das fotos.", 403);
+      const photoReview = await validatePhotoPublication(transaction, current, { ...current, ...productData, catalogClassification, prescriptionType, imageUrl, imageUrls,
+        inventorySource: productData.inventorySource ?? current.inventorySource,
+        imageAssetId: nextImageAssetId }, explicitlyReviewed);
       const featuredPosition = await resolveFeaturedPosition(transaction, { featured: parsed.data.featured, currentPosition: current.featuredPosition, status: productData.status, imageUrl });
       const updated = await transaction.product.updateMany({
         data: {
@@ -239,6 +248,8 @@ export async function PATCH(
             wimicoinsEnabled: savedProduct.wimicoinsEnabled,
             wimicoinsRateBps: savedProduct.wimicoinsRateBps,
             hasImage: Boolean(savedProduct.imageUrl),
+            imageAssetId: savedProduct.imageAssetId,
+            ...(photoReview ? { photoReview } : {}),
             featuredPosition: savedProduct.featuredPosition,
             name: savedProduct.name,
             classificationBefore: current.catalogClassification,

@@ -8,6 +8,7 @@ import { lockProductCatalog, ProductMutationError, resolveProductGallery, resolv
 import { gtinVariants, normalizeGtin, resolveSupplierOffer } from "@/features/supplier-catalog/commerce";
 import { classificationIsConsistent } from "@/features/products/catalog-operations";
 import { privateSupplierImageAllowed } from "@/features/product-images/private-supplier-policy";
+import { validatePhotoPublication } from "@/features/products/photo-publication-policy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -182,6 +183,8 @@ export async function POST(request: Request) {
         throw new ProductMutationError("A foto foi removida da biblioteca. Selecione outra foto.", 409);
       }
       const imageUrls = await resolveProductGallery(transaction, imageAsset?.url ?? fields.imageUrl, fields.imageUrls ?? []);
+      const photoReview = await validatePhotoPublication(transaction, null, { ...fields, imageUrls, imageAssetId: imageAsset?.id,
+        imageUrl: imageAsset?.url ?? fields.imageUrl }, guard.session?.user.role === "ADMIN" && Boolean(imageAsset));
       const featuredPosition = await resolveFeaturedPosition(transaction, { featured, status: fields.status, imageUrl: imageAsset?.url ?? fields.imageUrl });
       const product = await transaction.product.create({
         data: {
@@ -213,6 +216,8 @@ export async function POST(request: Request) {
             wimicoinsEnabled: product.wimicoinsEnabled,
             wimicoinsRateBps: product.wimicoinsRateBps,
             hasImage: Boolean(product.imageUrl),
+            imageAssetId: product.imageAssetId,
+            ...(photoReview ? { photoReview } : {}),
             featuredPosition: product.featuredPosition,
             name: product.name,
             catalogClassification: product.catalogClassification,
