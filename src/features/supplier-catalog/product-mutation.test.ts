@@ -20,7 +20,7 @@ test("edição sem campo de origem não permite remover ou invalidar EAN de dist
   for (const ean of [null, "", "invalid", "1234567890129"]) {
     const response = await loaded.exports.PATCH(new Request("https://example.invalid/api/produtos/synthetic-product", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "Synthetic product", price: 16, stock: 0, status: "ACTIVE", ean, expectedUpdatedAt: "2026-10-17T12:00:00.000Z" }) }), { params: Promise.resolve({ id: "synthetic-product" }) });
     assert.equal(response.status, 422);
-    assert.match((await response.json()).error, /EAN válido/);
+    assert.equal((await response.json()).error, ean ? "EAN/GTIN inválido. Confira os números da embalagem." : "Produtos de distribuidor exigem EAN válido.");
   }
   assert.equal(writes, 0);
 });
