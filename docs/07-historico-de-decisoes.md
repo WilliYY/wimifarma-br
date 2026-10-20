@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-20 — Crédito opcional por falta na distribuidora
+
+- ADMIN pode propor crédito para unidades indisponíveis de pedido pago, mantendo ao menos uma unidade entregável. O cliente escolhe aceitar crédito ou solicitar reembolso. Nenhum crédito é imposto ou emitido automaticamente.
+- Conta e livro separados do cashback/WimiCoins. Apenas dinheiro líquido gera crédito novo; descontos utilizados voltam à origem. Snapshots originais preservados, quantidades para entrega explícitas e reserva do distribuidor liberada parcialmente. Acumuladores evitam devolução dupla em cancelamento posterior.
+- Idempotência, locks, consentimento, titularidade e conciliação de reembolso protegem os saldos. Reembolso parcial sem vínculo exige conferência; estorno pelo gateway permanece atendimento humano. Não foram alterados frete grátis, mínimos regionais ou campanhas de cashback.
+- Contrato, migração, testes PostgreSQL sintéticos, revisão independente e limites operacionais em [92](92-creditos-por-itens-faltantes.md).
+
 ## 2026-10-20 — Introdução curta no catálogo
 
 - Título geral reduzido para “Produtos” e textos visíveis do catálogo/grupos limitados a uma frase curta; Dermo recebe introdução específica de cuidados com a pele.

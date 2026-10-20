@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { AdminOrderShortageActions } from "./order-shortage-actions";
+import type { ItemShortageSummary } from "@/features/store-credit/contracts";
 import { getAdminOrderGroup, matchesAdminOrderSearch, type AdminOrderGroup } from "@/features/orders/admin-presentation";
 import { OrderShippingSummary } from "./order-shipping-summary";
 import { orderPostingLocation } from "@/features/shipping/posting";
@@ -33,6 +35,8 @@ export type AdminOrderRecord = {
   onlinePayment?: { environment: string; status: string; statusDetail: string | null; providerOrderId: string | null } | null;
   shippingQuote?: unknown;
   cashbackRedeemedCents?: number;
+  storeCreditRedeemedCents?: number;
+  itemShortages?: ItemShortageSummary[];
   wimicoinsRedeemedPoints?: number;
   wimicoinsRedemptionState?: string;
   cashbackRedemptionState?: string;
@@ -63,6 +67,7 @@ export type AdminOrderRecord = {
   createdAt: string;
   updatedAt: string;
   items: Array<{
+    shortageQuantity?: number;
     inventorySource?: "PHARMACY" | "DISTRIBUTOR";
     supplierCode?: string | null;
     id: string;
@@ -118,8 +123,9 @@ const onlineStatusLabels: Record<string, string> = {
   CANCELED: "Pagamento cancelado", REFUNDED: "Pagamento estornado", PARTIALLY_REFUNDED: "Reembolso parcial", DISPUTED: "Pagamento contestado",
 };
 
-export function OrdersPanel({ initialOrders }: { initialOrders: AdminOrderRecord[] }) {
+export function OrdersPanel({ initialOrders, canManageCredits = false }: { initialOrders: AdminOrderRecord[]; canManageCredits?: boolean }) {
   const [orders, setOrders] = useState(initialOrders);
+  useEffect(() => setOrders(initialOrders), [initialOrders]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"ALL" | OrderStatus>("ALL");
   const [group, setGroup] = useState<"ALL" | AdminOrderGroup>("ALL");
@@ -188,7 +194,7 @@ export function OrdersPanel({ initialOrders }: { initialOrders: AdminOrderRecord
         {error ? <p className="mt-3 rounded-md bg-brand-soft px-4 py-3 text-sm font-bold text-brand" role="alert">{error}</p> : null}
       </section>
 
-      {visibleOrders.length === 0 ? <div className="grid min-h-48 place-items-center rounded-lg border border-dashed border-line bg-white px-5 text-center text-sm font-semibold text-muted">Nenhum pedido encontrado.</div> : <section className="grid gap-4">{visibleOrders.map((order) => <OrderCard key={order.id} onUpdate={updateOrder} order={order} updating={updatingId === order.id} />)}</section>}
+      {visibleOrders.length === 0 ? <div className="grid min-h-48 place-items-center rounded-lg border border-dashed border-line bg-white px-5 text-center text-sm font-semibold text-muted">Nenhum pedido encontrado.</div> : <section className="grid gap-4">{visibleOrders.map((order) => <OrderCard canManageCredits={canManageCredits} key={order.id} onUpdate={updateOrder} order={order} updating={updatingId === order.id} />)}</section>}
     </div>
   );
 }
@@ -201,7 +207,7 @@ function postingCityKey(quote: unknown) {
   return location ? `${location.city}/${location.state}` : "PENDING";
 }
 
-function OrderCard({ order, onUpdate, updating }: { order: AdminOrderRecord; onUpdate: (id: string, field: "status" | "paymentStatus" | "prescriptionReviewed", value: string | true) => void; updating: boolean }) {
+function OrderCard({ order, onUpdate, updating, canManageCredits }: { order: AdminOrderRecord; canManageCredits: boolean; onUpdate: (id: string, field: "status" | "paymentStatus" | "prescriptionReviewed", value: string | true) => void; updating: boolean }) {
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const payment = order.paymentMethod === "ONLINE" ? { icon: CreditCard, label: "Mercado Pago" } : order.paymentMethod === "PIX" ? { icon: QrCode, label: "Pix" } : order.paymentMethod === "CARD_ON_DELIVERY" ? { icon: CreditCard, label: "Cartao" } : { icon: Banknote, label: "Dinheiro" };
   const MethodIcon = order.fulfillmentMethod === "DELIVERY" ? Bike : Store;
@@ -220,12 +226,14 @@ function OrderCard({ order, onUpdate, updating }: { order: AdminOrderRecord; onU
     {online?.status === "PARTIALLY_REFUNDED" && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:mx-7">Reembolso parcial: conferir valores e benefícios antes de continuar o atendimento.</p>}
     {online?.status === "REVIEW" && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:mx-7">Conferência financeira necessária. Consulte a tentativa no gateway antes de continuar. Não cobre novamente nem libere o estoque enquanto a situação estiver incerta.</p>}
     {(order.wimicoinsRedeemedPoints ?? 0) > 0 ? <p className="border-b border-line bg-amber-50 px-5 py-3 text-sm text-amber-900">WimiCoins: <strong>{order.wimicoinsRedeemedPoints} pontos · {currency.format((order.wimicoinsRedeemedPoints ?? 0) / 100)}</strong> · {order.wimicoinsRedemptionState === "RETURNED" ? "Devolvidos ao cliente" : order.wimicoinsRedemptionState === "REDEEMED" ? "Utilizados" : "Reservados"}. O total já considera o desconto.</p> : null}
+    {(order.storeCreditRedeemedCents ?? 0) > 0 && <p className="border-b border-line px-5 py-3 text-sm text-brand">Crédito de compra utilizado: <strong>{currency.format((order.storeCreditRedeemedCents ?? 0) / 100)}</strong>. O total já considera o desconto.</p>}
+    <AdminOrderShortageActions order={order} canManageCredits={canManageCredits} />
     {(order.cashbackRedeemedCents ?? 0) > 0 ? <p className="border-b border-line bg-emerald-50 px-5 py-3 text-sm text-emerald-900">Desconto de cashback: <strong>{currency.format((order.cashbackRedeemedCents ?? 0) / 100)}</strong> · {order.cashbackRedemptionState === "RETURNED" ? "Devolvido ao cliente" : order.cashbackRedemptionState === "REDEEMED" ? "Utilizado" : "Reservado"}. O total ja considera o desconto.</p> : null}
     {pixDiscount > 0 && <p className="border-b border-line bg-emerald-50 px-5 py-3 text-sm text-emerald-900">Desconto no Pix: <strong>{currency.format(pixDiscount / 100)}</strong>. O total já considera este desconto.</p>}
     <div className="grid gap-7 p-5 sm:p-7 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)]">
       <div><p className="text-xs font-black uppercase text-muted">Cliente</p><p className="mt-2 font-black text-ink">{order.customerName}</p><a className="mt-1 block text-sm font-semibold text-brand" href={`tel:${order.customerPhone}`}>{order.customerPhone}</a>{order.customerEmail ? <p className="mt-1 break-all text-xs font-semibold text-muted">{order.customerEmail}</p> : null}</div>
       <div><p className="text-xs font-black uppercase text-muted">Atendimento</p><p className="mt-2 flex items-center gap-2 text-sm font-bold text-ink"><MethodIcon className="h-4 w-4 text-pharma-green" />{order.fulfillmentMethod === "DELIVERY" ? "Destinatário · entrega" : "Retirada"}</p>{order.fulfillmentMethod === "DELIVERY" ? <p className="mt-2 flex items-start gap-2 text-xs font-semibold leading-5 text-muted"><MapPin className="mt-0.5 h-4 w-4 shrink-0" />{order.street}, {order.addressNumber}{order.complement ? ` - ${order.complement}` : ""}<br />{order.neighborhood}, {order.city}-{order.state}<br />CEP {order.postalCode}</p> : null}<p className="mt-3 flex items-center gap-2 text-sm font-bold text-ink"><PaymentIcon className="h-4 w-4 text-brand" />{payment.label} · {paymentStatusLabels[order.paymentStatus]}</p></div>
-      <div><p className="text-xs font-black uppercase text-muted">Itens</p><div className="mt-2 grid gap-2">{order.items.map((item) => <div className="flex justify-between gap-4 text-sm" key={item.id}><span className="font-semibold text-ink">{item.quantity}x {item.productName}</span><strong className="shrink-0 text-ink">{currency.format(item.totalCents / 100)}</strong></div>)}</div>{order.notes ? <p className="mt-4 rounded-md bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-900"><strong>Observacao:</strong> {order.notes}</p> : null}</div>
+      <div><p className="text-xs font-black uppercase text-muted">Itens</p><div className="mt-2 grid gap-2">{order.items.map((item) => <div className="flex justify-between gap-4 text-sm" key={item.id}><span className="font-semibold text-ink">{item.quantity}x {item.productName}{(item.shortageQuantity ?? 0) > 0 && <span className="block text-xs text-amber-800">Original: {item.quantity} · Para entrega: {Math.max(0, item.quantity - (item.shortageQuantity ?? 0))}</span>}</span><strong className="shrink-0 text-ink">{currency.format(item.totalCents / 100)}</strong></div>)}</div>{order.notes ? <p className="mt-4 rounded-md bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-900"><strong>Observacao:</strong> {order.notes}</p> : null}</div>
     </div>
     {order.requiresPrescriptionReview && <section aria-label="Conferência de receita" className="border-t border-line bg-amber-50 px-5 py-4 text-sm sm:px-7">
       {order.prescriptionUpload && <div className="mb-3"><a href={`/api/admin/receitas/${order.prescriptionUpload.id}`} className="font-bold underline">Baixar receita para pré-análise</a><p className="mt-2 text-sm">Foto não substitui o original. Valide a receita física ou o PDF original, retenção e escrituração antes de registrar a conferência. Pagamento não autoriza dispensação.</p></div>}

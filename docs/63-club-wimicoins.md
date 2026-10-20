@@ -1,5 +1,7 @@
 # Club Wimifarma e WimiCoins
 
+Atualização de 20/10/2026: faltas aceitas como crédito devolvem os WimiCoins usados à carteira original e anulam ganhos das unidades não entregues. Cancelamento posterior devolve somente o saldo ainda não restituído. O crédito novo é separado dos pontos e pode ser usado no checkout; locks passam por Customer, cashback, crédito de compra e WimiCoins. Contrato em [92](92-creditos-por-itens-faltantes.md).
+
 Atualização de 19/10/2026: os ganhos de novos pedidos Pix usam o líquido após o desconto de 3%, além dos resgates de cashback/WimiCoins. A promoção não altera saldos reservados/devolvidos nem pedidos anteriores. Contrato e validações em [83](83-desconto-pix.md).
 
 ## Contrato autorizado em 13/10/2026

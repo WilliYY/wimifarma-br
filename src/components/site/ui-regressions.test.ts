@@ -39,6 +39,7 @@ async function fixture(kind: "search" | "checkout" | "header", run: (page: Page)
       if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: '<div id="root"></div><script>window.navigations=[];window.session={user:{id:"synthetic",name:"Cliente",role:"CUSTOMER"}};</script><script type="module" src="/fixture.js"></script>' });
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text });
       if (url.pathname === "/api/minha-conta/club") return route.fulfill({ json: { data: { member: false, joinedAt: null, balancePoints: 0, pendingPoints: 0, lifetimeEarnedPoints: 0, lifetimeRedeemedPoints: 0, transactions: [] } } });
+      if (url.pathname === "/api/minha-conta/creditos") return route.fulfill({ json: { data: { balanceCents: 0, availableCents: 0, reservedCents: 0, reviewRequired: false, transactions: [] } } });
       return route.abort();
     });
     try { await run(page); } catch (error) { if (errors.length) throw new Error(errors.join("; "), { cause: error }); throw error; }

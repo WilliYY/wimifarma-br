@@ -1,5 +1,6 @@
 "use client";
 
+import { OrderShortageActions } from "./order-shortage-actions";
 import Link from "next/link";
 import { ArrowRight, Check, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, MapPin, Package, RefreshCw, ShoppingBag, Store, Truck } from "lucide-react";
 import { useState } from "react";
@@ -38,7 +39,7 @@ export function OrderTracking({ order }: { order: CustomerOrder }) {
   </div>;
 }
 
-export function CustomerOrderCard({ order, featured = false }: { order: CustomerOrder; featured?: boolean }) {
+export function CustomerOrderCard({ order, featured = false, onShortageChanged }: { order: CustomerOrder; featured?: boolean; onShortageChanged?: () => void }) {
   const pixDiscount = orderPixDiscountCents(order);
   const tracking = getOrderTracking(order.status, order.fulfillmentMethod);
   const quantity = order.items.reduce((total, item) => total + item.quantity, 0);
@@ -57,6 +58,7 @@ export function CustomerOrderCard({ order, featured = false }: { order: Customer
         <span className={cn("rounded-full px-3 py-1.5 text-xs font-bold", tracking.canceled ? "bg-slate-100 text-slate-600" : order.status === "COMPLETED" ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900")}>{tracking.label}</span>
       </div>
       {featured && <OrderTracking order={order} />}
+      <OrderShortageActions orderId={order.id} shortages={order.itemShortages ?? []} onChanged={onShortageChanged} />
       {order.preparationReadyAt && !tracking.canceled && order.status !== "COMPLETED" && <p className="mt-4 rounded-xl border border-line bg-slate-50 p-4 text-sm leading-6 text-ink"><strong>Preparação prevista até {orderDate(order.preparationReadyAt, true)}.</strong> Avisaremos quando estiver pronto para retirada ou envio.</p>}
       {order.requiresPrescriptionReview && !tracking.canceled && order.status !== "COMPLETED" && <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm leading-6 text-amber-900">Apresente a receita à farmácia antes da entrega ou retirada. <a className="font-bold underline underline-offset-4" href={helpUrl} rel="noreferrer" target="_blank">Combine pelo WhatsApp com o número do pedido.</a></p>}
       <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
@@ -76,7 +78,7 @@ export function CustomerOrderCard({ order, featured = false }: { order: Customer
         <ul aria-label="Produtos da compra" className="divide-y divide-line">
           {order.items.map(item => <li className="flex items-center gap-3 py-3" key={item.id}>
             <ProductThumbnail name={item.productName} src={item.productImageUrl} />
-            <div className="min-w-0 flex-1"><p className="break-words text-sm font-bold text-ink">{item.productName}</p><p className="mt-1 text-xs text-muted">{item.quantity} × {accountMoney(item.unitPriceCents)}</p></div>
+            <div className="min-w-0 flex-1"><p className="break-words text-sm font-bold text-ink">{item.productName}</p><p className="mt-1 text-xs text-muted">{item.quantity} × {accountMoney(item.unitPriceCents)}</p>{(item.shortageQuantity ?? 0) > 0 && <p className="mt-1 text-xs font-bold text-amber-900">Quantidade original: {item.quantity} · Para entrega: {Math.max(0, item.quantity - (item.shortageQuantity ?? 0))}</p>}</div>
             <span className="shrink-0 text-sm font-bold">{accountMoney(item.totalCents)}</span>
           </li>)}
         </ul>
@@ -89,6 +91,7 @@ export function CustomerOrderCard({ order, featured = false }: { order: Customer
           <div className="flex justify-between gap-3"><dt className="text-muted">Entrega</dt><dd>{pickup ? "Retirada na loja" : order.deliveryFeeCents ? accountMoney(order.deliveryFeeCents) : "Sem taxa"}</dd></div>
           {(order.wimicoinsRedeemedPoints ?? 0) > 0 && <div className="flex justify-between gap-3 text-amber-800"><dt>WimiCoins utilizados</dt><dd>− {accountMoney(order.wimicoinsRedeemedPoints!)}</dd></div>}
           {order.cashbackRedeemedCents > 0 && <div className="flex justify-between gap-3 text-emerald-700"><dt>Desconto de cashback</dt><dd>− {accountMoney(order.cashbackRedeemedCents)}</dd></div>}
+          {(order.storeCreditRedeemedCents ?? 0) > 0 && <div className="flex justify-between gap-3 text-brand"><dt>Crédito de compra utilizado</dt><dd>− {accountMoney(order.storeCreditRedeemedCents!)}</dd></div>}
           {pixDiscount > 0 && <div className="flex justify-between gap-3 text-emerald-700"><dt>Desconto no Pix</dt><dd>− {accountMoney(pixDiscount)}</dd></div>}
           <div className="flex justify-between gap-3 border-t border-line pt-2 text-base font-black"><dt>Total do pedido</dt><dd>{accountMoney(order.totalCents)}</dd></div>
         </dl>
@@ -102,7 +105,7 @@ export function CustomerOrderCard({ order, featured = false }: { order: Customer
   </article>;
 }
 
-export function CustomerOrderHistoryPanel({ history, loading, error, onLoad }: { history: CustomerOrderHistory; loading: boolean; error: string | null; onLoad: (filter: OrderHistoryFilter, page: number) => void }) {
+export function CustomerOrderHistoryPanel({ history, loading, error, onLoad, onShortageChanged }: { history: CustomerOrderHistory; loading: boolean; error: string | null; onLoad: (filter: OrderHistoryFilter, page: number) => void; onShortageChanged?: () => void }) {
   const filters = [{ id: "all", label: "Todos" }, { id: "active", label: "Em andamento" }, { id: "completed", label: "Concluídos" }, { id: "canceled", label: "Cancelados" }] as const;
   const pageCount = Math.max(1, Math.ceil(history.total / history.pageSize));
   return <div>
@@ -116,7 +119,7 @@ export function CustomerOrderHistoryPanel({ history, loading, error, onLoad }: {
     {error && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
     <p aria-live="polite" className="sr-only">{loading ? "Consultando pedidos…" : `${history.total} pedidos encontrados. Página ${history.page}.`}</p>
     <div aria-busy={loading} className={cn("grid gap-4", loading && "opacity-60")}>
-      {history.orders.length ? history.orders.map(order => <CustomerOrderCard key={order.id} order={order} />) : <div className="rounded-2xl border border-dashed border-line bg-slate-50/60 px-5 py-12 text-center">
+      {history.orders.length ? history.orders.map(order => <CustomerOrderCard key={order.id} order={order} onShortageChanged={onShortageChanged} />) : <div className="rounded-2xl border border-dashed border-line bg-slate-50/60 px-5 py-12 text-center">
         <Package aria-hidden="true" className="mx-auto h-10 w-10 text-brand/60" /><h3 className="mt-4 text-lg font-black">{history.filter === "all" ? "Sua próxima compra começa aqui" : "Nenhum pedido neste filtro"}</h3>
         <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted">{history.filter === "all" ? "As compras feitas com esta conta aparecerão aqui para você acompanhar." : "Veja os outros filtros para consultar seu histórico."}</p>
         <Link className={cn(actionClass, "mt-5 bg-brand text-white hover:bg-brand-dark")} href="/catalogo">Explorar produtos <ArrowRight className="h-4 w-4" /></Link>

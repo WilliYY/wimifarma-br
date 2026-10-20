@@ -45,6 +45,11 @@ test("all order reads are scoped to session customer and exclude private notes",
   assert.equal((list.select as Record<string, unknown>).customerEmail, undefined);
   assert.equal((list.select as Record<string, unknown>).requiresPrescriptionReview, true);
   assert.equal((list.select as Record<string, unknown>).prescriptionReviewedById, undefined);
+  const shortageSelect = ((list.select as Record<string, unknown>).itemShortages as { select: Record<string, unknown> }).select;
+  assert.equal(shortageSelect.createdById, undefined);
+  assert.equal(shortageSelect.consentVersion, undefined);
+  assert.equal(shortageSelect.cashPaidCents, true);
+  assert.deepEqual(shortageSelect.orderItem, { select: { productName: true } });
   assert.deepEqual((list.where as { status: unknown }).status, { notIn: ["COMPLETED", "CANCELED"] });
   await assert.rejects(() => getCustomerOrders(db as never, "", { page: 1, filter: "all" }));
 });

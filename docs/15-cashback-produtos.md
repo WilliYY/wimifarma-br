@@ -1,5 +1,7 @@
 # 15 - Cashback por produto
 
+Atualização de 20/10/2026: crédito por unidade faltante tem carteira própria, sem alterar percentuais promocionais. Restituições parciais acumuladas evitam devolução dupla; ganhos das unidades faltantes são anulados. Contrato em [92](92-creditos-por-itens-faltantes.md).
+
 ## Escopo
 
 Solicitado em 2026-09-10: percentual inicial de 2%, editavel por produto, exibicao em reais na vitrine e saldo do cliente no header e perfil. Produtos existentes permanecem desabilitados. Nenhum saldo inicial ou avaliacao ficticia e criado.

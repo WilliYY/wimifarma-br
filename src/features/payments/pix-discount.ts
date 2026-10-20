@@ -15,11 +15,12 @@ type OrderPixDiscountSnapshot = {
   totalCents: number;
   cashbackRedeemedCents?: number;
   wimicoinsRedeemedPoints?: number;
+  storeCreditRedeemedCents?: number;
 };
 
 export function orderPixDiscountCents(order: OrderPixDiscountSnapshot): number {
   return Math.max(0, order.subtotalCents + order.deliveryFeeCents
-    - (order.cashbackRedeemedCents ?? 0) - (order.wimicoinsRedeemedPoints ?? 0) - order.totalCents);
+    - (order.cashbackRedeemedCents ?? 0) - (order.wimicoinsRedeemedPoints ?? 0) - (order.storeCreditRedeemedCents ?? 0) - order.totalCents);
 }
 
 export function allocatePixDiscount(items: { productSlug: string; totalCents: number }[], discountCents: number): number[] {

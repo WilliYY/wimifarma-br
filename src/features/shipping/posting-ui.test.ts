@@ -5,7 +5,11 @@ import { chromium, expect } from "@playwright/test";
 import { defaultShippingSettings } from "./schema";
 
 async function fixtureBundle(contents: string) {
-  const bundle = await build({ stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';${contents}`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' } });
+  const bundle = await build({ stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';${contents}`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' }, plugins: [{ name: "fixture-next-navigation", setup(builder) {
+    // Standalone fixtures have no Next App Router; shortage actions call useRouter while rendering.
+    builder.onResolve({ filter: /^next\/navigation$/ }, () => ({ path: "next/navigation", namespace: "fixture" }));
+    builder.onLoad({ filter: /.*/, namespace: "fixture" }, () => ({ contents: "export const useRouter=()=>({refresh:()=>{}});" }));
+  } }] });
   return bundle.outputFiles[0].text;
 }
 

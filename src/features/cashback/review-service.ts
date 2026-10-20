@@ -26,11 +26,15 @@ export async function saveRewardedReview(tx: Prisma.TransactionClient, customerI
   const credited = await tx.cashbackTransaction.findUnique({ where: { eventKey }, select: { id: true } });
   const itemIndex = order.items.findIndex(item => item.productId === productId);
   const item = order.items[itemIndex];
+  const deliveredQuantity = item ? item.quantity - (item.shortageQuantity ?? 0) : 0;
+  if (deliveredQuantity <= 0) throw new CashbackRuleError("A avaliação exige ao menos uma unidade recebida deste produto.", 403);
   const pixDiscounts = allocatePixDiscount(order.items.map(item => ({
-    productSlug: item.productSlug, totalCents: item.totalCents - item.cashbackDiscountCents - item.wimicoinsDiscountPoints,
+    productSlug: item.productSlug, totalCents: item.totalCents - item.cashbackDiscountCents - item.wimicoinsDiscountPoints - (item.storeCreditDiscountCents ?? 0),
   })), orderPixDiscountCents(order));
+  const missing = item.shortageQuantity ? await tx.orderItemShortage.aggregate({ where: { orderItemId: item.id, status: "CREDIT_ACCEPTED" }, _sum: { cashPaidCents: true } }) : null;
+  const deliveredPaidCents = item.totalCents - item.cashbackDiscountCents - item.wimicoinsDiscountPoints - (item.storeCreditDiscountCents ?? 0) - pixDiscounts[itemIndex] - (missing?._sum.cashPaidCents ?? 0);
   const cents = credited || product.requiresPrescription || product.isPopularPharmacy || !item
-    ? 0 : reviewRewardCents(item.unitPriceCents, item.quantity, item.cashbackDiscountCents + item.wimicoinsDiscountPoints + pixDiscounts[itemIndex]);
+    ? 0 : reviewRewardCents(item.unitPriceCents, deliveredQuantity, item.unitPriceCents * deliveredQuantity - deliveredPaidCents);
   const review = await tx.productReview.create({ data: {
     ...input, customerId, productId, orderId: order.id,
     cashbackRewardCents: cents, cashbackRewardState: cents > 0 ? "CREDITED" : "NONE",

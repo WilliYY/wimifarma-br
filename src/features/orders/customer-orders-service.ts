@@ -4,16 +4,21 @@ import { ORDER_HISTORY_PAGE_SIZE, type CustomerOrderHistory, type OrderHistoryQu
 // Explicit customer-facing projection: no internal notes, contact data, or payment credentials.
 const customerOrderSelect = {
   id: true, number: true, status: true, fulfillmentMethod: true, paymentMethod: true, paymentStatus: true,
-  subtotalCents: true, deliveryFeeCents: true, totalCents: true, cashbackRedeemedCents: true, wimicoinsRedeemedPoints: true,
+  subtotalCents: true, deliveryFeeCents: true, totalCents: true, cashbackRedeemedCents: true, storeCreditRedeemedCents: true, wimicoinsRedeemedPoints: true,
   street: true, addressNumber: true, complement: true, neighborhood: true, city: true, state: true,
   createdAt: true, updatedAt: true, preparationReadyAt: true, preparationDays: true,
   requiresPrescriptionReview: true,
+  itemShortages: { orderBy: { createdAt: "asc" }, select: {
+    id: true, orderItemId: true, quantity: true, cashPaidCents: true, cashbackReturnCents: true,
+    wimicoinsReturnPoints: true, storeCreditReturnCents: true, status: true, creditState: true,
+    version: true, createdAt: true, decidedAt: true, orderItem: { select: { productName: true } },
+  } },
   items: { orderBy: { createdAt: "asc" }, select: {
-    id: true, productName: true, productImageUrl: true, quantity: true, unitPriceCents: true, totalCents: true,
+    id: true, productName: true, productImageUrl: true, quantity: true, shortageQuantity: true, unitPriceCents: true, totalCents: true,
   } },
 } satisfies Prisma.OrderSelect;
 type SelectedOrder = Prisma.OrderGetPayload<{ select: typeof customerOrderSelect }>;
-const serialize = (order: SelectedOrder) => ({ ...order, preparationReadyAt: order.preparationReadyAt?.toISOString() ?? null, createdAt: order.createdAt.toISOString(), updatedAt: order.updatedAt.toISOString() });
+const serialize = (order: SelectedOrder) => ({ ...order, itemShortages: (order.itemShortages ?? []).map(({ orderItem, ...shortage }) => ({ ...shortage, productName: orderItem.productName, createdAt: shortage.createdAt.toISOString(), decidedAt: shortage.decidedAt?.toISOString() ?? null })), preparationReadyAt: order.preparationReadyAt?.toISOString() ?? null, createdAt: order.createdAt.toISOString(), updatedAt: order.updatedAt.toISOString() });
 
 export async function getCustomerOrders(prisma: Pick<PrismaClient, "order">, customerId: string, query: OrderHistoryQuery): Promise<CustomerOrderHistory> {
   if (!customerId) throw new Error("Customer session required");

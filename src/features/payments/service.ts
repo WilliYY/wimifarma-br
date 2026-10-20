@@ -4,6 +4,7 @@ import { auth } from "@/features/auth/auth";
 import { sessionCustomerId } from "@/features/auth/customer-session";
 import { settleOrderCashback } from "@/features/cashback/service";
 import { settleOrderBenefits } from "@/features/cashback/redemption";
+import { settleIssuedStoreCredits } from "@/features/store-credit/service";
 import { comparePaymentInventoryItems, validateSupplierPayment } from "@/features/supplier-catalog/inventory";
 import { getPrisma } from "@/lib/prisma";
 import { decryptValue, encryptValue } from "@/lib/secret-vault";
@@ -139,6 +140,7 @@ export async function applyProviderOrder(remote: ProviderOrder) {
     if (next === "PAID" && current.order.paymentStatus !== "PAID") await queueCommerceOrder(tx, "payment", { ...current.order, paymentStatus: "PAID", items: current.order.items.map(item => ({ name: item.productName, quantity: item.quantity, unitPriceCents: item.unitPriceCents, totalCents: item.totalCents })) }, current.environment === "test");
     if (failed) await tx.order.update({ where: { id: current.orderId }, data: { paymentStatus: "CANCELED", status: "CANCELED" } });
     if (["REFUNDED", "DISPUTED"].includes(next)) await tx.order.update({ where: { id: current.orderId }, data: { paymentStatus: "REFUNDED", status: "CANCELED" } });
+    if (current.environment === "production") await settleIssuedStoreCredits(tx, current.orderId, next);
     if (current.environment === "production" && next !== "PARTIALLY_REFUNDED") {
       await settleOrderCashback(tx, current.orderId);
       await settleOrderBenefits(tx, current.orderId);

@@ -1,3 +1,4 @@
+import type { ItemShortageSummary } from "@/features/store-credit/contracts";
 export type CustomerOrderStatus = "PENDING" | "CONFIRMED" | "PREPARING" | "READY" | "OUT_FOR_DELIVERY" | "COMPLETED" | "CANCELED";
 export type OrderHistoryFilter = "all" | "active" | "completed" | "canceled";
 export type OrderHistoryQuery = { page: number; filter: OrderHistoryFilter };
@@ -16,6 +17,8 @@ export type CustomerOrder = {
   deliveryFeeCents: number;
   totalCents: number;
   cashbackRedeemedCents: number;
+  storeCreditRedeemedCents?: number;
+  itemShortages?: ItemShortageSummary[];
   wimicoinsRedeemedPoints?: number;
   requiresPrescriptionReview: boolean;
   street: string | null;
@@ -26,7 +29,7 @@ export type CustomerOrder = {
   state: string | null;
   createdAt: string;
   updatedAt: string;
-  items: Array<{ id: string; productName: string; productImageUrl: string | null; quantity: number; unitPriceCents: number; totalCents: number }>;
+  items: Array<{ id: string; productName: string; productImageUrl: string | null; quantity: number; shortageQuantity?: number; unitPriceCents: number; totalCents: number }>;
 };
 export type CustomerOrderHistory = OrderHistoryQuery & {
   pageSize: number;

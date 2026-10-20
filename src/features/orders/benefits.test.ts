@@ -24,3 +24,12 @@ test("divisão de centavos preserva ambas as carteiras e o total", () => {
   assert.equal(result.reduce((sum,item)=>sum+item.cashbackDiscountCents+item.wimicoinsDiscountPoints,0),2);
   assert.throws(()=>allocateOrderBenefits([{totalCents:1,wimicoinsEligible:true}],0,-1));
 });
+
+test("crédito de compra respeita cashback, capacidade dos Coins e conservação de centavos", () => {
+  const items = [{ totalCents: 100, wimicoinsEligible: false }, { totalCents: 100, wimicoinsEligible: true }];
+  const result = allocateOrderBenefits(items, 20, 90, 90);
+  assert.equal(result.reduce((sum, item) => sum + item.storeCreditDiscountCents, 0), 90);
+  assert.equal(result.reduce((sum, item) => sum + item.paidCents, 0), 0);
+  assert.equal(result[0].wimicoinsDiscountPoints, 0);
+  assert.throws(() => allocateOrderBenefits(items, 20, 90, 91));
+});

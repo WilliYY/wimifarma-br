@@ -21,7 +21,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const result = await getPrisma().$transaction(async (transaction) => {
     await transaction.$queryRaw`SELECT id FROM "Order" WHERE id = ${id} FOR UPDATE`;
     const current = await transaction.order.findUnique({
-      select: { paymentStatus: true, status: true, paymentMethod: true, requiresPrescriptionReview: true,
+      select: { paymentStatus: true, status: true, paymentMethod: true, requiresPrescriptionReview: true, hasItemShortages: true,
         prescriptionReviewedAt: true, prescriptionReviewedById: true,
         onlinePayment: { select: { environment: true, status: true, statusDetail: true } } },
       where: { id },
@@ -45,6 +45,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
     const reviewedAt = current.prescriptionReviewedAt ?? (prescriptionReviewed ? new Date() : null);
     const nextStatus = statusUpdate.status ?? current.status;
+    if (current.hasItemShortages && ["READY", "OUT_FOR_DELIVERY", "COMPLETED"].includes(nextStatus)) {
+      const unresolved = await transaction.orderItemShortage.count({ where: { orderId: id, OR: [
+        { status: { in: ["PROPOSED", "REFUND_REQUESTED"] } }, { creditState: "REVIEW" },
+      ] } });
+      const items = await transaction.orderItem.findMany({ where: { orderId: id }, select: { quantity: true, shortageQuantity: true } });
+      if (unresolved || !items.some(item => item.quantity > item.shortageQuantity)) return { error: "Resolva os itens faltantes com o cliente antes de liberar a entrega.", statusCode: 409 };
+    }
     if (current.requiresPrescriptionReview && !reviewedAt && ["READY", "OUT_FOR_DELIVERY", "COMPLETED"].includes(nextStatus)) {
       return { error: "O farmacêutico precisa conferir a receita antes de liberar o pedido para entrega ou retirada.", statusCode: 409 };
     }

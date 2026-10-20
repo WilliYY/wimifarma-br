@@ -1,4 +1,5 @@
 "use client";
+import { CustomerStoreCredit } from "./customer-store-credit";
 import { ClubBenefits } from "@/components/site/club-benefits";
 import { CustomerRestockPanel } from "@/components/site/customer-restock-panel";
 
@@ -131,7 +132,7 @@ function Field({
 }
 
 export function CustomerAccountPanel({
-  cashback,
+  cashback: initialCashback,
   customer,
   initialOrders,
   adminAccess = false,
@@ -142,6 +143,8 @@ export function CustomerAccountPanel({
   adminAccess?: boolean;
 }) {
   const router = useRouter();
+  const [cashback, setCashback] = useState(initialCashback);
+  useEffect(() => setCashback(initialCashback), [initialCashback]);
   const club = useClubSummary();
   const [activeTab, setActiveTab] = useState<TabId>("inicio");
   useEffect(() => {
@@ -206,6 +209,20 @@ export function CustomerAccountPanel({
     } finally {
       if (orderRequest.current === controller) setOrdersLoading(false);
     }
+  }
+
+  async function refreshAfterShortage() {
+    await loadOrders(orders.filter, orders.page);
+    window.dispatchEvent(new Event("wimifarma:store-credit-updated"));
+    window.dispatchEvent(new Event("wimifarma:club-updated"));
+    window.dispatchEvent(new Event("wimifarma:cashback-updated"));
+    try {
+      const response = await fetch("/api/minha-conta/cashback", { cache: "no-store" });
+      const payload = await response.json();
+      if (response.ok) setCashback(payload.data);
+      else { setCashback(null); toast.error("Não foi possível atualizar o cashback. Atualize a conta."); }
+    } catch { setCashback(null); toast.error("Não foi possível atualizar o cashback. Atualize a conta."); }
+    router.refresh();
   }
 
   function updateProfileField(
@@ -339,14 +356,16 @@ export function CustomerAccountPanel({
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2"><h2 className="text-xl font-black tracking-tight">{orders.activeOrder ? "Acompanhe seu pedido" : "Suas compras"}</h2><button className="inline-flex min-h-11 items-center gap-2 text-xs font-bold text-brand disabled:opacity-50" disabled={ordersLoading} onClick={() => void loadOrders(orders.filter, orders.page)} type="button"><RefreshCw className={cn("h-3.5 w-3.5", ordersLoading && "animate-spin motion-reduce:animate-none")} />{ordersLoading ? "Atualizando…" : "Atualizar andamento"}</button></div>
             {ordersError && <p className="rounded-xl bg-red-50 p-4 text-sm text-red-800" role="alert">{ordersError}</p>}
-            {orders.activeOrder ? <CustomerOrderCard featured order={orders.activeOrder} /> : <div className="flex flex-col items-start justify-between gap-5 rounded-2xl border border-line bg-white p-6 sm:flex-row sm:items-center"><div><span className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-soft"><Package className="h-6 w-6 text-brand" /></span><h3 className="text-lg font-black">{orders.counts.all ? "Tudo em dia por aqui" : "Seu cuidado começa com uma escolha"}</h3><p className="mt-2 max-w-sm text-sm leading-6 text-muted">{orders.counts.all ? "Você não tem pedidos em andamento. Suas compras anteriores continuam no histórico." : "Encontre seus favoritos. Depois da compra, acompanhe cada etapa neste espaço."}</p></div><Link className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-white hover:bg-brand-dark" href="/catalogo">Ver produtos <ArrowRight className="h-4 w-4" /></Link></div>}
+            {orders.activeOrder ? <CustomerOrderCard featured order={orders.activeOrder} onShortageChanged={() => void refreshAfterShortage()} /> : <div className="flex flex-col items-start justify-between gap-5 rounded-2xl border border-line bg-white p-6 sm:flex-row sm:items-center"><div><span className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-soft"><Package className="h-6 w-6 text-brand" /></span><h3 className="text-lg font-black">{orders.counts.all ? "Tudo em dia por aqui" : "Seu cuidado começa com uma escolha"}</h3><p className="mt-2 max-w-sm text-sm leading-6 text-muted">{orders.counts.all ? "Você não tem pedidos em andamento. Suas compras anteriores continuam no histórico." : "Encontre seus favoritos. Depois da compra, acompanhe cada etapa neste espaço."}</p></div><Link className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-white hover:bg-brand-dark" href="/catalogo">Ver produtos <ArrowRight className="h-4 w-4" /></Link></div>}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-2xl border border-line bg-white p-5 sm:p-6"><div className="flex items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-base font-black"><MapPin className="h-5 w-5 text-brand" />Pronto para receber</h2><span className="text-xs font-bold text-muted">{profileProgress}%</span></div><div aria-label="Dados do perfil preenchidos" aria-valuemax={100} aria-valuemin={0} aria-valuenow={profileProgress} className="my-4 h-1.5 overflow-hidden rounded-full bg-slate-100" role="progressbar"><div className="h-full rounded-full bg-brand" style={{ width: `${profileProgress}%` }} /></div><p className="break-words text-sm leading-6 text-muted">{customer.address ? [customer.address, customer.neighborhood, customer.city].filter(Boolean).join(" · ") : "Complete seu endereço e telefone para facilitar suas próximas compras."}</p><button className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand" onClick={() => navigateTo("perfil")} type="button">{profileProgress === 100 ? "Revisar meus dados" : "Completar meus dados"}<ArrowRight className="h-4 w-4" /></button></div>
               <div className="rounded-2xl border border-amber-100 bg-[#fffaf0] p-5 sm:p-6"><Star className="mb-3 h-6 w-6 text-amber-600" /><h2 className="text-base font-black">Sua experiência ajuda outras pessoas</h2><p className="mt-2 text-sm leading-6 text-muted">Conte como foi usar os produtos das suas compras. Sua opinião faz a diferença.</p><Link className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand" href="/minha-conta/avaliacoes">Avaliar minhas compras <ArrowRight className="h-4 w-4" /></Link></div>
             </div>
             <a className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-line bg-white p-3 text-sm font-bold text-ink lg:hidden" href={supportUrl} target="_blank" rel="noopener noreferrer"><MessageCircle className="h-4 w-4 text-emerald-600" />Precisa de ajuda? Fale com a equipe</a>
           </div>}
-          {activeTab === "pedidos" && <div className="rounded-2xl border border-line bg-white p-4 sm:p-6"><CustomerOrderHistoryPanel error={ordersError} history={orders} loading={ordersLoading} onLoad={(filter, page) => void loadOrders(filter, page)} /></div>}
+          {(activeTab === "inicio" || activeTab === "beneficios") && <CustomerStoreCredit key={customer.id} customerId={customer.id} />}
+
+          {activeTab === "pedidos" && <div className="rounded-2xl border border-line bg-white p-4 sm:p-6"><CustomerOrderHistoryPanel onShortageChanged={() => void refreshAfterShortage()} error={ordersError} history={orders} loading={ordersLoading} onLoad={(filter, page) => void loadOrders(filter, page)} /></div>}
           {activeTab === "avisos" && <CustomerRestockPanel />}
           <div className={cn(activeTab === "inicio" || activeTab === "pedidos" || activeTab === "avisos" ? "hidden" : "rounded-2xl border border-line bg-white p-5 sm:p-7")}>
           {activeTab !== "inicio" && activeTab !== "pedidos" && activeTab !== "avisos" && <div className="mb-6 border-b border-line pb-5"><h2 className="text-2xl font-black tracking-tight">{activeTab === "perfil" ? "Seus dados, sempre em dia" : activeTab === "seguranca" ? "Acesso e segurança" : "Seus benefícios"}</h2><p className="mt-2 text-sm leading-6 text-muted">{activeTab === "perfil" ? "Mantenha seu contato e endereço atualizados para facilitar o atendimento." : activeTab === "seguranca" ? "Cuide do acesso à sua conta com uma senha que só você conhece." : "Acompanhe seu saldo e os benefícios das suas compras."}</p></div>}

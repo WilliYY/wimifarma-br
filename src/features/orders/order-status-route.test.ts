@@ -9,7 +9,9 @@ const bundle = build({ entryPoints: ["src/app/api/pedidos/[id]/route.ts"], bundl
   builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("permissions") ? "export const requireApiRole=globalThis.fixture.guard;" : args.path.endsWith("prisma") ? "export const getPrisma=()=>globalThis.fixture.prisma;" : args.path.endsWith("api") ? "export const readJsonBody=r=>r.json();" : "export const settleOrderCashback=globalThis.fixture.settle; export const settleOrderBenefits=globalThis.fixture.settle;" }));
 } }] });
 
-async function harness(overrides: Record<string, unknown> = {}, userId: string | null = "operator-test", denied = false) {
+type ShortageFixture = { rows?: { status: string; creditState: string }[]; items?: { quantity: number; shortageQuantity: number }[] };
+
+async function harness(overrides: Record<string, unknown> = {}, userId: string | null = "operator-test", denied = false, shortages: ShortageFixture = {}) {
   const current = { status: "PREPARING", paymentStatus: "PAID", paymentMethod: "CASH", requiresPrescriptionReview: true,
     prescriptionReviewedAt: null, prescriptionReviewedById: null, onlinePayment: null, ...overrides };
   const calls: string[] = [];
@@ -22,6 +24,16 @@ async function harness(overrides: Record<string, unknown> = {}, userId: string |
       update: async ({ data }: { data: Record<string, unknown> }) => { calls.push("update"); updates.push(data); Object.assign(current, data); },
       findUniqueOrThrow: async () => ({ ...current, id: "order-test", updatedAt: new Date(), cashbackRedeemedCents: 0, cashbackRedemptionState: "NONE" }),
     },
+    orderItemShortage: { count: async ({ where }: { where: { orderId: string; OR: { status?: { in: string[] }; creditState?: string }[] } }) => {
+      calls.push("shortage-count");
+      assert.equal(where.orderId, "order-test");
+      return (shortages.rows ?? []).filter(row => where.OR.some(condition => condition.status?.in.includes(row.status) || condition.creditState === row.creditState)).length;
+    } },
+    orderItem: { findMany: async ({ where }: { where: { orderId: string } }) => {
+      calls.push("shortage-items");
+      assert.equal(where.orderId, "order-test");
+      return shortages.items ?? [{ quantity: 3, shortageQuantity: 1 }];
+    } },
     onlinePayment: { findUnique: async () => current.onlinePayment },
     auditLog: { create: async ({ data }: { data: Record<string, unknown> }) => { audits.push(data); } },
   };
@@ -107,4 +119,49 @@ test("bloqueios de homologação, reembolso parcial e saltos de status permanece
   }
   const fixture = await harness({ status: "PENDING", prescriptionReviewedAt: new Date() });
   assert.equal((await fixture.patch({ status: "COMPLETED" })).status, 409);
+});
+
+test("falta proposta, reembolso solicitado e crédito em revisão bloqueiam liberação sob lock", async () => {
+  const blockers = [
+    { status: "PROPOSED", creditState: "NONE" },
+    { status: "REFUND_REQUESTED", creditState: "NONE" },
+    { status: "CREDIT_ACCEPTED", creditState: "REVIEW" },
+  ];
+  for (const row of blockers) {
+    for (const [status, next] of [["PREPARING", "READY"], ["PREPARING", "OUT_FOR_DELIVERY"], ["READY", "READY"], ["READY", "COMPLETED"], ["OUT_FOR_DELIVERY", "COMPLETED"]]) {
+      const fixture = await harness({ status, hasItemShortages: true, requiresPrescriptionReview: false }, "operator-test", false, { rows: [row] });
+      const response = await fixture.patch({ status: next });
+      assert.equal(response.status, 409, `${row.status}/${row.creditState}: ${status} para ${next}`);
+      assert.match((await response.json()).error, /Resolva os itens faltantes/);
+      assert.deepEqual(fixture.calls, ["lock", "read", "shortage-count", "shortage-items"]);
+      assert.equal(fixture.updates.length, 0);
+      assert.equal(fixture.audits.length, 0);
+    }
+  }
+});
+
+test("crédito aceito e sem pendências permite liberar somente havendo unidades entregáveis", async () => {
+  for (const [status, next] of [["PREPARING", "READY"], ["PREPARING", "OUT_FOR_DELIVERY"], ["READY", "COMPLETED"]]) {
+    const fixture = await harness({ status, hasItemShortages: true, requiresPrescriptionReview: false }, "operator-test", false, {
+      rows: [{ status: "CREDIT_ACCEPTED", creditState: "ISSUED" }, { status: "VOIDED", creditState: "NONE" }],
+      items: [{ quantity: 2, shortageQuantity: 2 }, { quantity: 3, shortageQuantity: 2 }],
+    });
+    const response = await fixture.patch({ status: next });
+    assert.equal(response.status, 200);
+    assert.equal(fixture.current.status, next);
+    assert.deepEqual(fixture.calls, ["lock", "read", "shortage-count", "shortage-items", "update", "settle", "settle"]);
+    assert.equal(fixture.audits[0].action, "ORDER_STATUS_UPDATED");
+  }
+});
+
+test("falta integral ou ausência de itens impede conclusão mesmo após crédito aceito", async () => {
+  for (const items of [[{ quantity: 2, shortageQuantity: 2 }, { quantity: 3, shortageQuantity: 3 }], []]) {
+    const fixture = await harness({ status: "READY", hasItemShortages: true, requiresPrescriptionReview: false }, "operator-test", false, {
+      rows: [{ status: "CREDIT_ACCEPTED", creditState: "ISSUED" }], items,
+    });
+    assert.equal((await fixture.patch({ status: "COMPLETED" })).status, 409);
+    assert.deepEqual(fixture.calls, ["lock", "read", "shortage-count", "shortage-items"]);
+    assert.equal(fixture.updates.length, 0);
+    assert.equal(fixture.audits.length, 0);
+  }
 });

@@ -54,8 +54,22 @@ export async function settleSupplierOrder(tx: Prisma.TransactionClient, orderId:
     const offer = await lockOffer(tx, row.offerId);
     const current = await tx.supplierInventoryReservation.findUnique({ where: { orderItemId: row.orderItemId } });
     if (!offer || current?.status !== "ACTIVE") continue;
-    if (offer.reservedQuantity < current.quantity) throw new PaymentError("A reserva do distribuidor precisa de revisão.", 409);
-    await tx.supplierCatalogOffer.update({ where: { id: row.offerId }, data: { reservedQuantity: { decrement: current.quantity }, ...(!canceled ? { committedQuantity: { increment: current.quantity } } : {}) } });
+    const remaining = current.quantity - (current.releasedQuantity ?? 0);
+    if (remaining < 0 || offer.reservedQuantity < remaining) throw new PaymentError("A reserva do distribuidor precisa de revisão.", 409);
+    await tx.supplierCatalogOffer.update({ where: { id: row.offerId }, data: { reservedQuantity: { decrement: remaining }, ...(!canceled ? { committedQuantity: { increment: remaining } } : {}) } });
     await tx.supplierInventoryReservation.update({ where: { orderItemId: row.orderItemId }, data: { status: canceled ? "RELEASED" : "CONSUMED" } });
   }
+}
+
+/** Caller holds the order lock and makes each shortage acceptance idempotent. */
+export async function releaseSupplierShortage(tx: Prisma.TransactionClient, orderItemId: string, quantity: number) {
+  const row = await tx.supplierInventoryReservation.findUnique({ where: { orderItemId } });
+  if (!row) throw new PaymentError("Reserva do distribuidor ausente.", 409);
+  const offer = await lockOffer(tx, row.offerId);
+  const current = await tx.supplierInventoryReservation.findUnique({ where: { orderItemId } });
+  if (!offer || !current || !["ACTIVE", "CONSUMED"].includes(current.status) || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > current.quantity - (current.releasedQuantity ?? 0)) throw new PaymentError("A reserva do distribuidor precisa de revisão.", 409);
+  const field = current.status === "ACTIVE" ? "reservedQuantity" : "committedQuantity";
+  if (offer[field] < quantity) throw new PaymentError("A reserva do distribuidor precisa de revisão.", 409);
+  await tx.supplierCatalogOffer.update({ where: { id: offer.id }, data: { [field]: { decrement: quantity } } });
+  await tx.supplierInventoryReservation.update({ where: { orderItemId }, data: { releasedQuantity: { increment: quantity } } });
 }

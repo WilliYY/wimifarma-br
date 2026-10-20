@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Crédito opcional por unidade indisponível na distribuidora, com aceite do cliente, extrato e uso no checkout: [documento 92](docs/92-creditos-por-itens-faltantes.md).
+
 Comparação ADMIN de transportadoras por etiqueta, viagem rateada, coleta, seguro externo e provisão de retorno, com aceitação da carga e pendências explícitas: [documento 91](docs/91-comparacao-transportadoras-custos.md).
 
 Cotação por quantidade com empacotamento do Melhor Envio, conferência de peso/medidas e pacotes preservados no pedido: [documento 89](docs/89-consolidacao-embalagens.md).

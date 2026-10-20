@@ -47,6 +47,7 @@ export const checkoutRequestSchema = z
     notes: optionalText(500),
     privacyConsent: z.literal(true),
     cashbackRedeemCents: z.number().int().min(0).max(600_000_000).default(0),
+    storeCreditRedeemCents: z.number().int().min(0).max(600_000_000).optional(),
     wimicoinsRedeemPoints: z.number().int().min(0).max(600_000_000).default(0),
     checkoutRequestId: z.string().uuid().optional(),
     prescriptionUploadId: z.string().uuid().optional(),
@@ -66,8 +67,8 @@ export const checkoutRequestSchema = z
     if (data.paymentMethod === "ONLINE" && (!data.checkoutRequestId || !data.customer.email)) {
       context.addIssue({ code: "custom", path: ["customer", "email"], message: "Informe seu e-mail e atualize o checkout para pagar online." });
     }
-    if ((data.cashbackRedeemCents > 0 || data.wimicoinsRedeemPoints > 0) && !data.checkoutRequestId) {
-      context.addIssue({ code: "custom", path: ["checkoutRequestId"], message: "Atualize o checkout antes de usar cashback ou WimiCoins." });
+    if ((data.cashbackRedeemCents > 0 || data.wimicoinsRedeemPoints > 0 || (data.storeCreditRedeemCents ?? 0) > 0) && !data.checkoutRequestId) {
+      context.addIssue({ code: "custom", path: ["checkoutRequestId"], message: "Atualize o checkout antes de usar seus saldos." });
     }
     if (data.fulfillmentMethod === "DELIVERY") {
       if (!data.address) {

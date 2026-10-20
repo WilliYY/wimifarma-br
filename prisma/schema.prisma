@@ -171,6 +171,7 @@ model SupplierInventoryReservation {
   offerId String
   offer SupplierCatalogOffer @relation(fields: [offerId], references: [id], onDelete: Restrict)
   quantity Int
+  releasedQuantity Int @default(0)
   unitCostCents Int
   status SupplierReservationStatus @default(ACTIVE)
   createdAt DateTime @default(now())
@@ -335,6 +336,7 @@ model Customer {
   status            CustomerStatus     @default(ACTIVE)
   spinWheelAttempts SpinWheelAttempt[]
   cashbackAccount   CashbackAccount?
+  storeCreditAccount StoreCreditAccount?
   clubMembership    ClubMembership?
   wimicoinAccount   WimicoinAccount?
   whatsappContacts  WhatsAppContact[]
@@ -380,6 +382,16 @@ model RestockInterest {
 }
 
 model Order {
+  itemShortages OrderItemShortage[]
+  storeCreditTransactions StoreCreditTransaction[]
+  hasItemShortages Boolean @default(false)
+  storeCreditRedeemedCents Int @default(0)
+  storeCreditRedemptionState CashbackRedemptionState @default(NONE)
+  storeCreditReturnedCents Int @default(0)
+  cashbackReturnedCents Int @default(0)
+  wimicoinsReturnedPoints Int @default(0)
+  cashbackEarnedVoidedCents Int @default(0)
+  wimicoinsEarnedVoidedPoints Int @default(0)
   prescriptionUpload PrescriptionUpload?
   preparationReadyAt DateTime?
   preparationDays Int @default(0)
@@ -505,6 +517,9 @@ model PaymentWebhookEvent {
 }
 
 model OrderItem {
+  itemShortages OrderItemShortage[]
+  shortageQuantity Int @default(0)
+  storeCreditDiscountCents Int @default(0)
   supplierDemandAllowed Boolean @default(false)
   inventorySource InventorySource @default(PHARMACY)
   supplierOfferId String?
@@ -665,6 +680,87 @@ model CashbackAccount {
   transactions     CashbackTransaction[]
   createdAt        DateTime              @default(now())
   updatedAt        DateTime              @updatedAt
+}
+
+enum ItemShortageStatus {
+  PROPOSED
+  CREDIT_ACCEPTED
+  REFUND_REQUESTED
+  VOIDED
+}
+
+enum ItemShortageCreditState {
+  NONE
+  ISSUED
+  REVIEW
+  REVERSED
+}
+
+enum StoreCreditTransactionKind {
+  ISSUE
+  RESERVE
+  RETURN
+  REVERSAL
+}
+
+model StoreCreditAccount {
+  id String @id @default(cuid())
+  customerId String @unique
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  balanceCents Int @default(0)
+  reviewRequired Boolean @default(false)
+  transactions StoreCreditTransaction[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StoreCreditTransaction {
+  id String @id @default(cuid())
+  eventKey String @unique
+  accountId String
+  account StoreCreditAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  kind StoreCreditTransactionKind
+  amountCents Int
+  description String
+  orderId String?
+  order Order? @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  shortageId String?
+  shortage OrderItemShortage? @relation(fields: [shortageId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+
+  @@index([accountId, createdAt])
+  @@index([orderId])
+  @@index([shortageId])
+}
+
+model OrderItemShortage {
+  id String @id @default(cuid())
+  orderId String
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  orderItemId String
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  startUnit Int
+  quantity Int
+  cashPaidCents Int
+  cashbackReturnCents Int
+  wimicoinsReturnPoints Int
+  storeCreditReturnCents Int
+  pixDiscountCents Int
+  cashbackEarnedVoidedCents Int
+  wimicoinsEarnedVoidedPoints Int
+  status ItemShortageStatus @default(PROPOSED)
+  creditState ItemShortageCreditState @default(NONE)
+  version Int @default(1)
+  createdById String
+  consentVersion String?
+  decidedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  transactions StoreCreditTransaction[]
+
+  @@index([orderItemId, startUnit])
+  @@index([orderId, status])
+  @@index([creditState])
 }
 
 model CashbackTransaction {

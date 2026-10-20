@@ -1,5 +1,7 @@
 # 16 - Bonus por avaliacao e uso do cashback
 
+Atualização de 20/10/2026: o checkout aceita também crédito de compra separado. A avaliação considera apenas unidades entregues e valor líquido após os três saldos e Pix; uma unidade integralmente faltante não gera bônus. Restituições já realizadas são abatidas do cancelamento posterior. Regras e limites em [92](92-creditos-por-itens-faltantes.md).
+
 Atualização de 19/10/2026: o bônus de avaliação abate também a parcela de desconto Pix congelada no pedido, mantendo a base efetivamente paga e os pedidos anteriores. Rateio exato por item, regressões e limites em [83](83-desconto-pix.md).
 
 ## Regra aprovada

@@ -5,6 +5,7 @@ import { moneyToCents } from "@/features/orders/checkout";
 import { requiresPrescriptionReview, requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 import { settleOrderCashback } from "@/features/cashback/service";
 import { settleOrderBenefits } from "@/features/cashback/redemption";
+import { settleIssuedStoreCredits } from "@/features/store-credit/service";
 import { comparePaymentInventoryItems, validateSupplierPayment } from "@/features/supplier-catalog/inventory";
 import { queueCommerceOrder } from "@/features/miauby/commerce-service";
 import { readAsaasIntegration } from "./asaas-integration";
@@ -199,6 +200,7 @@ export async function refreshAsaasCommercePayment(orderId: string, checkoutEvent
     }
     if (failed) await tx.order.update({ where: { id: orderId }, data: { status: "CANCELED", paymentStatus: "CANCELED" } });
     if (["REFUNDED", "DISPUTED"].includes(next)) await tx.order.update({ where: { id: orderId }, data: { status: "CANCELED", paymentStatus: "REFUNDED" } });
+    await settleIssuedStoreCredits(tx, orderId, next);
     if (changed && next !== "PARTIALLY_REFUNDED" && next !== "REVIEW") {
       await settleOrderCashback(tx, orderId); await settleOrderBenefits(tx, orderId);
     }

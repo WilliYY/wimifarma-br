@@ -1,5 +1,9 @@
 # 01 - Arquitetura
 
+## Crédito por unidade faltante — 20/10/2026
+
+`features/store-credit` mantém conta e livro próprios, separados do cashback promocional e dos WimiCoins. `OrderItemShortage` registra proposta ADMIN, rateio do snapshot e decisão do titular. O checkout reserva o crédito na transação existente; liquidação nos hooks de pedidos/pagamentos retorna apenas descontos ainda não restituídos e revoga emissão após reembolso financeiro. A ordem de locks inclui Customer antes de cashback, crédito de compra, WimiCoins e ofertas. Contrato, APIs, migração aditiva e limites em [92](92-creditos-por-itens-faltantes.md).
+
 ## ST observado na elegibilidade Profarma — 19/10/2026
 
 `SupplierCatalogOffer.substitutionTaxCents` é nullable e registra o cálculo da mesma observação do custo final. `supplier-planning/tax-eligibility` compartilha o filtro com `supplier-catalog/commerce`: medicamentos Profarma (incluindo MIP e classificação ainda pendente) sem ST não concorrem. O filtro alcança catálogo, importador, carrinho, checkout e pré-pagamento sem alterar liquidação de pagamentos já confirmados. Higiene/perfumaria classificadas e estoque físico mantêm as regras existentes. Contrato e implantação em [78](78-st-observado-profarma.md).

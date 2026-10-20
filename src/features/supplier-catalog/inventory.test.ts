@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { Prisma } from "@/generated/prisma/client";
-import { comparePaymentInventoryItems, reserveSupplierInventory, settleSupplierOrder, validateSupplierPayment } from "./inventory";
+import { comparePaymentInventoryItems, releaseSupplierShortage, reserveSupplierInventory, settleSupplierOrder, validateSupplierPayment } from "./inventory";
 
 function fixture() {
   const offer = { id: "offer-test", productId: "p-test", supplier: "ANB", eanNormalized: "01234567890128", unitCostCents: 1000, substitutionTaxCents: null as number | null, available: true, stockQuantity: null, allocationQuantity: 5, reservedQuantity: 0, committedQuantity: 0, observedAt: new Date(Date.now()-1000), validUntil: new Date(Date.now()+60000) };
-  const records: { orderItemId: string; offerId: string; quantity: number; unitCostCents: number; status: string }[] = [];
+  const records: { orderItemId: string; offerId: string; quantity: number; releasedQuantity?: number; unitCostCents: number; status: string }[] = [];
   const offers = [offer];
   const item = { id: "item-test", orderId: "order-test", productId: offer.productId, supplierOfferId: offer.id, inventorySource: "DISTRIBUTOR", quantity: 2, unitPriceCents: 1600 };
   const tx = {
@@ -15,7 +15,12 @@ function fixture() {
       findUnique: async ({where}:{where:{orderItemId:string}}) => records.find(r=>r.orderItemId===where.orderItemId)??null,
       create: async ({data}:{data:typeof records[number]}) => {records.push({...data});return data;},
       findMany: async () => records.map(r=>({...r,offer})),
-      update: async ({where,data}:{where:{orderItemId:string};data:{status:string}}) => Object.assign(records.find(r=>r.orderItemId===where.orderItemId)!,data),
+      update: async ({where,data}:{where:{orderItemId:string};data:{status?:string; releasedQuantity?: { increment: number }}}) => {
+        const row = records.find(r=>r.orderItemId===where.orderItemId)!;
+        if (data.status) row.status = data.status;
+        if (data.releasedQuantity) row.releasedQuantity = (row.releasedQuantity ?? 0) + data.releasedQuantity.increment;
+        return row;
+      },
     },
   } as unknown as Prisma.TransactionClient;
   return { tx, offer, offers, records, item };
@@ -27,6 +32,18 @@ test("nova oferta mais barata e troca de EAN impedem cobrança antiga", async()=
   await assert.rejects(validateSupplierPayment(f.tx,f.item), /nova condição/);
   f.offers.pop();
   await assert.rejects(validateSupplierPayment(f.tx,f.item,{ean:"7896181915638"}), /nova condição/);
+});
+
+test("falta parcial preserva quantity e liquida somente o restante", async () => {
+  const f = fixture(); await reserveSupplierInventory(f.tx, f.item);
+  await releaseSupplierShortage(f.tx, f.item.id, 1);
+  assert.equal(f.records[0].quantity, 2); assert.equal(f.records[0].releasedQuantity, 1);
+  assert.equal(f.offer.reservedQuantity, 1);
+  await settleSupplierOrder(f.tx, "order-test", "PREPARING", "PAID");
+  assert.equal(f.offer.committedQuantity, 1); assert.equal(f.offer.reservedQuantity, 0);
+  await releaseSupplierShortage(f.tx, f.item.id, 1);
+  assert.equal(f.offer.committedQuantity, 0); assert.equal(f.records[0].quantity, 2);
+  await assert.rejects(releaseSupplierShortage(f.tx, f.item.id, 1));
 });
 
 test("pagamentos preservam locks físicos ordenados e depois a ordem global das ofertas",()=>{

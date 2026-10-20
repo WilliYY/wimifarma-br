@@ -6,6 +6,8 @@ export class CashbackRuleError extends Error {
 
 // Movimentacoes do cliente passam pelo mesmo bloqueio; pedido existente vem antes.
 export async function lockCashbackAccount(tx: Prisma.TransactionClient, customerId: string) {
+  // Wallet creation acquires a customer FK lock; keep checkout's customer-first order.
+  await tx.$queryRaw`SELECT "id" FROM "Customer" WHERE "id" = ${customerId} FOR UPDATE`;
   const account = await tx.cashbackAccount.upsert({
     where: { customerId }, create: { customerId }, update: {}, select: { id: true },
   });
