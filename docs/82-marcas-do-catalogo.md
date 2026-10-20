@@ -10,7 +10,7 @@ Marcas novas de itens não medicinais continuam aparecendo automaticamente. Labo
 
 Adicionados 17 logos oficiais, 108.078 bytes, em WebP lossless, com até 480 × 240 e sem ampliação. Somados aos onze originais, são 28 assets locais. Legrand, Medquímica e Clear usam fundo escuro para preservar a legibilidade dos arquivos fornecidos. As marcas continuam pertencendo aos respectivos titulares; não há declaração de parceria.
 
-Na lista pública observada de 53 nomes, a conferência da atualização mantém 31 marcas/laboratórios e retira 22 nomes comerciais. Destes 31, 27 têm logo e quatro permanecem com nome: Eurofarma, Merck e Kit Kat tiveram originais bloqueados por HTTP 403; Wyeth não teve arquivo oficial inequívoco localizado. Esses resultados são da consulta desta tarefa, não um limite fixo de marcas.
+Na conferência do site publicado em 20/10/2026, a faixa apresentou 32 marcas/laboratórios, com 28 logos. Os 22 nomes comerciais identificados não apareceram na navegação. Quatro marcas permaneceram pelo nome: Eurofarma, Merck e Kit Kat tiveram originais bloqueados por HTTP 403; Wyeth não teve arquivo oficial inequívoco localizado. Esses resultados são da consulta desta tarefa, não um limite fixo de marcas.
 
 | Novo logo em `public/brands` | Página | Original |
 | --- | --- | --- |
@@ -37,6 +37,8 @@ O site do Biolab anuncia Biolab Farma, mas o download oficial fornecido ainda co
 Validação desta atualização: 18 testes direcionados (incluindo gestos reais de mouse e toque em Chromium), 420 testes de segurança, TypeScript e revisão independente aprovados. A conferência com CSS construído em 390 e 1440 px verificou rolagem horizontal, página vertical, estilos durante o arraste, ausência de navegação acidental e de transbordamento da página. A suíte completa também é exigida pela CI antes da ativação. Cabeçalho, marca da farmácia e bolhas do rodapé preservados.
 
 Lint aprovado. Auditoria de produção sem vulnerabilidades; auditoria completa com cinco alertas altos existentes na cadeia de desenvolvimento de `braces`/ESLint, sem críticos. Nenhuma dependência alterada nem correção forçada fora do escopo.
+
+Publicação: código `82f9fb8`, imagem com revisão OCI correspondente e app `healthy`, sem reinícios. CI [39446166177](https://github.com/WilliYY/wimifarma-br/actions/runs/39446166177) aprovou os 966 testes da suíte completa, Prisma, TypeScript, lint e auditorias de bloqueio. Build Docker aprovado. Conferência em Chromium de produção, em 1440 e 390 px: arraste e toque sem navegação acidental, sem erros de página ou transbordamento; clique em Aché abriu o catálogo com a marca correta. Os 17 novos WebP retornaram HTTP 200 com SHA-256 idêntico aos arquivos locais. Provas em `outputs/marcas-arraste-2026-10-20/publicado.json` e capturas `publicado-1440.png`/`publicado-390.png`, fora do Git. Nenhum pedido ou mensagem enviado.
 
 ## Comportamento solicitado
 
