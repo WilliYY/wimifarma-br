@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-20 — Inclusão exclusiva de 72 apresentações de medicamentos
+
+- Publicados 72 novos EANs de atorvastatina, rosuvastatina, omeprazol, pantoprazol, valsartana e carvedilol, incluindo similares conferidos: 488 → 560 ativos. ANB/Profarma, custo final com ST observado e percentuais individuais de 50% ou 10%, dentro do PMC.
+- Receita comum, ilustrações institucionais por classe e logística estimada desabilitada preservadas. Inclusão em 50 + 22 sob lock, backup, QA, dry-run e auditoria, com proteção dos registros antigos e dados comerciais.
+- Carteira acima de 500 ainda depende das próximas fontes e consultas. Provas, ocorrências reconciliadas, testes e limites em [90](90-lote-medicamentos-72-2026-10-20.md); capturas e custos privados permanecem fora do Git.
+
 ## 2026-10-20 — Consolidação e conferência dos pacotes de frete
 
 - Substituído `volumes` por `products` com quantidade no cálculo público do Melhor Envio; removida a imposição de uma remessa por unidade. Preservados limite operacional, permissões e perfis embalados, incluindo as estimativas autorizadas.
