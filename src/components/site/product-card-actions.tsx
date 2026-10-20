@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { MessageCircle, Minus, Plus, ShoppingBag, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { useCart, type CartProduct } from "@/components/site/cart-provider";
@@ -12,6 +13,7 @@ import { RestockButton } from "@/components/site/restock-button";
 export function ProductCardActions({ product }: { product: CartProduct }) {
   const { addProduct, hydrated, items, updateQuantity } = useCart();
   const router = useRouter();
+  const [quantityEmpty, setQuantityEmpty] = useState(false);
   const quantity = items.find((item) => item.id === product.id)?.quantity ?? 0;
   const limit = orderQuantityLimit(product);
   const restricted = requiresPurchaseAssistance(product);
@@ -28,7 +30,23 @@ export function ProductCardActions({ product }: { product: CartProduct }) {
     {restricted ? <a className={`${button} h-auto min-h-[5.5rem] border border-pharma-green/30 text-pharma-green hover:bg-emerald-50`} href={buildWhatsAppUrl(`Ola, gostaria de consultar ${product.name}.`)} rel="noreferrer" target="_blank"><MessageCircle className="h-4 w-4 shrink-0" />Consultar no WhatsApp</a> : product.stock < 1 ? <><span className="flex items-center justify-center text-xs font-semibold text-muted">Indisponível no momento</span><RestockButton compact product={product} /></> : <>
       {quantity > 0 ? <div aria-label={`Quantidade de ${product.name}`} className="grid h-10 grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center rounded-md border border-line bg-white" role="group">
         <button aria-label={`Diminuir ${product.name}`} className={`${button} px-0 text-brand hover:bg-brand-soft`} onClick={() => updateQuantity(product.id, quantity - 1)} type="button"><Minus className="h-4 w-4" /></button>
-        <output aria-live="polite" className="text-center text-sm font-black text-ink">{quantity}</output>
+        <input
+          aria-label={`Quantidade de caixas de ${product.name}`}
+          autoComplete="off"
+          className="h-full min-w-0 rounded-sm bg-transparent px-1 text-center text-sm font-black text-ink outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
+          inputMode="numeric"
+          onBlur={() => setQuantityEmpty(false)}
+          onChange={event => {
+            const value = event.target.value;
+            if (!/^[0-9]*$/.test(value)) return;
+            setQuantityEmpty(value === "");
+            if (value !== "") updateQuantity(product.id, Math.min(limit, Math.max(1, Number(value))));
+          }}
+          pattern="[0-9]*"
+          title={`Digite a quantidade de caixas (de 1 a ${limit})`}
+          type="text"
+          value={quantityEmpty ? "" : quantity}
+        />
         <button aria-label={`Aumentar ${product.name}`} className={`${button} px-0 text-brand hover:bg-brand-soft`} disabled={quantity >= limit} onClick={() => addProduct(product)} title={quantity >= limit ? "Quantidade disponível neste momento" : "Adicionar mais uma unidade"} type="button"><Plus className="h-4 w-4" /></button>
       </div> : <button className={`${button} border border-brand text-brand hover:bg-brand-soft`} disabled={!hydrated} onClick={() => add()} type="button"><ShoppingCart className="h-4 w-4" />Adicionar</button>}
       <button className={`${button} bg-brand text-white hover:bg-brand-dark active:scale-[0.98] motion-reduce:transform-none`} disabled={!hydrated} onClick={() => add(true)} type="button"><ShoppingBag className="h-4 w-4" />Comprar</button>

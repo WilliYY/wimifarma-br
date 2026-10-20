@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Quantidade digitada nos cards — 2026-10-19
+
+Depois de adicionar o produto, o número entre os botões de menos e mais é um campo editável de quantidade de caixas, com teclado numérico no celular e foco visível. Aceita somente dígitos inteiros, atualiza o carrinho imediatamente e mantém essa quantidade ao comprar. Letras, sinais e separadores decimais são rejeitados; zero é ajustado para uma caixa e valores acima do limite usam `orderQuantityLimit`, preservando estoque físico e compra sob demanda. É possível apagar para redigitar; sair do campo vazio restaura a última quantidade válida. O botão de menos continua removendo a última unidade. Produtos assistidos ou indisponíveis mantêm os fluxos existentes. Regressões de navegador em `src/components/site/product-card-actions.test.ts`.
+
 ## Consulta de CEP e frete — 2026-10-19
 
 Produto e `/delivery` consultam as opções reais por transportadora fora da área local, com os mesmos serviços do checkout. No produto, a quantidade selecionada alimenta o simulador; no delivery, a consulta usa o carrinho. Estados vazios e erros não são apresentados como ausência definitiva de cobertura do CEP. Detalhes e limites em [79](79-calculo-cep-e-frete.md).
