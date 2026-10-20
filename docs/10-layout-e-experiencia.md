@@ -4,6 +4,8 @@
 
 O catálogo geral usa o título “Produtos” e a frase “Encontre o que você precisa.”. O grupo Dermo mantém o título e usa “Cuidados para sua pele.”; os demais grupos usam “Confira os produtos desta categoria.”. As descrições de SEO, filtros, categorias e navegação permanecem como estavam. Mudança textual em `src/app/(site)/catalogo/page.tsx`, a pedido do lojista para reduzir a introdução repetida.
 
+Publicado em `a677d5d`, com commit/push e pull no servidor. ESLint focado e `git diff --check` aprovados; 420 testes de segurança locais e [CI 39451466263](https://github.com/WilliYY/wimifarma-br/actions/runs/39451466263) com Prisma, TypeScript, lint, 967 testes e auditorias aprovados. Auditoria de produção sem vulnerabilidades; completa mantém os cinco alertas altos anteriores no ferramental de desenvolvimento, sem críticos. Build Docker Linux aprovado e imagem anterior preservada; app saudável, zero reinícios. Catálogo geral e Dermo conferidos em 1280/390 px: textos esperados, SEO preservado, HTTP 200, sem transbordamento ou erro JavaScript. Capturas em `outputs/textos-catalogo-2026-10-20`, fora do Git; sem operações comerciais reais. Não há pendências deste ajuste textual.
+
 ## Fotografia suave na faixa de categorias — 2026-10-20
 
 Os seis atalhos recebem um painel com fotografia institucional ilustrativa em baixa opacidade, sobreposição clara e círculos com contorno e profundidade discreta. Os ícones vermelhos e os nomes mantêm prioridade visual. CSS local e imagem responsiva; sem novas promessas de confiança ou selos. Destinos, ordem, rolagem, setas e movimento reduzido preservados. Direção e validação em [88](88-faixa-categorias-visual.md).
