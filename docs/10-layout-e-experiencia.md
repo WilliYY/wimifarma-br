@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Farmacinha com 15 itens — 2026-10-20
+
+A antiga faixa “Medicamentos isentos de prescrição” passa a “Farmacinha”, com apoio “Cuidado em casa”. Como havia apenas três MIPs confirmados, o lojista autorizou completar a faixa com primeiros socorros e cuidados. A coleção prioriza medicamentos sem receita confirmados e produtos de higiene/cuidados classificados, com fotos válidas, disponibilidade e seleção sem repetição entre vitrines. Não altera cadastro, preços ou restrições de receita. Contrato em [75](75-catalogo-vitrines-e-compra-distribuidor.md).
+
 ## Categoria Medicamentos unificada — 2026-10-20
 
 O catálogo reúne os nomes cadastrados `Medicamento` e `Medicamentos` em um único filtro público “Medicamentos”. O filtro mantém os nomes originais na consulta para incluir todos os produtos, inclusive novas importações com a variante singular. Links de categoria e sitemap usam `/categorias/medicamentos`; o endereço singular redireciona permanentemente, preservando parâmetros de paginação. Categorias específicas e cadastros originais permanecem preservados. Alterações em `storefront.ts`, `seo.ts` e `next.config.ts`; regressão cobre agrupamento, variantes e consulta conjunta.

@@ -499,7 +499,7 @@ export function HomePage({
       <PixDiscountBanner />
 
       <HomeProductCarousel products={collections.care} id="home-care" title="Cuidados para o seu dia a dia" eyebrow="Beleza, higiene e bem-estar" href="/catalogo?grupo=beauty&ordem=preco-asc" />
-      <HomeProductCarousel products={collections.otc} id="home-otc" title="Medicamentos isentos de prescrição" eyebrow="MIP / OTC" href="/catalogo?grupo=medicines&ordem=preco-asc" />
+      <HomeProductCarousel products={collections.otc} id="home-otc" title="Farmacinha" eyebrow="Cuidado em casa" href="/catalogo" />
 
       <ClubBanner />
 

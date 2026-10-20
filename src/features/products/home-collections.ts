@@ -18,6 +18,13 @@ function dailyRank(day: string, id: string) {
   return hash >>> 0;
 }
 
+function cabinetCarePriority(product: RelatedProductCardItem) {
+  const name = product.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (/\b(soro|algodao|gaze|curativos?|esparadrapo|micropore|termometro|alcool|antisseptico|antiseptico|hastes)\b/.test(name)) return 0;
+  if (/\b(protetor|hidratante|labial|assaduras?|barreira|sabonete|lencos?)\b/.test(name)) return 1;
+  return readClassification(product.catalogClassification).kind === "HYGIENE" ? 2 : 3;
+}
+
 export function buildHomeCollections(products: RelatedProductCardItem[], verifiedPhotos: ReadonlySet<string>, date: Date): HomeCollections {
   const eligible = [...new Map(products.filter(product => product.imageUrl && verifiedPhotos.has(product.imageUrl) &&
     !product.imageUrl.startsWith("/brand/") && !product.requiresPrescription &&
@@ -33,19 +40,25 @@ export function buildHomeCollections(products: RelatedProductCardItem[], verifie
     const classification = readClassification(product.catalogClassification);
     return classification.kind === "MEDICINE" && classification.otc && classificationIsConsistent(classification, product);
   });
-  const otc = rotate(otcPool).filter(product => !selectedIds.has(product.id)).slice(0, HOME_COLLECTION_SIZE);
-  otc.forEach(product => selectedIds.add(product.id));
   const carePool = eligible.filter(product => {
-    if (selectedIds.has(product.id)) return false;
     const classification = readClassification(product.catalogClassification);
     if (classification.kind === "MEDICINE") return false;
     const category = (product.category ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     return ["PERFUMERY", "HYGIENE"].includes(classification.kind) || /\b(perfumaria|higiene|beleza|dermo|dermocosmeticos|cosmeticos|cuidados pessoais)\b/.test(category);
   });
+  // Farmacinha retains the existing collection key; only confirmed MIPs enter as medicines.
+  // Name matching prioritizes already-classified care products, never classifies medicines.
+  const cabinetCare = rotate(carePool.filter(product => {
+    const classification = readClassification(product.catalogClassification);
+    return ["HYGIENE", "PERFUMERY"].includes(classification.kind) && classificationIsConsistent(classification, product) && cabinetCarePriority(product) < 3;
+  }))
+    .sort((a, b) => cabinetCarePriority(a) - cabinetCarePriority(b));
+  const otc = [...rotate(otcPool), ...cabinetCare].filter(product => !selectedIds.has(product.id)).slice(0, HOME_COLLECTION_SIZE);
+  otc.forEach(product => selectedIds.add(product.id));
   // Only MIPs not already selected may join the mixed care collection.
   const cheapOtc = [...otcPool].sort((a, b) => commercialPrice(a) - commercialPrice(b) || a.id.localeCompare(b.id));
   const mixedOtc = cheapOtc.filter(product => !selectedIds.has(product.id)).slice(0, 5);
-  const careItems = rotate(carePool).slice(0, HOME_COLLECTION_SIZE - mixedOtc.length);
+  const careItems = rotate(carePool.filter(product => !selectedIds.has(product.id))).slice(0, HOME_COLLECTION_SIZE - mixedOtc.length);
   const care = careItems.flatMap((product, index) => [product, ...(mixedOtc[index] ? [mixedOtc[index]] : [])]);
   if (careItems.length) care.push(...mixedOtc.slice(careItems.length));
   care.forEach(product => selectedIds.add(product.id));

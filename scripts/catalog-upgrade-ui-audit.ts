@@ -63,7 +63,10 @@ async function main() {
     assert.equal(products.length, 15, `${name}: 15 synthetic items required`);
     assert.ok(products.every(product => !product.requiresPrescription && product.imageUrl && verifiedPhotos.has(product.imageUrl)));
   }
-  assert.ok(collections.otc.every(product => (product.catalogClassification as { otc: boolean }).otc));
+  assert.ok(collections.otc.every(product => {
+    const classification = product.catalogClassification as { kind: string; otc: boolean };
+    return classification.kind !== "MEDICINE" || classification.otc;
+  }));
   const bundle = await bundleFixture();
   const cssFiles = (await fs.readdir(".next/static/css", { recursive: true })).filter(file => file.endsWith(".css"));
   assert.ok(cssFiles.length, "Run the current Next.js build before the visual audit");

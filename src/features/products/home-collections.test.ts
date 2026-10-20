@@ -1,10 +1,33 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildHomeCollections, brasiliaDay, commercialPrice } from "./home-collections";
+import { readClassification } from "./catalog-operations";
 
 const item = (id: string, extra = {}) => ({ id, name: id, slug: id, imageUrl: `/uploads/products/${id}.webp`, price: "10.00", promotionalPrice: null, brand: null, category: "Perfumaria", stock: 2, requiresPrescription: false, prescriptionType: "UNREVIEWED" as const, isPopularPharmacy: false, activeIngredients: [], searchTerms: [], ...extra });
 const otc = { kind: "MEDICINE", medicineClass: "OTHER", ethical: false, otc: true };
+const hygiene = { kind: "HYGIENE", medicineClass: "UNCLASSIFIED", ethical: false, otc: false };
 const build = (products: ReturnType<typeof item>[], date = new Date("2026-10-19T12:00:00Z")) => buildHomeCollections(products, new Set(products.map(p => p.imageUrl)), date);
+
+test("Farmacinha completa 15 itens com MIPs e cuidados classificados sem repetir outras vitrines", () => {
+  const medicines = Array.from({ length: 3 }, (_, i) => item(`mip-${i}`, { category: "Medicamentos", price: "50", catalogClassification: otc }));
+  const care = Array.from({ length: 45 }, (_, i) => item(`care-${i}`, { catalogClassification: hygiene }));
+  const result = build([...medicines, ...care, item("rx-disguised", { catalogClassification: hygiene, requiresPrescription: true }), item("inconsistent", { name: "Curativo inconsistente", catalogClassification: { ...hygiene, medicineClass: "GENERIC" } })]);
+  assert.equal(result.otc.length, 15);
+  assert.equal(result.otc.filter(product => medicines.some(medicine => medicine.id === product.id)).length, 3);
+  assert.equal(result.otc.filter(product => readClassification(product.catalogClassification).kind === "HYGIENE").length, 12);
+  assert.equal(result.otc.some(product => ["rx-disguised", "inconsistent"].includes(product.id)), false);
+  const ids = Object.values(result).flat().map(product => product.id);
+  assert.equal(new Set(ids).size, ids.length);
+});
+
+test("Farmacinha prioriza primeiros socorros e não usa medicamento desconhecido nem perfume para completar", () => {
+  const cheap = Array.from({ length: 5 }, (_, i) => item(`cheap-${i}`, { category: "Chocolates", price: "1" }));
+  const care = Array.from({ length: 20 }, (_, i) => item(`care-${i}`, { catalogClassification: hygiene }));
+  const result = build([...cheap, ...care, item("bandage", { name: "Curativo adesivo", catalogClassification: hygiene }), item("unknown", { category: "Medicamentos" }), item("perfume", { name: "Perfume floral", catalogClassification: { ...hygiene, kind: "PERFUMERY" } })]);
+  assert.equal(result.otc.length, 15);
+  assert.equal(result.otc[0].id, "bandage");
+  assert.equal(result.otc.some(product => ["unknown", "perfume"].includes(product.id)), false);
+});
 
 test("vitrines exigem foto validada, disponibilidade e classificação MIP explícita", () => {
   const products = [item("care"), item("otc", { catalogClassification: otc, category: "Medicamentos", price: "12.00" }), item("unknown", { category: "Medicamentos" }), item("rx", { requiresPrescription: true, catalogClassification: otc }), item("empty", { stock: 0 }), item("illustration", { imageUrl: "/brand/medicamento-sem-foto.webp" })];

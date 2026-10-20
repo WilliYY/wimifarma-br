@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
 
-test("Club separa as vitrines, com ou sem MIP, sem produtos repetidos no celular e desktop", async () => {
+test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem repetição", async () => {
   const captureRoot = process.env.HOME_SHOWCASES_CAPTURE_ROOT;
   const cssDirectory = join(process.cwd(), ".next/static/css");
   const css = captureRoot && existsSync(cssDirectory) ? readdirSync(cssDirectory).filter(file => file.endsWith(".css")).map(file => readFileSync(join(cssDirectory, file), "utf8")).join("\n") : "";
@@ -26,10 +26,10 @@ test("Club separa as vitrines, com ou sem MIP, sem produtos repetidos no celular
     import {buildHomeCollections} from './src/features/products/home-collections';
     const withOtc=location.search.includes('otc');
     const products=Array.from({length:60},(_,i)=>({id:'synthetic-'+i,name:'Produto sintético '+i,slug:'synthetic-'+i,
-      imageUrl:'/uploads/products/synthetic-'+i+'.webp',price:String(i+1),promotionalPrice:null,brand:'Marca sintética',
-      category:withOtc&&i%3===0?'Medicamentos':'Perfumaria',stock:20,requiresPrescription:false,prescriptionType:'UNREVIEWED',
+      imageUrl:'/uploads/products/synthetic-'+i+'.webp',price:String(withOtc&&i<3?50+i:i+1),promotionalPrice:null,brand:'Marca sintética',
+      category:withOtc&&i<3?'Medicamentos':'Higiene',stock:20,requiresPrescription:false,prescriptionType:'UNREVIEWED',
       isPopularPharmacy:false,activeIngredients:[],searchTerms:[],
-      catalogClassification:withOtc&&i%3===0?{kind:'MEDICINE',medicineClass:'OTHER',ethical:false,otc:true}:undefined}));
+      catalogClassification:withOtc&&i<3?{kind:'MEDICINE',medicineClass:'OTHER',ethical:false,otc:true}:{kind:'HYGIENE',medicineClass:'UNCLASSIFIED',ethical:false,otc:false}}));
     const collections=buildHomeCollections(products,new Set(products.map(p=>p.imageUrl)),new Date('2026-10-19T12:00:00Z'));
     createRoot(document.getElementById('root')).render(<CartProvider><HomePage collections={collections} shortcuts={[]} customerReviews={[]}/></CartProvider>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "esm", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' }, plugins: [{ name: "home-showcases-fixture", setup(builder) {
       builder.onResolve({ filter: /.*/ }, args => Object.hasOwn(mocks, args.path) ? { path: args.path, namespace: "fixture" } : undefined);
@@ -60,7 +60,9 @@ test("Club separa as vitrines, com ou sem MIP, sem produtos repetidos no celular
           const carousel = section.querySelector("#home-care,#home-otc,#home-affordable");
           return carousel ? [carousel.id] : section.querySelector("#club-banner-title") ? ["club"] : [];
         }));
-        assert.deepEqual(order, ["home-care", ...(withOtc ? ["home-otc"] : []), "club", "home-affordable"]);
+        assert.deepEqual(order, ["home-care", "home-otc", "club", "home-affordable"]);
+        await expect(page.getByRole("heading", { name: "Farmacinha", exact: true })).toBeVisible();
+        await expect(page.locator("#home-otc [data-home-product-card]")).toHaveCount(15);
         const products = await page.locator("[data-home-product-card] a[href^='/produto/']").evaluateAll(links => links.map(link => link.getAttribute("href")));
         assert.equal(new Set(products).size, products.length);
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
