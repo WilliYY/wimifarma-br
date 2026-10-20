@@ -9,6 +9,7 @@ import { gtinVariants, normalizeGtin, resolveSupplierOffer } from "@/features/su
 import { classificationIsConsistent } from "@/features/products/catalog-operations";
 import { privateSupplierImageAllowed } from "@/features/product-images/private-supplier-policy";
 import { validatePhotoPublication } from "@/features/products/photo-publication-policy";
+import { isValidGtin } from "@/features/products/identity";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -101,7 +102,6 @@ async function getProducts() {
     where: { deletedAt: null },
     orderBy: { createdAt: "desc" },
     select: { ...productSelect, supplierOffers: true },
-    take: 100,
   });
 }
 
@@ -137,6 +137,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Somente o administrador pode configurar a embalagem de frete." }, { status: 403 });
   }
   if (parsed.data.inventorySource === "DISTRIBUTOR" && guard.session?.user.role !== "ADMIN") return NextResponse.json({ error: "Somente ADMIN pode cadastrar estoque de distribuidor." }, { status: 403 });
+  if (parsed.data.ean?.trim() && !isValidGtin(parsed.data.ean.trim())) return NextResponse.json({ error: "EAN/GTIN inválido. Confira os números da embalagem." }, { status: 422 });
   if (parsed.data.inventorySource === "DISTRIBUTOR" && !normalizeGtin(parsed.data.ean)) return NextResponse.json({ error: "Produtos de distribuidor exigem EAN válido." }, { status: 422 });
   if (parsed.data.prescriptionType !== undefined && guard.session?.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Somente o administrador pode classificar o tipo de receita." }, { status: 403 });

@@ -1,5 +1,19 @@
 # 69 — Classificação, preço rápido e integrações
 
+## Catálogo completo e novas entradas — 19/10/2026
+
+A listagem administrativa não limita mais a resposta aos 100 produtos mais recentes. Todos os cadastros não excluídos alimentam os totais, as origens, a pesquisa e os filtros, incluindo novas entradas. A API continua privada, exige ADMIN/MANAGER e mantém custos e percentual exclusivos de ADMIN.
+
+No primeiro carregamento, o painel abre a origem com mais itens; empate mantém Loja física. Uma escolha explícita da pessoa é preservada nos recarregamentos. O contador dos filtros compara os itens visíveis com o total da origem e informa separadamente o total do catálogo. Após criar um produto, o painel recarrega a lista, abre a origem salva e limpa os filtros anteriores para o cadastro não ficar escondido.
+
+Novo EAN preenchido deve ser um GTIN válido em qualquer origem; produto físico pode continuar sem código, e distribuidor continua exigindo EAN válido e identidade única. Na edição, omitir EAN preserva o valor existente, sua classificação e a pesquisa; físico legado com código inválido inalterado não é bloqueado por um ajuste alheio, mas outro código inválido é recusado. Remover EAN físico continua permitido; remover EAN de distribuidor continua bloqueado. Alteração real da identidade mantém a invalidação administrativa existente.
+
+Categoria é uma organização comercial; não equivale à classificação sanitária estruturada. O formulário manual não deduz genérico, similar, referência ou MIP pelo nome. Entradas sem classificação revisada aparecem em **A classificar**. Importações continuam exigindo o manifesto, origem e evidências já definidos; essas correções não reclassificam produtos reais nem mudam estoque, receita ou ofertas.
+
+Auditoria somente leitura nesta data: 375 cadastros, sendo 3 PHARMACY e 372 DISTRIBUTOR; todos ACTIVE e com categoria. Zero classificações estruturalmente incompatíveis com receita/Farmácia Popular, zero EANs preenchidos inválidos, um item sem EAN e dois índices `eanNormalized` legados divergentes da normalização do código válido. Três produtos físicos permanecem a classificar: Cimegrip 20cp, Óleo de Banho Dove Glicerinado 240ml e Kit Kat Milk Chocolate Wafer Bar. Isso não comprova classe sanitária ou apresentação por conferência farmacêutica. Nenhum dado produtivo foi alterado pela auditoria.
+
+Regressões: `catalog-list-route.test.ts`, `catalog-list-ui.test.ts` e `photo-publication-route.test.ts`, cobrindo mais de 100 itens, origem, filtros, novo cadastro, privacidade por perfil e validação/preservação de EAN.
+
 ## Escopo de 18/10/2026
 
 O lojista pediu investigar integrações da Profarma, SantaCruz e ANB, organizar tipos de produto e permitir consultar/ajustar preço e percentual na lista administrativa. Apenas ANB e Profarma continuam abastecendo comercialmente o piloto. Esta entrega não ativa conectores nem transmite pedidos.

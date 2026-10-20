@@ -606,6 +606,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
   const [classificationFilter, setClassificationFilter] = useState("");
   const [sort, setSort] = useState<ProductCatalogSort>("newest");
   const [origin, setOrigin] = useState<"PHARMACY" | "DISTRIBUTOR">("PHARMACY");
+  const originInitialized = useRef(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   async function loadProducts() {
@@ -620,7 +621,13 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
       if (!response.ok) {
         throw new Error(errorMessage(payload.error, "Nao foi possivel carregar os produtos."));
       }
-      setProducts(payload.data ?? []);
+      const loadedProducts = payload.data ?? [];
+      setProducts(loadedProducts);
+      if (!originInitialized.current) {
+        const physicalCount = loadedProducts.filter(product => (product.inventorySource ?? "PHARMACY") === "PHARMACY").length;
+        setOrigin(physicalCount >= loadedProducts.length - physicalCount ? "PHARMACY" : "DISTRIBUTOR");
+        originInitialized.current = true;
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel carregar os produtos.");
     } finally {
@@ -647,7 +654,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
         headers: { "Content-Type": "application/json" },
         method: "POST",
       });
-      const payload = (await response.json()) as { error?: unknown };
+      const payload = (await response.json()) as { data?: { inventorySource?: "PHARMACY" | "DISTRIBUTOR" }; error?: unknown };
 
       if (!response.ok) {
         throw new Error(errorMessage(payload.error, "Nao foi possivel cadastrar o produto."));
@@ -656,6 +663,9 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
       form.reset();
       imagePickerRef.current?.reset();
       await loadProducts();
+      setOrigin(payload.data?.inventorySource ?? (fieldValue(formData, "inventorySource") === "DISTRIBUTOR" ? "DISTRIBUTOR" : "PHARMACY"));
+      clearFilters();
+      setSelectedIds([]);
       await imagePickerRef.current?.refresh();
       setIsCreateOpen(false);
       toast.success("Produto cadastrado com imagem otimizada em WebP.");
@@ -706,6 +716,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
   }
 
   const activeProducts = products.filter((product) => product.status === "ACTIVE").length;
+  const originProductCount = products.filter(product => (product.inventorySource ?? "PHARMACY") === origin).length;
   const categoryOptions = useMemo(() => getProductCategories(products), [products]);
   const visibleProducts = useMemo(
     () => filterAndSortProducts(products.filter(product => {
@@ -854,7 +865,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
           </CardHeader>
           <CardContent className="p-4 sm:p-5">
             <div aria-label="Origem dos produtos" role="tablist" className="mb-4 flex gap-1 rounded-xl bg-surface-subtle p-1">
-              {([ ["PHARMACY", "Loja física"], ["DISTRIBUTOR", "Distribuidoras"] ] as const).map(([value, label]) => <button role="tab" aria-selected={origin === value} aria-controls="catalog-origin-products" id={`catalog-origin-${value}`} className={cn("min-h-11 flex-1 rounded-lg px-3 text-sm font-bold transition-colors", origin === value ? "bg-white text-brand shadow-sm" : "text-muted hover:text-ink")} key={value} onClick={() => { setOrigin(value); setSelectedIds([]); }} type="button">{label}<span className="ml-2 text-xs tabular-nums opacity-70">{products.filter(product => (product.inventorySource ?? "PHARMACY") === value).length}</span></button>)}
+              {([ ["PHARMACY", "Loja física"], ["DISTRIBUTOR", "Distribuidoras"] ] as const).map(([value, label]) => <button role="tab" aria-selected={origin === value} aria-controls="catalog-origin-products" id={`catalog-origin-${value}`} className={cn("min-h-11 flex-1 rounded-lg px-3 text-sm font-bold transition-colors", origin === value ? "bg-white text-brand shadow-sm" : "text-muted hover:text-ink")} key={value} onClick={() => { originInitialized.current = true; setOrigin(value); setSelectedIds([]); }} type="button">{label}<span className="ml-2 text-xs tabular-nums opacity-70">{products.filter(product => (product.inventorySource ?? "PHARMACY") === value).length}</span></button>)}
             </div>
             <p className="mb-4 text-xs leading-5 text-muted">{origin === "PHARMACY" ? "Cadastros da loja com estoque físico próprio. Novos produtos continuam com origem definida no cadastro." : "Cadastros de distribuidoras, com preço e disponibilidade vinculados a ofertas válidas. Estoque próprio continua separado."}</p>
             <div role="tabpanel" id="catalog-origin-products" aria-labelledby={`catalog-origin-${origin}`}>
@@ -907,7 +918,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                     </label>
                   </div>
                   <div className="flex min-h-9 flex-wrap items-center justify-between gap-2 xl:col-span-2">
-                    <p className="text-xs font-semibold text-muted">{visibleProducts.length} de {products.length} produtos</p>
+                    <p className="text-xs font-semibold text-muted">{visibleProducts.length} de {originProductCount} produtos · {products.length} no catálogo</p>
                     {hasActiveFilters ? (
                       <Button onClick={clearFilters} size="sm" type="button" variant="ghost">
                         <X className="h-4 w-4" />
