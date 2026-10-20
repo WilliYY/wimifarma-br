@@ -42,4 +42,10 @@ Validação local: `npm.cmd run typecheck`, `npm.cmd run lint`, `npm.cmd run pri
 
 `npm.cmd audit --omit=dev --audit-level=high`: zero vulnerabilidades. Auditoria completa mantém cinco alertas altos de desenvolvimento em `braces`, `micromatch`, `fast-glob`, `@next/eslint-plugin-next` e `eslint-config-next`, sem críticos e sem alteração de dependências nesta entrega.
 
-Publicação em andamento; evidências finais serão registradas após conclusão. Nenhum pedido ou movimento financeiro real foi criado para testar.
+## Publicação verificada — 20/10/2026
+
+- Código `637e26d3671f81ca0bfee404e70ee0c47bd96a12`, com push/pull concluídos. [CI 39462181234](https://github.com/WilliYY/wimifarma-br/actions/runs/39462181234) aprovou os 989 testes, Prisma, tipos, lint e os dois bloqueios de vulnerabilidade. Build Docker de app/tools aprovado.
+- Backup pré-migração `/home/ubuntu/backups/wimifarma-br/daily/20261020T170359Z` validado por checksums, listagem do dump e arquivo de uploads. Novo backup antes da ativação: `20261020T170528Z`. Imagem anterior preservada em `wimifarma-br-app:pre-store-credit-20261020T170527Z`.
+- Migração aditiva `20261020170000_store_credit_shortages` aplicada; repetição confirmou 31 migrações sem pendências. Antes de ativar, contas, movimentos e faltas novos tinham contagem zero. Nenhum seed, pedido ou movimento financeiro real foi criado para testar.
+- Somente aplicação recriada. Imagem `sha256:1c68688859eea57b51ca9f2723a3ded02fd8e604be8edc205e9fc113ca8cad54`, revisão OCI do código acima, estado saudável e zero reinícios. Home, catálogo e saúde HTTP 200; carteira anônima 401; POST anônimo administrativo 403 e do cliente 401. Verificação não encontrou erros de inicialização. Contêiner PostgreSQL descartável de QA ausente após a conclusão.
+- Fluxos autenticados e financeiros foram exercitados com dados sintéticos em PostgreSQL isolado e nos componentes reais; a conferência publicada usou somente consultas públicas e rejeições sem sessão. Limitações de reembolso parcial, falta integral e pedido online de valor zero permanecem descritas acima.
