@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Cotação por quantidade com empacotamento do Melhor Envio, conferência de peso/medidas e pacotes preservados no pedido: [documento 89](docs/89-consolidacao-embalagens.md).
+
 Faixa de categorias com fotografia suave e acabamento visual, preservando os seis destinos e a navegação acessível: [documento 88](docs/88-faixa-categorias-visual.md).
 
 Cards com “de/por”, percentual e condição real de Pix, sem preço de referência artificial: [documento 86](docs/86-precos-e-desconto-real-nos-cards.md).

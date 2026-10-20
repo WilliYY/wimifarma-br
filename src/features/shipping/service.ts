@@ -3,7 +3,8 @@ import { getPrisma } from "@/lib/prisma";
 import { prepareCheckoutOrder, type CheckoutRequest } from "@/features/orders/checkout";
 import { readShippingIntegration, shippingAccessToken, SHIPPING_INTEGRATION_ID } from "./integration";
 import { melhorEnvioRequest } from "./provider";
-import { normalizeQuotes, shippingFingerprint, signShippingQuote, validateShippingProduct, verifyShippingQuote } from "./rules";
+import { shippingFingerprint, signShippingQuote, validateShippingProduct, verifyShippingQuote } from "./rules";
+import { calculatePackedQuotes } from "./calculate-packed-quotes";
 import { ShippingError, shippingSettingsSchema, type ShippingSelection } from "./schema";
 import { permittedShippingServices } from "./eligibility";
 import { resolvePostingLocation } from "./posting";
@@ -22,23 +23,25 @@ export async function quoteCart(postalCode: string, items: CheckoutRequest["item
   if (!prepared.ok) throw new ShippingError(prepared.message, 409);
   const serviceIds = permittedShippingServices(settings.serviceIds, products);
   if (!serviceIds.length) throw new ShippingError("Este carrinho precisa de um serviço de transporte autorizado para todos os produtos. Consulte a farmácia.", 422);
-  // Reject before allocating one object per unit; quantity can exceed 20 now.
+  // Bound provider packing work, without allocating or pricing one parcel per unit.
   if (items.reduce((sum, item) => sum + item.quantity, 0) > 20) throw new ShippingError("Este pedido precisa de uma embalagem consolidada. Consulte a farmácia para calcular o frete.");
-  const volumes = items.map((item) => {
+  let estimated = false;
+  const packingProducts = items.map((item) => {
     const product = products.find((p) => p.id === item.productId)!;
     const profile = validateShippingProduct(product);
-    // Each unit is measured packed. This avoids inventing a carton packing algorithm.
-    return Array.from({ length: item.quantity }, () => ({ width: profile.widthCm, height: profile.heightCm, length: profile.lengthCm, weight: profile.weightGrams / 1000, insurance: item.expectedUnitPriceCents / 100 }));
-  }).flat();
-  if (volumes.length > 20) throw new ShippingError("Para mais de 20 volumes, consulte a farmácia.");
-  const raw = await melhorEnvioRequest(settings, "/api/v2/me/shipment/calculate", await shippingAccessToken(), {
-    from: { postal_code: settings.originPostalCode }, to: { postal_code: postalCode }, volumes,
-    services: serviceIds.join(","), options: { receipt: false, own_hand: false },
+    estimated ||= profile.measurementBasis === "estimated";
+    // Existing profiles include protection/box. Do not subtract tare or shrink them to retail dimensions.
+    return { id: product.id, width: profile.widthCm, height: profile.heightCm, length: profile.lengthCm, weight: profile.weightGrams / 1000, insurance_value: item.expectedUnitPriceCents / 100, quantity: item.quantity };
   });
+  const accessToken = await shippingAccessToken();
   const fingerprint = shippingFingerprint(items, products);
   const expiresAt = Date.now() + 15 * 60 * 1000;
   const preparationDays = products.some(p => p.inventorySource === "DISTRIBUTOR") ? Math.max(settings.preparationDays, getSupplierPreparationEstimate(new Date()).preparationDays) : settings.preparationDays;
-  return normalizeQuotes(raw, serviceIds, preparationDays).map((option) => ({ ...option, token: signShippingQuote({ ...option, preparationDays, postalCode, fingerprint, expiresAt, revision: integration.revision }, signingKey()) }));
+  const options = await calculatePackedQuotes({ products: packingProducts, inputMeasurementBasis: estimated ? "estimated" : "measured" }, serviceIds, preparationDays, (products, ids) => melhorEnvioRequest(settings, "/api/v2/me/shipment/calculate", accessToken, {
+    from: { postal_code: settings.originPostalCode }, to: { postal_code: postalCode }, products,
+    services: ids.join(","), options: { receipt: false, own_hand: false },
+  }));
+  return options.map((option) => ({ ...option, token: signShippingQuote({ ...option, preparationDays, postalCode, fingerprint, expiresAt, revision: integration.revision }, signingKey()) }));
 }
 
 export async function validateOrderShipping(tx: Prisma.TransactionClient, input: CheckoutRequest) {

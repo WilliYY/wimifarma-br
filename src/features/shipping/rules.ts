@@ -2,8 +2,9 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { shippingOptionSchema, shippingProfileSchema, shippingQuotePayloadSchema, ShippingError, type ShippingOption, type ShippingQuotePayload } from "./schema";
 import { requiresPharmacyShippingSupport } from "./eligibility";
 import type { PrescriptionType } from "@/features/products/purchase-policy";
+import { normalizeShippingPackaging, type PackingRequest } from "./packing";
 
-export function normalizeQuotes(raw: unknown, allowed: number[], preparationDays: number): ShippingOption[] {
+export function normalizeQuotes(raw: unknown, allowed: number[], preparationDays: number, packing?: PackingRequest): ShippingOption[] {
   const entries = Array.isArray(raw) ? raw : [raw];
   let technicalFailure = false;
   let temporaryFailure = false;
@@ -27,10 +28,17 @@ export function normalizeQuotes(raw: unknown, allowed: number[], preparationDays
     }
     const price = entry.custom_price ?? entry.price;
     const days = entry.custom_delivery_time ?? entry.delivery_time;
+    const packaging = packing ? normalizeShippingPackaging(entry.packages, packing) : undefined;
+    if (packaging === null) {
+      technicalFailure = true;
+      console.warn("[melhor-envio] quote-service-failed", { serviceId: entry.id, reason: "invalid-packing" });
+      continue;
+    }
     const parsed = shippingOptionSchema.safeParse({
       provider: "melhor-envio", serviceId: entry.id, carrier: entry.company?.name,
       service: entry.name, priceCents: typeof price === "string" || typeof price === "number" ? Math.round(Number(price) * 100) : NaN,
       deliveryDays: typeof days === "number" && Number.isInteger(days) && days >= 0 ? days + preparationDays : NaN,
+      ...(packaging ? { packaging } : {}),
     });
     if (parsed.success) quotes.set(parsed.data.serviceId, parsed.data);
     else {
@@ -58,9 +66,9 @@ export function validateShippingProduct(product: ShippingProduct) {
 }
 export function shippingFingerprint(items: { productId: string; quantity: number; expectedUnitPriceCents: number }[], products: ShippingProduct[]) {
   const indexed = new Map(products.map((p) => [p.id, p]));
-  return createHash("sha256").update(JSON.stringify([...items].sort((a, b) => a.productId.localeCompare(b.productId)).map((item) => ({
+  return createHash("sha256").update(JSON.stringify({ packingVersion: 1, items: [...items].sort((a, b) => a.productId.localeCompare(b.productId)).map((item) => ({
     ...item, updatedAt: indexed.get(item.productId)?.updatedAt.toISOString(), profile: indexed.get(item.productId)?.shippingProfile,
-  })))).digest("hex");
+  })) })).digest("hex");
 }
 export function signShippingQuote(payload: ShippingQuotePayload, key: string) {
   if (key.length < 16) throw new Error("Shipping signing key unavailable");

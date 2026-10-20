@@ -22,11 +22,14 @@ test("medication carrier acceptance is enforced both when quoting and submitting
   const baseProduct = { id: "fixture-product", name: "Produto sintético", slug: "fixture", imageUrl: null, category: "Medicamentos", price: "10.00", promotionalPrice: null, status: "ACTIVE" as const, stock: 10, requiresPrescription: false, prescriptionType: undefined as PrescriptionType | undefined, isPopularPharmacy: false, shippingProfile: profile, updatedAt: new Date(0) };
   let products = [baseProduct];
   const integration: { settings: ShippingSettings; revision: number } = { settings: { ...defaultShippingSettings, enabled: true, serviceIds: [1, 2, 3], contactEmail: "shipping@example.invalid" }, revision: 7 };
-  const requests: { services: string; volumes: { weight: number }[] }[] = [];
+  const requests: { services: string; products: { id: string; weight: number; width: number; height: number; length: number; insurance_value: number; quantity: number }[]; volumes?: unknown }[] = [];
   const tx = { product: { findMany: async () => products }, shippingIntegration: { findUnique: async () => integration } };
   const fixture = { tx, integration, provider: async (...args: unknown[]) => {
-    requests.push(args[3] as typeof requests[number]);
-    return [1, 3].map(id => ({ id, name: `Serviço ${id}`, price: "10.00", delivery_time: 3, company: { name: "Transportadora sintética" } }));
+    const request = args[3] as typeof requests[number];
+    requests.push(request);
+    const units = request.products ?? [];
+    const packages = [{ dimensions: { width: 15, height: units.reduce((sum, item) => sum + item.height * item.quantity, 0), length: 20 }, weight: units.reduce((sum, item) => sum + item.weight * item.quantity, 0), insurance_value: units.reduce((sum, item) => sum + item.insurance_value * item.quantity, 0), products: units.map(({ id, quantity }) => ({ id, quantity })) }];
+    return [1, 3].map(id => ({ id, name: `Serviço ${id}`, price: "10.00", delivery_time: 3, company: { name: "Transportadora sintética" }, packages }));
   } };
   const loaded = { exports: {} as { quoteCart: (cep: string, items: CheckoutRequest["items"]) => Promise<ShippingSelection[]>; validateOrderShipping: (transaction: unknown, input: CheckoutRequest) => Promise<unknown> } };
   vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), process: { env: { ...process.env, AUTH_SECRET: key } }, Buffer, Date, fixture, console });
@@ -34,7 +37,8 @@ test("medication carrier acceptance is enforced both when quoting and submitting
   const options = await loaded.exports.quoteCart("01001000", items);
   assert.deepEqual(Array.from(options, option => option.serviceId), [1]);
   assert.equal(requests[0].services, "1,2");
-  assert.equal(requests[0].volumes[0].weight, 0.35, "uses measured packaged grams, converted to kilograms");
+  assert.equal(requests[0].volumes, undefined, "does not force one parcel per unit");
+  assert.equal(requests[0].products[0].weight, 0.35, "uses packaged grams, converted to kilograms once");
   const input = checkoutRequestSchema.parse({ customer: { name: "Cliente sintético", phone: "44999990000" }, fulfillmentMethod: "DELIVERY", paymentMethod: "PIX", privacyConsent: true, address: { postalCode: "01001000", street: "Rua teste", number: "1", neighborhood: "Teste", city: "São Paulo", state: "SP" }, items, shippingToken: options[0].token });
   integration.settings.postingLocations = [{ serviceId: 1, city: "Umuarama", state: "PR", pointName: "Ponto QA" }];
   const savedQuote = await loaded.exports.validateOrderShipping(tx, input) as { postingLocation: { city: string; requiresTravel: boolean } };
@@ -76,4 +80,16 @@ test("medication carrier acceptance is enforced both when quoting and submitting
   products = [{ ...baseProduct, requiresPrescription: true }];
   await assert.rejects(loaded.exports.quoteCart("01001000", items), /atendimento/);
   assert.equal(requests.length, 4, "drafts and unclassified prescription items never reach the provider");
+  products = [{ ...baseProduct, stock: 30 }];
+  const tenItems = [{ ...items[0], quantity: 10 }];
+  const consolidated = await loaded.exports.quoteCart("01001000", tenItems);
+  assert.equal(requests.at(-1)?.products.length, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(requests.at(-1)?.products[0])), { id: baseProduct.id, weight: 0.35, width: 15, height: 10, length: 20, insurance_value: 10, quantity: 10 });
+  const packed = verifyShippingQuote(consolidated[0].token, key) as ReturnType<typeof verifyShippingQuote> & { packaging: { packages: { weightGrams: number; items: { productId: string; quantity: number }[] }[] } };
+  assert.equal(packed.packaging.packages.length, 1);
+  assert.equal(packed.packaging.packages[0].weightGrams, 3500, "keeps the full weight of ten packed units without adding tare again");
+  assert.deepEqual(packed.packaging.packages[0].items, [{ productId: baseProduct.id, quantity: 10 }]);
+  const before = requests.length;
+  await assert.rejects(loaded.exports.quoteCart("01001000", [{ ...items[0], quantity: 21 }]), /farmácia/);
+  assert.equal(requests.length, before, "oversized carts never reach the provider");
 });

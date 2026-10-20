@@ -1,5 +1,9 @@
 # 27 - Melhor Envio e frete por transportadora
 
+## Consolidação por quantidade — 20/10/2026
+
+O cálculo público usa `products` com dimensões/peso/seguro unitários e `quantity`, delegando o empacotamento ao Melhor Envio. O sistema confere os pacotes retornados por serviço e guarda o plano assinado no pedido. Os perfis existentes incluem embalagem/proteção, sem subtrair tara ou presumir medidas comerciais. A previsão não comprova uma caixa física disponível; contrato e pendências em [89](89-consolidacao-embalagens.md). Esta seção substitui o comportamento histórico de um volume por unidade descrito nas entregas anteriores.
+
 ## Simulação no produto e no delivery — 19/10/2026
 
 O simulador público deixou de tratar CEPs fora da área local como indisponíveis sem consulta. Reutiliza `/api/fretes/cotacao` com produto/quantidade atuais ou carrinho, sem modificar configurações e liberações logísticas. Respostas antigas são descartadas ao editar os dados. Contrato e regressões em [79](79-calculo-cep-e-frete.md).
@@ -26,7 +30,7 @@ Dinheiro fica limitado a retirada ou entrega local em Ivaté/Douradina-PR. Local
 2. O aplicativo cadastrado no Melhor Envio usa a URL de callback `https://wimifarma.com.br/api/admin/fretes/conectar/callback`. Os dados do aplicativo são guardados cifrados no banco. Sandbox e produção são contas/aplicativos distintos; mudar ambiente limpa a conexão.
 3. O botão Conectar inicia OAuth; o administrador autoriza no próprio Melhor Envio. Escopos: `shipping-calculate`, `shipping-companies`, `shipping-tracking`. **Não solicitar `shipping-checkout` ou outras permissões de gasto nesta fase.**
 4. Simular uma embalagem consulta preços e não gera remessas. Selecionar serviços somente após confirmar aceitação da carga, unidade de postagem e/ou coleta em Ivaté. Salvar configuração aplica a seleção.
-5. Pesar e medir cada unidade já embalada; registrar gramas e centímetros. Cada unidade é cotada como um volume separado, limitando a 20 volumes por pedido. Consolidação de vários produtos na mesma caixa é uma evolução pendente; não presumir dimensões da caixa a partir de fotos ou peso nominal do produto.
+5. Pesar e medir cada unidade já protegida; registrar gramas e centímetros. A API recebe os dados unitários com a quantidade e calcula os pacotes. Há limite operacional de 20 unidades por cotação automática; pedidos maiores seguem conferência da farmácia. Conferir o volume externo final antes da etiqueta; não presumir dimensões a partir de fotos, peso líquido ou medidas internas.
 6. Marcar a revisão de conservação/aceitação e liberar os produtos elegíveis. Medicamentos sem receita podem usar PAC/SEDEX; a categoria não bloqueia esses itens. `requiresPrescription` e Farmácia Popular continuam no atendimento. Líquidos, aerossóis e itens sensíveis ao calor exigem análise da equipe e da transportadora.
 7. Ativar a cotação no checkout somente depois da homologação. Entrega local e retirada permanecem disponíveis. Para outros CEPs o cliente calcula e escolhe uma cotação. O pagamento nacional aceita Pix combinado com a equipe ou Mercado Pago quando homologado e habilitado.
 8. O admin de pedidos mostra serviço, transportadora, valor e prazo escolhido. Comprar a etiqueta no Melhor Envio somente após conferir pagamento, NF-e, embalagem e destinatário.

@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-20 — Consolidação e conferência dos pacotes de frete
+
+- Substituído `volumes` por `products` com quantidade no cálculo público do Melhor Envio; removida a imposição de uma remessa por unidade. Preservados limite operacional, permissões e perfis embalados, incluindo as estimativas autorizadas.
+- Pacotes por serviço conferidos contra as unidades/pesos/dimensões/seguro enviados, assinados e preservados no snapshot do pedido. Estratégia versionada no fingerprint invalida cotações antigas; o ADMIN vê a previsão de embalagem e sua origem estimada.
+- O lojista autorizou médias/referências por não dispor de medições físicas. Revisada somente a estimativa operacional do Dove com ficha da apresentação exata e margens identificadas; demais perfis e regras comerciais preservados. Empacotamento inconsistente recebe uma única nova cotação com envelope maior; planos fisicamente impossíveis não viram ofertas. Contrato, fontes e validação em [89](89-consolidacao-embalagens.md).
+
 ## 2026-10-20 — Fundo suave e acabamento da faixa de categorias
 
 - Reutilizada fotografia institucional ilustrativa em baixa opacidade, com sobreposição clara e CSS isolado no componente de atalhos.

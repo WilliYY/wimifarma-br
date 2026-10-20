@@ -44,11 +44,24 @@ export const shippingItemsSchema = z.array(z.object({
   expectedUnitPriceCents: z.number().int().positive().max(1_000_000),
 })).min(1).max(30).refine((items) => new Set(items.map((item) => item.productId)).size === items.length, "Produto repetido.");
 export const quoteRequestSchema = z.object({ postalCode: z.string().regex(/^\d{8}$/), items: shippingItemsSchema });
+export const shippingPackagingSchema = z.object({
+  version: z.literal(1),
+  calculationMethod: z.enum(["provider", "provider-conservative-envelope"]).default("provider"),
+  inputMeasurementBasis: z.enum(["measured", "estimated"]),
+  packages: z.array(z.object({
+    weightGrams: z.number().int().positive().max(600000),
+    widthCm: z.number().positive().max(1000), heightCm: z.number().positive().max(1000), lengthCm: z.number().positive().max(1000),
+    insuranceValueCents: z.number().int().positive().max(20_000_000),
+    items: z.array(z.object({ productId: z.string().min(1).max(64), quantity: z.number().int().min(1).max(20) })).min(1).max(20),
+  })).min(1).max(20),
+});
+export type ShippingPackaging = z.infer<typeof shippingPackagingSchema>;
 export const shippingOptionSchema = z.object({
   provider: z.literal("melhor-envio"), serviceId: z.number().int().positive(),
   carrier: z.string().min(1).max(100), service: z.string().min(1).max(100),
   priceCents: z.number().int().positive().max(10_000_000),
   deliveryDays: z.number().int().min(0).max(365),
+  packaging: shippingPackagingSchema.optional(),
 });
 export const shippingSelectionSchema = shippingOptionSchema.extend({ token: z.string().min(1).max(8000) });
 export type ShippingOption = z.infer<typeof shippingOptionSchema>;

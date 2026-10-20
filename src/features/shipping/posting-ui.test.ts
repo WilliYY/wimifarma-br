@@ -13,7 +13,7 @@ test("orders show historical posting location above recipient and filter local, 
   const quote = { provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC", priceCents: 2000, deliveryDays: 4, postalCode: "01001000", fingerprint: "a".repeat(64), revision: 1, expiresAt: 1 };
   const base = { customerId: null, customerName: "Cliente sintético", customerPhone: "00000000000", customerEmail: null, fulfillmentMethod: "DELIVERY", paymentMethod: "PIX", paymentStatus: "PAID", status: "PENDING", requiresPrescriptionReview: false, prescriptionReviewedAt: null, subtotalCents: 5000, deliveryFeeCents: 2000, totalCents: 7000, street: "Rua sintética", addressNumber: "1", city: "São Paulo", state: "SP", postalCode: "01001000", items: [], createdAt: new Date(0).toISOString() };
   const orders = [
-    { ...base, id: "local", number: "LOCAL", shippingQuote: { ...quote, postingLocation: { city: "Ivaté", state: "PR", requiresTravel: false, pointName: "Agência sintética" } } },
+    { ...base, id: "local", number: "LOCAL", shippingQuote: { ...quote, packaging: { version: 1, inputMeasurementBasis: "estimated", packages: [{ weightGrams: 5000, lengthCm: 52.8, widthCm: 51.8, heightCm: 35, insuranceValueCents: 9990, items: [{ productId: "synthetic-a", quantity: 10 }] }] }, postingLocation: { city: "Ivaté", state: "PR", requiresTravel: false, pointName: "Agência sintética" } } },
     { ...base, id: "travel", number: "VIAGEM", shippingQuote: { ...quote, postingLocation: { city: "Umuarama", state: "PR", requiresTravel: true } } },
     { ...base, id: "pending", number: "LEGADO", shippingQuote: quote },
     { ...base, id: "delivery", number: "ENTREGA LOCAL", shippingQuote: null },
@@ -30,6 +30,10 @@ test("orders show historical posting location above recipient and filter local, 
     const pending = page.locator("article").filter({ has: page.getByRole("heading", { name: "LEGADO", exact: true }) });
     await expect(local.getByText("Postagem em Ivaté/PR", { exact: true })).toBeVisible();
     await expect(local.getByRole("region", { name: "Postagem do pedido" })).toHaveClass(/bg-emerald-50/);
+    await expect(local.getByLabel("Embalagem prevista na cotação")).toContainText("52,8 × 51,8 × 35 cm");
+    await expect(local.getByLabel("Embalagem prevista na cotação")).toContainText("5.000 g · 10 unidade(s)");
+    await expect(local.getByLabel("Embalagem prevista na cotação")).toContainText("pesos e medidas de origem são estimados");
+    await expect(travel.getByLabel("Embalagem prevista na cotação")).toHaveCount(0);
     await expect(travel.getByText("Levar para Umuarama/PR", { exact: true })).toBeVisible();
     await expect(travel.getByRole("region", { name: "Postagem do pedido" })).toHaveClass(/bg-amber-50/);
     await expect(pending.getByText("Local de postagem: confirmação pendente", { exact: true })).toBeVisible();

@@ -1,5 +1,9 @@
 # 43 - Frete estimado, envio próprio de e-mails e validação Asaas
 
+## Atualização — 20/10/2026
+
+O cálculo por unidade/volume descrito historicamente foi substituído pelo empacotamento por produtos/quantidade, com checagens e fallback conservador. O lojista renovou a autorização para médias/referências sem medições físicas: a estimativa do Dove foi revisada para 600 g e C10 × L10 × A18 cm com fonte e premissas identificadas; Cimegripe e KitKat preservam os limites anteriores. Estado atual em [89](89-consolidacao-embalagens.md).
+
 ## Decisão do lojista em 06/10/2026
 
 O lojista autorizou usar peso médio para iniciar cotações, sem tratar a estimativa como medição. Perfis operacionais propostos por unidade pronta para envio:
