@@ -14,7 +14,7 @@ const contentSecurityPolicy = [
   "form-action 'self'",
   `script-src ${scriptSources}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "img-src 'self' data: blob: https://lh3.googleusercontent.com",
+  "img-src 'self' data: blob: https://lh3.googleusercontent.com https://http2.mlstatic.com https://www.mercadopago.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "media-src 'self' blob:",
   "connect-src 'self'",
@@ -39,7 +39,6 @@ const paymentSecurityPolicy = contentSecurityPolicy
   // Secure Fields fetches its cache URL before assigning the iframe src;
   // api-static is its official fallback, so both need connect-src as well.
   .replace("connect-src 'self'", "connect-src 'self' https://api.mercadopago.com https://api.mercadolibre.com https://http2.mlstatic.com https://secure-fields.mercadopago.com https://api-static.mercadopago.com")
-  .replace("img-src 'self' data: blob: https://lh3.googleusercontent.com", "img-src 'self' data: blob: https://lh3.googleusercontent.com https://http2.mlstatic.com")
   + "; frame-src https://secure-fields.mercadopago.com https://api-static.mercadopago.com";
 
 if (process.env.NODE_ENV === "production") {

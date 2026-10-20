@@ -20,7 +20,15 @@ test("brands preserve every active card type, deduplicate IDs and omit provider-
   assert.deepEqual(brands[0], { id: "brand-0", name: "BRAND-0", image: "https://http2.mlstatic.com/brand.png" });
 });
 
-test("brands allow only HTTPS Mercado Pago image host without credentials; names remain usable", () => {
+test("brands support the official Mercado Pago logo origin without accepting lookalikes or credentials", () => {
+  const image = "https://www.mercadopago.com/org-img/MP3/API/logos/visa.gif";
+  assert.equal(parsePaymentBrands([method("visa", { secure_thumbnail: image })])[0].image, image);
+  for (const url of ["http://www.mercadopago.com/org-img/MP3/API/logos/visa.gif", "https://www.mercadopago.com.evil.example/a", "https://user:pass@www.mercadopago.com/a", "https://www.mercadopago.com:8443/a"]) {
+    assert.equal(parsePaymentBrands([method("visa", { secure_thumbnail: url })])[0].image, null);
+  }
+});
+
+test("brands allow only HTTPS Mercado Pago image hosts without credentials; names remain usable", () => {
   const invalid = [null, undefined, "http://http2.mlstatic.com/a", "https://http2.mlstatic.com.evil.example/a",
     "https://evil.example/a", "https://user:pass@http2.mlstatic.com/a", "data:image/svg+xml,test", "javascript:alert(1)"];
   for (const url of invalid) {

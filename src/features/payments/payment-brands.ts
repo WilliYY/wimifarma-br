@@ -16,7 +16,7 @@ export function parsePaymentBrands(value: unknown): PublicPaymentBrand[] {
     let image: string | null = null;
     try {
       const url = new URL(method.secure_thumbnail ?? "");
-      if (url.origin === "https://http2.mlstatic.com" && !url.username && !url.password) image = url.toString();
+      if (["https://http2.mlstatic.com", "https://www.mercadopago.com"].includes(url.origin) && !url.username && !url.password) image = url.toString();
     } catch { /* Brand name remains usable without an image. */ }
     return [{ id: method.id, name: method.name, image }];
   });

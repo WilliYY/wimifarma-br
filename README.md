@@ -50,7 +50,7 @@ Entrega de 07/10/2026, com conferência produtiva, testes, cotações reais e li
 
 Recuperação de consultas de pagamento, revisão explícita do carrinho e andamento das conexões Asaas/Reclame AQUI: [docs/50-recuperacao-de-compra-e-conexoes.md](docs/50-recuperacao-de-compra-e-conexoes.md).
 
-Cadastros de reputação e presença: [docs/46-cadastros-reputacao-e-presenca.md](docs/46-cadastros-reputacao-e-presenca.md). Search Console HTTPS verificado e sitemap processado, com 15 páginas encontradas. Solicitações Google e Ebit enviadas; Perfil da Empresa aguarda proprietário até 09/10. Reclame AQUI empresarial gratuito ativo, com login pessoal confirmado e somente o titular como administrador ativo; acesso da contabilidade desativado. Descrição, confirmação do site, logo e URL pública ainda pendentes. Nenhum selo concedido.
+Histórico dos cadastros de reputação e presença: [docs/46-cadastros-reputacao-e-presenca.md](docs/46-cadastros-reputacao-e-presenca.md). Search Console HTTPS verificado e sitemap processado; solicitações Google e Ebit enviadas. Perfil público do Reclame AQUI confirmado em 14/10 e novamente em 20/10/2026, ainda sem verificação ou reputação definida. A consulta pública Ebit de 20/10 não localizou a loja, sem concluir inexistência no sistema. Nenhum selo concedido foi comprovado; estado e fontes atuais em [84](docs/84-rodape-pagamentos-e-consultas.md).
 
 Pedido online de medicamentos de receita comum, sem upload no checkout, com conferência farmacêutica antes da dispensação: [docs/45-pedido-online-e-conferencia-de-receita.md](docs/45-pedido-online-e-conferencia-de-receita.md). Classificação exclusiva de ADMIN, sem decisão automática da IA; controlados e Farmácia Popular seguem atendimento assistido.
 

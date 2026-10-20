@@ -3,6 +3,7 @@
 ## 2026-10-20 — Pagamentos e consultas no rodapé
 
 - Bandeiras ativas do catálogo Mercado Pago aparecem automaticamente, sem corte em 12, com nome como alternativa para imagem indisponível e condições confirmadas no checkout. Cache por conta/revisão/ambiente protege a consulta; configuração financeira não foi alterada.
+- Imagens públicas permitem somente as duas origens oficiais HTTPS do provedor; scripts/conexões/frames permanecem restritos ao checkout. Pix usa símbolo vetorial oficial do BC, com proporções e cor do manual.
 - Anvisa recebe link ao portal oficial com ícone genérico; logomarca depende de autorização da agência. Perfil Reclame AQUI confirmado, sem RA1000/verificação; Ebit não localizado nesta consulta e reCAPTCHA não integrado, portanto sem esses selos.
 - Mantidos logo oficial, 128 bolhas, tempos, filtro e movimento reduzido. Fontes, limites e validação em [84](84-rodape-pagamentos-e-consultas.md).
 

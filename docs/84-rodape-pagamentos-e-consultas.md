@@ -11,13 +11,19 @@ A seção de pagamentos destaca Pix com os 3% já aprovados e reúne as bandeira
 - Reutiliza `publicPaymentConfiguration(false)`: apenas configuração pública de produção, sem habilitar ambiente de teste ou alterar roteamento financeiro.
 - O componente servidor entrega somente `{ id, name, image }` e um indicador de origem para a apresentação. Token, segredo de webhook, conta e revisão não são serializados no rodapé; a chave pública também não é necessária nessa seção.
 - O catálogo vem de `/v1/payment_methods`. Permanecem os tipos ativos `credit_card`, `debit_card` e `prepaid_card` já usados pela integração. IDs são deduplicados e o corte antigo em 12 foi removido.
-- URLs de imagem aceitam somente a origem HTTPS `http2.mlstatic.com`, sem usuário ou senha. Ausência, URL recusada ou erro de carregamento usa o nome da bandeira. Não há lista manual que precise ser atualizada para incluir novas marcas do catálogo.
+- URLs de imagem aceitam somente as origens HTTPS `http2.mlstatic.com` e `www.mercadopago.com`, sem usuário ou senha. A segunda é documentada no exemplo oficial de `secure_thumbnail`; HTTP e domínios semelhantes continuam recusados. Ausência, URL recusada ou erro de carregamento usa o nome da bandeira. Não há lista manual que precise ser atualizada para incluir novas marcas do catálogo.
 - O endpoint descreve métodos disponíveis para integração conforme o país associado à conta. `active` não comprova habilitação ou homologação individual para a loja. Por isso a legenda informa: “Bandeiras disponibilizadas pelo Mercado Pago. A opção final e as condições são confirmadas no checkout.”
 - Cache de apresentação por conta, revisão e ambiente: sucesso de 30 minutos, chamada compartilhada por chave e intervalo de 60 segundos após falha. Entradas assentadas vencidas são descartadas na próxima consulta. Uma requisição antiga não sobrescreve outra configuração. Nenhum dado de pagamento ou total é armazenado nesse cache.
 - Um componente servidor assíncrono em `Suspense` permite renderizar o restante do rodapé enquanto a consulta ocorre. Na indisponibilidade, Pix/cartão genéricos e orientação para conferir o checkout continuam disponíveis. O fallback Asaas existente é preservado e não recebe bandeiras inventadas.
 - Sem novos meios, PicPay, parcelas, cobranças, formulários de cartão, API pública ou dependências.
 
 Referências oficiais: [escopo do catálogo Mercado Pago](https://www.mercadopago.com.br/developers/pt/docs/sales-processing/payment-methods), [API de meios de pagamento](https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-api/payment-methods/get).
+
+### Política de imagens e marca Pix
+
+A conferência pública da primeira publicação identificou logos substituídos por nomes: a CSP das páginas públicas bloqueava `http2.mlstatic.com`, embora o checkout já o permitisse. O `img-src` geral foi ampliado apenas para as duas origens HTTPS oficiais acima. Scripts, conexões e frames do Mercado Pago continuam restritos às rotas de pagamento; não houve wildcard, nova API de proxy ou liberação de HTTP. A regressão de interface agora usa a CSP real, uma imagem válida e uma imagem quebrada, além do catálogo com 16 bandeiras.
+
+O Pix usa `public/payments/pix-symbol.svg`, com os três caminhos vetoriais extraídos de `ArquivosdaMarcaPix/pdf/simbolo_pix_policromia_positivo.pdf` do [pacote oficial do BC](https://www.bcb.gov.br/content/estabilidadefinanceira/pix/marca/ArquivosdaMarcaPix.zip). Geometria, proporção e área de proteção preservadas; cor RGB `#77B6A8` conforme o [manual v1.6](https://www.bcb.gov.br/content/estabilidadefinanceira/pix/Regulamento_Pix/I_manual_uso_marca_pix.pdf), sem efeitos ou referências externas. Artboard de 44 px resulta em símbolo de aproximadamente 32 px, acima dos 24 px mínimos. O texto “Pagando com Pix” acompanha o desconto sem reconstruir o logotipo. PDF de origem SHA-256: `97f05061832a99c04d3ca834dd14598eabac672a81e18fd1df6760ba2555cffc`. O [BC orienta o uso da marca por comerciantes](https://www.bcb.gov.br/estabilidadefinanceira/pix-cobranca) para identificar o meio aceito.
 
 ## Anvisa
 
@@ -48,6 +54,8 @@ A documentação atual mudou em 02/04/2026; não copiar automaticamente o aviso 
 - `npm.cmd run test:security`: 418/418. Dois testes de interface em Chromium passaram novamente com capturas e inspeção visual em celular/desktop; os testes de configuração usam banco e provedor simulados.
 - `npm.cmd run lint`, `npm.cmd run typecheck` e `git diff --check` passaram.
 - `npm.cmd audit --omit=dev --audit-level=high --json`: zero vulnerabilidades. Auditoria completa com nível moderate encontrou cinco alertas altos já existentes no ferramental de desenvolvimento (`@next/eslint-plugin-next`, `eslint-config-next`, `braces`, `fast-glob`, `micromatch`), zero críticos. Nenhuma dependência foi adicionada ou atualizada nesta tarefa.
-- Build Linux, saúde do container e conferência pública serão registrados após a publicação. A suíte completa de todas as áreas não foi repetida para esta alteração de apresentação; a verificação financeira foi focada e a suíte obrigatória de segurança foi executada.
+- `npm.cmd run prisma:validate` passou. Primeira publicação `ea18562`: build Linux passou e container ficou saudável; a conferência real identificou o bloqueio de imagens descrito acima.
+- RED do logo oficial e da CSP confirmado; após a correção, 17/17 testes focados passaram, incluindo imagem carregada, fallback e responsividade sob a política real. Revisão independente aprovou a permissão mínima e o SVG local, sem achados.
+- Rodada final de `npm.cmd run test:security`: 420/420 após o ajuste das imagens/CSP. Novo build e conferência pública dos logos serão registrados após execução. A suíte completa de todas as áreas não foi repetida para esta alteração de apresentação; a verificação financeira foi focada e a suíte obrigatória de segurança foi executada.
 
 Capturas e logs ficam em `outputs` ou no escopo temporário da tarefa, fora do Git. Os ensaios não criam pedidos, cobranças, avaliações ou cadastros externos.
