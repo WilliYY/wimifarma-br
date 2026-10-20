@@ -38,3 +38,11 @@ Regressões cobrem assuntos, contexto, nomes, identificadores, doses, SQL parame
 Evidências locais: `outputs/search-intelligence-2026-10-20/`. Sem migração, importação, reindexação ou alteração de dados comerciais.
 
 Validação antes da publicação: 24 testes de busca/SQL passaram; sete regressões de UI passaram, incluindo apresentação neutra e teclado do autocomplete. Os 442 testes de segurança, lint, typecheck e Prisma passaram. Revisão independente aprovou após corrigir a preservação de SKU por campo. Auditoria de produção sem vulnerabilidades; auditoria completa mantém cinco alertas high preexistentes de desenvolvimento, zero critical, sem alteração de dependências. Build e conferência publicada são registrados após a ativação.
+
+## Publicação conferida
+
+Publicado `ccb10710b1f1d58164590cc9e147c5009c2df30a` em 20/10/2026. [CI da entrega](https://github.com/WilliYY/wimifarma-br/actions/runs/39479867392) passou com 1.002 testes, sem falhas. Build de produção passou no Docker. Imagem `sha256:7133abb618cc6932033aa4bb3217589b91aaaa74853f45750d652533cdbb41ed`, com label de revisão igual ao commit, ficou saudável com zero reinicializações. Recriada somente a aplicação; imagem anterior preservada em `wimifarma-br-app:rollback-search-20261020`. Sem alteração de PostgreSQL ou proxy compartilhado.
+
+API publicada passou 16 verificações: assuntos, condições distintas, contextos bloqueados, consulta sem palavras e limite de 80 caracteres. Conferência no navegador validou autocomplete de pressão, Enter, 114 resultados em cinco páginas, relação Rx sem imagens e exclusão da lateral. `grip` recuperou Cimegrip também no autocomplete móvel. Página e busca sem transbordamento em 1280 e 390 px; viewport temporário restaurado. Capturas locais `search-desktop.png` e `search-mobile.png` na pasta de evidências.
+
+Fingerprint completo dos 596 registros de Product (594 ativos) permaneceu `1b423ed95ad59b2b38f4305dc16f6df0` antes/depois: nenhum campo, preço ou estoque foi alterado. Conferência foi somente leitura, sem pedido, pagamento ou envio de mensagem. Permanece a revisão sanitária pelo responsável técnico mencionada nos limites acima; não há pendência técnica conhecida desta entrega.
