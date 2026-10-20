@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Preço e economia nos cards — 2026-10-20
+
+Cards compartilhados pela home, catálogo, busca e relacionados mostram “de/por” usando referências reais e valor Pix com condição explícita de uma unidade. Selo verde distingue o Pix; promoção cadastrada conserva seu percentual próprio. Preço sem Pix permanece visível e o carrinho recebe a base anterior ao desconto. Sem alteração da grade, ações, imagens ou identidade. Contrato em [86](86-precos-e-desconto-real-nos-cards.md).
+
 ## Pagamentos e consultas no rodapé — 2026-10-20
 
 Pix com 3%, bandeiras automáticas do Mercado Pago com alternativa em texto e seção de consultas à Anvisa. Links de reputação ficam agrupados, sem estrelas ou selos não comprovados. As marcas quebram em linhas no celular; o carregamento da consulta usa `Suspense` sem bloquear o restante. Corpo branco, logo completa e animação original das 128 bolhas preservados. Contrato em [84](84-rodape-pagamentos-e-consultas.md).

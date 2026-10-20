@@ -22,6 +22,8 @@ O desconto exibido nos detalhes históricos é a diferença persistida `subtotal
 
 ## Banner e apresentação
 
+Desde 20/10/2026, os cards também destacam o preço Pix para uma unidade, com referência verdadeira, percentual e preço sem Pix. O valor enviado ao carrinho continua anterior à redução; o arredondamento por subtotal e os resgates seguem as regras acima. Comparação visual não cria promoção ou referência histórica fictícia. Detalhes em [86](86-precos-e-desconto-real-nos-cards.md).
+
 Faixa entre as marcas e a primeira vitrine, com fundo verde claro, texto escuro, destaque vermelho no percentual, logo oficial completa e ação para o catálogo. Geometria discreta, sem logo Pix recriada, imagem de campanha gerada, autoplay ou dependência adicional. Direção de varejo claro, usando a fonte e os controles existentes. DFII 14: impacto 3, adequação 5, viabilidade 4, desempenho 4, risco 2.
 
 Texto principal: **Pague com Pix e ganhe 3% de desconto.** Complemento informa aplicação nos produtos e frete à parte. O percentual vem da mesma constante usada no cálculo.

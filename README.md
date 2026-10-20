@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Cards com “de/por”, percentual e condição real de Pix, sem preço de referência artificial: [documento 86](docs/86-precos-e-desconto-real-nos-cards.md).
+
 Rodapé com bandeiras automáticas do meio de pagamento, Pix, consultas oficiais da Anvisa e canais de reputação conferidos: [documento 84](docs/84-rodape-pagamentos-e-consultas.md).
 
 Desconto de 3% no Pix para novos pedidos, banner e discriminação no checkout: [documento 83](docs/83-desconto-pix.md).

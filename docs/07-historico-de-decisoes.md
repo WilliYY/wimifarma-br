@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-20 — Comparação verdadeira de preços nos cards
+
+- Referências vêm do preço normal/promocional cadastrado, sem inverter o acréscimo de fornecedor ou fabricar preço anterior. Cards compráveis destacam o Pix real de 3%, com preço sem Pix e condição para uma unidade.
+- Carrinho conserva a base antes do Pix; checkout aplica a redução uma única vez no subtotal. Itens assistidos/indisponíveis mantêm seus fluxos. Contrato, limites de arredondamento e validação em [86](86-precos-e-desconto-real-nos-cards.md).
+
 ## 2026-10-20 — Pagamentos e consultas no rodapé
 
 - Bandeiras ativas do catálogo Mercado Pago aparecem automaticamente, sem corte em 12, com nome como alternativa para imagem indisponível e condições confirmadas no checkout. Cache por conta/revisão/ambiente protege a consulta; configuração financeira não foi alterada.

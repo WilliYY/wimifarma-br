@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { build } from "esbuild";
 import { chromium, expect, type Page } from "@playwright/test";
+import postcss from "postcss";
+import tailwind from "@tailwindcss/postcss";
+import { pixDiscountCents } from "@/features/payments/pix-discount";
 
 const origin = "http://127.0.0.1:3196";
 const quantityLabel = "Quantidade de caixas de Produto sintético";
@@ -17,7 +20,8 @@ const bundle = build({
       const kind=new URLSearchParams(location.search).get('kind');
       const product={id:'synthetic-product',slug:'produto-sintetico',name:'Produto sintético',
         imageUrl:null,category:'Produto',brand:'Marca sintética',activeIngredients:[],searchTerms:[],
-        price:'6.87',promotionalPrice:null,isPopularPharmacy:false,requiresPrescription:kind==='restricted',
+        price:kind==='soap'?'3.44':kind==='promotion'?'100.00':kind==='tiny'?'0.17':kind==='penny'?'0.01':'6.87',
+        promotionalPrice:kind==='promotion'?'80.00':null,isPopularPharmacy:false,requiresPrescription:kind==='restricted',
         prescriptionType:kind==='restricted'?'CONTROLLED':'ORDINARY',stock:kind==='unavailable'?0:kind==='demand'?1:15,
         inventorySource:kind==='demand'?'DISTRIBUTOR':'PHARMACY',supplierDemandAllowed:kind==='demand'};
       createRoot(document.getElementById('root')).render(<CartProvider><PublicProductCard product={product}/></CartProvider>);`,
@@ -41,10 +45,13 @@ const bundle = build({
   } }],
 });
 
+const css = process.env.PRODUCT_CARD_CAPTURE_ROOT
+  ? postcss([tailwind()]).process(readFileSync("src/app/globals.css", "utf8"), { from: "src/app/globals.css" }).then(result => result.css)
+  : Promise.resolve("");
+
 async function fixture(run: (page: Page) => Promise<void>, kind = "physical") {
-  const cssDirectory = join(process.cwd(), ".next/static/css");
-  const css = process.env.PRODUCT_CARD_CAPTURE_ROOT && existsSync(cssDirectory)
-    ? readdirSync(cssDirectory).filter(file => file.endsWith(".css")).map(file => readFileSync(join(cssDirectory, file), "utf8")).join("\n") : "";
+  const script = (await bundle).outputFiles[0].text;
+  const styles = await css;
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
@@ -53,9 +60,9 @@ async function fixture(run: (page: Page) => Promise<void>, kind = "physical") {
     await page.route("**/*", async route => {
       const url = new URL(route.request().url());
       if (url.origin !== origin) return route.abort();
-      if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: '<link rel="stylesheet" href="/fixture.css"><div id="root" style="width:280px;margin:24px"></div><script type="module" src="/fixture.js"></script>' });
-      if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: css });
-      if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: (await bundle).outputFiles[0].text });
+      if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: '<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><style>#root{width:min(280px,calc(50vw - 24px));margin:24px}</style><div id="root"></div><script type="module" src="/fixture.js"></script>' });
+      if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: styles });
+      if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: script });
       if (url.pathname === "/api/miauby/carrinho") return route.fulfill({ json: {} });
       return route.abort();
     });
@@ -151,6 +158,67 @@ test("itens assistidos ou indisponíveis não recebem campo de compra", async ()
       await expect(page.getByRole("button", { name: "Comprar", exact: true })).toHaveCount(0);
       if (kind === "restricted") await expect(page.getByRole("link", { name: "Consultar no WhatsApp" })).toBeVisible();
       else await expect(page.getByRole("button", { name: "Avise-me quando chegar" })).toBeVisible();
+      await expect(page.getByText("3% no Pix", { exact: true })).toHaveCount(0);
+      await expect(page.getByText("no Pix", { exact: true })).toHaveCount(0);
     }, kind);
   }
+});
+
+test("card compara preço normal com Pix real sem descontar antecipadamente o carrinho", async () => {
+  await fixture(async page => {
+    const prices = page.getByRole("group", { name: "Preço do produto", exact: true });
+    await expect(prices.locator("s")).toHaveText(/3,44/);
+    await expect(prices.getByText(/R\$\s*3,34/, { exact: true })).toBeVisible();
+    await expect(prices.getByText("no Pix", { exact: true })).toBeVisible();
+    await expect(prices.getByText("Para 1 unidade.", { exact: true })).toBeVisible();
+    await expect(page.getByText("3% no Pix", { exact: true })).toBeVisible();
+    if (process.env.PRODUCT_CARD_CAPTURE_ROOT) {
+      mkdirSync(process.env.PRODUCT_CARD_CAPTURE_ROOT, { recursive: true });
+      for (const width of [320, 390, 1280]) {
+        await page.setViewportSize({ width, height: 760 });
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+        await page.screenshot({ path: join(process.env.PRODUCT_CARD_CAPTURE_ROOT, `preco-pix-${width}.png`), fullPage: true });
+      }
+    }
+    await page.getByRole("button", { name: "Adicionar", exact: true }).click();
+    await expectCartQuantity(page, 1);
+    const item = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!)[0]);
+    assert.equal(item.unitPriceCents, 344);
+    assert.equal(item.originalPriceCents, null);
+  }, "soap");
+});
+
+test("promoção cadastrada mantém referência real e não soma percentuais ao Pix", async () => {
+  await fixture(async page => {
+    const prices = page.getByRole("group", { name: "Preço do produto", exact: true });
+    await expect(prices.locator("s")).toHaveText(/100,00/);
+    await expect(prices.getByText(/R\$\s*77,60/, { exact: true })).toBeVisible();
+    await expect(prices.getByText(/80,00 sem desconto Pix/)).toBeVisible();
+    await expect(page.getByText("20% OFF", { exact: true })).toBeVisible();
+    await expect(page.getByText("23% OFF", { exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: "Adicionar", exact: true }).click();
+    await expectCartQuantity(page, 1);
+    const item = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!)[0]);
+    assert.equal(item.unitPriceCents, 8000);
+    assert.equal(item.originalPriceCents, 10000);
+  }, "promotion");
+});
+
+test("preço Pix unitário informa sua condição e preserva arredondamento no subtotal", async () => {
+  await fixture(async page => {
+    const prices = page.getByRole("group", { name: "Preço do produto", exact: true });
+    await expect(prices.getByText(/R\$\s*0,16/, { exact: true })).toBeVisible();
+    await expect(prices.getByText("Para 1 unidade.", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Adicionar", exact: true }).click();
+    await page.getByRole("textbox", { name: quantityLabel }).fill("3");
+    await expectCartQuantity(page, 3);
+    const item = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!)[0]);
+    assert.equal(item.unitPriceCents, 17);
+    const subtotal = item.unitPriceCents * item.quantity;
+    assert.equal(subtotal - pixDiscountCents(subtotal), 49);
+  }, "tiny");
+  await fixture(async page => {
+    await expect(page.getByText("3% no Pix", { exact: true })).toHaveCount(0);
+    await expect(page.locator("s")).toHaveCount(0);
+  }, "penny");
 });
