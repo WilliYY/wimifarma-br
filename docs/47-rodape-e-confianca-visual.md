@@ -1,5 +1,9 @@
 # 47 - Rodapé e confiança visual
 
+## Atualização — 20/10/2026
+
+Rodapé inclui bandeiras do catálogo ativo do Mercado Pago, sem lista manual ou corte em 12, Pix com 3% e condições confirmadas no checkout. Imagens indisponíveis usam o nome; falha da consulta mantém orientação genérica. Anvisa recebe link ao portal oficial, sem logomarca ou alegação de certificação. Reclame AQUI e Google ficam em “Avaliações e atendimento”. Pesquisa atual, limites de Ebit/reCAPTCHA, cache e validação em [84](84-rodape-pagamentos-e-consultas.md). Logo, bolhas, filtro, tempos e preferência de movimento reduzido permanecem.
+
 ## Atualização — 14/10/2026
 
 Página pública do Reclame AQUI confirmada pelo CNPJ, descrição e domínio da Wimifarma. Incluído link textual “Nosso perfil no Reclame AQUI” em Nossa farmácia, com proteção de aba externa e estilo existente. Trata-se de acesso institucional, sem selo ou alegação de verificação: perfil ainda não verificado e sem reputação definida. RA1000/RA Verificada e Ebit permanecem sem concessão comprovada. Marca, estrutura e 128 bolhas preservadas. Evidências em [64](64-correcao-cashback-checkout-e-transportadoras.md).

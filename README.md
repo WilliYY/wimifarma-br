@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Rodapé com bandeiras automáticas do meio de pagamento, Pix, consultas oficiais da Anvisa e canais de reputação conferidos: [documento 84](docs/84-rodape-pagamentos-e-consultas.md).
+
 Desconto de 3% no Pix para novos pedidos, banner e discriminação no checkout: [documento 83](docs/83-desconto-pix.md).
 
 Faixa de marcas na home, alimentada pelos produtos publicados e com filtro exclusivo no catálogo: [documento 82](docs/82-marcas-do-catalogo.md).

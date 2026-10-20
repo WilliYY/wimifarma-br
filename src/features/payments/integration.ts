@@ -4,10 +4,11 @@ import { decryptValue, encryptValue } from "@/lib/secret-vault";
 import { PaymentError, paymentSettingsSchema } from "./schema";
 import { mercadoPagoRequest } from "./provider";
 import { readAsaasIntegration } from "./asaas-integration";
+import { createPaymentBrandsCache, type PublicPaymentBrand } from "./payment-brands";
 
 export const PAYMENT_INTEGRATION_ID = "mercado-pago";
 const secretsSchema = z.object({ accessToken: z.string().min(10), webhookSecret: z.string().min(10) });
-let brandsCache: { accountId: string; expiresAt: number; brands: { id: string; name: string; image: string | null }[] } | null = null;
+const readPaymentBrands = createPaymentBrandsCache();
 export async function readPaymentIntegration() {
   const row = await getPrisma().paymentIntegration.findUnique({ where: { id: PAYMENT_INTEGRATION_ID } });
   if (!row) return null;
@@ -26,24 +27,14 @@ export async function publicPaymentConfiguration(isAdmin = false) {
     const asaas = await readAsaasIntegration();
     return asaas?.enabled && asaas.secrets.webhookId && asaas.secrets.methods.length ? { publicKey: "", environment: "production", brands: [] } : null;
   }
-  let brands: { id: string; name: string; image: string | null }[] = [];
+  let brands: PublicPaymentBrand[] = [];
   let connection: Awaited<ReturnType<typeof readPaymentIntegration>>;
   try { connection = await readPaymentIntegration(); }
   catch { console.error("[mercado-pago] connection-unavailable"); return null; }
   if (!connection) return null;
+  const accessToken = connection.secrets.accessToken;
   try {
-    if (connection) {
-      if (brandsCache?.accountId === connection.accountId && brandsCache.expiresAt > Date.now()) brands = brandsCache.brands;
-      else {
-        const methods = z.array(z.object({ id: z.string().max(60), name: z.string().max(80), status: z.string(), payment_type_id: z.string(), secure_thumbnail: z.string().nullable().optional() })).parse(await mercadoPagoRequest("/v1/payment_methods", connection.secrets.accessToken));
-        brands = methods.filter(method => method.status === "active" && ["credit_card", "debit_card", "prepaid_card"].includes(method.payment_type_id)).slice(0, 12).map(method => {
-          let image: string | null = null;
-          try { const url = new URL(method.secure_thumbnail ?? ""); if (url.origin === "https://http2.mlstatic.com") image = url.toString(); } catch { /* Brand name remains usable without an image. */ }
-          return { id: method.id, name: method.name, image };
-        });
-        brandsCache = { accountId: connection.accountId, expiresAt: Date.now() + 30 * 60_000, brands };
-      }
-    }
+    brands = await readPaymentBrands(connection, () => mercadoPagoRequest("/v1/payment_methods", accessToken));
   } catch { console.warn("[mercado-pago] brands-unavailable"); /* Provider fields still identify the accepted brand. */ }
   return { publicKey: row.publicKey, environment: row.environment, brands };
 }

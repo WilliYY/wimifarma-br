@@ -1,5 +1,9 @@
 # 61 — Avaliações e rodapé
 
+## Atualização — 20/10/2026
+
+Pagamentos e consultas oficiais foram acrescentados ao rodapé; links Google e Reclame AQUI passaram para “Avaliações e atendimento”. Não houve mudança nas notas, relatos ou cashback. Perfil RA confirmado sem verificação/reputação definida, Ebit não localizado nesta consulta e reCAPTCHA ausente: não foram reproduzidos selos. Fontes e limites em [84](84-rodape-pagamentos-e-consultas.md).
+
 ## Pedido e direção — 11/10/2026
 
 Melhorar as avaliações de clientes e o rodapé usando a referência visual fornecida pelo lojista. Direção de varejo acolhedor: faixa vermelha, corpo claro, logo oficial colorida, respiro entre grupos e indicadores verdes. Mantidos Barlow, cores e componentes existentes. DFII interno: impacto 4, adequação 5, viabilidade 5, desempenho 5, risco de inconsistência 4; resultado 15, sem alegação de conversão medida.
