@@ -51,6 +51,9 @@ if (process.env.NODE_ENV === "production") {
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  async redirects() {
+    return [{ source: "/categorias/medicamento", destination: "/categorias/medicamentos", permanent: true }];
+  },
   async rewrites() {
     return {
       beforeFiles: [{ source: "/uploads/products/:fileName", destination: "/api/imagens/produtos/:fileName" }],

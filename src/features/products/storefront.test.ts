@@ -25,6 +25,19 @@ test("grupo Medicamentos abrange genéricos, similares, éticos e MIP sem invent
   assert.equal(catalogGroup(["medicines"]), undefined);
 });
 
+test("categoria Medicamentos reúne singular e plural preservando os nomes originais do filtro", async () => {
+  const { service, query } = await fixture(["Medicamento", "Medicamentos", " MEDICAMENTO ", "Medicamentos MIP", "Perfumaria"].map((category, i) => ({ category, id: String(i), name: `Produto ${i}`, stock: 1, price: "1", promotionalPrice: null })));
+  const categories = await service.getPublicCategories();
+  assert.equal(categories.filter(category => category.slug === "medicamentos").length, 1);
+  assert.equal(categories.some(category => category.slug === "medicamento"), false);
+  const medicines = categories.find(category => category.slug === "medicamentos")!;
+  assert.equal(medicines.name, "Medicamentos");
+  assert.deepEqual(Array.from(medicines.names), ["Medicamento", "Medicamentos", " MEDICAMENTO "]);
+  assert.equal(categories.find(category => category.slug === "medicamentos-mip")?.name, "Medicamentos MIP");
+  await service.getStorefrontProducts({ categories: medicines.names });
+  assert.equal(JSON.stringify((query().where as { category: unknown }).category), JSON.stringify({ in: medicines.names }));
+});
+
 test("marcas consultam publicados e metadados mínimos sem perder registros conflitantes", async () => {
   const { service, queries } = await fixture([], [{ brand: "Marca Nova" }, { brand: "marca nova" }, { brand: null }]);
   const brands = await service.getPublicBrands();

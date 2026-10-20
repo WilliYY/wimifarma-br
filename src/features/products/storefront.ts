@@ -18,7 +18,7 @@ export const getPublicCategories = cache(async () => {
     const name = item.category?.trim(); if (!name) continue;
     const slug = categorySlug(name); if (!slug) continue;
     const existing = categories.get(slug);
-    if (existing) existing.names.push(item.category!); else categories.set(slug, { name, slug, names: [item.category!] });
+    if (existing) existing.names.push(item.category!); else categories.set(slug, { name: slug === "medicamentos" ? "Medicamentos" : name, slug, names: [item.category!] });
   }
   return [...categories.values()];
 });

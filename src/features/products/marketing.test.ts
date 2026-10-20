@@ -46,5 +46,7 @@ test("SEO preserva descricao completa, omite GTIN invalido e limita resumo", () 
   assert.equal(structured.description, product.description);
   assert.ok(buildProductMetaDescription({ name: "N".repeat(160), brand: null, description: null }).length <= 160);
   assert.equal(categorySlug("Higiene & Beleza"), "higiene-beleza");
+  assert.equal(categorySlug("Medicamento"), "medicamentos");
+  assert.equal(categorySlug(" MEDICAMENTOS "), "medicamentos");
   assert.equal(siteStructuredData()["@graph"][0]["@type"], "Pharmacy");
 });

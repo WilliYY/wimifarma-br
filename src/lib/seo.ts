@@ -4,7 +4,8 @@ export const SITE_DESCRIPTION = "Farmácia Wimifarma em Ivaté-PR, na Avenida Mi
 export const STORE_ID = `${SITE_URL}/#farmacia`;
 
 export function categorySlug(category: string) {
-  return category.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const slug = category.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return slug === "medicamento" ? "medicamentos" : slug;
 }
 
 export function categoryPath(category: string) { return `/categorias/${categorySlug(category)}`; }

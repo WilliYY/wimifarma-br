@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Categoria Medicamentos unificada — 2026-10-20
+
+O catálogo reúne os nomes cadastrados `Medicamento` e `Medicamentos` em um único filtro público “Medicamentos”. O filtro mantém os nomes originais na consulta para incluir todos os produtos, inclusive novas importações com a variante singular. Links de categoria e sitemap usam `/categorias/medicamentos`; o endereço singular redireciona permanentemente, preservando parâmetros de paginação. Categorias específicas e cadastros originais permanecem preservados. Alterações em `storefront.ts`, `seo.ts` e `next.config.ts`; regressão cobre agrupamento, variantes e consulta conjunta.
+
 ## Textos curtos no catálogo — 2026-10-20
 
 O catálogo geral usa o título “Produtos” e a frase “Encontre o que você precisa.”. O grupo Dermo mantém o título e usa “Cuidados para sua pele.”; os demais grupos usam “Confira os produtos desta categoria.”. As descrições de SEO, filtros, categorias e navegação permanecem como estavam. Mudança textual em `src/app/(site)/catalogo/page.tsx`, a pedido do lojista para reduzir a introdução repetida.
