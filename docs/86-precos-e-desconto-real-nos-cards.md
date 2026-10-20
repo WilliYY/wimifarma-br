@@ -68,3 +68,11 @@ A pesquisa não encontrou autorização primária específica para equiparar est
 - Compra, quantidade, limites, itens assistidos/indisponíveis, preço Pix, referência real e arredondamento continuam cobertos pelos testes existentes.
 - Capturas em `outputs/cards-padrao-2026-10-20`, fora do Git. Testes interceptam a rede e não criam pedidos, cobranças ou mensagens reais.
 - Testes focados: 14/14; segurança: 420/420. Revisão independente dos três arquivos aprovou sem achados; ESLint focado e `git diff --check` aprovados. Auditoria de produção: zero vulnerabilidades.
+
+### Publicação desta padronização
+
+- Código `5d1f2087b124813fd5a17a0c693785db9b2c453e` (`fix(catalog): align product cards and show shipping conditions`), commit/push e pull no servidor concluídos.
+- [CI 39450225709](https://github.com/WilliYY/wimifarma-br/actions/runs/39450225709) aprovado: Prisma, TypeScript, lint e 967/967 testes. Auditoria de produção sem vulnerabilidades; auditoria completa com os cinco alertas altos anteriores em ferramentas de desenvolvimento, nenhum crítico e nenhuma dependência alterada.
+- Build Docker Linux aprovado, incluindo lint/TypeScript e 39 páginas estáticas. Ativado somente o app, com imagem anterior preservada em `wimifarma-br-app:pre-cards-5d1f208`. Container saudável, zero reinícios, revisão OCI igual ao código; imagem `sha256:b48b2bbd1eb07e595498f9b0ce379302f082c93e67bafb8cdaf43a800735d3e2`.
+- Conferência pública em Nivea, Dove, Kit Kat e medicamentos, em 1280 e 390 px: oito cenários sem transbordamento horizontal ou erro JavaScript, alinhamento da primeira linha e condições do selo conferidos. Capturas de Dove no desktop e medicamentos no celular inspecionadas. Endpoint de saúde HTTP 200. Nenhum produto adicionado ao carrinho, pedido, pagamento ou mensagem real.
+- A pendência do cashback medicinal permanece aberta conforme a seção específica acima; esta publicação contempla somente apresentação e condições gerais de entrega.
