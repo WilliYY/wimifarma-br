@@ -21,7 +21,7 @@ Direção de varejo claro, usando Barlow, tokens existentes e cartões cinza arr
 
 Uma linha com rolagem horizontal nativa, encaixe dos cartões, toque, teclado e setas de 44 px. Limites desabilitam as setas; não há reprodução automática. Movimento reduzido elimina a rolagem suave. Links têm nome acessível e foco visível. Nenhuma marca publicada significa ausência do bloco. Header e animação da logo, atalhos existentes e 128 bolhas do rodapé preservados.
 
-Os cartões aparecem após a campanha principal e antes do Club. `BrandCarousel` recebe apenas `PublicBrand[]` (`key`, `name`, `href`). Destinos não são pré-carregados em massa. Imagens locais, WebP lossless, carregamento sob demanda e dimensões reservadas evitam requisições a fabricantes durante a navegação.
+Os cartões aparecem após a campanha principal e antes das vitrines de produtos. `BrandCarousel` recebe apenas `PublicBrand[]` (`key`, `name`, `href`). Destinos não são pré-carregados em massa. Imagens locais, WebP lossless, carregamento sob demanda e dimensões reservadas evitam requisições a fabricantes durante a navegação.
 
 ## Logos oficiais e origem
 
@@ -47,4 +47,16 @@ Origens e hashes dos arquivos ficam no relatório local `outputs/marcas-2026-10-
 
 Os testes de `brands.test.ts`, `storefront.test.ts` e `home-shortcuts.test.ts` passaram (8/8). Cobrem agrupamento, marca nova, igualdade completa, marca inexistente, filtros combinados, paginação e seleção de publicados sem restrição de foto/receita/estoque. Lint e TypeScript passaram após a integração. Revisão independente sem achados.
 
-Arquivos: componente `brand-carousel.tsx`, helpers `brands.ts`/`brand-logos.ts`, consulta e testes de `storefront`, home, rota/página de catálogo e onze logos. README, histórico 07, documentos 10/13 e este contrato registram a entrega. Build, auditorias e conferência pública ficam registrados ao concluir a publicação.
+Arquivos: componente `brand-carousel.tsx`, helpers `brands.ts`/`brand-logos.ts`, consulta e testes de `storefront`, home, rota/página de catálogo e onze logos. README, histórico 07, documentos 10/13 e este contrato registram a entrega.
+
+## Publicação e conferência final
+
+Código no commit `5cdf46a` (`feat(catalog): add automatic brand navigation`), incluído na imagem publicada `b4441e9`. Conferência concluída em 19/10/2026, horário de Brasília: app `running / healthy`, revisão OCI `b4441e968a28da4c578a1182498b7f049defd7a5`. O checkout do servidor já incluía também a documentação `ec14966`. A publicação aproveitou a atualização simultânea das vitrines; nenhuma versão anterior foi recolocada no ar.
+
+- Build de produção passou em worktree isolada no commit `5cdf46a`, incluindo compilação, verificação de tipos e geração de páginas. Lint, TypeScript e `prisma:validate` também passaram. Treze testes direcionados de marcas, catálogo, atalhos e coleções passaram; os 400 testes de segurança passaram.
+- A suíte completa nessa revisão executou 884 testes: 883 passaram e um teste existente de quantidade no carrinho excedeu o tempo de navegação do navegador. O arquivo `product-card-actions.test.ts` foi reexecutado isoladamente, com os quatro cenários aprovados. Não houve alteração do teste ou do carrinho para esta entrega; a execução completa não é registrada como integralmente aprovada.
+- Auditoria de dependências de produção: zero vulnerabilidades. Auditoria completa: cinco alertas high em ferramentas de desenvolvimento (`@next/eslint-plugin-next`, `braces`, `eslint-config-next`, `fast-glob`, `micromatch`), zero critical. Permanecem fora do escopo desta mudança.
+- Consulta pública confirmou 29 links de marcas. As 29 páginas iniciais retornaram as contagens esperadas e o primeiro produto de cada uma teve sua marca conferida nos dados estruturados. A Nivea retornou 132 produtos distintos em seis páginas; marca inexistente retornou lista vazia. Onze logos responderam com HTTP 200 e `image/webp`, somando 89.818 bytes. Nenhuma falha nesse verificador.
+- Conferência no navegador desktop: aparência da faixa, avanço/retorno das setas, clique na EMS com seis produtos, clique na Nivea com 132 produtos e passagem para a página 2 mantendo a marca. A captura local final está em `outputs/marcas-2026-10-19/marcas-publicadas.png`, fora do Git. Não foi feita conferência visual em dispositivo móvel nesta entrega.
+
+Não houve alteração em dados de produtos, preços, estoque, pagamentos, permissões ou infraestrutura compartilhada. A inclusão automática depende de o produto estar publicado e possuir a marca preenchida; sem logo no registro local, a marca aparece pelo nome.
