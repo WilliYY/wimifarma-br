@@ -8,7 +8,7 @@ import { commercialPrice } from "./home-collections";
 import { buildPublicBrands, matchingBrandNames, type PublicBrand } from "./brands";
 
 export const PAGE_SIZE = 24;
-const getPublicBrandRecords = cache(async () => getPrisma().product.findMany({ where: { status: "ACTIVE", brand: { not: null } }, distinct: ["brand"], select: { brand: true }, orderBy: { brand: "asc" } }));
+const getPublicBrandRecords = cache(async () => getPrisma().product.findMany({ where: { status: "ACTIVE", brand: { not: null } }, select: { brand: true, category: true, requiresPrescription: true, catalogClassification: true }, orderBy: { brand: "asc" } }));
 export const getPublicBrands = cache(async (): Promise<PublicBrand[]> => buildPublicBrands(await getPublicBrandRecords()));
 const storefrontSelect = { ...supplierOfferInclude, ean: true, inventorySource: true, id: true, name: true, slug: true, brand: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, activeIngredients: true, searchTerms: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, cashbackEnabled: true, cashbackRateBps: true } satisfies Prisma.ProductSelect;
 export const getPublicCategories = cache(async () => {

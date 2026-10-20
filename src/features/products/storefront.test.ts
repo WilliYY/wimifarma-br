@@ -5,10 +5,10 @@ import test from "node:test";
 import { build } from "esbuild";
 import { groupCategoryNames, catalogGroup } from "./home-shortcuts";
 
-async function fixture(rows: object[], brands: { brand: string | null }[] = []) {
+async function fixture(rows: object[], brands: { brand: string | null; category?: string; requiresPrescription?: boolean; catalogClassification?: unknown }[] = []) {
   let query: Record<string, unknown> = {};
   const queries: Record<string, unknown>[] = [];
-  const db = { product: { fields: { price: "fixture-price" }, count: async () => rows.length, findMany: async (input: Record<string, unknown>) => { queries.push(input); if ((input.select as { brand?: boolean }).brand && input.distinct) return brands; query = input; return input.take ? rows.slice(Number(input.skip ?? 0), Number(input.skip ?? 0) + Number(input.take)) : rows; } } };
+  const db = { product: { fields: { price: "fixture-price" }, count: async () => rows.length, findMany: async (input: Record<string, unknown>) => { queries.push(input); if ((input.select as { brand?: boolean; id?: boolean }).brand && !(input.select as { id?: boolean }).id) return brands; query = input; return input.take ? rows.slice(Number(input.skip ?? 0), Number(input.skip ?? 0) + Number(input.take)) : rows; } } };
   const bundle = await build({ entryPoints: ["src/features/products/storefront.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "storefront-db", setup(builder) {
     builder.onResolve({ filter: /lib\/prisma$/ }, args => ({ path: args.path, namespace: "fixture" }));
     builder.onLoad({ filter: /.*/, namespace: "fixture" }, () => ({ contents: "export const getPrisma=()=>fixture.db;" }));
@@ -25,12 +25,28 @@ test("grupo Medicamentos abrange genéricos, similares, éticos e MIP sem invent
   assert.equal(catalogGroup(["medicines"]), undefined);
 });
 
-test("marcas usam apenas publicados, sem restrição de fotos, receita ou estoque", async () => {
+test("marcas consultam publicados e metadados mínimos sem perder registros conflitantes", async () => {
   const { service, queries } = await fixture([], [{ brand: "Marca Nova" }, { brand: "marca nova" }, { brand: null }]);
   const brands = await service.getPublicBrands();
   assert.equal(brands.length, 1);
   assert.equal(brands[0].name, "Marca Nova");
-  assert.equal(JSON.stringify(queries[0]), JSON.stringify({ where: { status: "ACTIVE", brand: { not: null } }, distinct: ["brand"], select: { brand: true }, orderBy: { brand: "asc" } }));
+  assert.equal(JSON.stringify(queries[0]), JSON.stringify({ where: { status: "ACTIVE", brand: { not: null } }, select: { brand: true, category: true, requiresPrescription: true, catalogClassification: true }, orderBy: { brand: "asc" } }));
+});
+
+test("consulta de marcas separa laboratórios de medicamentos sem alterar filtro direto", async () => {
+  const { service, query } = await fixture([], [
+    { brand: "Aradois", catalogClassification: { kind: "MEDICINE" } },
+    { brand: "Angipress", requiresPrescription: true },
+    { brand: "EMS", requiresPrescription: true },
+    { brand: "Aché", catalogClassification: { kind: "MEDICINE" } },
+    { brand: "Marca desconhecida", category: "Medicamentos" },
+    { brand: "Marca Mista", category: "Perfumaria" },
+    { brand: "Marca Mista", catalogClassification: { kind: "MEDICINE" } },
+    { brand: "Marca Nova sem logo", category: "Perfumaria" },
+  ]);
+  assert.deepEqual(Array.from(await service.getPublicBrands(), brand => brand.name), ["Aché", "EMS", "Marca Nova sem logo"]);
+  await service.getStorefrontProducts({ brand: "Aradois" });
+  assert.equal(JSON.stringify(query().where), JSON.stringify({ status: "ACTIVE", brand: { in: ["Aradois"] } }));
 });
 
 test("marca filtra variantes exatas e marca desconhecida mantém filtro vazio", async () => {

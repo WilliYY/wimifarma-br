@@ -10,6 +10,7 @@ import { normalizeProductSearch } from "@/features/products/public-search";
 
 export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
   const listRef = useRef<HTMLUListElement>(null);
+  const dragState = useRef({ moved: false, pointerId: null as number | null, scrollLeft: 0, startX: 0 });
   const [controls, setControls] = useState({ previous: false, next: false });
   const [failedLogos, setFailedLogos] = useState<Set<string>>(() => new Set());
   const orderedBrands = [...brands].sort((a, b) => {
@@ -46,6 +47,48 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
     });
   }
 
+  function handlePointerDown(event: React.PointerEvent<HTMLUListElement>) {
+    if (!event.isPrimary) return;
+    dragState.current.moved = false;
+    if (event.pointerType !== "mouse" || event.button !== 0) return;
+    dragState.current = { moved: false, pointerId: event.pointerId, scrollLeft: event.currentTarget.scrollLeft, startX: event.clientX };
+  }
+
+  function handlePointerMove(event: React.PointerEvent<HTMLUListElement>) {
+    const drag = dragState.current;
+    if (drag.pointerId !== event.pointerId) return;
+    if (event.buttons !== 1) { finishPointerDrag(event); return; }
+    const movement = event.clientX - drag.startX;
+    if (!drag.moved) {
+      if (Math.abs(movement) <= 6) return;
+      drag.moved = true;
+      // Capture after the gesture starts so a normal click still follows the brand link.
+      event.currentTarget.dataset.dragging = "true";
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+    event.preventDefault();
+    event.currentTarget.scrollLeft = drag.scrollLeft - movement;
+  }
+
+  function finishPointerDrag(event: React.PointerEvent<HTMLUListElement>) {
+    if (dragState.current.pointerId !== event.pointerId) return;
+    dragState.current.pointerId = null;
+    delete event.currentTarget.dataset.dragging;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  }
+
+  function preventClickAfterDrag(event: React.MouseEvent<HTMLUListElement>) {
+    if (!dragState.current.moved) return;
+    if (event.detail !== 0) { event.preventDefault(); event.stopPropagation(); }
+    dragState.current.moved = false;
+  }
+
+  function cancelPointerDrag(event: React.PointerEvent<HTMLUListElement>) {
+    if (dragState.current.pointerId !== event.pointerId) return;
+    finishPointerDrag(event);
+    dragState.current.moved = false;
+  }
+
   if (!brands.length) return null;
 
   return (
@@ -69,8 +112,19 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
           </button>
           <ul
             aria-label="Escolha uma marca para ver seus produtos"
-            className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain py-1 scroll-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand motion-reduce:scroll-auto sm:gap-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex cursor-grab snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain py-1 select-none scroll-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand motion-reduce:scroll-auto data-[dragging=true]:cursor-grabbing data-[dragging=true]:snap-none data-[dragging=true]:scroll-auto sm:gap-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden data-[dragging=true]:[&_a]:cursor-grabbing"
             id="home-brands-list"
+            onClickCapture={preventClickAfterDrag}
+            onDragStart={event => event.preventDefault()}
+            onKeyDown={event => {
+              if (event.target !== event.currentTarget) return;
+              if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); scrollBrands(event.key === "ArrowLeft" ? -1 : 1); }
+            }}
+            onLostPointerCapture={finishPointerDrag}
+            onPointerCancel={cancelPointerDrag}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={finishPointerDrag}
             onScroll={updateControls}
             ref={listRef}
             tabIndex={0}
@@ -83,6 +137,7 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
                     aria-label={`Ver produtos de ${brand.name}`}
                     className={`group flex h-28 w-28 items-center justify-center rounded-2xl border border-transparent p-4 text-center transition-colors hover:border-brand/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand motion-reduce:transition-none sm:h-40 sm:w-40 sm:p-6 ${logo?.dark ? "bg-ink text-white" : "bg-surface-subtle text-ink hover:bg-brand-soft"}`}
                     href={brand.href}
+                    draggable={false}
                     prefetch={false}
                   >
                     {logo ? (
@@ -90,6 +145,7 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
                         alt=""
                         className="h-16 w-full object-contain sm:h-24"
                         height={120}
+                        draggable={false}
                         onError={() => setFailedLogos(current => new Set(current).add(brand.key))}
                         sizes="(min-width: 640px) 112px, 80px"
                         src={logo.src}

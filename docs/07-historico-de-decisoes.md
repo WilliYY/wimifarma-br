@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-20 — Arraste das marcas e identidades conferidas
+
+- Adicionado arraste com mouse sobre os cartões/logos, preservando toque nativo, rolagem vertical, clique, teclado, setas e movimento reduzido. Gestos não abrem o catálogo acidentalmente.
+- Faixa deixa de promover nomes comerciais de medicamentos; mantém laboratórios reconhecidos e marcas não medicinais dinâmicas. Classificação medicinal é avaliada antes da deduplicação, sem alterar produtos ou filtros diretos do catálogo.
+- Incluídos 17 logos oficiais locais, com fallback nominal para originais não localizados/acessíveis. Fontes, limites do modelo e validação em [82](82-marcas-do-catalogo.md).
+
 ## 2026-10-20 — Comparação de custo completo e aceitação da carga
 
 - Simulador ADMIN consulta todo o catálogo do Melhor Envio e compara custos internos da rota: etiqueta, viagem rateada, coleta, seguro externo, reserva interna de retornos e adicionais. Desconhecido não vira zero; mudança de rota exige revisão dos valores.

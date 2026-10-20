@@ -14,6 +14,23 @@ const logos: Record<string, { src: string; dark?: boolean }> = {
   teuto: { src: "/brands/teuto.webp", dark: true },
   germed: { src: "/brands/germed.webp", dark: true },
   sandoz: { src: "/brands/sandoz.webp" },
+  ache: { src: "/brands/ache.webp" },
+  althaia: { src: "/brands/althaia.webp" },
+  biolab: { src: "/brands/biolab.webp" },
+  biosintetica: { src: "/brands/biosintetica.webp" },
+  cimed: { src: "/brands/cimed.webp" },
+  geolab: { src: "/brands/geolab.webp" },
+  legrand: { src: "/brands/legrand.webp", dark: true },
+  medley: { src: "/brands/medley.webp" },
+  medquimica: { src: "/brands/medquimica.webp", dark: true },
+  momenta: { src: "/brands/momenta.webp" },
+  "nova quimica": { src: "/brands/nova-quimica.webp" },
+  organon: { src: "/brands/organon.webp" },
+  pharlab: { src: "/brands/pharlab.webp" },
+  torrent: { src: "/brands/torrent.webp" },
+  clear: { src: "/brands/clear.webp", dark: true },
+  ducray: { src: "/brands/ducray.webp" },
+  neutrogena: { src: "/brands/neutrogena.webp" },
 };
 
 export function brandLogo(name: string) {

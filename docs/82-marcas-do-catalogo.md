@@ -1,10 +1,48 @@
 # 82 — Marcas do catálogo na home
 
+## Arraste e identidade das marcas — 20/10/2026
+
+O carrossel permite arrastar com o mouse, inclusive iniciando no logo ou link. A captura começa após seis pixels, com encaixe e rolagem suave suspensos durante o gesto. Soltar/cancelar limpa a captura; arrastar não abre o catálogo. Clique comum, Enter, Tab, setas e movimento reduzido são preservados. Toque continua com rolagem horizontal nativa e permite rolar a página verticalmente.
+
+Nomes comerciais de medicamentos saíram desta faixa. A lista agrupa todas as grafias de marca e avalia classificação estruturada `MEDICINE`, necessidade de receita e categoria medicinal. Um único registro medicinal oculta todo o grupo, exceto identidades farmacêuticas reconhecidas. Vinte e um laboratórios são reconhecidos explicitamente; 22 nomes comerciais atuais também ficam bloqueados quando seus metadados estão incompletos. Não há inferência de fabricante pelo nome do medicamento, nem alteração em dados dos produtos ou no filtro direto do catálogo.
+
+Marcas novas de itens não medicinais continuam aparecendo automaticamente. Laboratório novo em produtos medicinais precisa de conferência de identidade antes da inclusão na lista reconhecida. O modelo não contém um campo separado de fabricante: um medicamento futuro totalmente malclassificado, sem qualquer indicação medicinal e fora da lista de nomes já triados, não pode ser identificado só pelo texto `brand`; a classificação de cadastro continua necessária. Nova Química e Neo Química são identidades diferentes e não são agrupadas.
+
+Adicionados 17 logos oficiais, 108.078 bytes, em WebP lossless, com até 480 × 240 e sem ampliação. Somados aos onze originais, são 28 assets locais. Legrand, Medquímica e Clear usam fundo escuro para preservar a legibilidade dos arquivos fornecidos. As marcas continuam pertencendo aos respectivos titulares; não há declaração de parceria.
+
+Na lista pública observada de 53 nomes, a conferência da atualização mantém 31 marcas/laboratórios e retira 22 nomes comerciais. Destes 31, 27 têm logo e quatro permanecem com nome: Eurofarma, Merck e Kit Kat tiveram originais bloqueados por HTTP 403; Wyeth não teve arquivo oficial inequívoco localizado. Esses resultados são da consulta desta tarefa, não um limite fixo de marcas.
+
+| Novo logo em `public/brands` | Página | Original |
+| --- | --- | --- |
+| Aché — `ache.webp` | [Página oficial](https://www.ache.com.br/) | [Arquivo de origem](https://www.ache.com.br/wp-content/themes/ache/dist/img/LOGO-Ach%C3%A9.svg) |
+| Althaia — `althaia.webp` | [Página oficial](https://althaia.com.br/) | [Arquivo de origem](https://althaia.com.br/wp-content/uploads/2024/12/Layer-1.svg) |
+| Biolab Farma — `biolab.webp` | [Página oficial](https://www.biolabeco.com.br/marcas-biolab/) | [Arquivo de origem](https://www.biolabeco.com.br/wp-content/uploads/2024/08/Logo_Novo_Biolab_Farma-720x312.png) |
+| Biosintética — `biosintetica.webp` | [Página oficial](https://www.biosintetica.com.br/) | [Arquivo de origem](https://www.biosintetica.com.br/assets/images/svg/logo.svg) |
+| Cimed — `cimed.webp` | [Página oficial](https://cimedremedios.com.br/wp-json/wp/v2/media?search=logo&per_page=30) | [Arquivo de origem](https://cimedremedios.com.br/wp-content/uploads/2026/04/logo_cimed_preta.png) |
+| Geolab — `geolab.webp` | [Página oficial](https://www.geolab.com.br/) | [Arquivo de origem](https://www.geolab.com.br/wp-content/uploads/2025/11/logo_geolab_oficial.svg) |
+| Legrand — `legrand.webp` | [Página oficial](https://legrandpharma.com.br/) | [Arquivo de origem](https://legrandpharma.com.br/wp-content/themes/legrandpharma-theme/assets/img/logo-legrand.webp) |
+| Medley — `medley.webp` | [Página oficial](https://www.medley.com.br/) | [Arquivo de origem](https://www.medley.com.br/dam/jcr:ecac2d78-4855-4b0c-ab86-2fb693413420/Camada_1__.2025-08-14-21-32-07.png) |
+| Medquímica — `medquimica.webp` | [Página oficial](https://medquimica.ind.br/) | [Arquivo de origem](https://medquimica.ind.br/wp-content/uploads/logo-medquimica.png) |
+| Momenta — `momenta.webp` | [Página oficial](https://momentafarma.com.co/) | [Arquivo de origem](https://momentafarma.com.co/momenta/logo/thumb-logo.png) |
+| Nova Química — `nova-quimica.webp` | [Página oficial](https://www.novaquimicaonline.com.br/) | [Arquivo de origem](https://www.novaquimicaonline.com.br/img/nova_gen_logo.png) |
+| Organon — `organon.webp` | [Página oficial](https://www.organon.com/brazil/) | [Arquivo de origem](https://www.organon.com/brazil/wp-content/themes/organon/images/organon-logo.svg) |
+| Pharlab — `pharlab.webp` | [Página oficial](https://www.pharlab.com.br/) | [Arquivo de origem](https://www.pharlab.com.br/wp-content/uploads/2026/04/logo_Pharlab_juntossomossaude_box_2026.png) |
+| Torrent Pharma — `torrent.webp` | [Página oficial](https://www.torrent.com.br/) | [Arquivo de origem](https://www.torrent.com.br/uploads/new-logo.png) |
+| Clear — `clear.webp` | [Página oficial](https://www.clearhaircare.com/br/home.html) | [Arquivo de origem](https://assets.unileversolutions.com/v1/1235064.png) |
+| Ducray — `ducray.webp` | [Página oficial](https://www.ducray.com/pt-br) | [Arquivo de origem](https://www.ducray.com/var/dfp/storage/images/1/0/7/0/21540701-46-por-BR/c90d4c1c157f-logo_du_x1-png) |
+| Neutrogena — `neutrogena.webp` | [Página oficial](https://www.neutrogena.com.br/) | [Arquivo de origem](https://images.ctfassets.net/3zfcttr0ztpr/6uWyv7yvvOwX27cDZ8cl17/b40d59dfe5dff6cdb5fbe3f6dd8d072b/ba82c4ab-4216-4bcd-a420-b274012e3a18_079f01a4-a34f-4b4b-9720-9b92fbb24523_Prev.jpg?w=628) |
+
+O site do Biolab anuncia Biolab Farma, mas o download oficial fornecido ainda contém a assinatura “Farmacêutica”; a arte foi preservada. Momenta usa a versão disponível no site regional oficial. Fontes, hashes e dimensões constam em `outputs/marcas-arraste-2026-10-20/fontes.json`, com prancha revisada, fora do Git.
+
+Validação desta atualização: 18 testes direcionados (incluindo gestos reais de mouse e toque em Chromium), 420 testes de segurança, TypeScript e revisão independente aprovados. A conferência com CSS construído em 390 e 1440 px verificou rolagem horizontal, página vertical, estilos durante o arraste, ausência de navegação acidental e de transbordamento da página. A suíte completa também é exigida pela CI antes da ativação. Cabeçalho, marca da farmácia e bolhas do rodapé preservados.
+
+Lint aprovado. Auditoria de produção sem vulnerabilidades; auditoria completa com cinco alertas altos existentes na cadeia de desenvolvimento de `braces`/ESLint, sem críticos. Nenhuma dependência alterada nem correção forçada fora do escopo.
+
 ## Comportamento solicitado
 
 Em 19/10/2026, o lojista pediu uma faixa de marcas semelhante à referência fornecida, abrangendo perfumaria, medicamentos e os demais segmentos. Cada cartão abre os itens da respectiva marca. Novas marcas entram automaticamente quando um produto é publicado.
 
-A home consulta as marcas de todos os produtos `ACTIVE`, incluindo os que não têm foto, estão indisponíveis ou exigem receita. A consulta seleciona somente `brand`, sem custos, ofertas, dados de clientes ou alteração de classificação. Marcas nulas/vazias são omitidas; maiúsculas, acentos, pontuação e espaços equivalentes são agrupados. A navegação não cria marcas a partir do nome do produto nem promete estoque.
+A home consulta as marcas de todos os produtos `ACTIVE`, incluindo os que não têm foto, estão indisponíveis ou exigem receita. A consulta seleciona `brand`, `category`, `requiresPrescription` e `catalogClassification`, apenas para verificar a identidade da marca, sem custos, ofertas, dados de clientes ou alteração da classificação. Não usa `distinct` somente por marca, pois isso ocultaria registros medicinais conflitantes. O cliente recebe apenas `key`, `name` e `href` após a filtragem. Marcas nulas/vazias são omitidas; maiúsculas, acentos, pontuação e espaços equivalentes são agrupados. A navegação não cria marcas a partir do nome do produto nem promete estoque.
 
 O cache React compartilha a leitura dentro da requisição. As rotas são dinâmicas: publicação, mudança de marca ou retirada do último produto ativo aparecem na próxima abertura/atualização da página, sem precisar editar uma lista fixa, reconstruir o app ou cadastrar logo.
 
@@ -13,7 +51,7 @@ O cache React compartilha a leitura dentro da requisição. As rotas são dinâm
 - Destino: `/catalogo?marca=<nome>&ordem=preco-asc`. O servidor resolve as grafias completas equivalentes e usa igualdade no campo de marca; não pesquisa por substring, nome, princípio ativo ou descrição.
 - Marca, grupo e ordenação permanecem na paginação de 24 itens. O catálogo identifica a marca selecionada e oferece `Limpar marca`. Marca desconhecida resulta em lista vazia.
 - As regras de preço comercial, estoque, receita, fotografias e checkout continuam nos serviços existentes. O bloco de marcas é navegação, sem declaração de parceria oficial ou de disponibilidade de todos os itens.
-- A lista vem integralmente do catálogo. Onze marcas com assets conferidos têm prioridade visual; as demais seguem em ordem alfabética. Marca nova sem logo aparece pelo nome e possui o mesmo link funcional. Se uma imagem falhar, o nome também permanece disponível.
+- A lista parte do catálogo, com o filtro de identidade descrito na atualização de 20/10. As onze marcas originais mantêm prioridade visual; as demais seguem em ordem alfabética. Marca elegível sem logo aparece pelo nome e possui o mesmo link funcional. Se uma imagem falhar, o nome também permanece disponível.
 
 ## Direção visual e acessibilidade
 
