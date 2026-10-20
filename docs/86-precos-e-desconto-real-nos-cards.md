@@ -47,3 +47,24 @@ A condição unitária não deve ser multiplicada para reconstruir o total do pe
 - Conferência pública somente de leitura: nenhum item adicionado ao carrinho, pedido, cobrança ou mensagem real. A preservação dos valores do carrinho e o arredondamento foram comprovados nos ensaios sintéticos.
 
 Capturas ficam em `outputs/precos-2026-10-20`, fora do Git. Ensaios usam dados sintéticos e rede interceptada, sem pedidos, cobranças ou mensagens reais. O hook não forneceu um novo escopo temporário; foi criado um escopo exclusivo com `task_cleanup.py init`, usado pelo executor e destinado à limpeza explícita ao concluir.
+
+## Padronização dos cards e entrega — 20/10/2026
+
+O lojista pediu que todos os itens seguissem o acabamento do Kit Kat, incluindo genéricos e similares. O componente compartilhado reserva espaços para entrega, imagem, título, preço e cashback; promoções e benefícios não deslocam os botões em relação ao card vizinho. No celular, a área do preço acomoda a quebra de linha. A área de cashback contém a margem do componente (`flow-root`), evitando que ela altere a altura do rodapé.
+
+O selo de entrega aparece nos produtos com estoque e compra online permitida, inclusive distribuidor e genéricos/similares de receita comum. A informação visível usa `FREE_SHIPPING_THRESHOLD_CENTS`: frete grátis a partir de R$ 99,90, com consulta de cobertura pelo CEP. Não declara frete gratuito para qualquer pedido nem habilita transportadora, perfil logístico ou produto restrito. Itens assistidos ou indisponíveis não recebem o selo. A cotação e o checkout continuam decidindo a disponibilidade efetiva e a gratuidade sobre o subtotal elegível após descontos.
+
+O botão Adicionar continua incluindo uma unidade somente após ação do cliente; o seletor aparece quando o item já está no carrinho. Preços, Pix, promoções, estoque e valores armazenados no carrinho foram preservados.
+
+### Cashback solicitado em medicamentos: pendência específica
+
+O pedido de 1% em genéricos/similares não foi ativado nesta entrega. A classificação comercial não distingue, sozinha, medicamentos isentos de prescrição dos sujeitos a receita. A [RDC 96/2008, art. 10](https://anvisalegis.datalegis.net/action/ActionDatalegis.php?acao=abrirTextoAto&cod_menu=8542&cod_modulo=310&link=S&numeroAto=00000096&orgao=RDC%2FDC%2FANVISA%2FMS&seqAto=000&tipo=RDC&valorAno=2008) restringe medicamentos como objeto de pontuação em programas de fidelização; descontos imediatos têm tratamento próprio nos arts. 11, 18 e 19. A [RDC 44/2009, art. 54](https://anvisalegis.datalegis.net/action/ActionDatalegis.php?acao=abrirTextoAto&cod_menu=8542&cod_modulo=310&link=S&numeroAto=00000044&orgao=RDC%2FDC%2FANVISA%2FMS&seqAto=000&tipo=RDC&valorAno=2009) restringe promoção pública de medicamentos com receita.
+
+A pesquisa não encontrou autorização primária específica para equiparar este crédito futuro a desconto imediato, nem concluiu proibição geral de qualquer cashback. A extensão solicitada exige enquadramento técnico/jurídico da campanha e de sua publicidade antes da ativação. Foram preservados o contrato do documento 15 e os bloqueios atuais, sem criar selo de benefício não creditável. Não foram alterados percentuais no banco, carteiras, snapshots de pedidos, bônus de avaliação ou WimiCoins.
+
+### Verificação desta padronização
+
+- Regressão de navegador com produtos sintéticos: promoção com cashback, fornecedor sem benefício, genérico e similar com receita; alinhamento e ausência de transbordamento em 320, 390 e 1280 px; condições de entrega visíveis; ausência de falso cashback em receita.
+- Compra, quantidade, limites, itens assistidos/indisponíveis, preço Pix, referência real e arredondamento continuam cobertos pelos testes existentes.
+- Capturas em `outputs/cards-padrao-2026-10-20`, fora do Git. Testes interceptam a rede e não criam pedidos, cobranças ou mensagens reais.
+- Testes focados: 14/14; segurança: 420/420. Revisão independente dos três arquivos aprovou sem achados; ESLint focado e `git diff --check` aprovados. Auditoria de produção: zero vulnerabilidades.

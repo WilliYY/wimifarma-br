@@ -24,7 +24,15 @@ const bundle = build({
         promotionalPrice:kind==='promotion'?'80.00':null,isPopularPharmacy:false,requiresPrescription:kind==='restricted',
         prescriptionType:kind==='restricted'?'CONTROLLED':'ORDINARY',stock:kind==='unavailable'?0:kind==='demand'?1:15,
         inventorySource:kind==='demand'?'DISTRIBUTOR':'PHARMACY',supplierDemandAllowed:kind==='demand'};
-      createRoot(document.getElementById('root')).render(<CartProvider><PublicProductCard product={product}/></CartProvider>);`,
+      const cards=kind==='grid'?[
+        {...product,price:'6.90',promotionalPrice:'4.99',cashbackEnabled:true,cashbackRateBps:200},
+        {...product,id:'synthetic-demand',slug:'sob-demanda',name:'Produto sintético com nome maior em duas linhas',price:'4.85',inventorySource:'DISTRIBUTOR',supplierDemandAllowed:true},
+        {...product,id:'synthetic-generic',slug:'generico-sintetico',name:'Genérico sintético',price:'19.90',requiresPrescription:true,prescriptionType:'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
+          catalogClassification:{kind:'MEDICINE',medicineClass:'GENERIC',ethical:true,otc:false}},
+        {...product,id:'synthetic-similar',slug:'similar-sintetico',name:'Similar sintético',price:'12.90',requiresPrescription:true,prescriptionType:'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
+          catalogClassification:{kind:'MEDICINE',medicineClass:'SIMILAR',ethical:true,otc:false}}
+      ]:[product];
+      createRoot(document.getElementById('root')).render(<CartProvider>{cards.map(item=><PublicProductCard key={item.id} product={item}/>)}</CartProvider>);`,
     resolveDir: process.cwd(),
     loader: "tsx",
   },
@@ -45,13 +53,16 @@ const bundle = build({
   } }],
 });
 
-const css = process.env.PRODUCT_CARD_CAPTURE_ROOT
-  ? postcss([tailwind()]).process(readFileSync("src/app/globals.css", "utf8"), { from: "src/app/globals.css" }).then(result => result.css)
-  : Promise.resolve("");
+let css: Promise<string> | undefined;
+
+function fixtureStyles(enabled: boolean) {
+  if (!enabled) return Promise.resolve("");
+  return css ??= postcss([tailwind()]).process(readFileSync("src/app/globals.css", "utf8"), { from: "src/app/globals.css" }).then(result => result.css);
+}
 
 async function fixture(run: (page: Page) => Promise<void>, kind = "physical") {
   const script = (await bundle).outputFiles[0].text;
-  const styles = await css;
+  const styles = await fixtureStyles(Boolean(process.env.PRODUCT_CARD_CAPTURE_ROOT) || kind === "grid");
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
@@ -60,7 +71,7 @@ async function fixture(run: (page: Page) => Promise<void>, kind = "physical") {
     await page.route("**/*", async route => {
       const url = new URL(route.request().url());
       if (url.origin !== origin) return route.abort();
-      if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: '<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><style>#root{width:min(280px,calc(50vw - 24px));margin:24px}</style><div id="root"></div><script type="module" src="/fixture.js"></script>' });
+      if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: `<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><style>${kind === "grid" ? '#root{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:960px;margin:16px auto;padding:0 12px}@media(min-width:900px){#root{grid-template-columns:repeat(3,minmax(0,1fr))}}' : '#root{width:min(280px,calc(50vw - 24px));margin:24px}'}</style><div id="root"></div><script type="module" src="/fixture.js"></script>` });
       if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: styles });
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: script });
       if (url.pathname === "/api/miauby/carrinho") return route.fulfill({ json: {} });
@@ -77,6 +88,40 @@ async function fixture(run: (page: Page) => Promise<void>, kind = "physical") {
 async function expectCartQuantity(page: Page, quantity: number) {
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1") ?? "[]")[0]?.quantity)).toBe(quantity);
 }
+
+test("cards alinham preços e ações com promoção, cashback, fornecedor e genérico", async () => {
+  await fixture(async page => {
+    const cards = page.getByRole("article");
+    await expect(cards).toHaveCount(4);
+    for (const width of [320, 390, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      if (process.env.PRODUCT_CARD_CAPTURE_ROOT) {
+        mkdirSync(process.env.PRODUCT_CARD_CAPTURE_ROOT, { recursive: true });
+        await page.screenshot({ path: join(process.env.PRODUCT_CARD_CAPTURE_ROOT, `cards-padrao-${width}.png`), fullPage: true });
+      }
+      const prices = page.getByRole("group", { name: "Preço do produto", exact: true });
+      const firstPrice = await prices.nth(0).boundingBox();
+      const secondPrice = await prices.nth(1).boundingBox();
+      assert.ok(firstPrice && secondPrice);
+      assert.ok(Math.abs(firstPrice.y - secondPrice.y) < 1, `preços desalinhados em ${width}px: ${firstPrice.y} / ${secondPrice.y}`);
+      const firstBuy = await cards.nth(0).getByRole("button", { name: "Comprar", exact: true }).boundingBox();
+      const secondBuy = await cards.nth(1).getByRole("button", { name: "Comprar", exact: true }).boundingBox();
+      assert.ok(firstBuy && secondBuy);
+      assert.ok(Math.abs(firstBuy.y - secondBuy.y) < 1, `botões desalinhados em ${width}px`);
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      await expect(cards.nth(1).getByText("Frete grátis", { exact: true })).toBeVisible();
+      for (const index of [2, 3]) {
+        await expect(cards.nth(index).getByText("Frete grátis", { exact: true })).toBeVisible();
+        await expect(cards.nth(index).getByText(/cashback/)).toHaveCount(0);
+        await expect(cards.nth(index).getByText(/Consulte o CEP/)).toBeVisible();
+      }
+    }
+    assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1") ?? "[]")), []);
+    await cards.nth(0).getByRole("button", { name: "Adicionar", exact: true }).click();
+    await expect(cards.nth(0).getByRole("textbox", { name: quantityLabel })).toHaveValue("1");
+    await expect(cards.nth(1).getByRole("button", { name: "Adicionar", exact: true })).toBeVisible();
+  }, "grid");
+});
 
 test("card permite digitar caixas e mantém a quantidade ao comprar e usar mais/menos", async () => {
   await fixture(async page => {
@@ -160,6 +205,7 @@ test("itens assistidos ou indisponíveis não recebem campo de compra", async ()
       else await expect(page.getByRole("button", { name: "Avise-me quando chegar" })).toBeVisible();
       await expect(page.getByText("3% no Pix", { exact: true })).toHaveCount(0);
       await expect(page.getByText("no Pix", { exact: true })).toHaveCount(0);
+      await expect(page.getByText("Frete grátis", { exact: true })).toHaveCount(0);
     }, kind);
   }
 });

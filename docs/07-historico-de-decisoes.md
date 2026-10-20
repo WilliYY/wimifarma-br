@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-20 — Cards uniformes e condições de entrega visíveis
+
+- Padronizadas áreas de imagem, preço, cashback e ações no componente compartilhado, com alinhamento conferido em telas pequenas e desktop. Preservados preços reais, Pix, carrinho e quantidade.
+- Selo de frete para itens disponíveis à compra online, inclusive genéricos/similares e distribuidor, com mínimo da constante do checkout e consulta por CEP visíveis. Sem mudança da política de gratuidade, elegibilidade logística ou cotação.
+- A extensão de cashback de 1% para medicamentos permanece pendente de enquadramento técnico/jurídico da campanha e da publicidade, diante da RDC 96/2008, art. 10, e RDC 44/2009, art. 54. Nenhum benefício foi anunciado sem crédito efetivo nem foram alterados saldos, percentuais, pedidos ou regras existentes. Escopo, fontes e testes em [86](86-precos-e-desconto-real-nos-cards.md).
+
 ## 2026-10-20 — Arraste das marcas e identidades conferidas
 
 - Adicionado arraste com mouse sobre os cartões/logos, preservando toque nativo, rolagem vertical, clique, teclado, setas e movimento reduzido. Gestos não abrem o catálogo acidentalmente.

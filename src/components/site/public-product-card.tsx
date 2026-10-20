@@ -50,14 +50,17 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
   const displayUnitPriceCents = cartProduct.unitPriceCents - pixSavingsCents;
   const hasComparison = hasPromotion || hasPixOffer;
   const referencePrice = hasPromotion ? normalPrice : currentPrice;
+  const canOrder = product.stock > 0 && !requiresPurchaseAssistance(cartProduct);
 
   return (
     <article
-      className="group relative flex h-full min-h-[22rem] min-w-0 flex-col overflow-hidden rounded-md border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_18px_40px_rgba(17,24,39,0.11)] motion-reduce:transform-none"
+      className="group relative flex h-full min-h-[22rem] min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_18px_40px_rgba(17,24,39,0.11)] motion-reduce:transform-none"
     >
-      {product.inventorySource !== "DISTRIBUTOR" && <ProductShippingBadge />}
+      <div className="min-h-[4.25rem] shrink-0 px-3 pb-1 pt-3">
+        {canOrder && <ProductShippingBadge />}
+      </div>
       <div
-        className="relative flex h-40 items-center justify-center overflow-hidden bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
+        className="relative flex h-40 shrink-0 items-center justify-center overflow-hidden bg-white p-3"
       >
         {product.imageUrl ? (
           <Image
@@ -78,7 +81,7 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
       </div>
 
       <div className="flex flex-1 flex-col border-t border-line px-4 pb-4 pt-3">
-        <span className="text-[0.68rem] font-black uppercase text-brand">
+        <span className="line-clamp-1 min-h-4 text-[0.68rem] font-black uppercase text-brand">
           {product.category || product.brand || "Produto"}
         </span>
         <Link
@@ -91,31 +94,37 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
         <span className="mt-2 block line-clamp-1 min-h-4 text-xs font-semibold text-muted">
           {product.activeIngredients.join(" + ") || "Consulte os detalhes"}
         </span>
-        <strong className="mt-3 block truncate text-xs uppercase text-ink">
+        <strong className="mt-3 block min-h-4 truncate text-xs uppercase text-ink">
           {product.brand ?? "Wimifarma"}
         </strong>
 
-        <div role="group" aria-label="Preço do produto" className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-3">
-          <div className="min-w-0">
-            {hasComparison ? (
-              <span className="block text-[0.68rem] font-semibold text-muted">
-                De <s>{formatCurrency(referencePrice)}</s>
+        <div className="mt-auto pt-4">
+          <div role="group" aria-label="Preço do produto" className="min-h-40 border-t border-line pt-3 sm:min-h-[8.75rem]">
+            <div className="min-w-0">
+              <span className="block min-h-4 text-[0.68rem] font-semibold text-muted">
+                {hasComparison ? <>De <s>{formatCurrency(referencePrice)}</s></> : null}
               </span>
-            ) : null}
-            <div className="mt-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
-              {hasComparison && <span className="text-xs font-semibold text-brand">Por</span>}
-              <strong className="text-xl font-black leading-none text-brand">{formatCurrency(displayUnitPriceCents / 100)}</strong>
-              {hasPixOffer && <span className="text-xs font-semibold text-brand">no Pix</span>}
+              <div className="mt-1 flex min-h-6 flex-wrap items-baseline gap-x-1.5 gap-y-1">
+                {hasComparison && <span className="text-xs font-semibold text-brand">Por</span>}
+                <strong className="text-xl font-black leading-none text-brand">{formatCurrency(displayUnitPriceCents / 100)}</strong>
+                {hasPixOffer && <span className="text-xs font-semibold text-brand">no Pix</span>}
+              </div>
+              <div className="mt-2 min-h-8">
+                {hasPixOffer && <>
+                  <p className="text-[0.68rem] font-medium leading-4 text-muted">{formatCurrency(currentPrice)} sem desconto Pix</p>
+                  <p className="text-[0.68rem] leading-4 text-muted">Para 1 unidade.</p>
+                </>}
+              </div>
+              <div className="mt-1 min-h-6">
+                {hasPixOffer && hasPromotion && <span className="inline-block rounded-sm bg-pharma-green/10 px-2 py-1 text-[0.68rem] font-bold text-pharma-green">{PIX_DISCOUNT_PERCENT}% no Pix</span>}
+              </div>
             </div>
-            {hasPixOffer && <>
-              <p className="mt-2 text-[0.68rem] font-medium leading-4 text-muted">{formatCurrency(currentPrice)} sem desconto Pix</p>
-              <p className="text-[0.68rem] leading-4 text-muted">Para 1 unidade.</p>
-              {hasPromotion && <span className="mt-1 inline-block rounded-sm bg-pharma-green/10 px-2 py-1 text-[0.68rem] font-bold text-pharma-green">{PIX_DISCOUNT_PERCENT}% no Pix</span>}
-            </>}
           </div>
+          <div className="flow-root min-h-14 sm:min-h-12">
+            <ProductCashback product={product} unitPriceCents={displayUnitPriceCents} />
+          </div>
+          <ProductCardActions product={cartProduct} />
         </div>
-        <ProductCashback product={product} unitPriceCents={displayUnitPriceCents} />
-        <ProductCardActions product={cartProduct} />
       </div>
     </article>
   );
