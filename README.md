@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Faixa de categorias com fotografia suave e acabamento visual, preservando os seis destinos e a navegação acessível: [documento 88](docs/88-faixa-categorias-visual.md).
+
 Cards com “de/por”, percentual e condição real de Pix, sem preço de referência artificial: [documento 86](docs/86-precos-e-desconto-real-nos-cards.md).
 
 Rodapé com bandeiras automáticas do meio de pagamento, Pix, consultas oficiais da Anvisa e canais de reputação conferidos: [documento 84](docs/84-rodape-pagamentos-e-consultas.md).

@@ -17,6 +17,7 @@ test("Club separa as vitrines, com ou sem MIP, sem produtos repetidos no celular
     "@/components/site/brand-carousel": "export const BrandCarousel=()=>null;",
     "@/components/site/hero-product-stage": "export const HeroProductStage=()=>null;",
     "./home-campaign.module.css": "export default {};",
+    "./home-shortcuts.module.css": "export default {};",
   };
   const bundle = await build({ stdin: { contents: `import React from 'react';
     import {createRoot} from 'react-dom/client';

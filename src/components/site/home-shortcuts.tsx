@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ArrowUpRight,
   Baby,
   BadgePercent,
   ChevronLeft,
@@ -13,6 +15,7 @@ import {
   SprayCan,
 } from "lucide-react";
 import type { HomeShortcutItem } from "@/features/products/home-shortcuts";
+import styles from "./home-shortcuts.module.css";
 
 const shortcutIcons = {
   offers: BadgePercent,
@@ -56,11 +59,22 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
   }
 
   return (
-    <nav aria-label="Categorias de produtos" className="relative mb-7 px-11 sm:mb-9 sm:px-12">
+    <nav aria-label="Categorias de produtos" className={`${styles.panel} relative mb-7 px-11 sm:mb-9 sm:px-12`}>
+      <div aria-hidden="true" className={styles.scenery}>
+        <Image
+          alt=""
+          className={styles.backdrop}
+          fill
+          quality={75}
+          sizes="(min-width: 1280px) 1280px, 100vw"
+          src="/banners/contato-farmaceutica.webp"
+        />
+        <span className={styles.wash} />
+      </div>
       <button
         aria-controls="home-shortcuts"
         aria-label="Ver atalhos anteriores"
-        className="absolute left-0 top-6 flex h-11 w-11 items-center justify-center rounded-full text-brand transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:invisible sm:top-8"
+        className={`${styles.control} absolute left-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-brand transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:invisible`}
         disabled={!controls.previous}
         onClick={() => scrollShortcuts(-1)}
         type="button"
@@ -69,7 +83,7 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
       </button>
 
       <ul
-        className="flex snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-2 pt-1 scroll-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand motion-reduce:scroll-auto sm:gap-4 lg:justify-between [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="relative flex snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-2 pt-1 scroll-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand motion-reduce:scroll-auto sm:gap-4 lg:justify-between [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         id="home-shortcuts"
         onScroll={updateControls}
         ref={listRef}
@@ -81,11 +95,14 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
             <li className="w-24 shrink-0 snap-start sm:w-28" key={item.id}>
               <Link
                 aria-label={item.label}
-                className="group flex flex-col items-center gap-3 rounded-xl text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
+                className={`${styles.link} group flex flex-col items-center gap-3 rounded-xl text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand`}
                 href={item.href}
               >
-                <span className="flex h-20 w-20 items-center justify-center rounded-full bg-surface-subtle text-brand ring-1 ring-transparent transition duration-200 group-hover:-translate-y-1 group-hover:bg-brand-soft group-hover:ring-brand/20 motion-reduce:transform-none motion-reduce:transition-none sm:h-24 sm:w-24">
+                <span className={`${styles.icon} relative flex h-20 w-20 items-center justify-center rounded-full text-brand transition duration-200 group-hover:-translate-y-1 motion-reduce:transform-none motion-reduce:transition-none sm:h-24 sm:w-24`}>
                   <Icon aria-hidden="true" className="h-9 w-9 sm:h-10 sm:w-10" strokeWidth={1.6} />
+                  <span aria-hidden="true" className={styles.open}>
+                    <ArrowUpRight className="h-3 w-3" strokeWidth={2} />
+                  </span>
                 </span>
                 <span className="min-h-10 text-sm font-semibold leading-5 text-ink transition-colors group-hover:text-brand">
                   {item.label}
@@ -99,7 +116,7 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
       <button
         aria-controls="home-shortcuts"
         aria-label="Ver próximos atalhos"
-        className="absolute right-0 top-6 flex h-11 w-11 items-center justify-center rounded-full text-brand transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:invisible sm:top-8"
+        className={`${styles.control} absolute right-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-brand transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:invisible`}
         disabled={!controls.next}
         onClick={() => scrollShortcuts(1)}
         type="button"

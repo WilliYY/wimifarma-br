@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Fotografia suave na faixa de categorias — 2026-10-20
+
+Os seis atalhos recebem um painel com fotografia institucional ilustrativa em baixa opacidade, sobreposição clara e círculos com contorno e profundidade discreta. Os ícones vermelhos e os nomes mantêm prioridade visual. CSS local e imagem responsiva; sem novas promessas de confiança ou selos. Destinos, ordem, rolagem, setas e movimento reduzido preservados. Direção e validação em [88](88-faixa-categorias-visual.md).
+
 ## Preço e economia nos cards — 2026-10-20
 
 Cards compartilhados pela home, catálogo, busca e relacionados mostram “de/por” usando referências reais e valor Pix com condição explícita de uma unidade. Selo verde distingue o Pix; promoção cadastrada conserva seu percentual próprio. Preço sem Pix permanece visível e o carrinho recebe a base anterior ao desconto. Sem alteração da grade, ações, imagens ou identidade. Contrato em [86](86-precos-e-desconto-real-nos-cards.md).

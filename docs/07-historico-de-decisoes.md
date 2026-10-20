@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-20 — Fundo suave e acabamento da faixa de categorias
+
+- Reutilizada fotografia institucional ilustrativa em baixa opacidade, com sobreposição clara e CSS isolado no componente de atalhos.
+- Preservados seis destinos internos, ordem, setas, acessibilidade e movimento reduzido; círculos ganham contorno e indicação visual de acesso.
+- Nenhuma alteração de regra comercial, frete ou pagamento. Decisão e validação em [88](88-faixa-categorias-visual.md).
+
 ## 2026-10-20 — Catálogo por famílias e apresentação total
 
 - Publicadas 54 apresentações de enalapril, sinvastatina e atenolol, incluindo associações, com 77 ofertas elegíveis ANB/Profarma. Catálogo de 434 para 488 ativos; estoque físico, registros antigos e dados comerciais anteriores preservados.

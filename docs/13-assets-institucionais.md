@@ -1,5 +1,9 @@
 # 13 - Assets institucionais
 
+## Fundo decorativo das categorias — 20/10/2026
+
+`public/banners/contato-farmaceutica.webp` também compõe o fundo da faixa de categorias da home, com baixa opacidade, saturação reduzida e sobreposição clara. A cena existente é ilustrativa; não é apresentada como retrato da equipe real. Não houve geração, redesenho ou novo arquivo de imagem. Entrega responsiva pelo Next Image, qualidade 75, com alternativa vazia por ser decoração. Contrato em [88](88-faixa-categorias-visual.md).
+
 ## Logos das marcas do catálogo — 2026-10-19
 
 Onze logos oficiais em `public/brands`, convertidos para WebP lossless, total de 89.818 bytes, proporções/cores preservadas e sem ampliação de bitmaps. Identificação contextual das marcas publicadas, sem alegação de parceria; marcas sem asset aparecem por nome. Fontes oficiais, versões negativas, hashes e limites em [82-marcas-do-catalogo.md](82-marcas-do-catalogo.md).
