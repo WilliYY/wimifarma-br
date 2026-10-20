@@ -495,10 +495,11 @@ export function HomePage({
 
       <BrandCarousel brands={brands} />
 
-      <ClubBanner />
-
       <HomeProductCarousel products={collections.care} id="home-care" title="Cuidados para o seu dia a dia" eyebrow="Beleza, higiene e bem-estar" href="/catalogo?grupo=beauty&ordem=preco-asc" />
       <HomeProductCarousel products={collections.otc} id="home-otc" title="Medicamentos isentos de prescrição" eyebrow="MIP / OTC" href="/catalogo?grupo=medicines&ordem=preco-asc" />
+
+      <ClubBanner />
+
       <HomeProductCarousel products={collections.affordable} id="home-affordable" title="Menores preços para aproveitar" eyebrow="Economia no seu cuidado" href="/catalogo?ordem=preco-asc" />
 
       <CustomerReviews reviews={customerReviews} />
