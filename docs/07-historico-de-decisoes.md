@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-19 — Descrições públicas mais atraentes
+
+- Substituir na apresentação pública os textos vazios e o template completo da importação por textos em parágrafos, contextualizados pelo tipo de produto. Descrições editoriais preservadas; cadastro e dados comerciais não são regravados.
+- Compartilhamento e dados estruturados usam a mesma descrição da página. Alegações específicas exigem identidade e fonte oficial; o Dercos Collagen Repair 17 200 g tem conteúdo conferido na Vichy, sem transferir benefícios para outras apresentações.
+- Contrato, limites e regressões em [80](80-descricoes-publicas-produtos.md).
+
 ## 2026-10-19 — ST observado para medicamentos Profarma
 
 - Excluir da seleção ofertas de medicamentos Profarma sem cálculo de ST observado. MIP classificado também está coberto; fraldas/higiene/perfumaria não são bloqueadas por ausência desse campo. Comparação continua por EAN exato, custo final e percentual ADMIN.

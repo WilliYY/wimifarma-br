@@ -42,6 +42,7 @@ import {
 import { getPrisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
+import { buildPublicProductDescription } from "@/features/products/product-description";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 
 export const dynamic = "force-dynamic";
@@ -114,13 +115,13 @@ function RatingStars({ rating, size = "h-4 w-4" }: { rating: number | null; size
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const product = await getPrisma().product.findFirst({
-    select: { catalogClassification: true, brand: true, description: true, imageUrl: true, imageUrls: true, name: true, inventorySource: true, requiresPrescription: true },
+    select: { catalogClassification: true, brand: true, category: true, description: true, ean: true, imageUrl: true, imageUrls: true, isPopularPharmacy: true, name: true, prescriptionType: true, inventorySource: true, requiresPrescription: true },
     where: { slug, status: "ACTIVE" },
   });
   if (!product) return {};
   product.imageUrl = publicProductImageUrl(product);
   product.imageUrls = publicProductImageUrls(product);
-  const description = buildProductMetaDescription(product);
+  const description = buildProductMetaDescription({ ...product, description: buildPublicProductDescription(product) });
   const productUrl = `/produto/${encodeURIComponent(slug)}`;
   return {
     alternates: { canonical: productUrl },
@@ -151,6 +152,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   });
   if (!record) notFound();
   const product = toSaleProduct(record);
+  const description = buildPublicProductDescription(product);
 
   const relationFilters: Prisma.ProductWhereInput[] = [
     ...product.activeIngredients.map((ingredient) => ({ searchText: { contains: normalizeProductSearch(ingredient) } })),
@@ -204,7 +206,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const productStructuredData = buildProductStructuredData({
     category: product.category,
     brand: product.brand,
-    description: product.description,
+    description,
     ean: product.ean,
     imageUrl: product.imageUrl,
     name: product.name,
@@ -353,7 +355,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <div className="mt-7 divide-y divide-line border-y border-line">
                 <details className="group py-5" open>
                   <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-base font-bold text-ink focus-visible:outline-brand">Descrição<ChevronRight className="h-5 w-5 text-brand transition-transform group-open:rotate-90 motion-reduce:transition-none" aria-hidden="true" /></summary>
-                  <p className="mt-4 whitespace-pre-line text-sm leading-7 text-muted">{product.description ?? "A descricao detalhada ainda nao foi cadastrada. Consulte a embalagem e confirme as informacoes com a equipe da farmacia."}</p>
+                  <p className="mt-4 whitespace-pre-line text-sm leading-7 text-muted">{description}</p>
                 </details>
                 <details className="group py-5">
                   <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-base font-bold text-ink focus-visible:outline-brand">Princípios ativos e identificação<ChevronRight className="h-5 w-5 text-brand transition-transform group-open:rotate-90 motion-reduce:transition-none" aria-hidden="true" /></summary>
