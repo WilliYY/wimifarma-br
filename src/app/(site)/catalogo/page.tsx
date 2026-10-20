@@ -19,5 +19,6 @@ export default async function Page({ searchParams }: Props) {
   if (sort) query.set("ordem", sort);
   if (brand) query.set("marca", brand);
   const path = `/catalogo${query.size ? `?${query}` : ""}`;
-  return <CatalogPage title={categoryShortcuts.find(item => item.id === group)?.label ?? "Produtos para o seu dia a dia"} description={description} path={path} page={catalogPageNumber(params.pagina)} group={group} sort={sort} brand={brand} />;
+  const intro = group === "dermo" ? "Cuidados para sua pele." : group ? "Confira os produtos desta categoria." : "Encontre o que você precisa.";
+  return <CatalogPage title={categoryShortcuts.find(item => item.id === group)?.label ?? "Produtos"} description={intro} path={path} page={catalogPageNumber(params.pagina)} group={group} sort={sort} brand={brand} />;
 }

@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-20 — Introdução curta no catálogo
+
+- Título geral reduzido para “Produtos” e textos visíveis do catálogo/grupos limitados a uma frase curta; Dermo recebe introdução específica de cuidados com a pele.
+- Descrição de SEO, filtros e navegação preservados. Detalhes em [10](10-layout-e-experiencia.md).
+
 ## 2026-10-20 — Cards uniformes e condições de entrega visíveis
 
 - Padronizadas áreas de imagem, preço, cashback e ações no componente compartilhado, com alinhamento conferido em telas pequenas e desktop. Preservados preços reais, Pix, carrinho e quantidade.

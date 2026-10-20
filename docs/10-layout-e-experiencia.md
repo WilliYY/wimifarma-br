@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Textos curtos no catálogo — 2026-10-20
+
+O catálogo geral usa o título “Produtos” e a frase “Encontre o que você precisa.”. O grupo Dermo mantém o título e usa “Cuidados para sua pele.”; os demais grupos usam “Confira os produtos desta categoria.”. As descrições de SEO, filtros, categorias e navegação permanecem como estavam. Mudança textual em `src/app/(site)/catalogo/page.tsx`, a pedido do lojista para reduzir a introdução repetida.
+
 ## Fotografia suave na faixa de categorias — 2026-10-20
 
 Os seis atalhos recebem um painel com fotografia institucional ilustrativa em baixa opacidade, sobreposição clara e círculos com contorno e profundidade discreta. Os ícones vermelhos e os nomes mantêm prioridade visual. CSS local e imagem responsiva; sem novas promessas de confiança ou selos. Destinos, ordem, rolagem, setas e movimento reduzido preservados. Direção e validação em [88](88-faixa-categorias-visual.md).
