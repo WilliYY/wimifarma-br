@@ -1,5 +1,7 @@
 # Rotina do piloto de fornecedores
 
+Atualização de 19/10/2026: aplicar [78 — ST observado](78-st-observado-profarma.md). Para medicamentos Profarma, registrar `substitutionTaxCents` da mesma observação: traço/ausência = `null`, zero somente se explícito. Sem cálculo, a oferta não concorre; comparar outra fonte do mesmo EAN. Higiene/fraldas/perfumaria não são bloqueadas por esse campo ausente. Preço final já inclui ST: não somar novamente. Não preencher o ST de observação antiga nem renovar sua data por inferência.
+
 Atualização comercial de 19/10/2026: ANB, Profarma e DM Paraná são fontes autorizadas, nesta ordem de preferência para consulta, sem sobrepor o menor custo elegível do mesmo EAN. GAM/SantaCruz continuam referências. A nova ampliação tem registro próprio em [77](77-expansao-dermocosmeticos-e-dm.md). A rotina existente foi encontrada **PAUSED** e continua pausada; esta alteração não amplia sua lista nem ativa um coletor. Contagens anteriores abaixo são históricas.
 
 Estado posterior de 19/10/2026: escopo de **68 EANs publicados de distribuidor**, após os 23 novos do [lote 73](73-lote-familias-e-dove-2026-10-19.md). A configuração foi encontrada **PAUSED** e permaneceu pausada. A grade 8h/12h/17h não implica execução ativa; ofertas conservam sua expiração normal. Os relatos anteriores de ativação são históricos. Atualização pelo mecanismo do Codex, sem novo coletor, reposição de cota ou publicação automática de candidatos.

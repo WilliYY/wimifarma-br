@@ -12,6 +12,14 @@ const mixed = () => ({ manifestVersion: 1, products: [{ ...row, supplierMarkupBp
   catalogClassification: { kind: "MEDICINE", medicineClass: "GENERIC", ethical: false, otc: false },
   evidence: { identity: { ...evidence }, classification: { ...evidence } } }] });
 
+test("manifest preserves numeric ST and missing ST remains an explicit pending observation", () => {
+  for (const substitutionTaxCents of [null, 0, 95]) {
+    const input = mixed();
+    const parsed = supplierImportManifestSchema.parse({ ...input, products: [{ ...input.products[0], offers: [{ ...row.offers[0], supplier: "PROFARMA", substitutionTaxCents }] }] });
+    assert.equal(parsed.products[0].offers[0].substitutionTaxCents, substitutionTaxCents);
+  }
+});
+
 test("manifest accepts three distinct approved suppliers and rejects references or duplicate DM", () => {
   const input = mixed();
   const offers = ["ANB", "PROFARMA", "DM"].map(supplier => ({ ...row.offers[0], supplier }));

@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-19 — ST observado para medicamentos Profarma
+
+- Excluir da seleção ofertas de medicamentos Profarma sem cálculo de ST observado. MIP classificado também está coberto; fraldas/higiene/perfumaria não são bloqueadas por ausência desse campo. Comparação continua por EAN exato, custo final e percentual ADMIN.
+- Campo unitário nullable, sem backfill ou coerção de traço para zero; uma nova observação sem cálculo limpa a comprovação anterior. O Preço final inclui ST e não recebe soma adicional. Nova conferência real com ST numérico permite voltar à disputa.
+- Filtro compartilhado entre catálogo, importação, checkout/reserva, pré-pagamento e simulador; pedidos anteriores e estoque físico preservados. Contrato, regressões e implantação em [78](78-st-observado-profarma.md).
+
 ## 2026-10-19 — DM Paraná e expansão de dermocosméticos
 
 - Titular autorizou DM como terceira fonte comercial, com consultas preferenciais ANB/Profarma e menor custo elegível por EAN. Enum aditivo, importador de até três ofertas e painéis reutilizam as regras de validade, markup, estoque físico separado e auditoria.

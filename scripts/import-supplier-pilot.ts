@@ -51,7 +51,7 @@ async function main() {
         if (current) await tx.$queryRaw`SELECT id FROM "SupplierCatalogOffer" WHERE "productId" = ${current.id} ORDER BY id FOR UPDATE`;
         const previous = current ? await tx.supplierCatalogOffer.findMany({ where: { productId: current.id } }) : [];
         const markup = current?.supplierMarkupBps ?? row.supplierMarkupBps;
-        const { best, updates } = planPilotRefresh(eanNormalized, parsedOffers, previous, Date.now(), markup, row.requiresPrescription);
+        const { best, updates } = planPilotRefresh(eanNormalized, parsedOffers, previous, Date.now(), markup, current?.requiresPrescription ?? row.requiresPrescription, current ? current.catalogClassification : row.catalogClassification);
         if (!current && !best) throw new Error(`No current, permitted offer for ${row.ean}.`);
         const summary = { ean: row.ean, name: row.name, slug: current?.slug ?? row.slug, priceCents: best?.unitPriceCents ?? null,
           available: Boolean(best), action: current ? "UPDATE_OFFERS" : "CREATE", supplierMarkupBps: markup,
@@ -78,7 +78,7 @@ async function main() {
               imageUrl: saved.url, width: saved.width, height: saved.height, sizeBytes: saved.sizeBytes, publicPhoto: false } } });
         }
         await tx.auditLog.create({ data: { action: "SUPPLIER_PILOT_IMPORTED", entity: "Product", entityId: product.id, userId: actor.id,
-          metadata: { ean: row.ean, suppliers: parsedOffers.map(offer => offer.supplier), created: !current,
+          metadata: { ean: row.ean, suppliers: parsedOffers.map(offer => offer.supplier), supplierTaxes: parsedOffers.map(offer => ({ supplier: offer.supplier, substitutionTaxCents: offer.substitutionTaxCents })), created: !current,
             manifestVersion: input.manifestVersion ?? 0, supplierMarkupBps: markup,
             ...(row.evidence ? { evidence: row.evidence } : {}),
             ...(!current && row.catalogClassification ? { catalogClassification: row.catalogClassification } : {}),

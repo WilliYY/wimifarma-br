@@ -7,6 +7,7 @@ export const SupplierCatalogOfferSchema = z.object({
   externalCode: z.string().trim().min(1).max(150),
   eanNormalized: z.string().transform(value => normalizeGtin(value)).refine(value => value !== null, "EAN inválido."),
   unitCostCents: z.number().int().min(1).max(100_000_000),
+  substitutionTaxCents: z.number().int().min(0).max(100_000_000).nullable().default(null),
   retailCeilingCents: z.number().int().min(1).max(100_000_000).nullable().default(null),
   available: z.boolean(),
   stockQuantity: z.number().int().min(0).max(1_000_000).nullable().default(null),

@@ -81,3 +81,41 @@ test("receita exige teto CMED e não vende quando o acréscimo ultrapassa o limi
   assert.equal(resolveSupplierOffer({...product,requiresPrescription:true,supplierOffers:[{...offer,retailCeilingCents:1599}]},1,now),null);
   assert.equal(resolveSupplierOffer({...product,requiresPrescription:true},1,now)?.unitPriceCents,1600);
 });
+
+test("medicamento Profarma sem ST perde para oferta válida do mesmo EAN", () => {
+  const pf = { ...offer, id: "pf", supplier: "PROFARMA", unitCostCents: 500 };
+  const medicine = { ...product, requiresPrescription: true, supplierOffers: [pf, offer] };
+  assert.equal(resolveSupplierOffer(medicine, 1, now)?.supplier, "ANB");
+  for (const substitutionTaxCents of [null, undefined, -1, 0.5, NaN]) {
+    assert.equal(resolveSupplierOffer({ ...medicine, supplierOffers: [{ ...pf, substitutionTaxCents }] }, 1, now), null);
+  }
+  for (const substitutionTaxCents of [0, 95]) {
+    const approved = resolveSupplierOffer({ ...medicine, supplierOffers: [{ ...pf, substitutionTaxCents }, offer] }, 1, now);
+    assert.equal(approved?.supplier, "PROFARMA");
+    assert.equal(approved?.unitPriceCents, 800); // Final cost already includes ST.
+  }
+  assert.equal(resolveSupplierOffer({ ...medicine, supplierOffers: [{ ...pf, substitutionTaxCents: 95, eanNormalized: "11234567890125" }, offer] }, 1, now)?.supplier, "ANB");
+  const dto = withCommerceAvailability({ ...medicine, supplierOffers: [pf] }, now);
+  assert.equal(dto.availableForPurchase, false);
+  assert.equal("substitutionTaxCents" in dto, false);
+});
+
+test("trava de ST inclui MIP e preserva perfumaria, fraldas e estoque físico", () => {
+  const pf = { ...offer, id: "pf", supplier: "PROFARMA" };
+  const classification = { kind: "MEDICINE", medicineClass: "OTHER", ethical: false, otc: true };
+  assert.equal(resolveSupplierOffer({ ...product, catalogClassification: classification, supplierOffers: [pf] }, 1, now), null);
+  for (const kind of ["PERFUMERY", "HYGIENE"]) {
+    assert.equal(resolveSupplierOffer({ ...product, catalogClassification: { ...classification, kind, medicineClass: "UNCLASSIFIED", otc: false }, supplierOffers: [pf] }, 1, now)?.supplier, "PROFARMA");
+  }
+  const physical = withCommerceAvailability({ ...product, inventorySource: "PHARMACY", requiresPrescription: true, supplierOffers: [pf] }, now);
+  assert.equal(physical.stock, 17);
+  assert.equal(physical.price, "99.00");
+  assert.equal(physical.availableForPurchase, true);
+});
+
+test("classe ausente, incompleta ou inválida não comprova dispensa de ST", () => {
+  const pf = { ...offer, supplier: "PROFARMA" };
+  for (const catalogClassification of [null, undefined, { kind: "MEDICINE" }, { kind: "PERFUMERY" }, { kind: "UNCLASSIFIED", medicineClass: "UNCLASSIFIED", ethical: false, otc: false }]) {
+    assert.equal(resolveSupplierOffer({ ...product, catalogClassification, supplierOffers: [pf] }, 1, now), null);
+  }
+});

@@ -13,7 +13,7 @@ const names = { ANB: "ANB", SANTA_CRUZ: "SantaCruz", PROFARMA: "Profarma", GAM: 
 const money = (value: number | null) => value === null ? "Pendente" : (value / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const section = "rounded-xl border border-line bg-white p-4 shadow-sm sm:p-6";
 const select = "h-11 w-full rounded-md border border-line bg-white px-3 text-sm text-ink focus:outline-brand";
-const initialOffer = () => ({ cost: "", inbound: "0", availability: "UNKNOWN", stock: "", checked: "", validity: "15" });
+const initialOffer = () => ({ cost: "", substitutionTax: "", inbound: "0", availability: "UNKNOWN", stock: "", checked: "", validity: "15" });
 const initialSimulation = {
   cost: "", markup: "60", quantity: "1", sale: "", inbound: "0", packaging: "", carrier: "", tax: "", fee: "", fixed: "", other: "",
   cashback: "2", coins: "2", wallet: "0", currentThreshold: "99,90", currentPix: "0", proposedThreshold: "99", proposedPix: "3", pmc: "", uf: "",
@@ -49,6 +49,7 @@ function Result({ title, result }: { title: string; result: Simulation }) {
 export function SupplierPlanningPanel() {
   const [ean, setEan] = useState("");
   const [quantity, setQuantity] = useState("1");
+  const [isMedicine, setIsMedicine] = useState(true);
   const [offers, setOffers] = useState(() => suppliers.map(initialOffer));
   const [comparison, setComparison] = useState<Comparison | null>(null);
   const [excluded, setExcluded] = useState<string[]>([]);
@@ -79,15 +80,15 @@ export function SupplierPlanningPanel() {
           if (minutes > 1440) throw new Error("Validade deve ser de 1 a 1.440 minutos.");
           if (offer.stock.trim() && !/^\d+$/.test(offer.stock.trim())) throw new Error("Saldo deve ser um inteiro não negativo.");
           const checked = new Date(offer.checked);
-          valid.push(SupplierOfferSchema.parse({ supplier: suppliers[index], ean, unitCostCents: decimalToMinorUnits(offer.cost), inboundUnitCostCents: decimalToMinorUnits(offer.inbound), availability: offer.availability, stockQuantity: offer.stock.trim() ? Number(offer.stock) : null, checkedAt: checked.toISOString(), validUntil: new Date(checked.getTime() + minutes * 60_000).toISOString() }));
+          valid.push(SupplierOfferSchema.parse({ supplier: suppliers[index], ean, unitCostCents: decimalToMinorUnits(offer.cost), substitutionTaxCents: suppliers[index] === "PROFARMA" ? decimalToMinorUnits(offer.substitutionTax) : null, inboundUnitCostCents: decimalToMinorUnits(offer.inbound), availability: offer.availability, stockQuantity: offer.stock.trim() ? Number(offer.stock) : null, checkedAt: checked.toISOString(), validUntil: new Date(checked.getTime() + minutes * 60_000).toISOString() }));
         } catch (error) { exclusions.push(`${names[suppliers[index]]}: ${error instanceof Error && !("issues" in error) ? error.message : "Revise preço, entrada, saldo, EAN e conferência."}`); }
       });
-      setComparison(compareSupplierOffers({ ean, quantity: count, offers: valid }, Date.now())); setExcluded(exclusions);
+      setComparison(compareSupplierOffers({ ean, quantity: count, isMedicine, offers: valid }, Date.now())); setExcluded(exclusions);
     } catch { setComparisonError("Informe EAN válido da mesma apresentação e quantidade inteira de 1 a 10.000."); }
   }
   function useBest() {
     if (!comparison) return;
-    const fresh = compareSupplierOffers({ ean, quantity: quantityFromText(quantity), offers: comparison.options.map(option => option.offer) }, Date.now());
+    const fresh = compareSupplierOffers({ ean, quantity: quantityFromText(quantity), isMedicine, offers: comparison.options.map(option => option.offer) }, Date.now());
     setComparison(fresh);
     if (!fresh.best) { setComparisonError("A oferta não está mais válida. Confira novamente antes de usar o custo."); return; }
     setForm(previous => ({ ...previous, cost: (fresh.best!.unitCostCents / 100).toFixed(2), inbound: (fresh.best!.inboundUnitCostCents * Number(quantity) / 100).toFixed(2), quantity, sale: "" })); setResults(null);
@@ -111,8 +112,12 @@ export function SupplierPlanningPanel() {
       <h2 id="supplier-title" className="flex items-center gap-2 text-xl font-bold text-ink"><Scale className="size-5 text-brand" aria-hidden />Comparação por EAN</h2>
       <p className="mt-2 text-sm text-muted">Compare a mesma apresentação. Conferência não reserva mercadoria; preço, saldo e validade precisam de confirmação manual.</p>
       <div className="mt-5 grid gap-4 sm:grid-cols-2"><Field id="offer-ean" label="EAN da apresentação"><Input id="offer-ean" inputMode="numeric" value={ean} onChange={event => { setEan(event.target.value.trim()); invalidateComparison(); }} /></Field><Field id="offer-quantity" label="Quantidade desejada"><Input id="offer-quantity" inputMode="numeric" value={quantity} onChange={event => { setQuantity(event.target.value); invalidateComparison(); }} /></Field></div>
+      <label className="mt-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={isMedicine} onChange={event => { setIsMedicine(event.target.checked); invalidateComparison(); }} className="size-4 accent-brand" />Este produto é medicamento, inclusive sem receita.</label>
+      <p className="mt-2 text-xs text-muted">Mantenha marcado enquanto a classificação estiver pendente. Desmarque somente após conferir que o produto é higiene, fralda, perfumaria ou outro item que não seja medicamento.</p>
+      <p className="mt-2 text-xs text-muted">Informe o custo final por unidade já incluindo ST; ela não será somada novamente. Medicamento Profarma sem cálculo de ST fica fora da comparação. Higiene, fraldas e perfumaria não exigem esse cálculo para comparação.</p>
       <div className="mt-5 grid gap-4 xl:grid-cols-3">{offers.map((offer, index) => <fieldset key={suppliers[index]} className="min-w-0 rounded-lg border border-line p-4"><legend className="px-2 font-bold text-ink">{names[suppliers[index]]} · manual</legend><div className="grid gap-3">
-        {([ ["cost", "Custo por unidade (R$)"], ["inbound", "Entrada por unidade (R$)"], ["stock", "Saldo disponível (unidades)"] ] as const).map(([key, label]) => <Field key={key} id={`offer-${index}-${key}`} label={label}><Input id={`offer-${index}-${key}`} inputMode={key === "stock" ? "numeric" : "decimal"} value={offer[key]} onChange={event => updateOffer(index, key, event.target.value)} placeholder={key === "stock" ? "Desconhecido" : undefined} /></Field>)}
+        {([ ["cost", "Custo final por unidade (R$)"], ["inbound", "Entrada por unidade (R$)"], ["stock", "Saldo disponível (unidades)"] ] as const).map(([key, label]) => <Field key={key} id={`offer-${index}-${key}`} label={label}><Input id={`offer-${index}-${key}`} inputMode={key === "stock" ? "numeric" : "decimal"} value={offer[key]} onChange={event => updateOffer(index, key, event.target.value)} placeholder={key === "stock" ? "Desconhecido" : undefined} /></Field>)}
+        {suppliers[index] === "PROFARMA" && <Field id={`offer-${index}-substitutionTax`} label="ST por unidade conferida (R$)"><Input id={`offer-${index}-substitutionTax`} inputMode="decimal" value={offer.substitutionTax} onChange={event => updateOffer(index, "substitutionTax", event.target.value)} placeholder="Sem cálculo de ST" /><p className="text-xs text-muted">Opcional. Informe 0 somente se o portal mostrar zero explícito; traço ou ausência ficam em branco.</p></Field>}
         <Field id={`offer-${index}-availability`} label="Disponibilidade"><select id={`offer-${index}-availability`} className={select} value={offer.availability} onChange={event => updateOffer(index, "availability", event.target.value)}><option value="UNKNOWN">Não conferida</option><option value="AVAILABLE">Disponível (conferida manualmente)</option><option value="UNAVAILABLE">Indisponível</option></select></Field>
         <Field id={`offer-${index}-checked`} label="Conferido manualmente em"><Input id={`offer-${index}-checked`} type="datetime-local" value={offer.checked} onChange={event => updateOffer(index, "checked", event.target.value)} /></Field>
         <Field id={`offer-${index}-validity`} label="Validade da conferência (minutos)"><Input id={`offer-${index}-validity`} type="number" min={1} max={1440} value={offer.validity} onChange={event => updateOffer(index, "validity", event.target.value)} /></Field>

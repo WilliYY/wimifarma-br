@@ -4,7 +4,7 @@ import { SupplierOfferSchema, SupplierComparisonInputSchema, OrderSimulationInpu
 import { compareSupplierOffers, priceWithMarkup, simulateOrder } from "./planning";
 
 const now = Date.parse("2026-10-17T12:00:00Z");
-const offer: SupplierOffer = { supplier: "ANB", ean: "7891234567895", unitCostCents: 1000, inboundUnitCostCents: 0,
+const offer: SupplierOffer = { supplier: "ANB", ean: "7891234567895", unitCostCents: 1000, substitutionTaxCents: null, inboundUnitCostCents: 0,
   availability: "AVAILABLE", stockQuantity: 10, checkedAt: "2026-10-17T11:00:00Z", validUntil: "2026-10-17T13:00:00Z" };
 const input: OrderSimulationInput = { unitCostCents: 1000, unitSaleCents: 1600, quantity: 2, inboundFreightCents: 0,
   packagingCents: 100, carrierFreightCents: 500, taxBps: 600, paymentFeeBps: 200, paymentFixedCents: 50,
@@ -12,9 +12,42 @@ const input: OrderSimulationInput = { unitCostCents: 1000, unitSaleCents: 1600, 
   walletDiscountCents: 0, pixDiscountBps: 300, freeShippingThresholdCents: 9900, freeShippingBeforePix: false,
   pmcRequired: false, pmcCeilingCents: null };
 
+test("medicine comparison excludes Profarma without ST, including omitted values", () => {
+  for (const substitutionTaxCents of [null, undefined]) {
+    const profarma = { ...offer, supplier: "PROFARMA" as const, unitCostCents: 700, substitutionTaxCents };
+    const result = compareSupplierOffers({ ean: offer.ean, quantity: 2, isMedicine: true, offers: [offer, profarma] }, now);
+    assert.equal(result.best?.supplier, "ANB");
+    assert.ok(result.options.find(option => option.offer.supplier === "PROFARMA")?.reasons.includes("Sem cálculo de ST."));
+  }
+});
+
+test("explicit zero or positive Profarma ST qualifies without adding ST to final cost", () => {
+  for (const substitutionTaxCents of [0, 150, 100_000_000]) {
+    const profarma = { ...offer, supplier: "PROFARMA" as const, unitCostCents: 700, substitutionTaxCents };
+    const result = compareSupplierOffers({ ean: offer.ean, quantity: 2, isMedicine: true, offers: [offer, profarma] }, now);
+    assert.equal(result.best?.supplier, "PROFARMA");
+    assert.equal(result.options[0].totalCostCents, 1400);
+  }
+});
+
+test("non-medicine Profarma and other medicine suppliers do not require ST", () => {
+  for (const supplier of ["ANB", "SANTA_CRUZ", "PROFARMA", "GAM", "DM"] as const) {
+    const result = compareSupplierOffers({ ean: offer.ean, quantity: 1, isMedicine: supplier !== "PROFARMA", offers: [{ ...offer, supplier }] }, now);
+    assert.equal(result.best?.supplier, supplier);
+  }
+});
+
+test("comparison requires an explicit medicine classification and validates ST amounts", () => {
+  assert.equal(SupplierComparisonInputSchema.safeParse({ ean: offer.ean, quantity: 1, offers: [offer] }).success, false);
+  assert.equal(SupplierComparisonInputSchema.safeParse({ ean: offer.ean, quantity: 1, isMedicine: false, offers: [offer] }).success, true);
+  for (const substitutionTaxCents of [-1, 0.1, 100_000_001, Number.MAX_SAFE_INTEGER + 1, NaN, Infinity]) {
+    assert.equal(SupplierOfferSchema.safeParse({ ...offer, substitutionTaxCents }).success, false);
+  }
+});
+
 test("compares GAM with existing suppliers and rejects unsupported supplier codes", () => {
   const gam = SupplierOfferSchema.parse({ ...offer, supplier: "GAM", unitCostCents: 800 });
-  const result = compareSupplierOffers({ ean: offer.ean, quantity: 2, offers: [offer, gam] }, now);
+  const result = compareSupplierOffers({ ean: offer.ean, quantity: 2, isMedicine: false, offers: [offer, gam] }, now);
   assert.equal(result.best?.supplier, "GAM");
   assert.equal(result.options[0].totalCostCents, 1600);
   for (const supplier of ["ANB", "SANTA_CRUZ", "PROFARMA", "DM"]) {
@@ -27,11 +60,11 @@ test("compares GAM with existing suppliers and rejects unsupported supplier code
 
 test("DM competes on total eligible cost without changing reference suppliers", () => {
   const dm = SupplierOfferSchema.parse({ ...offer, supplier: "DM", unitCostCents: 700, inboundUnitCostCents: 100 });
-  const result = compareSupplierOffers({ ean: offer.ean, quantity: 2, offers: [offer, dm] }, now);
+  const result = compareSupplierOffers({ ean: offer.ean, quantity: 2, isMedicine: false, offers: [offer, dm] }, now);
   assert.equal(result.best?.supplier, "DM");
   assert.equal(result.options[0].totalCostCents, 1600);
   for (const changes of [{ ean: "96385074" }, { validUntil: new Date(now).toISOString() }, { stockQuantity: 0 }, { availability: "UNAVAILABLE" as const }]) {
-    assert.equal(compareSupplierOffers({ ean: offer.ean, quantity: 2, offers: [offer, { ...dm, ...changes }] }, now).best?.supplier, "ANB");
+    assert.equal(compareSupplierOffers({ ean: offer.ean, quantity: 2, isMedicine: false, offers: [offer, { ...dm, ...changes }] }, now).best?.supplier, "ANB");
   }
 });
 
@@ -51,7 +84,7 @@ test("requires offset timestamps and a positive offer validity of at most 24 hou
 });
 
 test("sorts complete comparison options by total cost, recommending only eligible stock", () => {
-  const result = compareSupplierOffers({ ean: offer.ean, quantity: 2, offers: [offer,
+  const result = compareSupplierOffers({ ean: offer.ean, quantity: 2, isMedicine: false, offers: [offer,
     { ...offer, supplier: "PROFARMA", unitCostCents: 900, inboundUnitCostCents: 200 },
     { ...offer, supplier: "SANTA_CRUZ", unitCostCents: 800, availability: "UNKNOWN" }] }, now);
   assert.equal(result.best?.supplier, "ANB");
@@ -62,20 +95,20 @@ test("sorts complete comparison options by total cost, recommending only eligibl
 test("never recommends divergent EAN, unknown or insufficient stock, unavailable, future or expired offers", () => {
   for (const changes of [{ ean: "96385074" }, { stockQuantity: null }, { stockQuantity: 1 }, { availability: "UNAVAILABLE" as const },
     { availability: "UNKNOWN" as const }, { checkedAt: "2026-10-17T12:00:01Z" }, { validUntil: "2026-10-17T12:00:00Z" }]) {
-    const result = compareSupplierOffers({ ean: offer.ean, quantity: 2, offers: [{ ...offer, ...changes }] }, now);
+    const result = compareSupplierOffers({ ean: offer.ean, quantity: 2, isMedicine: false, offers: [{ ...offer, ...changes }] }, now);
     assert.equal(result.best, null);
     assert.ok(result.options[0].reasons.length > 0);
   }
-  assert.equal(compareSupplierOffers({ ean: offer.ean, quantity: 1, offers: [offer] }, Date.parse(offer.checkedAt)).best?.supplier, "ANB");
+  assert.equal(compareSupplierOffers({ ean: offer.ean, quantity: 1, isMedicine: false, offers: [offer] }, Date.parse(offer.checkedAt)).best?.supplier, "ANB");
 });
 
 test("rejects invalid quantities, offer counts and unsafe monetary input", () => {
   for (const quantity of [0, 10001, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
-    assert.equal(SupplierComparisonInputSchema.safeParse({ ean: offer.ean, quantity, offers: [] }).success, false);
+    assert.equal(SupplierComparisonInputSchema.safeParse({ ean: offer.ean, quantity, isMedicine: false, offers: [] }).success, false);
   }
-  assert.equal(SupplierComparisonInputSchema.safeParse({ ean: offer.ean, quantity: 1, offers: Array(101).fill(offer) }).success, false);
+  assert.equal(SupplierComparisonInputSchema.safeParse({ ean: offer.ean, quantity: 1, isMedicine: false, offers: Array(101).fill(offer) }).success, false);
   assert.equal(SupplierOfferSchema.safeParse({ ...offer, unitCostCents: Number.MAX_SAFE_INTEGER + 1 }).success, false);
-  assert.throws(() => compareSupplierOffers({ ean: offer.ean, quantity: 1, offers: [offer] }, NaN));
+  assert.throws(() => compareSupplierOffers({ ean: offer.ean, quantity: 1, isMedicine: false, offers: [offer] }, NaN));
 });
 
 test("markup means addition to acquisition cost and rounds half up", () => {

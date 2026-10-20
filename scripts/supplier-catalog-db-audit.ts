@@ -50,7 +50,7 @@ async function main() {
     const product = await db.product.create({ data: { name: "Synthetic supplier", slug: "qa-supplier", ean: "1234567890128", eanNormalized: normalizeGtin("1234567890128"), price: 16, stock: 3, inventorySource: "DISTRIBUTOR", status: "ACTIVE" } });
     const offerData = { productId: product.id, eanNormalized: product.eanNormalized!, available: true, allocationQuantity: 5, observedAt: new Date(Date.now() - 1000), validUntil: new Date(Date.now() + 3600000) };
     const anb = await db.supplierCatalogOffer.create({ data: { ...offerData, supplier: "ANB", externalCode: "synthetic-a", unitCostCents: 1000 } });
-    const profarma = await db.supplierCatalogOffer.create({ data: { ...offerData, supplier: "PROFARMA", externalCode: "synthetic-p", unitCostCents: 1200 } });
+    const profarma = await db.supplierCatalogOffer.create({ data: { ...offerData, supplier: "PROFARMA", externalCode: "synthetic-p", unitCostCents: 1200, substitutionTaxCents: 95 } });
     const input = (quantity = 1, online = false) => checkoutRequestSchema.parse({ customer: { name: "Synthetic customer", email: "buyer@example.invalid", phone: "11999990000" }, fulfillmentMethod: "PICKUP", paymentMethod: online ? "ONLINE" : "CASH", privacyConsent: true, checkoutRequestId: crypto.randomUUID(), items: [{ productId: product.id, quantity, expectedUnitPriceCents: 1600 }] });
     const physical = async () => (await db.product.findUniqueOrThrow({ where: { id: product.id } })).stock;
     const concurrentInputs = [input(3), input(3)];

@@ -16,6 +16,7 @@ export const SupplierOfferSchema = z.object({
   supplier: z.enum(["ANB", "SANTA_CRUZ", "PROFARMA", "GAM", "DM"]),
   ean,
   unitCostCents: positiveMoney,
+  substitutionTaxCents: money.nullable().default(null),
   inboundUnitCostCents: money.default(0),
   availability: z.enum(["AVAILABLE", "UNAVAILABLE", "UNKNOWN"]),
   stockQuantity: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).nullable(),
@@ -29,6 +30,7 @@ export const SupplierOfferSchema = z.object({
 export const SupplierComparisonInputSchema = z.object({
   ean,
   quantity,
+  isMedicine: z.boolean(),
   offers: z.array(SupplierOfferSchema).max(100),
 });
 
@@ -60,4 +62,5 @@ export const OrderSimulationInputSchema = z.object({
 }, { message: "Os descontos devem preservar pelo menos um centavo dos produtos.", path: ["walletDiscountCents"] });
 
 export type SupplierOffer = z.infer<typeof SupplierOfferSchema>;
+export type SupplierComparisonInput = z.input<typeof SupplierComparisonInputSchema>;
 export type OrderSimulationInput = z.infer<typeof OrderSimulationInputSchema>;

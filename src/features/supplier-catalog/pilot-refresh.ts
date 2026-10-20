@@ -4,7 +4,7 @@ import type { SupplierCatalogOfferInput } from "./schema";
 type PreviousOffer = SupplierCommerceOffer & { externalCode: string };
 
 /** Routine price checks preserve allocation and every pending/consumed unit. */
-export function planPilotRefresh(eanNormalized: string, incoming: SupplierCatalogOfferInput[], previous: PreviousOffer[], now = Date.now(), supplierMarkupBps = 6000, requiresPrescription = true) {
+export function planPilotRefresh(eanNormalized: string, incoming: SupplierCatalogOfferInput[], previous: PreviousOffer[], now = Date.now(), supplierMarkupBps = 6000, requiresPrescription = true, catalogClassification?: unknown) {
   if (new Set(incoming.map(offer => offer.supplier)).size !== incoming.length) throw new Error("Duplicate supplier offer.");
   const updates = incoming.map(offer => {
     if (offer.replenishAllocation) throw new Error("Routine imports cannot replenish allocation.");
@@ -25,5 +25,5 @@ export function planPilotRefresh(eanNormalized: string, incoming: SupplierCatalo
       reservedQuantity: stored?.reservedQuantity ?? 0, committedQuantity: stored?.committedQuantity ?? 0 };
     if (index < 0) offers.push(refreshed); else offers[index] = refreshed;
   }
-  return { updates, best: resolveSupplierOffer({ eanNormalized, requiresPrescription, supplierMarkupBps, supplierOffers: offers }, 1, now) };
+  return { updates, best: resolveSupplierOffer({ eanNormalized, requiresPrescription, catalogClassification, supplierMarkupBps, supplierOffers: offers }, 1, now) };
 }

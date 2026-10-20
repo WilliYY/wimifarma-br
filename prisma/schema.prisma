@@ -142,6 +142,7 @@ model SupplierCatalogOffer {
   externalCode String
   eanNormalized String
   unitCostCents Int
+  substitutionTaxCents Int?
   retailCeilingCents Int?
   available Boolean @default(false)
   stockQuantity Int?

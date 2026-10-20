@@ -1,6 +1,7 @@
 import { publicProductImageUrl, publicProductImageUrls } from "@/features/product-images/private-supplier-policy";
 import { priceWithMarkup } from "@/features/supplier-planning/planning";
 import { MAX_ORDER_ITEM_QUANTITY } from "@/features/products/quantity";
+import { hasRequiredSupplierTax, requiresSupplierTaxEvidence } from "@/features/supplier-planning/tax-eligibility";
 
 export const supplierOfferInclude = { supplierOffers: true, supplierMarkupBps: true, catalogClassification: true } as const;
 
@@ -9,6 +10,7 @@ export type SupplierCommerceOffer = {
   supplier: string;
   eanNormalized: string;
   unitCostCents: number;
+  substitutionTaxCents?: number | null;
   retailCeilingCents?: number | null;
   available: boolean;
   stockQuantity: number | null;
@@ -54,16 +56,17 @@ export function gtinVariants(raw: unknown): string[] {
   return [8, 12, 13, 14].filter(size => /^0*$/.test(canonical.slice(0, 14 - size))).map(size => canonical.slice(-size));
 }
 
-export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "eanNormalized" | "supplierOffers" | "requiresPrescription" | "supplierMarkupBps" | "supplierDemandAllowed">, quantity = 1, now = Date.now()) {
+export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "eanNormalized" | "supplierOffers" | "requiresPrescription" | "supplierMarkupBps" | "supplierDemandAllowed" | "catalogClassification">, quantity = 1, now = Date.now()) {
   if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > MAX_ORDER_ITEM_QUANTITY || !Number.isFinite(now)) return null;
   const markup = product.supplierMarkupBps ?? 6000;
   if (!Number.isSafeInteger(markup) || markup < 0 || markup > 10000) return null;
   const ean = normalizeGtin(product.eanNormalized ?? product.ean);
   if (!ean) return null;
+  const isMedicine = requiresSupplierTaxEvidence(product);
   return (product.supplierOffers ?? []).flatMap(offer => {
     const observedAt = new Date(offer.observedAt).getTime();
     const validUntil = new Date(offer.validUntil).getTime();
-    if (!offer.available || normalizeGtin(offer.eanNormalized) !== ean ||
+    if (!offer.available || !hasRequiredSupplierTax(offer, isMedicine) || normalizeGtin(offer.eanNormalized) !== ean ||
       !Number.isSafeInteger(offer.unitCostCents) || offer.unitCostCents < 1 || offer.unitCostCents > 100_000_000 ||
       !Number.isFinite(observedAt) || !Number.isFinite(validUntil) || observedAt > now || validUntil <= now ||
       validUntil <= observedAt || validUntil - observedAt > 86_400_000 ||

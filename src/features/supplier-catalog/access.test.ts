@@ -149,10 +149,20 @@ test("offer POST persists 200 cents and canonical GTIN with an audit and no impl
   assert.equal(f.calls.writes.length, 1);
   const saved = f.calls.writes[0];
   assert.equal(saved.create.unitCostCents, 200);
+  assert.equal(saved.create.substitutionTaxCents, null);
   assert.equal(saved.create.eanNormalized, "07891234567895");
   assert.equal(saved.update.committedQuantity, undefined);
   assert.equal(f.calls.audits.length, 1);
   assert.equal(f.calls.audits[0].data.userId, "synthetic-admin");
+});
+
+test("offer POST persists explicitly calculated zero ST and clears older proof when omitted", async () => {
+  const calculated = await harness();
+  assert.equal((await calculated.run("POST", input({ supplier: "PROFARMA", substitutionTaxCents: 0 }))).status, 200);
+  assert.equal(calculated.calls.writes[0].create.substitutionTaxCents, 0);
+  const missing = await harness();
+  assert.equal((await missing.run("POST", input({ supplier: "PROFARMA" }))).status, 200);
+  assert.equal(missing.calls.writes[0].update.substitutionTaxCents, null);
 });
 
 test("offer POST refuses stale observations and supplier identity changes with open orders", async () => {

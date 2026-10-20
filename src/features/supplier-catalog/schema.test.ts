@@ -12,3 +12,13 @@ test("catalog schema accepts DM and retains GTIN, cost and 24-hour validity cons
     assert.equal(SupplierCatalogOfferSchema.safeParse({ ...offer, ...patch }).success, false);
   }
 });
+
+test("ST desconhecido permanece nulo; zero calculado é explícito e inválidos são rejeitados", () => {
+  assert.equal(SupplierCatalogOfferSchema.parse(offer).substitutionTaxCents, null);
+  for (const substitutionTaxCents of [null, 0, 95]) {
+    assert.equal(SupplierCatalogOfferSchema.parse({ ...offer, substitutionTaxCents }).substitutionTaxCents, substitutionTaxCents);
+  }
+  for (const substitutionTaxCents of ["-", "", -1, 0.5, NaN, 100_000_001]) {
+    assert.equal(SupplierCatalogOfferSchema.safeParse({ ...offer, substitutionTaxCents }).success, false);
+  }
+});

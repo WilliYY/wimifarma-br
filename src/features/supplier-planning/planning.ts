@@ -1,6 +1,7 @@
 import { productCashbackCents } from "@/features/cashback/rules";
 import { productWimicoinsPoints } from "@/features/club/rules";
-import { OrderSimulationInputSchema, SupplierComparisonInputSchema, type OrderSimulationInput, type SupplierOffer } from "./schema";
+import { OrderSimulationInputSchema, SupplierComparisonInputSchema, type OrderSimulationInput, type SupplierComparisonInput } from "./schema";
+import { hasRequiredSupplierTax } from "./tax-eligibility";
 
 function safeNumber(value: bigint): number {
   if (value > BigInt(Number.MAX_SAFE_INTEGER) || value < BigInt(Number.MIN_SAFE_INTEGER)) {
@@ -13,11 +14,12 @@ function ceilRate(value: bigint, rate: number): bigint {
   return (value * BigInt(rate) + BigInt(9999)) / BigInt(10000);
 }
 
-export function compareSupplierOffers(input: { ean: string; quantity: number; offers: SupplierOffer[] }, now: number) {
+export function compareSupplierOffers(input: SupplierComparisonInput, now: number) {
   const parsed = SupplierComparisonInputSchema.parse(input);
   if (!Number.isSafeInteger(now)) throw new Error("Data de comparação inválida.");
   const options = parsed.offers.map(offer => {
     const reasons: string[] = [];
+    if (!hasRequiredSupplierTax(offer, parsed.isMedicine)) reasons.push("Sem cálculo de ST.");
     if (offer.ean !== parsed.ean) reasons.push("EAN divergente.");
     if (offer.availability === "UNKNOWN") reasons.push("Disponibilidade desconhecida.");
     if (offer.availability === "UNAVAILABLE") reasons.push("Produto indisponível.");

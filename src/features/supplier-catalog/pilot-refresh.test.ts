@@ -40,10 +40,22 @@ test("routine refresh cannot restore consumed quota or disregard reservations", 
   assert.throws(() => planPilotRefresh(ean, [input({ replenishAllocation: true })], [], now), /cannot replenish/);
 });
 test("best offer includes other current suppliers and preserves their financial identity", () => {
-  const stored = previous({ supplier: "PROFARMA", id: "cheaper", unitCostCents: 250, reservedQuantity: 0, committedQuantity: 0 });
+  const stored = previous({ supplier: "PROFARMA", substitutionTaxCents: 95, id: "cheaper", unitCostCents: 250, reservedQuantity: 0, committedQuantity: 0 });
   const plan = planPilotRefresh(ean, [input()], [stored], now);
   assert.equal(plan.best?.id, "cheaper");
   assert.equal(plan.best?.unitPriceCents, 400);
+});
+
+test("nova observação sem ST limpa aprovação anterior; ST reconferido volta a competir", () => {
+  const stored = previous({ supplier: "PROFARMA", substitutionTaxCents: 95, allocationQuantity: 5 });
+  const missing = input({ supplier: "PROFARMA", unitCostCents: 200 });
+  const first = planPilotRefresh(ean, [missing], [stored], now);
+  assert.equal(first.updates[0].substitutionTaxCents, null);
+  assert.equal(first.best, null);
+  const restored = planPilotRefresh(ean, [input({ supplier: "PROFARMA", unitCostCents: 200, substitutionTaxCents: 80 })], [{ ...stored, ...first.updates[0] }], now);
+  assert.equal(restored.best?.unitPriceCents, 320);
+  assert.equal(restored.best?.reservedQuantity, 1);
+  assert.equal(restored.best?.committedQuantity, 1);
 });
 test("out-of-stock update disables an existing supplier without inventing a replacement", () => {
   const plan = planPilotRefresh(ean, [input({ available: false, stockQuantity: 0 })], [previous()], now);
@@ -77,4 +89,11 @@ test("refresh rejects mismatched EAN, duplicate supplier and validity exceeding 
   assert.throws(() => planPilotRefresh(ean, [input(), input()], [], now), /Duplicate/);
   const invalid = { ...input(), observedAt: "2026-10-17T10:00:00Z", validUntil: "2026-10-19T11:00:00Z" };
   assert.throws(() => planPilotRefresh(ean, [invalid], [], now), /24 hours/);
+});
+
+test("importação MIP exige ST, mas perfumaria não exige; classificação persistida decide", () => {
+  const pf = input({ supplier: "PROFARMA", retailCeilingCents: null });
+  const medicine = { kind: "MEDICINE", medicineClass: "OTHER", ethical: false, otc: true };
+  assert.equal(planPilotRefresh(ean, [pf], [], now, 2000, false, medicine).best, null);
+  assert.equal(planPilotRefresh(ean, [pf], [], now, 2000, false, { ...medicine, kind: "PERFUMERY", medicineClass: "UNCLASSIFIED", otc: false }).best?.unitPriceCents, 360);
 });

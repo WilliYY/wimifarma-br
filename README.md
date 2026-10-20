@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Regra de elegibilidade de medicamentos Profarma e conferência do ST: [documento 78](docs/78-st-observado-profarma.md).
+
 Ampliação publicada em 19/10/2026: 304 produtos de higiene/perfumaria/dermocosméticos, 260 fotos conferidas e acréscimo de 20%, totalizando 377 produtos. Comparação ANB/Profarma e suporte autorizado à DM Paraná, ainda sem ofertas DM neste lote. Evidências, fotos/medidas pendentes e rotina pausada em [docs/77-expansao-dermocosmeticos-e-dm.md](docs/77-expansao-dermocosmeticos-e-dm.md).
 
 App Android na Google Play e iOS na App Store: levantamento de paridade, dados compartilhados, arquitetura proposta e pendências das contas em [docs/76-app-android-ios.md](docs/76-app-android-ios.md). Ainda não há aplicativo compilado ou publicado.

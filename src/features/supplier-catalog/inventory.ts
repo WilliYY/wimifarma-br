@@ -3,7 +3,7 @@ import { PaymentError } from "@/features/payments/schema";
 import { resolveSupplierOffer } from "./commerce";
 
 type Item = { id: string; productId: string | null; supplierOfferId?: string | null; supplierDemandAllowed?: boolean; quantity: number; unitPriceCents: number };
-type PricingProduct = { ean?: string | null; eanNormalized?: string | null; requiresPrescription?: boolean; supplierMarkupBps?: number };
+type PricingProduct = { ean?: string | null; eanNormalized?: string | null; requiresPrescription?: boolean; supplierMarkupBps?: number; catalogClassification?: unknown };
 
 /** Physical rows first by product, then distributor rows by offer: identical global lock order. */
 export function comparePaymentInventoryItems(a: Item & { inventorySource?: string }, b: Item & { inventorySource?: string }) {

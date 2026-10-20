@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       const { replenishAllocation, ...fields } = input;
       const data = { ...fields, eanNormalized: input.eanNormalized!, observedAt: new Date(input.observedAt), validUntil: new Date(input.validUntil) };
       const saved = await tx.supplierCatalogOffer.upsert({ where: { productId_supplier: { productId: product.id, supplier: input.supplier } }, create: data, update: { ...data, ...(replenishAllocation ? { committedQuantity: 0 } : {}), revision: { increment: 1 } } });
-      await tx.auditLog.create({ data: { action: "SUPPLIER_OFFER_REVIEWED", entity: "SupplierCatalogOffer", entityId: saved.id, userId: actor.id, metadata: { supplier: saved.supplier, productId: product.id, revision: saved.revision, available: saved.available, allocationReplenished: replenishAllocation, previousCommittedQuantity: previous?.committedQuantity ?? 0 } } });
+      await tx.auditLog.create({ data: { action: "SUPPLIER_OFFER_REVIEWED", entity: "SupplierCatalogOffer", entityId: saved.id, userId: actor.id, metadata: { supplier: saved.supplier, productId: product.id, revision: saved.revision, available: saved.available, substitutionTaxCents: saved.substitutionTaxCents, allocationReplenished: replenishAllocation, previousCommittedQuantity: previous?.committedQuantity ?? 0 } } });
       return saved;
     });
     return NextResponse.json({ data: offer }, { headers: paymentHeaders });

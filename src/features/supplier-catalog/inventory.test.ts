@@ -4,7 +4,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { comparePaymentInventoryItems, reserveSupplierInventory, settleSupplierOrder, validateSupplierPayment } from "./inventory";
 
 function fixture() {
-  const offer = { id: "offer-test", productId: "p-test", supplier: "ANB", eanNormalized: "01234567890128", unitCostCents: 1000, available: true, stockQuantity: null, allocationQuantity: 5, reservedQuantity: 0, committedQuantity: 0, observedAt: new Date(Date.now()-1000), validUntil: new Date(Date.now()+60000) };
+  const offer = { id: "offer-test", productId: "p-test", supplier: "ANB", eanNormalized: "01234567890128", unitCostCents: 1000, substitutionTaxCents: null as number | null, available: true, stockQuantity: null, allocationQuantity: 5, reservedQuantity: 0, committedQuantity: 0, observedAt: new Date(Date.now()-1000), validUntil: new Date(Date.now()+60000) };
   const records: { orderItemId: string; offerId: string; quantity: number; unitCostCents: number; status: string }[] = [];
   const offers = [offer];
   const item = { id: "item-test", orderId: "order-test", productId: offer.productId, supplierOfferId: offer.id, inventorySource: "DISTRIBUTOR", quantity: 2, unitPriceCents: 1600 };
@@ -23,7 +23,7 @@ function fixture() {
 
 test("nova oferta mais barata e troca de EAN impedem cobrança antiga", async()=>{
   const f=fixture(); await reserveSupplierInventory(f.tx,f.item);
-  f.offers.push({...f.offer,id:"offer-cheaper",unitCostCents:500,reservedQuantity:0,supplier:"PROFARMA"});
+  f.offers.push({...f.offer,id:"offer-cheaper",unitCostCents:500,reservedQuantity:0,supplier:"PROFARMA",substitutionTaxCents:95});
   await assert.rejects(validateSupplierPayment(f.tx,f.item), /nova condição/);
   f.offers.pop();
   await assert.rejects(validateSupplierPayment(f.tx,f.item,{ean:"7896181915638"}), /nova condição/);
@@ -44,6 +44,22 @@ test("pagamento exige a mesma oferta válida e o preço fotografado",async()=>{
   await validateSupplierPayment(f.tx,f.item);
   f.offer.unitCostCents=1100;await assert.rejects(validateSupplierPayment(f.tx,f.item));
   f.offer.unitCostCents=1000;f.offer.validUntil=new Date(0);await assert.rejects(validateSupplierPayment(f.tx,f.item));
+});
+
+test("perda de ST após reserva impede novo pagamento sem alterar pedido ou reserva", async () => {
+  const f = fixture();
+  Object.assign(f.offer, { supplier: "PROFARMA", substitutionTaxCents: 95, retailCeilingCents: 5000 });
+  const medicine = { requiresPrescription: true, eanNormalized: f.offer.eanNormalized };
+  await reserveSupplierInventory(f.tx, f.item, medicine);
+  await validateSupplierPayment(f.tx, f.item, medicine);
+  const before = structuredClone({ item: f.item, records: f.records });
+  Object.assign(f.offer, { substitutionTaxCents: null });
+  await assert.rejects(validateSupplierPayment(f.tx, f.item, medicine));
+  assert.equal(f.offer.reservedQuantity, 2);
+  assert.deepEqual({ item: f.item, records: f.records }, before);
+  await assert.rejects(reserveSupplierInventory(f.tx, { ...f.item, id: "other" }, medicine));
+  Object.assign(f.offer, { substitutionTaxCents: 0 });
+  await validateSupplierPayment(f.tx, f.item, medicine);
 });
 
 test("demanda fotografada no item ultrapassa cotas sem alterar a política dos pedidos antigos", async () => {
