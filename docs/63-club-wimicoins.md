@@ -1,5 +1,7 @@
 # Club Wimifarma e WimiCoins
 
+Atualização de 19/10/2026: os ganhos de novos pedidos Pix usam o líquido após o desconto de 3%, além dos resgates de cashback/WimiCoins. A promoção não altera saldos reservados/devolvidos nem pedidos anteriores. Contrato e validações em [83](83-desconto-pix.md).
+
 ## Contrato autorizado em 13/10/2026
 
 Adesão gratuita e explícita da conta autenticada. O administrador vê participantes e saldos. Clientes antigos não são inscritos automaticamente; entrar no Club não cria bônus de boas-vindas nem autorização para mensagens comerciais.

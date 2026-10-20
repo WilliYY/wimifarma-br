@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-19 — Desconto de 3% no Pix
+
+- Lojista autorizou 3% no Pix de novos pedidos, após cashback/WimiCoins e sem desconto no frete. Cartão/dinheiro, gratuidade de frete e tentativas anteriores preservam seus valores e regras.
+- Total do pedido e cobrança são congelados juntos; benefícios ganhos usam o líquido após Pix. Desconto é auditado e aparece no checkout/histórico/painel, com banner na home.
+- Contrato, limites e verificações em [83](83-desconto-pix.md).
+
 ## 2026-10-19 — Navegação automática por marcas
 
 - A home inclui todas as marcas dos produtos publicados, inclusive medicamentos, sem exigir foto ou estoque. Novas marcas aparecem na próxima abertura da página; ausência de logo usa o nome, sem impedir o link.

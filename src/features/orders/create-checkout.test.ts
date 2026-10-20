@@ -3,7 +3,7 @@ import test from "node:test";
 import { build } from "esbuild";
 import vm from "node:vm";
 import { createRequire } from "node:module";
-import { webcrypto } from "node:crypto";
+import { createHash, webcrypto } from "node:crypto";
 import { prescriptionCartFingerprint } from "./prescription-upload";
 
 const bundle = build({ entryPoints: ["src/features/orders/create-checkout.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "isolated-create-order", setup(builder) {
@@ -60,10 +60,10 @@ test("criação impede receita controlada ou classificação pendente antes de g
 const rewardsBundle = build({ entryPoints: ["src/features/orders/create-checkout.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "isolated-checkout-rewards", setup(builder) {
   builder.onResolve({ filter: /features\/(cashback|club)\/wallet$|features\/shipping\/service$|features\/payments\/(schema|routing)$|features\/miauby\/commerce-service$/ }, args => ({ path: args.path, namespace: "fixture" }));
   builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents:
-    args.path.endsWith("wallet") ? "export class CashbackRuleError extends Error{}; export class ClubRuleError extends Error{}; export const lockCashbackAccount=async()=>({id:'wallet-test',balance:{lessThan:()=>false}}); export const reserveWimicoins=async()=>{};" :
-    args.path.endsWith("shipping/service") ? "export const validateOrderShipping=async()=>null;" :
+    args.path.endsWith("wallet") ? "export class CashbackRuleError extends Error{}; export class ClubRuleError extends Error{}; export const lockCashbackAccount=async()=>({id:'wallet-test',balance:{lessThan:()=>false}}); export const reserveWimicoins=async(_,input)=>{if(globalThis.pixFixture) globalThis.pixFixture.reservedCoins=input.points};" :
+    args.path.endsWith("shipping/service") ? "export const validateOrderShipping=async()=>globalThis.pixFixture?.shippingQuote ?? null;" :
     args.path.endsWith("schema") ? "export class PaymentError extends Error{};" :
-    args.path.endsWith("routing") ? "export const checkoutPaymentConnections=async()=>{throw new Error('unexpected payment access')}; export const resolveCheckoutPayment=async()=>{throw new Error('unexpected payment access')};" : "export const queueCommerceOrder=async()=>{};",
+    args.path.endsWith("routing") ? "export const checkoutPaymentConnections=async()=>({rows:[]}); export const resolveCheckoutPayment=async(_,input)=>{globalThis.pixFixture.routed=input;return {integration:{id:'mercadopago',environment:'production',revision:1,accountId:'synthetic'},route:{}}};" : "export const queueCommerceOrder=async()=>{};",
   }));
 } }] });
 
@@ -151,4 +151,109 @@ test("checkout rejects missing/foreign/expired/reused/cart-mismatched/submission
 test("classification becoming antimicrobial while checkout waits cannot bypass upload", async () => {
   const f = await prescriptionCheckout({ type: "ORDINARY", uploadId: false, mutateToAntimicrobial: true });
   await assert.rejects(f.run, /envie a receita/); assert.equal(f.order(), null);
+});
+
+async function pixCheckout(options: { paymentMethod?: string; onlineMethod?: string; cashback?: number; coins?: number; subtotal?: number; shipping?: number; previousTotal?: number; secondProduct?: boolean; quantity?: number } = {}) {
+  let saved: Record<string, unknown> = {};
+  let productReads = 0;
+  let reservedCashback: unknown;
+  const audits: { action: string; metadata: Record<string, number> }[] = [];
+  const subtotal = options.subtotal ?? 10000;
+  const input = { checkoutRequestId: "synthetic-pix-request", customer: { name: "Cliente sintético", email: "synthetic@example.com", phone: "44999999999" },
+    fulfillmentMethod: options.shipping ? "DELIVERY" : "PICKUP", paymentMethod: options.paymentMethod ?? "PIX", onlineMethod: options.onlineMethod,
+    cashbackRedeemCents: options.cashback ?? 0, wimicoinsRedeemPoints: options.coins ?? 0, privacyConsent: true,
+    items: [{ productId: "synthetic-pix-product", quantity: options.quantity ?? 1, expectedUnitPriceCents: subtotal }, ...(options.secondProduct ? [{ productId: "synthetic-second", quantity: 1, expectedUnitPriceCents: 1025 }] : [])] };
+  const product = { id: "synthetic-pix-product", name: "Produto sintético", slug: "synthetic", imageUrl: null, price: (subtotal / 100).toFixed(2), promotionalPrice: null,
+    stock: 100, status: "ACTIVE", requiresPrescription: false, prescriptionType: "ORDINARY", isPopularPharmacy: false,
+    cashbackEnabled: true, cashbackRateBps: 200, wimicoinsEnabled: true, wimicoinsRateBps: 200 };
+  const previous = options.previousTotal === undefined ? null : { id: "synthetic-old-order", customerId: "synthetic-customer", totalCents: options.previousTotal,
+    checkoutRequestHash: createHash("sha256").update(JSON.stringify({ ...input, checkoutRequestId: undefined })).digest("hex") };
+  const state = { shippingQuote: options.shipping ? { priceCents: options.shipping } : null, routed: undefined as { amountCents: number } | undefined, reservedCoins: 0 };
+  const tx = {
+    $queryRaw: async () => [], $executeRaw: async () => 0,
+    customer: { findFirst: async () => ({ id: "synthetic-customer" }) }, clubMembership: { findUnique: async () => ({ active: true }) },
+    product: { findMany: async () => { productReads++; return [product, ...(options.secondProduct ? [{ ...product, id: "synthetic-second", slug: "synthetic-second", price: "10.25" }] : [])]; } },
+    order: { findUnique: async () => previous, create: async ({ data }: { data: Record<string, unknown> }) => (saved = { ...data, id: "synthetic-order", number: "TEST-PIX" }), findUniqueOrThrow: async () => previous ?? saved },
+    cashbackAccount: { update: async (value: unknown) => { reservedCashback = value; } }, cashbackTransaction: { create: async () => ({}) },
+    auditLog: { create: async ({ data }: { data: typeof audits[number] }) => { audits.push(data); } },
+  };
+  const loaded = { exports: {} as { createCheckout: (tx: unknown, input: unknown, customer?: string) => Promise<unknown> } };
+  vm.runInNewContext((await rewardsBundle).outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), crypto: webcrypto, console, pixFixture: state });
+  const result = await loaded.exports.createCheckout(tx, input, "synthetic-customer");
+  return { saved, result, audits, state, productReads, reservedCashback };
+}
+
+test("Pix manual aplica 3% após cashback e WimiCoins sem alterar resgates ou preços", async () => {
+  const { saved, audits, reservedCashback, state } = await pixCheckout({ cashback: 1000, coins: 500 });
+  assert.equal(saved.totalCents, 8245);
+  assert.equal(saved.subtotalCents, 10000);
+  assert.equal(saved.cashbackRedeemedCents, 1000);
+  assert.equal(saved.wimicoinsRedeemedPoints, 500);
+  assert.equal(state.reservedCoins, 500);
+  assert.deepEqual(JSON.parse(JSON.stringify(reservedCashback)), { where: { id: "wallet-test" }, data: { balance: { decrement: "10.00" } } });
+  const item = (saved.items as { create: Record<string, number>[] }).create[0];
+  assert.equal(item.unitPriceCents, 10000);
+  assert.equal(item.totalCents, 10000);
+  assert.equal(item.cashbackDiscountCents, 1000);
+  assert.equal(item.wimicoinsDiscountPoints, 500);
+  assert.equal(saved.cashbackEarnedCents, 165);
+  assert.equal(saved.wimicoinsEarnedPoints, 165);
+  const audit = audits.find(a => a.action === "PIX_DISCOUNT_APPLIED");
+  assert.equal(audit?.metadata.baseCents, 8500);
+  assert.equal(audit?.metadata.percent, 3);
+  assert.equal(audit?.metadata.discountCents, 255);
+});
+
+test("Pix online explícito ou padrão congela o mesmo total reduzido no pedido e gateway", async () => {
+  for (const onlineMethod of [undefined, "pix"]) {
+    const { saved, state } = await pixCheckout({ paymentMethod: "ONLINE", onlineMethod, subtotal: 1025 });
+    assert.equal(saved.totalCents, 994);
+    assert.equal(state.routed?.amountCents, 994);
+    assert.equal((saved.onlinePayment as { create: { amountCents: number } }).create.amountCents, 994);
+  }
+});
+
+test("cartão e dinheiro não recebem desconto Pix mesmo com onlineMethod pix", async () => {
+  for (const options of [{ paymentMethod: "CASH", onlineMethod: "pix" }, { paymentMethod: "CARD_ON_DELIVERY", onlineMethod: "pix" }, { paymentMethod: "ONLINE", onlineMethod: "card" }]) {
+    const { saved, audits } = await pixCheckout(options);
+    assert.equal(saved.totalCents, 10000);
+    assert.equal(saved.cashbackEarnedCents, 200);
+    assert.equal(audits.some(a => a.action === "PIX_DISCOUNT_APPLIED"), false);
+  }
+});
+
+test("Pix preserva valor do frete e limiar de gratuidade anterior ao desconto Pix", async () => {
+  const paid = await pixCheckout({ subtotal: 10000, cashback: 1000, coins: 500, shipping: 1200 });
+  assert.equal(paid.saved.deliveryFeeCents, 1200);
+  assert.equal(paid.saved.totalCents, 9445);
+  const free = await pixCheckout({ subtotal: 10000, shipping: 1200 });
+  assert.equal(free.saved.deliveryFeeCents, 0);
+  assert.equal(free.saved.totalCents, 9700);
+});
+
+test("Pix rateia centavos líquidos entre produtos antes das recompensas", async () => {
+  const { saved } = await pixCheckout({ subtotal: 1025, secondProduct: true, cashback: 1, coins: 1 });
+  assert.equal(saved.totalCents, 1987);
+  assert.equal(saved.cashbackEarnedCents, 40);
+  assert.equal(saved.wimicoinsEarnedPoints, 40);
+  const items = (saved.items as { create: Record<string, number>[] }).create;
+  assert.deepEqual(Array.from(items, item => item.cashbackEarnedCents), [20, 20]);
+});
+
+test("Pix mantém arredondamento por unidade com centavos residuais após os resgates", async () => {
+  const { saved } = await pixCheckout({ subtotal: 1025, quantity: 20, cashback: 1, coins: 1 });
+  assert.equal(saved.totalCents, 19883);
+  assert.equal(saved.cashbackEarnedCents, 400);
+  assert.equal(saved.wimicoinsEarnedPoints, 400);
+});
+
+test("saldo cobre produtos sem desconto Pix ou auditoria e repetição preserva pedido antigo", async () => {
+  const covered = await pixCheckout({ cashback: 10000 });
+  assert.equal(covered.saved.totalCents, 0);
+  assert.equal(covered.audits.some(a => a.action === "PIX_DISCOUNT_APPLIED"), false);
+  const old = await pixCheckout({ paymentMethod: "ONLINE", previousTotal: 10000 });
+  assert.equal((old.result as { totalCents: number }).totalCents, 10000);
+  assert.equal(old.productReads, 0);
+  assert.equal(old.state.routed, undefined);
+  assert.equal(old.audits.length, 0);
 });

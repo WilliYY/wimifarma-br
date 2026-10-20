@@ -1,5 +1,7 @@
 # 12 - Carrinho, Checkout e Pedidos
 
+Atualização de 19/10/2026: novos pedidos Pix recebem 3% nos produtos após cashback/WimiCoins, sem desconto no frete. Total congelado no pedido/cobrança, ganhos sobre o líquido e tentativas antigas preservadas. Contrato em [83](83-desconto-pix.md).
+
 ## Escopo Entregue
 
 - Carrinho persistente no navegador, com quantidade, remocao e resumo.

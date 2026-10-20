@@ -6,6 +6,7 @@ import { useState } from "react";
 import { getOrderTracking, orderPaymentLabels, type CustomerOrder, type CustomerOrderHistory, type OrderHistoryFilter } from "@/features/orders/customer-orders";
 import { siteConfig } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { orderPixDiscountCents } from "@/features/payments/pix-discount";
 
 export const accountMoney = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 const orderDate = (value: string, time = false) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", ...(time ? { timeStyle: "short" as const } : {}), timeZone: "America/Sao_Paulo" }).format(new Date(value));
@@ -38,6 +39,7 @@ export function OrderTracking({ order }: { order: CustomerOrder }) {
 }
 
 export function CustomerOrderCard({ order, featured = false }: { order: CustomerOrder; featured?: boolean }) {
+  const pixDiscount = orderPixDiscountCents(order);
   const tracking = getOrderTracking(order.status, order.fulfillmentMethod);
   const quantity = order.items.reduce((total, item) => total + item.quantity, 0);
   const pickup = order.fulfillmentMethod === "PICKUP";
@@ -87,6 +89,7 @@ export function CustomerOrderCard({ order, featured = false }: { order: Customer
           <div className="flex justify-between gap-3"><dt className="text-muted">Entrega</dt><dd>{pickup ? "Retirada na loja" : order.deliveryFeeCents ? accountMoney(order.deliveryFeeCents) : "Sem taxa"}</dd></div>
           {(order.wimicoinsRedeemedPoints ?? 0) > 0 && <div className="flex justify-between gap-3 text-amber-800"><dt>WimiCoins utilizados</dt><dd>− {accountMoney(order.wimicoinsRedeemedPoints!)}</dd></div>}
           {order.cashbackRedeemedCents > 0 && <div className="flex justify-between gap-3 text-emerald-700"><dt>Desconto de cashback</dt><dd>− {accountMoney(order.cashbackRedeemedCents)}</dd></div>}
+          {pixDiscount > 0 && <div className="flex justify-between gap-3 text-emerald-700"><dt>Desconto no Pix</dt><dd>− {accountMoney(pixDiscount)}</dd></div>}
           <div className="flex justify-between gap-3 border-t border-line pt-2 text-base font-black"><dt>Total do pedido</dt><dd>{accountMoney(order.totalCents)}</dd></div>
         </dl>
         <div className="flex flex-wrap gap-2">

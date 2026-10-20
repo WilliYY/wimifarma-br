@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Banner e economia no Pix — 2026-10-19
+
+Faixa verde clara após as marcas e antes da primeira vitrine, logo oficial completa, percentual em vermelho e ação para o catálogo. O checkout destaca 3% no Pix e discrimina o valor economizado; cartão/dinheiro retiram a redução da prévia. Contrato, arredondamento e conferência responsiva em [83](83-desconto-pix.md).
+
 ## Faixa de marcas — 2026-10-19
 
 A home apresenta cartões de marcas após a campanha principal e antes do Club. Marcas publicadas vêm do banco, abrangendo perfumaria, medicamentos e demais segmentos; o cliente abre somente os itens da marca selecionada. Rolagem nativa por toque/teclado e setas, logos oficiais e nome para marcas novas sem asset. Direção, limites, fontes e regressões em [82-marcas-do-catalogo.md](82-marcas-do-catalogo.md).

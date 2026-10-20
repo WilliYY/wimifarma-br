@@ -1,6 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { reviewRewardCents } from "./review-rewards";
 import { CashbackRuleError, lockCashbackAccount } from "./wallet";
+import { allocatePixDiscount, orderPixDiscountCents } from "@/features/payments/pix-discount";
 
 export async function saveRewardedReview(tx: Prisma.TransactionClient, customerId: string, productId: string, input: { comment: string; rating: number }) {
   const customer = await tx.customer.findFirst({ where: { id: customerId, status: "ACTIVE" }, select: { id: true } });
@@ -13,7 +14,7 @@ export async function saveRewardedReview(tx: Prisma.TransactionClient, customerI
   });
   if (!candidate) throw new CashbackRuleError("Avalie depois que sua compra estiver concluida e paga.", 403);
   await tx.$queryRaw`SELECT "id" FROM "Order" WHERE "id" = ${candidate.id} FOR UPDATE`;
-  const order = await tx.order.findUniqueOrThrow({ where: { id: candidate.id }, include: { items: { where: { productId } } } });
+  const order = await tx.order.findUniqueOrThrow({ where: { id: candidate.id }, include: { items: true } });
   if (order.status !== "COMPLETED" || order.paymentStatus !== "PAID") throw new CashbackRuleError("Esta compra nao esta mais elegivel para avaliacao.");
   const account = await lockCashbackAccount(tx, customerId);
   const existing = await tx.productReview.findUnique({ where: { productId_customerId: { productId, customerId } } });
@@ -23,9 +24,13 @@ export async function saveRewardedReview(tx: Prisma.TransactionClient, customerI
   }
   const eventKey = `review:${customerId}:${productId}:CREDITED`;
   const credited = await tx.cashbackTransaction.findUnique({ where: { eventKey }, select: { id: true } });
-  const item = order.items[0];
+  const itemIndex = order.items.findIndex(item => item.productId === productId);
+  const item = order.items[itemIndex];
+  const pixDiscounts = allocatePixDiscount(order.items.map(item => ({
+    productSlug: item.productSlug, totalCents: item.totalCents - item.cashbackDiscountCents - item.wimicoinsDiscountPoints,
+  })), orderPixDiscountCents(order));
   const cents = credited || product.requiresPrescription || product.isPopularPharmacy || !item
-    ? 0 : reviewRewardCents(item.unitPriceCents, item.quantity, item.cashbackDiscountCents + item.wimicoinsDiscountPoints);
+    ? 0 : reviewRewardCents(item.unitPriceCents, item.quantity, item.cashbackDiscountCents + item.wimicoinsDiscountPoints + pixDiscounts[itemIndex]);
   const review = await tx.productReview.create({ data: {
     ...input, customerId, productId, orderId: order.id,
     cashbackRewardCents: cents, cashbackRewardState: cents > 0 ? "CREDITED" : "NONE",

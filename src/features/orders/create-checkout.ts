@@ -8,6 +8,7 @@ import { allocateOrderBenefits } from "./benefits";
 import { createOrderNumber, prepareCheckoutOrder, type CheckoutRequest } from "./checkout";
 import { validateOrderShipping } from "@/features/shipping/service";
 import { PaymentError } from "@/features/payments/schema";
+import { allocatePixDiscount, PIX_DISCOUNT_PERCENT, pixDiscountCents } from "@/features/payments/pix-discount";
 import { queueCommerceOrder } from "@/features/miauby/commerce-service";
 import { customerShippingFee } from "@/features/shipping/delivery-policy";
 import { requiresPrescriptionReview } from "@/features/products/purchase-policy";
@@ -88,10 +89,16 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
       return { totalCents: item.totalCents, wimicoinsEligible: !product.requiresPrescription && !product.isPopularPharmacy };
     }), redeem, coins);
   } catch { throw new ClubRuleError("Revise os descontos: WimiCoins valem nos itens sem receita e fora da Farmácia Popular.", 422); }
+  const onlineMethod = input.onlineMethod ?? "pix";
+  const productsAfterWalletCents = prepared.subtotalCents - redeem - coins;
+  const pixDiscount = input.paymentMethod === "PIX" || (input.paymentMethod === "ONLINE" && onlineMethod === "pix")
+    ? pixDiscountCents(productsAfterWalletCents) : 0;
+  const pixDiscounts = allocatePixDiscount(prepared.items.map((item, index) => ({ productSlug: item.productSlug, totalCents: discounts[index].paidCents })), pixDiscount);
   const items = prepared.items.map((item, index) => {
     const product = products.find((p) => p.id === item.productId)!;
-    const paidUnitCents = Math.floor(discounts[index].paidCents / item.quantity);
-    const extraCentUnits = discounts[index].paidCents % item.quantity;
+    const paidCents = discounts[index].paidCents - pixDiscounts[index];
+    const paidUnitCents = Math.floor(paidCents / item.quantity);
+    const extraCentUnits = paidCents % item.quantity;
     const baseUnits = item.quantity - extraCentUnits;
     // Distribui todo o valor líquido antes do arredondamento de cada unidade.
     const earned = customer ? productCashbackCents(product, paidUnitCents, baseUnits)
@@ -107,9 +114,8 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   });
   const cashbackEarnedCents = items.reduce((sum, item) => sum + item.cashbackEarnedCents, 0);
   const wimicoinsEarnedPoints = items.reduce((sum, item) => sum + item.wimicoinsEarnedPoints, 0);
-  const totalCents = prepared.subtotalCents + deliveryFeeCents - redeem - coins;
+  const totalCents = productsAfterWalletCents - pixDiscount + deliveryFeeCents;
   if (connections && totalCents < 1) throw new PaymentError("Seu saldo cobre o pedido. Escolha o atendimento da farmácia para concluir sem cobrança online.");
-  const onlineMethod = input.onlineMethod ?? "pix";
   const selected = connections ? await resolveCheckoutPayment(connections, { amountCents: totalCents, method: onlineMethod,
     installments: onlineMethod === "pix" ? 1 : input.onlineInstallments ?? 1 }, tx) : null;
   const integration = selected?.integration;
@@ -144,6 +150,8 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   }
   if (selected) await tx.auditLog.create({ data: { action: "PAYMENT_ROUTE_SELECTED", entity: "Order", entityId: order.id,
     metadata: { ...selected.route, integrationRevision: selected.integration.revision, method: onlineMethod, amountCents: totalCents } } });
+  if (pixDiscount > 0) await tx.auditLog.create({ data: { action: "PIX_DISCOUNT_APPLIED", entity: "Order", entityId: order.id,
+    metadata: { baseCents: productsAfterWalletCents, percent: PIX_DISCOUNT_PERCENT, discountCents: pixDiscount } } });
   if (redeem > 0 && account) {
     const amount = (redeem / 100).toFixed(2);
     await tx.cashbackAccount.update({ where: { id: account.id }, data: { balance: { decrement: amount } } });

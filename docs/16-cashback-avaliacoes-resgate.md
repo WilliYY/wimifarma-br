@@ -1,5 +1,7 @@
 # 16 - Bonus por avaliacao e uso do cashback
 
+Atualização de 19/10/2026: o bônus de avaliação abate também a parcela de desconto Pix congelada no pedido, mantendo a base efetivamente paga e os pedidos anteriores. Rateio exato por item, regressões e limites em [83](83-desconto-pix.md).
+
 ## Regra aprovada
 
 Em 2026-09-14 o lojista aprovou 1% extra sobre uma unidade efetivamente paga, uma unica vez por cliente/produto avaliado, independentemente da nota, com saldo utilizavel no proximo pedido pelo site. Esta decisao substitui a restricao anterior de resgate online indisponivel; nao habilita gateway, saque ou transferencia.

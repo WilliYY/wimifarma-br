@@ -21,6 +21,7 @@ import {
 import { HomeProductCarousel } from "@/components/site/home-product-carousel";
 import { HeroProductStage } from "@/components/site/hero-product-stage";
 import { ClubBanner } from "@/components/site/club-banner";
+import { PixDiscountBanner } from "@/components/site/pix-discount-banner";
 import { HomeShortcuts } from "@/components/site/home-shortcuts";
 import { BrandCarousel } from "@/components/site/brand-carousel";
 import type { PublicBrand } from "@/features/products/brands";
@@ -494,6 +495,8 @@ export function HomePage({
       </section>
 
       <BrandCarousel brands={brands} />
+
+      <PixDiscountBanner />
 
       <HomeProductCarousel products={collections.care} id="home-care" title="Cuidados para o seu dia a dia" eyebrow="Beleza, higiene e bem-estar" href="/catalogo?grupo=beauty&ordem=preco-asc" />
       <HomeProductCarousel products={collections.otc} id="home-otc" title="Medicamentos isentos de prescrição" eyebrow="MIP / OTC" href="/catalogo?grupo=medicines&ordem=preco-asc" />

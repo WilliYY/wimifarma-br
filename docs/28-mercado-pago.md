@@ -1,5 +1,9 @@
 # 28 - Mercado Pago: checkout e homologação
 
+## Desconto Pix autorizado — 19/10/2026
+
+Novos pedidos Pix recebem 3% sobre os produtos após resgates, antes do frete. O desconto entra na criação atômica de pedido/cobrança; gateway, validação canônica e retomada usam o valor persistido. Não reprecificar tentativas anteriores nem reutilizar valor Pix no cartão. Contrato e ensaios em [83](83-desconto-pix.md).
+
 ## Correção da validação antes da cobrança — 07/10/2026
 
 A preparação do pagamento passa a usar a mesma política comercial do checkout (`requiresPurchaseAssistance`). A checagem antiga recusava qualquer `requiresPrescription=true`, inclusive receita comum já classificada por ADMIN, e devolvia “Preço, disponibilidade ou estoque mudou. Cancele este pedido e atualize o carrinho.” antes de chamar o gateway. Receita comum pode criar pedido e iniciar Pix/cartão sem upload; a conferência farmacêutica continua obrigatória antes da dispensação. Controlados, classificação pendente e Farmácia Popular permanecem bloqueados.
