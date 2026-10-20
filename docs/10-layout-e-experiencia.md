@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Faixa de marcas — 2026-10-19
+
+A home apresenta cartões de marcas após a campanha principal e antes do Club. Marcas publicadas vêm do banco, abrangendo perfumaria, medicamentos e demais segmentos; o cliente abre somente os itens da marca selecionada. Rolagem nativa por toque/teclado e setas, logos oficiais e nome para marcas novas sem asset. Direção, limites, fontes e regressões em [82-marcas-do-catalogo.md](82-marcas-do-catalogo.md).
+
 ## Quantidade digitada nos cards — 2026-10-19
 
 Depois de adicionar o produto, o número entre os botões de menos e mais é um campo editável de quantidade de caixas, com teclado numérico no celular e foco visível. Aceita somente dígitos inteiros, atualiza o carrinho imediatamente e mantém essa quantidade ao comprar. Letras, sinais e separadores decimais são rejeitados; zero é ajustado para uma caixa e valores acima do limite usam `orderQuantityLimit`, preservando estoque físico e compra sob demanda. É possível apagar para redigitar; sair do campo vazio restaura a última quantidade válida. O botão de menos continua removendo a última unidade. Produtos assistidos ou indisponíveis mantêm os fluxos existentes. Regressões de navegador em `src/components/site/product-card-actions.test.ts`.

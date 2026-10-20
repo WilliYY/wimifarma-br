@@ -1,5 +1,9 @@
 # 13 - Assets institucionais
 
+## Logos das marcas do catálogo — 2026-10-19
+
+Onze logos oficiais em `public/brands`, convertidos para WebP lossless, total de 89.818 bytes, proporções/cores preservadas e sem ampliação de bitmaps. Identificação contextual das marcas publicadas, sem alegação de parceria; marcas sem asset aparecem por nome. Fontes oficiais, versões negativas, hashes e limites em [82-marcas-do-catalogo.md](82-marcas-do-catalogo.md).
+
 ## Campanhas com pessoas — 2026-10-09
 
 Quatro novos WebP em `public/banners/`: `hero-care-people-v3.webp`, `hero-beauty-people-v3.webp`, `rexona-people-v3.webp` e `nivea-people-v3.webp`. Cenas ilustrativas geradas/editadas com `image_gen`; embalagens reais preservadas e assinatura oficial no HTML. Dimensões, bytes, referências, prompts e invariantes em [59-banners-pessoas-e-produtos.md](59-banners-pessoas-e-produtos.md). Não representar essas pessoas como clientes ou funcionários reais.

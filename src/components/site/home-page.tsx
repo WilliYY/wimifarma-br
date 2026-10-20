@@ -22,6 +22,8 @@ import { HomeProductCarousel } from "@/components/site/home-product-carousel";
 import { HeroProductStage } from "@/components/site/hero-product-stage";
 import { ClubBanner } from "@/components/site/club-banner";
 import { HomeShortcuts } from "@/components/site/home-shortcuts";
+import { BrandCarousel } from "@/components/site/brand-carousel";
+import type { PublicBrand } from "@/features/products/brands";
 import type { HomeShortcutItem } from "@/features/products/home-shortcuts";
 import campaignStyles from "./home-campaign.module.css";
 import { BrandSignature } from "@/components/site/brand-signature";
@@ -471,10 +473,12 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
 }
 
 export function HomePage({
+  brands = [],
   collections,
   customerReviews,
   shortcuts,
 }: {
+  brands?: PublicBrand[];
   collections: HomeCollections;
   customerReviews: HomeReview[];
   shortcuts: HomeShortcutItem[];
@@ -488,6 +492,8 @@ export function HomePage({
           <HeroCarousel />
         </div>
       </section>
+
+      <BrandCarousel brands={brands} />
 
       <ClubBanner />
 

@@ -5,8 +5,11 @@ import { categorySlug } from "@/lib/seo";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 import { groupCategoryNames, type CatalogGroup } from "./home-shortcuts";
 import { commercialPrice } from "./home-collections";
+import { buildPublicBrands, matchingBrandNames, type PublicBrand } from "./brands";
 
 export const PAGE_SIZE = 24;
+const getPublicBrandRecords = cache(async () => getPrisma().product.findMany({ where: { status: "ACTIVE", brand: { not: null } }, distinct: ["brand"], select: { brand: true }, orderBy: { brand: "asc" } }));
+export const getPublicBrands = cache(async (): Promise<PublicBrand[]> => buildPublicBrands(await getPublicBrandRecords()));
 const storefrontSelect = { ...supplierOfferInclude, ean: true, inventorySource: true, id: true, name: true, slug: true, brand: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, activeIngredients: true, searchTerms: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, cashbackEnabled: true, cashbackRateBps: true } satisfies Prisma.ProductSelect;
 export const getPublicCategories = cache(async () => {
   const products = await getPrisma().product.findMany({ where: { status: "ACTIVE", category: { not: null } }, distinct: ["category"], select: { category: true }, orderBy: { category: "asc" } });
@@ -29,12 +32,13 @@ export function catalogPageHref(path: string, page: number) {
   return `${url.pathname}${url.search}`;
 }
 
-export async function getStorefrontProducts({ page = 1, categories, offers = false, group, sort }: { page?: number; categories?: string[]; offers?: boolean; group?: CatalogGroup; sort?: "preco-asc" } = {}) {
+export async function getStorefrontProducts({ page = 1, categories, offers = false, group, sort, brand }: { page?: number; categories?: string[]; offers?: boolean; group?: CatalogGroup; sort?: "preco-asc"; brand?: string } = {}) {
   const prisma = getPrisma();
   const groupedNames = group ? groupCategoryNames(await getPublicCategories(), group) : undefined;
-  const where: Prisma.ProductWhereInput = { status: "ACTIVE", ...(categories ? { category: { in: categories } } : {}), ...(offers ? { promotionalPrice: { lt: prisma.product.fields.price } } : {}), ...(group ? { OR: [{ category: { in: groupedNames } }, ...(group === "medicines" ? [{ catalogClassification: { path: ["kind"], equals: "MEDICINE" } }] : [])] } : {}) };
+  const brandNames = brand !== undefined ? matchingBrandNames(await getPublicBrandRecords(), brand) : undefined;
+  const where: Prisma.ProductWhereInput = { status: "ACTIVE", ...(categories ? { category: { in: categories } } : {}), ...(brandNames ? { brand: { in: brandNames } } : {}), ...(offers ? { promotionalPrice: { lt: prisma.product.fields.price } } : {}), ...(group ? { OR: [{ category: { in: groupedNames } }, ...(group === "medicines" ? [{ catalogClassification: { path: ["kind"], equals: "MEDICINE" } }] : [])] } : {}) };
   // Supplier sale prices and promotions must be resolved before sorting and pagination.
-  if (sort === "preco-asc" || categories || group) {
+  if (sort === "preco-asc" || categories || group || brand !== undefined) {
     const rows = await prisma.product.findMany({ where, select: storefrontSelect });
     const now = Date.now();
     const products = rows.map(item => toSaleProduct(item, now)).sort((a, b) => commercialPrice(a) - commercialPrice(b) || a.name.localeCompare(b.name, "pt-BR") || a.id.localeCompare(b.id));

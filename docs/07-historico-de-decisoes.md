@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-19 — Navegação automática por marcas
+
+- A home inclui todas as marcas dos produtos publicados, inclusive medicamentos, sem exigir foto ou estoque. Novas marcas aparecem na próxima abertura da página; ausência de logo usa o nome, sem impedir o link.
+- Clique abre filtro completo e exclusivo por marca no catálogo, preservado na paginação. Logos oficiais são locais e não criam alegação de parceria ou promessa comercial.
+- Contrato visual, fontes dos onze logos e validações em [82](82-marcas-do-catalogo.md).
+
 ## 2026-10-19 — Fotos conferidas como requisito e ofertas eGAM
 
 - Novos itens de distribuidor sem receita entram em rascunho até revisão explícita de foto por ADMIN; higiene/perfumaria físicas também exigem foto ao publicar. A prova liga identidade, classificação, capa e galeria: editar preço não aprova imagem, e mudar apresentação invalida revisão anterior. Preços/estoques legados continuam editáveis.

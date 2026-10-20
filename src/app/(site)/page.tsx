@@ -8,6 +8,7 @@ import { buildHomeShortcuts } from "@/features/products/home-shortcuts";
 import { buildHomeCollections } from "@/features/products/home-collections";
 import { validatedHomePhotos } from "@/features/products/home-photos";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
+import { getPublicBrands } from "@/features/products/storefront";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const prisma = getPrisma();
-  const [products, reviews] = await Promise.all([
+  const [products, reviews, brands] = await Promise.all([
     prisma.product.findMany({
       select: {
         ...supplierOfferInclude, ean: true, inventorySource: true,
@@ -45,6 +46,7 @@ export default async function Page() {
         product: { status: "ACTIVE" },
       },
     }),
+    getPublicBrands(),
   ]);
   const now = new Date();
   const saleProducts = products.map(product => toSaleProduct(product, now.getTime()));
@@ -62,6 +64,7 @@ export default async function Page() {
 
   return (
     <HomePage
+      brands={brands}
       collections={collections}
       customerReviews={customerReviews}
       shortcuts={buildHomeShortcuts()}
