@@ -21,6 +21,13 @@ O lojista pediu mais presença visual e confiança na faixa de seis categorias e
 - Preview com componente, CSS atual e imagem reais em 320, 390, 768, 1280 e 1440 px: seis links corretos, imagem carregada, setas nos limites, foco de teclado, movimento reduzido e ausência de transbordamento horizontal. Capturas inspecionadas em desktop e celular.
 - Revisão independente aprovada, sem achados materiais; inclui parsing do CSS e lint dos arquivos TypeScript alterados.
 - Auditoria de produção sem vulnerabilidades. Auditoria completa mantém cinco alertas altos nas ferramentas de desenvolvimento (`@next/eslint-plugin-next`, `eslint-config-next`, `braces`, `fast-glob`, `micromatch`), zero críticos. Nenhuma dependência alterada.
-- Build Linux e conferência publicada serão registrados após a execução. Capturas ficam em `outputs/categorias-2026-10-20`, fora do Git.
+- Build Linux aprovado, incluindo lint/TypeScript e geração de 39 páginas estáticas. Capturas ficam em `outputs/categorias-2026-10-20`, fora do Git.
+
+## Publicação e conferência real
+
+- Código `4ac0e64558b420fdcbe479d6df648060d1a75aa4` (`feat(home): add soft pharmacy backdrop to category shortcuts`) enviado ao GitHub e publicado somente no app, com imagem anterior preservada para reversão.
+- Container `wimifarma-br-app` saudável, revisão OCI igual ao código e imagem `sha256:a9031776b6f8a46df8fbebcf9d32e86a72b7c0deae5c5d78db579bb90e4ca13e`.
+- Home publicada inspecionada em 1440 × 1000 e 390 × 844: fotografia otimizada carregada com qualidade permitida, seis nomes/destinos internos e nenhum transbordamento horizontal. Seta no celular avançou até Medicamentos/Vitaminas, habilitando o retorno. Viewport temporário restaurado e aba de conferência encerrada.
+- Evidências: `categorias-publicadas-1440.png` e `categorias-publicadas-390.png`. Conferência pública sem interação com carrinho, pedidos, pagamentos ou contas.
 
 O pedido é visual. Frete, condições de gratuidade, Pix, cashback, WimiCoins, custos e emissão fiscal não foram alterados por esta entrega; os riscos identificados na auditoria comercial anterior continuam pendentes.

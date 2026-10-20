@@ -5,6 +5,7 @@
 - Reutilizada fotografia institucional ilustrativa em baixa opacidade, com sobreposição clara e CSS isolado no componente de atalhos.
 - Preservados seis destinos internos, ordem, setas, acessibilidade e movimento reduzido; círculos ganham contorno e indicação visual de acesso.
 - Nenhuma alteração de regra comercial, frete ou pagamento. Decisão e validação em [88](88-faixa-categorias-visual.md).
+- Publicado em `4ac0e64`: build Linux, lint/TypeScript, três testes focados e 420 de segurança aprovados; home conferida em desktop/celular com imagem carregada, navegação preservada e app saudável.
 
 ## 2026-10-20 — Catálogo por famílias e apresentação total
 
