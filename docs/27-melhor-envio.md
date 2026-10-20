@@ -1,5 +1,9 @@
 # 27 - Melhor Envio e frete por transportadora
 
+## Comparação operacional e mercadorias — 20/10/2026
+
+O ADMIN compara o catálogo completo por custo interno da rota e aceitação da carga. Viagem rateada, coleta, seguro externo, provisão de retornos e adicionais ficam pendentes enquanto desconhecidos; não alteram a cobrança pública. Características da mercadoria restringem serviços sem superar proibições ou ativar transportadoras automaticamente. Contrato, matriz, fontes e limites em [91](91-comparacao-transportadoras-custos.md).
+
 ## Consolidação por quantidade — 20/10/2026
 
 O cálculo público usa `products` com dimensões/peso/seguro unitários e `quantity`, delegando o empacotamento ao Melhor Envio. O sistema confere os pacotes retornados por serviço e guarda o plano assinado no pedido. Os perfis existentes incluem embalagem/proteção, sem subtrair tara ou presumir medidas comerciais. A previsão não comprova uma caixa física disponível; contrato e pendências em [89](89-consolidacao-embalagens.md). Esta seção substitui o comportamento histórico de um volume por unidade descrito nas entregas anteriores.

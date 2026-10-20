@@ -1,6 +1,8 @@
 import { MAX_ORDER_ITEM_QUANTITY } from "@/features/products/quantity";
 import { z } from "zod";
 import { shippingReferenceSchema } from "./product-reference";
+import { shippingCargoKindsSchema } from "./cargo-policy";
+import { shippingOperationalCostSchema } from "./operational-cost-schema";
 
 export const shippingServiceIdsSchema = z.array(z.number().int().positive()).max(50);
 const citySchema = z.string().trim().min(2).max(100);
@@ -19,6 +21,8 @@ export const shippingSettingsSchema = z.object({
     .refine(locations => new Set(locations.map(location => location.serviceId)).size === locations.length, "Selecione um local por serviço."),
   preparationDays: z.number().int().min(0).max(15),
   serviceIds: shippingServiceIdsSchema,
+  operationalCosts: z.array(shippingOperationalCostSchema).max(50).optional()
+    .refine(entries => !entries || new Set(entries.map(entry => entry.serviceId)).size === entries.length, "Informe um custo por serviço."),
   contactEmail: z.string().email().max(160),
 });
 export const defaultShippingSettings = {
@@ -28,6 +32,7 @@ export const defaultShippingSettings = {
 };
 export type ShippingSettings = z.infer<typeof shippingSettingsSchema>;
 export const shippingProfileSchema = z.object({
+  cargoKinds: shippingCargoKindsSchema.optional(),
   approvedServiceIds: shippingServiceIdsSchema.optional(),
   reference: shippingReferenceSchema.nullable().optional(),
   measurementBasis: z.enum(["measured", "estimated"]).default("measured"),

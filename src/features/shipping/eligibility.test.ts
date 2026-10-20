@@ -85,3 +85,16 @@ test("carrier approval intersects every product, medication policy and global co
   assert.deepEqual(permittedShippingServices(configured, [{ ...approved([1, 3]), category: "Medicamentos" }]), [1]);
   assert.deepEqual(configured, [1, 2, 3, 12, 35]);
 });
+
+test("cargo restrictions cannot be overridden by carrier approval or general flags", () => {
+  const perfume = { ...product, name: "Perfume sintético", shippingProfile: { ...profile, approvedServiceIds: [1, 3, 22, 33, 999], cargoKinds: ["general"] } };
+  assert.deepEqual(permittedShippingServices([1, 3, 22, 33, 999], [perfume]), [3, 22, 33]);
+  assert.deepEqual(permittedShippingServices([1, 3, 22, 33], [perfume, { ...product, catalogClassification: { kind: "MEDICINE" } }]), []);
+  assert.deepEqual(permittedShippingServices([1, 3], [{ ...product, shippingProfile: { ...profile, cargoKinds: ["temperature_sensitive"] } }]), []);
+});
+
+test("structured medicine closes free-category bypass while generic perfumery stays eligible", () => {
+  assert.deepEqual(permittedShippingServices([1, 2, 3, 12, 22], [{ ...product, category: "Outros", catalogClassification: { kind: "MEDICINE" } }]), [1, 2]);
+  assert.deepEqual(permittedShippingServices([1, 3, 31], [{ ...product, name: "Spray nasal sintético", category: "Perfumaria" }]), [1, 3, 31]);
+  assert.deepEqual(permittedShippingServices([1, 3, 31], [{ ...product, name: "Desodorante aerossol sintético" }]), [3]);
+});

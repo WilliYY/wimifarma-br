@@ -1,5 +1,9 @@
 # 65 - Local de postagem e validação operacional
 
+## Comparação dos custos da rota — 20/10/2026
+
+O ADMIN pode planejar local/custos de serviços ainda não selecionados e comparar etiqueta com deslocamento rateado, coleta, seguro externo e provisão interna de retornos. Valores desconhecidos permanecem pendentes e mudança de rota invalida custos anteriores. A recomendação exige custo completo e aceitação da mercadoria. Não ativa serviços nem altera a cobrança do cliente. Contrato e fontes em [91](91-comparacao-transportadoras-custos.md).
+
 ## Contrato
 
 O lojista confirmou que pode levar encomendas a Umuarama e pediu aviso de cidade de postagem para ADMIN e colaborador. O destino do cliente e o local onde a farmácia entrega o pacote à transportadora são informações distintas.

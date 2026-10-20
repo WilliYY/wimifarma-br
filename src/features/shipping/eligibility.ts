@@ -1,5 +1,6 @@
 import { requiresPrescriptionReview, requiresPurchaseAssistance, type PrescriptionType } from "@/features/products/purchase-policy";
 import { shippingProfileSchema } from "./schema";
+import { assessCarrierCargo, type ShippingCargo } from "./cargo-policy";
 
 export function requiresPharmacyShippingSupport(product: {
   category: string | null;
@@ -16,15 +17,24 @@ function normalizedCategory(category: string | null): string {
 
 export function permittedShippingServices(configured: number[], products: {
   category: string | null; requiresPrescription: boolean; prescriptionType?: PrescriptionType; isPopularPharmacy: boolean;
+  name?: string; catalogClassification?: unknown;
   shippingProfile?: unknown;
 }[]): number[] {
-  // Other carriers need explicit acceptance of this cargo. Quotes alone do not prove acceptance.
-  const containsMedication = products.some((product) => requiresPrescriptionReview(product) ||
-    requiresPurchaseAssistance(product) || /medicament|farmaci/.test(normalizedCategory(product.category)));
-  const approvals = products.map(product => {
+  const assessments = products.map(product => {
     const profile = shippingProfileSchema.safeParse(product.shippingProfile);
-    return profile.success ? profile.data.approvedServiceIds : undefined;
+    const cargos: ShippingCargo[] = profile.success ? [...(profile.data.cargoKinds ?? [])] : [];
+    const classification = product.catalogClassification;
+    const medicine = Boolean(classification && typeof classification === "object" && "kind" in classification && classification.kind === "MEDICINE");
+    if (medicine || requiresPrescriptionReview(product) || requiresPurchaseAssistance(product) || /medicament|farmaci/.test(normalizedCategory(product.category))) cargos.push("medication");
+    const name = normalizedCategory(product.name ?? null);
+    if (/\b(perfume|eau de toilette|deo\s*colonia|body splash)\b/.test(name)) cargos.push("perfume");
+    if (/\b(aerossol|aerosol)\b/.test(name)) cargos.push("aerosol");
+    return { cargos, approved: profile.success ? profile.data.approvedServiceIds : undefined };
   });
-  return configured.filter(service => (!containsMedication || service === 1 || service === 2) &&
-    approvals.every(approved => approved === undefined || approved.includes(service)));
+  return configured.filter(service => assessments.every(({ cargos, approved }) => {
+    if (cargos.includes("medication") && service !== 1 && service !== 2) return false;
+    if (approved !== undefined && !approved.includes(service)) return false;
+    const { status } = assessCarrierCargo(service, cargos);
+    return status !== "blocked" && status !== "unknown";
+  }));
 }

@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Comparação ADMIN de transportadoras por etiqueta, viagem rateada, coleta, seguro externo e provisão de retorno, com aceitação da carga e pendências explícitas: [documento 91](docs/91-comparacao-transportadoras-custos.md).
+
 Cotação por quantidade com empacotamento do Melhor Envio, conferência de peso/medidas e pacotes preservados no pedido: [documento 89](docs/89-consolidacao-embalagens.md).
 
 Faixa de categorias com fotografia suave e acabamento visual, preservando os seis destinos e a navegação acessível: [documento 88](docs/88-faixa-categorias-visual.md).

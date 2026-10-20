@@ -35,6 +35,7 @@ export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
   const baseEstimate = productIdentity ? estimateBaseShipping(productIdentity) : null;
   const hasEmptyMeasure = fields.some(([key]) => !draft.values[key].trim());
   const payload: ShippingDraft = {
+    ...(initial?.cargoKinds !== undefined ? { cargoKinds: initial.cargoKinds } : {}),
     ...(initial?.approvedServiceIds !== undefined ? { approvedServiceIds: initial.approvedServiceIds } : {}),
     enabled: false, transportReviewed: false,
     measurementBasis: draft.measurementBasis,

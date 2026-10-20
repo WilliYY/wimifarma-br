@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-20 — Comparação de custo completo e aceitação da carga
+
+- Simulador ADMIN consulta todo o catálogo do Melhor Envio e compara custos internos da rota: etiqueta, viagem rateada, coleta, seguro externo, reserva interna de retornos e adicionais. Desconhecido não vira zero; mudança de rota exige revisão dos valores.
+- Características da carga restringem serviços no simulador e no servidor público. Medicamentos mantêm PAC/SEDEX; classificação estruturada também impõe a regra. Revisão manual não supera proibição.
+- Sem ativação automática de transportadoras ou alteração da cobrança pública, frete grátis e benefícios. Contrato, fontes e pendências em [91](91-comparacao-transportadoras-custos.md).
+
 ## 2026-10-20 — Inclusão exclusiva de 72 apresentações de medicamentos
 
 - Publicados 72 novos EANs de atorvastatina, rosuvastatina, omeprazol, pantoprazol, valsartana e carvedilol, incluindo similares conferidos: 488 → 560 ativos. ANB/Profarma, custo final com ST observado e percentuais individuais de 50% ou 10%, dentro do PMC.

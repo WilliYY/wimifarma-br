@@ -6,6 +6,8 @@ import { postingLocationSchema, defaultShippingSettings, type ShippingOption, ty
 import { shippingAdminProfileSchema } from "@/features/shipping/product-draft";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
 import type { PrescriptionType } from "@/features/products/purchase-policy";
+import { SHIPPING_CARGO_LABELS, type ShippingCargo } from "@/features/shipping/cargo-policy";
+import { ShippingOperationalCostFields, ShippingCostComparisons } from "./shipping-operational-costs";
 
 type Product = { id: string; name: string; category: string | null; shippingProfile: unknown; requiresPrescription: boolean; prescriptionType?: PrescriptionType; isPopularPharmacy: boolean; updatedAt: string };
 type Data = { settings: ShippingSettings; revision: number; applicationConfigured: boolean; connected: boolean; expiresAt: number | null; products: Product[] };
@@ -13,7 +15,7 @@ type Service = Pick<ShippingOption, "serviceId" | "service" | "carrier">;
 const defaultServices: Service[] = [{ serviceId: 1, carrier: "Correios", service: "PAC" }, { serviceId: 2, carrier: "Correios", service: "SEDEX" }];
 const field = "min-h-11 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/10";
 const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white disabled:opacity-50";
-const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const cargoOptions = (Object.keys(SHIPPING_CARGO_LABELS) as ShippingCargo[]).filter(kind => kind !== "unspecified");
 async function request(path: string, method = "GET", body?: unknown) {
   const response = await fetch(path, { method, cache: "no-store", ...(body === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }) });
   const payload = await response.json().catch(() => null);
@@ -27,6 +29,8 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
   const [busy, setBusy] = useState(false);
   const [quotes, setQuotes] = useState<ShippingOption[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [simulationCargo, setSimulationCargo] = useState<{ cargoKinds: ShippingCargo[]; acceptanceConfirmed: boolean }>({ cargoKinds: ["unspecified"], acceptanceConfirmed: false });
+  const simulationSettingsChanged = !!data && ["environment", "originPostalCode", "originCity", "originState", "preparationDays"].some(key => settings[key as keyof ShippingSettings] !== data.settings[key as keyof ShippingSettings]);
   async function load() {
     const result = await request("/api/admin/fretes");
     setData(result.data); setSettings(result.data.settings);
@@ -42,7 +46,7 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
     await run(async () => {
       const clientId = String(values.get("clientId") || "").trim(); const clientSecret = String(values.get("clientSecret") || "").trim();
       await request("/api/admin/fretes", "PUT", { settings: { ...settings, postingLocations: settings.postingLocations.filter(location => location.city.trim()).map(location => ({ ...location, city: location.city.trim(), pointName: location.pointName?.trim() || undefined })) }, revision: data?.revision ?? 0, ...(clientId || clientSecret ? { application: { clientId, clientSecret } } : {}) });
-      form.reset(); await load(); setMessage("Configuração salva.");
+      form.reset(); setQuotes([]); await load(); setMessage("Configuração salva.");
     });
   }
   return <div className="space-y-6">
@@ -53,6 +57,7 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
     </section>
     {message && <p className="rounded-xl border border-line bg-white p-4 text-sm" role="status">{message}</p>}
     <form className="grid gap-5 rounded-2xl border border-line bg-white p-5 sm:p-7" onSubmit={save}>
+      <fieldset className="contents" disabled={busy}>
       <h2 className="text-lg font-black">Conexão e origem</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Label text="Ambiente"><select className={field} onChange={(e) => setSettings({ ...settings, enabled: false, environment: e.target.value as ShippingSettings["environment"] })} value={settings.environment}><option value="production">Produção</option><option value="sandbox">Sandbox (teste)</option></select></Label>
@@ -90,15 +95,19 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
           </fieldset>;
         })}
       </fieldset>
+      <ShippingOperationalCostFields settings={settings} services={[...defaultServices, ...services, ...quotes]} disabled={busy} onChange={setSettings} />
       <div className="flex flex-wrap gap-3"><button className={button} disabled={busy} type="submit">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}Salvar configuração</button><button className={`${button} bg-ink`} disabled={busy || !data?.applicationConfigured} onClick={() => run(async () => { const result = await request("/api/admin/fretes/conectar", "POST", {}); window.location.assign(result.url); })} type="button"><Link2 className="h-4 w-4" />Conectar Melhor Envio</button><a className="inline-flex min-h-11 items-center gap-2 px-3 text-sm font-bold text-brand" href="https://app.melhorenvio.com.br/integracoes/area-dev" rel="noreferrer" target="_blank">Área de aplicativos<ArrowUpRight className="h-4 w-4" /></a></div>
+      </fieldset>
     </form>
     <section className="rounded-2xl border border-line bg-white p-5 sm:p-7"><h2 className="text-lg font-black">Simular e selecionar serviços</h2><p className="mt-2 text-sm leading-6 text-muted">Informe uma encomenda embalada. A simulação consulta preços; não cria envio. Marque apenas serviços com postagem ou coleta viável para Ivaté e aceitação confirmada das mercadorias.</p>
-      <form className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-6" onChange={() => setQuotes([])} onSubmit={(event) => { event.preventDefault(); setQuotes([]); const values = new FormData(event.currentTarget); run(async () => { const body = { postalCode: String(values.get("postalCode")).replace(/\D/g, ""), ...Object.fromEntries(["width", "height", "length", "weight", "insurance"].map((key) => [key, Number(values.get(key))])) }; const result = await request("/api/admin/fretes/simular", "POST", body); setQuotes(result.data); setServices(result.services ?? result.data); setMessage(result.data.length ? "Cotação recebida. Confira o ponto de postagem e marque os serviços que deseja oferecer." : "Nenhum serviço disponível para essa encomenda."); }); }}>
+      <form className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-6" onChange={() => setQuotes([])} onSubmit={(event) => { event.preventDefault(); setQuotes([]); const values = new FormData(event.currentTarget); run(async () => { const kinds = values.getAll("cargoKinds") as ShippingCargo[]; const cargoKinds: ShippingCargo[] = kinds.length ? kinds : ["unspecified"]; const acceptanceConfirmed = values.has("acceptanceConfirmed"); const body = { postalCode: String(values.get("postalCode")).replace(/\D/g, ""), cargoKinds, acceptanceConfirmed, ...Object.fromEntries(["width", "height", "length", "weight", "insurance"].map((key) => [key, Number(values.get(key))])) }; const result = await request("/api/admin/fretes/simular", "POST", body); setSimulationCargo({ cargoKinds, acceptanceConfirmed }); setQuotes(result.data); setServices(result.services ?? result.data); setMessage(result.data.length ? "Cotação recebida. Compare custo completo, aceitação e viabilidade da rota antes de selecionar." : "Nenhum serviço disponível para essa encomenda."); }); }}>
         <Label text="CEP de destino"><input className={field} disabled={busy} name="postalCode" inputMode="numeric" maxLength={9} required /></Label>
         {[["weight", "Peso (kg)"], ["width", "Largura (cm)"], ["height", "Altura (cm)"], ["length", "Comprimento (cm)"], ["insurance", "Valor (R$)"]].map(([name, label]) => <Label key={name} text={label}><input className={field} disabled={busy} name={name} min="0.01" step="0.01" type="number" required /></Label>)}
-        <button className={`${button} sm:col-span-3 lg:col-span-6`} disabled={busy || !data?.connected} type="submit">Consultar preços e prazos</button>
+        <fieldset className="rounded-xl border border-line p-3 sm:col-span-3 lg:col-span-6" disabled={busy}><legend className="px-1 text-xs font-bold">Mercadorias nesta encomenda</legend><p className="mb-3 text-xs text-muted">Marque todos os tipos presentes. Perfumaria é uma categoria ampla: marque “Perfume” somente quando a encomenda contiver perfume. Sem classificação, a aceitação fica pendente.</p><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{cargoOptions.map(kind => <label className="flex gap-2 text-xs" key={kind}><input name="cargoKinds" type="checkbox" value={kind} />{SHIPPING_CARGO_LABELS[kind]}</label>)}</div><label className="mt-4 flex items-start gap-2 text-xs text-muted"><input name="acceptanceConfirmed" type="checkbox" />Conferi as condições do Melhor Envio e a aceitação desta carga e embalagem para os serviços condicionados exibidos. Esta confirmação vale apenas para a simulação.</label></fieldset>
+        {simulationSettingsChanged && <p className="text-xs text-amber-900 sm:col-span-3 lg:col-span-6">Salve a origem, o ambiente e o prazo de preparação antes de simular novamente.</p>}
+        <button className={`${button} sm:col-span-3 lg:col-span-6`} disabled={busy || !data?.connected || simulationSettingsChanged} type="submit">Comparar preços, custos e aceitação</button>
       </form>
-      <div className="mt-4 grid gap-3 md:grid-cols-2">{quotes.map((quote) => <label className="flex items-start gap-3 rounded-xl border border-line p-4" key={quote.serviceId}><input checked={settings.serviceIds.includes(quote.serviceId)} className="mt-1 h-4 w-4 accent-brand" onChange={(e) => setSettings({ ...settings, serviceIds: e.target.checked ? [...settings.serviceIds, quote.serviceId] : settings.serviceIds.filter((id) => id !== quote.serviceId) })} type="checkbox" /><span className="flex-1 text-sm"><strong>{quote.carrier} · {quote.service}</strong><span className="mt-1 block text-muted">Até {quote.deliveryDays} dias úteis estimados, com preparação</span></span><strong className="text-brand">{money.format(quote.priceCents / 100)}</strong></label>)}</div>
+      <ShippingCostComparisons quotes={simulationSettingsChanged ? [] : quotes} settings={settings} cargoKinds={simulationCargo.cargoKinds} acceptanceConfirmed={simulationCargo.acceptanceConfirmed} disabled={busy} onToggleService={(id, selected) => setSettings({ ...settings, serviceIds: selected ? [...new Set([...settings.serviceIds, id])] : settings.serviceIds.filter(serviceId => serviceId !== id) })} />
       <p className="mt-3 text-xs text-muted">Serviços selecionados: {settings.serviceIds.join(", ") || "nenhum"}. Use “Salvar configuração” para aplicar.</p>
     </section>
     <section className="rounded-2xl border border-line bg-white p-5 sm:p-7"><h2 className="flex items-center gap-2 text-lg font-black"><Package className="h-5 w-5 text-brand" />Produtos e embalagens</h2><p className="mt-2 text-sm leading-6 text-muted">Cadastre o peso e as medidas externas de cada unidade já protegida. O Melhor Envio recebe a quantidade e calcula os pacotes, sem forçar uma remessa por unidade. Os dados existentes já incluem caixa e proteção: não some tara novamente nem substitua por peso líquido ou medidas internas. O empacotamento é uma previsão; pese e meça a caixa final antes de emitir a etiqueta. Medicamentos sem receita e de receita comum classificada pelo administrador usam PAC ou SEDEX após revisão do transporte; a receita comum é conferida pelo farmacêutico antes da dispensação. Controlados, receita ainda não classificada e Farmácia Popular seguem no atendimento assistido. Líquidos, aerossóis e produtos sensíveis ao calor precisam de revisão de conservação e transporte.</p><div className="mt-5 grid gap-4">{data?.products.map((product) => <ProductShippingForm key={`${product.id}:${product.updatedAt}`} product={product} busy={busy} services={[...defaultServices, ...services, ...quotes]} configured={settings.serviceIds} onSave={(profile) => run(async () => { await request(`/api/admin/fretes/produtos/${product.id}`, "PUT", { profile, updatedAt: product.updatedAt }); await load(); setMessage("Dados de transporte salvos."); })} />)}</div></section>
@@ -116,6 +125,7 @@ function ProductShippingForm({ product, busy, services, configured, onSave }: { 
   const [measurementBasis, setMeasurementBasis] = useState<"measured" | "estimated">(profile?.measurementBasis ?? "measured");
   const [reference, setReference] = useState(profile?.reference ?? null);
   const [approvedServiceIds, setApprovedServiceIds] = useState(profile?.approvedServiceIds ?? [1, 2]);
+  const [cargoKinds, setCargoKinds] = useState<ShippingCargo[]>(profile?.cargoKinds ?? []);
   const options = [...new Map([
     ...configured.map(serviceId => ({ serviceId, carrier: "Transportadora", service: `Serviço ${serviceId}` })),
     ...approvedServiceIds.map(serviceId => ({ serviceId, carrier: "Transportadora", service: `Serviço ${serviceId}` })),
@@ -129,7 +139,7 @@ function ProductShippingForm({ product, busy, services, configured, onSave }: { 
     const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
     const draft = submitter?.value !== "approve";
     const result = shippingAdminProfileSchema.safeParse({
-      enabled: draft ? false : enabled, transportReviewed: draft ? false : reviewed, measurementBasis, reference, approvedServiceIds,
+      enabled: draft ? false : enabled, transportReviewed: draft ? false : reviewed, measurementBasis, reference, approvedServiceIds, cargoKinds,
       ...Object.fromEntries(Object.entries(measurements).map(([key, value]) => [key, value.trim() === "" ? null : Number(value)])),
     });
     if (!result.success || (!draft && !reviewed)) {
@@ -147,6 +157,7 @@ function ProductShippingForm({ product, busy, services, configured, onSave }: { 
       </div>
       <div className="mt-3 grid gap-3 sm:grid-cols-4">{([["weightGrams", "Peso embalado (g)"], ["widthCm", "Largura (cm)"], ["heightCm", "Altura (cm)"], ["lengthCm", "Comprimento (cm)"]] as const).map(([name, label]) => <Label key={name} text={label}><input className={field} disabled={busy} max={name === "weightGrams" ? 30000 : 200} min={name === "weightGrams" ? 1 : 0.01} name={name} onChange={(event) => { setMeasurements({ ...measurements, [name]: event.target.value }); invalidateReview(); }} step={name === "weightGrams" ? 1 : "any"} type="number" value={measurements[name]} /></Label>)}</div>
       <div className="mt-3"><Label text="Origem do peso e das medidas"><select className={field} disabled={busy} onChange={(event) => { setMeasurementBasis(event.target.value as "measured" | "estimated"); invalidateReview(); }} value={measurementBasis}><option value="measured">Medidos no volume pronto para envio</option><option value="estimated">Estimativa operacional autorizada</option></select></Label></div>
+      <fieldset className="mt-3 rounded-lg border border-line p-3" disabled={busy}><legend className="px-1 text-xs font-bold">Características para transporte</legend><p className="mb-3 text-xs leading-5 text-muted">Marque as características desta mercadoria. Elas restringem os serviços; não substituem as regras de medicamentos nem liberam transporte proibido. “Não informado” mantém a aceitação pendente até ser removido e a carga classificada. Alterações exigem nova revisão.</p><div className="grid gap-3 sm:grid-cols-2">{(["unspecified", ...cargoOptions] as ShippingCargo[]).map(kind => <label className="flex gap-2 text-xs" key={kind}><input checked={cargoKinds.includes(kind)} type="checkbox" onChange={event => { setCargoKinds(event.target.checked ? [...cargoKinds, kind] : cargoKinds.filter(value => value !== kind)); invalidateReview(); }} />{SHIPPING_CARGO_LABELS[kind]}</label>)}</div></fieldset>
       {measurementBasis === "estimated" && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-900">Estimativa operacional autorizada. Confira peso/dimensões reais antes da postagem; a transportadora pode ajustar o frete.</p>}
       <fieldset className="mt-3 rounded-lg border border-line p-3"><legend className="px-1 text-xs font-bold">Serviços aprovados para este produto</legend><p className="mb-3 text-xs leading-5 text-muted">Confirme a aceitação desta mercadoria e embalagem em cada serviço. A seleção global também precisa permitir o serviço. Sem marcações, este produto não recebe cotação. Faça uma simulação para carregar os nomes das transportadoras.</p><div className="grid gap-3 sm:grid-cols-2">{options.map(service => <label className="flex items-start gap-2 text-xs" key={service.serviceId}><input type="checkbox" disabled={busy} checked={approvedServiceIds.includes(service.serviceId)} onChange={event => { setApprovedServiceIds(event.target.checked ? [...approvedServiceIds, service.serviceId] : approvedServiceIds.filter(id => id !== service.serviceId)); invalidateReview(); }} /><span>{service.carrier} · {service.service}</span></label>)}</div></fieldset>
       <label className="mt-3 flex items-start gap-2 text-xs text-muted"><input checked={reviewed} disabled={busy} name="reviewed" onChange={(event) => { setReviewed(event.target.checked); if (!event.target.checked) setEnabled(false); }} type="checkbox" />Revisei as medidas/peso informados e a adequação da embalagem, conservação e aceitação nos serviços selecionados.</label>

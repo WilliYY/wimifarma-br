@@ -12,7 +12,7 @@ test("freight product selectors default to PAC/SEDEX, preserve explicit empty ap
     const origin = "http://127.0.0.1:3198";
     const profile = { enabled: true, transportReviewed: true, weightGrams: 500, widthCm: 20, heightCm: 20, lengthCm: 20 };
     const base = { category: "Higiene", requiresPrescription: false, isPopularPharmacy: false, updatedAt: new Date(0).toISOString() };
-    const saved: { approvedServiceIds: number[] }[] = [];
+    const saved: { approvedServiceIds: number[]; cargoKinds: string[] }[] = [];
     await page.route("**/*", async route => {
       const url = new URL(route.request().url());
       if (url.origin !== origin) return route.abort();
@@ -20,7 +20,7 @@ test("freight product selectors default to PAC/SEDEX, preserve explicit empty ap
       if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: '<div id="root"></div><script src="/fixture.js"></script>' });
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text });
       if (url.pathname === "/api/admin/fretes") return json({ data: { settings: { ...defaultShippingSettings, serviceIds: [1, 2, 12] }, connected: true, products: [
-        { ...base, id: "legacy", name: "Produto legado", shippingProfile: profile },
+        { ...base, id: "legacy", name: "Produto legado", shippingProfile: { ...profile, cargoKinds: ["unspecified"] } },
         { ...base, id: "empty", name: "Produto sem aprovação", shippingProfile: { ...profile, approvedServiceIds: [] } },
       ] } });
       if (url.pathname === "/api/admin/fretes/simular") return json({ data: [], services: [{ serviceId: 12, service: "Cargo", carrier: "LATAM" }] });
@@ -36,15 +36,18 @@ test("freight product selectors default to PAC/SEDEX, preserve explicit empty ap
     await empty.getByRole("button", { name: "Salvar rascunho", exact: true }).click();
     await expect.poll(() => saved.length).toBe(1);
     assert.deepEqual(saved[0].approvedServiceIds, []);
-    const simulator = page.locator("form").filter({ has: page.getByRole("button", { name: "Consultar preços e prazos", exact: true }) });
+    const simulator = page.locator("form").filter({ has: page.getByRole("button", { name: "Comparar preços, custos e aceitação", exact: true }) });
     for (const [label, value] of [["CEP de destino", "01001000"], ["Peso (kg)", "0.5"], ["Largura (cm)", "20"], ["Altura (cm)", "20"], ["Comprimento (cm)", "20"], ["Valor (R$)", "20"]]) await simulator.getByLabel(label, { exact: true }).fill(value);
-    await page.getByRole("button", { name: "Consultar preços e prazos", exact: true }).click();
+    await page.getByRole("button", { name: "Comparar preços, custos e aceitação", exact: true }).click();
+    await legacy.getByRole("checkbox", { name: "Não informado", exact: true }).uncheck();
+    await legacy.getByRole("checkbox", { name: "Líquido", exact: true }).check();
     await legacy.getByRole("checkbox", { name: "LATAM · Cargo", exact: true }).check();
     await expect(legacy.locator('input[name="reviewed"]')).not.toBeChecked();
     await expect(legacy.locator('input[name="enabled"]')).not.toBeChecked();
     await legacy.getByRole("button", { name: "Salvar rascunho", exact: true }).click();
     await expect.poll(() => saved.length).toBe(2);
     assert.deepEqual(saved[1].approvedServiceIds, [1, 2, 12]);
+    assert.deepEqual(saved[1].cargoKinds, ["liquid"], "unknown cargo can be reclassified without a hidden blocking flag");
   } finally { await browser.close(); }
 });
 

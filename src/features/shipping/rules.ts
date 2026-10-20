@@ -54,6 +54,7 @@ export function normalizeQuotes(raw: unknown, allowed: number[], preparationDays
 export type ShippingProduct = {
   id: string; name: string; category: string | null; requiresPrescription: boolean; isPopularPharmacy: boolean;
   prescriptionType?: PrescriptionType;
+  catalogClassification?: unknown;
   shippingProfile: unknown; updatedAt: Date;
 };
 export function validateShippingProduct(product: ShippingProduct) {
