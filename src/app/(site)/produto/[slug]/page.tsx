@@ -21,6 +21,7 @@ import { DeliveryEstimator } from "@/components/site/delivery-estimator";
 import { ProductImageViewer } from "@/components/site/product-image-viewer";
 import { ProductShareButton } from "@/components/site/product-share-button";
 import { ProductPurchasePanel } from "@/components/site/product-purchase-panel";
+import { ProductQuantityProvider } from "@/components/site/product-quantity";
 import { ProductCashback } from "@/components/site/product-cashback";
 import { ProductReviewForm } from "@/components/site/product-review-form";
 import { RelatedProductsCarousel } from "@/components/site/related-products-carousel";
@@ -260,6 +261,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
 
             <div className="grid gap-4">
+              <ProductQuantityProvider key={product.id}>
               <article className="min-w-0 rounded-3xl border border-line bg-white p-5 shadow-[0_12px_40px_rgba(17,24,39,0.04)] sm:p-7">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="text-xs font-bold uppercase tracking-[0.12em] text-brand">{product.brand ?? "Wimifarma"}</span>
@@ -311,7 +313,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 </div>
               </article>
 
-              <div className="scroll-mt-56" id="entrega"><DeliveryEstimator /></div>
+              <div className="scroll-mt-56" id="entrega"><DeliveryEstimator product={cartProduct} /></div>
+              </ProductQuantityProvider>
             </div>
           </div>
 

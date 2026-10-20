@@ -3,7 +3,7 @@
 import { productImageAlt } from "@/features/products/image-placeholder";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -22,6 +22,7 @@ import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
+import { ProductQuantityContext } from "./product-quantity";
 
 function QuantitySelector({
   maxQuantity,
@@ -60,7 +61,9 @@ function QuantitySelector({
 export function ProductPurchasePanel({ product }: { product: CartProduct }) {
   const router = useRouter();
   const { addProduct } = useCart();
-  const [quantity, setQuantity] = useState(1);
+  const [localQuantity, setLocalQuantity] = useState(1);
+  const sharedQuantity = useContext(ProductQuantityContext);
+  const { quantity, setQuantity } = sharedQuantity ?? { quantity: localQuantity, setQuantity: setLocalQuantity };
   const [showPurchaseDock, setShowPurchaseDock] = useState(false);
   const purchasePanelRef = useRef<HTMLDivElement>(null);
   const requiresAssistance = requiresPurchaseAssistance(product);

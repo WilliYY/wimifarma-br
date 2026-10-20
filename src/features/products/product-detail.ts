@@ -170,7 +170,7 @@ export function getDeliveryAvailability(value: string): DeliveryAvailability {
     normalizedPostalCode,
     title: available
       ? `Entrega disponível em ${city}`
-      : "Entrega pelo site ainda nao disponivel para este CEP",
+      : "Consulte o frete para os produtos e este CEP",
   };
 }
 

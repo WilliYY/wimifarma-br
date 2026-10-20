@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Consulta de CEP e frete — 2026-10-19
+
+Produto e `/delivery` consultam as opções reais por transportadora fora da área local, com os mesmos serviços do checkout. No produto, a quantidade selecionada alimenta o simulador; no delivery, a consulta usa o carrinho. Estados vazios e erros não são apresentados como ausência definitiva de cobertura do CEP. Detalhes e limites em [79](79-calculo-cep-e-frete.md).
+
 ## Atalhos exclusivos de catálogo — 2026-10-19
 
 A faixa circular da home reúne somente Ofertas, Infantil, Medicamentos, Vitaminas e suplementos, Dermo e Perfumaria. Ofertas abre `/ofertas`; os demais links usam `/catalogo?grupo=...&ordem=preco-asc`, preservando agrupamento por categoria, preço crescente e paginação. Uma categoria ainda vazia abre o estado vazio do próprio catálogo, sem WhatsApp ou nova aba. Farmácia Popular e Delivery foram retirados somente dessa faixa; suas páginas e demais acessos continuam disponíveis.

@@ -28,9 +28,9 @@ const steps = [
   { title: "Receba com tranquilidade", text: "Depois da confirmação, combinamos a entrega ou avisamos quando seu pedido estiver pronto para retirar." },
 ];
 const questions = [
-  { title: "A Wimifarma entrega no meu endereço?", text: "Atendemos a região de Ivaté. Consulte seu CEP nesta página e informe o endereço completo no pedido. A equipe confirma a disponibilidade de entrega antes de finalizar." },
-  { title: "Como funciona o frete grátis?", text: "Em compras a partir de R$ 99,90, o frete é grátis dentro da área atendida. Para outros valores ou endereços, consulte as condições com a equipe antes de confirmar o pedido." },
-  { title: "Qual é o prazo de entrega?", text: "O prazo e o horário são combinados com a equipe conforme o endereço, o estoque e a disponibilidade de atendimento. Fale pelo WhatsApp para consultar seu pedido." },
+  { title: "A Wimifarma entrega no meu endereço?", text: "Há entrega local em Ivaté e Douradina nos CEPs atendidos. Para outras cidades, adicione os produtos ao carrinho e consulte o CEP: as opções dependem da transportadora e da liberação dos itens para envio." },
+  { title: "Como funciona o frete grátis?", text: "A entrega local nos CEPs atendidos é gratuita. Para outras cidades, o frete é grátis a partir de R$ 99,90 em produtos após os descontos, desde que haja uma opção de transporte disponível. O checkout confirma o valor final." },
+  { title: "Qual é o prazo de entrega?", text: "A consulta mostra o prazo estimado em dias úteis das transportadoras, incluindo a preparação. Na entrega local, a equipe confirma o horário conforme o endereço e o estoque." },
   { title: "E os medicamentos com receita?", text: "Medicamentos com receita e itens da Farmácia Popular precisam de atendimento pelo WhatsApp. A equipe confere a receita e orienta sobre documentos e disponibilidade antes da confirmação." },
 ];
 
@@ -84,7 +84,7 @@ export default function Page() {
           </div>
           <div className="scroll-mt-40 lg:scroll-mt-60" id="consultar-entrega">
             <DeliveryEstimator />
-            <p className="px-5 pt-3 text-xs leading-5 text-muted">A consulta de CEP indica a área de atendimento. O prazo e as condições do pedido são confirmados pela equipe.</p>
+            <p className="px-5 pt-3 text-xs leading-5 text-muted">Para outras cidades, a consulta usa os produtos do seu carrinho. Preço, prazo e disponibilidade são estimados e conferidos novamente no checkout.</p>
           </div>
         </div>
       </section>

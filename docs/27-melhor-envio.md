@@ -1,5 +1,9 @@
 # 27 - Melhor Envio e frete por transportadora
 
+## Simulação no produto e no delivery — 19/10/2026
+
+O simulador público deixou de tratar CEPs fora da área local como indisponíveis sem consulta. Reutiliza `/api/fretes/cotacao` com produto/quantidade atuais ou carrinho, sem modificar configurações e liberações logísticas. Respostas antigas são descartadas ao editar os dados. Contrato e regressões em [79](79-calculo-cep-e-frete.md).
+
 ## Cotação automática e embalagens — 05/10/2026
 
 O checkout inicia a consulta 450 ms após CEP completo e carrinho elegível, cancela consultas obsoletas e oferece **Consultar novamente**. Conta/PAC/SEDEX responderam em simulações reais para São Paulo e Umuarama. Produtos continuam exigindo perfil do volume pronto para envio aprovado; o Dove recebeu somente dimensões comerciais em rascunho e correção de EAN. O lojista ainda não possui caixas. Fontes, três referências de caixas, preços/prazos simulados e limites em `39-frete-automatico-e-embalagens.md`.
