@@ -1,5 +1,7 @@
 # 66 — Fornecedores e viabilidade comercial
 
+Atualização ST de 19/10/2026: a comparação manual exige `isMedicine` explícito e recebe `substitutionTaxCents` nullable por oferta. O painel começa conservadoramente como medicamento; só desmarcar após confirmar classificação não medicamentosa. Profarma sem cálculo de ST não é recomendada para medicamento; o custo final já inclui ST. Regra compartilhada e implantação em [78](78-st-observado-profarma.md).
+
 Atualização de 19/10/2026: o titular autorizou DM Paraná como terceira fonte comercial, priorizando consultas ANB/Profarma e comparando o mesmo EAN na DM quando houver acesso. O menor custo final elegível determina o preço, sem prioridade fixa por nome de fornecedor. O código aceita três ofertas distintas; GAM/SantaCruz continuam referências. Ampliação e limites em [77](77-expansao-dermocosmeticos-e-dm.md). Os relatos anteriores abaixo preservam o escopo de cada data; não há conector automático ativado.
 
 ## Objetivo e escopo aprovado

@@ -1,5 +1,9 @@
 # 01 - Arquitetura
 
+## ST observado na elegibilidade Profarma — 19/10/2026
+
+`SupplierCatalogOffer.substitutionTaxCents` é nullable e registra o cálculo da mesma observação do custo final. `supplier-planning/tax-eligibility` compartilha o filtro com `supplier-catalog/commerce`: medicamentos Profarma (incluindo MIP e classificação ainda pendente) sem ST não concorrem. O filtro alcança catálogo, importador, carrinho, checkout e pré-pagamento sem alterar liquidação de pagamentos já confirmados. Higiene/perfumaria classificadas e estoque físico mantêm as regras existentes. Contrato e implantação em [78](78-st-observado-profarma.md).
+
 ## Aplicativos Android e iOS — levantamento de 19/10/2026
 
 Requisito confirmado: compartilhar dados e regras com o site, com distribuição na Google Play e App Store. Proposta ainda sem implementação: React Native/Expo consumindo APIs do backend atual, com contratos/tokens compartilhados e compatibilidade de versões. Telas nativas exigem manutenção coordenada; mudanças no site não atualizam automaticamente o binário. Matriz, alternativas e etapas em [76](76-app-android-ios.md).

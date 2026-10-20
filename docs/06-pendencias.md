@@ -1,5 +1,10 @@
 # 06 - Pendencias
 
+## Conferência ST de medicamentos Profarma — 19/10/2026
+
+- Regra publicada no código `dd31610`, sem preencher ST ou renovar ofertas antigas por inferência. Na implantação, 33 produtos tinham oferta Profarma sem comprovação registrada: 23 com alternativa elegível do mesmo EAN e 10 sem oferta elegível. Exigem nova conferência real; o cadastro não é excluído.
+- Os 304 cosméticos continuaram disponíveis. Rotina automática permanece `PAUSED`; esta entrega não fez novas consultas de preço ou ativou coletor. Contrato e evidências em [78](78-st-observado-profarma.md).
+
 ## Expansão de dermocosméticos e DM — 19/10/2026
 
 - Publicados 304 produtos e 260 fotos, totalizando 377 produtos, com preservação dos dados antigos e conferência pública. Evidências em [77](77-expansao-dermocosmeticos-e-dm.md).

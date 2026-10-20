@@ -21,4 +21,17 @@ O cadastro ADMIN aceita salvar a pendência e exibe **Sem cálculo de ST**. A ca
 
 Conferir EAN exato na ANB/Profarma/DM quando houver dúvida. O dado de uma fonte não comprova a tributação da outra. Preservar estoque `PHARMACY`, cotas, reservas, consumo, percentuais ADMIN, imagens e preços de pedidos. A rotina programada permanece pausada; a mudança não cria coletor nem renova ofertas.
 
-Regressões cobrem ausência/retorno de ST, zero explícito, valores inválidos, mesmo EAN, MIP, perfumaria/higiene, estoque físico, importação e perda de ST entre reserva e pagamento. O registro de implantação e verificações será acrescentado após execução real.
+Regressões cobrem ausência/retorno de ST, zero explícito, valores inválidos, mesmo EAN, MIP, perfumaria/higiene, estoque físico, importação e perda de ST entre reserva e pagamento.
+
+## Implantação verificada
+
+Código `dd31610` enviado ao GitHub e publicado na VPS em **19/10/2026, às 22h de Brasília**. Backup custom validado, migração aditiva sem backfill, imagem anterior preservada e aplicação saudável. PostgreSQL e proxy compartilhado não foram reiniciados.
+
+- `npm.cmd run test:suppliers`: **98 aprovados**. `npm.cmd run test:security`: **387 aprovados**. Mais **39 testes** direcionados de criação de checkout, schema do pedido, catálogo e busca passaram. Lint, typecheck, Prisma validate e build passaram. Revisão independente do código e dos scripts operacionais aprovada após corrigir casos de classificação desconhecida/persistida e fixtures de QA.
+- Auditoria de produção: **zero vulnerabilidades**. Auditoria completa: **cinco high de desenvolvimento** em `braces`, `micromatch`, `fast-glob`, `@next/eslint-plugin-next` e `eslint-config-next`, sem alteração forçada de dependências.
+- QA PostgreSQL vazio, separado da produção e com dados somente sintéticos: migração, alternativa ANB para mesmo EAN, checkout, reserva, impedimento de iniciar pagamento sem ST, retorno com zero explícito, custo sem ST duplicado, importação dry-run/apply e classificação persistida nula passaram. Sem chamada externa. Pedidos e reservas de teste mantiveram seus valores; nenhum pagamento real foi criado.
+- Produção: hashes de todos os produtos, ofertas (desconsiderando somente a nova coluna nula), usuários, clientes, pedidos, itens e reservas permaneceram iguais. **377 produtos** mantidos. **304 cosméticos disponíveis**; nenhuma data de observação/validade, preço, foto, cota ou estoque físico foi alterado nesta entrega.
+- **33 produtos de medicamento** tinham oferta Profarma com ST ainda não registrado. **23** possuíam alternativa elegível e **10** estavam sem oferta elegível no momento da conferência. Isso não constitui nova consulta aos fornecedores: ofertas legadas não ganharam comprovação retroativa.
+- Leitura HTTPS real: revisão de carrinho de **375 produtos ativos em 13 lotes**, com preços, origem e quantidade de compra conferidos; sem exposição de custos/ST. Home, login, categoria Dermo, página e busca de cosmético responderam corretamente. Nenhum pedido, cobrança, compra no fornecedor ou mensagem foi criado em produção.
+
+Arquivos alterados: schema/migração Prisma; domínio, schemas e testes de `supplier-catalog` e `supplier-planning`; importador e auditoria sintética; API ADMIN de ofertas; painéis de produto/oferta/planejamento. Documentação: README e documentos 01/06/07/68/78. Provas privadas em `outputs/st-profarma-2026-10-19`, fora do Git/build. A rotina existente continua `PAUSED` e o ST pendente exige observação real antes de voltar à seleção.
