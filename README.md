@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Cards compactos com selos sobre a foto, preço uniforme e sem reserva vazia de cashback: [documento 86](docs/86-precos-e-desconto-real-nos-cards.md).
+
 Busca por assuntos e termos populares, com precisão de dose e relações revisadas: [documento 93](docs/93-busca-por-assuntos.md).
 
 Crédito opcional por unidade indisponível na distribuidora, com aceite do cliente, extrato e uso no checkout: [documento 92](docs/92-creditos-por-itens-faltantes.md).

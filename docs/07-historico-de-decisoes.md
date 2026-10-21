@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-21 — Cards compactos e altura uniforme
+
+- Removidas as reservas vazias acumuladas de Pix/cashback. `% OFF` à esquerda e Pix à direita da foto; cashback em etiqueta na base da foto.
+- Preço e metadados mantêm faixas/linhas estáveis com ou sem benefícios, sem alterar cálculos, valores do carrinho ou restrições. Texto auxiliar encurtado, preservando a condição de uma unidade.
+- Regressões incluem telas de 320/390/1024/1280 px, valores maiores e itens sem Pix/assistidos. Contrato e limitações de conferência em `86-precos-e-desconto-real-nos-cards.md`.
+
 ## 2026-10-20 — Busca por assuntos e termos populares
 
 - Mapa revisado de relações de busca por sintomas/condições, usando ingredientes completos, termos explícitos e nomes; sem IA externa ou inferência a partir de advertências.

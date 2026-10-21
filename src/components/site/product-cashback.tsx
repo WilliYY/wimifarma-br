@@ -3,8 +3,8 @@ import Link from "next/link";
 import { productCashbackCents, type CashbackProduct } from "@/features/cashback/rules";
 import { formatCurrency } from "@/lib/utils";
 
-export function ProductCashback({ product, unitPriceCents, details = false }: {
-  product: CashbackProduct; unitPriceCents: number; details?: boolean;
+export function ProductCashback({ product, unitPriceCents, details = false, compact = false }: {
+  product: CashbackProduct; unitPriceCents: number; details?: boolean; compact?: boolean;
 }) {
   const amount = productCashbackCents(product, unitPriceCents);
   if (!amount) return null;
@@ -16,6 +16,11 @@ export function ProductCashback({ product, unitPriceCents, details = false }: {
         <p className="mt-1 text-xs leading-5 text-emerald-800">Para clientes conectados, após a conclusão e o pagamento do pedido. Use na próxima compra. <Link className="font-bold underline underline-offset-2 focus-visible:outline-brand" href="/cashback">Ver regras</Link></p>
       </div>
     </div>
+  );
+  if (compact) return (
+    <span className="inline-flex max-w-full items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-1 text-[0.625rem] font-semibold leading-3 text-emerald-800" title="Cashback estimado por unidade, antes de usar saldo como desconto.">
+      <Wallet aria-hidden="true" className="h-3 w-3 shrink-0" /><span className="truncate"><strong className="font-bold">{formatCurrency(amount / 100)}</strong> cashback</span>
+    </span>
   );
   return (
     <div className="mt-3 min-w-0 text-emerald-800">

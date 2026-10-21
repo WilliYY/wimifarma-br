@@ -56,11 +56,11 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
     <article
       className="group relative flex h-full min-h-[22rem] min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_18px_40px_rgba(17,24,39,0.11)] motion-reduce:transform-none"
     >
-      <div className="min-h-[4.25rem] shrink-0 px-3 pb-1 pt-3">
+      <div className="h-[4.25rem] shrink-0 px-3 pb-1 pt-3 sm:h-14">
         {canOrder && <ProductShippingBadge />}
       </div>
       <div
-        className="relative flex h-40 shrink-0 items-center justify-center overflow-hidden bg-white p-3"
+        className="relative flex h-40 shrink-0 items-center justify-center overflow-hidden bg-white px-3 pb-7 pt-8"
       >
         {product.imageUrl ? (
           <Image
@@ -73,55 +73,51 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
         ) : (
           <ProductImagePlaceholder catalogClassification={product.catalogClassification} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" showLabel />
         )}
-        {hasComparison ? (
-          <span className={`absolute left-3 top-3 rounded-sm px-2 py-1 text-[0.68rem] font-black ${hasPromotion ? "bg-brand-soft text-brand" : "bg-pharma-green/10 text-pharma-green"}`}>
-            {hasPromotion ? `${discount}% OFF` : `${PIX_DISCOUNT_PERCENT}% no Pix`}
+        {hasPromotion ? (
+          <span className="absolute left-2 top-2 rounded-sm bg-brand-soft px-1.5 py-1 text-[0.625rem] font-black text-brand">
+            {discount}% OFF
           </span>
         ) : null}
+        {hasPixOffer ? <span className="absolute right-2 top-2 rounded-sm bg-pharma-green/10 px-1.5 py-1 text-[0.625rem] font-black text-pharma-green">{PIX_DISCOUNT_PERCENT}% no Pix</span> : null}
+        <div className="absolute inset-x-2 bottom-1 flex justify-end">
+          <ProductCashback compact product={product} unitPriceCents={displayUnitPriceCents} />
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col border-t border-line px-4 pb-4 pt-3">
-        <span className="line-clamp-1 min-h-4 text-[0.68rem] font-black uppercase text-brand">
+        <span className="h-4 shrink-0 truncate text-[0.68rem] font-black uppercase text-brand">
           {product.category || product.brand || "Produto"}
         </span>
         <Link
           aria-label={`Ver ${productDisplayName(product.name)}`}
-          className="mt-1 line-clamp-2 min-h-10 text-sm font-bold leading-5 text-ink after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand"
+          className="mt-1 line-clamp-2 h-10 shrink-0 text-sm font-bold leading-5 text-ink after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand"
           href={`/produto/${product.slug}`}
         >
           {productDisplayName(product.name)}
         </Link>
-        <span className="mt-2 block line-clamp-1 min-h-4 text-xs font-semibold text-muted">
+        <span className="mt-2 h-4 shrink-0 truncate text-xs font-semibold leading-4 text-muted" title={product.activeIngredients.join(" + ") || undefined}>
           {product.activeIngredients.join(" + ") || "Consulte os detalhes"}
         </span>
-        <strong className="mt-3 block min-h-4 truncate text-xs uppercase text-ink">
+        <strong className="mt-2 h-4 shrink-0 truncate text-xs uppercase leading-4 text-ink" title={product.brand ?? undefined}>
           {product.brand ?? "Wimifarma"}
         </strong>
 
-        <div className="mt-auto pt-4">
-          <div role="group" aria-label="Preço do produto" className="min-h-40 border-t border-line pt-3 sm:min-h-[8.75rem]">
-            <div className="min-w-0">
-              <span className="block min-h-4 text-[0.68rem] font-semibold text-muted">
-                {hasComparison ? <>De <s>{formatCurrency(referencePrice)}</s></> : null}
-              </span>
-              <div className="mt-1 flex min-h-6 flex-wrap items-baseline gap-x-1.5 gap-y-1">
-                {hasComparison && <span className="text-xs font-semibold text-brand">Por</span>}
-                <strong className="text-xl font-black leading-none text-brand">{formatCurrency(displayUnitPriceCents / 100)}</strong>
-                {hasPixOffer && <span className="text-xs font-semibold text-brand">no Pix</span>}
-              </div>
-              <div className="mt-2 min-h-8">
-                {hasPixOffer && <>
-                  <p className="text-[0.68rem] font-medium leading-4 text-muted">{formatCurrency(currentPrice)} sem desconto Pix</p>
-                  <p className="text-[0.68rem] leading-4 text-muted">Para 1 unidade.</p>
-                </>}
-              </div>
-              <div className="mt-1 min-h-6">
-                {hasPixOffer && hasPromotion && <span className="inline-block rounded-sm bg-pharma-green/10 px-2 py-1 text-[0.68rem] font-bold text-pharma-green">{PIX_DISCOUNT_PERCENT}% no Pix</span>}
-              </div>
+        <div className="mt-auto pt-3">
+          <div role="group" aria-label="Preço do produto" className="grid grid-rows-[1rem_2.5rem_2rem] gap-y-1 border-t border-line pt-3 sm:grid-rows-[1rem_1.5rem_2rem]">
+            <span className="block min-w-0 text-[0.68rem] font-semibold text-muted">
+              {hasComparison ? <>De <s>{formatCurrency(referencePrice)}</s></> : null}
+            </span>
+            <div className="flex min-w-0 flex-wrap content-start items-baseline gap-x-1 gap-y-1">
+              {hasComparison && <span className="sr-only">Por</span>}
+              <strong className="text-lg font-black leading-none text-brand sm:text-xl">{formatCurrency(displayUnitPriceCents / 100)}</strong>
+              {hasPixOffer && <span className="text-xs font-semibold text-brand">no Pix</span>}
             </div>
-          </div>
-          <div className="flow-root min-h-14 sm:min-h-12">
-            <ProductCashback product={product} unitPriceCents={displayUnitPriceCents} />
+            <div className="min-w-0">
+              {hasPixOffer && <>
+                <p className="text-[0.68rem] font-medium leading-4 text-muted">{formatCurrency(currentPrice)} sem Pix</p>
+                <p className="text-[0.68rem] leading-4 text-muted">Para 1 unidade.</p>
+              </>}
+            </div>
           </div>
           <ProductCardActions product={cartProduct} />
         </div>

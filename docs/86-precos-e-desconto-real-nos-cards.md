@@ -1,5 +1,23 @@
 # 86 — Preços e desconto real nos cards
 
+## Cards compactos — 21/10/2026
+
+Pedido: reduzir a área vazia dos preços e manter altura uniforme com ou sem desconto/cashback. O espaço anterior vinha de `min-height` acumulados para Pix, cashback e metadados que ainda quebravam em várias linhas no celular.
+
+- `% OFF` fica sobre a foto, à esquerda; `3% no Pix`, à direita. Os dois selos coexistem quando há promoção e Pix, sem repetir Pix no bloco do preço.
+- Cashback elegível vira uma etiqueta compacta na base da foto. Usa o mesmo `ProductCashback` e cálculo canônico, sem área vazia reservada abaixo do preço. O modo detalhado e a apresentação dos outros locais permanecem.
+- O bloco de preço usa três faixas estáveis: referência, valor/condição Pix e duas linhas curtas de contexto. Mantém referência real, valor sem Pix e `Para 1 unidade.`. `Por` continua acessível ao leitor de tela; sua repetição visual foi retirada para evitar uma terceira linha com valores maiores. O texto auxiliar foi encurtado para `R$ ... sem Pix`.
+- Categoria, título, composição e marca têm limites de linhas consistentes. Composição e marca completas permanecem no conteúdo/atributo title e no detalhe. Sem alteração de nomes persistidos.
+- A reserva de entrega mantém espaço para a condição de CEP quebrar em duas linhas nas telas estreitas. Os selos não cobrem a região útil da foto.
+
+Essa seção substitui a reserva vertical de cashback descrita na padronização de 20/10. Direção: varejo compacto com os tokens existentes, preço vermelho e benefícios verdes. DFII 14 (3 + 5 + 4 + 4 − 2), sem dependências ou alterações globais. Nenhum cálculo de preço, desconto, cashback, carrinho, quantidade, receita, frete ou checkout foi modificado; não há escrita no catálogo/banco.
+
+Arquivos: `public-product-card.tsx`, `product-cashback.tsx` e `product-card-actions.test.ts`, em `src/components/site/`; documentação neste arquivo, README e histórico 07.
+
+Validação: o teste inicial reproduziu cards de 751,625/719,625 px em 320 px, com alturas diferentes. O ajuste passou a manter todos abaixo de 600 px e com a mesma altura nos cenários com promoção/cashback, fornecedor, genérico e similar em 320/390/1280 px. Outra regressão cobre valor Pix R$ 969,99, item sem Pix e atendimento assistido em 320/390/1024 px, com colunas de 200 px na largura intermediária, sem corte nem sobreposição de condições/ações. Vinte testes focados de card/Pix/cashback passaram, incluindo valores originais do carrinho e arredondamento. Revisão independente aprovou após a correção da quebra do preço em três linhas. Os 442 testes de segurança, lint, typecheck e Prisma passaram; auditoria de produção sem vulnerabilidades. Auditoria completa conserva cinco alertas high preexistentes de desenvolvimento e zero critical, sem alteração de dependências.
+
+Evidências em `outputs/cards-compactos-2026-10-21/`, fora do Git. Capturas automatizadas usam dados sintéticos e rede interceptada. A inspeção interativa do site pelo navegador local estava desativada nas configurações do Work; essa limitação não foi contornada. A conferência publicada usa HTTP/HTML e compara os preços antes/depois; não equivale a inspeção visual interativa da produção.
+
 ## Pedido e limites — 20/10/2026
 
 O lojista pediu mais destaque comercial, com “de/por” e percentual nos produtos. A referência não é aumentada artificialmente para simular oferta. O percentual ADMIN do distribuidor é acréscimo sobre o custo e continua privado; não é utilizado como desconto.

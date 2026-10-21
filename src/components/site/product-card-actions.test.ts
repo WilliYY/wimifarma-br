@@ -24,12 +24,13 @@ const bundle = build({
         promotionalPrice:kind==='promotion'?'80.00':null,isPopularPharmacy:false,requiresPrescription:kind==='restricted',
         prescriptionType:kind==='restricted'?'CONTROLLED':'ORDINARY',stock:kind==='unavailable'?0:kind==='demand'?1:15,
         inventorySource:kind==='demand'?'DISTRIBUTOR':'PHARMACY',supplierDemandAllowed:kind==='demand'};
-      const cards=kind==='grid'?[
-        {...product,price:'6.90',promotionalPrice:'4.99',cashbackEnabled:true,cashbackRateBps:200},
-        {...product,id:'synthetic-demand',slug:'sob-demanda',name:'Produto sintético com nome maior em duas linhas',price:'4.85',inventorySource:'DISTRIBUTOR',supplierDemandAllowed:true},
+      const cards=(kind==='grid'||kind==='large-grid')?[
+        {...product,price:kind==='large-grid'?'1299.90':'6.90',promotionalPrice:kind==='large-grid'?'999.99':'4.99',cashbackEnabled:true,cashbackRateBps:200},
+        {...product,id:'synthetic-demand',slug:'sob-demanda',name:'Produto sintético com nome maior em duas linhas',price:kind==='large-grid'?'0.01':'4.85',inventorySource:'DISTRIBUTOR',supplierDemandAllowed:true,
+          brand:'Marca sintética com nome extenso',activeIngredients:['Composição sintética longa para conferir a linha de detalhes']},
         {...product,id:'synthetic-generic',slug:'generico-sintetico',name:'Genérico sintético',price:'19.90',requiresPrescription:true,prescriptionType:'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
           catalogClassification:{kind:'MEDICINE',medicineClass:'GENERIC',ethical:true,otc:false}},
-        {...product,id:'synthetic-similar',slug:'similar-sintetico',name:'Similar sintético',price:'12.90',requiresPrescription:true,prescriptionType:'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
+        {...product,id:'synthetic-similar',slug:'similar-sintetico',name:'Similar sintético',price:'12.90',requiresPrescription:true,prescriptionType:kind==='large-grid'?'CONTROLLED':'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
           catalogClassification:{kind:'MEDICINE',medicineClass:'SIMILAR',ethical:true,otc:false}}
       ]:[product];
       createRoot(document.getElementById('root')).render(<CartProvider>{cards.map(item=><PublicProductCard key={item.id} product={item}/>)}</CartProvider>);`,
@@ -62,7 +63,7 @@ function fixtureStyles(enabled: boolean) {
 
 async function fixture(run: (page: Page) => Promise<void>, kind = "physical") {
   const script = (await bundle).outputFiles[0].text;
-  const styles = await fixtureStyles(Boolean(process.env.PRODUCT_CARD_CAPTURE_ROOT) || kind === "grid");
+  const styles = await fixtureStyles(Boolean(process.env.PRODUCT_CARD_CAPTURE_ROOT) || kind.endsWith("grid"));
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
@@ -71,7 +72,7 @@ async function fixture(run: (page: Page) => Promise<void>, kind = "physical") {
     await page.route("**/*", async route => {
       const url = new URL(route.request().url());
       if (url.origin !== origin) return route.abort();
-      if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: `<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><style>${kind === "grid" ? '#root{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:960px;margin:16px auto;padding:0 12px}@media(min-width:900px){#root{grid-template-columns:repeat(3,minmax(0,1fr))}}' : '#root{width:min(280px,calc(50vw - 24px));margin:24px}'}</style><div id="root"></div><script type="module" src="/fixture.js"></script>` });
+      if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: `<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><style>${kind.endsWith("grid") ? '#root{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:960px;margin:16px auto;padding:0 12px}@media(min-width:900px){#root{grid-template-columns:repeat(3,minmax(0,1fr))}}' : '#root{width:min(280px,calc(50vw - 24px));margin:24px}'}${kind === "large-grid" ? '#root{max-width:648px}' : ''}</style><div id="root"></div><script type="module" src="/fixture.js"></script>` });
       if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: styles });
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: script });
       if (url.pathname === "/api/miauby/carrinho") return route.fulfill({ json: {} });
@@ -88,6 +89,60 @@ async function fixture(run: (page: Page) => Promise<void>, kind = "physical") {
 async function expectCartQuantity(page: Page, quantity: number) {
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1") ?? "[]")[0]?.quantity)).toBe(quantity);
 }
+
+test("cards compactos mantêm benefícios fora do preço e altura uniforme sem espaços excessivos", async () => {
+  await fixture(async page => {
+    const cards = page.getByRole("article");
+    await expect(cards).toHaveCount(4);
+    for (const width of [320, 390, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      const sizes = await cards.evaluateAll(elements => elements.map(element => element.getBoundingClientRect().height));
+      if (process.env.PRODUCT_CARD_CAPTURE_ROOT) {
+        mkdirSync(process.env.PRODUCT_CARD_CAPTURE_ROOT, { recursive: true });
+        await page.screenshot({ path: join(process.env.PRODUCT_CARD_CAPTURE_ROOT, `cards-compactos-${width}.png`), fullPage: true });
+      }
+      assert.ok(Math.max(...sizes) <= 600, `cards ainda longos em ${width}px: ${sizes.join(", ")}`);
+      assert.ok(Math.max(...sizes) - Math.min(...sizes) < 1, `benefícios alteraram altura em ${width}px`);
+      const first = cards.nth(0);
+      const off = await first.getByText("28% OFF", { exact: true }).boundingBox();
+      const pix = await first.getByText("3% no Pix", { exact: true }).boundingBox();
+      const cashback = await first.getByText(/cashback/).boundingBox();
+      const price = await first.getByRole("group", { name: "Preço do produto", exact: true }).boundingBox();
+      const controls = await first.locator("[data-product-controls]").boundingBox();
+      assert.ok(off && pix && cashback && price && controls);
+      assert.ok(Math.abs(off.y - pix.y) < 1 && off.x + off.width <= pix.x, `selos devem ocupar esquerda/direita sem sobreposição em ${width}px`);
+      assert.ok(cashback.y + cashback.height <= price.y, `cashback alongou a área de preço em ${width}px`);
+      assert.ok(price.height <= 120 && controls.y - (price.y + price.height) <= 16, `espaço excessivo antes das ações em ${width}px`);
+      const note = await first.getByText("Para 1 unidade.", { exact: true }).boundingBox();
+      assert.ok(note && note.y + note.height <= controls.y, `condição unitária sobrepôs as ações em ${width}px`);
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      await expect(first.getByText(/R\$\s*0,10/)).toBeVisible();
+    }
+  }, "grid");
+});
+
+test("preço maior não sobrepõe no Pix, condição unitária ou ações em tela estreita", async () => {
+  await fixture(async page => {
+    const first = page.getByRole("article").first();
+    for (const width of [320, 390, 1024]) {
+      await page.setViewportSize({ width, height: 900 });
+      const prices = first.getByRole("group", { name: "Preço do produto", exact: true });
+      await expect(prices.getByText(/R\$\s*969,99/, { exact: true })).toBeVisible();
+      const pix = await prices.getByText("no Pix", { exact: true }).boundingBox();
+      const regular = await prices.getByText(/999,99 sem Pix/).boundingBox();
+      const unit = await prices.getByText("Para 1 unidade.", { exact: true }).boundingBox();
+      const controls = await first.locator("[data-product-controls]").boundingBox();
+      assert.ok(pix && regular && unit && controls);
+      assert.ok(pix.y + pix.height <= regular.y, `Pix sobrepôs preço regular em ${width}px`);
+      assert.ok(regular.y + regular.height <= unit.y, `preço regular sobrepôs unidade em ${width}px`);
+      assert.ok(unit.y + unit.height <= controls.y, `unidade sobrepôs ações em ${width}px`);
+      assert.ok(await prices.evaluate(element => element.scrollWidth <= element.clientWidth), `preço cortado em ${width}px`);
+      const sizes = await page.getByRole("article").evaluateAll(elements => elements.map(element => element.getBoundingClientRect().height));
+      assert.ok(Math.max(...sizes) - Math.min(...sizes) < 1, `card sem Pix/assistido alterou a altura em ${width}px`);
+      if (width === 1024) assert.ok((await prices.boundingBox())!.width <= 176, "fixture deve cobrir a coluna estreita da busca");
+    }
+  }, "large-grid");
+});
 
 test("cards alinham preços e ações com promoção, cashback, fornecedor e genérico", async () => {
   await fixture(async page => {
@@ -239,7 +294,7 @@ test("promoção cadastrada mantém referência real e não soma percentuais ao 
     const prices = page.getByRole("group", { name: "Preço do produto", exact: true });
     await expect(prices.locator("s")).toHaveText(/100,00/);
     await expect(prices.getByText(/R\$\s*77,60/, { exact: true })).toBeVisible();
-    await expect(prices.getByText(/80,00 sem desconto Pix/)).toBeVisible();
+    await expect(prices.getByText(/80,00 sem Pix/)).toBeVisible();
     await expect(page.getByText("20% OFF", { exact: true })).toBeVisible();
     await expect(page.getByText("23% OFF", { exact: true })).toHaveCount(0);
     await page.getByRole("button", { name: "Adicionar", exact: true }).click();
