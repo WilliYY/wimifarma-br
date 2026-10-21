@@ -18,6 +18,14 @@ Validação: o teste inicial reproduziu cards de 751,625/719,625 px em 320 px, c
 
 Evidências em `outputs/cards-compactos-2026-10-21/`, fora do Git. Capturas automatizadas usam dados sintéticos e rede interceptada. A inspeção interativa do site pelo navegador local estava desativada nas configurações do Work; essa limitação não foi contornada. A conferência publicada usa HTTP/HTML e compara os preços antes/depois; não equivale a inspeção visual interativa da produção.
 
+### Publicação dos cards compactos
+
+Código `33ff23f22ed7112e7a2b7c3d66ccee8b64e066ce`, enviado ao GitHub e publicado em 21/10/2026. [CI 39598278263](https://github.com/WilliYY/wimifarma-br/actions/runs/39598278263) aprovado com 1.004 testes, zero falhas. Build Docker Linux passou, incluindo tipos/lint e 39 páginas estáticas. Ativado somente o serviço app, sem migration ou alteração de PostgreSQL/proxy. Imagem anterior preservada em `wimifarma-br-app:rollback-compact-cards-20261021`.
+
+Imagem ativa `sha256:7cbf4e959d6f005bb9c711d802b16c78a425e9908cb22312181ddd9fc0ecceaf`, saudável e sem reinicializações, com revisão OCI igual ao código. Health público respondeu 200. HTTP confirmou a estrutura compacta e o CSS de produção com as duas faixas responsivas de preço.
+
+Comparação antes/depois conferiu 29 cards em quatro páginas: 23 L'Oréal Paris, quatro Dove, Kit Kat e Cimegrip. Nome, valores de referência/Pix/sem Pix e cashback permaneceram iguais; os selos Pix não estão duplicados e a antiga reserva vazia de cashback foi removida. A leitura não criou carrinho, pedido, pagamento ou mensagem. Nenhuma pendência funcional conhecida; permanece a limitação de inspeção interativa descrita acima.
+
 ## Pedido e limites — 20/10/2026
 
 O lojista pediu mais destaque comercial, com “de/por” e percentual nos produtos. A referência não é aumentada artificialmente para simular oferta. O percentual ADMIN do distribuidor é acréscimo sobre o custo e continua privado; não é utilizado como desconto.
