@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-22 — Cadastro completo por família de princípio ativo
+
+- Após o encerramento dos lotes anteriores, o lojista autorizou nova pesquisa e inclusão de levotiroxina, nimesulida, simeticona, tadalafila, ibuprofeno e loratadina, comparando ANB e Profarma. A ordem da planilha antiga deixa de definir esta rodada; associações precisam conter o princípio ativo solicitado.
+- Preservar cada marca, dose, forma e quantidade por GTIN, com custo final para uma unidade, teto verificado e classificação específica. Desloratadina não entra por semelhança de nome; conflitos entre fontes primárias permanecem retidos.
+- Venda livre somente é ativada junto da foto real da apresentação exata, revisada por origem e hash; medicamentos com receita conservam ilustração institucional. Importação de novos itens e publicação de imagens usam as ferramentas oficiais, revisão, banco isolado, backup, dry-run e conferência pública, preservando registros anteriores.
+- Contrato, resultados efetivamente publicados e limites da conferência em [96-catalogo-por-principio-ativo-2026-10-22.md](96-catalogo-por-principio-ativo-2026-10-22.md). As fontes comerciais, fotos e provas operacionais ficam privadas.
+
 ## 2026-10-22 — Correção confirmada em produção e lotes autorizados encerrados
 
 - O commit `778cb24` foi conferido em Linux e implantado somente no aplicativo, com Next.js 15.5.28 saudável, sem migração ou reinício do PostgreSQL. Runtime e provas foram revistos independentemente.

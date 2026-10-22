@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Cadastro por família de princípio ativo, comparação ANB/Profarma e fotos reais por apresentação de venda livre: [documento 96](docs/96-catalogo-por-principio-ativo-2026-10-22.md).
+
 Correção de segurança Next.js 15.5.28, auditoria de produção e alertas de desenvolvimento: [documento 95](docs/95-correcao-next-15-seguranca.md).
 
 Catálogo com navegação lateral, subcategorias, ordenação e páginas numeradas; continuidade autorizada da compra com a última oferta registrada quando faltar atualização: [documento 94](docs/94-catalogo-lateral-e-continuidade.md).
