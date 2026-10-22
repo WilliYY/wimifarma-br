@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { Prisma } from "@/generated/prisma/client";
 import { comparePaymentInventoryItems, releaseSupplierShortage, reserveSupplierInventory, settleSupplierOrder, validateSupplierPayment } from "./inventory";
+import { toSaleProduct } from "./commerce";
 
 function fixture() {
-  const offer = { id: "offer-test", productId: "p-test", supplier: "ANB", eanNormalized: "01234567890128", unitCostCents: 1000, substitutionTaxCents: null as number | null, available: true, stockQuantity: null, allocationQuantity: 5, reservedQuantity: 0, committedQuantity: 0, observedAt: new Date(Date.now()-1000), validUntil: new Date(Date.now()+60000) };
+  const now = Date.now();
+  const offer = { id: "offer-test", productId: "p-test", supplier: "ANB", eanNormalized: "01234567890128", unitCostCents: 1000, substitutionTaxCents: null as number | null, available: true, stockQuantity: null, allocationQuantity: 5, reservedQuantity: 0, committedQuantity: 0, observedAt: new Date(now-1000), validUntil: new Date(now+60000) };
   const records: { orderItemId: string; offerId: string; quantity: number; releasedQuantity?: number; unitCostCents: number; status: string }[] = [];
   const offers = [offer];
   const item = { id: "item-test", orderId: "order-test", productId: offer.productId, supplierOfferId: offer.id, inventorySource: "DISTRIBUTOR", quantity: 2, unitPriceCents: 1600 };
@@ -61,6 +63,45 @@ test("pagamento exige a mesma oferta válida e o preço fotografado",async()=>{
   await validateSupplierPayment(f.tx,f.item);
   f.offer.unitCostCents=1100;await assert.rejects(validateSupplierPayment(f.tx,f.item));
   f.offer.unitCostCents=1000;f.offer.validUntil=new Date(0);await assert.rejects(validateSupplierPayment(f.tx,f.item));
+});
+
+test("continuidade permite reservar e pagar o preço da vitrine após expiração sem renovar a oferta", async () => {
+  const f = fixture();
+  const now = Date.now();
+  Object.assign(f.offer, { observedAt: new Date(now - 7 * 86_400_000), validUntil: new Date(now - 6 * 86_400_000) });
+  const product = { inventorySource: "DISTRIBUTOR" as const, stock: 17, price: "99.00", eanNormalized: f.offer.eanNormalized, supplierMarkupBps: 4000, supplierOffers: f.offers };
+  const before = structuredClone(f.offer);
+  const sale = toSaleProduct(product);
+  assert.equal(sale.availableForPurchase, true);
+  assert.equal(sale.price, "14.00");
+  const item = { ...f.item, supplierDemandAllowed: sale.supplierDemandAllowed, unitPriceCents: 1400 };
+  await reserveSupplierInventory(f.tx, item, product);
+  await reserveSupplierInventory(f.tx, item, product);
+  await validateSupplierPayment(f.tx, item, product);
+  assert.equal(f.offer.reservedQuantity, 2);
+  assert.equal(f.records.length, 1);
+  assert.equal(f.records[0].unitCostCents, 1000);
+  assert.deepEqual(f.offer, { ...before, reservedQuantity: 2 });
+  assert.equal(product.stock, 17);
+  Object.assign(f.offer, { available: false });
+  await assert.rejects(validateSupplierPayment(f.tx, item, product));
+  await assert.rejects(reserveSupplierInventory(f.tx, { ...item, id: "other" }, product));
+  assert.equal(f.offer.reservedQuantity, 2);
+  await settleSupplierOrder(f.tx, "order-test", "CANCELED", "CANCELED");
+  await settleSupplierOrder(f.tx, "order-test", "CANCELED", "CANCELED");
+  assert.equal(f.offer.reservedQuantity, 0);
+});
+
+test("expiração entre reserva e pagamento mantém preço, mas oferta atual alternativa exige revisar pedido", async () => {
+  const f = fixture();
+  const item = { ...f.item, supplierDemandAllowed: true };
+  await reserveSupplierInventory(f.tx, item);
+  f.offer.validUntil = new Date(Date.now() - 1);
+  await validateSupplierPayment(f.tx, item);
+  await assert.rejects(validateSupplierPayment(f.tx, f.item));
+  f.offers.push({ ...f.offer, id: "new-current", supplier: "DM", unitCostCents: 1100, reservedQuantity: 0, validUntil: new Date(Date.now() + 60_000) });
+  await assert.rejects(validateSupplierPayment(f.tx, item), /nova condição/);
+  assert.equal(f.offer.reservedQuantity, 2);
 });
 
 test("perda de ST após reserva impede novo pagamento sem alterar pedido ou reserva", async () => {

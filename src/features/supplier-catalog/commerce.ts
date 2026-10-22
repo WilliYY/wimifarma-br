@@ -63,12 +63,16 @@ export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "ean
   const ean = normalizeGtin(product.eanNormalized ?? product.ean);
   if (!ean) return null;
   const isMedicine = requiresSupplierTaxEvidence(product);
+  // Prefer current eligible observations. For the demand policy, retain the last
+  // structurally valid offer without rewriting its dates or inventory accounting.
+  // Each product/source has one persisted row; an unavailable refresh replaces it.
   return (product.supplierOffers ?? []).flatMap(offer => {
     const observedAt = new Date(offer.observedAt).getTime();
     const validUntil = new Date(offer.validUntil).getTime();
     if (!offer.available || !hasRequiredSupplierTax(offer, isMedicine) || normalizeGtin(offer.eanNormalized) !== ean ||
       !Number.isSafeInteger(offer.unitCostCents) || offer.unitCostCents < 1 || offer.unitCostCents > 100_000_000 ||
-      !Number.isFinite(observedAt) || !Number.isFinite(validUntil) || observedAt > now || validUntil <= now ||
+      !Number.isFinite(observedAt) || !Number.isFinite(validUntil) || observedAt > now ||
+      (validUntil <= now && product.supplierDemandAllowed !== true) ||
       validUntil <= observedAt || validUntil - observedAt > 86_400_000 ||
       [offer.allocationQuantity, offer.reservedQuantity, offer.committedQuantity].some(value => !Number.isSafeInteger(value) || value < 0) ||
       (offer.stockQuantity !== null && (!Number.isSafeInteger(offer.stockQuantity) || offer.stockQuantity < 0))) return [];
@@ -81,7 +85,8 @@ export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "ean
     const purchaseLimit = product.supplierDemandAllowed ? MAX_ORDER_ITEM_QUANTITY : Math.max(0, Math.min(offer.allocationQuantity, offer.stockQuantity ?? offer.allocationQuantity) - offer.reservedQuantity - offer.committedQuantity);
     if (purchaseLimit < quantity) return [];
     return [{ ...offer, purchaseLimit, unitPriceCents }];
-  }).sort((a, b) => a.unitCostCents - b.unitCostCents || a.supplier.localeCompare(b.supplier) || a.id.localeCompare(b.id))[0] ?? null;
+  }).sort((a, b) => Number(new Date(a.validUntil).getTime() <= now) - Number(new Date(b.validUntil).getTime() <= now)
+    || a.unitCostCents - b.unitCostCents || a.supplier.localeCompare(b.supplier) || a.id.localeCompare(b.id))[0] ?? null;
 }
 
 export function withCommerceAvailability<T extends CommerceProduct>(product: T, now = Date.now()): Omit<T, "supplierMarkupBps" | "supplierOffers" | "price" | "promotionalPrice" | "inventorySource" | "imageUrl" | "imageUrls" | "imageAsset" | "imageAssetId"> & {

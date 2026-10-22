@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { planPilotRefresh } from "./pilot-refresh";
 import { SupplierCatalogOfferSchema } from "./schema";
+import { toSaleProduct } from "./commerce";
 
 const now = Date.parse("2026-10-18T12:00:00Z");
 const ean = "07896004708539";
@@ -61,6 +62,21 @@ test("out-of-stock update disables an existing supplier without inventing a repl
   const plan = planPilotRefresh(ean, [input({ available: false, stockQuantity: 0 })], [previous()], now);
   assert.equal(plan.best, null);
   assert.equal(plan.updates[0].available, false);
+});
+
+test("falha sem nova observação preserva a oferta expirada; indisponibilidade nova da mesma fonte a substitui", () => {
+  const stored = previous({ observedAt: "2026-10-16T11:00:00Z", validUntil: "2026-10-17T11:00:00Z", allocationQuantity: 5 });
+  const before = structuredClone(stored);
+  const unchanged = planPilotRefresh(ean, [], [stored], now);
+  assert.deepEqual(unchanged.updates, []);
+  const product = { inventorySource: "DISTRIBUTOR" as const, eanNormalized: ean, price: "99.00", stock: 0, supplierOffers: [stored] };
+  assert.equal(toSaleProduct(product, now).price, "4.80");
+  assert.equal(toSaleProduct(product, now).availableForPurchase, true);
+  const unavailable = planPilotRefresh(ean, [input({ available: false, stockQuantity: 0 })], [stored], now);
+  assert.equal(unavailable.best, null);
+  assert.equal(unavailable.updates[0].available, false);
+  assert.equal(toSaleProduct({ ...product, supplierOffers: [{ ...stored, ...unavailable.updates[0] }] }, now).availableForPurchase, false);
+  assert.deepEqual(stored, before);
 });
 
 test("rotina preserva percentual escolhido pelo ADMIN", () => {

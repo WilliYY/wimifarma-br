@@ -14,10 +14,10 @@ test("normaliza GTIN válido sem misturar apresentações de embalagem", () => {
   assert.deepEqual(gtinVariants("11234567890125"), ["11234567890125"]);
 });
 
-test("resolve menor custo elegível e respeita cota, saldo real e validade", () => {
+test("resolve menor custo elegível e respeita cota, saldo real e estrutura da observação", () => {
   assert.equal(resolveSupplierOffer(product, 5, now)?.unitPriceCents, 1600);
   assert.equal(resolveSupplierOffer(product, 6, now), null);
-  for (const changes of [{ available: false }, { stockQuantity: 0 }, { reservedQuantity: 5 }, { committedQuantity: 5 }, { observedAt: new Date(now + 1) }, { validUntil: new Date(now) }, { eanNormalized: "11234567890125" }, { unitCostCents: -1 }]) {
+  for (const changes of [{ available: false }, { stockQuantity: 0 }, { reservedQuantity: 5 }, { committedQuantity: 5 }, { observedAt: new Date(now + 1) }, { validUntil: offer.observedAt }, { eanNormalized: "11234567890125" }, { unitCostCents: -1 }]) {
     assert.equal(resolveSupplierOffer({ ...product, supplierOffers: [{ ...offer, ...changes }] }, 1, now), null);
   }
   const best = resolveSupplierOffer({ ...product, supplierOffers: [{ ...offer, id: "b", supplier: "PROFARMA" }, { ...offer, id: "a", supplier: "ANB" }] }, 1, now);
@@ -75,8 +75,33 @@ test("DTO público oculta custos e imagem interna, preservando estoque físico",
   assert.equal(dto.imageAsset, null);
   assert.equal("supplierOffers" in dto, false);
   const expired = withCommerceAvailability(product, now + 2000);
-  assert.equal(expired.purchaseLimit, 0);
-  assert.equal(expired.availableForPurchase, false);
+  assert.equal(expired.purchaseLimit, 999);
+  assert.equal(expired.availableForPurchase, true);
+  assert.equal(expired.price, "16.00");
+});
+
+test("última oferta expirada mantém preço calculado, datas reais e reservas", () => {
+  const expired = { ...offer, observedAt: new Date(now - 7 * 86_400_000), validUntil: new Date(now - 6 * 86_400_000), reservedQuantity: 1, committedQuantity: 1 };
+  const current = { ...product, supplierDemandAllowed: true, supplierMarkupBps: 4000, supplierOffers: [expired] };
+  const before = structuredClone(current);
+  const selected = resolveSupplierOffer(current, 3, now);
+  assert.equal(selected?.unitPriceCents, 1400);
+  assert.equal(selected?.purchaseLimit, 999);
+  assert.equal(resolveSupplierOffer({ ...current, supplierDemandAllowed: false }, 1, now), null);
+  assert.equal(withCommerceAvailability(current, now).price, "14.00");
+  assert.deepEqual(current, before);
+  for (const changes of [{ available: false }, { stockQuantity: 0 }, { unitCostCents: 0 }, { validUntil: expired.observedAt }, { validUntil: new Date(now) }, { retailCeilingCents: 1399 }, { eanNormalized: "11234567890125" }]) {
+    assert.equal(resolveSupplierOffer({ ...current, supplierOffers: [{ ...expired, ...changes }] }, 1, now), null);
+  }
+  assert.equal(resolveSupplierOffer({ ...current, requiresPrescription: true, supplierOffers: [{ ...expired, retailCeilingCents: null }] }, 1, now), null);
+  assert.equal(resolveSupplierOffer({ ...current, requiresPrescription: true, supplierOffers: [{ ...expired, supplier: "PROFARMA", substitutionTaxCents: null }] }, 1, now), null);
+});
+
+test("oferta atual elegível tem prioridade sobre expirada mais barata", () => {
+  const expired = { ...offer, id: "expired", supplier: "DM", unitCostCents: 500, validUntil: new Date(now) };
+  assert.equal(resolveSupplierOffer({ ...product, supplierDemandAllowed: true, supplierOffers: [expired, offer] }, 1, now)?.id, offer.id);
+  assert.equal(resolveSupplierOffer({ ...product, supplierDemandAllowed: true, supplierOffers: [{ ...offer, available: false }, expired] }, 1, now)?.id, expired.id);
+  assert.equal(resolveSupplierOffer({ ...product, supplierDemandAllowed: true, supplierOffers: [expired] }, 1, now)?.unitPriceCents, 800);
 });
 
 test("foto pública Rx permanece interna e o DTO usa ilustração sem alterar compra", () => {

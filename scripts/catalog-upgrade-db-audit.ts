@@ -157,6 +157,32 @@ async function auditBehavior(tx: Prisma.TransactionClient) {
   await settleSupplierOrder(tx, checkout.id, "CANCELED", "CANCELED");
   assert.equal((await tx.supplierCatalogOffer.findUniqueOrThrow({ where: { id: offer.id } })).reservedQuantity, 0);
   assert.equal(await tx.miaubyEvent.count(), 0, "Synthetic checkout must not enqueue an external communication");
+  const continuityNow = Date.now();
+  const expiredObservation = { observedAt: new Date(continuityNow - 172_800_000), validUntil: new Date(continuityNow - 86_400_000) };
+  await tx.supplierCatalogOffer.update({ where: { id: offer.id }, data: expiredObservation });
+  const continuityInput = checkoutRequestSchema.parse({
+    customer: { name: "Cliente sintético continuidade QA", phone: "44999999999", email: "catalog-continuity@example.invalid" },
+    fulfillmentMethod: "PICKUP", paymentMethod: "CASH", privacyConsent: true,
+    items: [{ productId: supplier.id, quantity: 3, expectedUnitPriceCents: 1500 }],
+  });
+  const continuity = await createCheckout(tx, continuityInput);
+  const continuityItem = await tx.orderItem.findFirstOrThrow({ where: { orderId: continuity.id } });
+  assert.equal(continuity.totalCents, 4500);
+  assert.equal(continuity.paymentStatus, "PENDING");
+  assert.equal(continuityItem.supplierDemandAllowed, true);
+  await validateSupplierPayment(tx, continuityItem, pricing);
+  const retained = await tx.supplierCatalogOffer.findUniqueOrThrow({ where: { id: offer.id } });
+  assert.equal(retained.observedAt.getTime(), expiredObservation.observedAt.getTime());
+  assert.equal(retained.validUntil.getTime(), expiredObservation.validUntil.getTime(), "Continuity must never renew a supplier observation");
+  assert.equal(retained.stockQuantity, 100);
+  assert.equal(retained.reservedQuantity, 3);
+  await tx.supplierCatalogOffer.update({ where: { id: offer.id }, data: { available: false } });
+  await assert.rejects(() => createCheckout(tx, continuityInput));
+  await assert.rejects(() => validateSupplierPayment(tx, continuityItem, pricing), /Preço ou disponibilidade/);
+  await settleSupplierOrder(tx, continuity.id, "CANCELED", "CANCELED");
+  await settleSupplierOrder(tx, continuity.id, "CANCELED", "CANCELED");
+  assert.equal((await tx.supplierCatalogOffer.findUniqueOrThrow({ where: { id: offer.id } })).reservedQuantity, 0);
+  assert.equal(await tx.miaubyEvent.count(), 0);
   assert.deepEqual(await immutable(), original);
 }
 

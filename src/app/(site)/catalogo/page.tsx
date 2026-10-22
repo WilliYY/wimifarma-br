@@ -1,9 +1,10 @@
 import { CatalogPage } from "@/components/site/catalog-page";
 import { catalogPageNumber } from "@/features/products/storefront";
 import { createPublicPageMetadata } from "@/lib/metadata";
-import { catalogGroup, categoryShortcuts } from "@/features/products/home-shortcuts";
+import { categoryShortcuts } from "@/features/products/home-shortcuts";
+import { catalogFilters, catalogFiltersPath, catalogSections, type CatalogParams } from "@/features/products/catalog-navigation";
 export const dynamic = "force-dynamic";
-type Props = { searchParams: Promise<{ pagina?: string | string[]; grupo?: string | string[]; ordem?: string | string[]; marca?: string | string[] }> };
+type Props = { searchParams: Promise<CatalogParams> };
 const description = "Conheça os produtos da Wimifarma em Ivaté-PR. Explore medicamentos, higiene, beleza e cuidados por categoria, com preços e informações de cada produto.";
 export async function generateMetadata({ searchParams }: Props) {
   const page = catalogPageNumber((await searchParams).pagina);
@@ -11,14 +12,10 @@ export async function generateMetadata({ searchParams }: Props) {
 }
 export default async function Page({ searchParams }: Props) {
   const params = await searchParams;
-  const group = catalogGroup(params.grupo);
-  const brand = typeof params.marca === "string" ? params.marca.trim() || undefined : undefined;
-  const sort = params.ordem === "preco-asc" || group || brand ? "preco-asc" : undefined;
-  const query = new URLSearchParams();
-  if (group) query.set("grupo", group);
-  if (sort) query.set("ordem", sort);
-  if (brand) query.set("marca", brand);
-  const path = `/catalogo${query.size ? `?${query}` : ""}`;
+  const filters = catalogFilters(params);
+  const { group } = filters;
+  const path = catalogFiltersPath("/catalogo", filters);
   const intro = group === "dermo" ? "Cuidados para sua pele." : group ? "Confira os produtos desta categoria." : "Encontre o que você precisa.";
-  return <CatalogPage title={categoryShortcuts.find(item => item.id === group)?.label ?? "Produtos"} description={intro} path={path} page={catalogPageNumber(params.pagina)} group={group} sort={sort} brand={brand} />;
+  const title = catalogSections.find(item => item.id === filters.section)?.label ?? (group === "beauty" ? "Higiene e beleza" : categoryShortcuts.find(item => item.id === group)?.label) ?? "Produtos";
+  return <CatalogPage title={title} description={intro} path={path} {...filters} />;
 }

@@ -20,8 +20,8 @@ test("política autorizada aceita demanda maior que cota e quantidade observada 
   assert.equal(product.stock, 3);
 });
 
-test("demanda não libera oferta esgotada, vencida, EAN diferente ou preço acima do teto", () => {
-  for (const changes of [{ available: false }, { stockQuantity: 0 }, { validUntil: new Date(now) }, { observedAt: new Date(now + 1) }, { eanNormalized: "11234567890125" }, { retailCeilingCents: 159 }, { stockQuantity: -1 }]) {
+test("demanda não libera oferta esgotada, malformada, EAN diferente ou preço acima do teto", () => {
+  for (const changes of [{ available: false }, { stockQuantity: 0 }, { validUntil: offer.observedAt }, { observedAt: new Date(now + 1) }, { eanNormalized: "11234567890125" }, { retailCeilingCents: 159 }, { stockQuantity: -1 }]) {
     assert.equal(resolveSupplierOffer({ ...product, requiresPrescription: true, supplierDemandAllowed: true, supplierOffers: [{ ...offer, ...changes }] }, 50, now), null);
   }
   assert.equal(resolveSupplierOffer({ ...product, supplierDemandAllowed: true }, Infinity, now), null);

@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-22 — Navegação lateral e continuidade de ofertas
+
+- Categorias laterais e subcategorias, ordenação explícita e paginação numérica no catálogo público, preservando filtros nas URLs e a relação neutra de medicamentos de receita por assunto.
+- Por autorização expressa do lojista, ausência de atualização deixa de bloquear a compra somente pelo vencimento da observação. As datas reais são preservadas; oferta atual é prioritária e a anterior elegível pode sustentar a compra. Indisponibilidade confirmada, identidade, tributação, teto, restrições de receita e estoque físico continuam protegidos.
+- A mesma regra comercial é aplicada antes da reserva e do pagamento, com regressões sintéticas e revisão independente. Contrato, responsabilidade por custo de reposição e evidências em [94](94-catalogo-lateral-e-continuidade.md).
+
 ## 2026-10-21 — Cards compactos e altura uniforme
 
 - Removidas as reservas vazias acumuladas de Pix/cashback. `% OFF` à esquerda e Pix à direita da foto; cashback em etiqueta na base da foto.

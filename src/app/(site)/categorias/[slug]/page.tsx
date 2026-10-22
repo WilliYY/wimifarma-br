@@ -2,8 +2,9 @@ import { notFound } from "next/navigation";
 import { CatalogPage } from "@/components/site/catalog-page";
 import { catalogPageNumber, getPublicCategories } from "@/features/products/storefront";
 import { createPublicPageMetadata } from "@/lib/metadata";
+import { catalogFilters, catalogFiltersPath, type CatalogParams } from "@/features/products/catalog-navigation";
 export const dynamic = "force-dynamic";
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ pagina?: string | string[] }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<CatalogParams> };
 async function categoryFor(props: Props) {
   const { slug } = await props.params;
   const category = (await getPublicCategories()).find(item => item.slug === slug);
@@ -17,5 +18,8 @@ export async function generateMetadata(props: Props) {
 }
 export default async function Page(props: Props) {
   const category = await categoryFor(props);
-  return <CatalogPage title={category.name} description={`Confira os produtos de ${category.name.toLocaleLowerCase("pt-BR")} disponíveis no catálogo. Abra cada produto para conhecer a marca, a apresentação e os detalhes.`} path={`/categorias/${category.slug}`} page={catalogPageNumber((await props.searchParams).pagina)} categoryNames={category.names} />;
+  const filters = catalogFilters(await props.searchParams);
+  filters.group = undefined;
+  filters.section = undefined;
+  return <CatalogPage title={category.name} description={`Confira os produtos de ${category.name.toLocaleLowerCase("pt-BR")} disponíveis no catálogo.`} path={catalogFiltersPath(`/categorias/${category.slug}`, filters)} {...filters} categoryNames={category.names} />;
 }

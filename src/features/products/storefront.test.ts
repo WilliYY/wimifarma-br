@@ -102,7 +102,7 @@ test("catálogo inteiro coloca disponíveis antes dos indisponíveis, inclusive 
   assert.deepEqual(second.products.map(product => product.id), [...available.slice(24), ...unavailable].map(product => product.id));
 });
 
-test("disponibilidade comercial e validade da oferta prevalecem sobre saldo bruto e preço", async () => {
+test("disponibilidade comercial usa cotação preservada por demanda antes de ordenar preço", async () => {
   const now = Date.now();
   const offer = { id: "synthetic-offer", supplier: "ANB", eanNormalized: "01234567890128", unitCostCents: 1000, retailCeilingCents: null, available: true, stockQuantity: null, allocationQuantity: 5, reservedQuantity: 0, committedQuantity: 0, observedAt: new Date(now - 60_000), validUntil: new Date(now + 3_600_000) };
   const rows = [
@@ -113,14 +113,43 @@ test("disponibilidade comercial e validade da oferta prevalecem sobre saldo brut
   const { service, query } = await fixture(rows, [{ brand: "Marca sintética" }]);
   for (const options of [{ sort: "preco-asc" as const }, { categories: ["Perfumaria"] }, { group: "beauty" as const }, { brand: "Marca sintética" }]) {
     const result = await service.getStorefrontProducts(options);
-    assert.deepEqual(result.products.map(product => product.id), ["fresh", "physical", "expired"]);
-    assert.deepEqual(result.products.map(product => product.stock > 0), [true, true, false]);
+    assert.deepEqual(result.products.map(product => product.id), ["expired", "fresh", "physical"]);
+    assert.deepEqual(result.products.map(product => product.stock > 0), [true, true, true]);
     assert.equal(result.count, 3);
     assert.equal(query().take, undefined);
   }
   const offers = await service.getStorefrontProducts({ offers: true });
-  assert.deepEqual(offers.products.map(product => product.id), ["physical", "fresh", "expired"]);
+  assert.deepEqual(offers.products.map(product => product.id), ["expired", "physical", "fresh"]);
   assert.equal(JSON.stringify(query().where), JSON.stringify({ status: "ACTIVE", promotionalPrice: { lt: "fixture-price" } }));
+});
+
+test("ordena todos os resultados por preço decrescente e nomes antes de paginar", async () => {
+  const rows = Array.from({ length: 30 }, (_, i) => ({ id: String(i), name: `Produto ${String(i).padStart(2, "0")}`, stock: 2, price: String(i + 1), promotionalPrice: i === 29 ? "1" : null }));
+  const { service } = await fixture(rows);
+  assert.equal((await service.getStorefrontProducts({ sort: "preco-desc" })).products[0].id, "28");
+  assert.equal((await service.getStorefrontProducts({ sort: "nome-desc" })).products[0].id, "29");
+  assert.equal((await service.getStorefrontProducts({ sort: "nome-asc", page: 2 })).products[0].id, "24");
+  assert.equal(service.catalogPageNumber(["2"]), 1);
+  assert.equal(service.catalogPageNumber("Infinity"), 1);
+});
+
+test("assunto e busca usam identidade revisada, dose e filtros antes da paginação", async () => {
+  const rows = [
+    { id: "a", name: "Metformina 500mg", category: "Medicamentos", activeIngredients: ["cloridrato de metformina"], searchTerms: [], price: "10", promotionalPrice: null, stock: 2 },
+    { id: "b", name: "Metformina 850mg", category: "Medicamentos", activeIngredients: ["cloridrato de metformina"], searchTerms: [], price: "20", promotionalPrice: null, stock: 2 },
+    { id: "c", name: "Produto neutro", category: "Medicamentos", activeIngredients: ["metformina inventada"], searchTerms: [], price: "5", promotionalPrice: null, stock: 2 },
+  ];
+  const { service } = await fixture(rows);
+  assert.deepEqual((await service.getStorefrontProducts({ section: "diabetes", query: "500mg" })).products.map(item => item.id), ["a"]);
+  assert.equal((await service.getStorefrontProducts({ query: "pressão baixa" })).count, 0);
+});
+
+test("lateral oferece somente subcategorias com produtos publicados compatíveis", async () => {
+  const { service } = await fixture([
+    { id: "a", name: "Shampoo sintético", category: "Higiene", activeIngredients: [], searchTerms: [], catalogClassification: { kind: "HYGIENE" } },
+    { id: "b", name: "Produto sintético", category: "Medicamentos", activeIngredients: ["metformina"], searchTerms: [], catalogClassification: { kind: "MEDICINE" } },
+  ]);
+  assert.deepEqual(Array.from(await service.getPublicCatalogSections()), ["diabetes", "hair"]);
 });
 
 test("indisponíveis continuam visíveis e página fora do catálogo fica vazia", async () => {

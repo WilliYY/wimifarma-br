@@ -38,7 +38,7 @@ Foi removido somente o parágrafo informativo de conferência de receita da áre
 
 ## Demanda de distribuidor e preservação histórica
 
-A oferta continua exigindo EAN/apresentação, disponibilidade positiva, custo, percentual, teto aplicável e observação válida de até 24 horas. Quantidade conhecida zero e oferta vencida impedem compra. Quando o fornecedor informa disponibilidade sem quantidade exata, o saldo continua desconhecido; não se grava estoque fictício.
+A oferta continua exigindo EAN/apresentação, disponibilidade positiva, custo, percentual, teto aplicável e intervalo de observação registrado de até 24 horas. Quantidade conhecida zero impede compra. Desde a autorização de 22/10/2026, novos pedidos por demanda podem usar a última oferta elegível mesmo vencida quando não houver atualização; datas não são renovadas e pedidos históricos por cota mantêm sua política. Contrato em [94](94-catalogo-lateral-e-continuidade.md). Quando o fornecedor informa disponibilidade sem quantidade exata, o saldo continua desconhecido; não se grava estoque fictício.
 
 Para novos pedidos, a cota observada deixa de ser o limite comercial de unidades. O DTO fornece a capacidade de compra ao carrinho sem expor custos. O painel diz **quantidade a conferir**, sem afirmar que existem 999 unidades. Há guarda técnica de **999 unidades por item**, 30 itens distintos e subtotal máximo de 600.000.000 centavos, para limitar processamento e valores; isso não comprova estoque infinito.
 
