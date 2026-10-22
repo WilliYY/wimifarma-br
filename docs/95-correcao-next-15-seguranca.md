@@ -34,3 +34,13 @@ A instalação `npm.cmd install --save-exact next@15.5.28 eslint-config-next@15.
 Logs e respostas públicas do registry ficam na pasta privada ignorada `outputs/correcao-seguranca-next-2026-10-22`. Comandos usam o executor de temporários da tarefa e `NODE_OPTIONS=--use-system-ca`.
 
 Esta evidência é local no Windows. Build Linux/Docker, revisão independente, backup da imagem ativa, publicação somente do app sem migrações e conferência de runtime/health/cabeçalhos continuam sendo requisitos da publicação conduzida pelo principal. Não houve ação em produção nesta etapa.
+
+## Confirmação posterior em produção e encerramento
+
+Em 22/10/2026, às 20:13:30 UTC, o commit `778cb2402932edb66a2ccb8ae465c5af5539aade` foi implantado após build Linux/Docker e revisão independente. A promoção recriou somente o aplicativo, sem migração. O runtime real confirmou Next.js 15.5.28, Sharp 0.35.5 e Node 24.21.0 em Linux arm64, health saudável e zero reinícios. O PostgreSQL manteve ID e horário de início anteriores; a imagem anterior foi preservada em tag de recuperação. Home e `/api/health` responderam HTTP 200.
+
+A retomada manual concluiu exclusivamente os lotes autorizados: seis itens infantis, oito medicamentos antigos, três Granado e sete Principia. Os sete Principia receberam autorização humana própria e reexecutaram os gates reais quando a validade anterior terminou, preservando fontes, datas comerciais e arquivos selados. Cada publicação usou revisão independente, QA isolado, auditoria de produção sem alertas, concessão serial CAS, backup validado, baseline/dry-run, inclusão exclusiva por EAN e provas de preservação e HTTPS. As quatro concessões foram encerradas; não há operação produtiva incerta.
+
+A consulta própria em transação somente leitura, às 21:25:30 UTC de 22/10, confirmou **619 produtos ativos, 621 registros totais e 220 medicamentos ativos**, incluindo os 24 EANs desta retomada sem duplicações. Um refil Granado indisponível e três Principia com divergências permaneceram retidos. A gerência foi encerrada e o acompanhamento central continua pausado, sem novos lotes ou retomada automática. A meta numérica anterior foi substituída pela instrução humana de fechar apenas os lotes existentes.
+
+As provas completas e o balanço estão em `outputs/catalogo-paralelo-2026-10-20/`, pasta privada ignorada pelo Git. A conferência pública validou campos das páginas e bytes das imagens por HTTPS; não constituiu uma nova avaliação visual do layout. Os cinco alertas de desenvolvimento já descritos permanecem registrados; a auditoria de dependências de produção permaneceu zerada nos gates atuais.

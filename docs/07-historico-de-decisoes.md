@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-22 — Correção confirmada em produção e lotes autorizados encerrados
+
+- O commit `778cb24` foi conferido em Linux e implantado somente no aplicativo, com Next.js 15.5.28 saudável, sem migração ou reinício do PostgreSQL. Runtime e provas foram revistos independentemente.
+- A retomada manual concluiu 24 cadastros autorizados: seis infantis, oito medicamentos antigos, três Granado e sete Principia. A consulta própria de 22/10 às 21:25:30 UTC confirmou 619 ativos, incluindo 220 medicamentos, sem duplicação dos EANs publicados.
+- Todas as janelas produtivas foram liberadas após auditoria, preservação e conferência pública. Um refil indisponível e três Principia divergentes ficaram retidos. Gerência encerrada e acompanhamento pausado; nenhuma próxima família ou retomada automática autorizada.
+- Provas, limites da verificação e alertas de desenvolvimento preservados em [95-correcao-next-15-seguranca.md](95-correcao-next-15-seguranca.md).
+
 ## 2026-10-22 — Correção de segurança Next.js 15.5.28
 
 - Atualizar somente Next.js, ESLint Next e dependências da mesma família de 15.5.27 para 15.5.28, corrigindo GHSA-2464-fhr4-w9xw e GHSA-p3m5-59mp-jv5r sem mudança comercial ou migração.
