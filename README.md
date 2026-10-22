@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Correção de segurança Next.js 15.5.28, auditoria de produção e alertas de desenvolvimento: [documento 95](docs/95-correcao-next-15-seguranca.md).
+
 Catálogo com navegação lateral, subcategorias, ordenação e páginas numeradas; continuidade autorizada da compra com a última oferta registrada quando faltar atualização: [documento 94](docs/94-catalogo-lateral-e-continuidade.md).
 
 Cards compactos com selos sobre a foto, preço uniforme e sem reserva vazia de cashback: [documento 86](docs/86-precos-e-desconto-real-nos-cards.md).

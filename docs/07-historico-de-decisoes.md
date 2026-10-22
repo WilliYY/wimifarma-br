@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-22 — Correção de segurança Next.js 15.5.28
+
+- Atualizar somente Next.js, ESLint Next e dependências da mesma família de 15.5.27 para 15.5.28, corrigindo GHSA-2464-fhr4-w9xw e GHSA-p3m5-59mp-jv5r sem mudança comercial ou migração.
+- Preservar Sharp 0.35.5 e demais versões. Auditoria de produção passou com zero vulnerabilidades; a completa mantém cinco high na cadeia ESLint/braces de desenvolvimento, sem downgrade incompatível ou `audit fix --force`.
+- Fontes, validações locais e limites da publicação em [95-correcao-next-15-seguranca.md](95-correcao-next-15-seguranca.md).
+
 ## 2026-10-22 — Navegação lateral e continuidade de ofertas
 
 - Categorias laterais e subcategorias, ordenação explícita e paginação numérica no catálogo público, preservando filtros nas URLs e a relação neutra de medicamentos de receita por assunto.
