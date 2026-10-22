@@ -27,7 +27,7 @@ test("catálogo responsivo mantém filtros, paginação, teclado e Rx neutro", a
   } }] });
   const loaded = { exports: {} as { render: (props: unknown) => Promise<string> } };
   vm.runInNewContext(server.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), fixture: { rows, medicine }, URL, URLSearchParams, process, console });
-  const client = await build({ stdin: { contents: "import React from 'react';import {createRoot} from 'react-dom/client';import {CatalogFilterPanel} from './src/components/site/catalog-filter-panel';const aside=document.querySelector('aside');const children=aside.lastElementChild.innerHTML;const host=document.createElement('div');aside.replaceWith(host);createRoot(host).render(<CatalogFilterPanel><div dangerouslySetInnerHTML={{__html:children}}/></CatalogFilterPanel>);", loader: "tsx", resolveDir: process.cwd() }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' } });
+  const client = await build({ stdin: { contents: "import React from 'react';import {createRoot} from 'react-dom/client';import {CatalogFilterPanel} from './src/components/site/catalog-filter-panel';const aside=document.querySelector('aside');const children=aside.lastElementChild.innerHTML;const host=document.createElement('div');host.style.display='contents';aside.replaceWith(host);createRoot(host).render(<CatalogFilterPanel><div dangerouslySetInnerHTML={{__html:children}}/></CatalogFilterPanel>);", loader: "tsx", resolveDir: process.cwd() }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' } });
   const require = createRequire(import.meta.url);
   const { compile } = require("@tailwindcss/node");
   const { Scanner } = require("@tailwindcss/oxide");
@@ -73,6 +73,12 @@ test("catálogo responsivo mantém filtros, paginação, teclado e Rx neutro", a
       assert.equal(new URL(page.url()).searchParams.get("marca"), "Marca QA");
       assert.equal(new URL(page.url()).searchParams.get("q"), "shampoo");
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+      if (width === 1280) {
+        await page.evaluate(() => { document.documentElement.style.scrollBehavior = "auto"; window.scrollTo(0, 400); });
+        await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(400);
+        assert.ok((await page.getByRole("complementary", { name: "Filtros do catálogo" }).boundingBox())!.y >= 224, "Sticky filters must stay below the fixed site header");
+        await page.evaluate(() => window.scrollTo(0, 0));
+      }
       await page.screenshot({ path: `${output}/catalogo-${width}.png`, fullPage: true });
       await page.screenshot({ path: `${output}/catalogo-topo-${width}.png` });
       await page.goto(`${base}/catalogo?grupo=medicines&assunto=diabetes`);
