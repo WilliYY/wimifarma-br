@@ -7,8 +7,8 @@ export function uniquePaymentBrandDisplay(brands: PublicPaymentBrand[]): PublicP
   const seen = new Set<string>();
   return brands.filter(brand => {
     const name = brand.name.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
-    // Mercado Pago names Elo credit and debit separately; the footer displays their shared brand.
-    const identity = ["elo", "elo débito", "elo debito", "elo crédito", "elo credito"].includes(name) ? "elo" : name;
+    // Mercado Pago names Elo card types separately; the footer displays their shared brand.
+    const identity = ["elo", "elo débito", "elo debito", "elo crédito", "elo credito", "elo prepaid", "elo pré-pago", "elo pre-pago"].includes(name) ? "elo" : name;
     if (seen.has(identity)) return false;
     seen.add(identity);
     return true;

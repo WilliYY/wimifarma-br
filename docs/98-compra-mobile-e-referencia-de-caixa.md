@@ -12,7 +12,7 @@
 
 Catálogo e busca compartilham `CatalogProductCard`. Itens sem restrição reutilizam `PublicProductCard`, com foto cadastrada ou fallback existente. Produtos com receita exibidos por assunto continuam informativos e neutros, sem foto de embalagem, publicidade ou compra direta, conforme [93](93-busca-por-assuntos.md); passam a ocupar a grade, em vez de linhas que atravessavam todas as colunas.
 
-O rodapé apresenta uma vez cada nome de bandeira normalizado. Os nomes conhecidos Elo, Elo Débito e Elo crédito representam a mesma marca visual. IDs de crédito/débito e catálogo do gateway continuam distintos; marcas diferentes não são agrupadas por compartilhar uma imagem. A arte Pix continua informando que o desconto depende da seleção no checkout.
+O rodapé apresenta uma vez cada nome de bandeira normalizado. Os nomes conhecidos Elo, Elo Débito, Elo crédito e Elo Prepaid/Pré-pago representam a mesma marca visual. IDs de crédito/débito/pré-pago e catálogo do gateway continuam distintos; marcas diferentes não são agrupadas por compartilhar uma imagem. A arte Pix continua informando que o desconto depende da seleção no checkout. A variante Prepaid foi identificada na conferência publicada e incluída em regressão própria.
 
 Consulta somente leitura em produção encontrou 858 produtos não excluídos, 857 ativos e um rascunho; nenhum grupo de EAN normalizado a 14 dígitos repetido nem de nome e marca exatos repetidos. Isso não identifica toda possível duplicação semântica. Há 376 cadastros sem `imageUrl` ou `imageAssetId`; esta tarefa não atribui fotos de outra dose, fabricante ou apresentação, nem publica fotos em massa.
 

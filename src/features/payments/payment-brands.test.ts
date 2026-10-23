@@ -28,6 +28,18 @@ test("footer does not merge arbitrary debit names or lookalikes into the Elo bra
   assert.deepEqual(uniquePaymentBrandDisplay(brands).map(brand => brand.name), ["Elo", "Elo outra marca", "Outra Débito", "Outra", "Mastercard", "American Express", "MP Card"]);
 });
 
+test("footer groups the live Elo prepaid variant with debit and credit without dropping gateway methods", () => {
+  const brands = parsePaymentBrands([
+    method("elo-prepaid", { name: "Elo Prepaid", payment_type_id: "prepaid_card" }),
+    method("elo-debit", { name: "Elo Débito", payment_type_id: "debit_card" }),
+    method("elo-credit", { name: "Elo" }),
+    method("elo-local-prepaid", { name: "Elo Pré-pago", payment_type_id: "prepaid_card" }),
+    method("visa", { name: "Visa" }),
+  ]);
+  assert.equal(brands.length, 5);
+  assert.deepEqual(uniquePaymentBrandDisplay(brands).map(brand => brand.id), ["elo-prepaid", "visa"]);
+});
+
 test("brands preserve every active card type, deduplicate IDs and omit provider-only fields", () => {
   const methods = Array.from({ length: 15 }, (_, index) => method(`brand-${index}`));
   const brands = parsePaymentBrands([
