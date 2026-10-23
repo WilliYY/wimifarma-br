@@ -12,7 +12,7 @@ Primeira etapa: levotiroxina, nimesulida, simeticona, tadalafila, ibuprofeno e l
 - Identificar cada apresentação pelo GTIN textual normalizado, composição, dose, forma e quantidade. Conferir divergências entre o fornecedor, fabricante e documentos oficiais; preservar a origem e a resolução de cada conflito.
 - Comparar o custo final elegível para uma unidade. Não somar ST novamente quando ela já integra o custo final, interpretar ST ausente como zero ou usar desconto condicionado a quantidade maior.
 - Reutilizar a política comercial aprovada, respeitando o teto da apresentação. Escolhas individuais ficam registradas separadamente; não criar promoções ou preços anteriores fictícios.
-- Novos cadastros exigem oferta real atual. Produtos existentes conservam seus dados e a continuidade comercial descrita em [94](94-catalogo-lateral-e-continuidade.md). Esta inclusão não renova cotas ou observações antigas.
+- Novos cadastros para compra exigem oferta real atual. Um novo indisponível pode usar referência comercial real de preço positivo, após comprovação explícita da indisponibilidade nas duas fontes, somente no fluxo Avise-me descrito abaixo. Produtos existentes conservam seus dados e a continuidade comercial descrita em [94](94-catalogo-lateral-e-continuidade.md). Esta inclusão não renova cotas ou observações antigas.
 - Manter o importador de novos GTINs separado da atualização de ofertas: uma colisão deve interromper a inclusão, inclusive em registros físicos, excluídos ou com outra representação do mesmo GTIN.
 - Classificar receita por apresentação e composição. A classe regulatória `Novo` não significa automaticamente medicamento de referência. A condição comercial de segmento ético é independente.
 
@@ -58,6 +58,37 @@ Os dados privados, apresentações e links públicos estão em `outputs/familias
 
 Na pesquisa dessas seis famílias, 116 apresentações comerciais ficaram fora do conjunto publicado: 25 na fila de foto/embalagem e 91 com pendências de identidade, disponibilidade, tributação ou classificação. Os 446 GTINs localizados somente em documentos oficiais não comprovam cotação ou estoque. A orientação posterior de mostrar indisponíveis como “Avise-me” será tratada com os dados exatos revisados, preservando as publicações desta etapa.
 
-## Ampliação em andamento
+## Segunda etapa concluída: 36 inclusões
 
-A segunda coleta foi autorizada para paracetamol, acetilcisteína, dexclorfeniramina, fexofenadina e ambroxol. Ela tem diretório privado separado, `outputs/familias-medicamentos-rodada-2-2026-10-22/`, e deve informar inclusões efetivas separadamente. Registros existentes precisam ser conciliados por GTIN; associações controladas ou com classificação pendente não podem ser importadas como receita comum.
+A segunda coleta comparou ANB e Profarma para paracetamol, acetilcisteína, dexclorfeniramina, fexofenadina e ambroxol. As 36 novas apresentações foram efetivamente publicadas, conferidas e encerradas:
+
+| Família | Novos produtos |
+| --- | ---: |
+| Paracetamol, incluindo associações e um Avise-me | 7 |
+| Acetilcisteína | 11 |
+| Dexclorfeniramina, incluindo associações | 9 |
+| Fexofenadina, incluindo associação | 6 |
+| Ambroxol | 3 |
+| **Total da segunda etapa** | **36** |
+
+Foram publicadas 30 fotos reais; seis apresentações com receita usam ilustração institucional. Tylenol Sinus 24/36 comprimidos e Allegra D foram classificados como receita comum por apresentação, sem tratá-los como MIP. Associações controladas ou com classificação pendente permaneceram retidas.
+
+O paracetamol EMS 750 mg com 20 comprimidos, GTIN `07896004703596`, foi incluído somente com Avise-me. ANB e Profarma tinham evidência explícita de indisponibilidade. O preço de referência usa custo final e ST numéricos da fonte escolhida; ST e quantidade desconhecidos da outra fonte indisponível permanecem null. Nenhuma oferta positiva, estoque físico ou cota de compra foi criada. A foto passou pelo publicador oficial; limite zero, rejeição de carrinho e checkout e botão público desabilitado foram comprovados no banco isolado, por HTTP e no navegador. A conferência não enviou inscrição ou mensagem.
+
+Na pesquisa dessas cinco famílias, foram observados 253 GTINs comerciais. Após excluir os 36 publicados, ficaram 217: 30 MIP aguardando foto exata ou vínculo aprovado, seis indisponíveis com contrato Avise aguardando foto/pacote e 181 com outras pendências. Há ainda 523 GTINs documentais sem cotação com EAN observado nessa coleta. As contagens de motivos e famílias se sobrepõem; não somar recortes de etapas diferentes nem interpretar ausência de cotação como estoque zero.
+
+## Encerramento acumulado: 189 inclusões
+
+As duas etapas somam **189 GTINs únicos, 73 fotos reais e 116 apresentações com receita e ilustração institucional**. Os 11 pacotes produtivos têm aplicação única, auditoria, conferência pública e release comprovados. Em 23/10/2026 às 02:30 UTC (22/10 às 23:30 em Ivaté), o snapshot tinha 810 registros, dos quais 807 ativos, um rascunho e dois excluídos. Esses números descrevem esse momento, sujeitos a alterações posteriores.
+
+A última rodada passou em Linux na fonte `de1689b`, com imagem de ferramentas imutável e mapa de 721 arquivos conferido no Git, host e imagem. Lint, typecheck, build e Prisma passaram, além de 244/244 testes gerais, 444/444 de segurança e 107/107 de fornecedores; os conjuntos podem se sobrepor. Auditoria de produção: zero vulnerabilidades. A auditoria completa preservou os cinco alertas high de desenvolvimento já registrados no documento 95. As alterações locais posteriores de outras frentes não fazem parte dessa validação. Não houve implantação de código de aplicativo ou migração por esta inclusão.
+
+As janelas terminaram sem concessão pendente ou aplicação incerta. As bases próprias de QA foram removidas após conferir proprietário, conexões e conteúdo sintético; os backups foram preservados. Uma restauração externa de um Dove interrompeu uma tentativa antes do marcador de aplicação; a restauração foi preservada e a tentativa não entrou na contagem publicada.
+
+O relatório completo com apresentações, fabricantes, GTINs, links, comandos, provas e pendências está em `outputs/familias-medicamentos-rodada-2-2026-10-22/relatorio-consolidado-189.md`. O resumo comprovado dos 11 pacotes é `operacao/published-cumulative-summary-189.json`, e a revisão independente da interface Avise está em `operacao/root-public-avise-ui-proof.json`. Custos, fontes, imagens, ferramentas privadas e backups permanecem fora do Git.
+
+## Interrupção comprovada antes de aplicar
+
+Nesta operação, um helper privado separado encerrou a tentativa interrompida como `aborted_no_apply`, sem simular `completed_released` ou produzir prova pública fictícia. A transição exigiu janela, operador, EAN, fingerprint e estado anterior exatos, executor encerrado, ausência dos marcadores de aplicação, GTIN e auditorias de importação ausentes, leitura real do banco e arquivos e revisão independente vinculada por hashes. O mutex e CAS preservaram coordenador, fila, alterações externas e backups.
+
+Uma nova concessão aceitou esse predecessor somente após conferir a cadeia física de intenção, provas negativas, revisão, código e resultado do aborto, seus hashes, cronologia e identidade. As novas tentativas usaram diretórios próprios, revisões, testes e provas atuais; os artefatos anteriores permaneceram intactos. Se a aplicação tiver começado ou o resultado for incerto, esse encerramento não se aplica: inspecionar o estado real antes de qualquer retomada.

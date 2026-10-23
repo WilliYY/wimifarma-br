@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-22 — 189 inclusões por família e indisponíveis com Avise-me
+
+- Encerrar as duas etapas autorizadas com 189 GTINs únicos efetivamente publicados: 153 nas seis primeiras famílias e 36 em paracetamol, acetilcisteína, dexclorfeniramina, fexofenadina e ambroxol. Publicadas 73 fotos reais; 116 apresentações com receita mantêm ilustração institucional. Contagens, apresentações, provas e pendências em [96-catalogo-por-principio-ativo-2026-10-22.md](96-catalogo-por-principio-ativo-2026-10-22.md).
+- Incluir um paracetamol EMS sem estoque somente com Avise-me, preço de referência real e indisponibilidade comprovada nas duas fontes. Preservar ST/quantidade desconhecidos da fonte secundária como null; limite zero e rejeição de carrinho/checkout comprovados, sem envio de inscrição ou mensagem.
+- Após alteração externa detectada antes da aplicação, preservar os dados atuais e encerrar somente a tentativa exata como `aborted_no_apply`, com prova negativa, revisão independente, mutex e CAS. Nova concessão exige cadeia física vinculada por hashes e novos gates; uma tentativa não aplicada nunca conta como publicação. Janelas encerradas, bases próprias de QA removidas com provas e backups preservados. Nenhuma alteração de aplicativo, migração ou dependência por esta inclusão.
+
 ## 2026-10-22 — Preço público antes do Pix e escolha explícita no checkout
 
 - O lojista determinou que os preços de home, catálogo, busca, relacionados, detalhe e carrinho sejam os valores atuais dos produtos, sem antecipar os 3% Pix. Cards deixam de exibir preço/selo Pix; referência riscada permanece apenas para promoção real cadastrada. A prévia de cashback também usa o preço atual, antes de desconto por meio de pagamento.
