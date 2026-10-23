@@ -2,7 +2,9 @@
 
 ## Atalhos compactos no cabeçalho — 23/10/2026
 
-Maps, WhatsApp e Sair usam somente ícones também em telas largas, mantendo rótulos acessíveis e tooltips. Maps/WhatsApp conservam 56 px e Sair 44 px, sem expansão por texto; o espaço liberado é ocupado pela busca flexível existente. O Maps preserva o endereço no tooltip e sua faixa de visibilidade atual. Conta/saldos, acesso Painel admin, ações e animações permanecem nos contratos atuais.
+Conforme ajuste posterior do lojista, o atalho WhatsApp foi retirado do cabeçalho público. O atendimento continua pelo atalho inferior existente, integrado à Miauby no celular. O espaço liberado fica disponível para a busca.
+
+Maps e Sair usam somente ícones também em telas largas, mantendo rótulos acessíveis e tooltips. Maps conserva 56 px e Sair 44 px, sem expansão por texto. O Maps preserva o endereço no tooltip e sua faixa de visibilidade atual. Conta/saldos, acesso Painel admin, ações e animações permanecem nos contratos atuais.
 
 Entre 360 px e o breakpoint `sm`, o espaçamento entre blocos passa de 4 para 2 px para manter o botão de busca dentro da tela com sessão de cliente.
 

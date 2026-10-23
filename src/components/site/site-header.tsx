@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   LogIn,
   LogOut,
-  MessageCircle,
   UserRound,
 } from "lucide-react";
 import { auth, signOut } from "@/features/auth/auth";
@@ -198,18 +197,6 @@ export async function SiteHeader() {
                 src="/brand/maps-pin-icon.svg"
                 width={32}
               />
-            </span>
-          </a>
-          <a
-            aria-label="Falar com a Wimifarma pelo WhatsApp"
-            className="soft-breathe hidden h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#22d365_0%,#14b85a_52%,#0f9f4f_100%)] font-body text-sm font-black text-white shadow-[0_16px_36px_rgba(34,211,101,0.28),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-white/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(34,211,101,0.34),inset_0_1px_0_rgba(255,255,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9ff0be] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7fbf9] lg:inline-flex"
-            href={siteConfig.whatsappUrl}
-            rel="noreferrer"
-            target="_blank"
-            title="WhatsApp"
-          >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/18 ring-1 ring-white/30">
-              <MessageCircle className="h-4 w-4 stroke-[2.6]" />
             </span>
           </a>
           <CartHeaderButton />
