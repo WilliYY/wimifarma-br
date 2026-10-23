@@ -120,7 +120,7 @@ const paymentTransitions: Record<PaymentStatus, PaymentStatus[]> = {
   REFUNDED: [],
 };
 const currency = new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" });
-const dateTime = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
+const dateTime = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
 const groupLabels: Record<AdminOrderGroup, string> = { NEW: "Pedidos feitos", ACTIVE: "Em andamento", COMPLETED: "Concluídos", CANCELED: "Cancelados / estornados" };
 const onlineStatusLabels: Record<string, string> = {
   REVIEW: "Conferência financeira necessária",

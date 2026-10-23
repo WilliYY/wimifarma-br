@@ -37,11 +37,14 @@ Cancelamentos e estornos online continuam no painel Mercado Pago, com conciliaç
 
 `admin-presentation.test.ts` cobre classificação e busca; `admin-supply.test.ts`, GTIN, origem e consolidação sem alterar pedidos. `admin-order-notice-{route,client}.test.ts` cobre autorização, resposta mínima, filtros, primeira consulta, atualização, falhas, visibilidade, timeout e limpeza. `admin-orders-ui.test.ts` usa 31 pedidos fictícios em 1440/390 px, CSS real, paginação, teclado, EAN, agrupamento, ausência de overflow e bloqueios financeiros. `shipping/posting-ui.test.ts` preserva a conferência da postagem acima do destinatário nos detalhes.
 
+Datas de criação e conferência usam explicitamente `America/Sao_Paulo` no servidor e navegador. A conferência publicada detectou o erro React 418 e um ensaio reproduziu a divergência de texto com servidor UTC e cliente Brasília. O teste de hidratação em `admin-orders-ui.test.ts` falhou antes da correção e exige árvore preservada, sem erro recuperável. Referência oficial: [React 418](https://react.dev/errors/418). Não se oculta a divergência com `suppressHydrationWarning`.
+
 Nenhum schema, regra financeira, dependência ou fluxo de gateway foi criado nesta mudança.
 
 ### Conferência de 22/10/2026
 
 - Suíte completa: 1.037 testes aprovados. Segurança: 444 aprovados. Lint, typecheck, Prisma validate e build Next.js local aprovados.
+- Após a correção de fuso, 21 testes direcionados passaram, incluindo SSR UTC + hidratação em Brasília no React de produção; lint e typecheck foram repetidos e aprovados.
 - Inspeção visual sintética em 1440/390 px, com 31 pedidos e CSS do projeto: linhas compactas, detalhes por teclado, paginação, busca EAN e nenhum overflow horizontal. Os dados usados são fictícios.
 - Auditoria `--omit=dev --audit-level=high`: zero vulnerabilidades. A completa mantém cinco HIGH na cadeia de desenvolvimento (`@next/eslint-plugin-next`, `braces`, `eslint-config-next`, `fast-glob`, `micromatch`), já registrada em [95](95-correcao-next-15-seguranca.md); nenhuma correção forçada ou dependência nova.
 - Consulta somente de leitura confirmou `enabled/orderAlerts=true` e ponte HTTP 200 configurada, habilitada e conectada. Não houve pedido, cobrança ou WhatsApp real de teste nesta tarefa; conexão não comprova entrega de uma mensagem futura.

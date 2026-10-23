@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { createRequire } from "node:module";
+import { runInNewContext } from "node:vm";
 import { build } from "esbuild";
 import postcss from "postcss";
 import tailwind from "@tailwindcss/postcss";
@@ -105,5 +107,38 @@ test("avisos financeiros ficam visíveis recolhidos e pagamentos incertos ou de 
       await expect(row.getByRole("combobox", { name: /^Andamento/ })).toBeDisabled();
       await expect(row.getByRole("combobox", { name: /^Pagamento/ })).toBeDisabled();
     }
+  } finally { await browser.close(); }
+});
+
+test("hidratação mantém horário de Brasília entre servidor UTC e navegador sem recriar a lista", async () => {
+  const props = `initialOrders={${JSON.stringify(fixtures().slice(0, 1))}}`;
+  const plugin = { name: "hydration-router", setup(builder: import("esbuild").PluginBuild) {
+    builder.onResolve({ filter: /^next\/navigation$/ }, () => ({ path: "next/navigation", namespace: "fixture" }));
+    builder.onLoad({ filter: /.*/, namespace: "fixture" }, () => ({ contents: "export const useRouter=()=>({refresh:()=>{}});" }));
+  } };
+  const server = await build({ stdin: { contents: `import React from 'react';import {renderToString} from 'react-dom/server';import {OrdersPanel} from './src/components/admin/orders-panel';export const html=renderToString(<OrdersPanel ${props}/>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "node", format: "cjs", jsx: "automatic", external: ["react", "react/*", "react-dom/*"], plugins: [plugin] });
+  const serverModule = { exports: {} as { html: string } };
+  const originalTimezone = process.env.TZ;
+  try {
+    process.env.TZ = "UTC";
+    runInNewContext(server.outputFiles[0].text, { module: serverModule, exports: serverModule.exports, require: createRequire(import.meta.url), process, console });
+  } finally {
+    if (originalTimezone === undefined) delete process.env.TZ; else process.env.TZ = originalTimezone;
+  }
+  const client = await build({
+    stdin: { contents: `import React,{useEffect} from 'react';import {hydrateRoot} from 'react-dom/client';import {OrdersPanel} from './src/components/admin/orders-panel';window.__hydrationErrors=[];function Fixture(){useEffect(()=>{document.documentElement.dataset.hydrated='true'},[]);return <OrdersPanel ${props}/>};hydrateRoot(document.getElementById('root'),<Fixture/>,{onRecoverableError:error=>window.__hydrationErrors.push(error.message)});`, resolveDir: process.cwd(), loader: "tsx" },
+    bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' }, plugins: [plugin],
+  });
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ timezoneId: "America/Sao_Paulo" });
+    await page.route("**/*", route => route.request().method() === "GET" && new URL(route.request().url()).hostname === "127.0.0.1"
+      ? route.fulfill({ contentType: "text/html; charset=utf-8", body: `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"></head><body><div id="root">${serverModule.exports.html}</div></body></html>` }) : route.abort());
+    await page.goto("http://127.0.0.1:3200");
+    await page.addScriptTag({ content: client.outputFiles[0].text });
+    await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+    const hydrationErrors = await page.evaluate(() => (window as unknown as { __hydrationErrors: string[] }).__hydrationErrors);
+    assert.deepEqual(hydrationErrors, []);
+    await expect(page.locator("article[data-order-id]").first()).toContainText(/22\/10\/2026.*09:00/);
   } finally { await browser.close(); }
 });
