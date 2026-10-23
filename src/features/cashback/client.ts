@@ -11,7 +11,7 @@ export const cashbackSavedSchema = z.object({ data: savedProductSchema });
 export const cashbackListingSchema = z.object({
   data: z.array(savedProductSchema.extend({
     name: z.string(), brand: z.string().nullable(), imageUrl: z.string().nullable(), status: z.string(),
-    price: z.string(), promotionalPrice: z.string().nullable(),
+    price: z.string().nullable(), promotionalPrice: z.string().nullable(), priceAvailable: z.boolean().optional(),
     isPopularPharmacy: z.boolean(), requiresPrescription: z.boolean(),
   })),
   total: z.number().int().nonnegative(), pages: z.number().int().positive(),

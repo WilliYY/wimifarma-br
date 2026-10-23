@@ -24,7 +24,8 @@ export function CashbackProductCard({ product, disabled, saving, onSave, selecte
   const [custom, setCustom] = useState(false);
   const restricted = !cashbackProductEligible(product);
   const price = Number(product.promotionalPrice ?? product.price);
-  const amount = productCashbackCents(product, Math.round(price * 100));
+  const priceAvailable = product.priceAvailable !== false && product.price !== null;
+  const amount = priceAvailable ? productCashbackCents(product, Math.round(price * 100)) : null;
   const selectId = `cashback-rate-${product.id}`;
 
   async function saveCustom(event: FormEvent<HTMLFormElement>) {
@@ -42,7 +43,7 @@ export function CashbackProductCard({ product, disabled, saving, onSave, selecte
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="break-words text-sm font-bold leading-5 text-ink">{product.name}</h3>
-          <p className="break-words text-xs text-muted">{product.brand || "Sem marca"} · {product.status === "ACTIVE" ? "Publicado" : "Nao publicado"} · {formatCurrency(price)}</p>
+          <p className="break-words text-xs text-muted">{product.brand || "Sem marca"} · {product.status === "ACTIVE" ? "Publicado" : "Nao publicado"} · {priceAvailable ? formatCurrency(price) : "Preço indisponível"}</p>
         </div>
       </div>
       <div className="flex min-h-11 flex-wrap items-center justify-between gap-2 lg:justify-start">
@@ -69,8 +70,8 @@ export function CashbackProductCard({ product, disabled, saving, onSave, selecte
           </select>
         </label>
         <div className="min-w-0 pb-1 text-right text-emerald-700">
-          <span className="flex items-center justify-end gap-1 text-base font-bold"><Wallet className="h-4 w-4 shrink-0" />{formatCurrency(amount / 100)}</span>
-          <span className="block text-xs">por unidade</span>
+          <span className="flex items-center justify-end gap-1 text-base font-bold"><Wallet className="h-4 w-4 shrink-0" />{amount === null ? "—" : formatCurrency(amount / 100)}</span>
+          <span className="block text-xs">{priceAvailable ? "por unidade" : "Sem preço atual"}</span>
         </div>
       </div>
       {custom && product.cashbackEnabled && !restricted ? <form className="flex min-w-0 items-end gap-2 lg:col-span-3" onSubmit={saveCustom}>
