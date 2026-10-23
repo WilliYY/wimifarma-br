@@ -29,7 +29,7 @@ const bundle = build({
           brand:'EUROFARMA LABORATÓRIOS S.A',activeIngredients:['Composição sintética longa para conferir a linha de detalhes']},
         {...product,id:'synthetic-generic',slug:'generico-sintetico',name:'Loratadina 10 mg 12 comprimidos',brand:'BIOLAB SANUS FARMACÊUTICA LTDA',price:'19.90',requiresPrescription:true,prescriptionType:'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
           catalogClassification:{kind:'MEDICINE',medicineClass:'GENERIC',ethical:true,otc:false}},
-        {...product,id:'synthetic-similar',slug:'similar-sintetico',name:'Similar sintético',price:'12.90',requiresPrescription:true,prescriptionType:kind==='large-grid'?'CONTROLLED':'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
+        {...product,id:'synthetic-similar',slug:'similar-sintetico',name:'Tadalafila 5 mg 30 comprimidos revestidos',brand:'MULTILAB INDUSTRIA E COMERCIO DE PRODUTOS FARMACEUTICOS LTDA',price:'12.90',requiresPrescription:true,prescriptionType:kind==='large-grid'?'CONTROLLED':'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
           catalogClassification:{kind:'MEDICINE',medicineClass:'SIMILAR',ethical:true,otc:false}}
       ]:[product];
       createRoot(document.getElementById('root')).render(<CartProvider>{cards.map(item=><PublicProductCard key={item.id} product={item}/>)}</CartProvider>);`,
@@ -101,15 +101,20 @@ test("cards compactos mantêm benefícios fora do preço e altura uniforme sem e
     await expect(eurofarma).toHaveAttribute("title", "Tadalafila 20 mg 4 comprimidos revestidos · EUROFARMA LABORATÓRIOS S.A");
     await expect(eurofarma).toHaveAttribute("aria-label", "Ver Tadalafila 20 mg 4 comprimidos revestidos · EUROFARMA LABORATÓRIOS S.A");
     await expect(cards.nth(2).getByRole("link")).toHaveText("Loratadina 10 mg 12 comp. BIOLAB");
+    const multilab = cards.nth(3).getByRole("link");
+    await expect(multilab).toHaveText("Tadalafila 5 mg 30 comp. rev. MULTILAB");
+    await expect(multilab).toHaveAttribute("title", "Tadalafila 5 mg 30 comprimidos revestidos · MULTILAB INDUSTRIA E COMERCIO DE PRODUTOS FARMACEUTICOS LTDA");
     await expect(title.locator(".line-clamp-3")).toHaveCount(1);
     for (const width of [320, 390, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       if (width === 390) {
-        const titleBox = await eurofarma.boundingBox();
-        const brandBox = await eurofarma.locator(".font-black").boundingBox();
-        assert.ok(titleBox && brandBox);
-        assert.ok(brandBox.y >= titleBox.y && brandBox.y + brandBox.height <= titleBox.y + titleBox.height, "marca deve caber no título de três linhas em 390px");
-        assert.ok(brandBox.x >= titleBox.x && brandBox.x + brandBox.width <= titleBox.x + titleBox.width, "marca não deve ser cortada horizontalmente");
+        for (const link of [eurofarma, multilab]) {
+          const titleBox = await link.boundingBox();
+          const brandBox = await link.locator(".font-black").boundingBox();
+          assert.ok(titleBox && brandBox);
+          assert.ok(brandBox.y >= titleBox.y && brandBox.y + brandBox.height <= titleBox.y + titleBox.height, "marca deve caber no título de três linhas em 390px");
+          assert.ok(brandBox.x >= titleBox.x && brandBox.x + brandBox.width <= titleBox.x + titleBox.width, "marca não deve ser cortada horizontalmente");
+        }
       }
       const sizes = await cards.evaluateAll(elements => elements.map(element => element.getBoundingClientRect().height));
       if (process.env.PRODUCT_CARD_CAPTURE_ROOT) {

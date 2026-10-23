@@ -6,6 +6,8 @@ Os cards compartilhados de home, catálogo, busca e relacionados mostram primeir
 
 A marca vem do cadastro, sem inventar laboratório: são removidos apenas sufixos corporativos como `LABORATÓRIOS FARMACÊUTICOS S.A`, `INDÚSTRIA FARMACÊUTICA S/A` e `LTDA`; `BIOLAB SANUS` usa a denominação curta `BIOLAB`, enquanto `SANOFI MEDLEY` permanece composta. Quando a marca curta já está no nome, ela não é repetida; diferenças de caixa/acentos são normalizadas e a comparação respeita palavras completas. Marcas ausentes não são inventadas. O nome original completo e a marca cadastrada distinta ficam no atributo `title` e no nome acessível do link. Sem alteração de cadastro, doses, quantidades, preço, carrinho, EAN ou estoque.
 
+A conferência publicada em 390 px identificou o complemento `INDUSTRIA E COMERCIO DE PRODUTOS FARMACEUTICOS LTDA` cortando a marca MULTILAB. A limpeza passou a reconhecer esse complemento e outras formas empresariais explícitas do cadastro, como indústria de cosméticos e medicamentos, importadora/distribuidora de medicamentos e `DO BRASIL`. Não reduz nomes compostos à primeira palavra. O formato `LABORATORIO TEUTO BRASILEIRO S/A` conserva `TEUTO`. Regressão com o nome real `Tadalafila 5 mg 30 comprimidos revestidos` confirma MULTILAB no final dentro da área do título.
+
 ## Regra vigente — preço do carrinho, sem antecipar Pix — 22/10/2026
 
 Esta seção substitui a apresentação de preço Pix descrita nos registros históricos abaixo. O preço principal do card é `CartProduct.unitPriceCents`, igual ao valor unitário enviado ao carrinho. Home, catálogo, busca e relacionados usam esse componente; detalhe, autocomplete e carrinho já usam o preço atual antes de Pix.

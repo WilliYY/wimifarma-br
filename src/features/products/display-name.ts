@@ -7,7 +7,12 @@ export function productTitleBrand(name: string, brand?: string | null) {
     previousLabel = label;
     label = label
       .replace(/\s+(?:s\.?\s*[/ .]?\s*a\.?|ltda\.?)$/iu, "")
+      .replace(/\s+ind[uú]stria\s+e\s+com[eé]rcio\s+de\s+produtos\s+farmac[eê]uticos$/iu, "")
+      .replace(/\s+ind[uú]stria\s+de\s+cosm[eé]ticos\s+e\s+medicamentos$/iu, "")
+      .replace(/\s+importadora\s+e\s+distribuidora\s+de\s+medicamentos$/iu, "")
+      .replace(/\s+do\s+brasil$/iu, "")
       .replace(/\s+(?:laborat[oó]rios?(?:\s+farmac[eê]uticos?)?|ind[uú]stria(?:\s+farmac[eê]utica)?|farmac[eê]utica)$/iu, "")
+      .replace(/^laborat[oó]rio\s+(.+)\s+brasileiro$/iu, "$1")
       .trim();
   } while (label !== previousLabel);
   if (/^biolab sanus$/iu.test(label)) label = "BIOLAB";
