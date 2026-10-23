@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Bloqueio de publicação por alerta Zod
+
+- Tratar separadamente o alerta high de consumo de memória em coleções do Zod, detectado na auditoria de produção durante a entrega visual. Fixar a menor versão corrigida 4.6.6 no manifesto e lock, sem atualizar outras dependências ou substituir os limites da aplicação. Preservar a divergência observada entre auditorias completa e de produção; contrato e fonte em [42](42-revisao-de-seguranca.md).
+
 ## 2026-10-23 — Logos oficiais e conferência de linhas
 
 - Adicionar logos locais de Johnson’s e Pampers para marcas existentes, mantendo filtros, ordem, produtos e regras comerciais. Usar a identidade Johnson’s fornecida pela Kenvue, preservando a distinção em relação ao logo corporativo Johnson & Johnson da referência. Fontes e limites em [82](82-marcas-do-catalogo.md).

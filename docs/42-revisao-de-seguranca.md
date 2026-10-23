@@ -1,5 +1,13 @@
 # 42 - Revisão de segurança
 
+## Zod e consumo de memória em coleções — 23/10/2026
+
+A auditoria de produção anterior à publicação dos logos retornou um alerta **high** em `zod` 4.4.3, reproduzido em nova consulta, apesar de a auditoria completa retornar zero naquele momento. A divergência não foi usada para desconsiderar o bloqueio. O aviso [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5), atualizado nesta data, aponta versões anteriores à 4.6.6; a correção upstream antecipa a rejeição de coleções que excedam limites declarados.
+
+Preparada atualização restrita de `zod` para **4.6.6**, fixada no manifesto e no lock, sem `audit fix --force`, troca de stack ou atualização de outros pacotes. Permanecem necessários os limites de corpo HTTP, tamanho de coleções, tempo e concorrência existentes; atualizar a biblioteca não prova que toda entrada esteja limitada. A atualização é separada da alteração visual de logos.
+
+Após o patch, TypeScript, lint e os 484 testes de segurança passaram; auditorias npm de produção e completa retornaram zero vulnerabilidades. Revisão independente sem achados confirmou a alteração exclusiva do Zod no manifesto/lock. CI, build e estado de publicação ficam na evidência da tarefa em `outputs/linhas-e-fotos-2026-10-23/validacao-e-publicacao.json`. Nenhum teste com cobrança ou cliente real é necessário para essa conferência. Resultado local ou CI não comprova, sozinho, atualização da imagem em produção.
+
 ## Auditoria funcional e de acessos — 23/10/2026
 
 Corrigido o caminho Club/Customer que permitia trocar a senha local vinculada sem conferir a credencial atual. Validação autoritativa, revalidação sob locks, CAS e isolamento transacional preservam concorrência e Google-only; falhas de infraestrutura têm resposta 503 e diagnóstico fixo sem segredos. Revisões independentes aprovaram acesso e mudanças comerciais. A suíte de segurança passou com 484 testes, e as auditorias npm de produção e completa retornaram zero vulnerabilidades nesta consulta. Controles públicos, bugs corrigidos, pendência de frete e limites em [101](101-auditoria-funcional-e-acessos.md). Os testes novos de concorrência usam banco simulado, sem afirmar prova PostgreSQL real.
