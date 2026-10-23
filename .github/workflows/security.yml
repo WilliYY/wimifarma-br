@@ -38,6 +38,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Official CMED parser regression tests
+        run: python3 -B scripts/prepare-cmed-reference.test.py
+
       - name: Install browser for isolated UI regression tests
         run: npx playwright install --with-deps chromium
 

@@ -12,7 +12,7 @@ function serializeProduct(product: SearchCatalogProduct): PublicProductSearchIte
     activeIngredients: product.activeIngredients, brand: product.brand, category: product.category,
     catalogClassification: product.catalogClassification,
     id: product.id, imageUrl: product.imageUrl, name: product.name,
-    price: product.price, promotionalPrice: product.promotionalPrice,
+    price: product.price, promotionalPrice: product.promotionalPrice, pmcReference: product.pmcReference,
     requiresPrescription: product.requiresPrescription, prescriptionType: product.prescriptionType,
     searchTerms: product.searchTerms, slug: product.slug,
   };

@@ -2,6 +2,11 @@ import { publicProductImageUrl, publicProductImageUrls } from "@/features/produc
 import { priceWithMarkup } from "@/features/supplier-planning/planning";
 import { MAX_ORDER_ITEM_QUANTITY } from "@/features/products/quantity";
 import { hasRequiredSupplierTax, requiresSupplierTaxEvidence } from "@/features/supplier-planning/tax-eligibility";
+import { normalizeGtin } from "@/features/products/gtin";
+import { readClassification } from "@/features/products/catalog-operations";
+import { resolveCmedReference, type PublicPmcReference } from "@/features/products/cmed-reference";
+
+export { normalizeGtin, gtinVariants } from "@/features/products/gtin";
 
 export const supplierOfferInclude = { supplierOffers: true, supplierMarkupBps: true, catalogClassification: true } as const;
 
@@ -33,28 +38,13 @@ export type CommerceProduct = {
   price: unknown;
   promotionalPrice?: unknown;
   requiresPrescription?: boolean;
+  isPopularPharmacy?: boolean;
   imageUrl?: string | null;
   imageUrls?: string[];
   imageAsset?: unknown;
   supplierOffers?: SupplierCommerceOffer[];
+  cmedReference?: unknown;
 };
-
-/** Canonical GTIN-14: leading zeroes are equivalent; nonzero packaging indicators are not. */
-export function normalizeGtin(raw: unknown): string | null {
-  if (typeof raw !== "string") return null;
-  const value = raw.trim();
-  if (!/^(?:\d{8}|\d{12}|\d{13}|\d{14})$/.test(value)) return null;
-  let sum = 0;
-  for (let i = value.length - 2, weight = 3; i >= 0; i--, weight = 4 - weight) sum += Number(value[i]) * weight;
-  if ((10 - sum % 10) % 10 !== Number(value.at(-1))) return null;
-  return value.padStart(14, "0");
-}
-
-export function gtinVariants(raw: unknown): string[] {
-  const canonical = normalizeGtin(raw);
-  if (!canonical) return [];
-  return [8, 12, 13, 14].filter(size => /^0*$/.test(canonical.slice(0, 14 - size))).map(size => canonical.slice(-size));
-}
 
 export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "eanNormalized" | "supplierOffers" | "requiresPrescription" | "supplierMarkupBps" | "supplierDemandAllowed" | "catalogClassification">, quantity = 1, now = Date.now()) {
   if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > MAX_ORDER_ITEM_QUANTITY || !Number.isFinite(now)) return null;
@@ -89,21 +79,24 @@ export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "ean
     || a.unitCostCents - b.unitCostCents || a.supplier.localeCompare(b.supplier) || a.id.localeCompare(b.id))[0] ?? null;
 }
 
-export function withCommerceAvailability<T extends CommerceProduct>(product: T, now = Date.now()): Omit<T, "supplierMarkupBps" | "supplierOffers" | "price" | "promotionalPrice" | "inventorySource" | "imageUrl" | "imageUrls" | "imageAsset" | "imageAssetId"> & {
+export function withCommerceAvailability<T extends CommerceProduct>(product: T, now = Date.now()): Omit<T, "supplierMarkupBps" | "supplierOffers" | "price" | "promotionalPrice" | "inventorySource" | "imageUrl" | "imageUrls" | "imageAsset" | "imageAssetId" | "cmedReference"> & {
   inventorySource: "PHARMACY" | "DISTRIBUTOR"; supplierDemandAllowed?: boolean; price: string; promotionalPrice: string | null;
   purchaseLimit: number; availableForPurchase: boolean; imageUrl: string | null; imageUrls: string[]; imageAsset?: unknown;
+  pmcReference: PublicPmcReference | null;
 } {
-  const { supplierMarkupBps: _markup, supplierOffers: _privateOffers, price: _price, promotionalPrice: _promo, inventorySource: _source, imageUrl: _image, imageUrls: _images, imageAsset: _asset, imageAssetId: _assetId, ...safe } = product;
-  void [_markup, _privateOffers, _price, _promo, _source, _image, _images, _asset, _assetId];
+  const { supplierMarkupBps: _markup, supplierOffers: _privateOffers, price: _price, promotionalPrice: _promo, inventorySource: _source, imageUrl: _image, imageUrls: _images, imageAsset: _asset, imageAssetId: _assetId, cmedReference: _cmed, ...safe } = product;
+  void [_markup, _privateOffers, _price, _promo, _source, _image, _images, _asset, _assetId, _cmed];
   const inventorySource = product.inventorySource ?? "PHARMACY";
   const imageUrl = publicProductImageUrl(product);
+  const pmcReference = !product.isPopularPharmacy && readClassification(product.catalogClassification).kind === "MEDICINE"
+    ? resolveCmedReference(product.cmedReference, product.eanNormalized ?? product.ean, now) : null;
   if (inventorySource === "PHARMACY") return {
-    ...safe, inventorySource, supplierDemandAllowed: false, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: imageUrl && !product.requiresPrescription ? product.imageAsset : null, purchaseLimit: Math.max(0, product.stock), availableForPurchase: product.stock > 0,
+    ...safe, inventorySource, pmcReference, supplierDemandAllowed: false, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: imageUrl && !product.requiresPrescription ? product.imageAsset : null, purchaseLimit: Math.max(0, product.stock), availableForPurchase: product.stock > 0,
     price: String(product.price), promotionalPrice: product.promotionalPrice == null ? null : String(product.promotionalPrice),
   };
   const offer = resolveSupplierOffer({ ...product, supplierDemandAllowed: true }, 1, now);
   return {
-    ...safe, inventorySource, supplierDemandAllowed: true, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: null, purchaseLimit: offer?.purchaseLimit ?? 0, availableForPurchase: Boolean(offer),
+    ...safe, inventorySource, pmcReference, supplierDemandAllowed: true, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: null, purchaseLimit: offer?.purchaseLimit ?? 0, availableForPurchase: Boolean(offer),
     price: offer ? (offer.unitPriceCents / 100).toFixed(2) : String(product.price), promotionalPrice: null,
   };
 }

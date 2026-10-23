@@ -10,6 +10,8 @@ import type { PublicProductSearchItem } from "@/features/products/public-search"
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName, productTitleBrand } from "@/features/products/display-name";
 import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
+import { canDisplayPmcSavings, pmcSavingsPercent } from "@/features/products/cmed-reference";
+import { ProductPmcBadge, ProductPmcPrice } from "./product-pmc";
 
 export type RelatedProductCardItem = PublicProductSearchItem & {
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
@@ -31,6 +33,8 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
   const discount = hasPromotion
     ? Math.round(((normalPrice - currentPrice) / normalPrice) * 100)
     : 0;
+  const pmc = product.pmcReference;
+  const pmcSavings = pmc && canDisplayPmcSavings(product) ? pmcSavingsPercent(pmc.amountCents, Math.round(currentPrice * 100)) : null;
   const cartProduct = {
     supplierDemandAllowed: product.supplierDemandAllowed,
     inventorySource: product.inventorySource,
@@ -70,7 +74,7 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
         ) : (
           <ProductImagePlaceholder catalogClassification={product.catalogClassification} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" showLabel />
         )}
-        {hasPromotion ? (
+        {pmcSavings !== null ? <ProductPmcBadge percent={pmcSavings} className="absolute right-2 top-2" /> : hasPromotion && !pmc ? (
           <span className="absolute left-2 top-2 rounded-sm bg-brand-soft px-1.5 py-1 text-[0.625rem] font-black text-brand">
             {discount}% OFF
           </span>
@@ -99,7 +103,7 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
         <div className="mt-auto pt-3">
           <div role="group" aria-label="Preço do produto" className="grid grid-rows-[1rem_1.75rem_1rem] gap-y-1 border-t border-line pt-3">
             <span className="block min-w-0 text-[0.68rem] font-semibold text-muted">
-              {hasPromotion ? <>De <s>{formatCurrency(normalPrice)}</s></> : null}
+              {pmc ? <ProductPmcPrice reference={pmc} strike={pmcSavings !== null} /> : hasPromotion ? <>De <s>{formatCurrency(normalPrice)}</s></> : null}
             </span>
             <div className="flex min-w-0 flex-wrap content-start items-baseline gap-x-1 gap-y-1">
               {hasPromotion && <span className="sr-only">Por</span>}

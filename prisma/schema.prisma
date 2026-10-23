@@ -183,6 +183,7 @@ model SupplierInventoryReservation {
 model Product {
   restockInterests RestockInterest[]
   catalogClassification Json?
+  cmedReference Json?
   supplierMarkupBps Int @default(6000)
   inventorySource InventorySource @default(PHARMACY)
   eanNormalized String? @unique

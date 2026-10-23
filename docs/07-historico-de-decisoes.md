@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Referência PMC por apresentação oficial
+
+- Acrescentar referência CMED opcional por GTIN exato, com origem, hash, edição e colunas oficiais. Identificar o PMC como referência comparativa, sem tratá-lo como preço anterior da loja; percentual conservador somente para MIP/OTC explicitamente elegível e informação neutra para receita.
+- Separar a referência de preço/markup/estoque e do desconto Pix condicionado ao checkout. Importação administrativa com locks, conferência de revisão e auditoria atômica; não renovar ofertas antigas nem presumir disponibilidade. Contrato, manutenção mensal, migração e validação em [102](102-referencia-pmc-cmed.md).
+
 ## 2026-10-23 — Bloqueio de publicação por alerta Zod
 
 - Tratar separadamente o alerta high de consumo de memória em coleções do Zod, detectado na auditoria de produção durante a entrega visual. Fixar a menor versão corrigida 4.6.6 no manifesto e lock, sem atualizar outras dependências ou substituir os limites da aplicação. Preservar a divergência observada entre auditorias completa e de produção; contrato e fonte em [42](42-revisao-de-seguranca.md).

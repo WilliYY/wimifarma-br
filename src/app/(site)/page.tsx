@@ -21,7 +21,7 @@ export default async function Page() {
   const [products, reviews, brands] = await Promise.all([
     prisma.product.findMany({
       select: {
-        ...supplierOfferInclude, ean: true, inventorySource: true,
+        ...supplierOfferInclude, cmedReference: true, ean: true, inventorySource: true,
         id: true, name: true, slug: true, brand: true, category: true,
         imageUrl: true, price: true, promotionalPrice: true, stock: true,
         activeIngredients: true, searchTerms: true, requiresPrescription: true,

@@ -20,6 +20,7 @@ function spellingVocabulary(prisma: ReturnType<typeof getPrisma>) {
 
 const searchSelect = {
   ...supplierOfferInclude,
+  cmedReference: true,
   id: true, name: true, slug: true, ean: true, inventorySource: true,
   brand: true, category: true, imageUrl: true, price: true, promotionalPrice: true,
   stock: true, activeIngredients: true, searchTerms: true, searchText: true,

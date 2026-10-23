@@ -45,11 +45,13 @@ import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
 import { buildPublicProductDescription } from "@/features/products/product-description";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
+import { canDisplayPmcSavings, pmcSavingsPercent } from "@/features/products/cmed-reference";
+import { ProductPmcBadge, ProductPmcDetails, ProductPmcPrice } from "@/components/site/product-pmc";
 
 export const dynamic = "force-dynamic";
 
 const productSelect = {
-  ...supplierOfferInclude, inventorySource: true,
+  ...supplierOfferInclude, cmedReference: true, inventorySource: true,
   cashbackEnabled: true,
   cashbackRateBps: true,
   activeIngredients: true,
@@ -77,6 +79,7 @@ type ProductRecord = Prisma.ProductGetPayload<{ select: typeof productSelect }>;
 function serializeProduct(raw: ProductRecord): RelatedProductCardItem {
   const product = toSaleProduct(raw);
   return {
+    pmcReference: product.pmcReference,
     cashbackEnabled: product.cashbackEnabled,
     inventorySource: product.inventorySource,
     cashbackRateBps: product.cashbackRateBps,
@@ -203,6 +206,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const hasPromotion = Boolean(product.promotionalPrice && currentPrice < normalPrice);
   const saving = hasPromotion ? normalPrice - currentPrice : 0;
   const discountPercentage = hasPromotion ? Math.round((saving / normalPrice) * 100) : 0;
+  const pmc = product.pmcReference;
+  const pmcSavings = pmc && canDisplayPmcSavings(product) ? pmcSavingsPercent(pmc.amountCents, Math.round(currentPrice * 100)) : null;
   const dateFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" });
   const productStructuredData = buildProductStructuredData({
     category: product.category,
@@ -294,6 +299,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 </div>
 
                 <div className="mt-4 rounded-xl bg-brand-soft/70 p-4 sm:mt-5 sm:rounded-2xl sm:p-5">
+                  {pmc ? <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-sm text-muted"><ProductPmcPrice reference={pmc} strike={pmcSavings !== null} />{pmcSavings !== null ? <ProductPmcBadge percent={pmcSavings} /> : null}</div> : null}
                   {hasPromotion ? (
                     <div className="flex flex-wrap items-center gap-2 text-sm">
                       <span className="text-muted">De <del>{formatCurrency(normalPrice)}</del></span>
@@ -306,6 +312,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   </div>
                   {hasPromotion ? <p className="mt-2 text-xs font-semibold text-emerald-800">Você economiza {formatCurrency(saving)} por unidade</p> : null}
                 </div>
+
+                {pmc ? <ProductPmcDetails reference={pmc} /> : null}
 
                 <ProductCashback product={product} unitPriceCents={Math.round(currentPrice * 100)} details />
                 <ProductPurchasePanel key={product.id} product={cartProduct} />

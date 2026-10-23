@@ -1,4 +1,5 @@
 import type { PrescriptionType } from "./purchase-policy";
+import type { PublicPmcReference } from "./cmed-reference";
 import { searchTopics, type SearchTopic } from "./search-topics";
 
 export type ProductSearchSource = {
@@ -13,6 +14,7 @@ export type ProductSearchSource = {
 };
 
 export type PublicProductSearchItem = {
+  pmcReference?: PublicPmcReference | null;
   supplierDemandAllowed?: boolean;
   cashbackEnabled?: boolean;
   catalogClassification?: unknown;

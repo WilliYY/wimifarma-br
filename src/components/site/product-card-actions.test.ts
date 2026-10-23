@@ -16,14 +16,17 @@ const bundle = build({
       import {createRoot} from 'react-dom/client';
       import {CartProvider} from './src/components/site/cart-provider';
       import {PublicProductCard} from './src/components/site/public-product-card';
+      import {ProductPmcDetails} from './src/components/site/product-pmc';
       const kind=new URLSearchParams(location.search).get('kind');
       const product={id:'synthetic-product',slug:'produto-sintetico',name:'Produto sintético',
         imageUrl:null,category:'Produto',brand:'Marca sintética',activeIngredients:[],searchTerms:[],
-        price:kind==='soap'?'3.44':kind==='promotion'?'100.00':kind==='tiny'?'0.17':kind==='penny'?'0.01':'6.87',
-        promotionalPrice:kind==='promotion'?'80.00':null,isPopularPharmacy:false,requiresPrescription:kind==='restricted',
-        prescriptionType:kind==='restricted'?'CONTROLLED':'ORDINARY',stock:kind==='unavailable'?0:kind==='demand'?1:15,
+        price:kind==='soap'?'3.44':kind==='promotion'||kind==='pmc-above'?'100.00':kind==='tiny'?'0.17':kind==='penny'?'0.01':'6.87',
+        promotionalPrice:kind==='promotion'||kind==='pmc-above'?'80.00':null,isPopularPharmacy:false,requiresPrescription:kind==='restricted',
+        prescriptionType:kind==='restricted'?'CONTROLLED':kind.startsWith('pmc')&&kind!=='pmc-rx'?'UNREVIEWED':'ORDINARY',stock:kind==='unavailable'?0:kind==='demand'?1:15,
+        ...(kind.startsWith('pmc')?{requiresPrescription:kind==='pmc-rx',catalogClassification:{kind:'MEDICINE',medicineClass:'GENERIC',ethical:false,otc:kind!=='pmc-rx'},
+          pmcReference:{amountCents:kind==='pmc-above'?7000:1000,column:'PMC 0 %',publishedOn:'2026-10-09',sourceUrl:'https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos/arquivos/lista_pmc__20261009_115232671.xlsx/@@download/file',presentation:'10 MG COM X 10',laboratory:'Laboratório sintético',registration:'1234567890123',rates:[{label:'PMC 0 %',cents:1000},{label:'PMC 19,5 %',cents:1250},{label:'PMC 19,5 %  ALC',cents:1200}]}}:{}),
         inventorySource:kind==='demand'?'DISTRIBUTOR':'PHARMACY',supplierDemandAllowed:kind==='demand'};
-      const cards=(kind==='grid'||kind==='large-grid')?[
+      const cards=(kind==='grid'||kind==='large-grid'||kind==='pmc-grid')?[
         {...product,price:kind==='large-grid'?'1299.90':'6.90',promotionalPrice:kind==='large-grid'?'999.99':'4.99',cashbackEnabled:true,cashbackRateBps:200},
         {...product,id:'synthetic-demand',slug:'sob-demanda',name:'Tadalafila 20 mg 4 comprimidos revestidos',price:kind==='large-grid'?'0.01':'4.85',inventorySource:'DISTRIBUTOR',supplierDemandAllowed:true,
           brand:'EUROFARMA LABORATÓRIOS S.A',activeIngredients:['Composição sintética longa para conferir a linha de detalhes']},
@@ -32,7 +35,7 @@ const bundle = build({
         {...product,id:'synthetic-similar',slug:'similar-sintetico',name:'Tadalafila 5 mg 30 comprimidos revestidos',brand:'MULTILAB INDUSTRIA E COMERCIO DE PRODUTOS FARMACEUTICOS LTDA',price:'12.90',requiresPrescription:true,prescriptionType:kind==='large-grid'?'CONTROLLED':'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
           catalogClassification:{kind:'MEDICINE',medicineClass:'SIMILAR',ethical:true,otc:false}}
       ]:[product];
-      createRoot(document.getElementById('root')).render(<CartProvider>{cards.map(item=><PublicProductCard key={item.id} product={item}/>)}</CartProvider>);`,
+      createRoot(document.getElementById('root')).render(kind==='pmc-details'?<ProductPmcDetails reference={product.pmcReference}/>:<CartProvider>{cards.map(item=><PublicProductCard key={item.id} product={item}/>)}</CartProvider>);`,
     resolveDir: process.cwd(),
     loader: "tsx",
   },
@@ -62,7 +65,7 @@ function fixtureStyles(enabled: boolean) {
 
 async function fixture(run: (page: Page) => Promise<void>, kind = "physical") {
   const script = (await bundle).outputFiles[0].text;
-  const styles = await fixtureStyles(Boolean(process.env.PRODUCT_CARD_CAPTURE_ROOT) || kind.endsWith("grid"));
+  const styles = await fixtureStyles(Boolean(process.env.PRODUCT_CARD_CAPTURE_ROOT) || kind.endsWith("grid") || kind === "pmc-details");
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
@@ -320,6 +323,81 @@ test("promoção cadastrada mantém somente referência real e preço atual do c
     assert.equal(item.unitPriceCents, 8000);
     assert.equal(item.originalPriceCents, 10000);
   }, "promotion");
+});
+
+test("PMC identificado destaca economia conservadora sem virar preço anterior ou desconto Pix", async () => {
+  await fixture(async page => {
+    const prices = page.getByRole("group", { name: "Preço do produto", exact: true });
+    await expect(prices.getByText(/PMC CMED/)).toBeVisible();
+    await expect(prices.locator("s")).toHaveText(/10,00/);
+    await expect(prices.locator("strong")).toHaveText(/6,87/);
+    await expect(page.getByText("31% abaixo do PMC", { exact: true })).toBeVisible();
+    await expect(page.getByText(/32%|34%|OFF|Pix/)).toHaveCount(0);
+    for (const width of [320, 390, 768, 1280]) {
+      await page.setViewportSize({ width, height: 760 });
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `PMC overflow at ${width}px`);
+      if (process.env.PRODUCT_CARD_CAPTURE_ROOT && [390, 1280].includes(width)) {
+        mkdirSync(process.env.PRODUCT_CARD_CAPTURE_ROOT, { recursive: true });
+        await page.screenshot({ path: join(process.env.PRODUCT_CARD_CAPTURE_ROOT, `pmc-${width}.png`), fullPage: true });
+      }
+    }
+    await page.getByRole("button", { name: "Adicionar", exact: true }).click();
+    await expectCartQuantity(page, 1);
+    const item = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!)[0]);
+    assert.equal(item.unitPriceCents, 687);
+    assert.equal(item.originalPriceCents, null);
+  }, "pmc-mip");
+});
+
+test("PMC em medicamento com receita permanece informação sem selo promocional", async () => {
+  await fixture(async page => {
+    const prices = page.getByRole("group", { name: "Preço do produto", exact: true });
+    await expect(prices.getByText(/PMC CMED/)).toBeVisible();
+    await expect(prices.locator("s")).toHaveCount(0);
+    await expect(prices.locator("strong")).toHaveText(/6,87/);
+    await expect(page.getByText(/abaixo do PMC|OFF|Pix/)).toHaveCount(0);
+  }, "pmc-rx");
+});
+
+test("PMC sem economia não empresta sua base ao percentual da promoção cadastrada", async () => {
+  await fixture(async page => {
+    await expect(page.getByText(/PMC CMED/)).toHaveText(/70,00/);
+    await expect(page.getByRole("group", { name: "Preço do produto", exact: true }).locator("strong")).toHaveText(/80,00/);
+    await expect(page.getByText(/OFF|abaixo do PMC/)).toHaveCount(0);
+    await page.getByRole("button", { name: "Adicionar", exact: true }).click();
+    await expectCartQuantity(page, 1);
+    const item = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!)[0]);
+    assert.equal(item.unitPriceCents, 8000);
+    assert.equal(item.originalPriceCents, 10000);
+  }, "pmc-above");
+});
+
+test("PMC mantém cards mistos alinhados e detalhes oficiais legíveis no celular", async () => {
+  await fixture(async page => {
+    const cards = page.getByRole("article");
+    await expect(cards).toHaveCount(4);
+    await expect(page.getByText(/abaixo do PMC/)).toHaveCount(2);
+    for (const width of [320, 390, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      const sizes = await cards.evaluateAll(elements => elements.map(element => element.getBoundingClientRect().height));
+      assert.ok(Math.max(...sizes) - Math.min(...sizes) < 1);
+      if (process.env.PRODUCT_CARD_CAPTURE_ROOT) await page.screenshot({ path: join(process.env.PRODUCT_CARD_CAPTURE_ROOT, `pmc-grid-${width}.png`), fullPage: true });
+    }
+  }, "pmc-grid");
+  await fixture(async page => {
+    await page.locator("#root").evaluate(element => { element.style.width = "calc(100vw - 32px)"; element.style.margin = "16px"; });
+    await page.getByText("Sobre o PMC e a comparação de preços", { exact: true }).click();
+    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByRole("row")).toHaveCount(4);
+    await expect(page.getByRole("link", { name: "Consultar a edição oficial da CMED" })).toHaveAttribute("href", /www\.gov\.br\/anvisa\//);
+    await expect(page.getByText(/Não representa um preço anterior/)).toBeVisible();
+    for (const width of [320, 390, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      if (process.env.PRODUCT_CARD_CAPTURE_ROOT) await page.screenshot({ path: join(process.env.PRODUCT_CARD_CAPTURE_ROOT, `pmc-details-${width}.png`), fullPage: true });
+    }
+  }, "pmc-details");
 });
 
 test("preço unitário em centavos continua igual ao carrinho em várias unidades", async () => {

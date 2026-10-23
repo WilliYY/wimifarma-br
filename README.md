@@ -401,6 +401,8 @@ A pasta `docs/` e a memoria longa do projeto. Comece por:
 
 ## Cuidados
 
+Referência oficial de PMC, importação por GTIN e limites da comparação de preços: [docs/102-referencia-pmc-cmed.md](docs/102-referencia-pmc-cmed.md).
+
 - Nao versionar `.env` real.
 - Nao colocar senha real no repositorio.
 - Nao usar dados reais de clientes em seed, teste ou exemplo.
