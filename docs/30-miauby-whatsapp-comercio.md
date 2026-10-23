@@ -1,5 +1,9 @@
 # Miauby: alertas comerciais por WhatsApp
 
+## Chat público local — 23/10/2026
+
+O widget público agora recebe a pessoa pelo primeiro nome seguro, apresenta dicas locais e consulta preços pela busca do catálogo, sem inferência de IA. Não dispara WhatsApp ou consulta produtos ao mostrar boas-vindas; os alertas comerciais abaixo preservam configuração, destinatários, fila e deduplicação. Contrato do chat em [100](100-miauby-atendimento-local.md).
+
 ## Etapas para clientes — 22/10/2026
 
 Avisos operacionais para o telefone do pedido usam opt-in ADMIN separado, outbox transacional e endpoint exclusivo. Os alertas descritos abaixo ao proprietário preservam seu destino fixo. Migração, validação antes do envio, isolamento de destinatários e diferença entre fila/aceitação/entrega estão em [97](97-operacao-admin-e-etapas-whatsapp.md).

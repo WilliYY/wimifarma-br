@@ -6,16 +6,20 @@ import postcss from "postcss";
 import tailwind from "@tailwindcss/postcss";
 import { chromium, expect } from "@playwright/test";
 
+const evidenceDirectory = "outputs/miauby-sem-tokens-2026-10-23";
+
 test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém chat e desktop acessíveis", async () => {
-  const bundle = await build({ stdin: { contents: `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';import {FloatingWhatsApp} from './src/components/site/floating-whatsapp';function Fixture(){const[ready,setReady]=useState(false);return <><main><button onClick={()=>setReady(true)}>Montar compra fictícia</button><div style={{height:200}}/>{ready&&<section data-product-purchase-panel style={{height:240}}>Compra fictícia</section>}<div style={{height:1600}}/></main><FloatingWhatsApp/></>}createRoot(document.getElementById('root')).render(<Fixture/>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' }, plugins: [{ name: "floating-fixture", setup(builder) {
+  const bundle = await build({ stdin: { contents: `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';import {FloatingWhatsApp} from './src/components/site/floating-whatsapp';function Fixture(){const[ready,setReady]=useState(false);const[viewer,setViewer]=useState({key:"opaque-ana",name:"Ana"});return <><main><button onClick={()=>setViewer({key:"opaque-bia",name:"Bia"})}>Trocar conta</button><button onClick={()=>setViewer(null)}>Sair da conta</button><button onClick={()=>setReady(true)}>Montar compra fictícia</button><div style={{height:200}}/>{ready&&<section data-product-purchase-panel style={{height:240}}>Compra fictícia</section>}<div style={{height:1600}}/></main><FloatingWhatsApp viewer={viewer}/></>}createRoot(document.getElementById('root')).render(<Fixture/>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"', "process.env.NEXTAUTH_URL": '""', "process.env.NEXTAUTH_URL_INTERNAL": '""', "process.env.VERCEL_URL": '""' }, plugins: [{ name: "floating-fixture", setup(builder) {
     builder.onResolve({ filter: /^next\/(navigation|image|link)$/ }, args => ({ path: args.path, namespace: "fixture" }));
     builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ resolveDir: process.cwd(), loader: "tsx", contents: args.path === "next/navigation" ? "export const usePathname=()=>'/produto/sintetico';" : args.path === "next/link" ? "import React from 'react';export default function Link(props){return <a {...props}/>;}" : "import React from 'react';export default function Image({priority,unoptimized,...props}){return <img {...props}/>;}" }));
   } }] });
   const css = (await postcss([tailwind()]).process(await fs.readFile("src/app/globals.css", "utf8"), { from: "src/app/globals.css" })).css;
   const browser = await chromium.launch();
   try {
-    const page = await browser.newPage({ viewport: { width: 390, height: 700 }, reducedMotion: "reduce" });
+    const context = await browser.newContext({ viewport: { width: 390, height: 700 }, reducedMotion: "reduce" });
+    const page = await context.newPage();
     const errors: string[] = [];
+    await page.addInitScript({ content: `window.miaubyRequests=[];window.miaubyPending=[];window.sessionReads=0;window.currentSession={user:{id:"ana-test",name:"Ana Maria"},expires:new Date(Date.now()+60000).toISOString()};window.fetch=(url,options)=>{if(url==="/api/auth/session"){window.sessionReads++;if(window.sessionUnavailable)throw new Error("Synthetic offline");return Promise.resolve(new Response(JSON.stringify(window.currentSession),{status:200}));}if(url!=="/api/miauby")throw new Error("Unexpected fetch");window.miaubyRequests.push(options);return new Promise(resolve=>window.miaubyPending.push(()=>resolve(new Response(JSON.stringify({message:"Resposta privada antiga",products:[]}),{status:200}))));};` });
     page.on("pageerror", error => errors.push(error.message));
     await page.route("**/*", async route => {
       const request = route.request(); const url = new URL(request.url());
@@ -26,8 +30,16 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
       return route.fulfill({ contentType: "text/html; charset=utf-8", body: '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body><div id="root"></div><script src="/fixture.js"></script></body></html>' });
     });
     await page.goto("http://127.0.0.1:3213/produto/sintetico");
+    assert.deepEqual(errors, [], "Fixture deve carregar sem erros JavaScript");
     const trigger = page.getByRole("button", { name: "Conversar com a Miauby", exact: true });
     await expect(trigger).toBeVisible();
+    const notice = page.getByRole("complementary", { name: "Dica da Miauby", exact: true });
+    await expect(notice).toContainText("Bem-vindo, Ana!");
+    await fs.mkdir(evidenceDirectory, { recursive: true });
+    await page.screenshot({ path: `${evidenceDirectory}/welcome-390.png` });
+    await page.getByRole("button", { name: "Ocultar dica da Miauby", exact: true }).click();
+    await expect(notice).toHaveCount(0);
+    assert.equal(await page.evaluate("window.miaubyRequests.length"), 0, "Saudações não consultam o assistente");
     await page.getByRole("button", { name: "Montar compra fictícia", exact: true }).click();
     await expect(trigger).toBeHidden();
     await page.setViewportSize({ width: 768, height: 700 });
@@ -68,6 +80,115 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
     await page.setViewportSize({ width: 768, height: 700 });
     await expect(humanHelp).toBeHidden();
     await expect(whatsapp).toBeVisible();
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await expect(whatsapp).toBeVisible();
+    await expect(chat.getByRole("button", { name: "Consultar preço de um produto", exact: true })).toBeVisible();
+    await page.screenshot({ path: `${evidenceDirectory}/chat-1280.png` });
+    // Hold a response while another identity mounts. The mocked transport ignores abort.
+    await chat.getByRole("textbox").fill("Mensagem privada Ana");
+    await chat.getByRole("button", { name: "Enviar pergunta", exact: true }).click();
+    assert.equal(await page.evaluate("window.miaubyRequests.length"), 1);
+    await page.getByRole("button", { name: "Trocar conta", exact: true }).click();
+    await expect(chat).toHaveCount(0);
+    assert.equal(await page.evaluate("window.miaubyRequests[0].signal.aborted"), true);
+    await page.evaluate("window.miaubyPending.shift()()");
+    await expect(notice).toContainText("Bem-vindo, Bia!");
+    await expect(notice).toHaveCount(0, { timeout: 9_000 });
+    await trigger.click();
+    await expect(chat.getByRole("textbox")).toHaveValue("");
+    await expect(chat).not.toContainText("Mensagem privada Ana");
+    await expect(chat).not.toContainText("Resposta privada antiga");
+    await chat.getByRole("textbox").fill("Mensagem privada Bia");
+    await chat.getByRole("button", { name: "Enviar pergunta", exact: true }).click();
+    await page.getByRole("button", { name: "Sair da conta", exact: true }).click();
+    assert.equal(await page.evaluate("window.miaubyRequests[1].signal.aborted"), true);
+    await page.evaluate("window.miaubyPending.shift()()");
+    await trigger.click();
+    await expect(chat.getByRole("textbox")).toHaveValue("");
+    await expect(chat).not.toContainText("Mensagem privada Bia");
+    await expect(chat).not.toContainText("Resposta privada antiga");
+    await expect(chat.getByRole("button", { name: "Enviar pergunta", exact: true })).toBeDisabled();
+    const stored = await page.evaluate(() => JSON.stringify(sessionStorage));
+    assert.ok(!/Ana|Bia|Mensagem|Resposta/.test(stored), "Storage não contém nomes ou conversas");
+    await page.getByRole("button", { name: "Trocar conta", exact: true }).click();
+    await expect(notice).toHaveCount(0);
+    await page.waitForTimeout(1500);
+    await expect(notice).not.toContainText("Bem-vindo, Bia!");
+    assert.equal(await page.evaluate("window.miaubyRequests.length"), 2, "Dicas e trocas de sessão não consultam o assistente");
+    await trigger.click();
+    for (let index = 0; index < 12; index++) {
+      await chat.getByRole("textbox").fill(`Consulta sintética ${index}`);
+      await chat.getByRole("button", { name: "Enviar pergunta", exact: true }).click();
+      await page.evaluate("window.miaubyPending.shift()()");
+      await expect(chat.getByRole("textbox")).toBeEnabled();
+    }
+    assert.ok(await chat.getByRole("log").locator("p").count() <= 20, "Conversa tem no máximo 20 mensagens no DOM");
+    assert.ok(await page.evaluate("window.miaubyRequests.every(request => JSON.parse(request.body).history.length <= 6)"), "Histórico enviado tem no máximo 6 mensagens");
+    // Auth.js cross-tab events must suspend the old UI before session lookup.
+    await chat.getByRole("textbox").fill("Privado antes de mudar em outra aba");
+    await chat.getByRole("button", { name: "Enviar pergunta", exact: true }).click();
+    const otherTab = await context.newPage();
+    await otherTab.route("**/*", route => route.fulfill({ contentType: "text/html", body: "<!doctype html><title>Outra aba sintética</title>" }));
+    await otherTab.goto("http://127.0.0.1:3213/other-tab");
+    await page.evaluate(`window.currentSession={user:{id:"carla-test",name:"Carla Silva"},expires:new Date(Date.now()+60000).toISOString()};`);
+    await otherTab.evaluate(`window.authChannel=new BroadcastChannel("next-auth");window.authChannel.postMessage({event:"session",data:{trigger:"getSession"}});`);
+    await expect(chat).toHaveCount(0);
+    assert.equal(await page.evaluate("window.miaubyRequests.at(-1).signal.aborted"), true);
+    await page.evaluate("window.miaubyPending.shift()()");
+    await expect(trigger).toBeVisible();
+    await expect(notice).toContainText("Bem-vindo, Carla!");
+    await trigger.click();
+    await expect(chat).not.toContainText("Privado antes de mudar");
+    await expect(chat).not.toContainText("Resposta privada antiga");
+    await expect(chat.getByRole("textbox")).toHaveValue("");
+    // Simulate a hidden tab whose real session expires before returning.
+    await chat.getByRole("textbox").fill("Conversa preservada Carla");
+    await chat.getByRole("button", { name: "Enviar pergunta", exact: true }).click();
+    await page.evaluate("window.miaubyPending.shift()()");
+    await expect(chat.getByRole("textbox")).toBeEnabled();
+    await chat.getByRole("textbox").fill("Rascunho preservado Carla");
+    await page.evaluate(`Object.defineProperty(document,"visibilityState",{configurable:true,value:"hidden"});document.dispatchEvent(new Event("visibilitychange"));`);
+    await expect(chat).toHaveCount(0);
+    await page.evaluate(`Object.defineProperty(document,"visibilityState",{configurable:true,value:"visible"});document.dispatchEvent(new Event("visibilitychange"));window.dispatchEvent(new Event("focus"));`);
+    await expect(chat).toBeVisible();
+    await expect(chat.getByRole("textbox")).toHaveValue("Rascunho preservado Carla");
+    await expect(chat).toContainText("Conversa preservada Carla");
+    await chat.getByRole("textbox").fill("Consulta cancelada ao ocultar");
+    await chat.getByRole("button", { name: "Enviar pergunta", exact: true }).click();
+    const requestsBeforeReturn = await page.evaluate("window.miaubyRequests.length");
+    await page.evaluate(`Object.defineProperty(document,"visibilityState",{configurable:true,value:"hidden"});document.dispatchEvent(new Event("visibilitychange"));`);
+    await expect(chat).toHaveCount(0);
+    assert.equal(await page.evaluate("window.miaubyRequests.at(-1).signal.aborted"), true);
+    await page.evaluate("window.miaubyPending.shift()()");
+    await page.evaluate(`Object.defineProperty(document,"visibilityState",{configurable:true,value:"visible"});document.dispatchEvent(new Event("visibilitychange"));`);
+    await expect(chat).toBeVisible();
+    await expect(chat.getByRole("textbox")).toBeEnabled();
+    await expect(chat.getByText("Resposta privada antiga", { exact: true })).toHaveCount(1);
+    assert.equal(await page.evaluate("window.miaubyRequests.length"), requestsBeforeReturn, "Consulta cancelada não é retomada automaticamente");
+    await chat.getByRole("textbox").fill("Rascunho antes de expirar");
+    await page.evaluate(`Object.defineProperty(document,"visibilityState",{configurable:true,value:"hidden"});document.dispatchEvent(new Event("visibilitychange"));window.currentSession={user:{id:"carla-test",name:"Carla"},expires:new Date(Date.now()-1000).toISOString()};`);
+    await expect(chat).toHaveCount(0);
+    await page.evaluate(`Object.defineProperty(document,"visibilityState",{configurable:true,value:"visible"});document.dispatchEvent(new Event("visibilitychange"));window.dispatchEvent(new Event("focus"));`);
+    await expect(trigger).toBeVisible();
+    await trigger.click();
+    await expect(chat.getByRole("textbox")).toHaveValue("");
+    await expect(chat).not.toContainText("Carla");
+    // A failed session lookup must never restore the old identity or private text.
+    await page.evaluate(`window.currentSession={user:{id:"dora-test",name:"Dora"},expires:new Date(Date.now()+60000).toISOString()};window.dispatchEvent(new Event("focus"));`);
+    await expect(notice).toContainText("Bem-vindo, Dora!");
+    await trigger.click();
+    await chat.getByRole("textbox").fill("Rascunho antes de ficar offline");
+    const reads = await page.evaluate<number>("window.sessionReads");
+    await page.evaluate(`window.sessionUnavailable=true;window.dispatchEvent(new Event("focus"));`);
+    await expect(chat).toHaveCount(0);
+    await expect(trigger).toBeVisible();
+    await trigger.click();
+    await expect(chat.getByRole("textbox")).toHaveValue("");
+    assert.equal(await page.evaluate("window.sessionReads"), reads + 1);
+    await expect(page.locator("body")).not.toContainText("Dora");
+    await page.waitForTimeout(1200);
+    assert.equal(await page.evaluate("window.sessionReads"), reads + 1, "Não há polling constante de sessão");
+    await otherTab.close();
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

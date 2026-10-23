@@ -1,101 +1,14 @@
 import { NextResponse } from "next/server";
-import type { Prisma } from "@/generated/prisma/client";
-import {
-  buildMiaubySystemPrompt,
-  cleanMiaubyReply,
-  keepMiaubyQuestionLocal,
-  miaubyFallbackReply,
-  miaubyReplyProducts,
-  miaubyRequestSchema,
-  miaubySearchTokens,
-  rankMiaubyCatalogProducts,
-  sanitizeMiaubyHistory,
-  type MiaubyCatalogSource,
-} from "@/features/miauby/assistant";
+import { miaubyCatalogQuery, miaubyLocalAnswer, miaubyReplyProducts, miaubyRequestSchema, type MiaubyCatalogProduct } from "@/features/miauby/assistant";
+import { limitMiaubyRequest } from "@/features/miauby/request-limits";
+import { getSearchCatalog } from "@/features/products/search-catalog";
 import { readJsonBody } from "@/lib/api";
-import { getPrisma } from "@/lib/prisma";
-import { acquireMiaubyInference, limitMiaubyRequest } from "@/features/miauby/request-limits";
-import { publicProductImageUrl } from "@/features/product-images/private-supplier-policy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-type GeminiPart = {
-  text?: string;
-};
-
-type GeminiResponse = {
-  candidates?: Array<{
-    content?: {
-      parts?: GeminiPart[];
-    };
-  }>;
-};
-
-const productSelect = {
-  inventorySource: true,
-  catalogClassification: true,
-  activeIngredients: true,
-  brand: true,
-  category: true,
-  id: true,
-  imageUrl: true,
-  isPopularPharmacy: true,
-  name: true,
-  price: true,
-  promotionalPrice: true,
-  requiresPrescription: true,
-  searchTerms: true,
-  searchText: true,
-  slug: true,
-} as const;
-
-type CatalogProduct = Prisma.ProductGetPayload<{ select: typeof productSelect }>;
-
-function serializeCatalogProduct(product: CatalogProduct): MiaubyCatalogSource {
-  return {
-    activeIngredients: product.activeIngredients,
-    brand: product.brand,
-    category: product.category,
-    id: product.id,
-    imageUrl: publicProductImageUrl(product),
-    catalogClassification: product.catalogClassification,
-    isPopularPharmacy: product.isPopularPharmacy,
-    name: product.name,
-    price: product.price.toString(),
-    promotionalPrice: product.promotionalPrice?.toString() ?? null,
-    requiresPrescription: product.requiresPrescription,
-    searchTerms: product.searchTerms,
-    searchText: product.searchText,
-    slug: product.slug,
-  };
-}
-
-async function findRelatedCatalogProducts(message: string) {
-  const tokens = miaubySearchTokens(message);
-  if (!tokens.length) return [];
-
-  const products = await getPrisma().product.findMany({
-    orderBy: [{ featuredPosition: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
-    select: productSelect,
-    take: 24,
-    where: {
-      OR: tokens.map((token) => ({ searchText: { contains: token } })),
-      status: "ACTIVE",
-    },
-  });
-
-  return rankMiaubyCatalogProducts(
-    message,
-    products.map(serializeCatalogProduct),
-  );
-}
-
 function json(data: Record<string, unknown>, status = 200) {
-  return NextResponse.json(data, {
-    headers: { "Cache-Control": "no-store" },
-    status,
-  });
+  return NextResponse.json(data, { headers: { "Cache-Control": "no-store" }, status });
 }
 
 export async function POST(request: Request) {
@@ -107,92 +20,38 @@ export async function POST(request: Request) {
   const retryAfter = limitMiaubyRequest(request);
   if (retryAfter) return NextResponse.json({ error: "Muitas perguntas. Aguarde um pouco e tente novamente." }, { status: 429, headers: { "Cache-Control": "no-store", "Retry-After": String(retryAfter) } });
   const parsed = miaubyRequestSchema.safeParse(await readJsonBody(request));
+  if (!parsed.success) return json({ error: "Envie uma pergunta de até 500 caracteres." }, 422);
 
-  if (!parsed.success) {
-    return json({ error: "Envie uma pergunta de ate 500 caracteres." }, 422);
-  }
-
-  const { message } = parsed.data;
-  const history = sanitizeMiaubyHistory(parsed.data.history);
-  let products = [] as Awaited<ReturnType<typeof findRelatedCatalogProducts>>;
+  const { message, history } = parsed.data;
+  const local = miaubyLocalAnswer(message);
+  if (local) return json({ message: local, products: [], source: "local" });
+  const query = miaubyCatalogQuery(message, history);
+  if (!query) return json({ message: "Qual é o nome do produto? Se souber, inclua a apresentação ou o EAN para eu consultar o preço certo.", products: [], source: "local" });
 
   try {
-    products = await findRelatedCatalogProducts(message);
-  } catch (error) {
-    console.error("Erro ao consultar catalogo para Miauby", error);
+    const result = await getSearchCatalog(query, { pageSize: 4, relatedLimit: 0 });
+    // The public DTO retains its stored price when a supplier offer expires.
+    // Never present that historical fallback as a current Miauby quote.
+    const pricedProducts = result.products.filter(product => product.inventorySource !== "DISTRIBUTOR" || product.availableForPurchase);
+    const products: MiaubyCatalogProduct[] = pricedProducts.map(product => ({
+      id: product.id, name: product.name, slug: product.slug, brand: product.brand,
+      inventorySource: product.inventorySource, catalogClassification: product.catalogClassification,
+      category: product.category, imageUrl: product.imageUrl, isPopularPharmacy: product.isPopularPharmacy,
+      price: String(product.price), promotionalPrice: product.promotionalPrice == null ? null : String(product.promotionalPrice),
+      requiresPrescription: product.requiresPrescription,
+    }));
+    return json({
+      message: products.length
+        ? `${result.correctedQuery ? `Resultados aproximados para “${result.correctedQuery}”. ` : ""}Encontrei estas apresentações no catálogo da loja. Os preços estão nos produtos abaixo; confira a apresentação ao abrir o item.`
+        : result.products.length
+          ? "Não consegui confirmar um preço disponível para essa apresentação agora. Fale com a equipe pelo WhatsApp para conferir."
+          : "Não encontrei essa apresentação no catálogo. Tente o nome, a marca ou o EAN do produto, ou fale com a equipe pelo WhatsApp.",
+      products: miaubyReplyProducts(message, products),
+      source: "catalog",
+    });
+  } catch {
+    // Do not log the question, history, private query diagnostics or user data.
+    console.error("[miauby] catalog-unavailable");
+    return json({ error: "Não consegui consultar os preços agora. Tente novamente em instantes ou fale com a equipe." }, 503);
   }
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-  const replyProducts = miaubyReplyProducts(message, products);
-
-  if (!apiKey || keepMiaubyQuestionLocal(message)) {
-    return json({
-      message: miaubyFallbackReply(message, replyProducts),
-      products: replyProducts,
-      source: "fallback",
-    });
-  }
-
-  const release = acquireMiaubyInference();
-  if (!release) return json({ message: miaubyFallbackReply(message, replyProducts), products: replyProducts, source: "fallback" });
-  let success = false;
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-      {
-        body: JSON.stringify({
-          contents: [
-            ...history.map((item) => ({
-              parts: [{ text: item.text }],
-              role: item.role === "assistant" ? "model" : "user",
-            })),
-            { parts: [{ text: message }], role: "user" },
-          ],
-          generationConfig: {
-            maxOutputTokens: 320,
-            temperature: 0.3,
-            ...(model.startsWith("gemini-2.5-flash")
-              ? { thinkingConfig: { thinkingBudget: 0 } }
-              : {}),
-          },
-          systemInstruction: {
-            parts: [{ text: buildMiaubySystemPrompt(products) }],
-          },
-        }),
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        method: "POST",
-        signal: AbortSignal.timeout(15_000),
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`Gemini respondeu ${response.status}`);
-    }
-
-    const payload = (await response.json()) as GeminiResponse;
-    const reply = cleanMiaubyReply(
-      payload.candidates?.[0]?.content?.parts
-        ?.map((part) => part.text ?? "")
-        .join(" ") ?? "",
-    );
-    success = true;
-
-    return json({
-      message: reply || miaubyFallbackReply(message, replyProducts),
-      products: replyProducts,
-      source: reply ? "gemini" : "fallback",
-    });
-  } catch (error) {
-    console.error("Erro no Miauby Gemini", error);
-
-    return json({
-      message: miaubyFallbackReply(message, replyProducts),
-      products: replyProducts,
-      source: "fallback",
-    });
-  } finally { release(success); }
 }

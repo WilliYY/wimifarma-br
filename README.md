@@ -144,7 +144,7 @@ Checkout e pedidos receberam revisão visual; pesquisa da IA reutiliza resultado
 - Site publico com campanhas de quatro produtos reais por banner (Dove, NIVEA, Rexona, Huggies e Johnson’s), carregamento apenas da campanha ativa e campanha de avaliacao `Sua opinião vale mais`, com bonus explicado separadamente. `Melhores ofertas`, perfumaria, medicamentos publicados e avaliacoes verificadas preservados. Fotos e textos ficam separados no celular. Pagina do produto com zoom, compartilhamento e total por quantidade; validacao em [docs/19-produtos-e-campanhas.md](docs/19-produtos-e-campanhas.md).
 - `Produtos / Catalogo` pesquisa nome/EAN com Gemini e preenche campos vazios apenas com identidade e fonte oficial confirmadas. Dados divergentes exigem revisao; ha previa de SEO, status Publicado por padrao e destaque opcional. Contrato e testes em [docs/18-cadastro-inteligente-e-fotos.md](docs/18-cadastro-inteligente-e-fotos.md).
 - Assistente atende tambem perfumaria, higiene e alimentos/chocolates. Ao enviar foto, analisa a embalagem, busca fotos reais e permite criar artes de estudio/editoriais para escolher uma capa, sem publicacao automatica. Fluxo, limites e testes em [docs/20-assistente-catalogo-e-imagens.md](docs/20-assistente-catalogo-e-imagens.md).
-- A Miauby abre uma conversa responsiva no site, usa Gemini com historico curto e contexto do catalogo publicado, mostra produtos relacionados e encaminha confirmacoes comerciais ou clinicas para a equipe.
+- A Miauby abre uma conversa responsiva, recebe a pessoa pelo primeiro nome seguro e oferece dicas locais limitadas por aba. O chat publico nao chama IA: consulta precos pela busca do catalogo publicado, preserva apresentacao/EAN e encaminha orientacao clinica ou assuntos privados para a equipe. Contrato em [docs/100-miauby-atendimento-local.md](docs/100-miauby-atendimento-local.md).
 - WhatsApp principal: `+55 44 98413-4971`, com mensagem padrao para medicamentos e Farmacia Popular.
 - Rotas publicas basicas criadas: `/`, `/ofertas`, `/farmacia-popular`, `/delivery`, `/sobre`, `/contato`, `/roleta`, `/login`.
 - A rota `/ofertas` continua existindo, mas nao aparece no menu principal enquanto a home estiver focada em anuncio.
@@ -282,7 +282,7 @@ Base em `.env.example`. Valores reais devem ficar apenas no `.env` local ou no s
 | `ADMIN_RESET_PASSWORD` | Permite resetar senha via seed quando `true`. |
 | `GOOGLE_CLIENT_ID` | OAuth Google para clientes. |
 | `GOOGLE_CLIENT_SECRET` | OAuth Google para clientes. |
-| `GEMINI_API_KEY` | Gemini server-side para Miauby e sugestoes do catalogo; nunca expor no cliente ou no Git. |
+| `GEMINI_API_KEY` | Gemini server-side para sugestoes administrativas do catalogo; o chat publico Miauby nao usa essa chave. Nunca expor no cliente ou no Git. |
 | `GEMINI_MODEL` | Modelo Gemini usado no servidor; padrao `gemini-2.5-flash`. |
 | `GEMINI_IMAGE_MODEL` | Modelo para artes solicitadas no cadastro; padrao `gemini-2.5-flash-image`, com a mesma conta Gemini. |
 

@@ -265,8 +265,8 @@
 
 ### Ativar sugestoes de catalogo com Gemini
 
-- Status: resolvido em 2026-09-07; `GEMINI_API_KEY` esta configurada no VPS e ativa a sugestao de catalogo e a Miauby.
-- Resolucao: a Miauby ganhou conversa com historico curto, contexto de produtos publicados, fallback local e limites de seguranca; a sugestao administrativa continua com pesquisa fundamentada e revisao humana.
+- Status: resolvido em 2026-09-07; `GEMINI_API_KEY` foi configurada no VPS para sugestao de catalogo e Miauby. Em 2026-10-23 o chat publico passou a atendimento local sem IA, mantendo a sugestao administrativa independente.
+- Resolucao atual: a Miauby consulta precos pelo catalogo publico, apresenta boas-vindas locais e conserva limites de seguranca, sem consumo de tokens de inferencia. A sugestao administrativa continua com pesquisa fundamentada e revisao humana. Contrato em [100](100-miauby-atendimento-local.md).
 - Cuidado aberto: como a chave inicial foi compartilhada em conversa, rotaciona-la no Google AI Studio e atualizar somente o `.env` do servidor.
 - Arquivos: `.env.example`, `src/app/api/produtos/sugestoes/route.ts`, `src/features/products/ai-suggestions.ts`, `docs/09-deploy-e-ambiente.md`.
 

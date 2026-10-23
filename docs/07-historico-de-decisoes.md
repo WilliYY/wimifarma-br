@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Miauby local, boas-vindas e consulta de preços
+
+- Substituir a inferência pública por respostas determinísticas para saudações e orientações do site. Consultas explícitas de produto usam a busca canônica e preços públicos atuais, sem recomendar tratamentos nem inventar estoque, dose, frete ou descontos. A sugestão administrativa com Gemini permanece independente.
+- Receber a pessoa pelo primeiro nome seguro, sem enviar sessão ou perfil ao chat. Dicas por contexto limitadas a três por aba; troca de identidade reinicia conversa e aborta requisições. Nenhuma consulta automática de produto ou mensagem comercial é disparada pelas boas-vindas.
+- Manter proteção de origem, limites por IP/global, corpo/histórico limitados, saída pública permitida e respostas locais para assuntos clínicos e privados. Contrato e validação em [100](100-miauby-atendimento-local.md).
+
 ## 2026-10-23 — Busca tolerante a erros e marca ao final do título
 
 - A busca tenta uma correção limitada pelo vocabulário cadastrado somente após ausência de resultado literal, rejeitando empates e preservando dose, números e identificadores. Autocomplete e página sinalizam resultados aproximados sem reescrever a entrada; filtros e paginação continuam no PostgreSQL com parâmetros. Cache de cinco minutos contém somente palavras. Contrato em [68](68-busca-e-galeria.md).

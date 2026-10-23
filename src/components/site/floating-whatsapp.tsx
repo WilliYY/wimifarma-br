@@ -16,6 +16,8 @@ import {
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { siteConfig } from "@/lib/site";
+import type { Session } from "next-auth";
+import { claimMiaubyNotice, miaubyRouteTip, safeMiaubyFirstName } from "@/features/miauby/greetings";
 
 type MiaubyProduct = {
   catalogClassification?: unknown;
@@ -42,7 +44,7 @@ type MiaubyResponse = {
   error?: string;
   message?: string;
   products?: MiaubyProduct[];
-  source?: "fallback" | "gemini";
+  source?: "local" | "catalog" | "fallback" | "gemini";
 };
 
 const initialMessage: ChatMessage = {
@@ -52,6 +54,7 @@ const initialMessage: ChatMessage = {
 };
 
 const quickQuestions = [
+  "Consultar preço de um produto",
   "Quero encontrar um produto",
   "Como funciona a entrega?",
   "Como funciona a Farmácia Popular?",
@@ -80,17 +83,161 @@ function WhatsAppLogo() {
   );
 }
 
-export function FloatingWhatsApp() {
+type MiaubyViewer = { key: string; name: string } | null;
+
+export function FloatingWhatsApp({ viewer = null }: { viewer?: MiaubyViewer }) {
+  return <SynchronizedMiauby key={viewer?.key ?? "anonymous"} viewer={viewer} />;
+}
+
+function SynchronizedMiauby({ viewer }: { viewer: MiaubyViewer }) {
+  const [currentViewer, setCurrentViewer] = useState(viewer);
+  const [sessionReady, setSessionReady] = useState(true);
+  const [conversationVersion, setConversationVersion] = useState(0);
+
+  useEffect(() => {
+    setCurrentViewer(viewer);
+    setSessionReady(true);
+    let refreshTimer: number | undefined;
+    let deadlineTimer: number | undefined;
+    let synchronization = 0;
+    // Auth.js v5 uses this channel for session changes in other tabs.
+    const channel = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel("next-auth");
+    const suspendConversation = () => {
+      synchronization++;
+      setSessionReady(false);
+      window.clearTimeout(refreshTimer);
+      window.clearTimeout(deadlineTimer);
+    };
+    const discardConversation = () => {
+      setCurrentViewer(null);
+      setConversationVersion(current => current + 1);
+    };
+    const revalidate = () => {
+      suspendConversation();
+      if (document.visibilityState !== "visible") return;
+      const version = synchronization;
+      // Coalesce focus/visibility/pageshow events from one return to the tab.
+      refreshTimer = window.setTimeout(async () => {
+        deadlineTimer = window.setTimeout(() => {
+          if (synchronization !== version) return;
+          synchronization++;
+          discardConversation();
+          setSessionReady(true);
+        }, 5_000);
+        try {
+          // Read the standard Auth.js endpoint directly: getSession() collapses
+          // network failures and anonymous sessions into null, losing that distinction.
+          const response = await fetch("/api/auth/session", { cache: "no-store", credentials: "same-origin" });
+          if (!response.ok) throw new Error("Sessão indisponível");
+          const session = await response.json() as Session | null;
+          const id = session?.user?.id;
+          let freshViewer: MiaubyViewer = null;
+          if (id && session.expires && Date.parse(session.expires) > Date.now()) {
+            const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`miauby:${id}`));
+            freshViewer = {
+              key: Array.from(new Uint8Array(hash), value => value.toString(16).padStart(2, "0")).join("").slice(0, 24),
+              name: safeMiaubyFirstName(session.user.name) ?? "",
+            };
+          }
+          if (synchronization !== version) return;
+          if (!freshViewer && session !== null) discardConversation();
+          setCurrentViewer(freshViewer);
+          setSessionReady(true);
+        } catch {
+          if (synchronization === version) {
+            discardConversation();
+            setSessionReady(true);
+          }
+        } finally {
+          if (synchronization === version) window.clearTimeout(deadlineTimer);
+        }
+      }, 80);
+    };
+    const sessionChanged = (event: MessageEvent) => {
+      if (event.data?.event === "session") {
+        discardConversation();
+        revalidate();
+      }
+    };
+    document.addEventListener("visibilitychange", revalidate);
+    window.addEventListener("focus", revalidate);
+    window.addEventListener("pageshow", revalidate);
+    window.addEventListener("pagehide", suspendConversation);
+    channel?.addEventListener("message", sessionChanged);
+    return () => {
+      synchronization++;
+      window.clearTimeout(refreshTimer);
+      window.clearTimeout(deadlineTimer);
+      document.removeEventListener("visibilitychange", revalidate);
+      window.removeEventListener("focus", revalidate);
+      window.removeEventListener("pageshow", revalidate);
+      window.removeEventListener("pagehide", suspendConversation);
+      channel?.close();
+    };
+  }, [viewer]); // Only the minimal server identity crosses this boundary.
+
+  // Suspend before fetching so old names, drafts and replies cannot flash on return.
+  return <div hidden={!sessionReady} inert={!sessionReady}><FloatingMiauby active={sessionReady} key={`${currentViewer?.key ?? "anonymous"}:${conversationVersion}`} viewer={currentViewer} /></div>;
+}
+
+function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: boolean }) {
   const pathname = usePathname();
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [purchasePosition, setPurchasePosition] = useState<"before" | "visible" | "after">("before");
   const [messages, setMessages] = useState<ChatMessage[]>([initialMessage]);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [isTabVisible, setIsTabVisible] = useState(false);
+  const attemptedNotices = useRef(new Set<string>());
   const inputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<AbortController | null>(null);
+  const requestTimeoutRef = useRef<number | undefined>(undefined);
   const isProductPage = pathname.startsWith("/produto/");
+  const isHiddenRoute = pathname === "/login" || pathname.startsWith("/minha-conta") || pathname.startsWith("/carrinho") || pathname.startsWith("/checkout");
+
+  useEffect(() => {
+    if (active) return;
+    requestRef.current?.abort();
+    requestRef.current = null;
+    window.clearTimeout(requestTimeoutRef.current);
+    setIsLoading(false);
+    setNotice(null);
+  }, [active]);
+
+  useEffect(() => {
+    const updateVisibility = () => {
+      setIsTabVisible(document.visibilityState === "visible");
+      if (document.visibilityState !== "visible") setNotice(null);
+    };
+    updateVisibility();
+    document.addEventListener("visibilitychange", updateVisibility);
+    return () => document.removeEventListener("visibilitychange", updateVisibility);
+  }, []);
+
+  useEffect(() => {
+    setNotice(null);
+    if (!active || isOpen || isHiddenRoute || !isTabVisible) return;
+    const identity = viewer?.key ?? "anonymous";
+    const name = safeMiaubyFirstName(viewer?.name);
+    const welcome = { key: "welcome", text: name ? `Bem-vindo, ${name}! Sou a Miauby. Posso ajudar?` : "Bem-vindo! Sou a Miauby. Posso ajudar?" };
+    const candidates = [welcome, miaubyRouteTip(pathname)].filter((candidate) => candidate !== null);
+    let hideTimer: number | undefined;
+    const showTimer = window.setTimeout(() => {
+      for (const candidate of candidates) {
+        if (attemptedNotices.current.has(candidate.key)) continue;
+        attemptedNotices.current.add(candidate.key);
+        try {
+          if (!claimMiaubyNotice(window.sessionStorage, identity, candidate.key)) continue;
+        } catch { continue; }
+        setNotice(candidate.text);
+        hideTimer = window.setTimeout(() => setNotice(null), 7_000);
+        break;
+      }
+    }, 1_200);
+    return () => { window.clearTimeout(showTimer); window.clearTimeout(hideTimer); };
+  }, [active, isHiddenRoute, isOpen, isTabVisible, pathname, viewer?.key, viewer?.name]);
 
   useEffect(() => {
     setIsOpen(false);
@@ -131,22 +278,19 @@ export function FloatingWhatsApp() {
   useEffect(
     () => () => {
       requestRef.current?.abort();
+      requestRef.current = null;
+      window.clearTimeout(requestTimeoutRef.current);
     },
     [],
   );
 
-  if (
-    pathname === "/login" ||
-    pathname.startsWith("/minha-conta") ||
-    pathname.startsWith("/carrinho") ||
-    pathname.startsWith("/checkout")
-  ) {
+  if (isHiddenRoute) {
     return null;
   }
 
   async function askMiauby(rawQuestion: string) {
     const question = rawQuestion.trim();
-    if (!question || isLoading) return;
+    if (!active || !question || isLoading || requestRef.current) return;
 
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -157,11 +301,12 @@ export function FloatingWhatsApp() {
 
     setInput("");
     setIsLoading(true);
-    setMessages((current) => [...current, userMessage]);
+    setMessages((current) => [...current, userMessage].slice(-20));
 
     const controller = new AbortController();
     requestRef.current = controller;
     const timeout = window.setTimeout(() => controller.abort(), 16_000);
+    requestTimeoutRef.current = timeout;
 
     try {
       const response = await fetch("/api/miauby", {
@@ -171,13 +316,14 @@ export function FloatingWhatsApp() {
         signal: controller.signal,
       });
       const payload = (await response.json()) as MiaubyResponse;
+      if (requestRef.current !== controller) return;
 
       if (!response.ok || !payload.message) {
         throw new Error(payload.error || "Resposta indisponivel");
       }
       const reply = payload.message;
 
-      setMessages((current) => [
+      setMessages((current) => ([
         ...current,
         {
           id: `miauby-${Date.now()}`,
@@ -185,20 +331,24 @@ export function FloatingWhatsApp() {
           role: "assistant",
           text: reply,
         },
-      ]);
+      ] satisfies ChatMessage[]).slice(-20));
     } catch {
-      setMessages((current) => [
+      if (requestRef.current !== controller) return;
+      setMessages((current) => ([
         ...current,
         {
           id: `miauby-error-${Date.now()}`,
           role: "assistant",
           text: "Não consegui responder agora. Você pode tentar novamente ou falar diretamente com a equipe pelo WhatsApp.",
         },
-      ]);
+      ] satisfies ChatMessage[]).slice(-20));
     } finally {
       window.clearTimeout(timeout);
-      if (requestRef.current === controller) requestRef.current = null;
-      setIsLoading(false);
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+        requestTimeoutRef.current = undefined;
+        setIsLoading(false);
+      }
     }
   }
 
@@ -213,6 +363,12 @@ export function FloatingWhatsApp() {
         isProductPage && purchasePosition === "after" && !isOpen ? "bottom-[calc(6rem+env(safe-area-inset-bottom))] sm:bottom-24" : isProductPage ? "bottom-[calc(0.75rem+env(safe-area-inset-bottom))] sm:bottom-24" : "bottom-[calc(0.75rem+env(safe-area-inset-bottom))] sm:bottom-5"
       }`}
     >
+      {notice && !isOpen ? (
+        <aside aria-label="Dica da Miauby" className="absolute bottom-[calc(100%+0.75rem)] right-0 flex w-[min(18rem,calc(100vw-1.5rem))] items-start gap-1 rounded-lg border border-[#f2c14e]/60 bg-[#fff8e8] p-3 text-sm text-ink shadow-lg sm:right-20 sm:bottom-auto sm:top-0">
+          <p aria-live="polite" className="min-w-0 flex-1 py-1">{notice}</p>
+          <button aria-label="Ocultar dica da Miauby" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" onClick={() => setNotice(null)} type="button"><X className="h-4 w-4" /></button>
+        </aside>
+      ) : null}
       {isOpen ? (
         <section
           aria-label="Conversa com a Miauby"
@@ -339,7 +495,7 @@ export function FloatingWhatsApp() {
             {isLoading ? (
               <div className="flex items-center gap-2 text-xs font-semibold text-muted">
                 <LoaderCircle className="h-4 w-4 animate-spin text-brand" />
-                Miauby está pensando...
+                Consultando a Miauby...
               </div>
             ) : null}
           </div>
@@ -379,11 +535,11 @@ export function FloatingWhatsApp() {
       <button
         aria-expanded={isOpen}
         aria-label="Conversar com a Miauby"
-        className="group relative flex h-11 w-11 items-center justify-center rounded-full bg-[#fff8e8] shadow-[0_16px_40px_rgba(0,0,0,0.22)] ring-2 ring-[#f2c14e]/60 transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:h-16 sm:w-16"
+        className="group relative flex h-11 w-11 items-center justify-center rounded-full bg-[#fff8e8] shadow-[0_16px_40px_rgba(0,0,0,0.22)] ring-2 ring-[#f2c14e]/60 transition hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:h-16 sm:w-16"
         onClick={() => setIsOpen((current) => !current)}
         type="button"
       >
-        <span className="absolute right-[calc(100%+0.75rem)] hidden whitespace-nowrap rounded-md bg-ink px-3 py-2 text-xs font-bold text-white shadow-lg sm:block">
+        <span className="absolute right-[calc(100%+0.75rem)] hidden whitespace-nowrap rounded-md bg-ink px-3 py-2 text-xs font-bold text-white shadow-lg sm:group-hover:block sm:group-focus-visible:block">
           Pergunte à Miauby
         </span>
         <span className="relative h-9 w-9 overflow-hidden rounded-full sm:h-14 sm:w-14">
