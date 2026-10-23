@@ -26,6 +26,7 @@ import { cartIdentity } from "@/features/orders/cart-identity";
 import { PIX_DISCOUNT_PERCENT, pixDiscountCents } from "@/features/payments/pix-discount";
 
 type PaymentConfig = { publicKey: string; environment: string; brands: { id: string; name: string; image: string | null }[] } | null;
+type PaymentMethodChoice = "pix" | "card" | "cash" | "manual-card";
 type Result = { id: string; number: string; totalCents: number; paymentMethod: string; preparationReadyAt?: string | null };
 type Props = { initialCustomer: { name: string; phone: string; email: string; street: string; neighborhood: string }; draftOwner?: string; isCustomer?: boolean; paymentConfig?: PaymentConfig; carrierShippingAvailable?: boolean };
 const money = (cents: number) => new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" }).format(cents / 100);
@@ -50,6 +51,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   const [order, setOrder] = useState<Result | null>(null);
   const [onlineOrder, setOnlineOrder] = useState<string | null>(null);
   const [initialPayment, setInitialPayment] = useState<PaymentView | null>(null);
+  const [paymentSelection, setPaymentSelection] = useState<{ owner: string; method: PaymentMethodChoice } | null>(null);
   const [storeCreditRedeemCents, setStoreCreditRedeemCents] = useState(0);
   const [cashbackRedeemCents, setCashbackRedeemCents] = useState(0);
   const [wimicoinsRedeemPoints, setWimicoinsRedeemPoints] = useState(0);
@@ -88,8 +90,11 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
     if (ready && hydrated && storedShippingSelection && (!carrierShippingAvailable || requiresShippingSupport)) setDraft(current => ({ ...current, shippingSelection: undefined }));
   }, [ready, hydrated, storedShippingSelection, carrierShippingAvailable, requiresShippingSupport, setDraft]);
   const local = fulfillmentMethod === "PICKUP" || (!shippingSelection && isLocalDeliveryAddress(address));
-  const method = draft.paymentMethod === "CASH" && local ? "cash" : !paymentConfig && draft.paymentMethod === "CARD_ON_DELIVERY" && local ? "manual-card" : draft.onlineMethod === "card" && paymentConfig ? "card" : "pix";
-  const online = Boolean(paymentConfig && method !== "cash");
+  const selectedMethod = paymentSelection?.owner === draftOwner ? paymentSelection.method : null;
+  const method = (selectedMethod === "cash" && !local)
+    || (selectedMethod === "manual-card" && (!local || paymentConfig))
+    || (selectedMethod === "card" && !paymentConfig) ? null : selectedMethod;
+  const online = Boolean(paymentConfig && method && method !== "cash");
   const paymentMethod = online ? "ONLINE" : method === "cash" ? "CASH" : method === "manual-card" ? "CARD_ON_DELIVERY" : "PIX";
   const pixDiscount = method === "pix" ? pixDiscountCents(subtotalCents - discountCents) : 0;
   const deliveryKnown = fulfillmentMethod === "PICKUP" || Boolean(shippingSelection) || isLocalDeliveryAddress(address);
@@ -102,7 +107,8 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   function setAddress(value: SetStateAction<CheckoutDraft["address"]>) {
     setDraft(current => { const next = typeof value === "function" ? value(current.address) : value; return { ...current, address: next, shippingSelection: normalizePostalCode(next.postalCode) === normalizePostalCode(current.address.postalCode) ? current.shippingSelection : undefined }; });
   }
-  function selectPayment(value: string) {
+  function selectPayment(value: PaymentMethodChoice) {
+    setPaymentSelection({ owner: draftOwner, method: value });
     setError(""); setDraft(current => ({ ...current, onlineMethod: value === "card" ? "card" : "pix", paymentMethod: value === "cash" ? "CASH" : value === "manual-card" ? "CARD_ON_DELIVERY" : paymentConfig ? "ONLINE" : "PIX" }));
   }
   function forgetActivePayment() {
@@ -118,6 +124,10 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   }
   async function submitOrder() {
     if (sending.current) throw new Error("Já estamos enviando este pedido.");
+    if (!method) {
+      const message = "Escolha uma forma de pagamento para continuar.";
+      setError(message); throw new Error(message);
+    }
     if (needsPrescription && (!isCustomer || !prescriptionAttachment)) {
       const message = "Entre na sua conta e envie a receita do antimicrobiano antes de concluir.";
       setError(message); throw new Error(message);
@@ -206,7 +216,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
         {needsPrescription && !onlineOrder && <div className="mt-4"><CheckoutPrescriptionUpload key={prescriptionScope} customer={isCustomer} scope={prescriptionScope} items={items.map(item => ({ productId: item.id, quantity: item.quantity }))} attachment={prescriptionAttachment} disabled={submitting} onUpload={setPrescription} /></div>}
         {onlineOrder ? <><OnlinePayment embedded orderId={onlineOrder} initialData={initialPayment} initialMethod={draft.onlineMethod ?? "pix"} onPaid={finishPayment} onTerminal={forgetActivePayment} onReview={resetPayment} />{error && <p className="mt-4 rounded-lg bg-brand-soft p-3 text-sm text-brand" role="alert">{error}</p>}</> : <>
           <fieldset className="mt-5 grid grid-cols-2 gap-2" disabled={submitting}><legend className="sr-only">Forma de pagamento</legend><PaymentChoice selected={method === "pix"} onSelect={() => selectPayment("pix")} label="Pix" detail={`${PIX_DISCOUNT_PERCENT}% de desconto`} Icon={QrCode} /><PaymentChoice selected={method === "card" || method === "manual-card"} onSelect={() => selectPayment(paymentConfig ? "card" : "manual-card")} label="Cartão" detail={paymentConfig ? "Até 3x sem juros" : "Na maquininha"} Icon={CreditCard} disabled={!paymentConfig && !local} />{local && <div className="col-span-2"><PaymentChoice selected={method === "cash"} onSelect={() => selectPayment("cash")} label={fulfillmentMethod === "PICKUP" ? "Dinheiro na retirada" : "Dinheiro na entrega local"} detail="Pague ao receber" Icon={Banknote} /></div>}</fieldset>
-          <p className="mt-3 text-xs leading-5 text-muted">{method === "cash" ? "Apenas retirada ou entrega local em Ivaté e Douradina. Informe o troco nas observações." : method === "manual-card" ? "Pague na maquininha ao receber ou retirar." : !paymentConfig ? "A farmácia enviará os dados do Pix após confirmar o pedido." : method === "pix" ? "QR Code e copia e cola aqui na tela. Você terá 2 horas para pagar." : "Até 3x sem juros. Acima de 3x, juros e total calculados pelo Mercado Pago."}</p>
+          <p className="mt-3 text-xs leading-5 text-muted">{!method ? "Escolha como deseja pagar. No Pix, você recebe 3% de desconto nos produtos." : method === "cash" ? "Apenas retirada ou entrega local em Ivaté e Douradina. Informe o troco nas observações." : method === "manual-card" ? "Pague na maquininha ao receber ou retirar." : !paymentConfig ? "A farmácia enviará os dados do Pix após confirmar o pedido." : method === "pix" ? "QR Code e copia e cola aqui na tela. Você terá 2 horas para pagar." : "Até 3x sem juros. Acima de 3x, juros e total calculados pelo Mercado Pago."}</p>
           {pixDiscount > 0 && <p className="mt-3 rounded-xl bg-emerald-50 px-3.5 py-3 text-xs leading-5 text-emerald-900"><strong>Você economiza {money(pixDiscount)} no Pix.</strong> Os {PIX_DISCOUNT_PERCENT}% são calculados nos produtos após cashback, WimiCoins e crédito de compra. Frete sem desconto.</p>}
           {method === "card" && paymentConfig?.brands.length ? <div className="mt-4 flex flex-wrap items-center gap-2" aria-label="Bandeiras disponíveis no Mercado Pago">{paymentConfig.brands.map(brand => <span key={brand.id} className="grid h-7 min-w-10 place-items-center rounded border border-line px-1.5">{brand.image ? <Image unoptimized src={brand.image} alt={brand.name} width={36} height={20} className="h-5 w-auto max-w-12 object-contain" /> : <span className="text-[10px] font-semibold">{brand.name}</span>}</span>)}</div> : null}
           {isCustomer && <fieldset disabled={submitting} key={draftOwner}><CheckoutWimiCoins capPoints={wimicoinsCapPoints} selectedPoints={wimicoinsRedeemPoints} onSelect={setWimicoinsRedeemPoints} /><CheckoutCashback subtotalCents={subtotalCents} selectedCents={cashbackDiscountCents} onSelect={setCashbackRedeemCents} /><CheckoutStoreCredit capCents={storeCreditCapCents} selectedCents={storeCreditDiscountCents} onSelect={setStoreCreditRedeemCents} /></fieldset>}
@@ -219,7 +229,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
           <label className="mt-5 flex items-start gap-3 text-sm leading-6 text-muted"><input checked={privacyConsent} className="mt-1 h-5 w-5 shrink-0 accent-brand" onChange={event => setPrivacyConsent(event.target.checked)} type="checkbox" /><span>Finalizar com os dados informados, conforme a <Link className="font-bold text-brand underline" href="/privacidade" target="_blank">Política de Privacidade</Link>.</span></label>
           {error && <p className="mt-4 rounded-lg bg-brand-soft p-3 text-sm text-brand" role="alert">{error}</p>}
           {method === "card" && paymentConfig && <label className="mt-5 grid gap-2 text-sm font-semibold">Como pagar no cartão<select className={fieldClass} value={draft.onlineInstallments ?? 1} onChange={event => setDraft(current => ({ ...current, onlineInstallments: Number(event.target.value) }))}><option value={1}>À vista · uma parcela</option><option value={12}>Parcelar · escolher parcelas no formulário</option></select><span className="text-xs leading-5 text-muted">Você confere os campos seguros, as parcelas e o total antes de pagar.</span></label>}
-          <button type="button" disabled={submitting} onClick={() => void submitOrder().catch(() => undefined)} className="mt-5 flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-black text-white transition hover:bg-brand-dark disabled:opacity-60">{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}{submitting ? "Confirmando..." : online ? method === "card" ? "Continuar para pagar com cartão" : "Gerar Pix e finalizar" : "Confirmar pedido"}</button>
+          <button type="button" disabled={submitting || !method} onClick={() => void submitOrder().catch(() => undefined)} className="mt-5 flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-black text-white transition hover:bg-brand-dark disabled:opacity-60">{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}{submitting ? "Confirmando..." : !method ? "Escolha a forma de pagamento" : online ? method === "card" ? "Continuar para pagar com cartão" : "Gerar Pix e finalizar" : "Confirmar pedido"}</button>
           <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs leading-5 text-muted"><LockKeyhole className="h-3.5 w-3.5 shrink-0" />{online ? "Pagamento protegido · Checkout Wimifarma" : "Preparação confirmada pela farmácia"}</p>
         </>}
       </section>

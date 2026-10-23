@@ -16,7 +16,7 @@ const bundle = build({
     import {PixDiscountBanner} from './src/components/site/pix-discount-banner';
     createRoot(document.getElementById('root')).render(location.pathname==='/banner'?<PixDiscountBanner/>:
       <CartProvider><CheckoutPage initialCustomer={{name:'',phone:'',email:'',street:'',neighborhood:''}}
-        isCustomer={true} paymentConfig={{publicKey:'TEST-synthetic',environment:'test',brands:[]}}/></CartProvider>);`,
+        isCustomer={true} paymentConfig={location.search==='?manual'?null:{publicKey:'TEST-synthetic',environment:'test',brands:[]}}/></CartProvider>);`,
     resolveDir: process.cwd(), loader: "tsx" },
   bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic",
   define: { "process.env.NODE_ENV": '"production"', "process.env": "{}" },
@@ -77,8 +77,15 @@ test("Pix, cartão e dinheiro mostram o total correspondente sem criar pedido", 
   await fixture(390, async (page, orders) => {
     await page.getByText("Retirar na farmacia", { exact: true }).click();
     const summary = page.getByRole("region", { name: "Resumo da compra" });
+    await expect(page.getByRole("group", { name: "Forma de pagamento", exact: true }).getByRole("radio", { checked: true })).toHaveCount(0);
+    await expect(summary.getByText("Desconto no Pix (3%)", { exact: true })).toHaveCount(0);
+    await expect(summary.locator("strong")).toHaveText(/100,00/);
+    await expect(page.getByRole("button", { name: "Escolha a forma de pagamento" })).toBeDisabled();
+    if (captureRoot) await page.screenshot({ path: join(captureRoot, "checkout-sem-pix-390.png"), fullPage: true });
+    await page.getByText("Pix", { exact: true }).click();
     await expect(summary.getByText("Desconto no Pix (3%)", { exact: true })).toBeVisible();
     await expect(summary.locator("strong")).toHaveText(/97,00/);
+    if (captureRoot) await page.screenshot({ path: join(captureRoot, "checkout-pix-aplicado-390.png"), fullPage: true });
     for (const method of ["Cartão", "Dinheiro na retirada"]) {
       await page.getByText(method, { exact: true }).click();
       await expect(page.getByRole("radio", { name: method, exact: true })).toBeChecked();
@@ -91,9 +98,60 @@ test("Pix, cartão e dinheiro mostram o total correspondente sem criar pedido", 
   });
 });
 
+test("sem escolha de pagamento o handler também impede criar pedido", async () => {
+  await fixture(390, async (page, orders) => {
+    await page.getByText("Retirar na farmacia", { exact: true }).click();
+    await page.getByLabel("Nome completo").fill("Cliente Sintético");
+    await page.getByLabel("WhatsApp / telefone").fill("+55 (44) 99999-0000");
+    await page.getByLabel(/^E-mail/).fill("buyer@example.invalid");
+    const submit = page.getByRole("button", { name: "Escolha a forma de pagamento" });
+    await expect(submit).toBeDisabled();
+    await submit.evaluate((button: HTMLButtonElement) => {
+      // Invoke the React callback directly to verify the guard beyond the disabled UI.
+      const key = Object.keys(button).find(value => value.startsWith("__reactProps$"));
+      if (!key) throw new Error("React event props unavailable");
+      (button as unknown as Record<string, { onClick: () => void }>)[key].onClick();
+    });
+    await expect(page.getByRole("alert").filter({ hasText: "Escolha uma forma de pagamento para continuar." })).toBeVisible();
+    assert.equal(orders.length, 0);
+  });
+});
+
+test("checkout manual exige escolha e não converte cartão local em Pix ao trocar entrega", async () => {
+  await fixture(320, async (page, orders) => {
+    await page.getByText("Retirar na farmacia", { exact: true }).click();
+    const summary = page.getByRole("region", { name: "Resumo da compra" });
+    const pending = page.getByRole("button", { name: "Escolha a forma de pagamento" });
+    await expect(pending).toBeDisabled();
+    await expect(summary.locator("strong")).toHaveText(/100,00/);
+    await page.getByText("Pix", { exact: true }).click();
+    await expect(summary.locator("strong")).toHaveText(/97,00/);
+    await page.getByText("Cartão", { exact: true }).click();
+    await expect(summary.locator("strong")).toHaveText(/100,00/);
+    await expect(page.getByRole("button", { name: "Confirmar pedido", exact: true })).toBeEnabled();
+    await page.getByText("Receber em casa", { exact: true }).click();
+    await expect(pending).toBeDisabled();
+    await expect(page.getByRole("radio", { name: "Pix", exact: true })).not.toBeChecked();
+    await expect(summary.getByText("Desconto no Pix (3%)", { exact: true })).toHaveCount(0);
+    assert.equal(orders.length, 0);
+  }, "/checkout?manual");
+});
+
+test("retomada usa o snapshot do pagamento sem exigir nova escolha nem criar pedido", async () => {
+  await fixture(390, async (page, orders) => {
+    await page.evaluate(() => sessionStorage.setItem("wimifarma-active-payment:guest", "synthetic-order"));
+    await page.reload();
+    await expect(page.getByLabel("Código Pix copia e cola")).toHaveValue("SYNTHETIC-PIX");
+    await expect(page.getByText(/R\$\s*67,90/, { exact: true })).toBeVisible();
+    await expect(page.getByRole("group", { name: "Forma de pagamento", exact: true })).toHaveCount(0);
+    assert.equal(orders.length, 0);
+  });
+});
+
 test("Pix combina resgates e preserva o valor na resposta de pagamento", async () => {
   await fixture(390, async (page, orders) => {
     await page.getByText("Retirar na farmacia", { exact: true }).click();
+    await page.getByText("Pix", { exact: true }).click();
     await page.getByRole("checkbox", { name: "Usar saldo de cashback" }).check();
     await page.getByRole("checkbox", { name: "Usar saldo de WimiCoins" }).check();
     const summary = page.getByRole("region", { name: "Resumo da compra" });

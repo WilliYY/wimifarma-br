@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-22 — Preço público antes do Pix e escolha explícita no checkout
+
+- O lojista determinou que os preços de home, catálogo, busca, relacionados, detalhe e carrinho sejam os valores atuais dos produtos, sem antecipar os 3% Pix. Cards deixam de exibir preço/selo Pix; referência riscada permanece apenas para promoção real cadastrada. A prévia de cashback também usa o preço atual, antes de desconto por meio de pagamento.
+- Preservar arte, marca e divulgação Pix, esclarecendo que a vantagem é aplicada ao escolher Pix no checkout. Novos checkouts iniciam com forma de pagamento pendente; escolher Pix revela o desconto e trocar para cartão/dinheiro o remove. Método ausente ou inválido bloqueia confirmação na interface e no handler.
+- Preservar cálculo canônico, arredondamento, resgates, frete, payload, pedidos e pagamentos já criados. Retomada usa o snapshot persistido. Sem schema, migration, atualização de dependências ou cobrança real nos ensaios. Contrato e validação nos documentos [83](83-desconto-pix.md) e [86](86-precos-e-desconto-real-nos-cards.md).
+
 ## 2026-10-22 — Produto legível no celular
 
 - Compactar cabeçalho, imagem, preço e espaçamentos da página de produto abaixo de 640 px. Preservar a animação oficial da marca, o modo de movimento reduzido e o atalho autorizado Painel admin.

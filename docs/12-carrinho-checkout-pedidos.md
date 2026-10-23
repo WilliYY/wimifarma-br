@@ -1,5 +1,7 @@
 # 12 - Carrinho, Checkout e Pedidos
 
+Atualização de 22/10/2026: preço público e carrinho sem antecipar Pix. Checkout inicia sem meio de pagamento selecionado e mostra os 3% somente após escolha explícita de Pix; cartão/dinheiro removem a redução. Arte promocional e pagamentos já criados preservados. Contrato em [83](83-desconto-pix.md).
+
 Atualização de 19/10/2026: novos pedidos Pix recebem 3% nos produtos após cashback/WimiCoins, sem desconto no frete. Total congelado no pedido/cobrança, ganhos sobre o líquido e tentativas antigas preservadas. Contrato em [83](83-desconto-pix.md).
 
 ## Escopo Entregue

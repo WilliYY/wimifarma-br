@@ -104,6 +104,7 @@ test("cashback label, summary and order request retain the explicitly selected a
     await expect(page.getByText(/Usar R\$\s*10,00 neste pedido/)).toBeVisible();
     await expect(page.getByRole("checkbox", { name: "Usar saldo de cashback" })).toBeChecked();
     await expect(page.locator("dl dd").filter({ hasText: /10,00/ })).toHaveText(/− R\$\s*10,00/);
+    await page.getByRole("radio", { name: "Pix", exact: true }).check();
     await page.getByRole("button", { name: "Confirmar pedido", exact: true }).click();
     await expect(page.getByRole("alert")).toHaveText("Pedido sintético interceptado");
     assert.equal(posted?.cashbackRedeemCents, 1000);

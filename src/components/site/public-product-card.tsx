@@ -10,7 +10,6 @@ import type { PublicProductSearchItem } from "@/features/products/public-search"
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
 import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
-import { PIX_DISCOUNT_PERCENT, pixDiscountCents } from "@/features/payments/pix-discount";
 
 export type RelatedProductCardItem = PublicProductSearchItem & {
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
@@ -43,13 +42,6 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
     stock: product.stock,
     unitPriceCents: Math.round(currentPrice * 100),
   } satisfies CartProduct;
-  const canPayWithPix = product.stock > 0 && !requiresPurchaseAssistance(cartProduct)
-    && Number.isSafeInteger(cartProduct.unitPriceCents) && cartProduct.unitPriceCents > 0;
-  const pixSavingsCents = canPayWithPix ? pixDiscountCents(cartProduct.unitPriceCents) : 0;
-  const hasPixOffer = pixSavingsCents > 0;
-  const displayUnitPriceCents = cartProduct.unitPriceCents - pixSavingsCents;
-  const hasComparison = hasPromotion || hasPixOffer;
-  const referencePrice = hasPromotion ? normalPrice : currentPrice;
   const canOrder = product.stock > 0 && !requiresPurchaseAssistance(cartProduct);
 
   return (
@@ -78,9 +70,8 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
             {discount}% OFF
           </span>
         ) : null}
-        {hasPixOffer ? <span className="absolute right-2 top-2 rounded-sm bg-pharma-green/10 px-1.5 py-1 text-[0.625rem] font-black text-pharma-green">{PIX_DISCOUNT_PERCENT}% no Pix</span> : null}
         <div className="absolute inset-x-2 bottom-1 flex justify-end">
-          <ProductCashback compact product={product} unitPriceCents={displayUnitPriceCents} />
+          <ProductCashback compact product={product} unitPriceCents={cartProduct.unitPriceCents} />
         </div>
       </div>
 
@@ -103,20 +94,16 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
         </strong>
 
         <div className="mt-auto pt-3">
-          <div role="group" aria-label="Preço do produto" className="grid grid-rows-[1rem_2.5rem_2rem] gap-y-1 border-t border-line pt-3 sm:grid-rows-[1rem_1.5rem_2rem]">
+          <div role="group" aria-label="Preço do produto" className="grid grid-rows-[1rem_1.75rem_1rem] gap-y-1 border-t border-line pt-3">
             <span className="block min-w-0 text-[0.68rem] font-semibold text-muted">
-              {hasComparison ? <>De <s>{formatCurrency(referencePrice)}</s></> : null}
+              {hasPromotion ? <>De <s>{formatCurrency(normalPrice)}</s></> : null}
             </span>
             <div className="flex min-w-0 flex-wrap content-start items-baseline gap-x-1 gap-y-1">
-              {hasComparison && <span className="sr-only">Por</span>}
-              <strong className="text-lg font-black leading-none text-brand sm:text-xl">{formatCurrency(displayUnitPriceCents / 100)}</strong>
-              {hasPixOffer && <span className="text-xs font-semibold text-brand">no Pix</span>}
+              {hasPromotion && <span className="sr-only">Por</span>}
+              <strong className="text-lg font-black leading-none text-brand sm:text-xl">{formatCurrency(cartProduct.unitPriceCents / 100)}</strong>
             </div>
             <div className="min-w-0">
-              {hasPixOffer && <>
-                <p className="text-[0.68rem] font-medium leading-4 text-muted">{formatCurrency(currentPrice)} sem Pix</p>
-                <p className="text-[0.68rem] leading-4 text-muted">Para 1 unidade.</p>
-              </>}
+              <p className="text-[0.68rem] leading-4 text-muted">Para 1 unidade.</p>
             </div>
           </div>
           <ProductCardActions product={cartProduct} />

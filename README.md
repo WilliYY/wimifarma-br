@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Preços públicos iguais aos do carrinho; 3% Pix somente após escolher Pix no checkout, com arte promocional preservada: [documento 83](docs/83-desconto-pix.md) e [documento 86](docs/86-precos-e-desconto-real-nos-cards.md).
+
 Página de produto organizada para celular, com cabeçalho compacto, compra legível e atalhos de atendimento sem cobrir os controles: [documento 19](docs/19-produtos-e-campanhas.md#organização-mobile-em-22102026).
 
 Pedidos no início do menu, aviso global, lista compacta com 30 por página e conferência por distribuidora/EAN/quantidade: [documento 34](docs/34-pedidos-operacao.md). Alertas novos da Miauby também identificam o fornecimento: [documento 30](docs/30-miauby-whatsapp-comercio.md).
@@ -22,7 +24,7 @@ Cotação por quantidade com empacotamento do Melhor Envio, conferência de peso
 
 Faixa de categorias com fotografia suave e acabamento visual, preservando os seis destinos e a navegação acessível: [documento 88](docs/88-faixa-categorias-visual.md).
 
-Cards com “de/por”, percentual e condição real de Pix, sem preço de referência artificial: [documento 86](docs/86-precos-e-desconto-real-nos-cards.md).
+Cards com preço atual do carrinho e “de/por” somente em promoções cadastradas, sem antecipar o desconto Pix: [documento 86](docs/86-precos-e-desconto-real-nos-cards.md).
 
 Rodapé com bandeiras automáticas do meio de pagamento, Pix, consultas oficiais da Anvisa e canais de reputação conferidos: [documento 84](docs/84-rodape-pagamentos-e-consultas.md).
 

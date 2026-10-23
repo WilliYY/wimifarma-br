@@ -82,7 +82,7 @@ test("rodapé mantém identidade, links oficiais e novas bandeiras em telas pequ
 test("indisponibilidade do catálogo mantém Pix e cartão sem inventar bandeiras", async () => {
   await fixture("/fallback", async page => {
     const footer = page.getByRole("contentinfo");
-    await expect(footer.getByText("Pagando com Pix", { exact: true })).toBeVisible();
+    await expect(footer.getByText("Escolhendo Pix no checkout", { exact: true })).toBeVisible();
     await expect(footer.getByText("Cartão", { exact: true })).toBeVisible();
     await expect(footer.getByRole("list", { name: "Bandeiras disponibilizadas pelo Mercado Pago" })).toHaveCount(0);
     await expect(footer.getByText("Confira as opções e as condições disponíveis ao finalizar sua compra.")).toBeVisible();

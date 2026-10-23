@@ -1,5 +1,21 @@
 # 83 — Desconto de 3% no Pix
 
+## Seleção explícita no checkout — 22/10/2026
+
+O lojista determinou preço público igual ao valor atual do carrinho, sem antecipar Pix. A vitrine não apresenta valor já reduzido nem selo Pix por produto; a arte promocional permanece, com a condição de escolher Pix no checkout. Apresentação dos cards em [86](86-precos-e-desconto-real-nos-cards.md).
+
+O checkout inicia sem forma de pagamento selecionada, mesmo quando o rascunho antigo contém o padrão Pix. Antes da escolha, o resumo não inclui desconto Pix. Escolher Pix aplica 3% na base elegível, mostra a economia e discrimina o desconto; escolher cartão ou dinheiro retira essa redução. O botão pede a escolha e permanece desabilitado; o handler também bloqueia envio sem método. Um método local que deixa de ser válido por mudança na entrega fica pendente, sem conversão automática para Pix.
+
+A seleção é explícita e mantida somente no estado da página, vinculada ao proprietário do rascunho. Não há campo persistente novo, mudança de schema ou alteração no payload financeiro. A retomada de uma cobrança existente continua usando `OnlinePayment` e seu snapshot; não exige refazer a escolha nem reprecifica um pedido anterior. Percentual, cálculo no servidor, rateio, arredondamento, frete, resgates, idempotência e gateway conservam as regras abaixo.
+
+Arquivos: `checkout-page.tsx`, `checkout-pix.test.ts` e ajuste de seleção explícita em `ui-regressions.test.ts`, em `src/components/site`; apresentação pública nos cinco arquivos do documento 86. Documentação atualizada em README e documentos 07/12/28/83/86. Os ensaios interceptam a rede, usam dados sintéticos e não geram cobranças, pedidos comerciais ou mensagens reais.
+
+Validação: falhas iniciais reproduziram Pix pré-selecionado e preço público reduzido. Após a correção, 13/13 testes de checkout/regressões passaram, incluindo bloqueio da UI e do handler, métodos online/manuais, troca inválida, carteiras e retomada pelo snapshot. Cards/rodapé: 12/12; cálculo Pix/criação de checkout/benefícios/compra: 26/26; segurança: 444/444 (as suítes têm sobreposição). Revisão independente aprovou sem achados. Resultados dos checks finais e conferência publicada ficam no relatório privado da entrega em `outputs/pix-somente-checkout-2026-10-22`.
+
+`npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run build`, `npm.cmd run prisma:validate` e `git diff --check` passaram. Os seis cenários de `checkout-pix.test.ts` foram repetidos com CSS real e capturas; todos passaram. O teste manual foi corrigido para clicar no rótulo visível, pois o input de rádio usa `sr-only`. Capturas inspecionadas confirmaram R$ 100,00 antes da escolha e R$ 97,00 depois de Pix, mantendo o banner em 320/390/768/1440 px. O build local conserva o aviso não fatal de configuração pública das bandeiras indisponível nesse ambiente.
+
+Auditoria `npm.cmd audit --omit=dev --audit-level=high --json`: zero vulnerabilidades de produção. Auditoria completa `npm.cmd audit --audit-level=moderate --json`: cinco HIGH preexistentes de desenvolvimento (`@next/eslint-plugin-next`, `eslint-config-next`, `braces`, `fast-glob`, `micromatch`) e zero critical. Nenhuma dependência foi modificada. Publicação exclusiva do app, sem migration; preservar a imagem anterior e conferir preços e escolha explícita pela interface pública, bloqueando escritas externas durante a automação.
+
 ## Autorização e regra comercial
 
 Em 19/10/2026, o lojista autorizou desconto real de 3% no Pix e um banner moderno para divulgar a vantagem. A regra vale para novos pedidos com Pix manual (`PIX`) e pagamento online cujo método seja `pix`. Cartão, cartão na entrega e dinheiro conservam seus valores.
@@ -22,7 +38,7 @@ O desconto exibido nos detalhes históricos é a diferença persistida `subtotal
 
 ## Banner e apresentação
 
-Desde 20/10/2026, os cards também destacam o preço Pix para uma unidade, com referência verdadeira, percentual e preço sem Pix. O valor enviado ao carrinho continua anterior à redução; o arredondamento por subtotal e os resgates seguem as regras acima. Comparação visual não cria promoção ou referência histórica fictícia. Detalhes em [86](86-precos-e-desconto-real-nos-cards.md).
+Desde 22/10/2026, os cards destacam o preço atual do carrinho, sem antecipar Pix. Referência riscada e percentual são exclusivos de promoção real cadastrada. A antiga apresentação de preço Pix unitário fica registrada historicamente em [86](86-precos-e-desconto-real-nos-cards.md); o desconto é revelado na escolha Pix do checkout.
 
 Faixa entre as marcas e a primeira vitrine, com fundo verde claro, texto escuro, destaque vermelho no percentual, logo oficial completa e ação para o catálogo. Geometria discreta, sem logo Pix recriada, imagem de campanha gerada, autoplay ou dependência adicional. Direção de varejo claro, usando a fonte e os controles existentes. DFII 14: impacto 3, adequação 5, viabilidade 4, desempenho 4, risco 2.
 

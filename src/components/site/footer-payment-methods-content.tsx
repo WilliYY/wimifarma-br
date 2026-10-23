@@ -10,7 +10,7 @@ export function FooterPaymentMethodsContent({ brands = [], fromMercadoPago = fal
     <div className="min-h-72">
       <h2 className="text-sm font-bold">Formas de pagamento</h2>
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <span className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-pharma-green/20 bg-pharma-green/5 px-3"><Image alt="" aria-hidden="true" className="h-11 w-11 shrink-0" height={44} src="/payments/pix-symbol.svg" unoptimized width={44} /><span><strong className="block text-sm font-bold text-ink">{PIX_DISCOUNT_PERCENT}% de desconto</strong><span className="block text-[11px] font-semibold text-pharma-green">Pagando com Pix</span></span></span>
+        <span className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-pharma-green/20 bg-pharma-green/5 px-3"><Image alt="" aria-hidden="true" className="h-11 w-11 shrink-0" height={44} src="/payments/pix-symbol.svg" unoptimized width={44} /><span><strong className="block text-sm font-bold text-ink">{PIX_DISCOUNT_PERCENT}% de desconto</strong><span className="block text-[11px] font-semibold text-pharma-green">Escolhendo Pix no checkout</span></span></span>
         {!brands.length && <span className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-line bg-white px-4 text-sm font-semibold"><CreditCard aria-hidden="true" className="h-5 w-5 text-ink/65" />Cartão</span>}
       </div>
       {brands.length > 0 && <ul className="mt-3 flex flex-wrap gap-2" aria-label="Bandeiras disponibilizadas pelo Mercado Pago">{brands.map(brand => <li key={`${brand.id}:${brand.image ?? "name"}`}><FooterPaymentBrand brand={brand} /></li>)}</ul>}

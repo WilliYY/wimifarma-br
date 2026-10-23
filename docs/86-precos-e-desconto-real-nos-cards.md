@@ -1,5 +1,17 @@
 # 86 — Preços e desconto real nos cards
 
+## Regra vigente — preço do carrinho, sem antecipar Pix — 22/10/2026
+
+Esta seção substitui a apresentação de preço Pix descrita nos registros históricos abaixo. O preço principal do card é `CartProduct.unitPriceCents`, igual ao valor unitário enviado ao carrinho. Home, catálogo, busca e relacionados usam esse componente; detalhe, autocomplete e carrinho já usam o preço atual antes de Pix.
+
+- Sem promoção cadastrada, há um único preço atual, sem referência riscada, preço Pix alternativo ou selo Pix. Exemplo: R$ 3,44 aparece como R$ 3,44 e entra no carrinho por R$ 3,44.
+- Com promoção real, o preço normal é a referência e o promocional é o preço principal do carrinho. Exemplo: R$ 100,00 por R$ 80,00; o card conserva 20% OFF e não exibe R$ 77,60. O Pix fica para a seleção de pagamento no checkout.
+- A prévia de cashback é calculada sobre o mesmo preço unitário atual, antes de escolher pagamento ou resgatar saldos; crédito efetivo conserva o cálculo sobre o valor líquido do pedido.
+- Preço vermelho, fotografias, promoções reais, benefícios elegíveis, alturas uniformes e ações de compra permanecem. O bloco fica mais curto, com uma única condição unitária. A arte Pix da home e do rodapé continua divulgando 3%, com aplicação condicionada à escolha Pix no checkout.
+- Sem escrita em catálogo, estoque, banco ou preço persistido. Cálculo financeiro do Pix e pedidos anteriores permanecem conforme o documento [83](83-desconto-pix.md).
+
+Arquivos: `public-product-card.tsx`, `product-card-actions.test.ts`, `pix-discount-banner.tsx`, `footer-payment-methods-content.tsx` e `site-footer.test.ts`, em `src/components/site`. Checkout e validação integrada estão no documento 83. Ensaios sintéticos de cards/rodapé: 12/12 aprovados, incluindo preço exibido igual ao carrinho, promoções, centavos, quantidade, produtos assistidos, alinhamento e telas 320/390/1024/1280 px. Capturas em `outputs/pix-somente-checkout-2026-10-22`, fora do Git.
+
 ## Cards compactos — 21/10/2026
 
 Pedido: reduzir a área vazia dos preços e manter altura uniforme com ou sem desconto/cashback. O espaço anterior vinha de `min-height` acumulados para Pix, cashback e metadados que ainda quebravam em várias linhas no celular.

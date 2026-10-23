@@ -6,7 +6,6 @@ import { build } from "esbuild";
 import { chromium, expect, type Page } from "@playwright/test";
 import postcss from "postcss";
 import tailwind from "@tailwindcss/postcss";
-import { pixDiscountCents } from "@/features/payments/pix-discount";
 
 const origin = "http://127.0.0.1:3196";
 const quantityLabel = "Quantidade de caixas de Produto sintético";
@@ -105,12 +104,11 @@ test("cards compactos mantêm benefícios fora do preço e altura uniforme sem e
       assert.ok(Math.max(...sizes) - Math.min(...sizes) < 1, `benefícios alteraram altura em ${width}px`);
       const first = cards.nth(0);
       const off = await first.getByText("28% OFF", { exact: true }).boundingBox();
-      const pix = await first.getByText("3% no Pix", { exact: true }).boundingBox();
       const cashback = await first.getByText(/cashback/).boundingBox();
       const price = await first.getByRole("group", { name: "Preço do produto", exact: true }).boundingBox();
       const controls = await first.locator("[data-product-controls]").boundingBox();
-      assert.ok(off && pix && cashback && price && controls);
-      assert.ok(Math.abs(off.y - pix.y) < 1 && off.x + off.width <= pix.x, `selos devem ocupar esquerda/direita sem sobreposição em ${width}px`);
+      assert.ok(off && cashback && price && controls);
+      await expect(first.getByText(/Pix/)).toHaveCount(0);
       assert.ok(cashback.y + cashback.height <= price.y, `cashback alongou a área de preço em ${width}px`);
       assert.ok(price.height <= 120 && controls.y - (price.y + price.height) <= 16, `espaço excessivo antes das ações em ${width}px`);
       const note = await first.getByText("Para 1 unidade.", { exact: true }).boundingBox();
@@ -121,19 +119,17 @@ test("cards compactos mantêm benefícios fora do preço e altura uniforme sem e
   }, "grid");
 });
 
-test("preço maior não sobrepõe no Pix, condição unitária ou ações em tela estreita", async () => {
+test("preço real maior não sobrepõe condição unitária ou ações em tela estreita", async () => {
   await fixture(async page => {
     const first = page.getByRole("article").first();
     for (const width of [320, 390, 1024]) {
       await page.setViewportSize({ width, height: 900 });
       const prices = first.getByRole("group", { name: "Preço do produto", exact: true });
-      await expect(prices.getByText(/R\$\s*969,99/, { exact: true })).toBeVisible();
-      const pix = await prices.getByText("no Pix", { exact: true }).boundingBox();
-      const regular = await prices.getByText(/999,99 sem Pix/).boundingBox();
+      const regular = await prices.getByText(/R\$\s*999,99/, { exact: true }).boundingBox();
       const unit = await prices.getByText("Para 1 unidade.", { exact: true }).boundingBox();
       const controls = await first.locator("[data-product-controls]").boundingBox();
-      assert.ok(pix && regular && unit && controls);
-      assert.ok(pix.y + pix.height <= regular.y, `Pix sobrepôs preço regular em ${width}px`);
+      assert.ok(regular && unit && controls);
+      await expect(first.getByText(/Pix/)).toHaveCount(0);
       assert.ok(regular.y + regular.height <= unit.y, `preço regular sobrepôs unidade em ${width}px`);
       assert.ok(unit.y + unit.height <= controls.y, `unidade sobrepôs ações em ${width}px`);
       assert.ok(await prices.evaluate(element => element.scrollWidth <= element.clientWidth), `preço cortado em ${width}px`);
@@ -265,14 +261,14 @@ test("itens assistidos ou indisponíveis não recebem campo de compra", async ()
   }
 });
 
-test("card compara preço normal com Pix real sem descontar antecipadamente o carrinho", async () => {
+test("card mostra somente o preço real do carrinho, sem antecipar Pix ou criar referência riscada", async () => {
   await fixture(async page => {
     const prices = page.getByRole("group", { name: "Preço do produto", exact: true });
-    await expect(prices.locator("s")).toHaveText(/3,44/);
-    await expect(prices.getByText(/R\$\s*3,34/, { exact: true })).toBeVisible();
-    await expect(prices.getByText("no Pix", { exact: true })).toBeVisible();
+    await expect(prices.locator("s")).toHaveCount(0);
+    await expect(prices.locator("strong")).toHaveText(/R\$\s*3,44/);
+    await expect(prices.getByText(/R\$\s*3,34/, { exact: true })).toHaveCount(0);
     await expect(prices.getByText("Para 1 unidade.", { exact: true })).toBeVisible();
-    await expect(page.getByText("3% no Pix", { exact: true })).toBeVisible();
+    await expect(page.getByRole("article").getByText(/Pix/)).toHaveCount(0);
     if (process.env.PRODUCT_CARD_CAPTURE_ROOT) {
       mkdirSync(process.env.PRODUCT_CARD_CAPTURE_ROOT, { recursive: true });
       for (const width of [320, 390, 1280]) {
@@ -289,12 +285,12 @@ test("card compara preço normal com Pix real sem descontar antecipadamente o ca
   }, "soap");
 });
 
-test("promoção cadastrada mantém referência real e não soma percentuais ao Pix", async () => {
+test("promoção cadastrada mantém somente referência real e preço atual do carrinho", async () => {
   await fixture(async page => {
     const prices = page.getByRole("group", { name: "Preço do produto", exact: true });
     await expect(prices.locator("s")).toHaveText(/100,00/);
-    await expect(prices.getByText(/R\$\s*77,60/, { exact: true })).toBeVisible();
-    await expect(prices.getByText(/80,00 sem Pix/)).toBeVisible();
+    await expect(prices.locator("strong")).toHaveText(/R\$\s*80,00/);
+    await expect(page.getByRole("article").getByText(/Pix/)).toHaveCount(0);
     await expect(page.getByText("20% OFF", { exact: true })).toBeVisible();
     await expect(page.getByText("23% OFF", { exact: true })).toHaveCount(0);
     await page.getByRole("button", { name: "Adicionar", exact: true }).click();
@@ -305,10 +301,10 @@ test("promoção cadastrada mantém referência real e não soma percentuais ao 
   }, "promotion");
 });
 
-test("preço Pix unitário informa sua condição e preserva arredondamento no subtotal", async () => {
+test("preço unitário em centavos continua igual ao carrinho em várias unidades", async () => {
   await fixture(async page => {
     const prices = page.getByRole("group", { name: "Preço do produto", exact: true });
-    await expect(prices.getByText(/R\$\s*0,16/, { exact: true })).toBeVisible();
+    await expect(prices.locator("strong")).toHaveText(/R\$\s*0,17/);
     await expect(prices.getByText("Para 1 unidade.", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Adicionar", exact: true }).click();
     await page.getByRole("textbox", { name: quantityLabel }).fill("3");
@@ -316,7 +312,7 @@ test("preço Pix unitário informa sua condição e preserva arredondamento no s
     const item = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!)[0]);
     assert.equal(item.unitPriceCents, 17);
     const subtotal = item.unitPriceCents * item.quantity;
-    assert.equal(subtotal - pixDiscountCents(subtotal), 49);
+    assert.equal(subtotal, 51);
   }, "tiny");
   await fixture(async page => {
     await expect(page.getByText("3% no Pix", { exact: true })).toHaveCount(0);

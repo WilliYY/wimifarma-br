@@ -1,5 +1,7 @@
 # 28 - Mercado Pago: checkout e homologação
 
+Interface em 22/10/2026: o desconto Pix só aparece após escolher Pix no checkout, que inicia sem método selecionado. Preço público igual ao carrinho. Retomada, snapshot, API, gateway e valor persistido permanecem inalterados; contrato em [83](83-desconto-pix.md).
+
 ## Desconto Pix autorizado — 19/10/2026
 
 Novos pedidos Pix recebem 3% sobre os produtos após resgates, antes do frete. O desconto entra na criação atômica de pedido/cobrança; gateway, validação canônica e retomada usam o valor persistido. Não reprecificar tentativas anteriores nem reutilizar valor Pix no cartão. Contrato e ensaios em [83](83-desconto-pix.md).

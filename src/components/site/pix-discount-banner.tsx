@@ -17,7 +17,7 @@ export function PixDiscountBanner() {
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-800 sm:text-xs">Seu cuidado com mais economia</p>
               <h2 id="pix-discount-title" className="mt-1.5 text-2xl font-black leading-tight tracking-tight text-ink sm:text-3xl">Pague com Pix e ganhe <span className="text-brand">{PIX_DISCOUNT_PERCENT}% de desconto.</span></h2>
-              <p className="mt-2 text-xs leading-5 text-emerald-950/75 sm:text-sm">Desconto automático nos produtos ao finalizar. Frete à parte.</p>
+              <p className="mt-2 text-xs leading-5 text-emerald-950/75 sm:text-sm">Escolha Pix no checkout para aplicar o desconto nos produtos. Frete à parte.</p>
             </div>
           </div>
           <Link href="/catalogo?ordem=preco-asc" className="group inline-flex min-h-12 items-center justify-center gap-4 self-center rounded-full bg-emerald-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-950 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-900">Aproveitar no Pix <ArrowUpRight aria-hidden="true" className="h-4 w-4 motion-safe:transition-transform motion-safe:group-hover:-translate-y-0.5 motion-safe:group-hover:translate-x-0.5" /></Link>
