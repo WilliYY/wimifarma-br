@@ -60,11 +60,11 @@ export function CustomerMessagePreview() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-wide text-brand">Modelos para clientes</p>
-          <h3 className="mt-1 text-lg font-black text-ink" id="customer-message-preview-title">Prévia — envio ao cliente ainda não conectado</h3>
+          <h3 className="mt-1 text-lg font-black text-ink" id="customer-message-preview-title">Prévia de mensagens</h3>
         </div>
         <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900">Dados fictícios</span>
       </div>
-      <p className="mt-3 text-sm leading-6 text-muted">Veja como a Miauby poderá acompanhar cada etapa da compra. Os alertas atuais ao WhatsApp do proprietário continuam em um canal separado. Esta prévia não configura nem envia mensagens.</p>
+      <p className="mt-3 text-sm leading-6 text-muted">Confira modelos com dados fictícios. Esta prévia não envia mensagens. Os avisos operacionais de etapas para clientes são ativados nas opções abaixo; os alertas ao proprietário usam um canal separado.</p>
       <div className="mt-5 grid min-w-0 gap-4 sm:grid-cols-2">
         <label className="grid min-w-0 gap-2 text-sm font-bold text-ink">
           Etapa da compra
