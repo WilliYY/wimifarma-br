@@ -25,9 +25,9 @@ const bundle = build({
         inventorySource:kind==='demand'?'DISTRIBUTOR':'PHARMACY',supplierDemandAllowed:kind==='demand'};
       const cards=(kind==='grid'||kind==='large-grid')?[
         {...product,price:kind==='large-grid'?'1299.90':'6.90',promotionalPrice:kind==='large-grid'?'999.99':'4.99',cashbackEnabled:true,cashbackRateBps:200},
-        {...product,id:'synthetic-demand',slug:'sob-demanda',name:'Produto sintético com nome maior em duas linhas',price:kind==='large-grid'?'0.01':'4.85',inventorySource:'DISTRIBUTOR',supplierDemandAllowed:true,
-          brand:'Marca sintética com nome extenso',activeIngredients:['Composição sintética longa para conferir a linha de detalhes']},
-        {...product,id:'synthetic-generic',slug:'generico-sintetico',name:'Genérico sintético',price:'19.90',requiresPrescription:true,prescriptionType:'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
+        {...product,id:'synthetic-demand',slug:'sob-demanda',name:'Tadalafila 20 mg 4 comprimidos revestidos',price:kind==='large-grid'?'0.01':'4.85',inventorySource:'DISTRIBUTOR',supplierDemandAllowed:true,
+          brand:'EUROFARMA LABORATÓRIOS S.A',activeIngredients:['Composição sintética longa para conferir a linha de detalhes']},
+        {...product,id:'synthetic-generic',slug:'generico-sintetico',name:'Loratadina 10 mg 12 comprimidos',brand:'BIOLAB SANUS FARMACÊUTICA LTDA',price:'19.90',requiresPrescription:true,prescriptionType:'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
           catalogClassification:{kind:'MEDICINE',medicineClass:'GENERIC',ethical:true,otc:false}},
         {...product,id:'synthetic-similar',slug:'similar-sintetico',name:'Similar sintético',price:'12.90',requiresPrescription:true,prescriptionType:kind==='large-grid'?'CONTROLLED':'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
           catalogClassification:{kind:'MEDICINE',medicineClass:'SIMILAR',ethical:true,otc:false}}
@@ -94,10 +94,23 @@ test("cards compactos mantêm benefícios fora do preço e altura uniforme sem e
     const cards = page.getByRole("article");
     await expect(cards).toHaveCount(4);
     const title = cards.first().getByRole("link", { name: "Ver Produto sintético · Marca sintética", exact: true });
-    await expect(title.locator("span").first()).toHaveText("Marca sintética");
-    await expect(title).toContainText("Produto sintético");
+    await expect(title).toHaveText("Produto sintético Marca sintética");
+    await expect(title.locator(".font-black")).toHaveText("Marca sintética");
+    const eurofarma = cards.nth(1).getByRole("link");
+    await expect(eurofarma).toHaveText("Tadalafila 20 mg 4 comp. rev. EUROFARMA");
+    await expect(eurofarma).toHaveAttribute("title", "Tadalafila 20 mg 4 comprimidos revestidos · EUROFARMA LABORATÓRIOS S.A");
+    await expect(eurofarma).toHaveAttribute("aria-label", "Ver Tadalafila 20 mg 4 comprimidos revestidos · EUROFARMA LABORATÓRIOS S.A");
+    await expect(cards.nth(2).getByRole("link")).toHaveText("Loratadina 10 mg 12 comp. BIOLAB");
+    await expect(title.locator(".line-clamp-3")).toHaveCount(1);
     for (const width of [320, 390, 1280]) {
       await page.setViewportSize({ width, height: 900 });
+      if (width === 390) {
+        const titleBox = await eurofarma.boundingBox();
+        const brandBox = await eurofarma.locator(".font-black").boundingBox();
+        assert.ok(titleBox && brandBox);
+        assert.ok(brandBox.y >= titleBox.y && brandBox.y + brandBox.height <= titleBox.y + titleBox.height, "marca deve caber no título de três linhas em 390px");
+        assert.ok(brandBox.x >= titleBox.x && brandBox.x + brandBox.width <= titleBox.x + titleBox.width, "marca não deve ser cortada horizontalmente");
+      }
       const sizes = await cards.evaluateAll(elements => elements.map(element => element.getBoundingClientRect().height));
       if (process.env.PRODUCT_CARD_CAPTURE_ROOT) {
         mkdirSync(process.env.PRODUCT_CARD_CAPTURE_ROOT, { recursive: true });

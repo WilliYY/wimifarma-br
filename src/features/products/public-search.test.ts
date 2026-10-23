@@ -8,7 +8,35 @@ import {
   productSearchHref,
   ingredientSearchIdentities,
   isProductAssociation,
+  correctProductSearchQuery,
+  productSpellingVocabulary,
 } from "./public-search";
+
+test("corrige erros próximos de nomes e marcas sem alterar doses, EAN ou SKU", () => {
+  const vocabulary = productSpellingVocabulary([
+    { name: "Tadalafila 20 mg", brand: "Geolab" }, { name: "Dipirona 500 mg" },
+    { name: "Losartana 50 mg" }, { name: "Sabonete Dove" }, { name: "Bisoprolol 2,5 mg" },
+  ]);
+  assert.equal(correctProductSearchQuery("tadalaflia 20 mg", vocabulary), "tadalafila 20 mg");
+  assert.equal(correctProductSearchQuery("diperona 500mg", vocabulary), "dipirona 500mg");
+  assert.equal(correctProductSearchQuery("losartna geolba 50 mg", vocabulary), "losartana geolab 50 mg");
+  assert.equal(correctProductSearchQuery("dvoe", vocabulary), "dove");
+  assert.equal(correctProductSearchQuery("bisoprlol 2,5 mg", vocabulary), "bisoprolol 2,5 mg");
+  for (const query of ["tada", "tadalafila 75mg", "7896181915639", "GEOLBA-123", "GEOLBA_123", "GEOLBA123", "x".repeat(81)]) {
+    assert.equal(correctProductSearchQuery(query, vocabulary), null, query);
+  }
+  assert.equal(correctProductSearchQuery("casa", ["capa", "cama"]), null, "ambiguidade não escolhe uma palavra arbitrária");
+});
+
+test("busca aproximada só entra quando não há literal e mantém os filtros de dose e contexto", () => {
+  const products = ["Tadalafila 20 mg", "Tadalafila 5 mg", "Bisoprolol 2,5 mg", "Bisoprolol 5 mg", "Dipirona 500 mg", "Diperona especial 500 mg"]
+    .map((name, index) => ({ id: String(index), name, searchText: buildProductSearchText({ name, activeIngredients: [], searchTerms: [] }) }));
+  assert.deepEqual(rankProductsForQuery(products, "tadalaflia 20mg").map(p => p.id), ["0"]);
+  assert.deepEqual(rankProductsForQuery(products, "tadalaflia 75mg"), []);
+  assert.deepEqual(rankProductsForQuery(products, "bisoprlol 5mg").map(p => p.id), ["3"]);
+  assert.deepEqual(rankProductsForQuery(products, "diperona 500mg").map(p => p.id), ["5"], "nome literal prevalece");
+  assert.deepEqual(rankProductsForQuery(products, "sem dipirona"), []);
+});
 
 test("normaliza termos, remove repeticoes e preserva a grafia de exibicao", () => {
   assert.deepEqual(

@@ -1,5 +1,17 @@
 # Busca de produtos e galeria
 
+## Correção de digitação — 23/10/2026
+
+A busca mantém resultados literais e prefixos como prioridade. Quando não encontra correspondência, tenta corrigir palavras usando somente nomes, marcas, princípios ativos e termos dos produtos ativos cadastrados. Não há chamada de IA por digitação nem criação de sinônimos clínicos.
+
+- Aceita uma edição em palavras de 4 a 7 letras e até duas nas de 8 a 32, incluindo troca de letras adjacentes. Empates não geram sugestão. Números, doses, unidades e identificadores alfanuméricos permanecem como digitados.
+- A consulta corrigida passa pelos mesmos filtros de contexto, dose, disponibilidade comercial e paginação. Uma página literal existente impede sua substituição por resultados aproximados em outra página.
+- A API acrescenta `correctedQuery`, nulo quando não houve correção com resultados. Autocomplete e `/busca` exibem `Resultados aproximados para…`, preservando o texto digitado e a URL. A apresentação neutra das consultas por assunto considera a consulta corrigida.
+- O servidor compartilha por cinco minutos somente o vocabulário textual ativo; preços, estoque e ofertas continuam consultados normalmente. Falhas removem a promessa do cache para permitir nova tentativa.
+- O limite de 80 caracteres permanece. Não houve dependência, configuração, migração ou alteração de cadastro. Contrato dos títulos comerciais em [86](86-precos-e-desconto-real-nos-cards.md).
+
+Regressões focadas cobrem erros comuns, transposição, empates, prioridade literal, doses decimais, códigos, SQL parametrizado, paginação, cache e aviso visual. Evidências locais e conferência publicada em `outputs/busca-tolerante-2026-10-23/`, fora do Git.
+
 ## Evolução de 20/10/2026
 
 Busca por assuntos adicionada ao mesmo serviço de autocomplete/resultados. Relações revisadas por princípio ativo, separação de condições diferentes, precisão de dose e relação neutra de Rx somente nas consultas por assunto. Contrato, fontes e validação em [93-busca-por-assuntos.md](93-busca-por-assuntos.md). Substitui a ausência de sinônimos clínicos do escopo de 18/10; busca literal e publicação de fotos anteriormente autorizada permanecem.

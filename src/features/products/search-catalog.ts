@@ -1,9 +1,22 @@
 import { Prisma } from "@/generated/prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
-import { ingredientSearchIdentities, isPrescriptionSearchProduct, normalizeProductSearch, productSearchPlan, topicNamePattern } from "./public-search";
+import { correctProductSearchQuery, ingredientSearchIdentities, isPrescriptionSearchProduct, normalizeProductSearch, productSearchPlan, productSpellingVocabulary, topicNamePattern } from "./public-search";
 
 export const SEARCH_PAGE_SIZE = 24;
+
+let spellingCache: { expiresAt: number; words: Promise<string[]> } | undefined;
+function spellingVocabulary(prisma: ReturnType<typeof getPrisma>) {
+  if (!spellingCache || spellingCache.expiresAt <= Date.now()) {
+    const entry = {
+      expiresAt: Date.now() + 5 * 60_000,
+      words: prisma.product.findMany({ where: { status: "ACTIVE" }, select: { name: true, brand: true, activeIngredients: true, searchTerms: true } }).then(productSpellingVocabulary),
+    };
+    spellingCache = entry;
+    void entry.words.catch(() => { if (spellingCache === entry) spellingCache = undefined; });
+  }
+  return spellingCache.words;
+}
 
 const searchSelect = {
   ...supplierOfferInclude,
@@ -58,19 +71,34 @@ function searchOrder(query: string) {
 
 export async function getSearchCatalog(query: string, { page = 1, pageSize = SEARCH_PAGE_SIZE, relatedLimit = 8 } = {}) {
   const cleanQuery = query.trim();
-  const plan = productSearchPlan(cleanQuery);
+  let plan = productSearchPlan(cleanQuery);
   if (cleanQuery.length < 2 || cleanQuery.length > 80 || plan.blocked || (!plan.patterns.length && !plan.topics.length)) {
-    return { products: [], relatedProducts: [], count: 0 };
+    return { products: [], relatedProducts: [], count: 0, correctedQuery: null as string | null };
   }
   const prisma = getPrisma();
   const safePage = Number.isInteger(page) && page >= 1 && page <= 10_000 ? page : 1;
   const safeSize = Math.min(SEARCH_PAGE_SIZE, Math.max(1, pageSize));
-  const condition = queryCondition(cleanQuery);
-  const matches = await prisma.$queryRaw<{ id: string; total: number }[]>(Prisma.sql`
+  const findMatches = (value: string, size = safeSize, pageNumber = safePage) => prisma.$queryRaw<{ id: string; total: number }[]>(Prisma.sql`
     SELECT p."id", (count(*) OVER())::int AS total FROM "Product" p
-    WHERE p."status" = 'ACTIVE' AND ${condition}
-    ORDER BY ${searchOrder(cleanQuery)} LIMIT ${safeSize} OFFSET ${(safePage - 1) * safeSize}
+    WHERE p."status" = 'ACTIVE' AND ${queryCondition(value)}
+    ORDER BY ${searchOrder(value)} LIMIT ${size} OFFSET ${(pageNumber - 1) * size}
   `);
+  let matches = await findMatches(cleanQuery);
+  let correctedQuery: string | null = null;
+  if (!matches.length && /[a-z]{4}/.test(normalizeProductSearch(cleanQuery))) {
+    const suggestion = correctProductSearchQuery(cleanQuery, await spellingVocabulary(prisma));
+    if (suggestion && (safePage === 1 || !(await findMatches(cleanQuery, 1, 1)).length)) {
+      const correctedPlan = productSearchPlan(suggestion);
+      if (!correctedPlan.blocked) {
+        matches = await findMatches(suggestion);
+        if (matches.length) {
+          correctedQuery = suggestion;
+          plan = correctedPlan;
+        }
+      }
+    }
+  }
+  const condition = queryCondition(correctedQuery ?? cleanQuery);
   const rows = matches.length ? await prisma.product.findMany({
     where: { status: "ACTIVE", id: { in: matches.map(row => row.id) } }, select: searchSelect,
   }) : [];
@@ -93,7 +121,7 @@ export async function getSearchCatalog(query: string, { page = 1, pageSize = SEA
   const relatedRows = relatedIds.length ? await prisma.product.findMany({
     where: { status: "ACTIVE", id: { in: relatedIds.map(row => row.id) } }, select: searchSelect, orderBy: [{ name: "asc" }, { id: "asc" }],
   }) : [];
-  return { products, relatedProducts: relatedRows.map(row => toSaleProduct(row)), count: matches[0]?.total ?? 0 };
+  return { products, relatedProducts: relatedRows.map(row => toSaleProduct(row)), count: matches[0]?.total ?? 0, correctedQuery };
 }
 
 export type SearchCatalogProduct = Awaited<ReturnType<typeof getSearchCatalog>>["products"][number];

@@ -18,8 +18,11 @@ export type RelatedProductCardItem = PublicProductSearchItem & {
 };
 
 export function PublicProductCard({ product }: { product: RelatedProductCardItem }) {
-  const displayName = productDisplayName(product.name);
+  const displayName = productDisplayName(product.name)
+    .replace(/\bcomprimidos?\b/giu, "comp.")
+    .replace(/\brevestidos?\b/giu, "rev.");
   const titleBrand = productTitleBrand(product.name, product.brand);
+  const fullTitle = `${product.name}${titleBrand ? ` · ${product.brand?.trim()}` : ""}`;
   const normalPrice = Number(product.price);
   const currentPrice = Number(product.promotionalPrice ?? product.price);
   const hasPromotion = Boolean(
@@ -82,13 +85,12 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
           {product.category || product.brand || "Produto"}
         </span>
         <Link
-          aria-label={`Ver ${displayName}${titleBrand ? ` · ${titleBrand}` : ""}`}
+          aria-label={`Ver ${fullTitle}`}
           className="mt-1 h-16 min-w-0 shrink-0 text-sm font-bold leading-5 text-ink after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand"
           href={`/produto/${product.slug}`}
-          title={`${displayName}${titleBrand ? ` · ${titleBrand}` : ""}`}
+          title={fullTitle}
         >
-          {titleBrand && <span className="block truncate font-black" title={titleBrand}>{titleBrand}</span>}
-          <span className="line-clamp-2">{displayName}</span>
+          <span className="line-clamp-3">{displayName}{titleBrand ? <> <span className="font-black">{titleBrand}</span></> : null}</span>
         </Link>
         <span className="mt-2 h-4 shrink-0 truncate text-xs font-semibold leading-4 text-muted" title={product.activeIngredients.join(" + ") || undefined}>
           {product.activeIngredients.join(" + ") || "Consulte os detalhes"}

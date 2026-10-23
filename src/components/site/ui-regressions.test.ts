@@ -70,6 +70,35 @@ test("busca por assunto apresenta Rx sem foto/promoção e mantém a navegação
   });
 });
 
+test("busca aproximada preserva o texto digitado, a URL e a apresentação neutra de Rx", async () => {
+  await fixture("search", async page => {
+    const rx = { ...product("Losartana 50mg"), requiresPrescription: true, prescriptionType: "ORDINARY", imageUrl: "/rx.webp", promotionalPrice: "8.00" };
+    await page.route("**/api/produtos/busca?*", route => {
+      const query = new URL(route.request().url()).searchParams.get("q");
+      return route.fulfill({ json: { data: { products: [rx], relatedProducts: [], correctedQuery: query === "pressaoo" ? "pressao" : null } } });
+    });
+    await page.clock.install();
+    await page.goto("http://127.0.0.1:3198");
+    const input = page.getByRole("combobox");
+    const notice = page.getByText("Resultados aproximados para “pressao”.", { exact: true });
+    await input.fill("pressaoo"); await page.clock.runFor(250);
+    await expect(notice).toBeVisible();
+    await expect(input).toHaveValue("pressaoo");
+    const result = page.getByRole("option", { name: /Losartana/ });
+    await expect(result.locator("[data-prescription-search]")).toHaveCount(1);
+    await expect(result.locator("img")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Ver todos os resultados" })).toHaveAttribute("href", "/busca?q=pressaoo");
+    await input.press("Enter");
+    assert.deepEqual(await page.evaluate("window.navigations"), ["/busca?q=pressaoo"]);
+    await input.click(); await input.fill("losartana");
+    await expect(notice).toHaveCount(0);
+    await page.clock.runFor(250);
+    await expect(result.locator("img")).toHaveCount(1);
+    await expect(page.getByText(/Resultados aproximados para/)).toHaveCount(0);
+    await expect(input).toHaveValue("losartana");
+  });
+});
+
 test("Enter opens current search immediately, including during debounce and after arrow selection", async () => {
   await fixture("search", async page => {
     await page.route("**/api/produtos/busca?*", route => {

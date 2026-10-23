@@ -34,6 +34,7 @@ export type PublicProductSearchItem = {
 export type SearchRankableProduct = {
   id: string;
   name: string;
+  brand?: string | null;
   searchText: string;
   activeIngredients?: string[];
   searchTerms?: string[];
@@ -183,7 +184,69 @@ export function buildProductSearchText(product: ProductSearchSource) {
     .join(" ");
 }
 
-export function rankProductsForQuery<T extends SearchRankableProduct>(
+export function productSpellingVocabulary(products: { name: string; brand?: string | null; activeIngredients?: string[]; searchTerms?: string[] }[]) {
+  return [...new Set(products.flatMap(product => normalizeProductSearch([
+    product.name, product.brand, ...(product.activeIngredients ?? []), ...(product.searchTerms ?? []),
+  ].filter(Boolean).join(" ")).split(" ").filter(word => /^[a-z]{4,32}$/.test(word))))].sort();
+}
+
+function spellingDistance(left: string, right: string, limit: number) {
+  if (Math.abs(left.length - right.length) > limit) return limit + 1;
+  let previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+  let beforePrevious: number[] | undefined;
+  for (let i = 1; i <= left.length; i++) {
+    const current = Array<number>(right.length + 1).fill(limit + 1);
+    current[0] = i;
+    let minimum = i;
+    for (let j = Math.max(1, i - limit); j <= Math.min(right.length, i + limit); j++) {
+      current[j] = Math.min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + Number(left[i - 1] !== right[j - 1]));
+      if (beforePrevious && i > 1 && j > 1 && left[i - 1] === right[j - 2] && left[i - 2] === right[j - 1]) {
+        current[j] = Math.min(current[j], beforePrevious[j - 2] + 1);
+      }
+      minimum = Math.min(minimum, current[j]);
+    }
+    if (minimum > limit) return limit + 1;
+    beforePrevious = previous;
+    previous = current;
+  }
+  return previous[right.length];
+}
+
+export function correctProductSearchQuery(query: string, vocabulary: string[]) {
+  if (query.length > 80) return null;
+  const known = new Set(vocabulary);
+  let changed = false;
+  const corrected = query.replace(/[\p{L}\p{N}]+(?:[-/_][\p{L}\p{N}]+)*/gu, token => {
+    const word = normalizeProductSearch(token);
+    if (!/^[a-z]{4,32}$/.test(word) || /[\d/-]/.test(token) || known.has(word) || vocabulary.some(candidate => candidate.startsWith(word))) return token;
+    const limit = word.length >= 8 ? 2 : 1;
+    let best = limit + 1;
+    let replacement: string | null = null;
+    let ambiguous = false;
+    for (const candidate of vocabulary) {
+      if (Math.abs(candidate.length - word.length) > limit) continue;
+      const distance = spellingDistance(word, candidate, limit);
+      if (distance < best) {
+        best = distance;
+        replacement = candidate;
+        ambiguous = false;
+      } else if (distance === best && candidate !== replacement) ambiguous = true;
+    }
+    if (!replacement || ambiguous || best > limit) return token;
+    changed = true;
+    return replacement;
+  });
+  return changed ? corrected : null;
+}
+
+export function rankProductsForQuery<T extends SearchRankableProduct>(products: T[], query: string): T[] {
+  const exact = rankExactProductsForQuery(products, query);
+  if (exact.length || productSearchPlan(query).blocked) return exact;
+  const corrected = correctProductSearchQuery(query, productSpellingVocabulary(products));
+  return corrected ? rankExactProductsForQuery(products, corrected) : exact;
+}
+
+function rankExactProductsForQuery<T extends SearchRankableProduct>(
   products: T[],
   query: string,
 ) {

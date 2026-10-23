@@ -24,5 +24,6 @@ export async function GET(request: Request) {
   const result = await getSearchCatalog(query, { pageSize: 6, relatedLimit: 4 });
   return NextResponse.json({ data: {
     products: result.products.map(serializeProduct), relatedProducts: result.relatedProducts.map(serializeProduct),
+    correctedQuery: result.correctedQuery,
   } }, { headers: { "Cache-Control": "public, max-age=30, stale-while-revalidate=120" } });
 }

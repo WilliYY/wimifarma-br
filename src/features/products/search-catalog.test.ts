@@ -47,13 +47,49 @@ test("busca pagina no banco, preserva ordem e não expõe foto privada/ofertas",
 
 test("texto de busca nunca vira SQL e consulta vazia não usa banco", async () => {
   const queries: Prisma.Sql[] = [];
-  const service = await fixture({ $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return []; } });
+  const service = await fixture({ $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return []; }, product: { findMany: async () => [] } });
   assert.equal((await service.getSearchCatalog(" + ")).count, 0);
   assert.equal(queries.length, 0);
   await service.getSearchCatalog("losartana'); DROP TABLE Product; --");
   assert.equal(queries.length, 1);
   assert.doesNotMatch(queries[0].text, /DROP TABLE/);
   assert.ok(queries[0].values.some(value => String(value).includes("drop table")));
+});
+
+test("correção usa vocabulário ativo em cache e mantém paginação/dose no SQL parametrizado", async () => {
+  const queries: Prisma.Sql[] = [];
+  let vocabularyReads = 0;
+  const service = await fixture({
+    $queryRaw: async (sql: Prisma.Sql) => {
+      queries.push(sql);
+      return sql.values.includes("(^| )losartana") ? [{ id: "match", total: 48 }] : [];
+    },
+    product: { findMany: async ({ select, where }: { select: Record<string, unknown>; where: Record<string, unknown> }) => {
+      assert.equal(where.status, "ACTIVE");
+      if (!select.id) vocabularyReads++;
+      return [product("match")];
+    } },
+  });
+  const result = await service.getSearchCatalog("losartna 50mg", { page: 2, relatedLimit: 0 });
+  assert.equal(result.correctedQuery, "losartana 50mg");
+  assert.equal(result.count, 48);
+  assert.equal(result.products[0].id, "match");
+  assert.deepEqual(queries.at(-1)!.values.slice(-2), [24, 24]);
+  assert.ok(queries.at(-1)!.values.includes("(^|[^0-9.,])50\\s*mg($|[^a-z0-9])"));
+  await service.getSearchCatalog("losartnaa 50mg", { relatedLimit: 0 });
+  assert.equal(vocabularyReads, 1, "consultas próximas compartilham somente o vocabulário, não preços ou estoque");
+});
+
+test("página fora da faixa não troca um literal existente por outro nome aproximado", async () => {
+  const queries: Prisma.Sql[] = [];
+  const service = await fixture({
+    $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return sql.values.at(-1) === 0 ? [{ id: "literal", total: 1 }] : []; },
+    product: { findMany: async () => [product("dipirona", { name: "Dipirona 500mg" })] },
+  });
+  const result = await service.getSearchCatalog("diperona", { page: 2, relatedLimit: 0 });
+  assert.equal(result.products.length, 0);
+  assert.equal(result.correctedQuery, null);
+  assert.ok(queries.every(sql => !sql.values.includes("(^| )dipirona")));
 });
 
 test("sidebar usa somente pedidos concluídos pagos e exclui gateway de teste", async () => {

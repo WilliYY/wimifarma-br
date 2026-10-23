@@ -10,6 +10,7 @@ import { productDisplayName } from "@/features/products/display-name";
 
 type ProductSearchResultsProps = {
   activeId: string | null;
+  correctedQuery?: string | null;
   error: string | null;
   id: string;
   isLoading: boolean;
@@ -118,6 +119,7 @@ function ResultItem({
 
 export function ProductSearchResults({
   activeId,
+  correctedQuery,
   error,
   id,
   isLoading,
@@ -129,12 +131,17 @@ export function ProductSearchResults({
   relatedProducts,
 }: ProductSearchResultsProps) {
   const trimmedQuery = query.trim();
-  const topicSearch = productSearchPlan(trimmedQuery).topics.length > 0;
+  const topicSearch = productSearchPlan(correctedQuery ?? trimmedQuery).topics.length > 0;
 
   return (
     <div
       className="max-h-[min(34rem,calc(100dvh-11rem))] overflow-y-auto rounded-2xl border border-line bg-white p-2 shadow-[0_16px_40px_rgba(17,24,39,0.16)] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2 motion-safe:duration-200"
     >
+      {trimmedQuery.length >= 2 && !isLoading && !error && products.length > 0 && correctedQuery ? (
+        <p className="px-3 py-2 text-xs leading-5 text-muted" role="status">
+          Resultados aproximados para “{correctedQuery}”.
+        </p>
+      ) : null}
       <div id={id} role="listbox">
       {trimmedQuery.length < 2 ? (
         <div className="flex min-h-14 items-center gap-3 rounded-xl bg-surface-subtle px-3 py-2.5 text-sm text-muted">

@@ -29,7 +29,7 @@ export default async function SearchPage({ searchParams }: Props) {
   const query = searchQuery(params.q);
   const page = catalogPageNumber(params.pagina);
   const result = await getSearchCatalog(query, { page });
-  const topicSearch = productSearchPlan(query).topics.length > 0;
+  const topicSearch = productSearchPlan(result.correctedQuery ?? query).topics.length > 0;
   if (page > 1 && !result.products.length) notFound();
   const singles = result.products.filter(product => !isProductAssociation(product));
   const associations = result.products.filter(isProductAssociation);
@@ -53,6 +53,7 @@ export default async function SearchPage({ searchParams }: Props) {
             <div className="min-w-0">
               <h1 className="max-w-3xl break-words text-3xl font-black tracking-tight text-ink sm:text-4xl">{query ? <>Você buscou <span className="text-brand">“{query}”</span></> : "Encontre o que você procura"}</h1>
               <p className="mt-3 text-sm text-muted">{query.length >= 2 ? `${result.count} ${result.count === 1 ? "produto encontrado" : "produtos encontrados"}` : "Busque pelo nome, pela marca ou pelo princípio ativo."}</p>
+              {result.correctedQuery && result.products.length > 0 ? <p className="mt-2 text-sm text-muted">Resultados aproximados para “{result.correctedQuery}”.</p> : null}
             </div>
             <form action="/busca" className="flex min-h-12 w-full items-center gap-2 rounded-full border border-line bg-white p-1.5 pl-4 sm:max-w-sm" role="search">
               <Search aria-hidden="true" className="h-4 w-4 shrink-0 text-brand" />

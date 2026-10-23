@@ -19,6 +19,7 @@ type SearchResponse = {
   data?: {
     products: PublicProductSearchItem[];
     relatedProducts: PublicProductSearchItem[];
+    correctedQuery?: string | null;
   };
   error?: string;
 };
@@ -26,6 +27,7 @@ type SearchResponse = {
 const emptyResults = {
   products: [] as PublicProductSearchItem[],
   relatedProducts: [] as PublicProductSearchItem[],
+  correctedQuery: null as string | null,
 };
 
 export function SiteSearch() {
@@ -78,7 +80,7 @@ export function SiteSearch() {
           throw new Error(payload.error || "Nao foi possivel buscar agora.");
         }
 
-        setResults(payload.data);
+        setResults({ ...payload.data, correctedQuery: payload.data.correctedQuery ?? null });
         setCompletedQuery(trimmedQuery);
         setActiveId(
           (currentId) =>
@@ -275,6 +277,7 @@ export function SiteSearch() {
           <div className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-50">
             <ProductSearchResults
               activeId={activeId}
+              correctedQuery={results.correctedQuery}
               error={error}
               id="desktop-product-search-results"
               isLoading={isLoading}
@@ -357,6 +360,7 @@ export function SiteSearch() {
             <div className="mt-3 min-h-0 flex-1">
               <ProductSearchResults
                 activeId={activeId}
+                correctedQuery={results.correctedQuery}
                 error={error}
                 id="mobile-product-search-results"
                 isLoading={isLoading}

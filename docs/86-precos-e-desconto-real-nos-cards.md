@@ -2,7 +2,9 @@
 
 ## Marca no título — 23/10/2026
 
-Os cards compartilhados de home, catálogo, busca e relacionados mostram a marca cadastrada na primeira linha do próprio título, seguida do nome/dose/apresentação em duas linhas. O bloco substitui a antiga linha de marca abaixo da composição, conservando a altura total e o alinhamento. Quando a marca já está no nome, ela não é repetida; diferenças de caixa/acentos são normalizadas e a comparação respeita palavras completas. Marcas ausentes não são inventadas. Nome completo e marca ficam no atributo `title` e no nome acessível do link. Sem alteração de cadastro, preço, carrinho, EAN ou estoque.
+Os cards compartilhados de home, catálogo, busca e relacionados mostram primeiro nome, dose e apresentação, com a marca curta ao final do próprio título em peso destacado, sem uma linha de marca antes do nome. O conjunto ocupa até três linhas na mesma altura reservada, preservando o alinhamento. Somente no título visível do card, `comprimido(s)` é abreviado para `comp.` e `revestido(s)` para `rev.`, sem abreviar ou remover dose, quantidade, liberação ou outras formulações. Exemplos: `Loratadina 10 mg 12 comp. BIOLAB` e `Tadalafila 20 mg 4 comp. rev. EUROFARMA`. Nome original completo permanece no atributo `title`, no nome acessível e no carrinho.
+
+A marca vem do cadastro, sem inventar laboratório: são removidos apenas sufixos corporativos como `LABORATÓRIOS FARMACÊUTICOS S.A`, `INDÚSTRIA FARMACÊUTICA S/A` e `LTDA`; `BIOLAB SANUS` usa a denominação curta `BIOLAB`, enquanto `SANOFI MEDLEY` permanece composta. Quando a marca curta já está no nome, ela não é repetida; diferenças de caixa/acentos são normalizadas e a comparação respeita palavras completas. Marcas ausentes não são inventadas. O nome original completo e a marca cadastrada distinta ficam no atributo `title` e no nome acessível do link. Sem alteração de cadastro, doses, quantidades, preço, carrinho, EAN ou estoque.
 
 ## Regra vigente — preço do carrinho, sem antecipar Pix — 22/10/2026
 

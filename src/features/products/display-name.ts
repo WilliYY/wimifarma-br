@@ -1,7 +1,16 @@
 /** Compact presentation only. Keep the registered name for identity, search and orders. */
 export function productTitleBrand(name: string, brand?: string | null) {
-  const label = brand?.trim().replace(/\s+/g, " ");
+  let label = brand?.trim().replace(/\s+/g, " ");
   if (!label) return null;
+  let previousLabel;
+  do {
+    previousLabel = label;
+    label = label
+      .replace(/\s+(?:s\.?\s*[/ .]?\s*a\.?|ltda\.?)$/iu, "")
+      .replace(/\s+(?:laborat[oó]rios?(?:\s+farmac[eê]uticos?)?|ind[uú]stria(?:\s+farmac[eê]utica)?|farmac[eê]utica)$/iu, "")
+      .trim();
+  } while (label !== previousLabel);
+  if (/^biolab sanus$/iu.test(label)) label = "BIOLAB";
   const normalize = (value: string) => value.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
   const key = normalize(label);
   return !key || ` ${normalize(name)} `.includes(` ${key} `) ? null : label;

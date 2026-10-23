@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Busca tolerante a erros e marca ao final do título
+
+- A busca tenta uma correção limitada pelo vocabulário cadastrado somente após ausência de resultado literal, rejeitando empates e preservando dose, números e identificadores. Autocomplete e página sinalizam resultados aproximados sem reescrever a entrada; filtros e paginação continuam no PostgreSQL com parâmetros. Cache de cinco minutos contém somente palavras. Contrato em [68](68-busca-e-galeria.md).
+- Conforme esclarecimento do lojista, o título do card passa a apresentar produto, dose/apresentação e marca curta ao final, por exemplo `Tadalafila 20 mg 4 comp. rev. EUROFARMA`. Abreviações ficam somente no card; nome cadastrado, carrinho e nome acessível permanecem completos. Esta decisão substitui a posição inicial da marca registrada abaixo. Contrato em [86](86-precos-e-desconto-real-nos-cards.md).
+
 ## 2026-10-23 — Mais espaço para pesquisa no cabeçalho
 
 - Manter Maps, WhatsApp e Sair somente com ícones em todos os tamanhos em que aparecem. Remover texto/expansão desktop e devolver espaço à busca flexível, preservando endereço no tooltip, acessibilidade, sessão, saldos e atalho administrativo. Registro em [10](10-layout-e-experiencia.md).
