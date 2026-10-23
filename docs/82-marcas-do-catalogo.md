@@ -1,5 +1,22 @@
 # 82 — Marcas do catálogo na home
 
+## Johnson’s e Pampers — 23/10/2026
+
+Acrescentados os logos oficiais de Johnson’s e Pampers para as marcas já publicadas. As grafias `Johnson’s` e `Johnson’s Baby` usam a mesma arte, mantendo seus filtros separados; `Pampers` recebe seu próprio asset. São apenas três entradas no mapa visual existente, sem mudança na inclusão automática, na ordem ou em produtos/preços/estoque. Não usar o logo corporativo Johnson & Johnson para representar a linha Johnson’s.
+
+| Arquivo | Dimensões | Bytes | Fonte oficial |
+| --- | --- | --- | --- |
+| `johnsons.webp` | 464 × 200 | 23.352 | [Marcas Kenvue](https://www.kenvue.com/brands), [PNG original](https://kenvue-production-kenvue.s3.us-east-1.amazonaws.com/brightspot/b9/a5/a4e3e24c8d95495eb16377fc8dfb/10cfeeb2-5040-4218-a3c1-21fdea744994-2x.png) |
+| `pampers.webp` | 480 × 218 | 8.360 | [Pampers Brasil](https://www.pampers.com.br/), [SVG original](https://images.ctfassets.net/t4odg9b4leib/H6pilwZxMcCa3D9SpWHcS/8747be80a2dce51bd950d5e892a718bc/Pampers_Logo_Revamp__2_.svg) |
+
+WebP lossless; Johnson’s sem ampliação e Pampers rasterizado do vetor. Proporções, letras e cores preservadas; carregamento continua local e sob demanda. Marcas pertencem aos respectivos titulares, sem declaração de parceria.
+
+A conferência de catálogo desta tarefa não demonstra linhas completas: entre os sete nomes da referência, havia 3 Dove, 3 Johnson’s/Johnson’s Baby, 23 L’Oréal Paris, 1 Pampers e 2 Ducray (grupo Pierre Fabre), além de 48 La Roche-Posay, 37 Vichy e 16 CeraVe do grupo L’Oréal. Não foram encontrados produtos ativos sob Novo Nordisk ou Rexona. Contagens são datadas, não comprovam disponibilidade atual de fornecedor. Nenhum produto foi adicionado para preencher lacunas.
+
+As 32 capas de Dove, Johnson’s, Pampers, Ducray e L’Oréal Paris responderam HTTP 200, decodificaram como WebP e foram revisadas em prancha; permaneceram preservadas. As demais 101 capas das três marcas dermatológicas não fizeram parte desta revisão visual. Evidências, hashes e limitações em `outputs/linhas-e-fotos-2026-10-23/`, fora do Git.
+
+Validação local desta alteração: 19 testes existentes de marcas e busca aprovados; TypeScript, lint, `git diff --check` e 484 testes de segurança aprovados. Os dois novos assets passaram pela inspeção visual. Estado de CI, build e publicação deve ser conferido na evidência final da tarefa; a preparação não comprova ativação.
+
 ## Arraste e identidade das marcas — 20/10/2026
 
 O carrossel permite arrastar com o mouse, inclusive iniciando no logo ou link. A captura começa após seis pixels, com encaixe e rolagem suave suspensos durante o gesto. Soltar/cancelar limpa a captura; arrastar não abre o catálogo. Clique comum, Enter, Tab, setas e movimento reduzido são preservados. Toque continua com rolagem horizontal nativa e permite rolar a página verticalmente.

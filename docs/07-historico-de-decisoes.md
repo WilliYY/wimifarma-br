@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Logos oficiais e conferência de linhas
+
+- Adicionar logos locais de Johnson’s e Pampers para marcas existentes, mantendo filtros, ordem, produtos e regras comerciais. Usar a identidade Johnson’s fornecida pela Kenvue, preservando a distinção em relação ao logo corporativo Johnson & Johnson da referência. Fontes e limites em [82](82-marcas-do-catalogo.md).
+- Conferência por registros ativos não comprova linha completa nem estoque de distribuidor. Preservar as 32 capas revisadas sem falha; lacunas de cadastro não autorizam presumir disponibilidade ou abrir novos lotes de publicação.
+
 ## 2026-10-23 — Auditoria funcional e de acessos
 
 - Reproduzidos quatro defeitos: troca de senha local vinculada ao Club sem validação da credencial atual; ausência de aviso em cancelamentos online; avaliação bloqueada pela compra recente integralmente faltante; link de catálogo inválido no checkout vazio. Corrigir com regressões sintéticas e revisão independente, preservando Google-only, concorrência, outbox, consentimento e idempotência financeira.
