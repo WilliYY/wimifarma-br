@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Operação administrativa: pedidos em lista única com etapas, avisos ao cliente, notificações com visualização, catálogo de 100 em 100 e cashback compacto em massa. Contratos, limites e publicação em [97](docs/97-operacao-admin-e-etapas-whatsapp.md).
+
 Preços públicos iguais aos do carrinho; 3% Pix somente após escolher Pix no checkout, com arte promocional preservada: [documento 83](docs/83-desconto-pix.md) e [documento 86](docs/86-precos-e-desconto-real-nos-cards.md).
 
 Página de produto organizada para celular, com cabeçalho compacto, compra legível e atalhos de atendimento sem cobrir os controles: [documento 19](docs/19-produtos-e-campanhas.md#organização-mobile-em-22102026).

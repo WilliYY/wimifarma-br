@@ -1,5 +1,7 @@
 # Usuarios Wimifarma
 
+Navegação de 22/10/2026: menu diário reduzido, Fretes/Pagamentos em configurações recolhidas e cofre sem atalho. Rotas e permissões permanecem; cofre continua exclusivo ADMIN, cifrado e sem cache. Contrato em [97](97-operacao-admin-e-etapas-whatsapp.md).
+
 ## Ranking e histórico — 04/10/2026
 
 Pessoas e acessos oferece filtro de mês e ordenação por gasto ou quantidade, preservando os controles de acesso. Somente pedidos `COMPLETED` + `PAID`, vinculados legitimamente ao cliente e sem OnlinePayment de ambiente teste, entram no ranking. Mês considera a criação do pedido em `America/Sao_Paulo`, início inclusivo/fim exclusivo. Sem mês, usa todo histórico. Não é relatório fiscal, nem saldo a receber.

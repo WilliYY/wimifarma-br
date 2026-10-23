@@ -608,6 +608,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
   const [origin, setOrigin] = useState<"PHARMACY" | "DISTRIBUTOR">("PHARMACY");
   const originInitialized = useRef(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [catalogPage, setCatalogPage] = useState(1);
 
   async function loadProducts() {
     try {
@@ -735,19 +736,23 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
     }),
     [categoryFilter, classificationFilter, products, query, sort, statusFilter, origin],
   );
-  const visibleSelectedIds = visibleBulkSelection(selectedIds, visibleProducts);
-  const selectedProducts = visibleProducts.filter(product => visibleSelectedIds.includes(product.id));
-  const selectableProducts = visibleProducts.slice(0, BULK_PRODUCT_LIMIT);
+  const catalogPages = Math.max(1, Math.ceil(visibleProducts.length / 100));
+  const currentCatalogPage = Math.min(catalogPage, catalogPages);
+  const pagedProducts = useMemo(() => visibleProducts.slice((currentCatalogPage - 1) * 100, currentCatalogPage * 100), [visibleProducts, currentCatalogPage]);
+  useEffect(() => { setCatalogPage(1); }, [origin, query, categoryFilter, classificationFilter, statusFilter, sort]);
+  const visibleSelectedIds = visibleBulkSelection(selectedIds, pagedProducts);
+  const selectedProducts = pagedProducts.filter(product => visibleSelectedIds.includes(product.id));
+  const selectableProducts = pagedProducts.slice(0, BULK_PRODUCT_LIMIT);
   const allVisibleSelected = selectableProducts.length > 0 && selectableProducts.every(product => visibleSelectedIds.includes(product.id));
   useEffect(() => {
     setSelectedIds(current => {
-      const next = visibleBulkSelection(current, visibleProducts);
+      const next = visibleBulkSelection(current, pagedProducts);
       return next.length === current.length && next.every((id, index) => id === current[index]) ? current : next;
     });
-  }, [visibleProducts]);
+  }, [pagedProducts]);
   function toggleSelection(id: string) {
     setSelectedIds(current => {
-      const selected = visibleBulkSelection(current, visibleProducts);
+      const selected = visibleBulkSelection(current, pagedProducts);
       if (selected.includes(id)) return selected.filter(value => value !== id);
       if (selected.length >= BULK_PRODUCT_LIMIT) { toast.error("Selecione até 50 produtos por lote."); return selected; }
       return [...selected, id];
@@ -918,7 +923,12 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                     </label>
                   </div>
                   <div className="flex min-h-9 flex-wrap items-center justify-between gap-2 xl:col-span-2">
-                    <p className="text-xs font-semibold text-muted">{visibleProducts.length} de {originProductCount} produtos · {products.length} no catálogo</p>
+                    <p className="text-xs font-semibold text-muted">{visibleProducts.length} de {originProductCount} produtos · {products.length} no catálogo · 100 por página</p>
+                    {catalogPages > 1 && <nav aria-label="Páginas de produtos" className="flex items-center gap-2 text-xs font-semibold text-muted">
+                      <Button aria-label="Página anterior de produtos" size="sm" variant="secondary" disabled={currentCatalogPage <= 1} onClick={() => { setSelectedIds([]); setCatalogPage(currentCatalogPage - 1); }}>Anterior</Button>
+                      <span>Página {currentCatalogPage} de {catalogPages}</span>
+                      <Button aria-label="Próxima página de produtos" size="sm" variant="secondary" disabled={currentCatalogPage >= catalogPages} onClick={() => { setSelectedIds([]); setCatalogPage(currentCatalogPage + 1); }}>Próxima</Button>
+                    </nav>}
                     {hasActiveFilters ? (
                       <Button onClick={clearFilters} size="sm" type="button" variant="ghost">
                         <X className="h-4 w-4" />
@@ -936,7 +946,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                       <label className="flex min-h-11 cursor-pointer items-center gap-2 text-xs font-semibold text-muted"><input aria-label="Selecionar produtos visíveis, até 50" className="h-4 w-4 accent-brand" type="checkbox" checked={allVisibleSelected} ref={element => { if (element) element.indeterminate = visibleSelectedIds.length > 0 && !allVisibleSelected; }} onChange={event => setSelectedIds(event.target.checked ? selectableProducts.map(product => product.id) : [])} />{visibleSelectedIds.length ? `${visibleSelectedIds.length} selecionados` : "Selecionar visíveis"}{visibleProducts.length > BULK_PRODUCT_LIMIT && " · limite 50"}</label>
                       <div className="flex flex-wrap items-center gap-2">{visibleSelectedIds.length > 0 && <Button onClick={() => setSelectedIds([])} size="sm" type="button" variant="ghost">Limpar seleção</Button>}<ProductBulkEditor canManageFinancial={canManageCashback} products={selectedProducts} onSaved={async () => { setSelectedIds([]); await loadProducts(); }} /></div>
                     </div>
-                    {visibleProducts.map((product) => {
+                    {pagedProducts.map((product) => {
                       const status = statusInfo[product.status];
                       const isFeatured = isShowcasePosition(product.featuredPosition);
                       const distributor = product.inventorySource === "DISTRIBUTOR";

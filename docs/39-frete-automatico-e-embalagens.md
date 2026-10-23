@@ -1,5 +1,7 @@
 # 39 - Frete automático e conferência de embalagens
 
+Atualização de 22/10/2026: confirmar explicitamente a revisão pré-seleciona a liberação de item permitido; abrir o painel não modifica perfis. Peso, medidas, carga e serviços continuam obrigatórios. Nenhuma medida foi inventada para liberar o catálogo. Contrato e pendências em [97](97-operacao-admin-e-etapas-whatsapp.md).
+
 ## Estimativa operacional autorizada — 06/10/2026
 
 O lojista autorizou peso médio para iniciar cotações. Perfis distinguem `measurementBasis: measured | estimated`. O painel permite salvar rascunhos parciais desabilitados e aplicar caixa de 20 cm (dimensões externas da referência: C20,8 × L20,8 × A21,6 cm), marcada como estimada. Mudanças invalidam revisão/liberação. Aprovação continua exigindo dados completos, revisão explícita, permissões ADMIN e auditoria. Peso total inclui proteção/caixa; não somar tara novamente.

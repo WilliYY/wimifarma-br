@@ -1,6 +1,41 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getAdminOrderGroup, matchesAdminOrderSearch } from "./admin-presentation";
+import { getAdminOrderGroup, matchesAdminOrderSearch, matchesAdminOrderQueue, getAdminOrderSteps, groupOrderItemsBySource } from "./admin-presentation";
+
+test("Todos mantém somente pedidos feitos e em andamento", () => {
+  for (const status of ["PENDING", "CONFIRMED", "PREPARING", "READY", "OUT_FOR_DELIVERY"]) {
+    assert.equal(matchesAdminOrderQueue({ status, paymentStatus: "PAID" }, "ALL"), true);
+  }
+  for (const order of [{ status: "COMPLETED", paymentStatus: "PAID" }, { status: "PENDING", paymentStatus: "REFUNDED" }, { status: "CANCELED", paymentStatus: "PAID" }]) {
+    assert.equal(matchesAdminOrderQueue(order, "ALL"), false);
+  }
+  assert.equal(matchesAdminOrderQueue({ status: "COMPLETED", paymentStatus: "PAID" }, "COMPLETED"), true);
+});
+
+test("etapas seguem confirmação, separação e pronto, com envio apenas na entrega", () => {
+  const order = { status: "PREPARING", paymentStatus: "PAID", fulfillmentMethod: "PICKUP" as const };
+  const pickup = getAdminOrderSteps(order);
+  assert.deepEqual(pickup.map(step => step.status), ["CONFIRMED", "PREPARING", "READY", "COMPLETED"]);
+  assert.deepEqual(pickup.map(step => step.state), ["done", "done", "current", "pending"]);
+  assert.equal(pickup[2].label, "Pronto para retirada");
+  const delivery = getAdminOrderSteps({ ...order, fulfillmentMethod: "DELIVERY" });
+  assert.deepEqual(delivery.map(step => step.status), ["CONFIRMED", "PREPARING", "READY", "OUT_FOR_DELIVERY", "COMPLETED"]);
+  assert.equal(delivery[2].label, "Pronto para envio");
+  assert.ok(getAdminOrderSteps({ ...order, status: "COMPLETED" }).every(step => step.state === "done"));
+  assert.ok(getAdminOrderSteps({ ...order, paymentStatus: "REFUNDED" }).every(step => step.state === "canceled"));
+});
+
+test("itens ficam agrupados dentro do pedido sem misturar origens ou apagar faltas", () => {
+  const items = [{ id: "anb", inventorySource: "DISTRIBUTOR" as const, supplierCode: "ANB", quantity: 3, shortageQuantity: 1 },
+    { id: "pharmacy", inventorySource: "PHARMACY" as const, supplierCode: null, quantity: 1 },
+    { id: "gam", inventorySource: "DISTRIBUTOR" as const, supplierCode: "GAM", quantity: 2 },
+    { id: "anb2", inventorySource: "DISTRIBUTOR" as const, supplierCode: "ANB", quantity: 1 }];
+  const groups = groupOrderItemsBySource(items);
+  assert.deepEqual(groups.map(group => group.label), ["Farmácia", "ANB", "GAM / eGAM"]);
+  assert.deepEqual(groups[1].items.map(item => item.id), ["anb", "anb2"]);
+  assert.equal(groups[1].items[0], items[0]);
+  assert.equal(items[0].shortageQuantity, 1);
+});
 
 test("operational groups retain pending paid orders and completed orders in their own queues", () => {
   for (const paymentStatus of ["PENDING", "PAID"]) {

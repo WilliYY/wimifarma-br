@@ -15,7 +15,7 @@ const bundlePromise = build({ stdin: { contents: 'export { GET, POST } from "./s
   builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents:
     args.path.endsWith("auth") ? "export const auth=globalThis.fixture.auth;" :
     args.path.endsWith("prisma") ? "export const getPrisma=()=>{globalThis.fixture.calls.push('database');throw new Error('Database must not be accessed');};" :
-    args.path.endsWith("commerce-provider") ? "export const commerceConnection=()=>{globalThis.fixture.calls.push('connection');return true;};" :
+    args.path.endsWith("commerce-provider") ? "export const commerceConnection=()=>{globalThis.fixture.calls.push('connection');return true;};export const commerceCustomerStatusReady=async()=>{globalThis.fixture.calls.push('customer-capability');return false;};" :
     "export const miaubyDashboard=async()=>{globalThis.fixture.calls.push('dashboard');return {synthetic:true};}; export const queueCommerceTest=async()=>{globalThis.fixture.calls.push('queue');}; export const processCommerceEvents=async()=>{globalThis.fixture.calls.push('process');};",
   }));
 } }] });
@@ -30,6 +30,13 @@ async function harness(role: string | null) {
   const postTest = () => loaded.exports.POST(new Request("https://example.com/api/admin/miauby", { method: "POST", headers: { Origin: "https://example.com", "Content-Type": "application/json" }, body: JSON.stringify({ action: "test" }) }));
   return { api: loaded.exports, calls, postTest };
 }
+
+test("ativação de clientes bloqueia antes do banco quando a ponte não confirma capacidade", async () => {
+  const f = await harness("ADMIN");
+  const response = await f.api.POST(new Request("https://example.com/api/admin/miauby", { method: "POST", headers: { Origin: "https://example.com", "Content-Type": "application/json" }, body: JSON.stringify({ action: "settings", enabled: true, cartAlerts: true, orderAlerts: true, paymentAlerts: true, customerStatusAlerts: true }) }));
+  assert.equal(response.status, 503);
+  assert.deepEqual(f.calls, ["connection", "customer-capability"]);
+});
 
 test("Miauby GET and POST deny anonymous, CUSTOMER, STAFF and MANAGER before service or database access", async () => {
   for (const role of [null, "CUSTOMER", "STAFF", "MANAGER"]) {

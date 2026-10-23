@@ -12,7 +12,7 @@ test("freight product selectors default to PAC/SEDEX, preserve explicit empty ap
     const origin = "http://127.0.0.1:3198";
     const profile = { enabled: true, transportReviewed: true, weightGrams: 500, widthCm: 20, heightCm: 20, lengthCm: 20 };
     const base = { category: "Higiene", requiresPrescription: false, isPopularPharmacy: false, updatedAt: new Date(0).toISOString() };
-    const saved: { approvedServiceIds: number[]; cargoKinds: string[] }[] = [];
+    const saved: { approvedServiceIds: number[]; cargoKinds: string[]; enabled: boolean; transportReviewed: boolean; weightGrams: number }[] = [];
     await page.route("**/*", async route => {
       const url = new URL(route.request().url());
       if (url.origin !== origin) return route.abort();
@@ -22,6 +22,9 @@ test("freight product selectors default to PAC/SEDEX, preserve explicit empty ap
       if (url.pathname === "/api/admin/fretes") return json({ data: { settings: { ...defaultShippingSettings, serviceIds: [1, 2, 12] }, connected: true, products: [
         { ...base, id: "legacy", name: "Produto legado", shippingProfile: { ...profile, cargoKinds: ["unspecified"] } },
         { ...base, id: "empty", name: "Produto sem aprovação", shippingProfile: { ...profile, approvedServiceIds: [] } },
+        { ...base, id: "paused", name: "Produto desabilitado manualmente", shippingProfile: { ...profile, enabled: false, approvedServiceIds: [1, 2], cargoKinds: ["general"] } },
+        { ...base, id: "incomplete", name: "Produto com peso pendente", shippingProfile: { ...profile, enabled: false, transportReviewed: false, weightGrams: null, approvedServiceIds: [1, 2], cargoKinds: ["general"] } },
+        { ...base, id: "assisted", name: "Produto com atendimento assistido", requiresPrescription: true, prescriptionType: "CONTROLLED", shippingProfile: { ...profile, enabled: false, transportReviewed: false, approvedServiceIds: [1, 2], cargoKinds: ["medication"] } },
       ] } });
       if (url.pathname === "/api/admin/fretes/simular") return json({ data: [], services: [{ serviceId: 12, service: "Cargo", carrier: "LATAM" }] });
       if (url.pathname.startsWith("/api/admin/fretes/produtos/")) { saved.push(route.request().postDataJSON().profile); return json({}); }
@@ -30,6 +33,16 @@ test("freight product selectors default to PAC/SEDEX, preserve explicit empty ap
     await page.goto(origin);
     const legacy = page.locator("form").filter({ has: page.getByText("Produto legado", { exact: true }) });
     const empty = page.locator("form").filter({ has: page.getByText("Produto sem aprovação", { exact: true }) });
+    const paused = page.locator("form").filter({ has: page.getByText("Produto desabilitado manualmente", { exact: true }) });
+    await expect(paused.locator('input[name="reviewed"]')).toBeChecked();
+    await expect(paused.locator('input[name="enabled"]')).not.toBeChecked();
+    await paused.locator('input[name="reviewed"]').uncheck();
+    await expect(paused.locator('input[name="enabled"]')).not.toBeChecked();
+    await expect(paused.locator('input[name="enabled"]')).toBeDisabled();
+    await paused.locator('input[name="reviewed"]').check();
+    await expect(paused.locator('input[name="enabled"]')).toBeChecked();
+    await paused.locator('input[name="reviewed"]').uncheck();
+    await expect(paused.locator('input[name="enabled"]')).not.toBeChecked();
     await expect(legacy.getByRole("checkbox", { name: "Correios · PAC", exact: true })).toBeChecked();
     await expect(legacy.getByRole("checkbox", { name: "Correios · SEDEX", exact: true })).toBeChecked();
     await expect(empty.getByRole("checkbox", { name: "Correios · PAC", exact: true })).not.toBeChecked();
@@ -48,6 +61,25 @@ test("freight product selectors default to PAC/SEDEX, preserve explicit empty ap
     await expect.poll(() => saved.length).toBe(2);
     assert.deepEqual(saved[1].approvedServiceIds, [1, 2, 12]);
     assert.deepEqual(saved[1].cargoKinds, ["liquid"], "unknown cargo can be reclassified without a hidden blocking flag");
+    const incomplete = page.locator("form").filter({ has: page.getByText("Produto com peso pendente", { exact: true }) });
+    await incomplete.locator('input[name="reviewed"]').check();
+    await incomplete.getByRole("button", { name: "Aprovar dados completos", exact: true }).click();
+    await expect(incomplete.getByRole("alert")).toContainText("Informe peso e todas as medidas válidas");
+    assert.equal(saved.length, 2, "aprovar sem peso não envia nenhuma alteração");
+    const assisted = page.locator("form").filter({ has: page.getByText("Produto com atendimento assistido", { exact: true }) });
+    await assisted.locator('input[name="reviewed"]').check();
+    await expect(assisted.locator('input[name="enabled"]')).not.toBeChecked();
+    await expect(assisted.locator('input[name="enabled"]')).toBeDisabled();
+    await expect(assisted.getByRole("button", { name: "Aprovar dados completos", exact: true })).toBeDisabled();
+    await legacy.locator('input[name="reviewed"]').check();
+    await expect(legacy.locator('input[name="enabled"]')).toBeChecked();
+    await legacy.getByRole("button", { name: "Aprovar dados completos", exact: true }).click();
+    await expect.poll(() => saved.length).toBe(3);
+    assert.equal(saved[2].enabled, true);
+    assert.equal(saved[2].transportReviewed, true);
+    assert.equal(saved[2].weightGrams, 500);
+    assert.deepEqual(saved[2].approvedServiceIds, [1, 2, 12]);
+    assert.deepEqual(saved[2].cargoKinds, ["liquid"]);
   } finally { await browser.close(); }
 });
 

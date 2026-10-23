@@ -105,8 +105,11 @@ export async function AdminShell({
   }
 
   const visibleNav = adminNav.filter((item) =>
-    canAccessAdminRole(role, item.roles),
+    canAccessAdminRole(role, item.roles) && ![
+      "/admin/ofertas", "/admin/api-senhas", "/admin/fornecedores", "/admin/temas", "/admin/fretes", "/admin/pagamentos",
+    ].includes(item.href),
   );
+  const settingsNav = adminNav.filter(item => ["/admin/fretes", "/admin/pagamentos"].includes(item.href) && canAccessAdminRole(role, item.roles));
 
   return (
     <div className="min-h-screen bg-surface-subtle">
@@ -140,6 +143,13 @@ export async function AdminShell({
           })}
         </nav>
 
+        {settingsNav.length > 0 && <details className="mt-5 rounded-lg border border-line bg-surface-subtle p-3">
+          <summary className="cursor-pointer text-sm font-semibold text-muted">Configurações da loja</summary>
+          <nav aria-label="Configurações administrativas" className="mt-2 grid gap-1">
+            {settingsNav.map(item => <Link className="flex min-h-11 items-center gap-3 rounded-md px-2 text-sm font-semibold text-muted hover:bg-white hover:text-brand" href={item.href} key={item.href}><item.icon className="h-4 w-4" />{item.label}</Link>)}
+          </nav>
+        </details>}
+
         <div className="mt-8 rounded-lg border border-line bg-surface-subtle p-4">
           <ChartNoAxesCombined className="h-5 w-5 text-brand" />
           <p className="mt-3 text-sm font-bold text-ink">Permissoes por perfil</p>
@@ -159,7 +169,7 @@ export async function AdminShell({
               <h1 className="text-base font-black text-ink sm:text-lg">{title}</h1>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {canAccessAdminRole(role, adminRoutePermissions["/admin/pedidos"]) && <AdminOrderNotice />}
+              {canAccessAdminRole(role, adminRoutePermissions["/admin/pedidos"]) && <AdminOrderNotice viewerKey={session.user.id} />}
               <Button asChild size="sm" variant="secondary">
                 <Link href="/">
                   <Home className="h-4 w-4" />
@@ -190,6 +200,7 @@ export async function AdminShell({
           </div>
         </header>
         <nav aria-label="Modulos administrativos" className="flex gap-2 overflow-x-auto border-b border-line bg-white p-3 lg:hidden">{visibleNav.map(item => <Link key={item.href} href={item.href} className="shrink-0 rounded-md px-3 py-2 text-sm font-semibold text-muted hover:bg-brand-soft hover:text-brand">{item.label}</Link>)}</nav>
+        {settingsNav.length > 0 && <details className="border-b border-line bg-white px-4 py-3 lg:hidden"><summary className="cursor-pointer text-sm font-semibold text-muted">Configurações da loja</summary><nav aria-label="Configurações administrativas no celular" className="mt-2 flex flex-wrap gap-2">{settingsNav.map(item => <Link className="min-h-11 rounded-md px-3 py-3 text-sm font-semibold text-muted hover:bg-brand-soft hover:text-brand" href={item.href} key={item.href}>{item.label}</Link>)}</nav></details>}
         <main className="px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>

@@ -7,18 +7,22 @@ import { Button } from "@/components/ui/button";
 import { CashbackPercentageInput } from "./cashback-percentage-input";
 import type { CashbackListProduct } from "@/features/cashback/client";
 import { productCashbackCents } from "@/features/cashback/rules";
+import { cashbackProductEligible } from "@/features/cashback/client";
 import { formatCurrency } from "@/lib/utils";
 
 const rates = [200, 300, 500, 1000];
 
-export function CashbackProductCard({ product, disabled, saving, onSave }: {
+export function CashbackProductCard({ product, disabled, saving, onSave, selected = false, selectionFull = false, onSelect }: {
   product: CashbackListProduct;
   disabled: boolean;
   saving: boolean;
   onSave: (enabled: boolean, rateBps: number) => Promise<boolean>;
+  selected?: boolean;
+  selectionFull?: boolean;
+  onSelect?: (selected: boolean) => void;
 }) {
   const [custom, setCustom] = useState(false);
-  const restricted = product.isPopularPharmacy || product.requiresPrescription;
+  const restricted = !cashbackProductEligible(product);
   const price = Number(product.promotionalPrice ?? product.price);
   const amount = productCashbackCents(product, Math.round(price * 100));
   const selectId = `cashback-rate-${product.id}`;
@@ -30,18 +34,18 @@ export function CashbackProductCard({ product, disabled, saving, onSave }: {
   }
 
   return (
-    <article aria-label={product.name} aria-busy={saving} className={`min-w-0 rounded-md border bg-white p-4 transition-colors ${product.cashbackEnabled && !restricted ? "border-emerald-200" : "border-line"}`}>
+    <article aria-label={product.name} aria-busy={saving} className={`grid min-w-0 gap-2 rounded-md border bg-white p-3 transition-colors lg:grid-cols-[minmax(0,1fr)_10rem_17rem] lg:items-center lg:gap-x-4 ${selected ? "border-brand bg-emerald-50/30" : product.cashbackEnabled && !restricted ? "border-emerald-200" : "border-line"}`}>
       <div className="flex min-w-0 items-start gap-3">
-        <span className="flex h-16 w-16 shrink-0 items-center justify-center bg-white p-1">
-          {product.imageUrl ? <Image alt="" className="h-full w-full object-contain" height={64} width={64} src={product.imageUrl} /> : <ImageIcon className="h-6 w-6 text-muted" />}
+        {onSelect ? <label className="flex min-h-11 w-6 shrink-0 items-center justify-center"><input type="checkbox" aria-label={`Selecionar ${product.name}`} checked={selected} disabled={disabled || restricted || (selectionFull && !selected)} onChange={event => onSelect(event.target.checked)} className="h-5 w-5 accent-emerald-700 disabled:opacity-40" /></label> : null}
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-white p-1">
+          {product.imageUrl ? <Image alt="" className="h-full w-full object-contain" height={44} width={44} src={product.imageUrl} /> : <ImageIcon className="h-5 w-5 text-muted" />}
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="break-words text-sm font-bold leading-5 text-ink">{product.name}</h3>
-          <p className="mt-1 break-words text-xs text-muted">{product.brand || "Sem marca"} · {product.status === "ACTIVE" ? "Publicado" : "Nao publicado"}</p>
-          <p className="mt-2 text-base font-bold text-ink">{formatCurrency(price)}</p>
+          <p className="break-words text-xs text-muted">{product.brand || "Sem marca"} · {product.status === "ACTIVE" ? "Publicado" : "Nao publicado"} · {formatCurrency(price)}</p>
         </div>
       </div>
-      <div className="mt-4 flex min-h-11 flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
+      <div className="flex min-h-11 flex-wrap items-center justify-between gap-2 lg:justify-start">
         <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-semibold has-disabled:cursor-not-allowed">
           <input aria-label={`Ativar cashback em ${product.name}`} type="checkbox" checked={product.cashbackEnabled}
             className="h-5 w-5 shrink-0 cursor-pointer accent-emerald-700 disabled:cursor-not-allowed"
@@ -53,7 +57,7 @@ export function CashbackProductCard({ product, disabled, saving, onSave }: {
             {restricted ? "Nao elegivel" : product.cashbackEnabled ? `${product.cashbackRateBps / 100}% ativo` : "Desativado"}
           </span>}
       </div>
-      <div className="mt-2 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-end gap-3">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-end gap-3">
         <label htmlFor={selectId} className="grid min-w-0 gap-1 text-xs font-semibold text-muted">Percentual
           <select id={selectId} aria-label={`Percentual de ${product.name}`} className="h-11 w-full min-w-0 cursor-pointer rounded-md border border-line bg-white px-2 text-sm text-ink outline-none focus:border-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={disabled || restricted || !product.cashbackEnabled}
@@ -69,11 +73,11 @@ export function CashbackProductCard({ product, disabled, saving, onSave }: {
           <span className="block text-xs">por unidade</span>
         </div>
       </div>
-      {custom && product.cashbackEnabled && !restricted ? <form className="mt-3 flex min-w-0 items-end gap-2" onSubmit={saveCustom}>
+      {custom && product.cashbackEnabled && !restricted ? <form className="flex min-w-0 items-end gap-2 lg:col-span-3" onSubmit={saveCustom}>
         <div className="min-w-0 flex-1"><CashbackPercentageInput defaultValue={product.cashbackRateBps / 100} disabled={disabled} label={`Percentual personalizado de ${product.name}`} name="percent" /></div>
         <Button className="h-11 w-11 shrink-0 cursor-pointer" aria-label={`Aplicar percentual em ${product.name}`} title="Aplicar percentual" disabled={disabled} size="icon" variant="success" type="submit"><Check className="h-4 w-4" /></Button>
       </form> : null}
-      {restricted ? <p className="mt-3 text-xs text-muted">Indisponivel para receita ou Farmacia Popular.</p> : null}
+      {restricted ? <p className="text-xs text-muted lg:col-span-3">Indisponivel para receita ou Farmacia Popular.</p> : null}
     </article>
   );
 }

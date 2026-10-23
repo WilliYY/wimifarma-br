@@ -1,5 +1,14 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-22 — Fila operacional, cashback em massa e etapas por WhatsApp
+
+- Adotar lista única de pedidos com fornecimento agrupado dentro de cada pedido, etapas conforme retirada/entrega e cores por situação. "Todos" contém a fila ativa; encerrados ficam nas situações próprias. Visualizado é uma preferência local do operador, sem mudar o andamento.
+- Separar avisos das etapas para o telefone do pedido dos alertas fixos ao proprietário. Outbox transacional congela destino/texto e vincula pedido/etapa; o worker revalida o estado antes do transporte. Incerteza não permite reenvio automático. Migração aditiva e opção desativada por padrão; publicação coordenada da ponte antes da ativação.
+- Exibir 100 produtos por página no catálogo e cashback. Cashback usa seleção de até 50 IDs, revisão e controle de versão existentes, sem seleção implícita do catálogo inteiro. O catálogo continua carregando metadados completos para busca/filtros locais.
+- Reduzir o menu diário, mantendo rotas, permissões e dados: Fretes/Pagamentos em configurações; cofre sem atalho e ainda ADMIN. Ofertas, Temas e simulador de fornecedores ficam preservados para uso futuro.
+- Pré-selecionar transporte somente quando o operador confirma a revisão física do item. Não inventar medidas para liberar os produtos pendentes. Óleo Dove pode mudar a origem sem publicar seu rascunho, apagar estoque físico ou substituir perfil de transporte.
+- Implementação, segurança, validação e limites em [97](97-operacao-admin-e-etapas-whatsapp.md).
+
 ## 2026-10-22 — 189 inclusões por família e indisponíveis com Avise-me
 
 - Encerrar as duas etapas autorizadas com 189 GTINs únicos efetivamente publicados: 153 nas seis primeiras famílias e 36 em paracetamol, acetilcisteína, dexclorfeniramina, fexofenadina e ambroxol. Publicadas 73 fotos reais; 116 apresentações com receita mantêm ilustração institucional. Contagens, apresentações, provas e pendências em [96-catalogo-por-principio-ativo-2026-10-22.md](96-catalogo-por-principio-ativo-2026-10-22.md).

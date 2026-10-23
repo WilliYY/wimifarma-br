@@ -6,8 +6,8 @@ import { build } from "esbuild";
 import type { BridgeResult, CommerceState, CommerceType } from "./commerce-rules";
 
 type Api = Pick<typeof import("./commerce-service"), "queueCommerceOrder" | "processCommerceEvents">;
-type Settings = { enabled: boolean; cartAlerts: boolean; orderAlerts: boolean; paymentAlerts: boolean };
-type Event = { id: string; key: string; type: CommerceType; text: string; status: CommerceState; attempts: number; createdAt: Date; availableAt: Date; leaseExpiresAt: Date | null; lastError?: string | null; messageId?: string | null; sentAt?: Date | null };
+type Settings = { enabled: boolean; cartAlerts: boolean; orderAlerts: boolean; paymentAlerts: boolean; customerStatusAlerts?: boolean };
+type Event = { id: string; key: string; type: CommerceType; text: string; recipient?: string | null; orderId?: string | null; orderStatus?: string | null; status: CommerceState; attempts: number; createdAt: Date; availableAt: Date; leaseExpiresAt: Date | null; lastError?: string | null; messageId?: string | null; sentAt?: Date | null };
 type Where = { id?: string; key?: string; type?: string | { in: string[] }; status?: string | { in: string[] }; createdAt?: { lt: Date }; availableAt?: { lte: Date }; leaseExpiresAt?: { lt: Date } };
 type Data = Partial<Omit<Event, "attempts">> & { attempts?: { increment: number } };
 const enabled: Settings = { enabled: true, cartAlerts: true, orderAlerts: true, paymentAlerts: true };
@@ -20,6 +20,8 @@ const bundlePromise = build({ entryPoints: ["src/features/miauby/commerce-servic
 async function fixture(settings: Settings | null = enabled, initial: Partial<Event>[] = [], loseClaim = false, beforeClaim?: (event: Event) => void) {
   const bundle = await bundlePromise;
   const events: Event[] = initial.map((event, index) => ({ id: `event-${index}`, key: `key-${index}`, type: "order", text: "synthetic", status: "PENDING", attempts: 0, createdAt: new Date(), availableAt: new Date(0), leaseExpiresAt: null, ...event }));
+  const orderState = { status: "READY", paymentStatus: "PAID", paymentMethod: "CASH", fulfillmentMethod: "PICKUP", requiresPrescriptionReview: false, prescriptionReviewedAt: null as Date | null,
+    onlinePayment: null as null | { status: string; environment: string; financialReviewReason?: string | null; statusDetail?: string | null } };
   const matches = (event: Event, where: Where) => (!where.id || event.id === where.id) && (!where.key || event.key === where.key)
     && (!where.type || (typeof where.type === "string" ? event.type === where.type : where.type.in.includes(event.type)))
     && (!where.status || (typeof where.status === "string" ? event.status === where.status : where.status.in.includes(event.status)))
@@ -27,6 +29,7 @@ async function fixture(settings: Settings | null = enabled, initial: Partial<Eve
     && (!where.leaseExpiresAt || Boolean(event.leaseExpiresAt && event.leaseExpiresAt < where.leaseExpiresAt.lt));
   const apply = (event: Event, data: Data) => { const { attempts, ...rest } = data; Object.assign(event, rest); if (attempts) event.attempts += attempts.increment; };
   const db = {
+    order: { findUnique: async () => orderState },
     miaubyConfig: { findUnique: async () => settings },
     miaubyEvent: {
       upsert: async ({ where, create }: { where: { key: string }; create: { key: string; type: CommerceType; text: string } }) => {
@@ -51,10 +54,56 @@ async function fixture(settings: Settings | null = enabled, initial: Partial<Eve
   const api = loaded.exports;
   const queue = (type: "order" | "payment", isTest = false, snapshot: Parameters<Api["queueCommerceOrder"]>[2] = order) => api.queueCommerceOrder(db as unknown as Parameters<Api["queueCommerceOrder"]>[0], type, snapshot, isTest);
   const processEvents = (send: Parameters<Api["processCommerceEvents"]>[1]) => api.processCommerceEvents(db as unknown as Parameters<Api["processCommerceEvents"]>[0], send);
-  return { events, queue, processEvents };
+  return { events, queue, processEvents, orderState };
 }
 const accepted = (id: string): BridgeResult => ({ ok: true, eventId: id, status: "accepted", messageId: "synthetic-message", accepted: true, delivered: null, uncertain: false, duplicate: false, retryable: false });
 const blocked = (id: string): BridgeResult => ({ ...accepted(id), ok: false, status: "blocked", messageId: null, accepted: false, retryable: true });
+
+test("etapa de cliente congela destinatário e envio incerto não é repetido", async () => {
+  const f = await fixture({ ...enabled, customerStatusAlerts: true });
+  f.events.push({ id: "customer-stage", key: "customer-status:v1:synthetic:READY", type: "order_status", orderId: "synthetic", orderStatus: "READY", text: "Etapa sintética", recipient: "5511999990000", status: "PENDING", attempts: 0, createdAt: new Date(), availableAt: new Date(0), leaseExpiresAt: null });
+  let sends = 0;
+  await f.processEvents(async event => { sends++; assert.equal(event.recipient, "5511999990000"); throw new Error("ambiguous timeout"); });
+  assert.equal(f.events[0].status, "UNCERTAIN");
+  await f.processEvents(async event => { sends++; return accepted(event.id); });
+  assert.equal(sends, 1);
+});
+
+test("desativação após o claim cancela aviso de cliente antes de invocar transporte", async () => {
+  const settings = { ...enabled, customerStatusAlerts: true };
+  const f = await fixture(settings, [], false, () => { settings.customerStatusAlerts = false; });
+  f.events.push({ id: "customer-stage", key: "customer-status:v1:synthetic:READY", type: "order_status", text: "Etapa sintética", recipient: "5511999990000", status: "PENDING", attempts: 0, createdAt: new Date(), availableAt: new Date(0), leaseExpiresAt: null });
+  let sends = 0;
+  await f.processEvents(async event => { sends++; return accepted(event.id); });
+  assert.equal(sends, 0);
+  assert.equal(f.events[0].status, "FAILED");
+});
+
+test("etapa superada, cancelamento, revisão, sandbox e receita pendente suspendem aviso antes do transporte", async () => {
+  for (const change of [
+    { status: "CANCELED" }, { status: "COMPLETED" }, { paymentStatus: "REFUNDED" },
+    { paymentMethod: "ONLINE", onlinePayment: { status: "PAID", environment: "production", financialReviewReason: "amount_mismatch" } },
+    { paymentMethod: "ONLINE", onlinePayment: { status: "PAID", environment: "test" } },
+    { paymentMethod: "ONLINE", onlinePayment: { status: "REFUNDED", environment: "production" } },
+    { requiresPrescriptionReview: true, prescriptionReviewedAt: null },
+  ]) {
+    const f = await fixture({ ...enabled, customerStatusAlerts: true }, [{ type: "order_status", orderId: "synthetic", orderStatus: "READY", recipient: "5511999990000" }]);
+    Object.assign(f.orderState, change);
+    let sends = 0;
+    await f.processEvents(async event => { sends++; return accepted(event.id); });
+    assert.equal(sends, 0, JSON.stringify(change));
+    assert.equal(f.events[0].status, "FAILED");
+  }
+});
+
+test("etapa de cliente ainda válida envia uma vez com vínculo explícito", async () => {
+  const f = await fixture({ ...enabled, customerStatusAlerts: true }, [{ type: "order_status", orderId: "synthetic", orderStatus: "READY", recipient: "5511999990000" }]);
+  let sends = 0;
+  await f.processEvents(async event => { sends++; return accepted(event.id); });
+  assert.equal(f.events[0].status, "SENT");
+  await f.processEvents(async event => { sends++; return accepted(event.id); });
+  assert.equal(sends, 1);
+});
 
 test("queue respects absent, disabled and per-type settings", async () => {
   for (const settings of [null, { ...enabled, enabled: false }, { ...enabled, orderAlerts: false, paymentAlerts: false }]) {

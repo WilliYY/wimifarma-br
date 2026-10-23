@@ -15,6 +15,36 @@ export function getAdminOrderGroup(order: OrderPresentation): AdminOrderGroup {
   return order.status === "PENDING" ? "NEW" : "ACTIVE";
 }
 
+export function matchesAdminOrderQueue(order: OrderPresentation, group: "ALL" | AdminOrderGroup) {
+  const current = getAdminOrderGroup(order);
+  return group === "ALL" ? current === "NEW" || current === "ACTIVE" : current === group;
+}
+
+type StepStatus = "CONFIRMED" | "PREPARING" | "READY" | "OUT_FOR_DELIVERY" | "COMPLETED";
+export function getAdminOrderSteps(order: OrderPresentation & { fulfillmentMethod: "PICKUP" | "DELIVERY" }) {
+  const steps: Array<{ status: StepStatus; label: string }> = [
+    { status: "CONFIRMED", label: "Confirmar" },
+    { status: "PREPARING", label: "Separar" },
+    { status: "READY", label: order.fulfillmentMethod === "PICKUP" ? "Pronto para retirada" : "Pronto para envio" },
+    ...(order.fulfillmentMethod === "DELIVERY" ? [{ status: "OUT_FOR_DELIVERY" as const, label: "Saiu para entrega / envio" }] : []),
+    { status: "COMPLETED", label: "Concluir" },
+  ];
+  const completedIndex = order.status === "OUT_FOR_DELIVERY" && order.fulfillmentMethod === "PICKUP"
+    ? 2 : steps.findIndex(step => step.status === order.status);
+  return steps.map((step, index) => ({ ...step, state: getAdminOrderGroup(order) === "CANCELED" ? "canceled" as const
+    : index <= completedIndex ? "done" as const : index === completedIndex + 1 ? "current" as const : "pending" as const }));
+}
+
+export function groupOrderItemsBySource<T extends { inventorySource?: "PHARMACY" | "DISTRIBUTOR"; supplierCode?: string | null }>(items: T[]) {
+  const groups = new Map<string, { key: string; label: string; items: T[] }>();
+  for (const item of items) {
+    const key = item.inventorySource === "DISTRIBUTOR" ? `supplier:${item.supplierCode ?? "unknown"}` : "pharmacy";
+    if (!groups.has(key)) groups.set(key, { key, label: key === "pharmacy" ? "Farmácia" : supplierSourceLabel(item), items: [] });
+    groups.get(key)!.items.push(item);
+  }
+  return [...groups.values()].sort((a, b) => Number(b.key === "pharmacy") - Number(a.key === "pharmacy") || a.label.localeCompare(b.label, "pt-BR"));
+}
+
 export function matchesAdminOrderSearch(order: {
   number: string;
   customerName: string;

@@ -1,5 +1,7 @@
 # Busca por assuntos — 20/10/2026
 
+Acabamento de 22/10/2026: um único botão de limpar com área de toque de 44 px, estados vazios compactos e nomes legíveis no celular, preservando teclado/debounce e relevância. Contrato em [97](97-operacao-admin-e-etapas-whatsapp.md).
+
 ## Comportamento
 
 Autocomplete e `/busca?q=...` compartilham consulta parametrizada e paginada no PostgreSQL. Além de nome, marca, EAN, SKU, composição e dose, reconhecem `grip`/`gripe`/`influenza`, dor, febre, cabeça/cefaleia, pressão/hipertensão, diabete/diabetes, colesterol e azia/refluxo. Sem IA externa, envio de buscas a terceiros, novos cadastros ou alteração de estoque/preços.

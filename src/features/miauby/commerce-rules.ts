@@ -2,11 +2,11 @@ import { MAX_ORDER_ITEM_QUANTITY } from "@/features/products/quantity";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 
-export const commerceSettingsSchema = z.object({ action: z.literal("settings"), enabled: z.boolean(), cartAlerts: z.boolean(), orderAlerts: z.boolean(), paymentAlerts: z.boolean() }).strict();
+export const commerceSettingsSchema = z.object({ action: z.literal("settings"), enabled: z.boolean(), cartAlerts: z.boolean(), orderAlerts: z.boolean(), paymentAlerts: z.boolean(), customerStatusAlerts: z.boolean().optional() }).strict();
 export const cartRequestSchema = z.object({ items: z.array(z.object({ productId: z.string().min(1).max(80), quantity: z.number().int().min(1).max(MAX_ORDER_ITEM_QUANTITY) }).strict()).max(30) }).strict().refine(value => new Set(value.items.map(item => item.productId)).size === value.items.length);
 export const bridgeResultSchema = z.object({ ok: z.boolean(), eventId: z.string(), status: z.enum(["accepted", "blocked", "uncertain"]), messageId: z.string().nullable(), accepted: z.boolean(), delivered: z.boolean().nullable(), uncertain: z.boolean(), duplicate: z.boolean(), retryable: z.boolean() });
 export type BridgeResult = z.infer<typeof bridgeResultSchema>;
-export type CommerceType = "cart" | "order" | "payment" | "test";
+export type CommerceType = "cart" | "order" | "payment" | "test" | "order_status";
 export type CommerceState = "PENDING" | "PROCESSING" | "SENT" | "FAILED" | "UNCERTAIN";
 const signature = (value: string, secret: string) => createHmac("sha256", secret).update(value).digest("hex");
 export function createCartIdentity(secret: string, now = Date.now()) {

@@ -892,6 +892,7 @@ model MiaubyConfig {
   cartAlerts    Boolean  @default(true)
   orderAlerts   Boolean  @default(true)
   paymentAlerts Boolean  @default(true)
+  customerStatusAlerts Boolean @default(false)
   updatedAt     DateTime @updatedAt
 }
 
@@ -900,6 +901,9 @@ model MiaubyEvent {
   key            String    @unique
   type           String
   text           String
+  recipient      String?
+  orderId        String?
+  orderStatus    OrderStatus?
   sessionId      String?
   status         String    @default("PENDING")
   attempts       Int       @default(0)

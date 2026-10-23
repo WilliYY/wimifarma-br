@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAdminOnlyApi } from "@/features/auth/permissions";
 import { getPrisma } from "@/lib/prisma";
 
+const PAGE_SIZE = 100;
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
@@ -19,7 +21,7 @@ export async function GET(request: Request) {
       ...(query ? { OR: ["name", "brand", "sku", "ean"].map((field) => ({ [field]: { contains: query, mode: "insensitive" as const } })) } : {}),
     };
     const [products, total, active, pending] = await prisma.$transaction([
-      prisma.product.findMany({ where, orderBy: [{ name: "asc" }, { id: "asc" }], skip: (page - 1) * 24, take: 24,
+      prisma.product.findMany({ where, orderBy: [{ name: "asc" }, { id: "asc" }], skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE,
         select: { id: true, name: true, brand: true, imageUrl: true, status: true, price: true,
           promotionalPrice: true, cashbackEnabled: true, cashbackRateBps: true, updatedAt: true,
           isPopularPharmacy: true, requiresPrescription: true } }),
@@ -29,7 +31,7 @@ export async function GET(request: Request) {
     ]);
     return NextResponse.json({ data: products.map((p) => ({ ...p, price: p.price.toString(),
       promotionalPrice: p.promotionalPrice?.toString() ?? null, updatedAt: p.updatedAt.toISOString() })),
-      total, page, pages: Math.max(1, Math.ceil(total / 24)), active, pendingCents: pending._sum.cashbackEarnedCents ?? 0,
+      total, page, pages: Math.max(1, Math.ceil(total / PAGE_SIZE)), active, pendingCents: pending._sum.cashbackEarnedCents ?? 0,
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     const code = error && typeof error === "object" && "code" in error ? String(error.code) : "unknown";

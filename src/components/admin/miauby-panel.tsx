@@ -24,11 +24,12 @@ type Settings = {
   cartAlerts: boolean;
   orderAlerts: boolean;
   paymentAlerts: boolean;
+  customerStatusAlerts: boolean;
 };
 
 type AlertEvent = {
   id: string;
-  type: "cart" | "order" | "payment" | "test";
+  type: "cart" | "order" | "payment" | "test" | "order_status";
   status: "PENDING" | "PROCESSING" | "SENT" | "FAILED" | "UNCERTAIN";
   text: string;
   createdAt: string;
@@ -54,7 +55,7 @@ const connectionLabels = {
   unconfigured: "Conexão não configurada",
 };
 
-const eventLabels = { cart: "Carrinho", order: "Pedido", payment: "Pagamento", test: "Teste" };
+const eventLabels = { cart: "Carrinho", order: "Pedido", payment: "Pagamento", test: "Teste", order_status: "Etapa do pedido · cliente" };
 const statusLabels = {
   PENDING: "Na fila",
   PROCESSING: "Em processamento",
@@ -73,6 +74,7 @@ const alertOptions = [
   { key: "cartAlerts", label: "Movimentação de carrinho", description: "Resumo após 30 segundos de estabilidade, limitado a um aviso por 10 minutos por navegador. Não comprova abandono, compra ou reserva.", icon: ShoppingCart },
   { key: "orderAlerts", label: "Novos pedidos", description: "Avisa quando o checkout registra um pedido. Pedido registrado não significa pagamento confirmado.", icon: ShoppingBag },
   { key: "paymentAlerts", label: "Atualizações de pagamento", description: "Acompanha o resultado confirmado pelo gateway. A preparação e o atendimento continuam com a equipe.", icon: CreditCard },
+  { key: "customerStatusAlerts", label: "Etapas do pedido para o cliente", description: "Ao confirmar, separar, liberar ou concluir um pedido, envia uma atualização ao WhatsApp registrado pelo cliente. Cada etapa é avisada uma vez.", icon: MessageCircle },
 ] as const;
 
 async function request(signal: AbortSignal, body?: Record<string, unknown>): Promise<PanelData> {

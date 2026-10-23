@@ -1,5 +1,7 @@
 # 75 — Catálogo, vitrines e compra de distribuidor
 
+Atualização de 22/10/2026: o catálogo ADMIN renderiza 100 itens por página; busca/filtros continuam sobre todos os metadados carregados. A seleção de lote não atravessa páginas e mantém limite de 50. Não há nova paginação de banco. Contrato em [97](97-operacao-admin-e-etapas-whatsapp.md).
+
 ## Pedido e alcance
 
 Em 19/10/2026, o lojista solicitou catálogo administrativo compacto, seleção e edição em massa, separação visual das origens, login mais claro e três vitrines horizontais com fotografias reais. Autorizou também cobrar pedidos de distribuidor acima das quantidades observadas, assumindo a conferência humana posterior com fornecedor e cliente.

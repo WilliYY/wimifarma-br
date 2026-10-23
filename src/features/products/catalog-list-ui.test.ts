@@ -51,7 +51,8 @@ test("painel mostra totais completos, abre a maior origem e acompanha novo cadas
     const summary = page.getByRole("definition").first();
     await expect(summary).toHaveText("133");
     await expect(page.getByRole("tab", { name: /Distribuidoras/ })).toHaveAttribute("aria-selected", "true");
-    await expect(page.getByRole("checkbox", { name: "Selecionar Distribuidor sintético 129", exact: true })).toBeVisible();
+    await expect(page.getByRole("checkbox", { name: "Selecionar Distribuidor sintético 0", exact: true })).toBeVisible();
+    await expect(page.getByRole("checkbox", { name: /^Selecionar Distribuidor sintético/ })).toHaveCount(100);
     if (process.env.CATALOG_LIST_CAPTURE_ROOT) {
       mkdirSync(process.env.CATALOG_LIST_CAPTURE_ROOT, { recursive: true });
       for (const width of [390, 1280]) {
@@ -61,6 +62,7 @@ test("painel mostra totais completos, abre a maior origem e acompanha novo cadas
       }
     }
     await page.getByPlaceholder("Nome, marca, SKU ou EAN").fill("Distribuidor sintético 129");
+    await expect(page.getByRole("checkbox", { name: "Selecionar Distribuidor sintético 129", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Novo produto", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await dialog.locator("input[name='name']").fill("Novo produto físico sintético");
@@ -86,7 +88,7 @@ test("origem vazia selecionada pela pessoa permanece explícita, sem esconder a 
     await expect(page.getByRole("tab", { name: /Distribuidoras/ })).toHaveAttribute("aria-selected", "true");
     await page.getByRole("tab", { name: /Loja física/ }).click();
     await expect(page.getByRole("tab", { name: /Loja física/ })).toHaveAttribute("aria-selected", "true");
-    await expect(page.getByText("0 de 0 produtos · 130 no catálogo", { exact: true })).toBeVisible();
+    await expect(page.getByText("0 de 0 produtos · 130 no catálogo · 100 por página", { exact: true })).toBeVisible();
     await expect(page.getByRole("tab", { name: /Distribuidoras.*130/ })).toBeVisible();
   });
 });

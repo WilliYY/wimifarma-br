@@ -11,13 +11,33 @@ const bundle = build({ entryPoints: ["src/app/api/pedidos/[id]/route.ts"], bundl
 
 type ShortageFixture = { rows?: { status: string; creditState: string }[]; items?: { quantity: number; shortageQuantity: number }[] };
 
+test("retirada nunca aceita etapa de saída para entrega", async () => {
+  const f = await harness({ status: "READY", fulfillmentMethod: "PICKUP", requiresPrescriptionReview: false });
+  assert.equal((await f.patch({ status: "OUT_FOR_DELIVERY" })).status, 409);
+  assert.equal(f.updates.length, 0);
+});
+
+test("pagamento com revisão financeira pendente não libera etapas", async () => {
+  const f = await harness({ status: "PENDING", paymentMethod: "ONLINE", requiresPrescriptionReview: false,
+    onlinePayment: { environment: "production", status: "PAID", statusDetail: null, financialReviewReason: "amount_mismatch" } });
+  assert.equal((await f.patch({ status: "CONFIRMED" })).status, 409);
+  assert.equal(f.updates.length, 0);
+});
+
 async function harness(overrides: Record<string, unknown> = {}, userId: string | null = "operator-test", denied = false, shortages: ShortageFixture = {}) {
-  const current = { status: "PREPARING", paymentStatus: "PAID", paymentMethod: "CASH", requiresPrescriptionReview: true,
+  const current = { id: "order-test", number: "WIM-SYNTHETIC", customerPhone: "11999990000", fulfillmentMethod: "DELIVERY", status: "PREPARING", paymentStatus: "PAID", paymentMethod: "CASH", requiresPrescriptionReview: true,
     prescriptionReviewedAt: null, prescriptionReviewedById: null, onlinePayment: null, ...overrides };
   const calls: string[] = [];
   const updates: Record<string, unknown>[] = [];
   const audits: Record<string, unknown>[] = [];
+  const messages: Record<string, unknown>[] = [];
   const tx = {
+    miaubyConfig: { findUnique: async () => ({ enabled: true, customerStatusAlerts: true }) },
+    miaubyEvent: { upsert: async ({ create }: { create: Record<string, unknown> }) => {
+      const existing = messages.find(message => message.key === create.key);
+      if (existing) return existing;
+      const event = { status: "PENDING", ...create }; messages.push(event); return event;
+    } },
     $queryRaw: async () => { calls.push("lock"); return [{ id: "order-test" }]; },
     order: {
       findUnique: async () => { calls.push("read"); return current; },
@@ -43,8 +63,27 @@ async function harness(overrides: Record<string, unknown> = {}, userId: string |
     prisma: { $transaction: async (fn: (value: typeof tx) => unknown) => fn(tx) },
     settle: async () => { calls.push("settle"); },
   } });
-  return { current, calls, updates, audits, patch: (body: unknown) => loaded.exports.PATCH(new Request("https://example.com/api/pedidos/order-test", { method: "PATCH", body: JSON.stringify(body), headers: { "Content-Type": "application/json" } }), { params: Promise.resolve({ id: "order-test" }) }) };
+  return { current, calls, updates, audits, messages, patch: (body: unknown) => loaded.exports.PATCH(new Request("https://example.com/api/pedidos/order-test", { method: "PATCH", body: JSON.stringify(body), headers: { "Content-Type": "application/json" } }), { params: Promise.resolve({ id: "order-test" }) }) };
 }
+
+test("etapa válida congela um aviso e repeti-la não duplica nem expõe o telefone", async () => {
+  const f = await harness({ status: "PENDING", requiresPrescriptionReview: false });
+  const response = await f.patch({ status: "CONFIRMED" });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.data.notificationStatus, "QUEUED");
+  assert.equal(Object.hasOwn(body.data, "customerPhone"), false);
+  assert.equal(f.messages.length, 1);
+  assert.equal(f.messages[0].recipient, "5511999990000");
+  assert.equal((await f.patch({ status: "CONFIRMED" })).status, 200);
+  assert.equal(f.messages.length, 1);
+});
+
+test("guarda de receita bloqueia também a criação do aviso", async () => {
+  const f = await harness();
+  assert.equal((await f.patch({ status: "READY" })).status, 409);
+  assert.equal(f.messages.length, 0);
+});
 
 test("receita pendente bloqueia saída direta, pronto, conclusão e repetição do status sob lock", async () => {
   for (const [status, next] of [["PREPARING", "READY"], ["PREPARING", "OUT_FOR_DELIVERY"], ["READY", "READY"], ["READY", "COMPLETED"], ["OUT_FOR_DELIVERY", "COMPLETED"]]) {

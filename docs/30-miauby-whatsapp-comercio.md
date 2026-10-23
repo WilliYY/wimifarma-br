@@ -1,5 +1,9 @@
 # Miauby: alertas comerciais por WhatsApp
 
+## Etapas para clientes — 22/10/2026
+
+Avisos operacionais para o telefone do pedido usam opt-in ADMIN separado, outbox transacional e endpoint exclusivo. Os alertas descritos abaixo ao proprietário preservam seu destino fixo. Migração, validação antes do envio, isolamento de destinatários e diferença entre fila/aceitação/entrega estão em [97](97-operacao-admin-e-etapas-whatsapp.md).
+
 ## Fornecimento nos avisos — 22/10/2026
 
 Novos avisos de pedido recebido incluem EAN do produto conferido na criação e distribuidora escolhida, ou estoque próprio, junto da quantidade. A origem usa o mesmo snapshot que será persistido no item; não faz uma nova cotação para decidir a mensagem. Ausência de dados não inventa fornecedor ou EAN. O limite existente de itens e a indicação de itens restantes continuam. Nenhum nome, telefone ou endereço do cliente foi acrescentado.

@@ -1,5 +1,7 @@
 # 15 - Cashback por produto
 
+Atualização de 22/10/2026: lista compacta de 100 por página, seleção de até 50 elegíveis, revisão e aplicação em massa com controle de versão. Respostas incertas não são repetidas automaticamente. Contrato em [97](97-operacao-admin-e-etapas-whatsapp.md).
+
 Atualização de 20/10/2026: crédito por unidade faltante tem carteira própria, sem alterar percentuais promocionais. Restituições parciais acumuladas evitam devolução dupla; ganhos das unidades faltantes são anulados. Contrato em [92](92-creditos-por-itens-faltantes.md).
 
 ## Escopo

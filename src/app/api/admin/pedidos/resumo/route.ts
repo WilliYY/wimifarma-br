@@ -23,11 +23,14 @@ export async function GET() {
         { onlinePayment: { is: { environment: "production", status: { notIn: ["FAILED", "CANCELED", "REFUNDED", "DISPUTED", "PARTIALLY_REFUNDED"] } } } },
       ],
     };
-    const [pending, latest] = await Promise.all([
+    const [pending, orders] = await Promise.all([
       prisma.order.count({ where }),
-      prisma.order.findFirst({ where, select: { id: true, createdAt: true }, orderBy: [{ createdAt: "desc" }, { id: "desc" }] }),
+      prisma.order.findMany({ where, take: 10, select: { id: true, number: true, createdAt: true }, orderBy: [{ createdAt: "desc" }, { id: "desc" }] }),
     ]);
-    return NextResponse.json({ data: { pending, latestId: latest?.id ?? null, latestCreatedAt: latest?.createdAt.toISOString() ?? null } }, { headers });
+    const latest = orders[0];
+    return NextResponse.json({ data: { pending, latestId: latest?.id ?? null, latestCreatedAt: latest?.createdAt.toISOString() ?? null,
+      orders: orders.map(order => ({ id: order.id, number: order.number, createdAt: order.createdAt.toISOString() })),
+    } }, { headers });
   } catch {
     return NextResponse.json({ error: "Resumo de pedidos indisponível." }, { status: 503, headers });
   }

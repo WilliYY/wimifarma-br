@@ -6,7 +6,7 @@ O painel Miauby ADMIN integra uma prévia de seis eventos, seleção WhatsApp/e-
 
 `src/features/communications/customer-messages.ts` prepara uma representação única para WhatsApp e e-mail: saudação da Miauby, evento, número do pedido, subtotal, frete, descontos, total, modalidade, estados reais e cashback informado. Os itens, quando autorizados, mostram quantidade, preço unitário e total. O texto do WhatsApp é o mesmo do e-mail; o HTML escapa o conteúdo recebido. Os assuntos são genéricos e nunca incluem produtos ou inferências de saúde.
 
-É um gerador puro, sem envio, fila, banco, cadastro de contatos ou cálculo de benefícios. A ponte WhatsApp atual continua destinada ao proprietário, conforme `30-miauby-whatsapp-comercio.md`. E-mails continuam sem provedor conectado, conforme `33-emails-clientes.md`. Não há automação de clientes ativada nesta entrega.
+Esse gerador editorial permanece puro, sem envio ou cálculo de benefícios. A partir da evolução de 22/10/2026, avisos operacionais de etapas usam uma fila e uma rota próprias, separados desta prévia e dos alertas ao proprietário: [97](97-operacao-admin-e-etapas-whatsapp.md). E-mails continuam sem provedor conectado, conforme `33-emails-clientes.md`.
 
 ## Eventos e verdade comercial
 

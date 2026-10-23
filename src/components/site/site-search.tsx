@@ -241,7 +241,7 @@ export function SiteSearch() {
           aria-haspopup="listbox"
           aria-label="Buscar produtos"
           autoComplete="off"
-          className="h-full min-w-0 flex-1 bg-transparent font-body text-[0.95rem] font-medium text-ink outline-none placeholder:text-[#6e7e95]"
+          className="h-full min-w-0 flex-1 appearance-none bg-transparent font-body text-[0.95rem] font-medium text-ink outline-none placeholder:text-[#6e7e95] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
           maxLength={80}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -257,7 +257,7 @@ export function SiteSearch() {
         {trimmedQuery ? (
           <button
             aria-label="Limpar busca"
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#53647c] transition hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#53647c] transition hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
             onClick={handleClear}
             type="button"
           >
@@ -334,7 +334,7 @@ export function SiteSearch() {
                 aria-haspopup="listbox"
                 aria-label="Buscar produtos"
                 autoComplete="off"
-                className="h-full min-w-0 flex-1 bg-transparent text-base font-semibold text-ink outline-none placeholder:text-muted"
+                className="h-full min-w-0 flex-1 appearance-none bg-transparent text-base font-semibold text-ink outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
                 maxLength={80}
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={handleKeyDown}
@@ -345,7 +345,7 @@ export function SiteSearch() {
                 value={query}
               />
               {trimmedQuery ? (
-                <button aria-label="Limpar busca" className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted" onClick={handleClear} type="button">
+                <button aria-label="Limpar busca" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40" onClick={handleClear} type="button">
                   <X className="h-4 w-4" />
                 </button>
               ) : null}

@@ -5,6 +5,7 @@ import { settleOrderBenefits } from "@/features/cashback/redemption";
 import { canTransitionStatus, orderStatusTransitions, orderStatusUpdateSchema, paymentStatusTransitions } from "@/features/orders/checkout";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
+import { queueCustomerOrderStatus, type CustomerNotificationStatus } from "@/features/miauby/customer-order-status";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -21,12 +22,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const result = await getPrisma().$transaction(async (transaction) => {
     await transaction.$queryRaw`SELECT id FROM "Order" WHERE id = ${id} FOR UPDATE`;
     const current = await transaction.order.findUnique({
-      select: { paymentStatus: true, status: true, paymentMethod: true, requiresPrescriptionReview: true, hasItemShortages: true,
+      select: { paymentStatus: true, status: true, paymentMethod: true, fulfillmentMethod: true, requiresPrescriptionReview: true, hasItemShortages: true,
         prescriptionReviewedAt: true, prescriptionReviewedById: true,
-        onlinePayment: { select: { environment: true, status: true, statusDetail: true } } },
+        onlinePayment: { select: { environment: true, status: true, statusDetail: true, financialReviewReason: true } } },
       where: { id },
     });
     if (!current) return { error: "Pedido nao encontrado.", statusCode: 404 };
+    if (statusUpdate.status === "OUT_FOR_DELIVERY" && current.fulfillmentMethod !== "DELIVERY") {
+      return { error: "Pedidos de retirada não possuem etapa de envio ou saída para entrega.", statusCode: 409 };
+    }
+    if (statusUpdate.status && statusUpdate.status !== current.status && current.onlinePayment?.financialReviewReason) {
+      return { error: "Resolva a revisão financeira do pagamento antes de avançar o pedido.", statusCode: 409 };
+    }
     if (current.paymentMethod === "ONLINE" && (statusUpdate.paymentStatus || current.onlinePayment?.environment === "test" || current.onlinePayment?.statusDetail === "partially_refunded"
       || (statusUpdate.status && statusUpdate.status !== current.status && current.paymentStatus !== "PAID") || statusUpdate.status === "CANCELED")) {
       return { error: "Pagamento online é atualizado pelo Mercado Pago. Para cancelar ou reembolsar, use o painel do provedor e aguarde a sincronização. Pedidos de teste ou com reembolso parcial não podem ser preparados.", statusCode: 409 };
@@ -45,6 +52,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
     const reviewedAt = current.prescriptionReviewedAt ?? (prescriptionReviewed ? new Date() : null);
     const nextStatus = statusUpdate.status ?? current.status;
+    const statusChanged = nextStatus !== current.status;
     if (current.hasItemShortages && ["READY", "OUT_FOR_DELIVERY", "COMPLETED"].includes(nextStatus)) {
       const unresolved = await transaction.orderItemShortage.count({ where: { orderId: id, OR: [
         { status: { in: ["PROPOSED", "REFUND_REQUESTED"] } }, { creditState: "REVIEW" },
@@ -57,7 +65,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
     if (current.paymentMethod === "ONLINE" && (statusUpdate.status || statusUpdate.paymentStatus)) {
       const online = await transaction.onlinePayment.findUnique({ where: { orderId: id } });
-      if (!online || online.status !== "PAID" || online.environment === "test") {
+      if (!online || online.status !== "PAID" || online.environment !== "production" || online.financialReviewReason) {
         return { error: "Aguarde a confirmação do pagamento pelo Mercado Pago antes de preparar o pedido.", statusCode: 409 };
       }
     }
@@ -69,7 +77,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     await settleOrderCashback(transaction, id);
     await settleOrderBenefits(transaction, id);
     const saved = await transaction.order.findUniqueOrThrow({
-      select: { id: true, paymentStatus: true, status: true, updatedAt: true, cashbackRedeemedCents: true,
+      select: { id: true, number: true, customerPhone: true, fulfillmentMethod: true, paymentStatus: true, status: true, updatedAt: true, cashbackRedeemedCents: true,
         wimicoinsRedeemedPoints: true, wimicoinsRedemptionState: true,
         cashbackRedemptionState: true, requiresPrescriptionReview: true, prescriptionReviewedAt: true },
       where: { id },
@@ -88,7 +96,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         userId: userId && userId !== "demo-admin" ? userId : undefined,
       } });
     }
-    return { data: { ...saved, updatedAt: saved.updatedAt.toISOString(), prescriptionReviewedAt: saved.prescriptionReviewedAt?.toISOString() ?? null } };
+    const notificationStatus: CustomerNotificationStatus = statusChanged ? await queueCustomerOrderStatus(transaction, saved) : "SKIPPED";
+    const { customerPhone: _customerPhone, ...responseOrder } = saved;
+    void _customerPhone;
+    return { data: { ...responseOrder, notificationStatus, updatedAt: saved.updatedAt.toISOString(), prescriptionReviewedAt: saved.prescriptionReviewedAt?.toISOString() ?? null } };
   });
   if ("error" in result) return NextResponse.json({ error: result.error }, { status: result.statusCode });
   return NextResponse.json(result);

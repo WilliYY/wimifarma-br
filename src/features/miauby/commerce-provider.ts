@@ -1,4 +1,5 @@
 import { bridgeResultSchema, type CommerceType } from "./commerce-rules";
+import { customerRecipient } from "./customer-order-status";
 
 export function commerceConnection() {
   const base = process.env.MIAUBY_COMMERCE_URL;
@@ -31,8 +32,19 @@ async function bridgeRequest(path: string, body?: unknown) {
   } finally { reader.releaseLock(); }
   return JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown;
 }
-export async function sendCommerceEvent(event: { id: string; type: string; text: string }) {
+export async function sendCommerceEvent(event: { id: string; type: string; text: string; recipient?: string | null }) {
+  if (event.type === "order_status") {
+    if (!event.recipient || customerRecipient(event.recipient) !== event.recipient) return bridgeResultSchema.parse({ ok: false, eventId: event.id, status: "blocked", messageId: null, accepted: false, delivered: null, uncertain: false, duplicate: false, retryable: false });
+    return bridgeResultSchema.parse(await bridgeRequest("customer-status", { eventId: event.id, type: "order_status", recipient: event.recipient, text: event.text }));
+  }
   return bridgeResultSchema.parse(await bridgeRequest("alerts", { eventId: event.id, type: event.type as CommerceType, text: event.text }));
+}
+export async function commerceCustomerStatusReady(): Promise<boolean> {
+  if (!commerceConnection()) return false;
+  try {
+    const data = await bridgeRequest("status") as { configured?: boolean; enabled?: boolean; connected?: boolean | null; customerStatus?: boolean };
+    return data.configured === true && data.enabled === true && data.connected === true && data.customerStatus === true;
+  } catch { return false; }
 }
 export async function commerceTransportStatus(): Promise<"connected" | "unavailable" | "unknown" | "unconfigured"> {
   if (!commerceConnection()) return "unconfigured";
