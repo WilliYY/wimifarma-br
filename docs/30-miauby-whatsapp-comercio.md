@@ -1,5 +1,11 @@
 # Miauby: alertas comerciais por WhatsApp
 
+## Fornecimento nos avisos — 22/10/2026
+
+Novos avisos de pedido recebido incluem EAN do produto conferido na criação e distribuidora escolhida, ou estoque próprio, junto da quantidade. A origem usa o mesmo snapshot que será persistido no item; não faz uma nova cotação para decidir a mensagem. Ausência de dados não inventa fornecedor ou EAN. O limite existente de itens e a indicação de itens restantes continuam. Nenhum nome, telefone ou endereço do cliente foi acrescentado.
+
+O envio mantém configuração, destino fixo, deduplicação, worker e quarentena existentes. Textos já tentados permanecem congelados e não são reenviados pela mudança. O painel de pedidos mostra o estado dos controles de aviso somente a ADMIN; isso não comprova entrega no aparelho. A implementação foi testada com transporte simulado, sem criar pedido ou disparar WhatsApp real. O aviso visual do cabeçalho e a lista compacta estão documentados em [34](34-pedidos-operacao.md).
+
 ## Resumos e prévia — 04/10/2026
 
 Os alertas de pedido/pagamento ao proprietário agora incluem quantidade, preço unitário e total de itens, subtotal, frete e descontos quando disponíveis no snapshot confiável. Cashback pendente é identificado como previsto, sem inventar saldo ou crédito. IDs de eventos, destinatário fixo, deduplicação e quarentena de envio incerto permanecem.

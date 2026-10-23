@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Pedidos no início do menu, aviso global, lista compacta com 30 por página e conferência por distribuidora/EAN/quantidade: [documento 34](docs/34-pedidos-operacao.md). Alertas novos da Miauby também identificam o fornecimento: [documento 30](docs/30-miauby-whatsapp-comercio.md).
+
 Cadastro por família de princípio ativo, comparação ANB/Profarma e fotos reais por apresentação de venda livre: [documento 96](docs/96-catalogo-por-principio-ativo-2026-10-22.md).
 
 Correção de segurança Next.js 15.5.28, auditoria de produção e alertas de desenvolvimento: [documento 95](docs/95-correcao-next-15-seguranca.md).

@@ -29,6 +29,7 @@ test("orders show historical posting location above recipient and filter local, 
     await page.route("**/*", route => route.fulfill({ contentType: "text/html", body: '<div id="root"></div>' }));
     await page.goto("http://127.0.0.1:3196");
     await page.addScriptTag({ content: script });
+    for (const number of ["LOCAL", "VIAGEM", "LEGADO"]) await page.getByRole("button", { name: `Ver detalhes do pedido ${number}`, exact: true }).click();
     const local = page.locator("article").filter({ has: page.getByRole("heading", { name: "LOCAL", exact: true }) });
     const travel = page.locator("article").filter({ has: page.getByRole("heading", { name: "VIAGEM", exact: true }) });
     const pending = page.locator("article").filter({ has: page.getByRole("heading", { name: "LEGADO", exact: true }) });
@@ -48,6 +49,7 @@ test("orders show historical posting location above recipient and filter local, 
       return Boolean(posting && customer && posting.compareDocumentPosition(customer) & Node.DOCUMENT_POSITION_FOLLOWING);
     }), true);
     const filter = page.getByLabel("Filtrar por cidade de postagem", { exact: true });
+    await page.getByRole("button", { name: "Filtros", exact: true }).click();
     await filter.selectOption("Umuarama/PR");
     await expect(page.locator("article")).toHaveCount(1);
     await expect(travel).toBeVisible();
@@ -56,6 +58,7 @@ test("orders show historical posting location above recipient and filter local, 
     await expect(pending).toBeVisible();
     await filter.selectOption("ALL");
     await expect(page.locator("article")).toHaveCount(4);
+    await page.getByRole("button", { name: "Ver detalhes do pedido ENTREGA LOCAL", exact: true }).click();
     await expect(page.locator("article").filter({ has: page.getByRole("heading", { name: "ENTREGA LOCAL", exact: true }) }).getByRole("region", { name: "Postagem do pedido" })).toHaveCount(0);
   } finally { await browser.close(); }
 });

@@ -37,3 +37,10 @@ test("search covers order, customer, phone and products while preserving source 
   assert.equal(matchesAdminOrderSearch(order, "outro produto"), false);
   assert.equal(order.items[0].productName, "Sabonete Teste");
 });
+
+test("busca operacional encontra EAN e fornecedor sem exigir abertura do pedido", () => {
+  const order = { number: "WIM-SINTETICO", customerName: "Cliente sintético", customerPhone: "00000000000", items: [{ productName: "Produto sintético", ean: "7891234567895", inventorySource: "DISTRIBUTOR" as const, supplierCode: "DM" }] };
+  assert.equal(matchesAdminOrderSearch(order, "7891234567895"), true);
+  assert.equal(matchesAdminOrderSearch(order, "dm paraná"), true);
+  assert.equal(matchesAdminOrderSearch(order, "profarma"), false);
+});

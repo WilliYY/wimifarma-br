@@ -5,6 +5,7 @@ import {
   requireAdminPageRoute,
 } from "@/features/auth/permissions";
 import { getPrisma } from "@/lib/prisma";
+import { resolveOrderItemEan } from "@/features/orders/admin-supply";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -18,6 +19,7 @@ export default async function Page() {
       itemShortages: { include: { orderItem: { select: { productName: true } } }, orderBy: { createdAt: "asc" } },
       items: {
         orderBy: { createdAt: "asc" },
+        include: { product: { select: { ean: true } }, supplierOffer: { select: { supplier: true, eanNormalized: true } } },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -38,18 +40,18 @@ export default async function Page() {
     updatedAt: order.updatedAt.toISOString(),
     prescriptionReviewedAt: order.prescriptionReviewedAt?.toISOString() ?? null,
     preparationReadyAt: order.preparationReadyAt?.toISOString() ?? null,
-    items: order.items.map((item) => ({
-      ...item,
-      createdAt: item.createdAt.toISOString(),
+    items: order.items.map(({ product, supplierOffer, ...item }) => ({
+      ...item, ...resolveOrderItemEan({ ...item, product, supplierOffer }), createdAt: item.createdAt.toISOString(),
     })),
   })) satisfies AdminOrderRecord[];
+  const miauby = role === "ADMIN" ? await getPrisma().miaubyConfig.findUnique({ where: { id: "commerce" }, select: { enabled: true, orderAlerts: true } }) : null;
 
   return (
     <AdminShell
       allowedRoles={adminRoutePermissions["/admin/pedidos"]}
       title="Pedidos"
     >
-      <OrdersPanel initialOrders={serialized} canManageCredits={role === "ADMIN"} />
+      <OrdersPanel initialOrders={serialized} canManageCredits={role === "ADMIN"} miaubyOrderAlertsEnabled={role === "ADMIN" ? Boolean(miauby?.enabled && miauby.orderAlerts) : undefined} />
     </AdminShell>
   );
 }

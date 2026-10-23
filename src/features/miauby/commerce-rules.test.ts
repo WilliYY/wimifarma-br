@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { bridgeResultSchema, cartEventKey, cartRequestSchema, createCartIdentity, readCartIdentity, formatCommerceOrder, classifyBridgeResult } from "./commerce-rules";
+import { bridgeResultSchema, cartEventKey, cartRequestSchema, createCartIdentity, readCartIdentity, formatCommerceItems, formatCommerceOrder, classifyBridgeResult } from "./commerce-rules";
 
 test("cart identity is signed, expires and deduplicates a ten-minute window", () => {
   const now = Date.now(); const secret = "synthetic-secret-only";
@@ -43,4 +43,36 @@ test("owner alerts share truthful money details without claiming pending cashbac
   assert.match(result, /2 × Produto sintético.*R\$\s*12,00/);
   assert.match(result, /Cashback previsto/);
   assert.doesNotMatch(result, /ganhou|creditado|saldo disponível/i);
+});
+
+test("new order alerts show recorded EAN and procurement source without changing payment or cart messages", () => {
+  const input = { id: "fixture", number: "TEST-123", totalCents: 1200, fulfillmentMethod: "PICKUP",
+    items: [
+      { name: "Produto distribuidor", quantity: 3, ean: "7890000000001", inventorySource: "DISTRIBUTOR", supplierCode: "PROFARMA" },
+      { name: "Produto local", quantity: 2, ean: "7890000000002", inventorySource: "PHARMACY" },
+      { name: "Produto histórico", quantity: 1 },
+      { name: "Distribuidor sem identificação", quantity: 1, inventorySource: "DISTRIBUTOR" },
+    ] };
+  const result = formatCommerceOrder("order", input);
+  assert.match(result, /3 × Produto distribuidor · EAN: 7890000000001 · Fornecedor: PROFARMA/);
+  assert.match(result, /2 × Produto local · EAN: 7890000000002 · Estoque próprio/);
+  assert.match(result, /\n1 × Produto histórico\n/);
+  assert.match(result, /\n1 × Distribuidor sem identificação\n/);
+  assert.match(result, /painel de pedidos/);
+  assert.doesNotMatch(formatCommerceOrder("payment", input), /EAN:|Fornecedor:|Estoque próprio/);
+  assert.doesNotMatch(formatCommerceItems(input.items), /EAN:|Fornecedor:|Estoque próprio/);
+});
+
+test("procurement details sanitize text, omit blank fields and keep the ten-item limit", () => {
+  const input = { id: "fixture", number: "TEST-123", totalCents: 1200, fulfillmentMethod: "PICKUP",
+    items: [
+      { name: "Produto", quantity: 1, ean: "789\n*000*", inventorySource: "DISTRIBUTOR", supplierCode: "ANB\n*texto*" },
+      { name: "Sem dados", quantity: 1, ean: " \n ", inventorySource: "DISTRIBUTOR", supplierCode: " \n " },
+      ...Array.from({ length: 9 }, (_, index) => ({ name: `Extra ${index}`, quantity: 1 })),
+    ] };
+  const result = formatCommerceOrder("order", input);
+  assert.match(result, /EAN: 789 000 · Fornecedor: ANB texto/);
+  assert.match(result, /\n1 × Sem dados\n/);
+  assert.match(result, /Mais 1 itens no painel/);
+  assert.doesNotMatch(result, /\*|Extra 8/);
 });

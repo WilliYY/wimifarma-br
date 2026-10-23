@@ -172,6 +172,7 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
     await tx.auditLog.create({ data: { action: "CASHBACK_REDEMPTION_RESERVED", entity: "Order", entityId: order.id, metadata: { customerId: customer?.id, amountCents: redeem } } });
   }
   if (coins > 0 && customer) await reserveWimicoins(tx, { customerId: customer.id, orderId: order.id, number: order.number, points: coins });
-  await queueCommerceOrder(tx, "order", { ...order, items: items.map(item => ({ name: item.productName, quantity: item.quantity, unitPriceCents: item.unitPriceCents, totalCents: item.totalCents })) }, isTest);
+  await queueCommerceOrder(tx, "order", { ...order, items: items.map(item => ({ name: item.productName, quantity: item.quantity, unitPriceCents: item.unitPriceCents, totalCents: item.totalCents,
+    ean: products.find(product => product.id === item.productId)?.ean, inventorySource: item.inventorySource, supplierCode: item.supplierCode })) }, isTest);
   return tx.order.findUniqueOrThrow({ where: { id: order.id }, select: orderResultSelect });
 }

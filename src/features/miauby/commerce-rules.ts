@@ -24,8 +24,18 @@ export function readCartIdentity(token: string | undefined, secret: string, now 
 export const cartEventKey = (id: string, now = Date.now()) => `cart:${id}:${Math.floor(now / 600_000)}`;
 export const commerceMoney = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 const safeText = (text: string) => text.replace(/[\r\n\t*_~`\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 100);
-export function formatCommerceItems(items: { name: string; quantity: number; unitPriceCents?: number; totalCents?: number }[]) {
-  return items.slice(0, 10).map(item => `${item.quantity} × ${safeText(item.name)}${item.unitPriceCents !== undefined && item.totalCents !== undefined ? ` · un. ${commerceMoney(item.unitPriceCents)} · total ${commerceMoney(item.totalCents)}` : ""}`).join("\n") + (items.length > 10 ? `\nMais ${items.length - 10} itens no painel.` : "");
+export function formatCommerceItems(items: { name: string; quantity: number; unitPriceCents?: number; totalCents?: number; ean?: string | null; inventorySource?: string; supplierCode?: string | null }[], includeProcurement = false) {
+  return items.slice(0, 10).map(item => {
+    const details: string[] = [];
+    if (includeProcurement) {
+      const ean = safeText(item.ean ?? "");
+      const supplier = safeText(item.supplierCode ?? "");
+      if (ean) details.push(`EAN: ${ean}`);
+      if (item.inventorySource === "PHARMACY") details.push("Estoque próprio");
+      else if (item.inventorySource === "DISTRIBUTOR" && supplier) details.push(`Fornecedor: ${supplier}`);
+    }
+    return `${item.quantity} × ${safeText(item.name)}${details.length ? ` · ${details.join(" · ")}` : ""}${item.unitPriceCents !== undefined && item.totalCents !== undefined ? ` · un. ${commerceMoney(item.unitPriceCents)} · total ${commerceMoney(item.totalCents)}` : ""}`;
+  }).join("\n") + (items.length > 10 ? `\nMais ${items.length - 10} itens no painel.` : "");
 }
 export function formatCommerceOrder(type: "order" | "payment", order: { id: string; number: string; totalCents: number; fulfillmentMethod: string;
   subtotalCents?: number; deliveryFeeCents?: number; cashbackEarnedCents?: number; cashbackState?: string; status?: string; paymentStatus?: string;
@@ -41,7 +51,7 @@ export function formatCommerceOrder(type: "order" | "payment", order: { id: stri
     if (order.cashbackState === "CREDITED" && order.status === "COMPLETED" && order.paymentStatus === "PAID") summary.push(`Cashback creditado: ${commerceMoney(order.cashbackEarnedCents!)}`);
     else if (order.cashbackState === "PENDING") summary.push(`Cashback previsto: ${commerceMoney(order.cashbackEarnedCents!)}. Crédito após conclusão e pagamento.`);
   }
-  return `${isTest ? "[TESTE — sem compra real]\n" : ""}Miauby · Wimifarma\n${title}\nPedido ${safeText(order.number)}\n${formatCommerceItems(order.items)}\n${summary.length ? `${summary.join("\n")}\n` : ""}Total: ${commerceMoney(order.totalCents)}\n${order.fulfillmentMethod === "PICKUP" ? "Retirada na farmácia" : "Entrega solicitada"}\nConfira os detalhes no painel de pedidos.`;
+  return `${isTest ? "[TESTE — sem compra real]\n" : ""}Miauby · Wimifarma\n${title}\nPedido ${safeText(order.number)}\n${formatCommerceItems(order.items, type === "order")}\n${summary.length ? `${summary.join("\n")}\n` : ""}Total: ${commerceMoney(order.totalCents)}\n${order.fulfillmentMethod === "PICKUP" ? "Retirada na farmácia" : "Entrega solicitada"}\nConfira os detalhes no painel de pedidos.`;
 }
 export function classifyBridgeResult(result: BridgeResult, eventId: string): CommerceState {
   if (result.eventId !== eventId || result.uncertain || result.status === "uncertain") return "UNCERTAIN";

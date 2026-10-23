@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-22 — Pedidos compactos, fornecimento e avisos
+
+- Priorizar Pedidos na navegação e apresentar até 30 linhas expansíveis por página dos últimos 100 carregados, com busca por EAN, filtros e visão por distribuidora. Preservar estados financeiros, postagem, receita e ações existentes.
+- Usar a distribuidora gravada no item e identificar a fonte atual do EAN; não recalcular o fornecedor nem apresentar EAN atual como snapshot histórico. A consolidação desconta faltas e distingue demanda paga de pendente, sem transmitir compras.
+- Consultar um resumo autenticado mínimo a cada 30 segundos em aba visível para avisar novos pedidos, sem IA. Acrescentar EAN/origem aos novos textos da outbox Miauby, preservando destino, deduplicação e envio incerto. Sem migração, dependência ou alteração de credenciais.
+- Contratos e validação em [34-pedidos-operacao.md](34-pedidos-operacao.md) e [30-miauby-whatsapp-comercio.md](30-miauby-whatsapp-comercio.md).
+
 ## 2026-10-22 — Cadastro completo por família de princípio ativo
 
 - Após o encerramento dos lotes anteriores, o lojista autorizou nova pesquisa e inclusão de levotiroxina, nimesulida, simeticona, tadalafila, ibuprofeno e loratadina, comparando ANB e Profarma. A ordem da planilha antiga deixa de definir esta rodada; associações precisam conter o princípio ativo solicitado.

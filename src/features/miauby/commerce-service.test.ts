@@ -49,7 +49,7 @@ async function fixture(settings: Settings | null = enabled, initial: Partial<Eve
   const loaded = { exports: {} as Api };
   vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), Date, process, console });
   const api = loaded.exports;
-  const queue = (type: "order" | "payment", isTest = false) => api.queueCommerceOrder(db as unknown as Parameters<Api["queueCommerceOrder"]>[0], type, order, isTest);
+  const queue = (type: "order" | "payment", isTest = false, snapshot: Parameters<Api["queueCommerceOrder"]>[2] = order) => api.queueCommerceOrder(db as unknown as Parameters<Api["queueCommerceOrder"]>[0], type, snapshot, isTest);
   const processEvents = (send: Parameters<Api["processCommerceEvents"]>[1]) => api.processCommerceEvents(db as unknown as Parameters<Api["processCommerceEvents"]>[0], send);
   return { events, queue, processEvents };
 }
@@ -65,6 +65,17 @@ test("order and payment keys deduplicate repeated transactional queues", async (
   const f = await fixture(); await f.queue("order"); await f.queue("order"); await f.queue("payment", true); await f.queue("payment", true);
   assert.deepEqual(f.events.map(event => event.key), ["order:synthetic-order", "payment:synthetic-order"]);
   assert.match(f.events[0].text, /não confirma pagamento/); assert.match(f.events[1].text, /TESTE — sem compra real/);
+});
+test("order outbox freezes procurement details from creation when repeated queues provide different data", async () => {
+  const f = await fixture();
+  const snapshot = { ...order, items: [{ name: "Produto sintético", quantity: 3, ean: "7890000000001", inventorySource: "DISTRIBUTOR", supplierCode: "PROFARMA" }] };
+  await f.queue("order", false, snapshot);
+  const original = f.events[0].text;
+  await f.queue("order", false, { ...snapshot, items: [{ ...snapshot.items[0], ean: "7890000000002", supplierCode: "ANB" }] });
+  assert.equal(f.events.length, 1);
+  assert.equal(f.events[0].text, original);
+  assert.match(original, /3 × Produto sintético · EAN: 7890000000001 · Fornecedor: PROFARMA/);
+  assert.doesNotMatch(original, /7890000000002|Fornecedor: ANB/);
 });
 test("disabled dispatcher sends only explicit test events", async () => {
   const f = await fixture({ ...enabled, enabled: false }, [{ type: "cart" }, { type: "order" }, { type: "payment" }, { type: "test" }]);

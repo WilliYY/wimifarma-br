@@ -21,6 +21,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AdminOrderNotice } from "@/components/admin/admin-order-notice";
 import { auth, signOut } from "@/features/auth/auth";
 import {
   adminRoutePermissions,
@@ -30,6 +31,12 @@ import {
 import { siteConfig } from "@/lib/site";
 
 const adminNav = [
+  {
+    href: "/admin/pedidos",
+    icon: ShoppingBag,
+    label: "Pedidos",
+    roles: adminRoutePermissions["/admin/pedidos"],
+  },
   { href: "/admin/avisos-estoque", icon: Bell, label: "Avise-me", roles: adminRoutePermissions["/admin/avisos-estoque"] },
   { href: "/admin/usuarios", icon: Users, label: "Usuarios", roles: adminRoutePermissions["/admin/usuarios"] },
   {
@@ -43,12 +50,6 @@ const adminNav = [
     icon: BadgePercent,
     label: "Ofertas",
     roles: adminRoutePermissions["/admin/ofertas"],
-  },
-  {
-    href: "/admin/pedidos",
-    icon: ShoppingBag,
-    label: "Pedidos",
-    roles: adminRoutePermissions["/admin/pedidos"],
   },
   {
     href: "/admin/cupons",
@@ -157,7 +158,8 @@ export async function AdminShell({
               </p>
               <h1 className="text-base font-black text-ink sm:text-lg">{title}</h1>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {canAccessAdminRole(role, adminRoutePermissions["/admin/pedidos"]) && <AdminOrderNotice />}
               <Button asChild size="sm" variant="secondary">
                 <Link href="/">
                   <Home className="h-4 w-4" />

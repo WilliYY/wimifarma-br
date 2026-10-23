@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AdminOrderShortageActions } from "./order-shortage-actions";
 import type { ItemShortageSummary } from "@/features/store-credit/contracts";
 import { getAdminOrderGroup, matchesAdminOrderSearch, type AdminOrderGroup } from "@/features/orders/admin-presentation";
+import { getOrderSupplyGroups, supplierSourceLabel } from "@/features/orders/admin-supply";
+import { OrderSupplyView } from "./order-supply-view";
 import { OrderShippingSummary } from "./order-shipping-summary";
 import { orderPostingLocation } from "@/features/shipping/posting";
 import { shippingQuotePayloadSchema } from "@/features/shipping/schema";
@@ -19,6 +22,7 @@ import {
   QrCode,
   Search,
   ShoppingBag,
+  RefreshCw,
   Store,
   XCircle,
 } from "lucide-react";
@@ -70,6 +74,8 @@ export type AdminOrderRecord = {
     shortageQuantity?: number;
     inventorySource?: "PHARMACY" | "DISTRIBUTOR";
     supplierCode?: string | null;
+    ean?: string | null;
+    eanSource?: "offer" | "product" | null;
     id: string;
     orderId: string;
     productId: string | null;
@@ -123,23 +129,36 @@ const onlineStatusLabels: Record<string, string> = {
   CANCELED: "Pagamento cancelado", REFUNDED: "Pagamento estornado", PARTIALLY_REFUNDED: "Reembolso parcial", DISPUTED: "Pagamento contestado",
 };
 
-export function OrdersPanel({ initialOrders, canManageCredits = false }: { initialOrders: AdminOrderRecord[]; canManageCredits?: boolean }) {
+export function OrdersPanel({ initialOrders, canManageCredits = false, miaubyOrderAlertsEnabled }: { initialOrders: AdminOrderRecord[]; canManageCredits?: boolean; miaubyOrderAlertsEnabled?: boolean }) {
+  const router = useRouter();
   const [orders, setOrders] = useState(initialOrders);
   useEffect(() => setOrders(initialOrders), [initialOrders]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"ALL" | OrderStatus>("ALL");
   const [group, setGroup] = useState<"ALL" | AdminOrderGroup>("ALL");
   const [postingCity, setPostingCity] = useState("ALL");
+  const [source, setSource] = useState("ALL");
+  const [view, setView] = useState<"orders" | "suppliers">("orders");
+  const [page, setPage] = useState(1);
+  const [advancedFilters, setAdvancedFilters] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const visibleOrders = useMemo(() => {
     return orders.filter((order) => {
       const matchesStatus = filter === "ALL" || order.status === filter;
-      return matchesStatus && (postingCity === "ALL" || postingCityKey(order.shippingQuote) === postingCity) && (group === "ALL" || getAdminOrderGroup(order) === group) && matchesAdminOrderSearch(order, search);
+      return matchesStatus && (source === "ALL" || order.items.some(item => orderSourceKey(item) === source)) && (postingCity === "ALL" || postingCityKey(order.shippingQuote) === postingCity) && (group === "ALL" || getAdminOrderGroup(order) === group) && matchesAdminOrderSearch(order, search);
+    }).sort((a, b) => {
+      const priority: Record<AdminOrderGroup, number> = { NEW: 0, ACTIVE: 1, COMPLETED: 2, CANCELED: 3 };
+      return priority[getAdminOrderGroup(a)] - priority[getAdminOrderGroup(b)] || Date.parse(b.createdAt) - Date.parse(a.createdAt);
     });
-  }, [filter, group, orders, search, postingCity]);
+  }, [filter, group, orders, search, postingCity, source]);
   const postingCities = [...new Set(orders.map(order => postingCityKey(order.shippingQuote)).filter((city): city is string => city !== null))].sort();
+  const sources = [...new Map(orders.flatMap(order => order.items.map(item => [orderSourceKey(item), supplierSourceLabel(item)] as const))).entries()].sort((a, b) => a[1].localeCompare(b[1], "pt-BR"));
+  const pageCount = Math.max(1, Math.ceil(visibleOrders.length / 30));
+  const currentPage = Math.min(page, pageCount);
+  const pageOrders = visibleOrders.slice((currentPage - 1) * 30, currentPage * 30);
+  const supplyGroups = getOrderSupplyGroups(visibleOrders).filter(item => source === "ALL" || (item.key === "pharmacy" ? "PHARMACY" : item.supplierCode ?? "UNKNOWN") === source);
 
   const counts = orders.reduce((summary, order) => { summary[getAdminOrderGroup(order)] += 1; return summary; }, { NEW: 0, ACTIVE: 0, COMPLETED: 0, CANCELED: 0 });
 
@@ -173,33 +192,72 @@ export function OrdersPanel({ initialOrders, canManageCredits = false }: { initi
   }
 
   return (
-    <div className="space-y-5">
-      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+    <div className="space-y-4">
+      <section aria-label="Resumo dos pedidos carregados" className="grid grid-cols-2 divide-x divide-line overflow-hidden rounded-xl border border-line bg-white sm:grid-cols-4">
         <Metric icon={Clock3} label="Pedidos feitos" tone="brand" value={counts.NEW} />
         <Metric icon={ShoppingBag} label="Em andamento" tone="green" value={counts.ACTIVE} />
         <Metric icon={PackageCheck} label="Concluídos" tone="green" value={counts.COMPLETED} />
         <Metric icon={XCircle} label="Cancelados / estornados" tone="neutral" value={counts.CANCELED} />
       </section>
 
-      <section className="rounded-lg border border-line bg-white p-4 shadow-sm sm:p-5">
-        <div aria-label="Situação dos pedidos" className="mb-5 flex flex-wrap gap-2">
-          {(["ALL", "NEW", "ACTIVE", "COMPLETED", "CANCELED"] as const).map(value => <button aria-pressed={group === value} className={`min-h-11 rounded-xl border px-4 py-2 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${group === value ? "border-brand bg-brand text-white" : "border-line bg-white text-muted hover:bg-surface-subtle"}`} key={value} onClick={() => { setGroup(value); setFilter("ALL"); }} type="button">{value === "ALL" ? "Todos" : groupLabels[value]} <span className="ml-2 tabular-nums">{value === "ALL" ? orders.length : counts[value]}</span></button>)}
+      <section className="rounded-xl border border-line bg-white p-3 sm:p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div aria-label="Forma de visualização" className="inline-flex rounded-lg bg-surface-subtle p-1">
+            <button aria-pressed={view === "orders"} className={`min-h-10 rounded-md px-3 text-sm font-bold ${view === "orders" ? "bg-white text-brand shadow-sm" : "text-muted"}`} onClick={() => setView("orders")} type="button">Por pedido</button>
+            <button aria-pressed={view === "suppliers"} className={`min-h-10 rounded-md px-3 text-sm font-bold ${view === "suppliers" ? "bg-white text-brand shadow-sm" : "text-muted"}`} onClick={() => setView("suppliers")} type="button">Por distribuidora</button>
+          </div>
+          <div className="flex items-center gap-3">
+            {typeof miaubyOrderAlertsEnabled === "boolean" && <a className={`text-xs font-bold ${miaubyOrderAlertsEnabled ? "text-pharma-green" : "text-brand"}`} href="/admin/miauby">{miaubyOrderAlertsEnabled ? "Miauby · avisos habilitados" : "Miauby · avisos desativados"}</a>}
+            <button aria-label="Atualizar pedidos" className="inline-flex min-h-10 items-center gap-2 rounded-md border border-line px-3 text-xs font-bold text-muted hover:bg-surface-subtle" onClick={() => router.refresh()} type="button"><RefreshCw className="h-3.5 w-3.5" />Atualizar</button>
+          </div>
         </div>
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_13rem_15rem]">
-          <label className="relative block"><span className="sr-only">Buscar pedido</span><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" /><input className="h-11 w-full rounded-md border border-line pl-10 pr-3 text-sm font-semibold outline-none focus:border-brand focus:ring-2 focus:ring-brand/10" onChange={(event) => setSearch(event.target.value)} placeholder="Número, cliente, telefone ou produto" value={search} /></label>
-          <label><span className="sr-only">Filtrar por status</span><select className="h-11 w-full rounded-md border border-line bg-white px-3 text-sm font-bold outline-none focus:border-brand" onChange={(event) => setFilter(event.target.value as "ALL" | OrderStatus)} value={filter}><option value="ALL">Todos os status</option>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-          <label><span className="sr-only">Filtrar por cidade de postagem</span><select aria-label="Filtrar por cidade de postagem" className="h-11 w-full rounded-md border border-line bg-white px-3 text-sm font-bold outline-none focus:border-brand" onChange={event => setPostingCity(event.target.value)} value={postingCity}><option value="ALL">Todas as postagens</option>{postingCities.map(city => <option key={city} value={city}>{city === "PENDING" ? "Confirmação pendente" : city}</option>)}</select></label>
+        <div aria-label="Situação dos pedidos" className="mb-3 flex gap-1.5 overflow-x-auto sm:flex-wrap">
+          {(["ALL", "NEW", "ACTIVE", "COMPLETED", "CANCELED"] as const).map(value => <button aria-pressed={group === value} className={`min-h-10 shrink-0 rounded-lg border px-3 py-2 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${group === value ? "border-brand bg-brand text-white" : "border-line bg-white text-muted hover:bg-surface-subtle"}`} key={value} onClick={() => { setGroup(value); setFilter("ALL"); setPage(1); }} type="button">{value === "ALL" ? "Todos" : groupLabels[value]} <span className="ml-2 tabular-nums">{value === "ALL" ? orders.length : counts[value]}</span></button>)}
+        </div>
+        <div className="grid gap-2 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+          <div className="flex min-w-0 gap-2"><label className="relative block min-w-0 flex-1"><span className="sr-only">Buscar pedido</span><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" /><input className="h-11 w-full rounded-md border border-line pl-10 pr-3 text-sm font-semibold outline-none focus:border-brand focus:ring-2 focus:ring-brand/10" onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Pedido, cliente, produto ou EAN" value={search} /></label><button aria-controls="order-extra-filters" aria-expanded={advancedFilters} className="min-h-11 rounded-md border border-line px-3 text-xs font-bold text-muted sm:hidden" onClick={() => setAdvancedFilters(value => !value)} type="button">Filtros{filter !== "ALL" || source !== "ALL" || postingCity !== "ALL" ? " · ativos" : ""}</button></div>
+          <div id="order-extra-filters" className={`${advancedFilters ? "grid" : "hidden"} gap-2 sm:grid sm:grid-cols-3`}>
+          <label><span className="sr-only">Filtrar por status</span><select className="h-11 w-full rounded-md border border-line bg-white px-3 text-sm font-bold outline-none focus:border-brand" onChange={(event) => { setFilter(event.target.value as "ALL" | OrderStatus); setPage(1); }} value={filter}><option value="ALL">Todos os status</option>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label><span className="sr-only">Filtrar por distribuidora</span><select className="h-11 w-full rounded-md border border-line bg-white px-3 text-sm font-bold outline-none focus:border-brand" onChange={event => { setSource(event.target.value); setPage(1); }} value={source}><option value="ALL">Todas as origens</option>{sources.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+          <label><span className="sr-only">Filtrar por cidade de postagem</span><select aria-label="Filtrar por cidade de postagem" className="h-11 w-full rounded-md border border-line bg-white px-3 text-sm font-bold outline-none focus:border-brand" onChange={event => { setPostingCity(event.target.value); setPage(1); }} value={postingCity}><option value="ALL">Todas as postagens</option>{postingCities.map(city => <option key={city} value={city}>{city === "PENDING" ? "Confirmação pendente" : city}</option>)}</select></label>
+          </div>
         </div>
         <p aria-live="polite" className="mt-3 text-xs font-semibold text-muted">{visibleOrders.length} de {orders.length} pedidos carregados · {group === "ALL" ? "Todas as situações" : groupLabels[group]}</p>
         {error ? <p className="mt-3 rounded-md bg-brand-soft px-4 py-3 text-sm font-bold text-brand" role="alert">{error}</p> : null}
       </section>
 
-      {visibleOrders.length === 0 ? <div className="grid min-h-48 place-items-center rounded-lg border border-dashed border-line bg-white px-5 text-center text-sm font-semibold text-muted">Nenhum pedido encontrado.</div> : <section className="grid gap-4">{visibleOrders.map((order) => <OrderCard canManageCredits={canManageCredits} key={order.id} onUpdate={updateOrder} order={order} updating={updatingId === order.id} />)}</section>}
+      {view === "suppliers" ? <OrderSupplyView groups={supplyGroups} /> : visibleOrders.length === 0 ? <div className="grid min-h-48 place-items-center rounded-lg border border-dashed border-line bg-white px-5 text-center text-sm font-semibold text-muted">Nenhum pedido encontrado.</div> : <section aria-label="Lista de pedidos" className="overflow-hidden rounded-xl border border-line bg-white">
+        <div aria-hidden="true" className="hidden grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,0.9fr)_7rem_1.25rem] gap-4 border-b border-line bg-surface-subtle px-4 py-2 text-[10px] font-black uppercase tracking-wide text-muted sm:grid"><span>Pedido e horário</span><span>Cliente e origem</span><span>Situação</span><span className="text-right">Total</span><span /></div>
+        {pageOrders.map((order) => <OrderRow canManageCredits={canManageCredits} key={order.id} onUpdate={updateOrder} order={order} updating={updatingId === order.id} />)}
+        <footer className="flex flex-wrap items-center justify-between gap-3 bg-surface-subtle px-4 py-3 text-xs font-semibold text-muted"><p>Página {currentPage} de {pageCount} · até 30 pedidos por página</p><nav aria-label="Páginas de pedidos" className="flex gap-2"><button aria-label="Página anterior" className="min-h-10 rounded-md border border-line bg-white px-3 disabled:opacity-40" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)} type="button">Anterior</button><button aria-label="Próxima página" className="min-h-10 rounded-md border border-line bg-white px-3 disabled:opacity-40" disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)} type="button">Próxima</button></nav></footer>
+      </section>}
     </div>
   );
 }
 
-function Metric({ icon: Icon, label, tone, value }: { icon: typeof ShoppingBag; label: string; tone: "brand" | "green" | "neutral"; value: number }) { const colors = tone === "brand" ? "bg-brand-soft text-brand" : tone === "green" ? "bg-[#e9f9ef] text-pharma-green" : "bg-surface-subtle text-muted"; return <div className="flex items-center gap-4 rounded-lg border border-line bg-white p-5 shadow-sm"><span className={`grid h-11 w-11 place-items-center rounded-md ${colors}`}><Icon className="h-5 w-5" /></span><span><strong className="block text-2xl font-black text-ink">{value}</strong><span className="text-xs font-bold text-muted">{label}</span></span></div>; }
+function Metric({ icon: Icon, label, tone, value }: { icon: typeof ShoppingBag; label: string; tone: "brand" | "green" | "neutral"; value: number }) { const colors = tone === "brand" ? "bg-brand-soft text-brand" : tone === "green" ? "bg-emerald-50 text-pharma-green" : "bg-surface-subtle text-muted"; return <div className="flex items-center gap-3 px-3 py-3 sm:px-4"><span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${colors}`}><Icon className="h-4 w-4" /></span><span className="min-w-0"><strong className="block text-xl font-black tabular-nums text-ink">{value}</strong><span className="block text-[11px] font-bold leading-4 text-muted">{label}</span></span></div>; }
+
+function orderSourceKey(item: AdminOrderRecord["items"][number]) { return item.inventorySource === "DISTRIBUTOR" ? item.supplierCode ?? "UNKNOWN" : "PHARMACY"; }
+
+function OrderRow(props: Parameters<typeof OrderCard>[0]) {
+  const { order } = props;
+  const [expanded, setExpanded] = useState(false);
+  const online = order.onlinePayment;
+  const sources = [...new Set(order.items.map(supplierSourceLabel))];
+  const units = order.items.reduce((total, item) => total + Math.max(0, item.quantity - (item.shortageQuantity ?? 0)), 0);
+  const attention = online?.environment === "test" ? "Homologação · não separar" : ["UNKNOWN", "SUBMITTING"].includes(online?.status ?? "") ? "Pagamento incerto · não separar" : online?.status === "REVIEW" ? "Conferir pagamento · não separar" : online?.status === "PARTIALLY_REFUNDED" ? "Reembolso parcial · conferir" : null;
+  return <article data-order-id={order.id} className="border-b border-line last:border-b-0">
+    <button aria-controls={`order-details-${order.id}`} aria-expanded={expanded} aria-label={`Ver detalhes do pedido ${order.number}`} className={`grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-3 py-3 text-left transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,0.9fr)_7rem_1.25rem] sm:px-4 ${expanded ? "bg-brand-soft/50" : "bg-white"}`} onClick={() => setExpanded(value => !value)} type="button">
+      <span className="min-w-0"><span role="heading" aria-level={2} className="block break-all text-[13px] font-black text-ink">{order.number}</span><span className="mt-1 block text-[11px] font-medium text-muted">{dateTime.format(new Date(order.createdAt))}</span></span>
+      <span className="col-span-2 row-start-2 min-w-0 sm:col-span-1 sm:row-auto"><span className="block truncate text-sm font-bold text-ink">{order.customerName}</span><span className="mt-0.5 block truncate text-[11px] text-muted">{units} un. · {sources.slice(0, 2).join(" / ")}{sources.length > 2 ? ` +${sources.length - 2}` : ""}</span></span>
+      <span className="col-span-2 flex min-w-0 flex-wrap gap-1 sm:col-span-1 sm:flex-col sm:items-start"><span className={`rounded px-2 py-0.5 text-[10px] font-bold ${getAdminOrderGroup(order) === "NEW" ? "bg-brand-soft text-brand" : getAdminOrderGroup(order) === "ACTIVE" ? "bg-emerald-50 text-pharma-green" : "bg-surface-subtle text-muted"}`}>{statusLabels[order.status]}</span><span className={`text-[10px] font-semibold ${order.paymentStatus === "PAID" && (!online || online.status === "PAID") ? "text-pharma-green" : "text-muted"}`}>{online ? onlineStatusLabels[online.status] ?? online.status : `Pagamento ${paymentStatusLabels[order.paymentStatus].toLowerCase()}`}</span>{attention && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-900">{attention}</span>}</span>
+      <span className="col-start-2 row-start-1 text-right sm:col-start-auto sm:row-auto"><strong className="block whitespace-nowrap text-sm font-black tabular-nums text-ink">{currency.format(order.totalCents / 100)}</strong><span className="mt-1 block text-[10px] font-semibold text-muted">{order.fulfillmentMethod === "PICKUP" ? "Retirada" : "Entrega"}</span></span>
+      <ChevronDown aria-hidden="true" className={`hidden h-4 w-4 text-muted transition-transform sm:block ${expanded ? "rotate-180" : ""}`} />
+      <span className="col-span-2 text-[10px] font-bold text-brand sm:hidden">{expanded ? "Recolher detalhes" : "Ver itens e detalhes"}</span>
+    </button>
+    <div id={`order-details-${order.id}`}>{expanded && <OrderCard {...props} />}</div>
+  </article>;
+}
 
 function postingCityKey(quote: unknown) {
   if (!shippingQuotePayloadSchema.safeParse(quote).success) return null;
@@ -217,8 +275,7 @@ function OrderCard({ order, onUpdate, updating, canManageCredits }: { order: Adm
   const paymentAllowedTransitions = order.paymentMethod !== "ONLINE" ? transitions[order.status] :
     online?.environment === "production" && online.status === "PAID" ? transitions[order.status].filter(status => status !== "CANCELED") : [];
   const allowedTransitions = paymentAllowedTransitions.filter(status => !order.requiresPrescriptionReview || order.prescriptionReviewedAt || !["READY", "OUT_FOR_DELIVERY", "COMPLETED"].includes(status));
-  return <article className="min-w-0 overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
-    <header className="flex flex-col gap-4 border-b border-line p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7"><div className="min-w-0"><div className="flex flex-wrap items-center gap-3"><h2 className="break-all text-lg font-black text-ink sm:text-xl">{order.number}</h2><span className={`rounded-full px-3 py-1.5 text-xs font-bold ${order.status === "PENDING" ? "bg-brand-soft text-brand" : order.status === "COMPLETED" ? "bg-[#e9f9ef] text-pharma-green" : order.status === "CANCELED" ? "bg-slate-100 text-slate-600" : "bg-amber-50 text-amber-700"}`}>{statusLabels[order.status]}</span><span className={`rounded-full px-3 py-1.5 text-xs font-bold ${order.paymentStatus === "PAID" && (!online || online.status === "PAID") ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>{online ? onlineStatusLabels[online.status] ?? online.status : `Pagamento ${paymentStatusLabels[order.paymentStatus].toLowerCase()}`}</span></div><p className="mt-2 text-sm font-medium text-muted">{dateTime.format(new Date(order.createdAt))}</p></div><div className="shrink-0"><p className="text-xs font-semibold text-muted sm:text-right">Total do pedido</p><strong className="text-2xl font-black text-ink">{currency.format(order.totalCents / 100)}</strong></div></header>
+  return <div aria-label={`Detalhes do pedido ${order.number}`} className="min-w-0 overflow-hidden border-t border-line bg-white">
     <OrderShippingSummary quote={order.shippingQuote} />
     {order.preparationReadyAt && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950"><strong>Pedido com itens de distribuidor.</strong> Previsão de preparo: {new Date(order.preparationReadyAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })}. Providencie a compra e conferência antes de liberar a retirada ou o envio.</p>}
     {online?.environment === "test" && <p className="mx-5 mt-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 sm:mx-7">HOMOLOGAÇÃO — não separar nem entregar</p>}
@@ -233,7 +290,7 @@ function OrderCard({ order, onUpdate, updating, canManageCredits }: { order: Adm
     <div className="grid gap-7 p-5 sm:p-7 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)]">
       <div><p className="text-xs font-black uppercase text-muted">Cliente</p><p className="mt-2 font-black text-ink">{order.customerName}</p><a className="mt-1 block text-sm font-semibold text-brand" href={`tel:${order.customerPhone}`}>{order.customerPhone}</a>{order.customerEmail ? <p className="mt-1 break-all text-xs font-semibold text-muted">{order.customerEmail}</p> : null}</div>
       <div><p className="text-xs font-black uppercase text-muted">Atendimento</p><p className="mt-2 flex items-center gap-2 text-sm font-bold text-ink"><MethodIcon className="h-4 w-4 text-pharma-green" />{order.fulfillmentMethod === "DELIVERY" ? "Destinatário · entrega" : "Retirada"}</p>{order.fulfillmentMethod === "DELIVERY" ? <p className="mt-2 flex items-start gap-2 text-xs font-semibold leading-5 text-muted"><MapPin className="mt-0.5 h-4 w-4 shrink-0" />{order.street}, {order.addressNumber}{order.complement ? ` - ${order.complement}` : ""}<br />{order.neighborhood}, {order.city}-{order.state}<br />CEP {order.postalCode}</p> : null}<p className="mt-3 flex items-center gap-2 text-sm font-bold text-ink"><PaymentIcon className="h-4 w-4 text-brand" />{payment.label} · {paymentStatusLabels[order.paymentStatus]}</p></div>
-      <div><p className="text-xs font-black uppercase text-muted">Itens</p><div className="mt-2 grid gap-2">{order.items.map((item) => <div className="flex justify-between gap-4 text-sm" key={item.id}><span className="font-semibold text-ink">{item.quantity}x {item.productName}{(item.shortageQuantity ?? 0) > 0 && <span className="block text-xs text-amber-800">Original: {item.quantity} · Para entrega: {Math.max(0, item.quantity - (item.shortageQuantity ?? 0))}</span>}</span><strong className="shrink-0 text-ink">{currency.format(item.totalCents / 100)}</strong></div>)}</div>{order.notes ? <p className="mt-4 rounded-md bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-900"><strong>Observacao:</strong> {order.notes}</p> : null}</div>
+      <div><p className="text-xs font-black uppercase text-muted">Itens e fornecimento</p><div className="mt-2 grid gap-2">{order.items.map((item) => <div className="rounded-lg border border-line p-3 text-sm" key={item.id}><div className="flex justify-between gap-3"><span className="font-bold text-ink">{item.quantity} × {item.productName}</span><strong className="shrink-0 text-ink">{currency.format(item.totalCents / 100)}</strong></div><p className="mt-2 text-xs font-bold text-brand">{supplierSourceLabel(item)}</p><p className="mt-1 flex flex-wrap gap-x-2 text-xs text-muted"><span>{item.eanSource === "offer" ? "EAN da oferta vinculada" : "EAN cadastrado"}</span><span className="select-all font-mono font-semibold text-ink">{item.ean ?? "Não registrado"}</span></p>{(item.shortageQuantity ?? 0) > 0 && <p className="mt-1 text-xs text-amber-800">Original: {item.quantity} · Para entrega: {Math.max(0, item.quantity - (item.shortageQuantity ?? 0))}</p>}</div>)}</div>{order.notes ? <p className="mt-4 rounded-md bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-900"><strong>Observacao:</strong> {order.notes}</p> : null}</div>
     </div>
     {order.requiresPrescriptionReview && <section aria-label="Conferência de receita" className="border-t border-line bg-amber-50 px-5 py-4 text-sm sm:px-7">
       {order.prescriptionUpload && <div className="mb-3"><a href={`/api/admin/receitas/${order.prescriptionUpload.id}`} className="font-bold underline">Baixar receita para pré-análise</a><p className="mt-2 text-sm">Foto não substitui o original. Valide a receita física ou o PDF original, retenção e escrituração antes de registrar a conferência. Pagamento não autoriza dispensação.</p></div>}
@@ -255,5 +312,5 @@ function OrderCard({ order, onUpdate, updating, canManageCredits }: { order: Adm
       </div>
     </details>}
     <footer className="grid gap-3 border-t border-line p-4 sm:grid-cols-2 sm:p-5"><label className="grid gap-1.5 text-xs font-black text-muted">Andamento<select className="h-10 rounded-md border border-line bg-white px-3 text-sm font-bold text-ink disabled:opacity-60" disabled={updating || allowedTransitions.length === 0} onChange={(event) => onUpdate(order.id, "status", event.target.value)} value={order.status}><option value={order.status}>{statusLabels[order.status]}</option>{allowedTransitions.map((status) => <option key={status} value={status}>{statusLabels[status]}</option>)}</select></label><label className="grid gap-1.5 text-xs font-black text-muted">Pagamento<select className="h-10 rounded-md border border-line bg-white px-3 text-sm font-bold text-ink disabled:opacity-60" disabled={order.paymentMethod === "ONLINE" || updating || paymentTransitions[order.paymentStatus].length === 0} onChange={(event) => onUpdate(order.id, "paymentStatus", event.target.value)} value={order.paymentStatus}><option value={order.paymentStatus}>{paymentStatusLabels[order.paymentStatus]}</option>{paymentTransitions[order.paymentStatus].map((status) => <option key={status} value={status}>{paymentStatusLabels[status]}</option>)}</select></label>{updating ? <p className="text-xs font-bold text-muted">Salvando...</p> : null}</footer>
-  </article>;
+  </div>;
 }
