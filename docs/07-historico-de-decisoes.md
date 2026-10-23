@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Mais espaço para pesquisa no cabeçalho
+
+- Manter Maps, WhatsApp e Sair somente com ícones em todos os tamanhos em que aparecem. Remover texto/expansão desktop e devolver espaço à busca flexível, preservando endereço no tooltip, acessibilidade, sessão, saldos e atalho administrativo. Registro em [10](10-layout-e-experiencia.md).
+
 ## 2026-10-23 — Marca identificável no título dos cards
 
 - Mover a marca cadastrada para a primeira linha do título nos cards públicos compartilhados, preservando nome/dose/apresentação logo abaixo, altura e alinhamento. Evitar repetição quando já consta do nome; não inferir marcas ou alterar nomes persistidos. Contrato em [86](86-precos-e-desconto-real-nos-cards.md).

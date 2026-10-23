@@ -71,7 +71,7 @@ export async function SiteHeader() {
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white/96 shadow-[0_10px_30px_rgba(17,24,39,0.08)] backdrop-blur-md">
       <AnnouncementBar />
 
-      <div className="relative isolate z-20 flex min-h-16 items-center gap-0 bg-[#f7fbf9] px-1 py-1.5 min-[360px]:gap-1 min-[360px]:px-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
+      <div className="relative isolate z-20 flex min-h-16 items-center gap-0 bg-[#f7fbf9] px-1 py-1.5 min-[360px]:gap-0.5 min-[360px]:px-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <Image
             alt=""
@@ -183,7 +183,7 @@ export async function SiteHeader() {
         <div className="ml-auto hidden min-w-0 shrink-0 items-center justify-end md:flex">
           <a
             aria-label="Abrir localizacao da Wimifarma no Google Maps"
-            className="soft-breathe mr-2 hidden min-h-14 max-w-[15.75rem] items-center gap-3 rounded-full border border-white/80 bg-white px-3.5 py-2 font-body text-xs font-black text-ink shadow-[0_14px_34px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.9)] transition duration-300 hover:-translate-y-0.5 hover:border-brand/30 hover:bg-[#fff7f8] hover:text-brand 2xl:inline-flex"
+            className="soft-breathe mr-2 hidden h-14 w-14 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white text-ink shadow-[0_14px_34px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.9)] transition duration-300 hover:-translate-y-0.5 hover:border-brand/30 hover:bg-[#fff7f8] hover:text-brand 2xl:inline-flex"
             href={siteConfig.mapsUrl}
             rel="noreferrer"
             target="_blank"
@@ -199,23 +199,15 @@ export async function SiteHeader() {
                 width={32}
               />
             </span>
-            <span className="flex min-w-0 flex-col leading-tight text-left">
-              <span className="text-[0.68rem] uppercase tracking-[0.12em] text-brand">
-                Como chegar
-              </span>
-              <span className="truncate text-[0.8rem] text-ink">
-                Av. Minas Gerais, 2263
-              </span>
-            </span>
           </a>
           <a
             aria-label="Falar com a Wimifarma pelo WhatsApp"
-            className="soft-breathe hidden h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#22d365_0%,#14b85a_52%,#0f9f4f_100%)] font-body text-sm font-black text-white shadow-[0_16px_36px_rgba(34,211,101,0.28),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-white/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(34,211,101,0.34),inset_0_1px_0_rgba(255,255,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9ff0be] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7fbf9] lg:inline-flex xl:w-auto xl:gap-3 xl:px-5"
+            className="soft-breathe hidden h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#22d365_0%,#14b85a_52%,#0f9f4f_100%)] font-body text-sm font-black text-white shadow-[0_16px_36px_rgba(34,211,101,0.28),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-white/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(34,211,101,0.34),inset_0_1px_0_rgba(255,255,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9ff0be] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7fbf9] lg:inline-flex"
             href={siteConfig.whatsappUrl}
             rel="noreferrer"
             target="_blank"
+            title="WhatsApp"
           >
-            <span className="hidden xl:inline">WhatsApp</span>
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/18 ring-1 ring-white/30">
               <MessageCircle className="h-4 w-4 stroke-[2.6]" />
             </span>
@@ -262,11 +254,10 @@ export async function SiteHeader() {
                     aria-label="Sair"
                     className={hasAdminAccess
                       ? "inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-[0_6px_20px_rgba(17,24,39,0.06)] transition-colors hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-                      : "inline-flex h-11 w-11 items-center justify-center whitespace-nowrap rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:w-auto xl:gap-2 xl:px-5"}
+                      : "inline-flex h-11 w-11 items-center justify-center whitespace-nowrap rounded-full border border-line bg-white font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand"}
                     title="Sair"
                     type="submit"
                   >
-                    {!hasAdminAccess && <span className="hidden xl:inline">Sair</span>}
                     <LogOut className="h-4 w-4" />
                   </button>
                 </form>

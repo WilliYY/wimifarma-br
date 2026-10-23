@@ -1,5 +1,11 @@
 # 10 - Layout e Experiencia
 
+## Atalhos compactos no cabeçalho — 23/10/2026
+
+Maps, WhatsApp e Sair usam somente ícones também em telas largas, mantendo rótulos acessíveis e tooltips. Maps/WhatsApp conservam 56 px e Sair 44 px, sem expansão por texto; o espaço liberado é ocupado pela busca flexível existente. O Maps preserva o endereço no tooltip e sua faixa de visibilidade atual. Conta/saldos, acesso Painel admin, ações e animações permanecem nos contratos atuais.
+
+Entre 360 px e o breakpoint `sm`, o espaçamento entre blocos passa de 4 para 2 px para manter o botão de busca dentro da tela com sessão de cliente.
+
 ## Farmacinha com 15 itens — 2026-10-20
 
 A antiga faixa “Medicamentos isentos de prescrição” passa a “Farmacinha”, com apoio “Cuidado em casa”. Como havia apenas três MIPs confirmados, o lojista autorizou completar a faixa com primeiros socorros e cuidados. A coleção prioriza medicamentos sem receita confirmados e produtos de higiene/cuidados classificados, com fotos válidas, disponibilidade e seleção sem repetição entre vitrines. Não altera cadastro, preços ou restrições de receita. Contrato em [75](75-catalogo-vitrines-e-compra-distribuidor.md).

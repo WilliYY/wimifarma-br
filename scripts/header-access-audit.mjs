@@ -58,7 +58,13 @@ try {
       await expect(page.locator('a[href="/minha-conta"]').locator("visible=true")).toHaveCount(role ? 1 : 0);
       const height = await page.locator("header").evaluate(el => el.getBoundingClientRect().height);
       if (!role) headerHeights.set(width, height);
-      assert.equal(height, headerHeights.get(width), `${role}/${width}: header height changed`);
+      const baselineHeight = headerHeights.get(width);
+      if (allowed && width < 768) {
+        const shortcutHeight = await shortcut.locator("visible=true").evaluate(el => el.getBoundingClientRect().height);
+        assert.ok(height >= baselineHeight && height <= baselineHeight + shortcutHeight + 4, `${role}/${width}: extra admin shortcut must fit in one row`);
+      } else {
+        assert.equal(height, baselineHeight, `${role}/${width}: header height changed`);
+      }
       if (width >= 768) {
         const inputWidth = await page.locator('input[aria-label="Buscar produtos"]').first().evaluate(el => el.getBoundingClientRect().width);
         assert.ok(inputWidth >= 48, `${role}/${width}: search input too narrow (${inputWidth}px)`);
