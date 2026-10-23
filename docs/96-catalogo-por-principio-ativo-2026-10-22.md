@@ -92,3 +92,11 @@ O relatório completo com apresentações, fabricantes, GTINs, links, comandos, 
 Nesta operação, um helper privado separado encerrou a tentativa interrompida como `aborted_no_apply`, sem simular `completed_released` ou produzir prova pública fictícia. A transição exigiu janela, operador, EAN, fingerprint e estado anterior exatos, executor encerrado, ausência dos marcadores de aplicação, GTIN e auditorias de importação ausentes, leitura real do banco e arquivos e revisão independente vinculada por hashes. O mutex e CAS preservaram coordenador, fila, alterações externas e backups.
 
 Uma nova concessão aceitou esse predecessor somente após conferir a cadeia física de intenção, provas negativas, revisão, código e resultado do aborto, seus hashes, cronologia e identidade. As novas tentativas usaram diretórios próprios, revisões, testes e provas atuais; os artefatos anteriores permaneceram intactos. Se a aplicação tiver começado ou o resultado for incerto, esse encerramento não se aplica: inspecionar o estado real antes de qualquer retomada.
+
+## Fotos de páginas de varejistas
+
+O manifesto do publicador oficial admite `sourceKind: RETAILER` para identificar corretamente fotos observadas em páginas públicas de varejistas. Essa origem é preservada na auditoria, sem ser convertida em fabricante ou distribuidora. O arquivo continua exigindo GTIN e apresentação exatos, classificação MIP ou não medicinal compatível, URL e horário observados, hash, conferência da apresentação e autorização explícita de uso.
+
+As demais proteções permanecem: ADMIN ativo, identidade conferida após bloqueio do produto, preservação de capas e galerias existentes, imagem estática limitada e ativação de rascunho somente por aprovação explícita. Medicamentos com receita continuam fora desse publicador de embalagens. Aceitar a origem documental não representa uma publicação ou uma aprovação sanitária.
+
+A revisão da rodada seguinte também deve preservar os impedimentos das fontes: receita sem retenção não concede, isoladamente, liberação de venda online. Exigências de revisão legal independente e restrições dos adendos não podem desaparecer ao converter uma matriz de pesquisa em manifesto. Formas e quantidades devem conferir com a apresentação literal, distinguindo creme vaginal, cápsula mole, pó para inalação e número de frascos e aplicadores.

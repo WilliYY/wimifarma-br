@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Proveniência de fotos de varejistas no catálogo
+
+- O publicador administrativo de fotos aceita `RETAILER`, além de fabricante e distribuidora, e registra a origem exata na auditoria. Uma página de outra farmácia não deve ser identificada como fabricante ou distribuidora.
+- Permanecem obrigatórios GTIN, apresentação, classificação sem receita, autorização de uso, URL e horário observados, hash e revisão explícita. A nova origem não libera fotos de embalagens de medicamentos com receita, não substitui imagens manuais e não ativa rascunhos implicitamente.
+- Validação: regressões do publicador cobrem proveniência, ausência de ativação implícita, rejeição de receitas e de origem desconhecida. Não há mudança de banco, dependências ou cobrança.
+
 ## 2026-10-23 — Compra mobile, atendimento e caixa informada
 
 - Compactar carrinho/checkout e conta logada; manter Pix sem escolha inicial e desconto somente após seleção. Reunir WhatsApp dentro da Miauby no celular, preservando atalhos desktop e identidade visual.

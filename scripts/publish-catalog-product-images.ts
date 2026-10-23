@@ -20,7 +20,7 @@ export const catalogImageManifestSchema = z.object({ images: z.array(z.object({
   filePath: z.string().min(1).max(2000),
   mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/avif"]),
   sha256: z.string().regex(/^[a-f0-9]{64}$/), sourceUrl: importSourceSchema,
-  sourceKind: z.enum(["MANUFACTURER", "DISTRIBUTOR"]),
+  sourceKind: z.enum(["MANUFACTURER", "DISTRIBUTOR", "RETAILER"]),
   sourceObservedAt: z.iso.datetime({ offset: true }).refine(value => Date.parse(value) <= Date.now(), "Source must already have been observed."),
   sourceEvidence: z.string().trim().min(8).max(400),
   presentationVerified: z.literal(true), eanVerified: z.literal(true), reuseAuthorized: z.literal(true),

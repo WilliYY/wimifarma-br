@@ -108,6 +108,50 @@ test("publication preserves originals, creates bounded readable WebP and audits 
   } finally { await f.cleanup(); }
 });
 
+test("retailer photos of explicitly classified OTC products preserve exact audited provenance", async () => {
+  const f = await fixture();
+  try {
+    const classification = { kind: "MEDICINE", medicineClass: "GENERIC", ethical: false, otc: true };
+    f.input.images[0].catalogClassification = classification;
+    f.change({ catalogClassification: classification, status: "DRAFT" });
+    Object.assign(f.input.images[0], { sourceKind: "RETAILER", sourceUrl: "https://retailer.example/products/7896004708539" });
+    assert.equal(catalogImageManifestSchema.parse(f.input).images[0].sourceKind, "RETAILER");
+    assert.equal((await f.run()).applied, false);
+    assert.equal(f.writes.length, 0);
+    assert.equal(f.audits.length, 0);
+    assert.deepEqual(await readdir(f.root), ["original.png"]);
+    assert.equal((await f.run(true)).images[0].action, "PUBLISH_IMAGE");
+    const audit = f.audits[0].metadata as Record<string, unknown>;
+    assert.equal(audit.sourceKind, "RETAILER");
+    assert.equal(audit.sourceUrl, f.input.images[0].sourceUrl);
+    assert.equal(audit.sourceSha256, f.input.images[0].sha256);
+    assert.equal(audit.sourceObservedAt, f.input.images[0].sourceObservedAt);
+    assert.equal(audit.sourceEvidence, f.input.images[0].sourceEvidence);
+    assert.equal(audit.reuseAuthorized, true);
+    assert.equal(audit.publishOnApproval, false);
+    assert.equal(f.writes.find(write => write.kind === "product")!.data.status, undefined);
+    assert.deepEqual(await readFile(f.filePath), f.bytes);
+    assert.equal((await f.run(true)).images[0].action, "PRESERVE_EXISTING_IMAGES");
+    assert.equal(f.audits.length, 1);
+  } finally { await f.cleanup(); }
+});
+
+test("retailer provenance never permits prescription products in OTC photo publication", async () => {
+  for (const prescriptionType of ["ORDINARY", "ANTIMICROBIAL", "CONTROLLED"] as const) {
+    const f = await fixture();
+    try {
+      Object.assign(f.input.images[0], { sourceKind: "RETAILER" });
+      const classification = { kind: "MEDICINE", medicineClass: "GENERIC", ethical: false, otc: true };
+      f.input.images[0].catalogClassification = classification;
+      f.change({ catalogClassification: classification, requiresPrescription: true, prescriptionType });
+      await assert.rejects(f.run(true), /Identity or non-prescription classification changed/);
+      assert.equal(f.writes.length, 0);
+      assert.equal(f.audits.length, 0);
+      assert.deepEqual(await readdir(f.root), ["original.png"]);
+    } finally { await f.cleanup(); }
+  }
+});
+
 test("active ADMIN, exact post-lock identity and compatible non-Rx classification are mandatory", async () => {
   for (const invalid of ["actor", "duplicate", "rx", "controlled", "popular", "physical", "deleted", "name", "ean", "classification", "unclassified", "medicine-unreviewed"] as const) {
     const f = await fixture();
@@ -162,7 +206,7 @@ test("strict sources, explicit verification, source hash, MIME and static image 
   const f = await fixture();
   try {
     for (const fields of [{ sourceUrl: "https://user:secret@example.org" }, { sourceUrl: "https://example.org/?token=secret" },
-      { sourceUrl: "http://example.org" }, { reuseAuthorized: false }, { eanVerified: false }, { presentationVerified: false }, { unexpected: true }]) {
+      { sourceUrl: "http://example.org" }, { sourceKind: "UNKNOWN" }, { reuseAuthorized: false }, { eanVerified: false }, { presentationVerified: false }, { unexpected: true }]) {
       assert.equal(catalogImageManifestSchema.safeParse({ images: [{ ...f.input.images[0], ...fields }] }).success, false);
     }
     assert.equal(catalogImageManifestSchema.safeParse({ images: [f.input.images[0], { ...f.input.images[0], ean: "07896004708539" }] }).success, false);
