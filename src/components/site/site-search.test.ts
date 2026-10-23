@@ -46,7 +46,11 @@ async function fixture(width: number, run: (page: Page, requests: string[]) => P
         const query = url.searchParams.get("q") ?? "";
         requests.push(query);
         if (query === "erro") return route.fulfill({ status: 503, json: { error: "Busca temporariamente indisponível." } });
-        return route.fulfill({ json: { data: { products: query === "vazio" ? [] : [{ id: "synthetic", slug: "synthetic", name: "Produto sintético com apresentação e nome completo", price: "29.90", imageUrl: null, activeIngredients: [], brand: "Marca sintética" }], relatedProducts: [] } } });
+        const product = { id: "synthetic", slug: "synthetic", name: "Produto sintético com apresentação e nome completo", price: "29.90", imageUrl: null, activeIngredients: [], brand: "Marca sintética",
+          ...(query.startsWith("pmc") ? { requiresPrescription: query === "pmc-rx", prescriptionType: query === "pmc-rx" ? "ORDINARY" : "UNREVIEWED",
+            catalogClassification: { kind: "MEDICINE", medicineClass: "GENERIC", ethical: false, otc: query !== "pmc-rx" },
+            pmcReference: { amountCents: 4000, column: "PMC 0 %", publishedOn: "2026-10-09", sourceUrl: "https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos/arquivos/lista_pmc__20261009_115232671.xlsx/@@download/file", presentation: "10 MG COM X 10", laboratory: "Laboratório sintético", registration: "1234567890123", rates: [{ label: "PMC 0 %", cents: 4000 }] } } : {}) };
+        return route.fulfill({ json: { data: { products: query === "vazio" ? [] : [product], relatedProducts: [] } } });
       }
       return route.abort();
     });
@@ -56,6 +60,24 @@ async function fixture(width: number, run: (page: Page, requests: string[]) => P
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 }
+
+for (const width of [320, 390, 1280]) test(`autocomplete PMC ${width}px identifica referência sem antecipar Pix`, async () => {
+  await fixture(width, async page => {
+    const input = page.getByRole("combobox", { name: "Buscar produtos" });
+    await input.fill("pmc");
+    const item = page.getByRole("option", { name: /Produto sintético/ });
+    await expect(item.getByText(/PMC CMED/)).toContainText(/40,00/);
+    await expect(item.getByText("25% abaixo do PMC", { exact: true })).toBeVisible();
+    await expect(item.locator("strong")).toHaveText(/29,90/);
+    await expect(item.getByText(/Pix/)).toHaveCount(0);
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    if (captureRoot) { await mkdir(captureRoot, { recursive: true }); await page.screenshot({ path: join(captureRoot, `search-pmc-${width}.png`) }); }
+    await input.fill("pmc-rx");
+    await expect(item.getByText(/PMC CMED/)).toBeVisible();
+    await expect(item.getByText(/abaixo do PMC/)).toHaveCount(0);
+    await expect(item.locator("s")).toHaveCount(0);
+  });
+});
 
 for (const width of [320, 390, 1280]) test(`busca ${width}px tem um limpar, avisos compactos e mantém navegação`, async () => {
   await fixture(width, async (page, requests) => {

@@ -7,6 +7,8 @@ import { isPrescriptionSearchProduct, productSearchHref, productSearchPlan, type
 import { PrescriptionSearchDetails } from "./prescription-search-details";
 import { cn, formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
+import { canDisplayPmcSavings, pmcSavingsPercent } from "@/features/products/cmed-reference";
+import { ProductPmcBadge, ProductPmcPrice } from "./product-pmc";
 
 type ProductSearchResultsProps = {
   activeId: string | null;
@@ -50,6 +52,8 @@ function ResultItem({
   const hasPromotion = Boolean(
     item.promotionalPrice && Number(item.promotionalPrice) < Number(item.price),
   );
+  const pmc = item.pmcReference;
+  const pmcSavings = pmc && canDisplayPmcSavings(item) ? pmcSavingsPercent(pmc.amountCents, Math.round(currentPrice * 100)) : null;
 
   return (
     <Link
@@ -91,7 +95,8 @@ function ResultItem({
             ? item.activeIngredients.join(" + ")
             : [item.brand, item.category].filter(Boolean).join(" · ") || "Consulte os detalhes"}
         </span>
-        <span className="mt-1 flex items-baseline gap-2">
+        {pmc ? <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[0.68rem] text-muted"><ProductPmcPrice reference={pmc} strike={pmcSavings !== null} />{pmcSavings !== null ? <ProductPmcBadge percent={pmcSavings} /> : null}</span> : null}
+        <span className="mt-1 flex flex-wrap items-baseline gap-2">
           <strong className="font-body text-sm text-brand">
             {formatCurrency(currentPrice)}
           </strong>
