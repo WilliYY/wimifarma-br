@@ -29,7 +29,11 @@ O Pix usa `public/payments/pix-symbol.svg`, com os três caminhos vetoriais extr
 
 ## Anvisa
 
-Exibe “Consultas na Anvisa”, ícone genérico e [portal oficial](https://consultas.anvisa.gov.br/#/). Não afirma que o site possui certificação da agência. A Anvisa exige aprovação da Assessoria de Comunicação para terceiros utilizarem sua logomarca: [orientação oficial](https://www.gov.br/anvisa/pt-br/assuntos/noticias-anvisa/2017/anvisa-alerta-para-uso-irregular-de-sua-marca).
+Atualização de 23/10/2026: a pedido do lojista, a referência fica na faixa final do rodapé, antes da identificação legal, com fundo verde suave e apresentação empilhada no celular. Exibe “Compromisso com as normas sanitárias” e “A Wimifarma tem o compromisso de seguir as normas e orientações da Anvisa.” O link apresenta o nome completo da agência em texto, ícone genérico e [portal oficial](https://consultas.anvisa.gov.br/#/); a antiga seção de consultas foi substituída para evitar duplicação.
+
+O texto registra o compromisso informado pelo lojista; não comprova licença, AFE vigente ou certificação da agência. A Anvisa exige aprovação da Assessoria de Comunicação para terceiros utilizarem sua logomarca: [orientação oficial](https://www.gov.br/anvisa/pt-br/assuntos/noticias-anvisa/2017/anvisa-alerta-para-uso-irregular-de-sua-marca), consultada novamente nesta data. A logomarca e qualquer selo oficial ficam pendentes de autorização comprovada. Não foi criada imagem que imite a identidade da agência. Marca da farmácia, 128 bolhas, pagamentos e links de reputação permanecem.
+
+Validação desta alteração: os dois testes existentes do rodapé passaram, incluindo links, fallback e ausência de transbordamento em 320, 390, 768 e 1440 px. Capturas de 390/1440 px inspecionadas em `outputs/anvisa-rodape-2026-10-23`. Typecheck, lint, 484 testes obrigatórios de segurança e auditorias npm de produção/completa passaram, ambas com zero alertas. Revisão independente dos dois arquivos sem achados. Esta alteração de apresentação não executa checkout, cobrança, cadastro ou consulta sanitária autenticada. Publicação e comprovantes do build ficam na evidência da tarefa, sem inferir produção a partir dos testes locais.
 
 A consulta atual por CNPJ ficou inconclusiva: a tela exibiu carregamento e ausência de registros simultaneamente, com erro do desafio de proteção. Isso não prova inexistência de autorização. Um DOU de 2010 cita o mesmo CNPJ e razão social antiga; não foi tratado como comprovação vigente. Não publicar AFE, licença ou responsável técnico sem conferência atual.
 

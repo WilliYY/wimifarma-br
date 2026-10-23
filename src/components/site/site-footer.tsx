@@ -119,11 +119,7 @@ export function SiteFooter() {
           </div>
           <Suspense fallback={<FooterPaymentMethodsContent />}><FooterPaymentMethods /></Suspense>
         </div>
-        <div className="mt-8 grid gap-6 border-t border-line pt-7 sm:grid-cols-2 lg:gap-12">
-          <section className="flex min-w-0 items-start gap-4" aria-labelledby="footer-anvisa-title">
-            <span aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-pharma-green/5 text-pharma-green"><Landmark className="h-6 w-6" strokeWidth={1.5} /></span>
-            <div className="min-w-0"><h2 id="footer-anvisa-title" className="text-base font-bold">Consultas na Anvisa</h2><p className="mt-1.5 max-w-md text-xs leading-5 text-ink/75">Acesse informações oficiais sobre medicamentos, cosméticos e empresas.</p><a className={`${linkStyle} mt-1 font-semibold`} href="https://consultas.anvisa.gov.br/#/" rel="noopener noreferrer" target="_blank">Consultar no portal da Anvisa<ArrowUpRight aria-hidden="true" className="h-4 w-4 shrink-0" /></a></div>
-          </section>
+        <div className="mt-8 border-t border-line pt-7">
           <section className="min-w-0" aria-labelledby="footer-reputation-title">
             <h2 id="footer-reputation-title" className="text-base font-bold">Avaliações e atendimento</h2><p className="mt-1.5 text-xs leading-5 text-ink/75">Consulte nossos canais públicos e conheça a nossa farmácia.</p><div className="mt-2 flex flex-wrap gap-x-6"><a className={`${linkStyle} font-semibold`} href={siteConfig.reclameAquiUrl} rel="noopener noreferrer" target="_blank">Nosso perfil no Reclame AQUI<ArrowUpRight aria-hidden="true" className="h-4 w-4 shrink-0" /></a><a className={linkStyle} href={siteConfig.mapsUrl} rel="noopener noreferrer" target="_blank">Encontre a Wimifarma no Google<ArrowUpRight aria-hidden="true" className="h-4 w-4 shrink-0" /></a></div>
           </section>
@@ -131,6 +127,25 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-line bg-surface-subtle">
+        <section className="border-b border-line bg-pharma-green/5" aria-labelledby="footer-anvisa-title">
+          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:px-6 lg:px-8">
+            <div className="min-w-0">
+              <h2 id="footer-anvisa-title" className="text-sm font-bold text-ink">Compromisso com as normas sanitárias</h2>
+              <p className="mt-1 max-w-2xl text-xs leading-5 text-ink/75">A Wimifarma tem o compromisso de seguir as normas e orientações da Anvisa.</p>
+            </div>
+            <a
+              aria-label="Consultar no portal da Anvisa"
+              className="inline-flex min-h-11 w-fit max-w-full items-center gap-3 rounded-lg border border-pharma-green/20 bg-white px-4 py-3 text-pharma-green transition-colors hover:bg-pharma-green/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4"
+              href="https://consultas.anvisa.gov.br/#/"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <Landmark aria-hidden="true" className="h-6 w-6 shrink-0" strokeWidth={1.5} />
+              <span className="min-w-0 text-sm font-bold leading-5">Anvisa<span className="block text-xs font-normal leading-4">Agência Nacional de Vigilância Sanitária</span></span>
+              <ArrowUpRight aria-hidden="true" className="h-4 w-4 shrink-0" />
+            </a>
+          </div>
+        </section>
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-6 text-xs leading-5 text-ink/75 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:gap-8 lg:px-8">
           <div className="min-w-0"><p className="font-semibold text-ink">{siteConfig.legalName}</p><p>CNPJ {siteConfig.cnpj} · Ivaté-PR</p></div>
           <p>© {new Date().getFullYear()} Wimifarma. Todos os direitos reservados.</p>
