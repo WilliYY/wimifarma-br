@@ -4,7 +4,7 @@ Operação administrativa: pedidos em lista única com etapas, avisos ao cliente
 
 Preços públicos iguais aos do carrinho; 3% Pix somente após escolher Pix no checkout, com arte promocional preservada: [documento 83](docs/83-desconto-pix.md) e [documento 86](docs/86-precos-e-desconto-real-nos-cards.md).
 
-Página de produto organizada para celular, com cabeçalho compacto, compra legível e atalhos de atendimento sem cobrir os controles: [documento 19](docs/19-produtos-e-campanhas.md#organização-mobile-em-22102026).
+Página de produto organizada para celular, com cabeçalho compacto, logo em cápsula arredondada, formas de pagamento claras e atalhos de atendimento sem cobrir os controles: [documento 19](docs/19-produtos-e-campanhas.md#logo-e-formas-de-pagamento-no-mobile-em-23102026).
 
 Pedidos no início do menu, aviso global, lista compacta com 30 por página e conferência por distribuidora/EAN/quantidade: [documento 34](docs/34-pedidos-operacao.md). Alertas novos da Miauby também identificam o fornecimento: [documento 30](docs/30-miauby-whatsapp-comercio.md).
 

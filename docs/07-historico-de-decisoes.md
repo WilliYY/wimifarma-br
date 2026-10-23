@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Logo mobile arredondada e apresentação dos pagamentos
+
+- Aproximar a cápsula da logo mobile do acabamento desktop, preservando SVG, ciclo original, movimento reduzido, proporções e acesso administrativo.
+- Trocar o texto antigo do acordeão de pagamento por blocos informativos de Pix/cartão/dinheiro. Pix usa o símbolo e a constante existentes e informa aplicação do desconto somente após seleção no checkout. Dinheiro continua local; condições do cartão são confirmadas na finalização. Sem alterar gateway, preço ou envio de pedido.
+- Layout e critérios em [19](19-produtos-e-campanhas.md#logo-e-formas-de-pagamento-no-mobile-em-23102026).
+
 ## 2026-10-22 — Fila operacional, cashback em massa e etapas por WhatsApp
 
 - Adotar lista única de pedidos com fornecimento agrupado dentro de cada pedido, etapas conforme retirada/entrega e cores por situação. "Todos" contém a fila ativa; encerrados ficam nas situações próprias. Visualizado é uma preferência local do operador, sem mudar o andamento.

@@ -21,6 +21,7 @@ import { DeliveryEstimator } from "@/components/site/delivery-estimator";
 import { ProductImageViewer } from "@/components/site/product-image-viewer";
 import { ProductShareButton } from "@/components/site/product-share-button";
 import { ProductPurchasePanel } from "@/components/site/product-purchase-panel";
+import { ProductPaymentMethods } from "@/components/site/product-payment-methods";
 import { ProductQuantityProvider } from "@/components/site/product-quantity";
 import { ProductCashback } from "@/components/site/product-cashback";
 import { ProductReviewForm } from "@/components/site/product-review-form";
@@ -369,7 +370,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 </details>
                 <details className="group py-5">
                   <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-base font-bold text-ink focus-visible:outline-brand"><span className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-muted" aria-hidden="true" />Formas de pagamento</span><ChevronRight className="h-5 w-5 text-brand transition-transform group-open:rotate-90 motion-reduce:transition-none" aria-hidden="true" /></summary>
-                  <p className="mt-4 text-sm leading-7 text-muted">Pix apos confirmacao da equipe, dinheiro ou cartao no atendimento. O site nao solicita numero do cartao ou CVV.</p>
+                  <ProductPaymentMethods />
                 </details>
               </div>
             </div>

@@ -78,6 +78,16 @@ No navegador local, a primeira imagem otimizada transferiu **15.812 bytes** em d
 - Não aplicar uma camada branca sobre os produtos nem ampliar uma fonte de baixa resolução para simular detalhe.
 - Não publicar fixtures, imagens PNG de geração, capturas de QA, logs ou credenciais. Somente WebP final e código entram no Git.
 
+## Logo e formas de pagamento no mobile em 23/10/2026
+
+A área da logo no celular usa uma cápsula com ponta direita totalmente arredondada, contorno vermelho e encaixe na borda esquerda, seguindo o acabamento do desktop. O SVG original, seu ciclo e proporções continuam intactos; o sinal de mais aparece como parte da montagem original. A alternativa estática para movimento reduzido e o atalho Painel admin mantêm seus contratos. Desktop não recebe uma nova animação.
+
+O acordeão Formas de pagamento usa o componente apresentacional `product-payment-methods.tsx`: Pix em destaque com símbolo oficial e percentual da constante existente, cartão e dinheiro em blocos compactos. O texto explica que o desconto entra ao escolher Pix no checkout, condições de cartão são confirmadas na finalização e dinheiro depende de retirada/entrega local. Substitui a orientação antiga de Pix somente após confirmação da equipe e a afirmação de que não há campos de cartão, pois o fluxo online usa campos seguros do provedor. Nenhum campo, chamada de gateway, preço, método selecionado ou cálculo financeiro foi modificado.
+
+Direção visual: varejo claro, cápsula da marca como assinatura e hierarquia de Pix em verde suave, com os tokens, fonte Barlow e ícones existentes. Sem dependência ou asset novo. DFII 14 (impacto 3, adequação 5, viabilidade 5, desempenho 4, risco 3). A mudança é restrita à apresentação e ao texto; não altera o Pix de 3% somente após seleção documentado em [83](83-desconto-pix.md).
+
+Validação: 13 cenários visuais com CSS/fontes reais (sete Chromium e seis WebKit), 320/390/430 px, desktop 1440 px, ADMIN em 320 px, CUSTOMER em 390 px e movimento reduzido. Sem overflow horizontal, erros JavaScript ou escritas externas. Revisão independente recomendou reduzir o padding abaixo de 360 px para preservar folga das ações; ajuste aplicado e cenários repetidos. Onze testes direcionados e 448 de segurança aprovados; lint dos arquivos alterados, typecheck e build local aprovados. Auditoria de produção sem vulnerabilidades; completa mantém cinco HIGH de desenvolvimento registrados em [95](95-correcao-next-15-seguranca.md). Capturas e resultado publicado ficam em `outputs/mobile-logo-pagamento-2026-10-23`, fora do Git. WebKit automatizado não comprova teste em iPhone físico.
+
 ## Organização mobile em 22/10/2026
 
 A página de produto usa espaçamentos menores abaixo de 640 px, imagem com altura limitada, nome com quebra de linha e preço de 36 px. Quantidade e total permanecem juntos; adicionar ao carrinho e comprar agora mantêm áreas de toque de pelo menos 44 px. A consulta de entrega usa uma coluna flexível para o CEP e outra para o botão.
