@@ -21,7 +21,7 @@ const browser = await chromium.launch();
 const results = [], failures = [];
 const product = price => ({id:"fixture-item",slug:"fixture-item",name:"Dove óleo de banho · produto de teste",imageUrl:"/qa-product.webp",category:"Teste",unitPriceCents:price,originalPriceCents:null,stock:20,requiresPrescription:false,isPopularPharmacy:false,quantity:1});
 
-async function fixture(width, {price=9990,customer=false,failOrder=false,failPayment=false,failPaymentRead=false,rejectPix=false,failPaymentStatus="UNKNOWN",shippingAvailable=true,medicine=false,ordinaryMedicine=false,balance="0.01"}={}) {
+async function fixture(width, {price=9990,customer=false,failOrder=false,failPayment=false,failPaymentRead=false,rejectPix=false,failPaymentStatus="UNKNOWN",shippingAvailable=true,medicine=false,ordinaryMedicine=false,balance="0.01",selectPix=true}={}) {
   const context = await browser.newContext({viewport:{width,height:1000},reducedMotion:"reduce"});
   const page = await context.newPage(); const errors=[], orders=[], payments=[], quotes=[];
   const state = {failOrder,failPayment,status:"NEW",expiresAt:null};
@@ -45,9 +45,13 @@ async function fixture(width, {price=9990,customer=false,failOrder=false,failPay
     if(url.pathname==="/qa.js") return route.fulfill({contentType:"text/javascript",body:Buffer.from(bundle.outputFiles[0].contents)});
     if(url.pathname==="/qa.css") return route.fulfill({contentType:"text/css",body:css});
     if(url.pathname==="/qa-product.webp") return route.fulfill({contentType:"image/webp",body:productPhoto});
+    if(url.pathname==="/brand/medicamento-ilustrativo.webp") return route.fulfill({contentType:"image/webp",body:await fs.readFile("public/brand/medicamento-ilustrativo.webp")});
     if(url.pathname==="/secure-fields") return route.fulfill({contentType:"text/html; charset=utf-8",body:'<label>Número de cartão simulado<input></label><label>CVV simulado<input></label>'});
+    if(url.pathname==="/api/health") return json({timestamp:new Date().toISOString()});
     if(url.pathname.startsWith("/api/cep/")) { const cep=url.pathname.split("/").pop(); return json({data:{postalCode:cep,street:"Rua Sintética",neighborhood:"Bairro Teste",city:cep==="87485000"?"Douradina":cep==="87525000"?"Ivaté":cep==="87501070"?"Umuarama":"São Paulo",state:cep==="01001000"?"SP":"PR"}}); }
     if(url.pathname==="/api/minha-conta/cashback") return json({data:{balance}});
+    if(url.pathname==="/api/minha-conta/club") return json({data:{member:false,joinedAt:null,balancePoints:0,pendingPoints:0,lifetimeEarnedPoints:0,lifetimeRedeemedPoints:0,transactions:[]}});
+    if(url.pathname==="/api/minha-conta/creditos") return json({data:{availableCents:0,reviewRequired:false,transactions:[]}});
     if(url.pathname==="/api/fretes/cotacao") {quotes.push(request.postDataJSON());return json({data:[{provider:"melhor-envio",serviceId:1,carrier:"Transportadora Teste",service:"Normal",priceCents:2000,deliveryDays:5,token:"synthetic-quote"}]});}
     if(url.pathname==="/api/pedidos") {orders.push(request.postDataJSON());if(state.failOrder){state.failOrder=false;return route.abort("failed");}return json({data:{id:"fixture-order",number:"WF-SINTETICO-1",totalCents:price,paymentMethod:orders.at(-1).paymentMethod}});}
     if(url.pathname==="/api/pagamentos/fixture-order") {
@@ -62,6 +66,7 @@ async function fixture(width, {price=9990,customer=false,failOrder=false,failPay
   const query=new URLSearchParams();if(customer)query.set("customer","");if(!shippingAvailable)query.set("shipping-disabled","");
   await page.goto(`${base}/checkout?${query}`);
   await expect(page.getByRole("heading",{name:"Finalize sua compra"})).toBeVisible();
+  if(selectPix) await page.getByLabel("Pix",{exact:true}).locator("..").click();
   return {page,context,state,errors,orders,payments,quotes};
 }
 async function fillContact(page,email="cliente@example.invalid") {await page.getByLabel("Nome completo").fill("Cliente Sintético");await page.getByLabel("WhatsApp / telefone").fill("+55 (44) 99999-0000");await page.getByLabel("E-mail",{exact:true}).fill(email);}
@@ -71,7 +76,7 @@ async function fits(page,width) {assert.ok(await page.evaluate(()=>document.docu
 async function test(name,run) {try {await run();results.push({name,passed:true});console.log(`PASS ${name}`);}catch(e){failures.push({name,error:e.message});console.log(`FAIL ${name}: ${e.message}`);}}
 try {
   await test("preselected checkout acknowledgment is separate from optional marketing",async()=>{
-    const f=await fixture(390);try {await expect(f.page.getByRole("checkbox",{name:/Finalizar com os dados/})).toBeChecked();await expect(f.page.getByText(/Revisei meus dados e li/)).toHaveCount(0);assert.equal(f.orders.length,0);}finally{await f.context.close();}
+    const f=await fixture(390,{selectPix:false});try {await expect(f.page.getByRole("checkbox",{name:/Finalizar com os dados/})).toBeChecked();await expect(f.page.getByText(/Revisei meus dados e li/)).toHaveCount(0);await expect(f.page.getByLabel("Pix",{exact:true})).not.toBeChecked();await expect(f.page.getByLabel("Cartão",{exact:true})).not.toBeChecked();await expect(f.page.getByRole("button",{name:"Escolha a forma de pagamento"})).toBeDisabled();await expect(f.page.getByText("Desconto no Pix (3%)",{exact:true})).toHaveCount(0);assert.equal(f.orders.length,0);assert.equal(f.payments.length,0);}finally{await f.context.close();}
   });
   await test("new Pix stays visible when the following read fails",async()=>{
     const f=await fixture(390,{failPaymentRead:true});try {await fillContact(f.page);await pickup(f.page);await f.page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(f.page.getByLabel("Código Pix copia e cola")).toHaveValue("SYNTHETIC-PIX-CODE");await expect(f.page.getByAltText("QR Code para pagar este pedido com Pix")).toBeVisible();assert.equal(f.orders.length,1);assert.equal(f.payments.length,1);await fits(f.page,390);}finally{await f.context.close();}
@@ -105,13 +110,13 @@ try {
   await test("restored carrier selection is discarded when quoting becomes unavailable",async()=>{
     const f=await fixture(390);const {page}=f;
     try {await fillContact(page);await page.getByLabel("CEP",{exact:true}).fill("01001000");await expect(page.getByLabel("Cidade",{exact:true})).toHaveValue("São Paulo");await page.getByLabel("Numero",{exact:true}).fill("123");await page.getByRole("radio",{name:/Transportadora Teste/}).check();await expect.poll(()=>page.evaluate(()=>Boolean(JSON.parse(sessionStorage.getItem("wimifarma-checkout-draft-v1"))?.data.shippingSelection))).toBe(true);
-      await page.goto(`${base}/checkout?shipping-disabled`);await expect(page.getByRole("heading",{name:"Entrega por transportadora indisponível"})).toBeVisible();await expect.poll(()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem("wimifarma-checkout-draft-v1"))?.data.shippingSelection)).toBeUndefined();await expect(page.getByRole("region",{name:"Resumo da compra"}).getByText("Indisponível",{exact:true})).toBeVisible();await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();assert.equal(f.orders.length,0);assert.equal(f.payments.length,0);assert.equal(f.quotes.length,1);assert.deepEqual(f.errors,[]);
+      await page.goto(`${base}/checkout?shipping-disabled`);await expect(page.getByRole("heading",{name:"Entrega por transportadora indisponível"})).toBeVisible();await expect.poll(()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem("wimifarma-checkout-draft-v1"))?.data.shippingSelection)).toBeUndefined();await expect(page.getByRole("region",{name:"Resumo da compra"}).getByText("Indisponível",{exact:true})).toBeVisible();await page.getByLabel("Pix",{exact:true}).locator("..").click();await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();assert.equal(f.orders.length,0);assert.equal(f.payments.length,0);assert.equal(f.quotes.length,1);assert.deepEqual(f.errors,[]);
     }finally{await f.context.close();}
   });
   for(const width of [320,390,768,1440]) await test(`layout and Pix reload ${width}`,async()=>{
     const f=await fixture(width);const {page}=f;
     try {
-      await fits(page,width);await expect(page.getByAltText("Dove óleo de banho · produto de teste")).toBeVisible();assert.ok(await page.getByAltText("Dove óleo de banho · produto de teste").evaluate(img=>img.complete&&img.naturalWidth>0));const boxes=await page.locator('h2').filter({hasText:/^(Seus dados|Entrega ou retirada|Pagamento)$/}).evaluateAll(els=>els.map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y})));
+      await fits(page,width);await page.getByText(/^Sua cesta ·/).click();await expect(page.getByAltText("Dove óleo de banho · produto de teste")).toBeVisible();assert.ok(await page.getByAltText("Dove óleo de banho · produto de teste").evaluate(img=>img.complete&&img.naturalWidth>0));const boxes=await page.locator('h2').filter({hasText:/^(Seus dados|Entrega ou retirada|Pagamento)$/}).evaluateAll(els=>els.map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y})));
       if(width===1440){assert.equal(boxes.length,3);assert.ok(Math.max(...boxes.map(b=>b.y))-Math.min(...boxes.map(b=>b.y))<2);assert.ok(boxes[0].x<boxes[1].x&&boxes[1].x<boxes[2].x);}
       await page.screenshot({path:`${output}/checkout-${width}.png`,fullPage:true});
       await fillContact(page);await pickup(page);await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();
@@ -124,13 +129,13 @@ try {
   });
   await test("card contact/privacy/address gate and 12 installments",async()=>{
     const f=await fixture(390);const {page}=f;
-    try {await page.getByLabel("Cartão",{exact:true}).locator("..").click();await expect(page.locator("iframe")).toHaveCount(0);await fillContact(page,"invalid");await pickup(page);await privacy(page);await expect(page.locator("iframe")).toHaveCount(0);await page.getByLabel("E-mail",{exact:true}).fill("cliente@example.invalid");await page.getByRole("checkbox",{name:/Finalizar com os dados/}).uncheck();await expect(page.locator("iframe")).toHaveCount(0);await privacy(page);await expect(page.locator("iframe")).toBeVisible();
+    try {await page.getByLabel("Cartão",{exact:true}).locator("..").click();await expect(page.locator("iframe")).toHaveCount(0);await fillContact(page,"invalid");await pickup(page);await privacy(page);await page.getByRole("button",{name:"Continuar para pagar com cartão"}).click();await expect(page.getByRole("alert")).toBeVisible();assert.equal(f.orders.length,0);await expect(page.locator("iframe")).toHaveCount(0);await page.getByLabel("E-mail",{exact:true}).fill("cliente@example.invalid");await page.getByRole("checkbox",{name:/Finalizar com os dados/}).uncheck();await page.getByRole("button",{name:"Continuar para pagar com cartão"}).click();await expect(page.getByRole("alert")).toContainText("privacidade");assert.equal(f.orders.length,0);await expect(page.locator("iframe")).toHaveCount(0);await privacy(page);await page.getByLabel("Como pagar no cartão").selectOption("12");await page.getByRole("button",{name:"Continuar para pagar com cartão"}).click();await expect(page.locator("iframe")).toBeVisible();
       assert.deepEqual(await page.evaluate(()=>window.__bricks.at(-1).customization.paymentMethods),{minInstallments:1,maxInstallments:12});await page.screenshot({path:`${output}/card-390.png`,fullPage:true});await page.getByRole("button",{name:"Pagar com cartão simulado"}).click();await expect(page.getByRole("heading",{name:"Pagamento confirmado"})).toBeVisible();assert.equal(f.payments[0].installments,12);assert.ok(!JSON.stringify(f.orders).includes("synthetic-token"));assert.deepEqual(f.errors,[]);
     }finally{await f.context.close();}
   });
   await test("card requires complete delivery address",async()=>{
     const f=await fixture(390);const {page}=f;
-    try {await fillContact(page);await page.getByLabel("CEP",{exact:true}).fill("87525000");await expect(page.getByLabel("Cidade",{exact:true})).toHaveValue("Ivaté");await page.getByLabel("Cartão",{exact:true}).locator("..").click();await privacy(page);await expect(page.locator("iframe")).toHaveCount(0);await page.getByLabel("Numero",{exact:true}).fill("123");await expect(page.locator("iframe")).toBeVisible();}finally{await f.context.close();}
+    try {await fillContact(page);await page.getByLabel("CEP",{exact:true}).fill("87525000");await expect(page.getByLabel("Cidade",{exact:true})).toHaveValue("Ivaté");await page.getByLabel("Cartão",{exact:true}).locator("..").click();await privacy(page);await expect(page.locator("iframe")).toHaveCount(0);await page.getByRole("button",{name:"Continuar para pagar com cartão"}).click();assert.equal(f.orders.length,0);await page.getByLabel("Numero",{exact:true}).fill("123");await page.getByRole("button",{name:"Continuar para pagar com cartão"}).click();await expect(page.locator("iframe")).toBeVisible();}finally{await f.context.close();}
   });
   await test("cash limited to local CEP or pickup",async()=>{
     const f=await fixture(390);const {page}=f;
@@ -142,7 +147,7 @@ try {
   });
   await test("uncertain order retry preserves request id",async()=>{
     const f=await fixture(390,{failOrder:true});const {page}=f;
-    try {await fillContact(page);await pickup(page);await page.getByRole("checkbox",{name:/Finalizar com os dados/}).uncheck();await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByRole("alert")).toContainText("privacidade");assert.equal(f.orders.length,0);await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByRole("alert")).toBeVisible();await page.reload();await expect(page.getByLabel("Nome completo")).toHaveValue("Cliente Sintético");await expect(page.getByRole("checkbox",{name:/Finalizar com os dados/})).toBeChecked();await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByAltText("QR Code para pagar este pedido com Pix")).toBeVisible();assert.equal(f.orders.length,2);assert.equal(f.orders[0].checkoutRequestId,f.orders[1].checkoutRequestId);}finally{await f.context.close();}
+    try {await fillContact(page);await pickup(page);await page.getByRole("checkbox",{name:/Finalizar com os dados/}).uncheck();await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByRole("alert")).toContainText("privacidade");assert.equal(f.orders.length,0);await privacy(page);await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByRole("alert")).toBeVisible();await page.reload();await expect(page.getByLabel("Nome completo")).toHaveValue("Cliente Sintético");await expect(page.getByRole("checkbox",{name:/Finalizar com os dados/})).toBeChecked();await expect(page.getByLabel("Pix",{exact:true})).not.toBeChecked();await page.getByLabel("Pix",{exact:true}).locator("..").click();await page.getByRole("button",{name:"Gerar Pix e finalizar"}).click();await expect(page.getByAltText("QR Code para pagar este pedido com Pix")).toBeVisible();assert.equal(f.orders.length,2);assert.equal(f.orders[0].checkoutRequestId,f.orders[1].checkoutRequestId);}finally{await f.context.close();}
   });
   await test("uncertain payment resumes without second charge",async()=>{
     const f=await fixture(390,{failPayment:true});const {page}=f;
@@ -170,7 +175,7 @@ try {
       assert.equal(await page.evaluate(() => localStorage.getItem("wimifarma-cart-v1")), cartBefore);
       await page.screenshot({ path: `${output}/terminal-${status.toLowerCase()}-390.png`, fullPage: true });
       await page.reload();
-      await expect(page.getByRole("button", { name: "Gerar Pix e finalizar" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Escolha a forma de pagamento" })).toBeDisabled();
       await expect(page.getByRole("heading", { name: "Situação do pagamento" })).toHaveCount(0);
       assert.equal(await page.evaluate(() => localStorage.getItem("wimifarma-cart-v1")), cartBefore);
       assert.equal(f.state.status, status);

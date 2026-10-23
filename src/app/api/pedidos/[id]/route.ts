@@ -36,7 +36,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
     if (current.paymentMethod === "ONLINE" && (statusUpdate.paymentStatus || current.onlinePayment?.environment === "test" || current.onlinePayment?.statusDetail === "partially_refunded"
       || (statusUpdate.status && statusUpdate.status !== current.status && current.paymentStatus !== "PAID") || statusUpdate.status === "CANCELED")) {
-      return { error: "Pagamento online é atualizado pelo Mercado Pago. Para cancelar ou reembolsar, use o painel do provedor e aguarde a sincronização. Pedidos de teste ou com reembolso parcial não podem ser preparados.", statusCode: 409 };
+      return { error: "Pagamento online é atualizado pelo provedor do pagamento. Para cancelar ou reembolsar, use o painel dele e aguarde a sincronização. Pedidos de teste ou com reembolso parcial não podem ser preparados.", statusCode: 409 };
     }
     if (statusUpdate.status && !canTransitionStatus(orderStatusTransitions, current.status, statusUpdate.status)) {
       return { error: "Esta mudanca de status do pedido nao e permitida.", statusCode: 409 };
@@ -66,7 +66,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (current.paymentMethod === "ONLINE" && (statusUpdate.status || statusUpdate.paymentStatus)) {
       const online = await transaction.onlinePayment.findUnique({ where: { orderId: id } });
       if (!online || online.status !== "PAID" || online.environment !== "production" || online.financialReviewReason) {
-        return { error: "Aguarde a confirmação do pagamento pelo Mercado Pago antes de preparar o pedido.", statusCode: 409 };
+        return { error: "Aguarde a confirmação pelo provedor do pagamento antes de preparar o pedido.", statusCode: 409 };
       }
     }
     const recordingReview = Boolean(prescriptionReviewed && !current.prescriptionReviewedAt);

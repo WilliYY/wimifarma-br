@@ -83,7 +83,11 @@ test("catálogo responsivo mantém filtros, paginação, teclado e Rx neutro", a
       await page.screenshot({ path: `${output}/catalogo-topo-${width}.png` });
       await page.goto(`${base}/catalogo?grupo=medicines&assunto=diabetes`);
       await expect(page.locator("[data-prescription-search]")).toHaveCount(1);
-      await expect(page.locator("article, [data-product-controls], img, s")).toHaveCount(0);
+      const neutralCard = page.locator("article").filter({ has: page.locator("[data-prescription-search]") });
+      await expect(neutralCard).toHaveCount(1);
+      await expect(neutralCard.getByRole("link")).toHaveAttribute("href", "/produto/rx");
+      await expect(page.locator("[data-product-controls], img, s")).toHaveCount(0);
+      await expect(neutralCard.locator("svg, button, [role=img]")).toHaveCount(0);
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
       await page.screenshot({ path: `${output}/diabetes-${width}.png`, fullPage: true });
       assert.deepEqual(errors, []);

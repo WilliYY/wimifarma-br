@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Dados logísticos e auditoria da compra
+
+- Priorizar exportação logística por EAN do fabricante/distribuidor e usar GS1 mediante amostra e contrato confirmado. Separar referência da unidade comercial de pacote de expedição aprovado; não preencher frete com peso ou unidade inferidos.
+- Consulta real retornou PAC/SEDEX em 31 CEPs válidos, cobrindo 27 UFs e quatro cidades do interior. Essa amostra não libera os produtos sem perfis físicos revisados. CEP todo zero passa a ser rejeitado antes da chamada ao Melhor Envio.
+- Configuração ativa simulada em 15 combinações escolheu Mercado Pago: Asaas permite cartão à vista, Mercado Pago permite Pix/cartão; comparação de taxas incompleta mantém o padrão. Tentativas existentes continuam no gateway salvo. Mensagens de andamento agora se referem ao pagamento online sem atribuir todo pedido ao Mercado Pago.
+- Testes defensivos, integração PostgreSQL isolada, auditorias de dependências e revisão independente documentados em [99](99-auditoria-frete-checkout-seguranca.md). Não houve cobrança, envio de mensagem ou alteração de tarifas/perfis em produção.
+
 ## 2026-10-23 — Proveniência de fotos de varejistas no catálogo
 
 - O publicador administrativo de fotos aceita `RETAILER`, além de fabricante e distribuidora, e registra a origem exata na auditoria. Uma página de outra farmácia não deve ser identificada como fabricante ou distribuidora.

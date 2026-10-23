@@ -11,6 +11,28 @@ const bundle = build({ entryPoints: ["src/app/api/pedidos/[id]/route.ts"], bundl
 
 type ShortageFixture = { rows?: { status: string; creditState: string }[]; items?: { quantity: number; shortageQuantity: number }[] };
 
+test("orientação financeira funciona para Asaas e Mercado Pago sem encaminhar ao gateway errado", async () => {
+  for (const provider of ["asaas", "mercado-pago"]) {
+    const cancellation = await harness({ paymentMethod: "ONLINE", requiresPrescriptionReview: false,
+      onlinePayment: { provider, environment: "production", status: "PAID", statusDetail: null } });
+    const canceled = await cancellation.patch({ status: "CANCELED" });
+    assert.equal(canceled.status, 409);
+    const cancelBody = await canceled.json();
+    assert.match(cancelBody.error, /provedor do pagamento/);
+    assert.doesNotMatch(cancelBody.error, /Mercado Pago/);
+    assert.equal(cancellation.updates.length, 0);
+
+    const pending = await harness({ status: "CONFIRMED", paymentMethod: "ONLINE", requiresPrescriptionReview: false,
+      onlinePayment: { provider, environment: "production", status: "PENDING", statusDetail: null } });
+    const preparing = await pending.patch({ status: "PREPARING" });
+    assert.equal(preparing.status, 409);
+    const preparingBody = await preparing.json();
+    assert.match(preparingBody.error, /provedor do pagamento/);
+    assert.doesNotMatch(preparingBody.error, /Mercado Pago/);
+    assert.equal(pending.updates.length, 0);
+  }
+});
+
 test("retirada nunca aceita etapa de saída para entrega", async () => {
   const f = await harness({ status: "READY", fulfillmentMethod: "PICKUP", requiresPrescriptionReview: false });
   assert.equal((await f.patch({ status: "OUT_FOR_DELIVERY" })).status, 409);

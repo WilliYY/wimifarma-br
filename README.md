@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Auditoria de compra em 23/10: frete consultado nas 27 UFs, escolha efetiva de Mercado Pago/Asaas, rota de dados logísticos por EAN e testes de segurança/concorrência: [99](docs/99-auditoria-frete-checkout-seguranca.md). A cobertura da consulta não substitui os perfis físicos dos produtos.
+
 Carrinho e checkout compactos no celular, conta logada, WhatsApp dentro da Miauby, grade de produtos uniforme e revisão de frete com referência de caixa 24 × 15 × 10 cm: [98](docs/98-compra-mobile-e-referencia-de-caixa.md). O frete nacional ainda depende dos perfis logísticos revisados; a caixa informada não substitui peso e conferência.
 
 Operação administrativa: pedidos em lista única com etapas, avisos ao cliente, notificações com visualização, catálogo de 100 em 100 e cashback compacto em massa. Contratos, limites e publicação em [97](docs/97-operacao-admin-e-etapas-whatsapp.md).

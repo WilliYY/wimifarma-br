@@ -1,5 +1,9 @@
 # 42 - Revisão de segurança
 
+## Auditoria de compra e frete — 23/10/2026
+
+452 testes de segurança e auditoria de concorrência/idempotência em PostgreSQL descartável passaram; revisão independente sem achados novos nas mudanças. Auditorias npm de produção e completa com desenvolvimento retornaram zero alertas nesta consulta, atualizando o retrato histórico abaixo. Lint, typecheck e build local passaram. Escopo, controles, matriz de frete, configuração efetiva dos gateways e limites em [99-auditoria-frete-checkout-seguranca.md](99-auditoria-frete-checkout-seguranca.md). Não é prova de ausência de qualquer vulnerabilidade nem homologação com cobrança real.
+
 ## Correções e revisão ampliada — 10/10/2026
 
 - Criação ADMIN revalida acesso sob bloqueio após o hash; criação de usuário e criação/exclusão no cofre são atômicas com auditoria.

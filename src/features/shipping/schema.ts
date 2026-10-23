@@ -48,7 +48,7 @@ export const shippingItemsSchema = z.array(z.object({
   productId: z.string().min(1).max(64), quantity: z.number().int().min(1).max(MAX_ORDER_ITEM_QUANTITY),
   expectedUnitPriceCents: z.number().int().positive().max(1_000_000),
 })).min(1).max(30).refine((items) => new Set(items.map((item) => item.productId)).size === items.length, "Produto repetido.");
-export const quoteRequestSchema = z.object({ postalCode: z.string().regex(/^\d{8}$/), items: shippingItemsSchema });
+export const quoteRequestSchema = z.object({ postalCode: z.string().regex(/^(?!0{8}$)\d{8}$/), items: shippingItemsSchema });
 export const shippingPackagingSchema = z.object({
   version: z.literal(1),
   calculationMethod: z.enum(["provider", "provider-conservative-envelope"]).default("provider"),

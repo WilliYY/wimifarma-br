@@ -84,7 +84,7 @@ try {
   await api.refreshPayment(uncertain.id); assert.equal(keys.at(-1), keys.at(-2), "unknown retries retain the same key"); assert.equal(await stock(product.id), 1);
   const refreshed = await prisma.onlinePayment.findUniqueOrThrow({ where: { id: unknown.id } }); assert.equal(refreshed.requestCiphertext, null);
   const beforeCalls = calls; const draft = await makeOrder(product.id); await api.cancelUnsubmittedPayment(draft.id); assert.equal(calls, beforeCalls); assert.equal(await stock(product.id), 1);
-  const card = await makeOrder(product.id);
+  const card = await prisma.$transaction(tx => createCheckout(tx, { ...input(product.id), onlineMethod: "card", onlineInstallments: 12 }));
   await api.startPayment(card.id, { method: "card", email: "buyer@example.com", token: "synthetic-card-token", paymentMethodId: "visa", paymentType: "credit_card", installments: 12 });
   assert.equal((bodies.at(-1) as { transactions: { payments: { payment_method: { installments: number } }[] } }).transactions.payments[0].payment_method.installments, 12, "selected installment count reaches the gateway unchanged");
   assert.equal((await prisma.onlinePayment.findUniqueOrThrow({ where: { orderId: card.id } })).pixExpiresAt, null, "card has no Pix expiration");
