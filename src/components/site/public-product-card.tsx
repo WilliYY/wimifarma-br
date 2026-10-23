@@ -8,7 +8,7 @@ import { ProductCashback } from "@/components/site/product-cashback";
 import type { CartProduct } from "@/components/site/cart-provider";
 import type { PublicProductSearchItem } from "@/features/products/public-search";
 import { formatCurrency } from "@/lib/utils";
-import { productDisplayName } from "@/features/products/display-name";
+import { productDisplayName, productTitleBrand } from "@/features/products/display-name";
 import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 
 export type RelatedProductCardItem = PublicProductSearchItem & {
@@ -18,6 +18,8 @@ export type RelatedProductCardItem = PublicProductSearchItem & {
 };
 
 export function PublicProductCard({ product }: { product: RelatedProductCardItem }) {
+  const displayName = productDisplayName(product.name);
+  const titleBrand = productTitleBrand(product.name, product.brand);
   const normalPrice = Number(product.price);
   const currentPrice = Number(product.promotionalPrice ?? product.price);
   const hasPromotion = Boolean(
@@ -80,18 +82,17 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
           {product.category || product.brand || "Produto"}
         </span>
         <Link
-          aria-label={`Ver ${productDisplayName(product.name)}`}
-          className="mt-1 line-clamp-2 h-10 shrink-0 text-sm font-bold leading-5 text-ink after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand"
+          aria-label={`Ver ${displayName}${titleBrand ? ` · ${titleBrand}` : ""}`}
+          className="mt-1 h-16 min-w-0 shrink-0 text-sm font-bold leading-5 text-ink after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand"
           href={`/produto/${product.slug}`}
+          title={`${displayName}${titleBrand ? ` · ${titleBrand}` : ""}`}
         >
-          {productDisplayName(product.name)}
+          {titleBrand && <span className="block truncate font-black" title={titleBrand}>{titleBrand}</span>}
+          <span className="line-clamp-2">{displayName}</span>
         </Link>
         <span className="mt-2 h-4 shrink-0 truncate text-xs font-semibold leading-4 text-muted" title={product.activeIngredients.join(" + ") || undefined}>
           {product.activeIngredients.join(" + ") || "Consulte os detalhes"}
         </span>
-        <strong className="mt-2 h-4 shrink-0 truncate text-xs uppercase leading-4 text-ink" title={product.brand ?? undefined}>
-          {product.brand ?? "Wimifarma"}
-        </strong>
 
         <div className="mt-auto pt-3">
           <div role="group" aria-label="Preço do produto" className="grid grid-rows-[1rem_1.75rem_1rem] gap-y-1 border-t border-line pt-3">

@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { productDisplayName } from "./display-name";
+import { productDisplayName, productTitleBrand } from "./display-name";
+
+test("marca no título distingue apresentações sem duplicar palavras já presentes", () => {
+  assert.equal(productTitleBrand("Tadalafila 20 mg 2 comprimidos", "ACHÉ LABORATÓRIOS FARMACÊUTICOS S.A"), "ACHÉ LABORATÓRIOS FARMACÊUTICOS S.A");
+  assert.equal(productTitleBrand("Sabonete Dove 90 g", "DOVE"), null);
+  assert.equal(productTitleBrand("Produto Ache 20 mg", "Aché"), null);
+  assert.equal(productTitleBrand("Creme biomed 30 g", "Med"), "Med");
+  assert.equal(productTitleBrand("Produto sem marca", null), null);
+});
 
 test("encurta losartana mantendo dose, quantidade e fabricante", () => {
   assert.equal(productDisplayName("Losartana Potássica 50 mg 30 Comprimidos Revestidos Germed"), "Losartana 50 mg · 30 comprimidos · Germed");

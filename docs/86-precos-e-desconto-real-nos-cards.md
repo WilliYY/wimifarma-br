@@ -1,5 +1,9 @@
 # 86 — Preços e desconto real nos cards
 
+## Marca no título — 23/10/2026
+
+Os cards compartilhados de home, catálogo, busca e relacionados mostram a marca cadastrada na primeira linha do próprio título, seguida do nome/dose/apresentação em duas linhas. O bloco substitui a antiga linha de marca abaixo da composição, conservando a altura total e o alinhamento. Quando a marca já está no nome, ela não é repetida; diferenças de caixa/acentos são normalizadas e a comparação respeita palavras completas. Marcas ausentes não são inventadas. Nome completo e marca ficam no atributo `title` e no nome acessível do link. Sem alteração de cadastro, preço, carrinho, EAN ou estoque.
+
 ## Regra vigente — preço do carrinho, sem antecipar Pix — 22/10/2026
 
 Esta seção substitui a apresentação de preço Pix descrita nos registros históricos abaixo. O preço principal do card é `CartProduct.unitPriceCents`, igual ao valor unitário enviado ao carrinho. Home, catálogo, busca e relacionados usam esse componente; detalhe, autocomplete e carrinho já usam o preço atual antes de Pix.

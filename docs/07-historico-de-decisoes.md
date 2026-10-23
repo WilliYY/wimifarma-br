@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Marca identificável no título dos cards
+
+- Mover a marca cadastrada para a primeira linha do título nos cards públicos compartilhados, preservando nome/dose/apresentação logo abaixo, altura e alinhamento. Evitar repetição quando já consta do nome; não inferir marcas ou alterar nomes persistidos. Contrato em [86](86-precos-e-desconto-real-nos-cards.md).
+
 ## 2026-10-23 — Dados logísticos e auditoria da compra
 
 - Priorizar exportação logística por EAN do fabricante/distribuidor e usar GS1 mediante amostra e contrato confirmado. Separar referência da unidade comercial de pacote de expedição aprovado; não preencher frete com peso ou unidade inferidos.

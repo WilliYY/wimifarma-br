@@ -93,6 +93,9 @@ test("cards compactos mantêm benefícios fora do preço e altura uniforme sem e
   await fixture(async page => {
     const cards = page.getByRole("article");
     await expect(cards).toHaveCount(4);
+    const title = cards.first().getByRole("link", { name: "Ver Produto sintético · Marca sintética", exact: true });
+    await expect(title.locator("span").first()).toHaveText("Marca sintética");
+    await expect(title).toContainText("Produto sintético");
     for (const width of [320, 390, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       const sizes = await cards.evaluateAll(elements => elements.map(element => element.getBoundingClientRect().height));
