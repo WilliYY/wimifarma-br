@@ -1,5 +1,7 @@
 # Busca por assuntos — 20/10/2026
 
+Atualização de apresentação em 23/10: catálogo e busca compartilham a grade de cards; resultados com receita por assunto continuam neutros e sem fotos de embalagem, promoção ou compra direta. Detalhes em [98](98-compra-mobile-e-referencia-de-caixa.md).
+
 Acabamento de 22/10/2026: um único botão de limpar com área de toque de 44 px, estados vazios compactos e nomes legíveis no celular, preservando teclado/debounce e relevância. Contrato em [97](97-operacao-admin-e-etapas-whatsapp.md).
 
 ## Comportamento

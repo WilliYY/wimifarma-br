@@ -1,5 +1,7 @@
 # 39 - Frete automático e conferência de embalagens
 
+Atualização de 23/10: painel com busca global e páginas de 100 produtos; referência de caixa informada de 24 × 15 × 10 cm aplicada apenas a rascunho individual, preservando peso e exigindo nova revisão. Tara e medidas externas ainda não aferidas; não houve liberação em massa. Detalhes e pendências em [98](98-compra-mobile-e-referencia-de-caixa.md).
+
 Atualização de 22/10/2026: confirmar explicitamente a revisão pré-seleciona a liberação de item permitido; abrir o painel não modifica perfis. Peso, medidas, carga e serviços continuam obrigatórios. Nenhuma medida foi inventada para liberar o catálogo. Contrato e pendências em [97](97-operacao-admin-e-etapas-whatsapp.md).
 
 ## Estimativa operacional autorizada — 06/10/2026

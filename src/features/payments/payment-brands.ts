@@ -1,6 +1,19 @@
 import { z } from "zod";
 
 export type PublicPaymentBrand = { id: string; name: string; image: string | null };
+
+/** The footer lists brands; credit/debit method IDs remain distinct in the gateway catalogue. */
+export function uniquePaymentBrandDisplay(brands: PublicPaymentBrand[]): PublicPaymentBrand[] {
+  const seen = new Set<string>();
+  return brands.filter(brand => {
+    const name = brand.name.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
+    // Mercado Pago names Elo credit and debit separately; the footer displays their shared brand.
+    const identity = ["elo", "elo débito", "elo debito", "elo crédito", "elo credito"].includes(name) ? "elo" : name;
+    if (seen.has(identity)) return false;
+    seen.add(identity);
+    return true;
+  });
+}
 type PaymentBrandsConnection = { accountId: string; revision: number; environment: string };
 const paymentMethodsSchema = z.array(z.object({
   id: z.string().trim().min(1).max(60), name: z.string().trim().min(1).max(80),

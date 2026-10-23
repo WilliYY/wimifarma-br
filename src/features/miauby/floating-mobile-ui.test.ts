@@ -32,13 +32,14 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
     await expect(trigger).toBeHidden();
     await page.setViewportSize({ width: 768, height: 700 });
     await expect(trigger).toBeVisible();
+    const whatsapp = page.getByRole("link", { name: "Chamar Wimifarma no WhatsApp", exact: true });
+    await expect(whatsapp).toBeVisible();
+    const whatsappUrl = await whatsapp.getAttribute("href");
     await page.setViewportSize({ width: 390, height: 700 });
     await expect(trigger).toBeHidden();
     await page.evaluate(() => window.scrollTo(0, 900));
     await expect(trigger).toBeVisible();
-    const whatsapp = page.getByRole("link", { name: "Chamar Wimifarma no WhatsApp", exact: true });
-    assert.equal((await whatsapp.boundingBox())!.height, 44);
-    assert.equal((await whatsapp.boundingBox())!.y, (await trigger.boundingBox())!.y);
+    await expect(whatsapp).toBeHidden();
     await trigger.click();
     const chat = page.getByRole("dialog", { name: "Conversa com a Miauby", exact: true });
     await expect(chat).toBeVisible();
@@ -46,6 +47,10 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
     assert.ok(box.x >= 0 && box.y >= 0 && box.x + box.width <= 390 && box.y + box.height <= 700);
     assert.ok((await trigger.boundingBox())!.y >= box.y + box.height, "O atalho deve ficar abaixo da conversa aberta");
     await expect(chat.getByRole("button", { name: "Fechar conversa", exact: true })).toBeVisible();
+    const humanHelp = chat.getByRole("link", { name: "Falar com a equipe no WhatsApp", exact: true });
+    await expect(humanHelp).toBeVisible();
+    assert.ok((await humanHelp.boundingBox())!.height >= 44);
+    assert.equal(await humanHelp.getAttribute("href"), whatsappUrl);
     await chat.getByRole("textbox", { name: "Pergunte para a Miauby", exact: true }).fill("Dúvida fictícia de teste");
     const send = chat.getByRole("button", { name: "Enviar pergunta", exact: true });
     await expect(send).toBeEnabled();
@@ -56,6 +61,13 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
     }), "Os atalhos não podem cobrir o botão Enviar");
     await page.keyboard.press("Escape");
     await expect(chat).toHaveCount(0);
+    await page.setViewportSize({ width: 320, height: 568 });
+    await trigger.click();
+    await expect(humanHelp).toBeVisible();
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+    await page.setViewportSize({ width: 768, height: 700 });
+    await expect(humanHelp).toBeHidden();
+    await expect(whatsapp).toBeVisible();
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

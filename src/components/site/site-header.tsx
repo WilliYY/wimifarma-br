@@ -128,7 +128,7 @@ export async function SiteHeader() {
               <>
                 <Link
                   aria-label="Abrir minha conta"
-                  className={`inline-flex h-11 w-11 ${hasCustomer ? "flex-col min-[480px]:w-auto min-[480px]:max-w-28 min-[480px]:px-2" : ""} items-center justify-center overflow-hidden rounded-full border border-line bg-white text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:border-brand hover:text-brand`}
+                  className={`inline-flex h-11 w-11 flex-col gap-0.5 px-1 min-[360px]:w-16 min-[360px]:px-1.5 ${hasCustomer ? "min-[480px]:w-auto min-[480px]:max-w-28 min-[480px]:px-2" : ""} items-center justify-center overflow-hidden rounded-2xl border border-brand/15 bg-white text-ink shadow-[0_6px_18px_rgba(17,24,39,0.06)] transition duration-300 hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
                   href="/minha-conta"
                   title={displayName}
                 >
@@ -138,7 +138,7 @@ export async function SiteHeader() {
                   </> : userImage ? (
                     <Image
                       alt=""
-                      className="h-8 w-8 rounded-full object-cover"
+                      className="h-5 w-5 rounded-full object-cover"
                       height={32}
                       referrerPolicy="no-referrer"
                       src={userImage}
@@ -148,6 +148,7 @@ export async function SiteHeader() {
                   ) : (
                     <UserRound className="h-4 w-4 text-brand" />
                   )}
+                  <span className={`block w-full truncate text-center text-[10px] font-bold leading-3 ${hasCustomer ? "min-[480px]:hidden" : ""}`}>{compactDisplayName}</span>
                 </Link>
                 <form
                   className="shrink-0"

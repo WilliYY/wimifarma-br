@@ -1,5 +1,7 @@
 # 84 — Rodapé: pagamentos, consultas e reputação
 
+Atualização de 23/10: nomes normalizados e aliases conhecidos Elo/Elo Débito/Elo crédito aparecem uma vez no rodapé, sem fundir IDs ou métodos do gateway. Contrato em [98](98-compra-mobile-e-referencia-de-caixa.md).
+
 ## Pedido e resultado — 20/10/2026
 
 O lojista pediu formas de pagamento com inclusão automática de novas bandeiras, Pix, referência à Anvisa e conferência de reCAPTCHA, Reclame AQUI e Ebit. O rodapé mantém a faixa vermelha, o corpo branco, a marca completa e as 128 bolhas originais, com tempos, filtro e preferência de movimento reduzido preservados.

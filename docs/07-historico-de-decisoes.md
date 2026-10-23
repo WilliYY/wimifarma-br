@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Compra mobile, atendimento e caixa informada
+
+- Compactar carrinho/checkout e conta logada; manter Pix sem escolha inicial e desconto somente após seleção. Reunir WhatsApp dentro da Miauby no celular, preservando atalhos desktop e identidade visual.
+- Unificar a grade de catálogo/busca sem liberar publicidade ou fotos de embalagem para receitas por assunto. Deduplicar a marca Elo no rodapé, sem fundir métodos financeiros.
+- Substituir o corte de 500 produtos na revisão de frete por busca/páginas de 100. Usar 24 × 15 × 10 cm como referência informada no rascunho individual, com peso preservado e nova revisão exigida; não alterar perfis em massa ou inventar tara/cabimento. A liberação nacional de todo o catálogo permanece dependente de dados logísticos.
+- Critérios, evidência somente leitura e limitações em [98](98-compra-mobile-e-referencia-de-caixa.md).
+
 ## 2026-10-23 — Logo mobile arredondada e apresentação dos pagamentos
 
 - Aproximar a cápsula da logo mobile do acabamento desktop, preservando SVG, ciclo original, movimento reduzido, proporções e acesso administrativo.

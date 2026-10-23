@@ -251,6 +251,16 @@ export function FloatingWhatsApp() {
             </button>
           </header>
 
+          <a
+            className="flex min-h-11 shrink-0 items-center justify-center gap-2 border-b border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600 sm:hidden"
+            href={siteConfig.whatsappUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <WhatsAppLogo />
+            Falar com a equipe no WhatsApp
+          </a>
+
           <div
             aria-live="polite"
             className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-surface-subtle px-3 py-4"
@@ -392,7 +402,7 @@ export function FloatingWhatsApp() {
 
       <a
         aria-label="Chamar Wimifarma no WhatsApp"
-        className="flex h-11 w-11 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition hover:scale-105 hover:bg-[#1ebe57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:h-16 sm:w-16"
+        className="hidden h-11 w-11 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition hover:scale-105 hover:bg-[#1ebe57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:flex sm:h-16 sm:w-16"
         href={siteConfig.whatsappUrl}
         rel="noreferrer"
         target="_blank"

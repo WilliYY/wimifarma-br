@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, CheckCircle2, Link2, Loader2, Package, Truck } from "lucide-react";
 import { postingLocationSchema, defaultShippingSettings, type ShippingOption, type ShippingSettings } from "@/features/shipping/schema";
 import { shippingAdminProfileSchema } from "@/features/shipping/product-draft";
@@ -10,14 +10,14 @@ import { SHIPPING_CARGO_LABELS, type ShippingCargo } from "@/features/shipping/c
 import { ShippingOperationalCostFields, ShippingCostComparisons } from "./shipping-operational-costs";
 
 type Product = { id: string; name: string; category: string | null; shippingProfile: unknown; requiresPrescription: boolean; prescriptionType?: PrescriptionType; isPopularPharmacy: boolean; updatedAt: string };
-type Data = { settings: ShippingSettings; revision: number; applicationConfigured: boolean; connected: boolean; expiresAt: number | null; products: Product[] };
+type Data = { settings: ShippingSettings; revision: number; applicationConfigured: boolean; connected: boolean; expiresAt: number | null; products: Product[]; pagination: { page: number; pageSize: number; total: number; totalPages: number } };
 type Service = Pick<ShippingOption, "serviceId" | "service" | "carrier">;
 const defaultServices: Service[] = [{ serviceId: 1, carrier: "Correios", service: "PAC" }, { serviceId: 2, carrier: "Correios", service: "SEDEX" }];
 const field = "min-h-11 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/10";
 const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white disabled:opacity-50";
 const cargoOptions = (Object.keys(SHIPPING_CARGO_LABELS) as ShippingCargo[]).filter(kind => kind !== "unspecified");
-async function request(path: string, method = "GET", body?: unknown) {
-  const response = await fetch(path, { method, cache: "no-store", ...(body === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }) });
+async function request(path: string, method = "GET", body?: unknown, signal?: AbortSignal) {
+  const response = await fetch(path, { method, cache: "no-store", signal, ...(body === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }) });
   const payload = await response.json().catch(() => null);
   if (!response.ok) throw new Error(typeof payload?.error === "string" ? payload.error : "Não foi possível concluir a operação.");
   return payload;
@@ -29,17 +29,37 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
   const [busy, setBusy] = useState(false);
   const [quotes, setQuotes] = useState<ShippingOption[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [search, setSearch] = useState("");
+  const [catalogQuery, setCatalogQuery] = useState("");
+  const [catalogPage, setCatalogPage] = useState(1);
+  const [catalogRequest, setCatalogRequest] = useState(0);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState("");
+  const catalogInitialized = useRef(false);
+  const catalogUrl = `/api/admin/fretes?${new URLSearchParams({ q: catalogQuery, page: String(catalogPage) })}`;
   const [simulationCargo, setSimulationCargo] = useState<{ cargoKinds: ShippingCargo[]; acceptanceConfirmed: boolean }>({ cargoKinds: ["unspecified"], acceptanceConfirmed: false });
   const simulationSettingsChanged = !!data && ["environment", "originPostalCode", "originCity", "originState", "preparationDays"].some(key => settings[key as keyof ShippingSettings] !== data.settings[key as keyof ShippingSettings]);
-  async function load() {
-    const result = await request("/api/admin/fretes");
-    setData(result.data); setSettings(result.data.settings);
+  async function load(refreshSettings = true) {
+    const result = await request(catalogUrl);
+    if (refreshSettings) { setData(result.data); setSettings(result.data.settings); }
+    else setData(current => current ? { ...current, products: result.data.products, pagination: result.data.pagination } : result.data);
   }
   useEffect(() => {
-    load().catch((error) => setMessage(error.message));
     const status = new URLSearchParams(window.location.search).get("connection");
     if (status) setMessage(status === "success" ? "Conta conectada. Faça uma simulação antes de ativar no checkout." : "Não foi possível autorizar. Confira o aplicativo e tente conectar novamente.");
   }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    setCatalogLoading(true); setCatalogError("");
+    request(catalogUrl, "GET", undefined, controller.signal).then((result: { data: Data }) => {
+      if (controller.signal.aborted) return;
+      if (!catalogInitialized.current) { setSettings(result.data.settings); catalogInitialized.current = true; }
+      setData(current => current ? { ...current, products: result.data.products, pagination: result.data.pagination } : result.data);
+    }).catch(error => {
+      if (!controller.signal.aborted) setCatalogError(error instanceof Error ? error.message : "Falha ao consultar os produtos.");
+    }).finally(() => { if (!controller.signal.aborted) setCatalogLoading(false); });
+    return () => controller.abort();
+  }, [catalogUrl, catalogRequest]);
   async function run(action: () => Promise<void>) { setBusy(true); setMessage(""); try { await action(); } catch (error) { setMessage(error instanceof Error ? error.message : "Falha na operação."); } finally { setBusy(false); } }
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); const form = event.currentTarget; const values = new FormData(form);
@@ -110,7 +130,22 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
       <ShippingCostComparisons quotes={simulationSettingsChanged ? [] : quotes} settings={settings} cargoKinds={simulationCargo.cargoKinds} acceptanceConfirmed={simulationCargo.acceptanceConfirmed} disabled={busy} onToggleService={(id, selected) => setSettings({ ...settings, serviceIds: selected ? [...new Set([...settings.serviceIds, id])] : settings.serviceIds.filter(serviceId => serviceId !== id) })} />
       <p className="mt-3 text-xs text-muted">Serviços selecionados: {settings.serviceIds.join(", ") || "nenhum"}. Use “Salvar configuração” para aplicar.</p>
     </section>
-    <section className="rounded-2xl border border-line bg-white p-5 sm:p-7"><h2 className="flex items-center gap-2 text-lg font-black"><Package className="h-5 w-5 text-brand" />Produtos e embalagens</h2><p className="mt-2 text-sm leading-6 text-muted">Cadastre o peso e as medidas externas de cada unidade já protegida. O Melhor Envio recebe a quantidade e calcula os pacotes, sem forçar uma remessa por unidade. Os dados existentes já incluem caixa e proteção: não some tara novamente nem substitua por peso líquido ou medidas internas. O empacotamento é uma previsão; pese e meça a caixa final antes de emitir a etiqueta. Medicamentos sem receita e de receita comum classificada pelo administrador usam PAC ou SEDEX após revisão do transporte; a receita comum é conferida pelo farmacêutico antes da dispensação. Controlados, receita ainda não classificada e Farmácia Popular seguem no atendimento assistido. Líquidos, aerossóis e produtos sensíveis ao calor precisam de revisão de conservação e transporte.</p><div className="mt-5 grid gap-4">{data?.products.map((product) => <ProductShippingForm key={`${product.id}:${product.updatedAt}`} product={product} busy={busy} services={[...defaultServices, ...services, ...quotes]} configured={settings.serviceIds} onSave={(profile) => run(async () => { await request(`/api/admin/fretes/produtos/${product.id}`, "PUT", { profile, updatedAt: product.updatedAt }); await load(); setMessage("Dados de transporte salvos."); })} />)}</div></section>
+    <section className="rounded-2xl border border-line bg-white p-5 sm:p-7"><h2 className="flex items-center gap-2 text-lg font-black"><Package className="h-5 w-5 text-brand" />Produtos e embalagens</h2><p className="mt-2 text-sm leading-6 text-muted">Cadastre o peso e as medidas externas de cada unidade já protegida. O Melhor Envio recebe a quantidade e calcula os pacotes, sem forçar uma remessa por unidade. Os dados existentes já incluem caixa e proteção: não some tara novamente nem substitua por peso líquido ou medidas internas. O empacotamento é uma previsão; pese e meça a caixa final antes de emitir a etiqueta. Medicamentos sem receita e de receita comum classificada pelo administrador usam PAC ou SEDEX após revisão do transporte; a receita comum é conferida pelo farmacêutico antes da dispensação. Controlados, receita ainda não classificada e Farmácia Popular seguem no atendimento assistido. Líquidos, aerossóis e produtos sensíveis ao calor precisam de revisão de conservação e transporte.</p>
+      <form className="mt-5 flex flex-wrap items-end gap-3" onSubmit={event => { event.preventDefault(); setCatalogQuery(search.trim()); setCatalogPage(1); setCatalogRequest(current => current + 1); }}>
+        <div className="min-w-0 flex-1"><Label text="Buscar produto por nome, EAN ou SKU"><input className={field} disabled={busy} maxLength={120} onChange={event => setSearch(event.target.value)} type="search" value={search} /></Label></div>
+        <button className={button} disabled={busy || catalogLoading} type="submit">Buscar produtos</button>
+        {(search || catalogQuery) && <button className={`${button} bg-ink`} disabled={busy || catalogLoading} onClick={() => { setSearch(""); setCatalogQuery(""); setCatalogPage(1); }} type="button">Limpar busca</button>}
+      </form>
+      <p className="mt-3 text-xs text-muted">A busca consulta todo o catálogo, incluindo rascunhos. Salve as alterações do produto antes de trocar de página ou buscar.</p>
+      <nav aria-label="Páginas de produtos para transporte" className="mt-4 flex flex-wrap items-center gap-3">
+        <button className={`${button} bg-ink`} disabled={busy || catalogLoading || !data || (data.pagination?.page ?? 1) <= 1} onClick={() => setCatalogPage((data?.pagination?.page ?? 1) - 1)} type="button">Anterior</button>
+        <p aria-live="polite" className="text-sm text-muted">Página {data?.pagination?.page ?? 1} de {data?.pagination?.totalPages ?? 1} · {data?.pagination?.total ?? data?.products.length ?? 0} produtos · até 100 por página</p>
+        <button className={button} disabled={busy || catalogLoading || !data || (data.pagination?.page ?? 1) >= (data.pagination?.totalPages ?? 1)} onClick={() => setCatalogPage((data?.pagination?.page ?? 1) + 1)} type="button">Próxima</button>
+      </nav>
+      {catalogLoading && <p className="mt-4 text-sm text-muted" role="status">Carregando produtos…</p>}
+      {catalogError && <p className="mt-4 text-sm text-red-700" role="alert">{catalogError}</p>}
+      {!catalogLoading && !catalogError && data?.products.length === 0 && <p className="mt-4 text-sm text-muted">Nenhum produto encontrado.</p>}
+      <div className="mt-5 grid gap-4">{!catalogLoading && !catalogError && data?.products.map((product) => <ProductShippingForm key={`${product.id}:${product.updatedAt}`} product={product} busy={busy} services={[...defaultServices, ...services, ...quotes]} configured={settings.serviceIds} onSave={(profile) => run(async () => { await request(`/api/admin/fretes/produtos/${product.id}`, "PUT", { profile, updatedAt: product.updatedAt }); await load(false); setMessage("Dados de transporte salvos."); })} />)}</div></section>
   </div>;
 }
 function Label({ text, children }: { text: string; children: React.ReactNode }) { return <label className="grid min-w-0 gap-2 text-xs font-bold text-muted"><span>{text}</span>{children}</label>; }
@@ -151,9 +186,8 @@ function ProductShippingForm({ product, busy, services, configured, onSave }: { 
     {!reviewed && <p className="mb-3 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-900">Rascunho: dados parciais podem ser salvos sem liberar o transporte. Confira o volume pronto para envio, com proteção e caixa, antes de aprovar. Referências da IA podem descrever apenas a embalagem comercial.</p>}
     <strong className="text-sm text-ink">{product.name}</strong>{blocked && <p className="mt-2 text-xs text-muted">Você pode preparar peso e medidas deste produto. A venda e o envio exigem atendimento farmacêutico; o rascunho não libera cotação ou cobrança automática.</p>}<>
       <div className="mt-3 rounded-lg bg-surface-subtle p-3 text-xs leading-5 text-muted">
-        <button className={`${button} mb-2`} disabled={busy} onClick={() => { setMeasurements({ ...measurements, lengthCm: "20.8", widthCm: "20.8", heightCm: "21.6" }); setMeasurementBasis("estimated"); invalidateReview(); }} type="button">Caixa média 20 cm</button>
-        <p>Referência Packit: caixa interna de 20 × 20 × 20 cm; medidas externas C20,8 × L20,8 × A21,6 cm. Preenche somente dimensões em rascunho; o peso informado é preservado. Confira encaixe, proteção e peso final.</p>
-        <a className="mt-1 inline-flex items-center gap-1 font-bold text-brand" href="https://www.packit.com.br/10-caixas-de-papelao-20x20x20-cm" rel="noreferrer" target="_blank">Consultar caixa e medidas no fornecedor<ArrowUpRight className="h-3 w-3" /></a>
+        <button className={`${button} mb-2`} disabled={busy} onClick={() => { setMeasurements({ ...measurements, lengthCm: "24", widthCm: "15", heightCm: "10" }); setMeasurementBasis("estimated"); invalidateReview(); }} type="button">Usar referência 24 × 15 × 10 cm no rascunho</button>
+        <p>Caixa informada pelo responsável: C24 × L15 × A10 cm. Medidas externas e peso da caixa vazia ainda precisam de confirmação. Aplica somente as dimensões neste rascunho e preserva o peso informado; não comprova encaixe nem libera o envio. Confira proteção, medidas externas e peso do volume final antes de aprovar. Caixas maiores ainda não estão definidas.</p>
       </div>
       <div className="mt-3 grid gap-3 sm:grid-cols-4">{([["weightGrams", "Peso embalado (g)"], ["widthCm", "Largura (cm)"], ["heightCm", "Altura (cm)"], ["lengthCm", "Comprimento (cm)"]] as const).map(([name, label]) => <Label key={name} text={label}><input className={field} disabled={busy} max={name === "weightGrams" ? 30000 : 200} min={name === "weightGrams" ? 1 : 0.01} name={name} onChange={(event) => { setMeasurements({ ...measurements, [name]: event.target.value }); invalidateReview(); }} step={name === "weightGrams" ? 1 : "any"} type="number" value={measurements[name]} /></Label>)}</div>
       <div className="mt-3"><Label text="Origem do peso e das medidas"><select className={field} disabled={busy} onChange={(event) => { setMeasurementBasis(event.target.value as "measured" | "estimated"); invalidateReview(); }} value={measurementBasis}><option value="measured">Medidos no volume pronto para envio</option><option value="estimated">Estimativa operacional autorizada</option></select></Label></div>

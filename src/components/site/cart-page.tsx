@@ -76,26 +76,26 @@ export function CartPage() {
             </Link>
           </div>
         ) : (
-          <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+          <div className="mt-6 grid gap-5 sm:mt-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
             <div className="grid gap-3">
               {items.map((item) => (
-                <article className="grid gap-4 rounded-lg border border-line bg-white p-4 shadow-sm sm:grid-cols-[7rem_minmax(0,1fr)_auto] sm:items-center" key={item.id}>
-                  <Link className="relative mx-auto aspect-square w-28 overflow-hidden rounded-md border border-line bg-white" href={`/produto/${item.slug}`}>
+                <article className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-3 rounded-xl border border-line bg-white p-3 shadow-sm sm:grid-cols-[7rem_minmax(0,1fr)_auto] sm:items-center sm:gap-4 sm:p-4" key={item.id}>
+                  <Link className="relative aspect-square w-full overflow-hidden rounded-lg border border-line bg-white" href={`/produto/${item.slug}`}>
                     {item.imageUrl ? <Image alt={productImageAlt(item.name, item.imageUrl)} className="object-contain p-2" fill sizes="112px" src={item.imageUrl} /> : <ProductImagePlaceholder catalogClassification={item.catalogClassification} name={item.name} category={item.category} requiresPrescription={item.requiresPrescription} isPopularPharmacy={item.isPopularPharmacy} className="h-full w-full p-2" showLabel={false} />}
                   </Link>
                   <div className="min-w-0">
                     {item.category ? <p className="text-xs font-bold uppercase text-muted">{item.category}</p> : null}
-                    <Link className="mt-1 block text-base font-black text-ink transition hover:text-brand" href={`/produto/${item.slug}`}>{productDisplayName(item.name)}</Link>
-                    <strong className="mt-3 block text-xl font-black text-brand">{currency.format(item.unitPriceCents / 100)}</strong>
+                    <Link className="mt-1 block break-words text-sm font-bold leading-5 text-ink transition hover:text-brand sm:text-base" href={`/produto/${item.slug}`}>{productDisplayName(item.name)}</Link>
+                    <strong className="mt-2 block text-lg font-black text-brand sm:text-xl">{currency.format(item.unitPriceCents / 100)}</strong>
                     {item.originalPriceCents && item.originalPriceCents > item.unitPriceCents ? <span className="text-xs font-semibold text-muted line-through">{currency.format(item.originalPriceCents / 100)}</span> : null}
                   </div>
-                  <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
+                  <div className="col-span-2 flex items-center justify-between gap-3 border-t border-line pt-3 sm:col-span-1 sm:flex-col sm:items-end sm:border-0 sm:pt-0">
                     <div className="grid h-11 grid-cols-[2.5rem_2.75rem_2.5rem] overflow-hidden rounded-md border border-line bg-white">
                       <button aria-label={`Diminuir quantidade de ${item.name}`} className="grid place-items-center text-muted transition hover:bg-surface-subtle hover:text-brand" onClick={() => updateQuantity(item.id, item.quantity - 1)} type="button"><Minus className="h-4 w-4" /></button>
                       <span aria-live="polite" className="grid place-items-center border-x border-line text-sm font-black text-ink">{item.quantity}</span>
                       <button aria-label={`Aumentar quantidade de ${item.name}`} className="grid place-items-center text-muted transition hover:bg-surface-subtle hover:text-brand disabled:opacity-35" disabled={item.quantity >= orderQuantityLimit(item)} onClick={() => updateQuantity(item.id, item.quantity + 1)} type="button"><Plus className="h-4 w-4" /></button>
                     </div>
-                    <button aria-label={`Remover ${item.name}`} className="inline-flex h-10 items-center gap-2 px-2 text-xs font-bold text-muted transition hover:text-brand" onClick={() => removeProduct(item.id)} type="button"><Trash2 className="h-4 w-4" /> Remover</button>
+                    <button aria-label={`Remover ${item.name}`} className="inline-flex min-h-11 items-center gap-2 px-2 text-xs font-bold text-muted transition hover:text-brand" onClick={() => removeProduct(item.id)} type="button"><Trash2 className="h-4 w-4" /> Remover</button>
                   </div>
                 </article>
               ))}
@@ -106,6 +106,8 @@ export function CartPage() {
               <div className="mt-5 flex justify-between text-sm text-muted"><span>Produtos</span><span>{currency.format(subtotalCents / 100)}</span></div>
               <div className="mt-3 flex justify-between text-sm text-muted"><span>Entrega em Ivate ou retirada</span><span className="font-bold text-pharma-green">Gratis</span></div>
               <div className="mt-5 flex items-end justify-between border-t border-line pt-5"><span className="font-black text-ink">Total</span><strong className="text-2xl font-black text-brand">{currency.format(subtotalCents / 100)}</strong></div>
+              <Link className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(208,14,49,0.2)] transition hover:bg-brand-dark" href="/checkout">Continuar para finalizar <ArrowRight className="h-4 w-4 shrink-0" /></Link>
+              <Link className="mt-2 flex min-h-11 items-center justify-center text-sm font-bold text-muted hover:text-brand" href="/catalogo">Continuar comprando</Link>
               <div className="mt-5 rounded-lg border border-line bg-surface-subtle p-4">
                 <h3 className="text-sm font-black text-ink">Confira preços e disponibilidade</h3>
                 <p className="mt-2 text-xs leading-5 text-muted">Seu carrinho pode conter dados de uma visita anterior. Consulte os valores atuais e revise as diferenças antes de aplicar.</p>
@@ -128,7 +130,6 @@ export function CartPage() {
                   <button type="button" onClick={() => setProposal(null)} className="mt-2 min-h-11 w-full text-xs font-bold text-muted underline">Manter meu carrinho</button>
                 </div>}
               </div>
-              <Link className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-brand px-5 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(208,14,49,0.2)] transition hover:bg-brand-dark" href="/checkout">Ir para o checkout <ArrowRight className="h-4 w-4" /></Link>
               <p className="mt-4 flex items-start gap-2 text-xs font-semibold leading-5 text-muted"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-pharma-green" />O pedido e conferido pela farmacia antes da confirmacao.</p>
             </aside>
           </div>

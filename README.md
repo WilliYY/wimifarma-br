@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Carrinho e checkout compactos no celular, conta logada, WhatsApp dentro da Miauby, grade de produtos uniforme e revisão de frete com referência de caixa 24 × 15 × 10 cm: [98](docs/98-compra-mobile-e-referencia-de-caixa.md). O frete nacional ainda depende dos perfis logísticos revisados; a caixa informada não substitui peso e conferência.
+
 Operação administrativa: pedidos em lista única com etapas, avisos ao cliente, notificações com visualização, catálogo de 100 em 100 e cashback compacto em massa. Contratos, limites e publicação em [97](docs/97-operacao-admin-e-etapas-whatsapp.md).
 
 Preços públicos iguais aos do carrinho; 3% Pix somente após escolher Pix no checkout, com arte promocional preservada: [documento 83](docs/83-desconto-pix.md) e [documento 86](docs/86-precos-e-desconto-real-nos-cards.md).

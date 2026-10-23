@@ -1,11 +1,31 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createPaymentBrandsCache, parsePaymentBrands } from "./payment-brands";
+import { createPaymentBrandsCache, parsePaymentBrands, uniquePaymentBrandDisplay } from "./payment-brands";
 
 const connection = { accountId: "synthetic-account", revision: 1, environment: "production" };
 const method = (id = "visa", overrides: Record<string, unknown> = {}) => ({
   id, name: id.toUpperCase(), status: "active", payment_type_id: "credit_card",
   secure_thumbnail: "https://http2.mlstatic.com/brand.png", ...overrides,
+});
+
+test("footer shows a brand once while preserving distinct payment method IDs in the catalogue", () => {
+  const brands = parsePaymentBrands([
+    method("elo", { name: "Elo", secure_thumbnail: "https://http2.mlstatic.com/elo.png" }),
+    method("debelo", { name: "Elo Débito", payment_type_id: "debit_card", secure_thumbnail: "https://http2.mlstatic.com/elo-debit.png" }),
+    method("elo-credit", { name: "Elo crédito", secure_thumbnail: "https://http2.mlstatic.com/elo-credit.png" }),
+    method("elo-case", { name: " ELO ", secure_thumbnail: null }),
+    method("visa", { name: "Visa", secure_thumbnail: "https://http2.mlstatic.com/elo.png" }),
+    method("another", { name: "Outra marca", secure_thumbnail: null }),
+  ]);
+  assert.equal(brands.length, 6, "display filtering must not remove payment methods");
+  assert.deepEqual(uniquePaymentBrandDisplay(brands).map(brand => brand.id), ["elo", "visa", "another"]);
+  assert.equal(brands.length, 6);
+});
+
+test("footer does not merge arbitrary debit names or lookalikes into the Elo brand", () => {
+  const names = ["Elo", "Elo Débito", "Elo crédito", "Elo debito", "Elo credito", "Elo outra marca", "Outra Débito", "Outra", "Mastercard", "American Express", "MP Card"];
+  const brands = names.map((name, index) => ({ id: `synthetic-${index}`, name, image: null }));
+  assert.deepEqual(uniquePaymentBrandDisplay(brands).map(brand => brand.name), ["Elo", "Elo outra marca", "Outra Débito", "Outra", "Mastercard", "American Express", "MP Card"]);
 });
 
 test("brands preserve every active card type, deduplicate IDs and omit provider-only fields", () => {

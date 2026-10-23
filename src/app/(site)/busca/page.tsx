@@ -5,10 +5,9 @@ import { ProductImagePlaceholder } from "@/components/site/product-image-placeho
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, ChevronLeft, ChevronRight, Search, SearchX, TrendingUp } from "lucide-react";
-import { PublicProductCard } from "@/components/site/public-product-card";
-import { PrescriptionSearchDetails } from "@/components/site/prescription-search-details";
+import { CatalogProductCard } from "@/components/site/catalog-product-card";
 import { getSearchCatalog, getSearchSidebar, SEARCH_PAGE_SIZE } from "@/features/products/search-catalog";
-import { isPrescriptionSearchProduct, isProductAssociation, productSearchHref, productSearchPlan } from "@/features/products/public-search";
+import { isProductAssociation, productSearchHref, productSearchPlan } from "@/features/products/public-search";
 import { catalogPageNumber } from "@/features/products/storefront";
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
@@ -70,9 +69,7 @@ export default async function SearchPage({ searchParams }: Props) {
               <section className="scroll-mt-44" id={section.id} key={section.id}>
                 <h2 className="text-xl font-black text-ink">{section.title}</h2>
                 {section.description ? <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">{section.description}</p> : null}
-                <div className="mt-5 grid grid-cols-1 gap-4 min-[400px]:grid-cols-2 md:grid-cols-3">{section.products.map(product => topicSearch && isPrescriptionSearchProduct(product)
-                  ? <Link className="col-span-full rounded-xl border border-line bg-white p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" href={`/produto/${product.slug}`} key={product.id}><PrescriptionSearchDetails item={product} /></Link>
-                  : <PublicProductCard key={product.id} product={product} />)}</div>
+                <div className="mt-5 grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 md:grid-cols-3">{section.products.map(product => <CatalogProductCard key={product.id} product={product} topicSearch={topicSearch} />)}</div>
               </section>
             )) : (
               <div className="rounded-2xl border border-line bg-white px-6 py-12 sm:px-10">

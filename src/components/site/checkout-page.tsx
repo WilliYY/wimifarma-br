@@ -31,7 +31,7 @@ type Result = { id: string; number: string; totalCents: number; paymentMethod: s
 type Props = { initialCustomer: { name: string; phone: string; email: string; street: string; neighborhood: string }; draftOwner?: string; isCustomer?: boolean; paymentConfig?: PaymentConfig; carrierShippingAvailable?: boolean };
 const money = (cents: number) => new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" }).format(cents / 100);
 const fieldClass = "checkout-field h-13 w-full min-w-0 rounded-xl border border-line bg-white px-4 text-base font-medium text-ink outline-none transition hover:border-ink/25 focus:border-brand focus:ring-4 focus:ring-brand/10 disabled:cursor-not-allowed";
-const panelClass = "min-w-0 overflow-hidden rounded-2xl border border-line bg-white p-5 shadow-[0_8px_30px_-20px_rgba(17,24,39,0.18)] sm:p-6 2xl:p-7";
+const panelClass = "min-w-0 overflow-hidden rounded-2xl border border-line bg-white p-4 shadow-[0_8px_30px_-20px_rgba(17,24,39,0.18)] sm:p-6 2xl:p-7";
 
 export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer = false, paymentConfig = null, carrierShippingAvailable = false }: Props) {
   const { clearCart, hydrated, items, itemCount, subtotalCents } = useCart();
@@ -177,18 +177,18 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   if (!items.length && !onlineOrder) return <CheckoutShell><div className="rounded-2xl border border-line bg-white px-5 py-12 text-center"><PackageCheck className="mx-auto h-12 w-12 text-brand" /><h1 className="mt-4 text-2xl font-black">Seu carrinho está vazio</h1><Link className="mt-5 inline-block font-bold text-brand" href="/produtos">Encontrar produtos →</Link></div></CheckoutShell>;
   return <CheckoutShell>
     <Link href="/carrinho" className="mb-5 inline-flex min-h-8 items-center gap-2 rounded-md text-sm font-semibold text-muted transition hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"><ArrowLeft className="h-4 w-4" />Voltar ao carrinho</Link>
-    <header className="mb-6 flex flex-wrap items-center justify-between gap-5 rounded-2xl border border-line bg-white px-5 py-6 sm:px-7">
+    <header className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-white px-4 py-5 sm:mb-6 sm:px-7 sm:py-6">
       <div className="min-w-0">
         <p className="mb-2 text-[11px] font-black uppercase tracking-[0.18em] text-brand">Sua compra na Wimifarma</p>
-        <h1 className="text-3xl font-black tracking-tight text-ink sm:text-4xl">Finalize sua compra</h1>
+        <h1 className="text-2xl font-black tracking-tight text-ink sm:text-4xl">Finalize sua compra</h1>
         <p className="mt-2 text-sm leading-6 text-muted">Tudo em uma página. Confira seus dados e escolha como receber.</p>
       </div>
-      <div className="flex items-center gap-3 rounded-xl bg-surface-subtle px-4 py-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-pharma-green"><LockKeyhole className="h-5 w-5" /></span>
-        <div><strong className="block text-sm font-bold text-ink">Conexão protegida</strong><span className="mt-1 block text-xs text-muted">Checkout Wimifarma</span></div>
+      <div className="flex items-center gap-2 rounded-xl bg-surface-subtle px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-pharma-green sm:h-10 sm:w-10"><LockKeyhole className="h-4 w-4 sm:h-5 sm:w-5" /></span>
+        <div><strong className="block text-xs font-bold text-ink sm:text-sm">Conexão protegida</strong><span className="mt-1 hidden text-xs text-muted sm:block">Checkout Wimifarma</span></div>
       </div>
     </header>
-    <div className="grid items-start gap-6 md:grid-cols-2 min-[86.25rem]:grid-cols-3 min-[86.25rem]:items-stretch">
+    <div className="grid items-start gap-4 sm:gap-6 md:grid-cols-2 min-[86.25rem]:grid-cols-3 min-[86.25rem]:items-stretch">
       <section className={panelClass} data-checkout-panel="customer">
         <PanelTitle number="1" Icon={UserRound} title="Seus dados" description="Para acompanhar e receber seu pedido." complete={contactReady} />
         <fieldset disabled={Boolean(onlineOrder) || submitting} className="mt-5 grid min-w-0 gap-4 disabled:opacity-70">
@@ -197,7 +197,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
           <Field label={online ? "E-mail" : "E-mail (opcional)"} autoComplete="email" type="email" maxLength={160} required={online} value={customer.email} onChange={event => setDraft(current => ({ ...current, customer: { ...current.customer, email: event.target.value } }))} />
           <label className="grid gap-2 text-sm font-semibold text-ink">Observação (opcional)<textarea className={`${fieldClass} h-20 resize-y py-3`} maxLength={500} value={notes} placeholder="Referência para entrega ou troco" onChange={event => setDraft(current => ({ ...current, notes: event.target.value }))} /></label>
         </fieldset>
-        {!onlineOrder && <details className="mt-6 rounded-xl border border-line bg-surface-subtle/60 p-4" open>
+        {!onlineOrder && <details className="mt-6 rounded-xl border border-line bg-surface-subtle/60 p-4">
           <summary className="cursor-pointer text-sm font-bold text-ink focus-visible:outline-2 focus-visible:outline-brand">Sua cesta · {itemCount} {itemCount === 1 ? "item" : "itens"}</summary>
           <div className="mt-4 grid gap-4">{items.map(item => <div className="flex min-w-0 items-center gap-3" key={item.id}>
             <div className="relative grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-line bg-white p-1.5">
@@ -229,7 +229,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
           <label className="mt-5 flex items-start gap-3 text-sm leading-6 text-muted"><input checked={privacyConsent} className="mt-1 h-5 w-5 shrink-0 accent-brand" onChange={event => setPrivacyConsent(event.target.checked)} type="checkbox" /><span>Finalizar com os dados informados, conforme a <Link className="font-bold text-brand underline" href="/privacidade" target="_blank">Política de Privacidade</Link>.</span></label>
           {error && <p className="mt-4 rounded-lg bg-brand-soft p-3 text-sm text-brand" role="alert">{error}</p>}
           {method === "card" && paymentConfig && <label className="mt-5 grid gap-2 text-sm font-semibold">Como pagar no cartão<select className={fieldClass} value={draft.onlineInstallments ?? 1} onChange={event => setDraft(current => ({ ...current, onlineInstallments: Number(event.target.value) }))}><option value={1}>À vista · uma parcela</option><option value={12}>Parcelar · escolher parcelas no formulário</option></select><span className="text-xs leading-5 text-muted">Você confere os campos seguros, as parcelas e o total antes de pagar.</span></label>}
-          <button type="button" disabled={submitting || !method} onClick={() => void submitOrder().catch(() => undefined)} className="mt-5 flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-black text-white transition hover:bg-brand-dark disabled:opacity-60">{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}{submitting ? "Confirmando..." : !method ? "Escolha a forma de pagamento" : online ? method === "card" ? "Continuar para pagar com cartão" : "Gerar Pix e finalizar" : "Confirmar pedido"}</button>
+          <button type="button" disabled={submitting || !method} onClick={() => void submitOrder().catch(() => undefined)} className="mt-5 flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-brand px-3 py-3 text-center text-sm font-black leading-5 text-white transition hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-60">{submitting ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : <ArrowRight className="h-4 w-4 shrink-0" />}{submitting ? "Confirmando..." : !method ? "Escolha a forma de pagamento" : online ? method === "card" ? "Continuar para pagar com cartão" : "Gerar Pix e finalizar" : "Confirmar pedido"}</button>
           <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs leading-5 text-muted"><LockKeyhole className="h-3.5 w-3.5 shrink-0" />{online ? "Pagamento protegido · Checkout Wimifarma" : "Preparação confirmada pela farmácia"}</p>
         </>}
       </section>
@@ -237,7 +237,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   </CheckoutShell>;
 }
 
-function CheckoutShell({ children }: { children: React.ReactNode }) { return <section className="min-h-[75vh] bg-[#f5f6f8] px-4 pb-20 pt-32 sm:px-6 sm:pt-40 lg:px-8 lg:pt-52"><div className="mx-auto max-w-[1600px]">{children}</div></section>; }
+function CheckoutShell({ children }: { children: React.ReactNode }) { return <section className="min-h-[75vh] bg-[#f5f6f8] px-4 pb-20 pt-40 sm:px-6 sm:pt-40 lg:px-8 lg:pt-52"><div className="mx-auto max-w-[1600px]">{children}</div></section>; }
 function PanelTitle({ number, Icon, title, description, complete = false }: { number: string; Icon: typeof UserRound; title: string; description: string; complete?: boolean }) {
   return <div className="border-b border-line pb-5">
     <div className="flex items-center gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-soft text-sm font-black text-brand">{number}</span><h2 className="min-w-0 flex-1 text-lg font-black leading-6 text-ink">{title}</h2>{complete ? <Check className="h-4 w-4 shrink-0 text-pharma-green" aria-label="Dados preenchidos" /> : <Icon className="h-4 w-4 shrink-0 text-muted" />}</div>
@@ -252,7 +252,7 @@ function PaymentChoice({ selected, onSelect, label, detail, Icon, disabled = fal
     {selected && <span className="absolute right-3 top-3 grid h-4 w-4 place-items-center rounded-full bg-brand text-white"><Check className="h-2.5 w-2.5" /></span>}
   </label>;
 }
-function SummaryLine({ label, value }: { label: string; value: string }) { return <div className="flex min-w-0 justify-between gap-3"><dt className="min-w-0 text-muted">{label}</dt><dd className="shrink-0 font-semibold text-ink">{value}</dd></div>; }
+function SummaryLine({ label, value }: { label: string; value: string }) { return <div className="flex min-w-0 flex-wrap justify-between gap-x-3 gap-y-1"><dt className="min-w-0 break-words text-muted">{label}</dt><dd className="ml-auto max-w-full break-words text-right font-semibold text-ink">{value}</dd></div>; }
 function FreeShippingProgress({ eligibleCents }: { eligibleCents: number }) {
   const reached = eligibleCents >= FREE_SHIPPING_THRESHOLD_CENTS;
   const percent = Math.min(100, Math.max(0, eligibleCents / FREE_SHIPPING_THRESHOLD_CENTS * 100));
