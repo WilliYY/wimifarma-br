@@ -12,13 +12,18 @@ export async function resolveClubCustomer(tx: Prisma.TransactionClient, session:
   if (session.user.role === "CUSTOMER") customerId = sessionCustomerId(session);
   else {
     if (join) await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${session.user.id} FOR UPDATE`;
-    const user = await tx.user.findUnique({ where: { id: session.user.id }, select: { id: true, isActive: true, customerId: true, name: true, email: true } });
+    const user = await tx.user.findUnique({ where: { id: session.user.id }, select: { id: true, isActive: true, customerId: true, name: true, email: true, passwordHash: true } });
     if (!user?.isActive) throw new ClubRuleError("Conta indisponível.", 401);
     customerId = user.customerId;
     if (!customerId && join) {
       const conflict = await tx.customer.findUnique({ where: { email: user.email }, select: { id: true } });
       if (conflict) throw new ClubRuleError("Não foi possível vincular esta conta. Contate a administração.", 409);
-      const customer = await tx.customer.create({ data: { name: user.name, email: user.email }, select: { id: true } });
+      const localPassword = user.passwordHash !== "!GOOGLE_ONLY" ? user.passwordHash : null;
+      const customer = await tx.customer.create({ data: {
+        name: user.name, email: user.email,
+        passwordHash: localPassword,
+        passwordSetAt: localPassword ? new Date() : null,
+      }, select: { id: true } });
       await tx.user.update({ where: { id: user.id }, data: { customerId: customer.id } });
       customerId = customer.id;
     }

@@ -1,5 +1,9 @@
 # 42 - Revisão de segurança
 
+## Auditoria funcional e de acessos — 23/10/2026
+
+Corrigido o caminho Club/Customer que permitia trocar a senha local vinculada sem conferir a credencial atual. Validação autoritativa, revalidação sob locks, CAS e isolamento transacional preservam concorrência e Google-only; falhas de infraestrutura têm resposta 503 e diagnóstico fixo sem segredos. Revisões independentes aprovaram acesso e mudanças comerciais. A suíte de segurança passou com 484 testes, e as auditorias npm de produção e completa retornaram zero vulnerabilidades nesta consulta. Controles públicos, bugs corrigidos, pendência de frete e limites em [101](101-auditoria-funcional-e-acessos.md). Os testes novos de concorrência usam banco simulado, sem afirmar prova PostgreSQL real.
+
 ## Auditoria de compra e frete — 23/10/2026
 
 452 testes de segurança e auditoria de concorrência/idempotência em PostgreSQL descartável passaram; revisão independente sem achados novos nas mudanças. Auditorias npm de produção e completa com desenvolvimento retornaram zero alertas nesta consulta, atualizando o retrato histórico abaixo. Lint, typecheck e build local passaram. Escopo, controles, matriz de frete, configuração efetiva dos gateways e limites em [99-auditoria-frete-checkout-seguranca.md](99-auditoria-frete-checkout-seguranca.md). Não é prova de ausência de qualquer vulnerabilidade nem homologação com cobrança real.

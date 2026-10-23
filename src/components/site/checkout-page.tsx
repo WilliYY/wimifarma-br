@@ -174,7 +174,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   }
   if (!hydrated || !ready) return <CheckoutShell><div className="h-96 animate-pulse rounded-2xl border border-line bg-white" /></CheckoutShell>;
   if (order) return <CheckoutSuccess order={order} />;
-  if (!items.length && !onlineOrder) return <CheckoutShell><div className="rounded-2xl border border-line bg-white px-5 py-12 text-center"><PackageCheck className="mx-auto h-12 w-12 text-brand" /><h1 className="mt-4 text-2xl font-black">Seu carrinho está vazio</h1><Link className="mt-5 inline-block font-bold text-brand" href="/produtos">Encontrar produtos →</Link></div></CheckoutShell>;
+  if (!items.length && !onlineOrder) return <CheckoutShell><div className="rounded-2xl border border-line bg-white px-5 py-12 text-center"><PackageCheck className="mx-auto h-12 w-12 text-brand" /><h1 className="mt-4 text-2xl font-black">Seu carrinho está vazio</h1><Link className="mt-5 inline-block font-bold text-brand" href="/catalogo">Encontrar produtos →</Link></div></CheckoutShell>;
   return <CheckoutShell>
     <Link href="/carrinho" className="mb-5 inline-flex min-h-8 items-center gap-2 rounded-md text-sm font-semibold text-muted transition hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"><ArrowLeft className="h-4 w-4" />Voltar ao carrinho</Link>
     <header className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-white px-4 py-5 sm:mb-6 sm:px-7 sm:py-6">

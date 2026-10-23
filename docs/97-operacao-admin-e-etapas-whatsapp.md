@@ -1,5 +1,7 @@
 # 97 — Operação administrativa e etapas por WhatsApp
 
+Atualização de 23/10/2026: cancelamentos canônicos por Mercado Pago/Asaas e cancelamento antes da submissão registram a etapa de cancelado na mesma transação somente quando o pedido muda para CANCELED. Opt-in, ambiente comercial, destino canônico e deduplicação permanecem; conciliações repetidas não criam aviso retroativo. Não houve envio real para testar. Evidências e limites em [101](101-auditoria-funcional-e-acessos.md).
+
 ## Pedidos e notificações
 
 A lista única mostra 30 pedidos por página entre os últimos 100 carregados. “Todos” é a fila ativa; “Pedidos feitos” contém PENDING, “Em andamento” contém CONFIRMED/PREPARING/READY/OUT_FOR_DELIVERY. Concluídos ficam em verde; andamento em amarelo; cancelados/estornados em vermelho, fora da fila ativa. Os contadores da lista não representam o histórico integral.

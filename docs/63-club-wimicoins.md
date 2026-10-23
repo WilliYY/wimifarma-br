@@ -1,5 +1,7 @@
 # Club Wimifarma e WimiCoins
 
+Atualização de 23/10/2026: ao criar o vínculo para um User local, o novo Customer recebe a mesma credencial, sem criar senha distinta. O marcador `!GOOGLE_ONLY` nunca é copiado como senha nem substituído por uma senha de cliente. Vínculos antigos sem hash são tratados pela validação da senha local vinculada e pelo painel; não houve migração ou backfill de credenciais. Auditoria em [101](101-auditoria-funcional-e-acessos.md).
+
 Atualização de 20/10/2026: faltas aceitas como crédito devolvem os WimiCoins usados à carteira original e anulam ganhos das unidades não entregues. Cancelamento posterior devolve somente o saldo ainda não restituído. O crédito novo é separado dos pontos e pode ser usado no checkout; locks passam por Customer, cashback, crédito de compra e WimiCoins. Contrato em [92](92-creditos-por-itens-faltantes.md).
 
 Atualização de 19/10/2026: os ganhos de novos pedidos Pix usam o líquido após o desconto de 3%, além dos resgates de cashback/WimiCoins. A promoção não altera saldos reservados/devolvidos nem pedidos anteriores. Contrato e validações em [83](83-desconto-pix.md).

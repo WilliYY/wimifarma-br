@@ -1,5 +1,7 @@
 # Usuarios Wimifarma
 
+Auditoria de 23/10/2026: a troca de senha considera a credencial local do User explicitamente vinculado, mesmo quando o Customer antigo ainda não tem hash. Validação antes da escrita, revalidação transacional de vínculo/ativo/hashes, CAS e rollback impedem sobrescrita concorrente. O painel recebe somente `hasPassword`; Google-only continua sem senha administrativa local. Falhas inesperadas retornam 503 com diagnóstico fixo sem dados privados. Contrato e evidências em [101](101-auditoria-funcional-e-acessos.md).
+
 Navegação de 22/10/2026: menu diário reduzido, Fretes/Pagamentos em configurações recolhidas e cofre sem atalho. Rotas e permissões permanecem; cofre continua exclusivo ADMIN, cifrado e sem cache. Contrato em [97](97-operacao-admin-e-etapas-whatsapp.md).
 
 ## Ranking e histórico — 04/10/2026

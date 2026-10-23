@@ -28,6 +28,7 @@ export default async function MinhaContaPage() {
   const prisma = getPrisma();
   const customer = await prisma.customer.findUnique({
     where: { id: customerId, status: "ACTIVE" },
+    include: { staffAccess: { select: { isActive: true, passwordHash: true } } },
   });
 
   if (!customer) {
@@ -48,7 +49,9 @@ export default async function MinhaContaPage() {
         createdAt: customer.createdAt.toISOString(),
         email: customer.email,
         hasGoogle: Boolean(customer.googleSubject),
-        hasPassword: Boolean(customer.passwordHash),
+        hasPassword: Boolean(customer.passwordHash || (
+          customer.staffAccess?.isActive && customer.staffAccess.passwordHash !== "!GOOGLE_ONLY" && customer.staffAccess.passwordHash
+        )),
         id: customer.id,
         imageUrl: customer.imageUrl,
         lastLoginAt: customer.lastLoginAt?.toISOString() ?? null,

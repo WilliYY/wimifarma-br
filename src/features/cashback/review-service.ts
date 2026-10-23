@@ -9,7 +9,7 @@ export async function saveRewardedReview(tx: Prisma.TransactionClient, customerI
   const product = await tx.product.findFirst({ where: { id: productId, status: "ACTIVE" }, select: { id: true, requiresPrescription: true, isPopularPharmacy: true } });
   if (!product) throw new CashbackRuleError("Produto nao encontrado.", 404);
   const candidate = await tx.order.findFirst({
-    where: { customerId, status: "COMPLETED", paymentStatus: "PAID", items: { some: { productId } } },
+    where: { customerId, status: "COMPLETED", paymentStatus: "PAID", items: { some: { productId, quantity: { gt: tx.orderItem.fields.shortageQuantity } } } },
     orderBy: [{ createdAt: "desc" }, { id: "asc" }], select: { id: true },
   });
   if (!candidate) throw new CashbackRuleError("Avalie depois que sua compra estiver concluida e paga.", 403);

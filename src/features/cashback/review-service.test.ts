@@ -9,10 +9,10 @@ const bundle = build({ entryPoints: ["src/features/cashback/review-service.ts"],
   builder.onLoad({ filter: /.*/, namespace: "fixture" }, () => ({ contents: "export class CashbackRuleError extends Error{}; export const lockCashbackAccount=async()=>({id:'synthetic-wallet'});" }));
 } }] });
 
-type Item = { productId: string; productSlug: string; unitPriceCents: number; quantity: number; totalCents: number; cashbackDiscountCents: number; wimicoinsDiscountPoints: number };
+type Item = { productId: string; productSlug: string; unitPriceCents: number; quantity: number; shortageQuantity?: number; totalCents: number; cashbackDiscountCents: number; wimicoinsDiscountPoints: number };
 const item = (productSlug = "a", price = 10000): Item => ({ productId: productSlug, productSlug, unitPriceCents: price, quantity: 1, totalCents: price, cashbackDiscountCents: 0, wimicoinsDiscountPoints: 0 });
 
-async function fixture(options: { items?: Item[]; totalCents?: number; existing?: boolean; credited?: boolean } = {}) {
+async function fixture(options: { items?: Item[]; totalCents?: number; existing?: boolean; credited?: boolean; recentMissing?: number; changeAtLock?: "CANCELED" | "SHORTAGE" } = {}) {
   const items = options.items ?? [item()];
   const order = { id: "synthetic-order", number: "TEST-REVIEW", status: "COMPLETED", paymentStatus: "PAID", subtotalCents: items.reduce((sum, i) => sum + i.totalCents, 0),
     cashbackRedeemedCents: items.reduce((sum, i) => sum + i.cashbackDiscountCents, 0), wimicoinsRedeemedPoints: items.reduce((sum, i) => sum + i.wimicoinsDiscountPoints, 0),
@@ -20,12 +20,28 @@ async function fixture(options: { items?: Item[]; totalCents?: number; existing?
   const credits: { amount: string; eventKey: string }[] = [];
   let accountUpdates = 0;
   let review = options.existing ? { id: "synthetic-review" } : null;
+  const history = [...Array.from({ length: options.recentMissing ?? 0 }, (_, index) => ({ ...order, id: `missing-${index}`, items: [{ ...item(), shortageQuantity: 1 }, item("other")] })), order];
+  let selected = order;
   const tx = {
-    $queryRaw: async () => [], customer: { findFirst: async () => ({ id: "synthetic-customer" }) },
+    orderItem: { fields: { shortageQuantity: { name: "shortageQuantity" } } },
+    orderItemShortage: { aggregate: async () => ({ _sum: { cashPaidCents: 10000 } }) },
+    $queryRaw: async () => {
+      if (options.changeAtLock === "CANCELED") selected.status = "CANCELED";
+      if (options.changeAtLock === "SHORTAGE") selected.items[0].shortageQuantity = selected.items[0].quantity;
+      return [];
+    }, customer: { findFirst: async () => ({ id: "synthetic-customer" }) },
     product: { findFirst: async () => ({ requiresPrescription: false, isPopularPharmacy: false }) },
-    order: { findFirst: async () => ({ id: order.id }), findUniqueOrThrow: async ({ include }: { include: { items: { where?: { productId: string } } | boolean } }) => {
+    order: { findFirst: async ({ where }: { where: { status: string; paymentStatus: string; items: { some: { productId: string; quantity?: { gt: number | { name: keyof Item } } } } } }) => {
+      const filter = where.items.some;
+      const found = history.find(candidate => candidate.status === where.status && candidate.paymentStatus === where.paymentStatus && candidate.items.some(row => {
+        const threshold = filter.quantity?.gt;
+        return row.productId === filter.productId && (threshold === undefined || row.quantity > Number(typeof threshold === "number" ? threshold : row[threshold.name] ?? 0));
+      }));
+      if (!found) return null;
+      selected = found; return { id: found.id };
+    }, findUniqueOrThrow: async ({ include }: { include: { items: { where?: { productId: string } } | boolean } }) => {
       const selectedProduct = typeof include.items === "object" ? include.items.where?.productId : undefined;
-      return { ...order, items: selectedProduct ? items.filter(i => i.productId === selectedProduct) : items };
+      return { ...selected, items: selectedProduct ? selected.items.filter(i => i.productId === selectedProduct) : selected.items };
     } },
     productReview: { findUnique: async () => review, update: async () => review,
       create: async ({ data }: { data: Record<string, unknown> }) => (review = { id: "synthetic-review", ...data }) },
@@ -70,5 +86,29 @@ test("edição, repetição e crédito já existente não duplicam bônus após 
     const previous = await fixture(options);
     assert.equal((await previous.run()).awardedCents, 0);
     assert.equal(previous.credits.length, 0);
+  }
+});
+
+test("avaliação usa compra anterior recebida mesmo após muitos pedidos integralmente faltantes", async () => {
+  const f = await fixture({ recentMissing: 101 });
+  assert.equal((await f.run()).awardedCents, 97);
+  assert.equal((await f.run()).awardedCents, 0);
+  assert.equal(f.credits.length, 1);
+});
+
+test("avaliação recusa histórico integralmente faltante e aceita quantidade parcialmente recebida", async () => {
+  const missing = await fixture({ recentMissing: 2, items: [{ ...item(), shortageQuantity: 1 }] });
+  await assert.rejects(missing.run(), /compra.*concluida e paga/);
+  assert.equal(missing.credits.length, 0);
+  const partial = await fixture({ items: [{ ...item(), quantity: 2, totalCents: 20000, shortageQuantity: 1 }], totalCents: 21200 });
+  assert.equal((await partial.run()).awardedCents, 100);
+});
+
+test("cancelamento ou falta concorrente entre seleção e lock impede recompensa", async () => {
+  for (const changeAtLock of ["CANCELED", "SHORTAGE"] as const) {
+    const f = await fixture({ recentMissing: 1, changeAtLock });
+    await assert.rejects(f.run(), /elegivel|unidade recebida/);
+    assert.equal(f.credits.length, 0);
+    assert.equal(f.accountUpdates(), 0);
   }
 });

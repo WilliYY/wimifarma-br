@@ -11,6 +11,7 @@ import { decryptValue, encryptValue } from "@/lib/secret-vault";
 import { moneyToCents } from "@/features/orders/checkout";
 import { requiresPrescriptionReview, requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 import { queueCommerceOrder } from "@/features/miauby/commerce-service";
+import { queueCustomerOrderStatus } from "@/features/miauby/customer-order-status";
 import { readPaymentIntegration } from "./integration";
 import { mercadoPagoRequest, MercadoPagoProviderError } from "./provider";
 import { assertPaymentBinding, paymentBody, PIX_EXPIRATION_MS, providerState, providerStatusDetail, validPaymentAccess } from "./rules";
@@ -140,6 +141,9 @@ export async function applyProviderOrder(remote: ProviderOrder) {
     if (next === "PAID" && current.order.paymentStatus !== "PAID") await queueCommerceOrder(tx, "payment", { ...current.order, paymentStatus: "PAID", items: current.order.items.map(item => ({ name: item.productName, quantity: item.quantity, unitPriceCents: item.unitPriceCents, totalCents: item.totalCents })) }, current.environment === "test");
     if (failed) await tx.order.update({ where: { id: current.orderId }, data: { paymentStatus: "CANCELED", status: "CANCELED" } });
     if (["REFUNDED", "DISPUTED"].includes(next)) await tx.order.update({ where: { id: current.orderId }, data: { paymentStatus: "REFUNDED", status: "CANCELED" } });
+    if (current.environment === "production" && current.order.status !== "CANCELED" && ["FAILED", "CANCELED", "REFUNDED", "DISPUTED"].includes(next)) {
+      await queueCustomerOrderStatus(tx, { ...current.order, status: "CANCELED" });
+    }
     if (current.environment === "production") await settleIssuedStoreCredits(tx, current.orderId, next);
     if (current.environment === "production" && next !== "PARTIALLY_REFUNDED") {
       await settleOrderCashback(tx, current.orderId);
@@ -178,10 +182,11 @@ export async function paymentView(orderId: string) {
 export async function cancelUnsubmittedPayment(orderId: string) {
   await getPrisma().$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Order" WHERE id = ${orderId} FOR UPDATE`;
-    const payment = await tx.onlinePayment.findUniqueOrThrow({ where: { orderId } });
+    const payment = await tx.onlinePayment.findUniqueOrThrow({ where: { orderId }, include: { order: true } });
     if (payment.status !== "NEW") throw new PaymentError("O pagamento já foi iniciado. Consulte a equipe antes de cancelar.");
     await tx.onlinePayment.update({ where: { id: payment.id }, data: { status: "CANCELED" } });
     await tx.order.update({ where: { id: orderId }, data: { status: "CANCELED", paymentStatus: "CANCELED" } });
+    if (payment.environment === "production" && payment.order.status !== "CANCELED") await queueCustomerOrderStatus(tx, { ...payment.order, status: "CANCELED" });
     await settleOrderBenefits(tx, orderId); await settleOrderCashback(tx, orderId);
     await tx.auditLog.create({ data: { action: "UNSUBMITTED_PAYMENT_CANCELED", entity: "Order", entityId: orderId } });
   });

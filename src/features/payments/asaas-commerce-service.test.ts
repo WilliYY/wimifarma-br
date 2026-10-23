@@ -17,12 +17,12 @@ const bundle = build({ entryPoints: ["src/features/payments/asaas-commerce-servi
           : "export const queueCommerceOrder=async()=>fixture.effects.messages++;" }));
   } }] });
 
-async function harness(options: { prescriptionAttachment?: boolean; customerActive?: boolean; reclassifyAtLock?: boolean; deactivateAtLock?: boolean } = {}) {
+async function harness(options: { prescriptionAttachment?: boolean; customerActive?: boolean; reclassifyAtLock?: boolean; deactivateAtLock?: boolean; customerAlerts?: boolean; commerceEnabled?: boolean } = {}) {
   const connection = { id: "asaas", accountId: "synthetic-wallet", environment: "production", enabled: true, revision: 2,
     secrets: { accessToken: "$aact_prod_synthetic", webhookId: "synthetic-hook", methods: ["pix", "card"], pixAddressKey: "123e4567-e89b-42d3-a456-426614174000" } };
   const product = { id: "synthetic-product", price: "5.00", promotionalPrice: null, stock: 2, updatedAt: new Date(),
     status: "ACTIVE", requiresPrescription: false, isPopularPharmacy: false, prescriptionType: "UNREVIEWED" };
-  const order: Data = { id: "synthetic-order", customerId: options.prescriptionAttachment === undefined ? null : "customer-synthetic", number: "SYNTHETIC", status: "PENDING", paymentStatus: "PENDING", createdAt: new Date(),
+  const order: Data = { id: "synthetic-order", customerId: options.prescriptionAttachment === undefined ? null : "customer-synthetic", number: "SYNTHETIC", customerPhone: "(11) 99999-0000", fulfillmentMethod: "PICKUP", status: "PENDING", paymentStatus: "PENDING", createdAt: new Date(),
     requiresPrescriptionReview: false, customerEmail: "synthetic@example.invalid", items: [{ productId: product.id, productName: "Fictício", unitPriceCents: 500, quantity: 1, totalCents: 500 }] };
   const payment: Data = { id: "synthetic-attempt", orderId: order.id, provider: "asaas", integrationId: "asaas", environment: "production",
     accountId: connection.accountId, integrationRevision: 2, amountCents: 500, status: "NEW", stockReserved: false,
@@ -31,8 +31,16 @@ async function harness(options: { prescriptionAttachment?: boolean; customerActi
   const effects = { cashback: 0, benefits: 0, messages: 0 };
   const calls = { posts: 0, gets: 0, locks: 0 };
   const audits: Data[] = [];
+  const customerEvents: Data[] = [];
   const controls = { uncertain: false, badAmount: false, deleted: false, empty: false, status: "RECEIVED", refunds: [] as Data[] };
   const prisma = {
+    miaubyConfig: { findUnique: async () => ({ enabled: options.commerceEnabled ?? true, customerStatusAlerts: options.customerAlerts ?? false }) },
+    miaubyEvent: { upsert: async ({ create }: Data) => {
+      assert.equal(order.status, "CANCELED");
+      const existing = customerEvents.find(event => event.key === create.key);
+      if (existing) return existing;
+      const event = { status: "PENDING", ...create }; customerEvents.push(event); return event;
+    } },
     customer: { findFirst: async () => options.customerActive === false ? null : { id: "customer-synthetic" } },
     prescriptionUpload: { findFirst: async ({ where }: { where: { orderId: string; customerId: string } }) => options.prescriptionAttachment && where.orderId === order.id && where.customerId === "customer-synthetic" ? { id: "synthetic-upload", expiresAt: new Date(0) } : null },
     $queryRaw: async (strings: TemplateStringsArray) => {
@@ -71,8 +79,33 @@ async function harness(options: { prescriptionAttachment?: boolean; customerActi
         value: controls.badAmount ? 6 : 5, netValue: 4.5, deleted: controls.deleted, pixQrCodeId: "synthetic-qr", checkoutSession: "123e4567-e89b-42d3-a456-426614174001", refunds: controls.refunds };
       return Response.json(_url.includes("/payments?") ? { data: controls.empty ? [] : [remote], hasMore: false } : remote);
     } });
-  return { ...loaded.exports, product, payment, order, connection, effects, calls, controls, audits, input: { method: "pix", email: "synthetic@example.invalid" } };
+  return { ...loaded.exports, product, payment, order, connection, effects, calls, controls, audits, customerEvents, input: { method: "pix", email: "synthetic@example.invalid" } };
 }
+
+test("Asaas cancellation and financial termination queue one opted-in customer event", async () => {
+  for (const status of ["PENDING", "REFUNDED", "CHARGEBACK_REQUESTED"]) {
+    const f = await harness({ customerAlerts: true }); await f.startAsaasCommercePayment(f.order.id, f.input);
+    f.controls.status = status; f.controls.deleted = status === "PENDING";
+    await Promise.all([f.refreshAsaasCommercePayment(f.order.id), f.refreshAsaasCommercePayment(f.order.id)]);
+    assert.equal(f.order.status, "CANCELED"); assert.equal(f.customerEvents.length, 1);
+    assert.equal(f.customerEvents[0].recipient, "5511999990000"); assert.equal(f.customerEvents[0].status, "PENDING");
+    assert.equal(f.customerEvents[0].orderStatus, "CANCELED");
+  }
+});
+
+test("Asaas customer event respects opt-in, existing cancellation and production-only gate", async () => {
+  for (const options of [{ customerAlerts: false }, { customerAlerts: true, commerceEnabled: false }]) {
+    const f = await harness(options); await f.startAsaasCommercePayment(f.order.id, f.input);
+    f.controls.status = "PENDING"; f.controls.deleted = true;
+    await f.refreshAsaasCommercePayment(f.order.id); assert.equal(f.customerEvents.length, 0);
+  }
+  const canceled = await harness({ customerAlerts: true }); await canceled.startAsaasCommercePayment(canceled.order.id, canceled.input);
+  canceled.order.status = "CANCELED"; canceled.controls.deleted = true; canceled.controls.status = "PENDING";
+  await canceled.refreshAsaasCommercePayment(canceled.order.id); assert.equal(canceled.customerEvents.length, 0);
+  const sandbox = await harness({ customerAlerts: true }); sandbox.payment.environment = "test";
+  await assert.rejects(sandbox.refreshAsaasCommercePayment(sandbox.order.id), /comercial Asaas não encontrado/);
+  assert.equal(sandbox.customerEvents.length, 0); assert.equal(sandbox.calls.gets, 0);
+});
 
 test("canceled or expired checkout with no canonical payment becomes visible review and retains its reservation", async () => {
   for (const eventType of ["CHECKOUT_CANCELED", "CHECKOUT_EXPIRED"]) {

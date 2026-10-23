@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Auditoria funcional e de acessos
+
+- Reproduzidos quatro defeitos: troca de senha local vinculada ao Club sem validação da credencial atual; ausência de aviso em cancelamentos online; avaliação bloqueada pela compra recente integralmente faltante; link de catálogo inválido no checkout vazio. Corrigir com regressões sintéticas e revisão independente, preservando Google-only, concorrência, outbox, consentimento e idempotência financeira.
+- Controles de autorização, navegação pública em três larguras, saúde do servidor e pendência logística foram conferidos sem pedidos, cobranças ou mensagens reais. Evidências e limites em [101](101-auditoria-funcional-e-acessos.md).
+
 ## 2026-10-23 — Miauby local, boas-vindas e consulta de preços
 
 - Substituir a inferência pública por respostas determinísticas para saudações e orientações do site. Consultas explícitas de produto usam a busca canônica e preços públicos atuais, sem recomendar tratamentos nem inventar estoque, dose, frete ou descontos. A sugestão administrativa com Gemini permanece independente.
