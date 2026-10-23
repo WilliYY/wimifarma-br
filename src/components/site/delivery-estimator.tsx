@@ -61,19 +61,19 @@ export function DeliveryEstimator({ product, quantity }: { product?: CartProduct
   }
 
   return (
-    <section aria-labelledby="delivery-estimator-title" className="rounded-3xl border border-line bg-white p-5 sm:p-6">
+    <section aria-labelledby="delivery-estimator-title" className="rounded-2xl border border-line bg-white p-4 sm:rounded-3xl sm:p-6">
       <div className="flex items-start gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand sm:h-11 sm:w-11">
           <Truck className="h-5 w-5" aria-hidden="true" />
         </span>
-        <div>
+        <div className="min-w-0">
           <h2 className="text-lg font-bold text-ink" id="delivery-estimator-title">Como você quer receber?</h2>
           <p className="mt-1 text-sm leading-6 text-muted">Consulte o frete e o prazo ou retire na farmácia.</p>
           {items.length > 0 && <p className="mt-1 text-xs text-muted">Simulação para {itemCount} {itemCount === 1 ? "unidade" : "unidades"}{product ? " deste produto" : " do carrinho"}.</p>}
         </div>
       </div>
 
-      <form className="mt-5 flex gap-2" onSubmit={handleSubmit}>
+      <form className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:mt-5" onSubmit={handleSubmit}>
         <label className="sr-only" htmlFor="product-postal-code">CEP</label>
         <div className="relative min-w-0 flex-1">
           <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
@@ -94,7 +94,7 @@ export function DeliveryEstimator({ product, quantity }: { product?: CartProduct
             value={postalCode}
           />
         </div>
-        <button className="inline-flex h-12 shrink-0 items-center gap-2 rounded-xl bg-ink px-4 text-sm font-bold text-white transition hover:bg-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-60" disabled={result?.busy} type="submit">
+        <button className="inline-flex h-12 shrink-0 items-center gap-2 rounded-xl bg-ink px-3 text-sm font-bold text-white transition hover:bg-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-60 sm:px-4" disabled={result?.busy} type="submit">
           {result?.busy && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
           {result?.busy ? "Consultando..." : "Consultar"}
         </button>

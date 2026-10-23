@@ -44,7 +44,7 @@ function QuantitySelector({
       >
         <Minus className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" aria-hidden="true" />
       </button>
-      <input aria-label="Quantidade desejada" className="min-w-0 bg-transparent text-center text-sm font-black text-ink outline-brand [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" inputMode="numeric" max={maxQuantity} min={1} onChange={event => { const value = Number(event.target.value); if (Number.isSafeInteger(value) && value >= 1) onChange(Math.min(value, maxQuantity)); }} type="number" value={quantity} />
+      <input aria-label="Quantidade desejada" className="min-w-0 bg-transparent text-center text-base font-black text-ink outline-brand [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:text-sm" inputMode="numeric" max={maxQuantity} min={1} onChange={event => { const value = Number(event.target.value); if (Number.isSafeInteger(value) && value >= 1) onChange(Math.min(value, maxQuantity)); }} type="number" value={quantity} />
       <button
         aria-label="Aumentar quantidade"
         className="group flex h-full cursor-pointer items-center justify-center text-brand transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand disabled:cursor-not-allowed disabled:opacity-35"
@@ -98,7 +98,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
 
   if (requiresAssistance) {
     return (
-      <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50/50 p-4">
+      <div data-product-purchase-panel className="mt-5 rounded-2xl border border-amber-200 bg-amber-50/50 p-4">
         <p className="text-sm font-semibold leading-6 text-amber-900">
           Este item precisa de atendimento da equipe antes da compra.
         </p>
@@ -119,7 +119,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
 
   if (product.stock < 1) {
     return (
-      <div className="mt-5 border-t border-line pt-5">
+      <div data-product-purchase-panel className="mt-5 border-t border-line pt-5">
         <button className="min-h-12 w-full cursor-not-allowed rounded-xl bg-surface-subtle px-5 text-sm font-bold text-muted" disabled type="button">
           Produto indisponível
         </button>
@@ -141,7 +141,8 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
   return (
     <>
       <div
-        className="mt-5 border-t border-line pt-5"
+        data-product-purchase-panel
+        className="mt-4 border-t border-line pt-4 sm:mt-5 sm:pt-5"
         ref={purchasePanelRef}
       >
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -160,7 +161,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
         </div>
         <div className="grid gap-2.5">
           <button
-            className="group inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-brand/30 bg-white px-5 text-sm font-bold text-brand transition-colors hover:border-brand hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+            className="group inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-brand/30 bg-white px-4 py-2 text-sm font-bold text-brand transition-colors hover:border-brand hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:min-h-12 sm:px-5"
             onClick={() => continuePurchase("/carrinho")}
             type="button"
           >
@@ -168,7 +169,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
             Adicionar ao carrinho
           </button>
           <button
-            className="group inline-flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-5 text-base font-bold text-white shadow-[0_8px_20px_rgba(200,16,46,0.16)] transition-colors hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+            className="group inline-flex min-h-13 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-4 text-base font-bold text-white shadow-[0_8px_20px_rgba(200,16,46,0.16)] transition-colors hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:min-h-14 sm:px-5"
             onClick={() => continuePurchase("/checkout")}
             type="button"
           >
@@ -177,7 +178,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true" />
           </button>
         </div>
-        <p className="mt-3 flex min-h-10 items-center justify-center gap-2 text-xs font-semibold text-emerald-800">
+        <p className="mt-3 flex items-start gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold leading-5 text-emerald-800 sm:min-h-10 sm:items-center sm:justify-center sm:bg-transparent sm:p-0">
           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><Check className="h-3.5 w-3.5" aria-hidden="true" /></span>
           Em estoque, sujeito à confirmação da farmácia
         </p>

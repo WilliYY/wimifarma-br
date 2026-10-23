@@ -71,7 +71,7 @@ export async function SiteHeader() {
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white/96 shadow-[0_10px_30px_rgba(17,24,39,0.08)] backdrop-blur-md">
       <AnnouncementBar />
 
-      <div className="relative isolate z-20 flex items-center gap-2 bg-[#f7fbf9] px-1 py-1.5 min-[360px]:px-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
+      <div className="relative isolate z-20 flex min-h-16 items-center gap-0 bg-[#f7fbf9] px-1 py-1.5 min-[360px]:gap-1 min-[360px]:px-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <Image
             alt=""
@@ -82,10 +82,10 @@ export async function SiteHeader() {
           />
         </div>
 
-        <div className="relative z-10 -my-1.5 -ml-1 flex shrink-0 self-stretch items-center gap-2 rounded-r-[3.5rem] border-r-2 border-brand bg-[#121820] py-1.5 pl-1 pr-3 shadow-[14px_0_30px_rgba(17,24,39,0.12)] min-[360px]:-ml-2 min-[360px]:pl-2 sm:-ml-6 sm:pl-6 sm:pr-5 lg:-ml-8 lg:pl-8 xl:pr-7">
+        <div className="relative z-10 -my-1.5 flex shrink-0 self-stretch items-center gap-2 rounded-r-2xl bg-[#121820] py-1.5 motion-reduce:bg-white sm:-ml-6 sm:rounded-r-[3.5rem] sm:border-r-2 sm:border-brand sm:pl-6 sm:pr-5 sm:shadow-[14px_0_30px_rgba(17,24,39,0.12)] sm:motion-reduce:bg-[#121820] lg:-ml-8 lg:pl-8 xl:pr-7">
           <Link
             aria-label="Wimifarma"
-            className="relative flex h-20 w-24 shrink-0 items-center justify-start overflow-hidden min-[360px]:w-28 sm:h-24 sm:w-64 md:w-32 lg:w-64 xl:w-72"
+            className="relative flex h-[52px] w-32 shrink-0 items-center justify-start min-[360px]:w-[136px] sm:h-24 sm:w-64 sm:overflow-hidden md:w-32 lg:w-64 xl:w-72"
             href="/"
           >
             <picture data-animated-brand>
@@ -93,11 +93,11 @@ export async function SiteHeader() {
               <Image
                 alt=""
                 aria-hidden="true"
-                className="object-contain object-left brightness-0 invert"
+                className="object-contain object-left sm:brightness-0 sm:invert"
                 fill
                 loading="eager"
                 fetchPriority="high"
-                sizes="(min-width: 1280px) 288px, (min-width: 1024px) 256px, (min-width: 768px) 128px, (min-width: 640px) 256px, (min-width: 360px) 112px, 96px"
+                sizes="(min-width: 1280px) 288px, (min-width: 1024px) 256px, (min-width: 768px) 128px, (min-width: 640px) 256px, (min-width: 360px) 136px, 128px"
                 src="/brand/logo-wimifarma-animated.svg"
                 unoptimized
               />
@@ -122,7 +122,7 @@ export async function SiteHeader() {
 
         <div className="ml-auto flex shrink-0 flex-col items-end gap-1 md:hidden">
           {hasAdminAccess && <AdminPanelShortcut />}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0 min-[360px]:gap-1 sm:gap-1">
             <CartHeaderButton className="ml-0" />
             {session?.user ? (
               <>

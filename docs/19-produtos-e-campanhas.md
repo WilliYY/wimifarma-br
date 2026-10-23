@@ -77,3 +77,23 @@ No navegador local, a primeira imagem otimizada transferiu **15.812 bytes** em d
 - Novas fotografias são ilustrativas, com legenda, sem prometer marcas ou disponibilidade.
 - Não aplicar uma camada branca sobre os produtos nem ampliar uma fonte de baixa resolução para simular detalhe.
 - Não publicar fixtures, imagens PNG de geração, capturas de QA, logs ou credenciais. Somente WebP final e código entram no Git.
+
+## Organização mobile em 22/10/2026
+
+A página de produto usa espaçamentos menores abaixo de 640 px, imagem com altura limitada, nome com quebra de linha e preço de 36 px. Quantidade e total permanecem juntos; adicionar ao carrinho e comprar agora mantêm áreas de toque de pelo menos 44 px. A consulta de entrega usa uma coluna flexível para o CEP e outra para o botão.
+
+O cabeçalho mobile preserva a marca oficial, seu ciclo original de animação e a alternativa estática para movimento reduzido. A faixa superior tem 52 px, com título e condição em duas linhas. O acesso Painel admin continua visível para as mesmas sessões autorizadas. Nenhum SVG, imagem institucional, rodapé ou regra de acesso foi alterado.
+
+Miauby e WhatsApp usam atalhos de 44 px lado a lado no celular. Nas páginas de produto, os atalhos fechados ficam ocultos enquanto a área de compra estiver visível. Após a área de compra, ficam acima da barra de compra rápida. Com a conversa aberta, os atalhos descem para baixo do chat; a janela respeita as áreas seguras superior e inferior. `IntersectionObserver` acompanha a compra, com um `MutationObserver` temporário para conteúdo de rota carregado depois do layout; ambos são desconectados ao sair da rota. Desktop mantém a disposição vertical.
+
+### Arquivos e validação
+
+- Layout: `src/app/(site)/produto/[slug]/page.tsx`, `site-header.tsx`, `announcement-bar.module.css`, `product-image-viewer.tsx`, `product-purchase-panel.tsx`, `delivery-estimator.tsx` e `floating-whatsapp.tsx` em `src/components/site`.
+- Regressão: `src/features/miauby/floating-mobile-ui.test.ts`, com conteúdo tardio, mudança de largura, atalhos ocultos durante a compra, geometria do chat e hit-test de Enviar. Uma falha de sobreposição foi reproduzida antes da correção e o teste passou depois.
+- Fixture local com produto e conta ADMIN fictícios: Chromium em 320, 390, 430, 768 e 1440 px, mais ADMIN em 320 e 390 px; WebKit em 320 e 390 px. Nove cenários sem overflow horizontal ou erros JavaScript. Quantidade, total, carrinho e checkout conferidos sem transmitir pedidos; requisições de escrita respondidas somente no fixture local.
+- Três mensagens da faixa superior conferidas com animação normal em 320 e 390 px, sem texto cortado. Capturas inspecionadas em celular e desktop. WebKit automatizado não equivale a teste em um iPhone físico.
+- 54 testes direcionados passaram com `node --import tsx --test` (regressão mobile, produto, política de compra, galeria, placeholder, referência de frete e carrinho); `npm.cmd run test:security`: 444 testes passaram.
+- `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run build`, `npm.cmd run prisma:validate` e `git diff --check` passaram. O build local informou indisponibilidade da configuração de bandeiras de pagamento nesse ambiente; nenhuma integração de pagamento foi alterada.
+- `npm.cmd audit --omit=dev --audit-level=high --json`: zero vulnerabilidades de produção. Auditoria completa: cinco HIGH preexistentes de desenvolvimento (`@next/eslint-plugin-next`, `eslint-config-next`, `braces`, `fast-glob`, `micromatch`), preservados como pendência do documento 95; sem atualização de dependências nesta entrega.
+
+Não há migration nem alteração comercial. Capturas e relatórios ficam em `outputs/mobile-produto-2026-10-22`, ignorados pelo Git; auxiliares de QA e navegadores de teste ficam na pasta temporária da tarefa. Publicação deve recriar somente o aplicativo, preservando a imagem anterior para reversão.

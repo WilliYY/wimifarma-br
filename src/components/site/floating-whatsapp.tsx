@@ -85,6 +85,7 @@ export function FloatingWhatsApp() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [purchasePosition, setPurchasePosition] = useState<"before" | "visible" | "after">("before");
   const [messages, setMessages] = useState<ChatMessage[]>([initialMessage]);
   const inputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
@@ -94,6 +95,27 @@ export function FloatingWhatsApp() {
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    setPurchasePosition("before");
+    if (!isProductPage || !("IntersectionObserver" in window)) return;
+    let active = true;
+    let observer: IntersectionObserver | null = null;
+    // Route content can arrive after the persistent site layout has mounted.
+    const pendingContent = new MutationObserver(connectPurchasePanel);
+    function connectPurchasePanel() {
+      const panel = document.querySelector("[data-product-purchase-panel]");
+      if (!panel || observer) return;
+      pendingContent.disconnect();
+      observer = new IntersectionObserver(([entry]) => {
+        if (active) setPurchasePosition(entry.isIntersecting ? "visible" : entry.boundingClientRect.bottom <= 0 ? "after" : "before");
+      });
+      observer.observe(panel);
+    }
+    connectPurchasePanel();
+    if (!observer) pendingContent.observe(document.querySelector("main") ?? document.body, { childList: true, subtree: true });
+    return () => { active = false; pendingContent.disconnect(); observer?.disconnect(); };
+  }, [isProductPage, pathname]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -187,14 +209,14 @@ export function FloatingWhatsApp() {
 
   return (
     <div
-      className={`fixed right-3 z-50 flex flex-col items-end gap-2 sm:right-5 sm:gap-3 ${
-        isProductPage ? "bottom-24" : "bottom-3 sm:bottom-5"
+      className={`fixed right-3 z-50 flex-row items-end gap-2 sm:right-5 sm:flex-col sm:gap-3 ${isProductPage && purchasePosition === "visible" && !isOpen ? "hidden sm:flex" : "flex"} ${
+        isProductPage && purchasePosition === "after" && !isOpen ? "bottom-[calc(6rem+env(safe-area-inset-bottom))] sm:bottom-24" : isProductPage ? "bottom-[calc(0.75rem+env(safe-area-inset-bottom))] sm:bottom-24" : "bottom-[calc(0.75rem+env(safe-area-inset-bottom))] sm:bottom-5"
       }`}
     >
       {isOpen ? (
         <section
           aria-label="Conversa com a Miauby"
-          className="absolute bottom-[calc(100%+0.75rem)] right-0 flex max-h-[min(68dvh,34rem)] min-h-[24rem] w-[min(23rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-lg border border-line bg-white shadow-[0_24px_70px_rgba(15,23,42,0.28)]"
+          className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] top-[max(0.75rem,env(safe-area-inset-top))] flex min-h-0 flex-col overflow-hidden rounded-lg border border-line bg-white shadow-[0_24px_70px_rgba(15,23,42,0.28)] sm:absolute sm:inset-x-auto sm:bottom-[calc(100%+0.75rem)] sm:right-0 sm:top-auto sm:max-h-[min(68dvh,34rem)] sm:min-h-[24rem] sm:w-[min(23rem,calc(100vw-1.5rem))]"
           onKeyDown={(event) => {
             if (event.key === "Escape") setIsOpen(false);
           }}
@@ -220,7 +242,7 @@ export function FloatingWhatsApp() {
             </div>
             <button
               aria-label="Fechar conversa"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-white hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-white hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               onClick={() => setIsOpen(false)}
               title="Fechar"
               type="button"
@@ -318,7 +340,7 @@ export function FloatingWhatsApp() {
                 Pergunte para a Miauby
               </label>
               <input
-                className="h-11 min-w-0 flex-1 rounded-md border border-line bg-white px-3 text-sm text-ink outline-none transition placeholder:text-muted focus:border-brand focus:ring-2 focus:ring-brand/15"
+                className="h-11 min-w-0 flex-1 rounded-md border border-line bg-white px-3 text-base text-ink outline-none transition placeholder:text-muted focus:border-brand focus:ring-2 focus:ring-brand/15 sm:text-sm"
                 disabled={isLoading}
                 id="miauby-question"
                 maxLength={500}
@@ -347,14 +369,14 @@ export function FloatingWhatsApp() {
       <button
         aria-expanded={isOpen}
         aria-label="Conversar com a Miauby"
-        className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-[#fff8e8] shadow-[0_16px_40px_rgba(0,0,0,0.22)] ring-2 ring-[#f2c14e]/60 transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:h-16 sm:w-16"
+        className="group relative flex h-11 w-11 items-center justify-center rounded-full bg-[#fff8e8] shadow-[0_16px_40px_rgba(0,0,0,0.22)] ring-2 ring-[#f2c14e]/60 transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:h-16 sm:w-16"
         onClick={() => setIsOpen((current) => !current)}
         type="button"
       >
         <span className="absolute right-[calc(100%+0.75rem)] hidden whitespace-nowrap rounded-md bg-ink px-3 py-2 text-xs font-bold text-white shadow-lg sm:block">
           Pergunte à Miauby
         </span>
-        <span className="relative h-12 w-12 overflow-hidden rounded-full sm:h-14 sm:w-14">
+        <span className="relative h-9 w-9 overflow-hidden rounded-full sm:h-14 sm:w-14">
           <Image
             alt=""
             className="h-full w-full object-contain"
@@ -363,14 +385,14 @@ export function FloatingWhatsApp() {
             width={112}
           />
         </span>
-        <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-brand text-white shadow-md">
+        <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand text-white shadow-md sm:h-6 sm:w-6">
           <Bot className="h-3.5 w-3.5" />
         </span>
       </button>
 
       <a
         aria-label="Chamar Wimifarma no WhatsApp"
-        className="flex h-14 w-14 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition hover:scale-105 hover:bg-[#1ebe57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:h-16 sm:w-16"
+        className="flex h-11 w-11 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition hover:scale-105 hover:bg-[#1ebe57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:h-16 sm:w-16"
         href={siteConfig.whatsappUrl}
         rel="noreferrer"
         target="_blank"

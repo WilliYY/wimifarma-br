@@ -240,7 +240,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         type="application/ld+json"
       />
       <section className="border-b border-line bg-[#f7f8fa]">
-        <div className="mx-auto w-full max-w-7xl px-4 pb-10 pt-36 sm:px-6 sm:pt-40 lg:px-8 lg:pb-12 lg:pt-56">
+        <div className="mx-auto w-full max-w-7xl px-3 pb-8 pt-40 sm:px-6 sm:pb-10 lg:px-8 lg:pb-12 lg:pt-56">
           <nav aria-label="Navegacao estrutural" className="flex items-center gap-1 overflow-hidden text-xs font-bold text-muted sm:text-sm">
             <Link className="shrink-0 transition hover:text-brand" href="/">Home</Link>
             <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -253,10 +253,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <span aria-current="page" className="truncate text-ink">{productDisplayName(product.name)}</span>
           </nav>
 
-          <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-start lg:gap-10">
+          <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-start lg:gap-10">
             <div className="grid min-w-0 gap-4 lg:sticky lg:top-52">
               <ProductImageViewer catalogClassification={product.catalogClassification} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} imageUrls={product.imageUrls} imageUrl={product.imageUrl} key={product.id} name={product.name} />
-              <div className="flex items-center gap-3 px-2 text-sm text-muted">
+              <div className="hidden items-center gap-3 px-2 text-sm text-muted sm:flex">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-brand"><Headphones className="h-5 w-5" aria-hidden="true" /></span>
                 <p><strong className="block font-bold text-ink">Cuidado de perto, também online.</strong><span className="text-xs">Atendimento pela equipe da Wimifarma em Ivaté.</span></p>
               </div>
@@ -264,14 +264,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             <div className="grid gap-4">
               <ProductQuantityProvider key={product.id}>
-              <article className="min-w-0 rounded-3xl border border-line bg-white p-5 shadow-[0_12px_40px_rgba(17,24,39,0.04)] sm:p-7">
+              <article className="min-w-0 rounded-2xl border border-line bg-white p-4 shadow-[0_12px_40px_rgba(17,24,39,0.04)] sm:rounded-3xl sm:p-7">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="text-xs font-bold uppercase tracking-[0.12em] text-brand">{product.brand ?? "Wimifarma"}</span>
                   <ProductShareButton key={product.id} name={product.name} />
                 </div>
 
-                <h1 className="mt-4 text-[1.65rem] font-bold leading-[1.15] tracking-tight text-ink sm:text-3xl lg:text-[2.15rem]">{productDisplayName(product.name)}</h1>
-                <p className="mt-3 flex items-center gap-1.5 text-xs text-muted"><BadgeCheck className="h-4 w-4 text-brand" aria-hidden="true" />Vendido e atendido por <strong className="font-bold text-ink">Wimifarma</strong></p>
+                <h1 className="mt-3 break-words text-2xl font-bold leading-[1.15] tracking-tight text-ink sm:mt-4 sm:text-3xl lg:text-[2.15rem]">{productDisplayName(product.name)}</h1>
+                <p className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted"><BadgeCheck className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />Vendido e atendido por <strong className="font-bold text-ink">Wimifarma</strong></p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   {ratingSummary.count > 0 ? (
                     <a className="inline-flex min-h-8 items-center gap-2 text-xs font-bold text-muted transition hover:text-brand focus-visible:outline-brand" href="#avaliacoes">
@@ -292,7 +292,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   {product.sku ? <span className="self-center text-xs text-muted">Cód. {product.sku}</span> : null}
                 </div>
 
-                <div className="mt-5 rounded-2xl bg-brand-soft/70 p-5">
+                <div className="mt-4 rounded-xl bg-brand-soft/70 p-4 sm:mt-5 sm:rounded-2xl sm:p-5">
                   {hasPromotion ? (
                     <div className="flex flex-wrap items-center gap-2 text-sm">
                       <span className="text-muted">De <del>{formatCurrency(normalPrice)}</del></span>
@@ -300,7 +300,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     </div>
                   ) : null}
                   <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
-                    <strong className="text-5xl font-bold tracking-tight text-brand tabular-nums">{formatCurrency(currentPrice)}</strong>
+                    <strong className="text-4xl font-bold tracking-tight text-brand tabular-nums sm:text-5xl">{formatCurrency(currentPrice)}</strong>
                     <span className="text-xs text-muted">por unidade</span>
                   </div>
                   {hasPromotion ? <p className="mt-2 text-xs font-semibold text-emerald-800">Você economiza {formatCurrency(saving)} por unidade</p> : null}
@@ -309,7 +309,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <ProductCashback product={product} unitPriceCents={Math.round(currentPrice * 100)} details />
                 <ProductPurchasePanel key={product.id} product={cartProduct} />
 
-                <div className="mt-4 flex items-start gap-2 text-xs leading-5 text-muted">
+                <div className="mt-3 flex items-start gap-2 rounded-lg bg-surface-subtle p-3 text-xs leading-5 text-muted sm:mt-4 sm:bg-transparent sm:p-0">
                   <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />
                   <p>Pedido confirmado pela equipe. O pagamento é combinado no atendimento, sem informar dados de cartão no site.</p>
                 </div>

@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Página de produto organizada para celular, com cabeçalho compacto, compra legível e atalhos de atendimento sem cobrir os controles: [documento 19](docs/19-produtos-e-campanhas.md#organização-mobile-em-22102026).
+
 Pedidos no início do menu, aviso global, lista compacta com 30 por página e conferência por distribuidora/EAN/quantidade: [documento 34](docs/34-pedidos-operacao.md). Alertas novos da Miauby também identificam o fornecimento: [documento 30](docs/30-miauby-whatsapp-comercio.md).
 
 Cadastro por família de princípio ativo, comparação ANB/Profarma e fotos reais por apresentação de venda livre: [documento 96](docs/96-catalogo-por-principio-ativo-2026-10-22.md).

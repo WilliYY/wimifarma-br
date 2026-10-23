@@ -92,13 +92,19 @@
 }
 
 @media (max-width: 639px) {
+  .bar { height: 52px; }
   .inner { padding: 0 8px; }
   .slide { gap: 8px; }
-  .scene { flex-basis: 62px; }
-  .copy { flex-direction: column; align-items: flex-start; gap: 0; }
-  .copy strong { font-size: 12px; line-height: 16px; }
+  .scene { flex-basis: 48px; }
+  .truck { left: 6px; }
+  .truckCross { left: 16px; }
+  .healthIcon, .gift { left: 13px; }
+  .healthCross { left: 0; }
+  .coins { left: 0; }
+  .copy { flex: 0 0 auto; flex-direction: column; align-items: flex-start; gap: 0; }
+  .copy strong { font-size: 12px; line-height: 16px; white-space: nowrap; }
   .offer { gap: 5px; }
-  .detail, .highlight { font-size: 10px; line-height: 14px; }
+  .detail, .highlight { font-size: 11px; line-height: 16px; white-space: nowrap; }
   .bar[data-theme="delivery"] .highlight { font-size: 13px; line-height: 16px; }
   .bar:not([data-theme="delivery"]) .highlight { display: none; }
   .cross, .sparkle { display: none; }

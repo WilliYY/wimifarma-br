@@ -41,8 +41,8 @@ export function ProductImageViewer({ imageUrl, imageUrls = [], name, ...identity
   }, [zoom, currentImage]);
   if (identity.requiresPrescription || !currentImage) {
     return (
-      <div className="flex aspect-square max-h-[32rem] flex-col items-center justify-center gap-4 rounded-3xl border border-line bg-white text-muted">
-        <ProductImagePlaceholder {...identity} className="h-64 w-full max-w-xs sm:h-80" showLabel />
+      <div className="flex aspect-[4/3] max-h-72 flex-col items-center justify-center gap-3 rounded-2xl border border-line bg-white text-muted sm:aspect-square sm:max-h-[32rem] sm:gap-4 sm:rounded-3xl">
+        <ProductImagePlaceholder {...identity} className="h-48 w-full max-w-xs sm:h-80" showLabel />
         {!isMedicineImagePlaceholder(identity) ? <span className="text-sm font-semibold">Imagem indisponível</span> : null}
       </div>
     );
@@ -50,15 +50,15 @@ export function ProductImageViewer({ imageUrl, imageUrls = [], name, ...identity
 
   return (
     <Dialog onOpenChange={() => setZoom(1)}>
-      <div className="overflow-hidden rounded-3xl border border-line bg-white">
-        <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4 text-xs font-semibold text-muted">
+      <div className="overflow-hidden rounded-2xl border border-line bg-white sm:rounded-3xl">
+        <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3 text-xs font-semibold text-muted sm:px-5 sm:py-4">
           <span className="flex items-center gap-2"><ImageIcon className="h-4 w-4" aria-hidden="true" />Imagem do produto</span>
           <span aria-live="polite">{currentIndex + 1} de {availableImages.length} {availableImages.length === 1 ? "imagem" : "imagens"}</span>
         </div>
         <DialogTrigger asChild>
           <button
             aria-label={`Ampliar imagem de ${name}`}
-            className="group relative flex aspect-square max-h-[32rem] w-full cursor-zoom-in items-center justify-center overflow-hidden bg-white p-8 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand sm:p-12"
+            className="group relative flex aspect-[4/3] max-h-72 w-full cursor-zoom-in items-center justify-center overflow-hidden bg-white p-4 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand sm:aspect-square sm:max-h-[32rem] sm:p-12"
             type="button"
           >
             <Image

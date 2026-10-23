@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-22 — Produto legível no celular
+
+- Compactar cabeçalho, imagem, preço e espaçamentos da página de produto abaixo de 640 px. Preservar a animação oficial da marca, o modo de movimento reduzido e o atalho autorizado Painel admin.
+- Dispor Miauby e WhatsApp lado a lado no celular, ocultando os atalhos fechados enquanto o painel de compra estiver visível. Após esse painel, posicioná-los acima da compra rápida; com chat aberto, manter os atalhos abaixo da conversa, respeitando as áreas seguras da tela.
+- Ajustar somente apresentação e observação da área de compra. Estoque, receitas, pagamentos, cálculo de quantidade, carrinho e envio de mensagens conservam os contratos existentes. Validação e arquivos em [19-produtos-e-campanhas.md](19-produtos-e-campanhas.md#organização-mobile-em-22102026).
+
 ## 2026-10-22 — Pedidos compactos, fornecimento e avisos
 
 - Priorizar Pedidos na navegação e apresentar até 30 linhas expansíveis por página dos últimos 100 carregados, com busca por EAN, filtros e visão por distribuidora. Preservar estados financeiros, postagem, receita e ações existentes.
