@@ -2,7 +2,7 @@
 
 ## Contagem
 
-O dashboard apresenta `Visitantes únicos do site`: total de registros `SiteVisit`, um por identidade persistente de navegador. A descricao mostra quantos desses navegadores estiveram ativos nas ultimas 24 horas, usando `lastSeenAt`. F5, abrir novamente o site, navegar entre paginas e repetir visitas nao criam outro registro enquanto a identidade puder ser recuperada.
+O dashboard apresenta `Navegadores registrados`: total de registros `SiteVisit`, um por identidade persistente de navegador. A descricao mostra quantos desses navegadores estiveram ativos nas ultimas 24 horas, usando `lastSeenAt`. F5, abrir novamente o site, navegar entre paginas e repetir visitas nao criam outro registro enquanto a identidade puder ser recuperada. O indicador separado `Visitantes online agora` usa a janela de dois minutos descrita abaixo.
 
 Essa medida nao identifica pessoas fisicas. Outro navegador, perfil, dispositivo ou dados do site totalmente limpos podem representar um novo visitante. Abas anonimas compartilham identidade apenas enquanto o navegador mantiver seus dados. Nao ha fingerprinting, vinculo com conta ou deduplicacao por IP. `views` representa requisicoes de visualizacao; recargas e chamadas repetidas podem aumenta-lo sem aumentar visitantes. Sinais de presenca nao incrementam `views`.
 
