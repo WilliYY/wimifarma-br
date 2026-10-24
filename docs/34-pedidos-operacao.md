@@ -1,5 +1,13 @@
 # 34 - Organização do painel de pedidos
 
+## Homologações fora da fila operacional — 24/10/2026
+
+A consulta de `/admin/pedidos` exclui pedidos vinculados a `OnlinePayment.environment = "test"` antes da ordenação e do limite de 100 registros. Eles não entram na lista, nas abas, nos filtros ou nos contadores locais. Pedidos manuais sem pagamento online e registros com ambiente diferente de teste continuam disponíveis, inclusive quando exigem conferência financeira. A regra usa o ambiente registrado, sem inferir teste pelo nome do cliente, valor ou número do pedido.
+
+Não há exclusão física, cancelamento, estorno ou alteração financeira. Pedidos e tentativas de homologação ficam preservados no banco e nos painéis próprios dos gateways. O resumo global já exclui ambientes de teste. A regressão de página cobre a consulta antes do limite, autorização prévia e a preservação de campos exclusivos de ADMIN.
+
+Conferência somente de leitura encontrou 15 pedidos, oito vinculados a ambiente de teste, incluindo os três pendentes da imagem enviada. Os registros são preservados. Seis testes de página/resumo, 485 de segurança, lint e typecheck passaram; revisão independente aprovada. Auditorias sem high/critical, mantendo o moderate conhecido em `fast-uri`. Não há migração nem alteração no gateway.
+
 ## Contraste e leitura — 24/10/2026
 
 O painel usa cores locais por situação: âmbar para novos, azul para andamento, verde para concluídos e vermelho para cancelados/estornados. As mesmas cores aparecem no resumo, na faixa lateral da linha e no rótulo de situação. Os textos e estados acessíveis continuam identificando cada situação sem depender apenas da cor.
@@ -12,7 +20,7 @@ Validação local: 12 testes de apresentação/interface, 485 de segurança, lin
 
 ## Apresentação operacional
 
-`/admin/pedidos` aparece primeiro na navegação administrativa e separa os últimos 100 pedidos carregados em filtros de situação. A busca aceita número, cliente, telefone, produto, EAN e origem. Status, distribuidora e cidade de postagem combinam com a situação selecionada. Trocar a situação limpa apenas o filtro de status; a busca permanece.
+`/admin/pedidos` aparece primeiro na navegação administrativa e separa os últimos 100 pedidos operacionais carregados em filtros de situação. Homologações são excluídas antes desse limite. A busca aceita número, cliente, telefone, produto, EAN e origem. Status, distribuidora e cidade de postagem combinam com a situação selecionada. Trocar a situação limpa apenas o filtro de status; a busca permanece.
 
 - **Pedidos feitos:** pedidos `PENDING`, inclusive os já pagos que ainda aguardam confirmação operacional.
 - **Em andamento:** pedidos `CONFIRMED`, `PREPARING`, `READY` e `OUT_FOR_DELIVERY`.

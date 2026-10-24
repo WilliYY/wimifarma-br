@@ -13,6 +13,10 @@ export const runtime = "nodejs";
 export default async function Page() {
   const { role } = await requireAdminPageRoute("/admin/pedidos");
   const orders = await getPrisma().order.findMany({
+    where: { OR: [
+      { onlinePayment: { is: null } },
+      { onlinePayment: { is: { environment: { not: "test" } } } },
+    ] },
     include: {
       ...(role === "ADMIN" ? { prescriptionUpload: { select: { id: true } } } : {}),
       onlinePayment: { select: { environment: true, status: true, statusDetail: true, providerOrderId: true } },
