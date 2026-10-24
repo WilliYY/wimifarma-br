@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-24 — Mais 38 apresentações Above publicadas; repelentes retidos por lote
+
+- Operação: incluir 20 aerossóis, sete apresentações capilares e 11 outros cosméticos Above, com oferta ANB, ST numérica, foto real e conferência individual. Os 13 lotes próprios somam 224 EANs distintos com fotos, sendo 51 Above; nenhum lote encerrado foi reaplicado.
+- Identidade e imagens: rótulo, tabela de EAN e oferta confrontados, sem converter massa/volume ou inferir equivalência de fórmula. Originais de distribuidor totalizam 1.971.098 bytes e as transformações WebP conferidas, 355.018 bytes, preservando a resolução de origem sem ampliação/corte. A referência atual Baston sustenta a natureza da família solar, sem comprovar EAN, formulação ou regularidade atual.
+- Controles: fonte imutável `3f905a9`, 988 arquivos e 904 execuções de teste aprovadas; segurança/fornecedores/auditorias repetidos por lote, novo QA isolado, ADMIN ativo, deduplicação atual, mutex/CAS, backup, dry-run, aplicação única, imagens persistentes e conferência pública. Janelas liberadas, QAs próprios removidos e backups preservados. Auditorias mantêm um alerta moderado em `fast-uri`, sem altos/críticos.
+- Pendências: aviso Anvisa de 03/08/2026 cita os lotes 189952 e 205688 de repelentes Above. As três apresentações pesquisadas permanecem fora da publicação enquanto lote/correspondência estiverem desconhecidos; não se afirma proibição de todos os lotes. Doutorflan e adesivo antisséptico aguardam classificação própria; ONE Sport aguarda vínculo de marca. Divergências de quantidade/duração também continuam retidas. Provas e fontes em `96-catalogo-por-principio-ativo-2026-10-22.md`.
+
 ## 2026-10-24 — Dove21, Lux11 e TheraSkin8 encerrados com prova pública
 
 - Operação: publicar 21 apresentações Dove, 11 Lux e oito cosméticos TheraSkin, com revisão por EAN, foto real, ST numérica e deduplicação atual. A união dos dez lotes desta frente contém 186 EANs distintos com fotos; os lotes anteriores não foram reaplicados.
