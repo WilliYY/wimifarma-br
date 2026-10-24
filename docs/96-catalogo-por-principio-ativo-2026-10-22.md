@@ -1,5 +1,7 @@
 # 96 — Cadastro por família de princípio ativo
 
+Atualização de 23/10/2026: novos genéricos e similares com classificação confirmada recebem cashback de compra de 1%, inclusive receita comum/antimicrobiana classificada, conforme [15](15-cashback-produtos.md). O importador aplica o padrão somente na criação; atualizar ofertas de cadastro existente preserva a configuração ADMIN. Controlados, receita pendente e Farmácia Popular ficam excluídos. Essa autorização não transforma segmento comercial em classificação regulatória e não libera selos promocionais ou fotos públicas de receitas.
+
 ## Escopo autorizado
 
 Em 22/10/2026, o lojista substituiu a prioridade da planilha histórica pela pesquisa de uma família completa por vez. A inclusão deve comparar ANB e Profarma e preservar marcas, fabricantes, doses, formas e quantidades diferentes. Associações entram quando contêm o princípio ativo solicitado; nomes apenas parecidos não são equivalentes.

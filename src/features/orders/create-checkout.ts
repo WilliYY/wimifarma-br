@@ -62,7 +62,7 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   }
   if (coins > 0 && customer) await lockWimicoinAccount(tx, customer.id);
   const loadProducts = () => tx.product.findMany({
-    select: { ...supplierOfferInclude, ean: true, inventorySource: true, cashbackEnabled: true, cashbackRateBps: true, wimicoinsEnabled: true, wimicoinsRateBps: true, id: true, imageUrl: true, isPopularPharmacy: true, name: true, price: true, promotionalPrice: true, requiresPrescription: true, prescriptionType: true, slug: true, status: true, stock: true },
+    select: { ...supplierOfferInclude, ean: true, inventorySource: true, catalogClassification: true, cashbackEnabled: true, cashbackRateBps: true, wimicoinsEnabled: true, wimicoinsRateBps: true, id: true, imageUrl: true, isPopularPharmacy: true, name: true, price: true, promotionalPrice: true, requiresPrescription: true, prescriptionType: true, slug: true, status: true, stock: true },
     where: { id: { in: input.items.map((item) => item.productId) } },
   });
   let products = await loadProducts();

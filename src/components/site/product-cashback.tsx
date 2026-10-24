@@ -6,6 +6,8 @@ import { formatCurrency } from "@/lib/utils";
 export function ProductCashback({ product, unitPriceCents, details = false, compact = false }: {
   product: CashbackProduct; unitPriceCents: number; details?: boolean; compact?: boolean;
 }) {
+  // Public Rx listings remain factual; the earned benefit is settled privately.
+  if (product.requiresPrescription || ["ORDINARY", "ANTIMICROBIAL", "CONTROLLED"].includes(product.prescriptionType ?? "")) return null;
   const amount = productCashbackCents(product, unitPriceCents);
   if (!amount) return null;
   if (details) return (

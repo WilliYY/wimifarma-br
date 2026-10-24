@@ -1,5 +1,7 @@
 # 16 - Bonus por avaliacao e uso do cashback
 
+Atualização de 23/10/2026: o cashback **de compra** de 1% em genéricos/similares com receita foi autorizado separadamente em [15](15-cashback-produtos.md). Isso não amplia o bônus por avaliação: produtos com receita e Farmácia Popular continuam sem esse bônus. Resgates, estornos e snapshots mantêm as regras abaixo.
+
 Atualização de 23/10/2026: a seleção da compra elegível filtra no banco ao menos uma unidade recebida do produto (`quantity > shortageQuantity`), antes da escolha por data. Assim uma compra recente integralmente faltante não oculta uma compra anterior válida; não há corte arbitrário do histórico. Revalidação após lock, bônus único e cálculo permanecem. Regressões e limites em [101](101-auditoria-funcional-e-acessos.md).
 
 Atualização de 20/10/2026: o checkout aceita também crédito de compra separado. A avaliação considera apenas unidades entregues e valor líquido após os três saldos e Pix; uma unidade integralmente faltante não gera bônus. Restituições já realizadas são abatidas do cancelamento posterior. Regras e limites em [92](92-creditos-por-itens-faltantes.md).

@@ -1,5 +1,23 @@
 # 15 - Cashback por produto
 
+## Genéricos e similares, inclusive com receita — 23/10/2026
+
+O lojista aprovou cashback de compra de **1%** em medicamentos classificados explicitamente como `MEDICINE` + `GENERIC` ou `SIMILAR`, incluindo receita comum e antimicrobianos classificados. Essa decisão substitui a exclusão geral de medicamentos com receita descrita no histórico abaixo. Controlados, receita pendente e Farmácia Popular continuam excluídos; nomes, categorias e segmentos comerciais não substituem a classificação confirmada.
+
+Novos produtos classificados recebem o padrão habilitado/100 pontos-base; uma escolha explícita ADMIN prevalece. O cadastro novo oferece classificação ADMIN e acompanha esse padrão até a primeira edição do checkbox ou percentual. Alterar nome, marca ou EAN invalida a classificação e a receita do novo cadastro. Produtos existentes preservam sua configuração até alteração auditada; atualizar uma cotação não ativa benefícios nem reescreve pedidos.
+
+Painel, filtros e checkout usam a mesma elegibilidade, rejeitando JSON incompleto ou com campos extras. O checkout relê a classificação sob bloqueio e congela a taxa/valor líquido por unidade. Saldo exige cliente autenticado, pedido concluído e pago; visitante não recebe crédito retroativo. Liquidação, cancelamento, estorno, unidades faltantes e resgates mantêm seus contratos e idempotência. WimiCoins e bônus de avaliação **não** foram ampliados para receitas.
+
+Não há selo promocional público de cashback em produto com receita. A separação entre cálculo financeiro e divulgação pública observa a restrição do art. 59 da [RDC 44/2009](https://bvsms.saude.gov.br/bvs/saudelegis/anvisa/2009/rdc0044_17_08_2009.pdf); não altera a conferência farmacêutica nem as regras de fotos e compra.
+
+### Ativação auditada dos cadastros existentes
+
+`scripts/configure-medicine-cashback.ts --source-commit <SHA>` gera somente plano de leitura dos produtos ativos elegíveis que precisam de ajuste. O plano registra ID, GTIN, versão e configuração anterior. Aplicar exige arquivo revisado, SHA-256, ADMIN ativo e a mesma versão de código; expira em 15 minutos. Todos os itens são revalidados e atualizados por `updateCatalogBulk` em uma única transação, com locks e auditoria por produto. Conflito reverte todo o plano; resposta incerta exige inspeção antes de repetir. Somente `cashbackEnabled` e `cashbackRateBps` mudam: preços, markup, estoque, ofertas, classificação, saldos e snapshots históricos permanecem intactos.
+
+Validação: `npm.cmd run test:cashback`, regressões de lote/planejamento e `scripts/audit-medicine-cashback.ts`. A auditoria real aceita exclusivamente o banco vazio `wimifarma_br_chat5_cashback_rx_qa_20261023` com `CASHBACK_RX_AUDIT=synthetic-only`, verifica JSONB, plano, crédito/estorno e rollback. Não executar fixtures em produção. Preparação de código ou plano não comprova ativação: registrar a execução e a leitura posterior separadamente.
+
+Conferência desta alteração: 51 testes de cashback/checkout, 261 gerais, 485 de segurança e 108 de fornecedores aprovados; lint, TypeScript, build e Prisma validate aprovados. Auditoria PostgreSQL com fixtures sintéticas confirmou elegibilidade JSONB, plano de três itens, crédito de R$ 0,20 e estorno único, snapshot e rollback; banco QA removido. Revisão independente concluída sem achados pendentes após correções. Auditorias npm completa e de produção registraram **um alerta moderado em `fast-uri`, zero high/critical**; nenhuma dependência foi alterada. Evidência operacional privada em `outputs/familias-catalogo-chat5-2026-10-23/cashback-rx-validacao/`.
+
 Atualização de 22/10/2026: lista compacta de 100 por página, seleção de até 50 elegíveis, revisão e aplicação em massa com controle de versão. Respostas incertas não são repetidas automaticamente. Contrato em [97](97-operacao-admin-e-etapas-whatsapp.md).
 
 Atualização de 20/10/2026: crédito por unidade faltante tem carteira própria, sem alterar percentuais promocionais. Restituições parciais acumuladas evitam devolução dupla; ganhos das unidades faltantes são anulados. Contrato em [92](92-creditos-por-itens-faltantes.md).

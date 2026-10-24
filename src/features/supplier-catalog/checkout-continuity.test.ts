@@ -9,7 +9,7 @@ import { toSaleProduct } from "./commerce";
 const bundle = build({ entryPoints: ["src/features/orders/create-checkout.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "supplier-continuity-checkout", setup(builder) {
   builder.onResolve({ filter: /features\/cashback\/(rules|wallet)$|features\/shipping\/service$|features\/payments\/routing$|features\/miauby\/commerce-service$/ }, args => ({ path: args.path, namespace: "fixture" }));
   builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents:
-    args.path.endsWith("rules") ? "export const productCashbackCents=()=>0;" :
+    args.path.endsWith("rules") ? "export const productCashbackCents=()=>0; export const calculateCashbackCents=()=>0;" :
     args.path.endsWith("wallet") ? "export class CashbackRuleError extends Error{}; export const lockCashbackAccount=()=>{throw new Error('unexpected wallet access')};" :
     args.path.endsWith("shipping/service") ? "export const validateOrderShipping=async()=>null;" :
     args.path.endsWith("routing") ? "export const checkoutPaymentConnections=async()=>{throw new Error('unexpected payment access')}; export const resolveCheckoutPayment=async()=>{throw new Error('unexpected payment access')};" : "export const queueCommerceOrder=async()=>{};",

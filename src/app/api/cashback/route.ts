@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAdminOnlyApi } from "@/features/auth/permissions";
 import { getPrisma } from "@/lib/prisma";
 import { toSaleProduct } from "@/features/supplier-catalog/commerce";
+import { cashbackProductIsEligible } from "@/features/cashback/rules";
+import { cashbackEligibleWhere } from "@/features/cashback/eligibility";
 
 const PAGE_SIZE = 100;
 
@@ -26,13 +28,13 @@ export async function GET(request: Request) {
       prisma.product.findMany({ where, orderBy: [{ name: "asc" }, { id: "asc" }], skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE,
         select: { id: true, name: true, brand: true, imageUrl: true, status: true, price: true,
           promotionalPrice: true, cashbackEnabled: true, cashbackRateBps: true, updatedAt: true,
-          isPopularPharmacy: true, requiresPrescription: true, inventorySource: true, stock: true,
+          isPopularPharmacy: true, requiresPrescription: true, prescriptionType: true, inventorySource: true, stock: true,
           ean: true, eanNormalized: true, supplierMarkupBps: true, catalogClassification: true,
           supplierOffers: { select: { id: true, supplier: true, eanNormalized: true, unitCostCents: true,
             substitutionTaxCents: true, retailCeilingCents: true, available: true, stockQuantity: true,
             allocationQuantity: true, reservedQuantity: true, committedQuantity: true, observedAt: true, validUntil: true } } } }),
       prisma.product.count({ where }),
-      prisma.product.count({ where: { deletedAt: null, cashbackEnabled: true, status: "ACTIVE", requiresPrescription: false, isPopularPharmacy: false } }),
+      prisma.product.count({ where: { deletedAt: null, cashbackEnabled: true, status: "ACTIVE", AND: [cashbackEligibleWhere] } }),
       prisma.order.aggregate({ where: { cashbackState: "PENDING" }, _sum: { cashbackEarnedCents: true } }),
     ]);
     const now = Date.now();
@@ -43,6 +45,7 @@ export async function GET(request: Request) {
       return { id: p.id, name: p.name, brand: p.brand, imageUrl: p.imageUrl, status: p.status,
         cashbackEnabled: p.cashbackEnabled, cashbackRateBps: p.cashbackRateBps,
         isPopularPharmacy: p.isPopularPharmacy, requiresPrescription: p.requiresPrescription,
+        cashbackEligible: cashbackProductIsEligible(p),
         price: priceAvailable ? sale.price : null, promotionalPrice: priceAvailable ? sale.promotionalPrice : null,
         priceAvailable, updatedAt: p.updatedAt.toISOString() };
     }),

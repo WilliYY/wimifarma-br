@@ -3,6 +3,7 @@ import { validateSupplierMarkupChange } from "./catalog-operations-service";
 import { bulkRequiresAdmin, type BulkProductUpdate } from "./catalog-bulk";
 import { lockProductCatalog, ProductMutationError } from "./mutations";
 import { validatePhotoPublication } from "./photo-publication-policy";
+import { cashbackProductIsEligible } from "@/features/cashback/rules";
 
 export async function updateCatalogBulk(tx: Prisma.TransactionClient, input: BulkProductUpdate, actorId: string) {
   await lockProductCatalog(tx);
@@ -19,7 +20,8 @@ export async function updateCatalogBulk(tx: Prisma.TransactionClient, input: Bul
     if (current.updatedAt.toISOString() !== item.expectedUpdatedAt) throw new ProductMutationError("Um produto mudou. Atualize a lista e revise todo o lote.", 409);
     const changes = input.changes;
     if (changes.supplierMarkupBps !== undefined && current.inventorySource !== "DISTRIBUTOR") throw new ProductMutationError("Selecione somente produtos de distribuidoras para alterar o acréscimo.");
-    if ((changes.cashbackEnabled || changes.wimicoinsEnabled) && (current.requiresPrescription || current.isPopularPharmacy)) throw new ProductMutationError("Benefícios não podem ser ativados em produtos com receita ou Farmácia Popular.");
+    if (changes.cashbackEnabled && !cashbackProductIsEligible(current)) throw new ProductMutationError("Este produto não é elegível ao cashback.");
+    if (changes.wimicoinsEnabled && (current.requiresPrescription || current.isPopularPharmacy)) throw new ProductMutationError("WimiCoins não podem ser ativados em produtos com receita ou Farmácia Popular.");
     await validateSupplierMarkupChange(tx, current, changes.supplierMarkupBps);
     await validatePhotoPublication(tx, current, { ...current, status: changes.status ?? current.status });
     validated.push(current);

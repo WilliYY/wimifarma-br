@@ -6,7 +6,7 @@ import { Check, ImageIcon, Loader2, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CashbackPercentageInput } from "./cashback-percentage-input";
 import type { CashbackListProduct } from "@/features/cashback/client";
-import { productCashbackCents } from "@/features/cashback/rules";
+import { calculateCashbackCents } from "@/features/cashback/rules";
 import { cashbackProductEligible } from "@/features/cashback/client";
 import { formatCurrency } from "@/lib/utils";
 
@@ -25,7 +25,7 @@ export function CashbackProductCard({ product, disabled, saving, onSave, selecte
   const restricted = !cashbackProductEligible(product);
   const price = Number(product.promotionalPrice ?? product.price);
   const priceAvailable = product.priceAvailable !== false && product.price !== null;
-  const amount = priceAvailable ? productCashbackCents(product, Math.round(price * 100)) : null;
+  const amount = priceAvailable ? product.cashbackEnabled && !restricted ? calculateCashbackCents(Math.round(price * 100), product.cashbackRateBps) : 0 : null;
   const selectId = `cashback-rate-${product.id}`;
 
   async function saveCustom(event: FormEvent<HTMLFormElement>) {

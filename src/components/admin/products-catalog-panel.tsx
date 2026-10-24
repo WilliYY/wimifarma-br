@@ -36,7 +36,8 @@ import { ProductQuickControls } from "@/components/admin/product-quick-controls"
 import { ProductBulkEditor } from "@/components/admin/product-bulk-editor";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import { BULK_PRODUCT_LIMIT, visibleBulkSelection } from "@/features/products/catalog-bulk";
-import { catalogKindLabels, classificationLabels, medicineClassLabels, readClassification } from "@/features/products/catalog-operations";
+import { catalogKindLabels, classificationLabels, emptyClassification, medicineClassLabels, readClassification, type CatalogClassification } from "@/features/products/catalog-operations";
+import { medicineCashbackDefaults } from "@/features/cashback/rules";
 import { productDisplayName } from "@/features/products/display-name";
 import { ProductShippingFields, type ProductShippingFieldsHandle } from "@/components/admin/product-shipping-fields";
 import { ProductMarketingTools } from "@/components/admin/product-marketing-tools";
@@ -159,6 +160,7 @@ function productPayload(
     clearEmptyFields ? fieldValue(formData, key) || null : optionalField(formData, key);
 
   return {
+    ...(formData.has("catalogClassification") ? { catalogClassification: JSON.parse(fieldValue(formData, "catalogClassification")) as unknown } : {}),
     ...(formData.has("supplierMarkupPercent") ? { supplierMarkupBps: Math.round(Number(fieldValue(formData, "supplierMarkupPercent")) * 100) } : {}),
     ...(formData.has("inventorySource") ? { inventorySource: fieldValue(formData, "inventorySource") } : {}),
     ...(formData.has("shippingDraft") ? { shippingProfile: JSON.parse(fieldValue(formData, "shippingDraft")) as unknown } : {}),
@@ -239,6 +241,9 @@ function ProductFormFields({
   const lastResearchKey = useRef(product ? productIdentityKey({ name: product.name, brand: product.brand ?? "", ean: product.ean ?? "" }) : "");
   const [automatic, setAutomatic] = useState(true);
   const [inventorySource, setInventorySource] = useState(product?.inventorySource ?? "PHARMACY");
+  const [newClassification, setNewClassification] = useState<CatalogClassification>({ ...emptyClassification });
+  const [cashbackContext, setCashbackContext] = useState({ requiresPrescription: product?.requiresPrescription ?? false, isPopularPharmacy: product?.isPopularPharmacy ?? false, prescriptionType: product?.prescriptionType ?? "UNREVIEWED" });
+  const newCashbackDefaults = medicineCashbackDefaults({ ...cashbackContext, catalogClassification: newClassification });
   const privateSupplierPhoto = inventorySource === "DISTRIBUTOR" && Boolean(product?.requiresPrescription);
   const [seo, setSeo] = useState({ name: product?.name ?? "", brand: product?.brand ?? "", description: product?.description ?? "" });
   const [photoIdentity, setPhotoIdentity] = useState({ name: product?.name ?? "", brand: product?.brand ?? "", ean: product?.ean ?? "" });
@@ -276,6 +281,10 @@ function ProductFormFields({
     if (researchTimer.current) clearTimeout(researchTimer.current);
     setIsSuggesting(false);
     setSuggestion(null);
+    if (!product) {
+      setNewClassification({ ...emptyClassification });
+      setCashbackContext(current => ({ ...current, prescriptionType: "UNREVIEWED" }));
+    }
     refreshSeo();
   }
 
@@ -404,7 +413,11 @@ function ProductFormFields({
   const nonMedicine = ["food", "beauty", "hygiene", "device", "other"].includes(typeHint);
 
   return (
-    <fieldset className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain bg-surface-subtle p-3 sm:p-5" disabled={disabled}>
+    <fieldset className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain bg-surface-subtle p-3 sm:p-5" disabled={disabled} onChange={event => {
+      const field = event.target;
+      if (field instanceof HTMLInputElement && (field.name === "requiresPrescription" || field.name === "isPopularPharmacy")) setCashbackContext(current => ({ ...current, [field.name]: field.checked }));
+      if (field instanceof HTMLSelectElement && field.name === "prescriptionType") setCashbackContext(current => ({ ...current, prescriptionType: field.value as typeof current.prescriptionType }));
+    }}>
       <div className="mb-5 overflow-hidden rounded-xl border border-brand/20 bg-brand-soft/40">
         <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
@@ -565,7 +578,22 @@ function ProductFormFields({
             </div>
             <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-brand/20 bg-brand-soft/40 px-3 py-3 text-sm font-bold text-ink"><input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={isShowcasePosition(product?.featuredPosition ?? null)} name="featured" type="checkbox" /><Star className="h-4 w-4 text-brand" />Destacar em Melhores ofertas</label>
 
-            {canManageCashback ? <CashbackProductFields enabled={product?.cashbackEnabled} rateBps={product?.cashbackRateBps} /> : null}
+            {canManageCashback && !product && <fieldset className="grid gap-3 rounded-lg border border-line p-3">
+              <legend className="text-sm font-bold">Classificação do produto (ADMIN)</legend>
+              <input type="hidden" name="catalogClassification" value={JSON.stringify(newClassification)} />
+              <label className="grid gap-2 text-sm font-semibold">Tipo<select className="min-h-11 rounded-md border border-line px-3" value={newClassification.kind} onChange={event => { const kind = event.target.value as CatalogClassification["kind"]; setNewClassification(current => kind === "MEDICINE" ? { ...current, kind } : { ...emptyClassification, kind }); }}>
+                {Object.entries(catalogKindLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </select></label>
+              {newClassification.kind === "MEDICINE" && <>
+                <label className="grid gap-2 text-sm font-semibold">Classe<select className="min-h-11 rounded-md border border-line px-3" value={newClassification.medicineClass} onChange={event => setNewClassification(current => ({ ...current, medicineClass: event.target.value as CatalogClassification["medicineClass"] }))}>
+                  {Object.entries(medicineClassLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                </select></label>
+                <label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={newClassification.ethical} onChange={event => setNewClassification(current => ({ ...current, ethical: event.target.checked }))} />Ético</label>
+                <label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={newClassification.otc} onChange={event => setNewClassification(current => ({ ...current, otc: event.target.checked }))} />MIP / OTC confirmado</label>
+              </>}
+              <p className="text-xs text-muted">Classifique pela documentação do produto. Genéricos e similares elegíveis iniciam com 1% de cashback.</p>
+            </fieldset>}
+            {canManageCashback ? <CashbackProductFields enabled={product ? product.cashbackEnabled : newCashbackDefaults.cashbackEnabled} rateBps={product ? product.cashbackRateBps : newCashbackDefaults.cashbackRateBps} /> : null}
             {canManageCashback ? <WimiCoinsProductFields enabled={product?.wimicoinsEnabled} rateBps={product?.wimicoinsRateBps} /> : null}
 
             <label className="flex items-center gap-3 rounded-md border border-line bg-surface-subtle px-3 py-3 text-sm font-bold text-ink">

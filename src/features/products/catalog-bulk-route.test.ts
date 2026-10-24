@@ -9,10 +9,10 @@ const bundle = build({ entryPoints: ["src/app/api/admin/produtos/lote/route.ts"]
   builder.onResolve({ filter: /features\/auth\/auth$|lib\/prisma$/ }, args => ({ path: args.path, namespace: "fixture" }));
   builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("auth") ? "export const auth=fixture.auth;" : "export const getPrisma=()=>fixture.db;" }));
 } }] });
-type Options = { role?: string | null; revoked?: boolean; stale?: boolean; missing?: boolean; pending?: boolean; distributor?: boolean; prescription?: boolean; auditFails?: boolean; draft?: boolean };
+type Options = { role?: string | null; revoked?: boolean; stale?: boolean; missing?: boolean; pending?: boolean; distributor?: boolean; prescription?: boolean; auditFails?: boolean; draft?: boolean; medicineClass?: string };
 async function harness(options: Options = {}) {
   const role = options.role === undefined ? "ADMIN" : options.role;
-  const products = ["b", "a"].map(id => ({ id, name: "Synthetic", updatedAt: new Date(version), status: "ACTIVE", category: "Original", inventorySource: options.distributor ? "DISTRIBUTOR" : "PHARMACY", supplierMarkupBps: 6000, supplierOffers: [], requiresPrescription: options.prescription ?? false, isPopularPharmacy: false, featuredPosition: 2, cashbackEnabled: false, cashbackRateBps: 200, wimicoinsEnabled: false, wimicoinsRateBps: 200 }));
+  const products = ["b", "a"].map(id => ({ id, name: "Synthetic", updatedAt: new Date(version), status: "ACTIVE", category: "Original", inventorySource: options.distributor ? "DISTRIBUTOR" : "PHARMACY", supplierMarkupBps: 6000, supplierOffers: [], requiresPrescription: options.prescription ?? false, prescriptionType: options.prescription ? "ORDINARY" : "UNREVIEWED", catalogClassification: options.medicineClass ? { kind: "MEDICINE", medicineClass: options.medicineClass, ethical: false, otc: false } : undefined, isPopularPharmacy: false, featuredPosition: 2, cashbackEnabled: false, cashbackRateBps: 200, wimicoinsEnabled: false, wimicoinsRateBps: 200 }));
   if (options.draft) for (const product of products) product.status = "DRAFT";
   const writes: { id: string; data: Record<string, unknown> }[] = [], audits: unknown[] = [], locks: string[] = [];
   let dbReads = 0;
@@ -61,6 +61,21 @@ test("bulk: preserva origem, receitas e benefícios incompatíveis; status remov
   const rx = await harness({ prescription: true }); assert.equal((await rx.run({ cashbackEnabled: true })).status, 422); assert.equal((await rx.run({ wimicoinsEnabled: true })).status, 422);
   const f = await harness(); assert.equal((await f.run({ status: "DRAFT" })).status, 200);
   for (const write of f.writes) assert.deepEqual(Object.keys(write.data).sort(), ["featuredPosition", "status"]);
+});
+
+test("bulk: ADMIN ativa 1% em generico/similar Rx e continua impedindo WimiCoins ou referencia", async () => {
+  for (const medicineClass of ["GENERIC", "SIMILAR"]) {
+    const f = await harness({ prescription: true, medicineClass });
+    assert.equal((await f.run({ cashbackEnabled: true, cashbackRateBps: 100 })).status, 200);
+    assert.equal(f.audits.length, 2);
+    for (const write of f.writes) assert.deepEqual(JSON.parse(JSON.stringify(write.data)), { cashbackEnabled: true, cashbackRateBps: 100 });
+    const coins = await harness({ prescription: true, medicineClass });
+    assert.equal((await coins.run({ cashbackEnabled: true, cashbackRateBps: 100, wimicoinsEnabled: true })).status, 422);
+    assert.equal(coins.writes.length, 0);
+  }
+  const reference = await harness({ prescription: true, medicineClass: "REFERENCE" });
+  assert.equal((await reference.run({ cashbackEnabled: true, cashbackRateBps: 100 })).status, 422);
+  assert.equal(reference.writes.length, 0);
 });
 test("bulk: falha de auditoria reverte o lote sem expor detalhes", async () => {
   const f = await harness({ auditFails: true }); const response = await f.run({ status: "DRAFT" }); assert.equal(response.status, 503); assert.equal(f.writes.length, 0); assert.equal((await response.text()).includes("private SQL"), false);

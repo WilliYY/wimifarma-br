@@ -9,7 +9,7 @@ import { prescriptionCartFingerprint } from "./prescription-upload";
 const bundle = build({ entryPoints: ["src/features/orders/create-checkout.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "isolated-create-order", setup(builder) {
   builder.onResolve({ filter: /features\/cashback\/(rules|review-rewards|wallet)$|features\/shipping\/service$|features\/payments\/(schema|routing)$|features\/miauby\/commerce-service$/ }, args => ({ path: args.path, namespace: "fixture" }));
   builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents:
-    args.path.endsWith("rules") ? "export const productCashbackCents=()=>0;" :
+    args.path.endsWith("rules") ? "export const productCashbackCents=()=>0; export const calculateCashbackCents=()=>0;" :
     args.path.endsWith("review-rewards") ? "export const allocateCashbackDiscount=items=>items.map(()=>0);" :
     args.path.endsWith("wallet") ? "export class CashbackRuleError extends Error{}; export const lockCashbackAccount=()=>{throw new Error('unexpected wallet access')};" :
     args.path.endsWith("shipping/service") ? "export const validateOrderShipping=async()=>null;" :
@@ -67,18 +67,18 @@ const rewardsBundle = build({ entryPoints: ["src/features/orders/create-checkout
   }));
 } }] });
 
-async function rewardSnapshot(cashback: number, coins: number, options: { quantity?: number; requiresPrescription?: boolean; isPopularPharmacy?: boolean; customer?: boolean; member?: boolean } = {}) {
+async function rewardSnapshot(cashback: number, coins: number, options: { quantity?: number; requiresPrescription?: boolean; isPopularPharmacy?: boolean; customer?: boolean; member?: boolean; cashbackRateBps?: number; catalogClassification?: unknown } = {}) {
   const quantity = options.quantity ?? 20;
   let saved: Record<string, unknown> = {};
   const product = { id: "reward-product", name: "Produto sintético", slug: "produto-sintetico", imageUrl: null, price: "10.25", promotionalPrice: null,
-    status: "ACTIVE", stock: 100, requiresPrescription: false, prescriptionType: "ORDINARY", isPopularPharmacy: false,
+    status: "ACTIVE", stock: 100, requiresPrescription: false, prescriptionType: options.requiresPrescription ? "ORDINARY" : "UNREVIEWED", isPopularPharmacy: false,
     cashbackEnabled: true, cashbackRateBps: 200, wimicoinsEnabled: true, wimicoinsRateBps: 200, ...options };
   const tx = {
     $queryRaw: async () => [],
     $executeRaw: async () => 0,
     customer: { findFirst: async () => ({ id: "customer-test" }) },
     clubMembership: { findUnique: async () => ({ active: options.member !== false }) },
-    product: { findMany: async () => [product] },
+    product: { findMany: async ({ select }: { select: Record<string, unknown> }) => [Object.fromEntries(Object.entries(product).filter(([key]) => select[key] === true))] },
     order: { findUnique: async () => null, create: async ({ data }: { data: Record<string, unknown> }) => (saved = { ...data, id: "order-test", number: "TEST-001" }), findUniqueOrThrow: async () => saved },
     cashbackAccount: { update: async () => ({}) }, cashbackTransaction: { create: async () => ({}) }, auditLog: { create: async () => ({}) },
   };
@@ -99,6 +99,22 @@ test("recompensas preservam centavos líquidos e arredondamento por unidade nos 
     const items = saved.items as { create: { cashbackEarnedCents: number; wimicoinsEarnedPoints: number }[] };
     assert.equal(items.create[0].cashbackEarnedCents, expected);
     assert.equal(items.create[0].wimicoinsEarnedPoints, expected);
+  }
+});
+
+test("checkout consulta classificacao e congela 1% Rx sem liberar WimiCoins nem saldo de visitante", async () => {
+  for (const medicineClass of ["GENERIC", "SIMILAR"]) {
+    const options = { quantity: 2, requiresPrescription: true, cashbackRateBps: 100,
+      catalogClassification: { kind: "MEDICINE", medicineClass, ethical: false, otc: false } };
+    const saved = await rewardSnapshot(0, 0, options);
+    assert.equal(saved.cashbackEarnedCents, 20);
+    assert.equal(saved.cashbackState, "PENDING");
+    assert.equal(saved.requiresPrescriptionReview, true);
+    const items = (saved.items as { create: { cashbackEarnedCents: number; cashbackRateBps: number; wimicoinsEarnedPoints: number }[] }).create;
+    assert.equal(items[0].cashbackRateBps, 100);
+    assert.equal(items[0].cashbackEarnedCents, 20);
+    assert.equal(items[0].wimicoinsEarnedPoints, 0);
+    assert.equal((await rewardSnapshot(0, 0, { ...options, customer: false })).cashbackEarnedCents, 0);
   }
 });
 
@@ -164,7 +180,7 @@ async function pixCheckout(options: { paymentMethod?: string; onlineMethod?: str
     cashbackRedeemCents: options.cashback ?? 0, wimicoinsRedeemPoints: options.coins ?? 0, privacyConsent: true,
     items: [{ productId: "synthetic-pix-product", quantity: options.quantity ?? 1, expectedUnitPriceCents: subtotal }, ...(options.secondProduct ? [{ productId: "synthetic-second", quantity: 1, expectedUnitPriceCents: 1025 }] : [])] };
   const product = { id: "synthetic-pix-product", name: "Produto sintético", slug: "synthetic", imageUrl: null, price: (subtotal / 100).toFixed(2), promotionalPrice: null,
-    stock: 100, status: "ACTIVE", requiresPrescription: false, prescriptionType: "ORDINARY", isPopularPharmacy: false,
+    stock: 100, status: "ACTIVE", requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false,
     cashbackEnabled: true, cashbackRateBps: 200, wimicoinsEnabled: true, wimicoinsRateBps: 200 };
   const previous = options.previousTotal === undefined ? null : { id: "synthetic-old-order", customerId: "synthetic-customer", totalCents: options.previousTotal,
     checkoutRequestHash: createHash("sha256").update(JSON.stringify({ ...input, checkoutRequestId: undefined })).digest("hex") };

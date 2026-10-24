@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { readClassification } from "@/features/products/catalog-operations";
 
 export const DEFAULT_CASHBACK_RATE_BPS = 200;
+export const GENERIC_SIMILAR_CASHBACK_RATE_BPS = 100;
 export const cashbackRateSchema = z.number().int().min(1).max(10_000);
 export const cashbackProductUpdateSchema = z.object({
   cashbackEnabled: z.boolean(),
@@ -13,7 +15,25 @@ export type CashbackProduct = {
   cashbackRateBps?: number;
   requiresPrescription?: boolean;
   isPopularPharmacy?: boolean;
+  prescriptionType?: string;
+  catalogClassification?: unknown;
 };
+
+export function cashbackProductIsEligible(product: CashbackProduct) {
+  if (product.isPopularPharmacy || product.prescriptionType === "CONTROLLED") return false;
+  const classifiedPrescription = product.prescriptionType === "ORDINARY" || product.prescriptionType === "ANTIMICROBIAL";
+  if (!product.requiresPrescription && !classifiedPrescription) return true;
+  const classification = readClassification(product.catalogClassification);
+  return classifiedPrescription && classification.kind === "MEDICINE" &&
+    (classification.medicineClass === "GENERIC" || classification.medicineClass === "SIMILAR");
+}
+
+export function medicineCashbackDefaults(product: CashbackProduct) {
+  const classification = readClassification(product.catalogClassification);
+  return cashbackProductIsEligible(product) && classification.kind === "MEDICINE" &&
+    (classification.medicineClass === "GENERIC" || classification.medicineClass === "SIMILAR")
+    ? { cashbackEnabled: true, cashbackRateBps: GENERIC_SIMILAR_CASHBACK_RATE_BPS } : {};
+}
 
 export type CashbackState = "NONE" | "PENDING" | "CREDITED" | "VOIDED" | "REVERSED";
 
@@ -32,7 +52,7 @@ export function calculateCashbackCents(unitPriceCents: number, rateBps: number, 
 }
 
 export function productCashbackCents(product: CashbackProduct, unitPriceCents: number, quantity = 1) {
-  if (!product.cashbackEnabled || product.requiresPrescription || product.isPopularPharmacy) return 0;
+  if (!product.cashbackEnabled || !cashbackProductIsEligible(product)) return 0;
   return calculateCashbackCents(unitPriceCents, product.cashbackRateBps ?? DEFAULT_CASHBACK_RATE_BPS, quantity);
 }
 

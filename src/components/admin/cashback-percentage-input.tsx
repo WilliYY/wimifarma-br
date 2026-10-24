@@ -5,9 +5,14 @@ import { Minus, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { changePercentage } from "@/features/cashback/percentage";
 
-export function CashbackPercentageInput({ name, label, defaultValue, disabled = false }: { name: string; label: string; defaultValue: number; disabled?: boolean }) {
+export function CashbackPercentageInput({ name, label, defaultValue, disabled = false, value: controlledValue, onValueChange }: { name: string; label: string; defaultValue: number; disabled?: boolean; value?: string; onValueChange?: (value: string) => void }) {
   const id = useId();
-  const [value, setValue] = useState(String(defaultValue));
+  const [localValue, setLocalValue] = useState(String(defaultValue));
+  const value = controlledValue ?? localValue;
+  function setValue(next: string) {
+    setLocalValue(next);
+    onValueChange?.(next);
+  }
   return <div className="min-w-0 space-y-2">
     <label className="block text-xs font-semibold text-ink" htmlFor={id}>{label}</label>
     <div className="flex min-w-0 items-center gap-1">

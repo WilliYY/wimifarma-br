@@ -13,6 +13,7 @@ export const cashbackListingSchema = z.object({
     name: z.string(), brand: z.string().nullable(), imageUrl: z.string().nullable(), status: z.string(),
     price: z.string().nullable(), promotionalPrice: z.string().nullable(), priceAvailable: z.boolean().optional(),
     isPopularPharmacy: z.boolean(), requiresPrescription: z.boolean(),
+    cashbackEligible: z.boolean().optional(),
   })),
   total: z.number().int().nonnegative(), pages: z.number().int().positive(),
   active: z.number().int().nonnegative(), pendingCents: z.number().int().nonnegative(),
@@ -20,8 +21,8 @@ export const cashbackListingSchema = z.object({
 export type CashbackListing = z.infer<typeof cashbackListingSchema>;
 export type CashbackListProduct = CashbackListing["data"][number];
 
-export function cashbackProductEligible(product: Pick<CashbackListProduct, "requiresPrescription" | "isPopularPharmacy">) {
-  return !product.requiresPrescription && !product.isPopularPharmacy;
+export function cashbackProductEligible(product: Pick<CashbackListProduct, "requiresPrescription" | "isPopularPharmacy" | "cashbackEligible">) {
+  return !product.isPopularPharmacy && (product.cashbackEligible ?? !product.requiresPrescription);
 }
 
 export function selectCashbackProducts(selected: readonly string[], visible: readonly CashbackListProduct[]) {

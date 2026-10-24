@@ -1,4 +1,4 @@
-import { productCashbackCents } from "@/features/cashback/rules";
+import { calculateCashbackCents } from "@/features/cashback/rules";
 import { productWimicoinsPoints } from "@/features/club/rules";
 import { OrderSimulationInputSchema, SupplierComparisonInputSchema, type OrderSimulationInput, type SupplierComparisonInput } from "./schema";
 import { hasRequiredSupplierTax } from "./tax-eligibility";
@@ -70,8 +70,12 @@ export function simulateOrder(input: OrderSimulationInput) {
   const product = { requiresPrescription: value.requiresPrescription, isPopularPharmacy: value.isPopularPharmacy,
     cashbackEnabled: value.cashbackBps > 0, cashbackRateBps: value.cashbackBps,
     wimicoinsEnabled: value.wimicoinsBps > 0, wimicoinsRateBps: value.wimicoinsBps };
-  const cashbackCents = productCashbackCents(product, unitBase, baseUnits)
-    + (extraUnits > 0 ? productCashbackCents(product, unitBase + 1, extraUnits) : 0);
+  // A manually entered scenario must include its stated cashback cost, including
+  // eligible Rx cases. This calculator never changes product eligibility.
+  const cashbackCents = value.cashbackBps > 0 && !value.isPopularPharmacy
+    ? calculateCashbackCents(unitBase, value.cashbackBps, baseUnits)
+      + (extraUnits > 0 ? calculateCashbackCents(unitBase + 1, value.cashbackBps, extraUnits) : 0)
+    : 0;
   const wimicoinsCents = productWimicoinsPoints(product, unitBase, baseUnits)
     + (extraUnits > 0 ? productWimicoinsPoints(product, unitBase + 1, extraUnits) : 0);
   const contribution = missing.length > 0 || collected === null || tax === null || paymentFee === null ? null

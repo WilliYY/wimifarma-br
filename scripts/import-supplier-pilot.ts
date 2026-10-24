@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { medicineCashbackDefaults } from "../src/features/cashback/rules";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
@@ -63,7 +64,9 @@ async function main() {
         const { offers: _offers, internalImage: _image, evidence: _evidence, ...identity } = row;
         void [_offers, _image, _evidence];
         const product = current ?? await tx.product.create({ data: { ...identity, prescriptionType: persistedPrescriptionType(row), eanNormalized, inventorySource: "DISTRIBUTOR", status: importedProductStatus(row), stock: 0,
-          price: (best!.unitPriceCents / 100).toFixed(2), cashbackEnabled: false, wimicoinsEnabled: false, searchText: buildProductSearchText({ ...identity, searchTerms: [] }) } });
+          price: (best!.unitPriceCents / 100).toFixed(2), cashbackEnabled: false,
+          ...medicineCashbackDefaults({ ...row, prescriptionType: persistedPrescriptionType(row) }),
+          wimicoinsEnabled: false, searchText: buildProductSearchText({ ...identity, searchTerms: [] }) } });
         for (const offer of updates) {
           const { replenishAllocation: _replenish, ...fields } = offer;
           void _replenish;

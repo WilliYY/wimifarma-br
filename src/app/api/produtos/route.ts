@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cashbackProductIsEligible, medicineCashbackDefaults } from "@/features/cashback/rules";
 import { requireAdminApi } from "@/features/auth/permissions";
 import { productCreateSchema } from "@/features/products/schema";
 import { buildProductSearchText } from "@/features/products/public-search";
@@ -153,8 +154,8 @@ export async function POST(request: Request) {
   if (parsed.data.wimicoinsEnabled && (parsed.data.requiresPrescription || parsed.data.isPopularPharmacy)) {
     return NextResponse.json({ error: "WimiCoins não disponíveis para produtos com receita ou Farmácia Popular." }, { status: 422 });
   }
-  if (parsed.data.cashbackEnabled && (parsed.data.requiresPrescription || parsed.data.isPopularPharmacy)) {
-    return NextResponse.json({ error: "Cashback nao disponivel para produtos com receita ou Farmacia Popular." }, { status: 422 });
+  if (parsed.data.cashbackEnabled && !cashbackProductIsEligible(parsed.data)) {
+    return NextResponse.json({ error: "Este produto não é elegível ao cashback." }, { status: 422 });
   }
   const imageAssetId = normalizeOptional(parsed.data.imageAssetId);
   const imageAsset = imageAssetId
@@ -189,6 +190,7 @@ export async function POST(request: Request) {
       const featuredPosition = await resolveFeaturedPosition(transaction, { featured, status: fields.status, imageUrl: imageAsset?.url ?? fields.imageUrl });
       const product = await transaction.product.create({
         data: {
+          ...medicineCashbackDefaults(fields),
           ...fields,
           featuredPosition,
           imageUrls,

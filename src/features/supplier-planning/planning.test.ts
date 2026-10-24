@@ -156,12 +156,20 @@ test("discounts wallet first and preserves exact benefit allocation with a remai
   assert.equal(pix.netProductsCents, 242);
 });
 
-test("excludes restricted prescription and Popular products from both benefits", () => {
-  for (const flags of [{ requiresPrescription: true }, { isPopularPharmacy: true }]) {
-    const result = simulateOrder({ ...input, ...flags });
-    assert.equal(result.cashbackCents, 0);
-    assert.equal(result.wimicoinsCents, 0);
-  }
+test("Popular products remain excluded from both benefits", () => {
+  const result = simulateOrder({ ...input, isPopularPharmacy: true });
+  assert.equal(result.cashbackCents, 0);
+  assert.equal(result.wimicoinsCents, 0);
+});
+
+test("explicit 1% Rx cashback reduces the simulated margin without enabling WimiCoins", () => {
+  const scenario = { ...input, requiresPrescription: true, quantity: 1, unitSaleCents: 1000, cashbackBps: 100 };
+  const withCashback = simulateOrder(scenario);
+  const withoutCashback = simulateOrder({ ...scenario, cashbackBps: 0 });
+  assert.equal(withCashback.netProductsCents, 970);
+  assert.equal(withCashback.cashbackCents, 10);
+  assert.equal(withCashback.wimicoinsCents, 0);
+  assert.equal(withoutCashback.contributionCents! - withCashback.contributionCents!, 10);
 });
 
 test("retains each unknown cost as null and lists the corresponding missing field", () => {

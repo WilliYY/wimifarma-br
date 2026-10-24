@@ -1,5 +1,13 @@
 # 42 - Revisão de segurança
 
+## Cashback em genéricos e similares com receita — 23/10/2026
+
+A autorização comercial amplia apenas o cashback de compra. Classificação estrita e validada no servidor, versão do produto, locks, auditoria e liquidação idempotente preservam o limite financeiro. A revisão independente identificou e corrigiu defaults do cadastro e divergência entre filtros JSONB por caminho e o schema estrito; o filtro agora compara objetos JSON exatos. Identidade nova alterada também invalida a classificação de receita no formulário.
+
+O plano de ativação usa ADMIN atual, GTIN/versão/configuração anterior, expiração, hash externo e transação única. Não aceita creditar carteiras ou recalcular pedidos. Testes sintéticos não usam dados de clientes e a auditoria real recusa banco fora do nome QA permitido. Resultados finais de checks, auditorias npm e implantação devem ser registrados na evidência da tarefa; esta descrição do mecanismo não comprova execução nem ativação em produção.
+
+Conferência posterior: revisão independente sem achados pendentes, incluindo validação do autor no CLI/helper antes de consultar Prisma. 485 regressões de segurança e auditoria financeira em PostgreSQL descartável aprovadas. Auditorias npm completas e de produção em 24/10/2026 UTC retornaram um alerta moderado em `fast-uri` e zero high/critical; o bloqueio high/critical não foi ignorado e nenhuma dependência foi modificada nesta entrega. Testes e checks adicionais constam em [15](15-cashback-produtos.md).
+
 ## Zod e consumo de memória em coleções — 23/10/2026
 
 A auditoria de produção anterior à publicação dos logos retornou um alerta **high** em `zod` 4.4.3, reproduzido em nova consulta, apesar de a auditoria completa retornar zero naquele momento. A divergência não foi usada para desconsiderar o bloqueio. O aviso [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5), atualizado nesta data, aponta versões anteriores à 4.6.6; a correção upstream antecipa a rejeição de coleções que excedam limites declarados.

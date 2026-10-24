@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminOnlyApi } from "@/features/auth/permissions";
 import { cashbackProductUpdateSchema } from "@/features/cashback/rules";
+import { cashbackEligibleWhere } from "@/features/cashback/eligibility";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
 
@@ -15,8 +16,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const prisma = getPrisma();
     const saved = await prisma.$transaction(async (tx) => {
       const changed = await tx.product.updateMany({
-        where: { id, updatedAt: new Date(expectedUpdatedAt),
-          ...(data.cashbackEnabled ? { isPopularPharmacy: false, requiresPrescription: false } : {}) },
+        where: { id, deletedAt: null, updatedAt: new Date(expectedUpdatedAt),
+          ...(data.cashbackEnabled ? { AND: [cashbackEligibleWhere] } : {}) },
         data,
       });
       if (changed.count !== 1) return null;

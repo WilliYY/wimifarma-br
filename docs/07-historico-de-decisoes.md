@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Cashback de compra em genéricos e similares com receita
+
+- Decisão do lojista: aplicar 1% em genéricos/similares, inclusive com receita classificada. Controlados, receita pendente e Farmácia Popular permanecem excluídos; WimiCoins e bônus de avaliação não foram ampliados.
+- Implementação: elegibilidade única por classificação explícita, consulta autoritativa no checkout, padrão para novos cadastros e ativação versionada/auditada dos existentes. Snapshots e saldos antigos não são recalculados.
+- Divulgação: sem selo promocional público em receitas, preservando a separação entre cálculo financeiro, publicidade e dispensação. Contrato e operação em `15-cashback-produtos.md`.
+
 ## 2026-10-23 — Farmácia Popular com orientação em três etapas
 
 - Decisão: reduzir blocos repetidos, ampliar a foto ilustrativa, usar verde como apoio e destacar WhatsApp, etapas e checklist em uma composição responsiva.

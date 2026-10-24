@@ -11,6 +11,7 @@ import { BULK_PRODUCT_LIMIT, type BulkProductUpdate } from "@/features/products/
 import { CashbackProductCard } from "./cashback-product-card";
 import { CASHBACK_PAGE_SIZE, CashbackSessionError, cashbackListingSchema, cashbackSavedSchema, readCashbackResponse, selectCashbackProducts, createCashbackBulkUpdate, confirmCashbackBulkResponse, type CashbackListing, type CashbackListProduct } from "@/features/cashback/client";
 import { cashbackRateSchema } from "@/features/cashback/rules";
+import { cashbackProductEligible } from "@/features/cashback/client";
 import { decimalToMinorUnits } from "@/features/supplier-planning/form";
 import { formatCurrency } from "@/lib/utils";
 
@@ -116,7 +117,7 @@ export function CashbackPanel() {
       }
       setListing((current) => {
         if (!current) return current;
-        const activeDelta = product.status === "ACTIVE" && !product.isPopularPharmacy && !product.requiresPrescription ? Number(data.cashbackEnabled) - Number(product.cashbackEnabled) : 0;
+        const activeDelta = product.status === "ACTIVE" && cashbackProductEligible(product) ? Number(data.cashbackEnabled) - Number(product.cashbackEnabled) : 0;
         return { ...current, active: Math.max(0, current.active + activeDelta), data: current.data.map((item) => item.id === data.id ? { ...item, ...data } : item) };
       });
       toast.success(cashbackEnabled ? "Cashback atualizado." : "Cashback desativado.");

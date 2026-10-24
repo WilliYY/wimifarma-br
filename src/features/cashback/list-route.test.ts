@@ -66,7 +66,7 @@ test("cashback distribuidor usa menor custo e markup canônicos sem preço físi
     assert.equal(payload.data[0].price, expected);
     assert.equal(payload.data[0].promotionalPrice, null);
     assert.equal(payload.data[0].priceAvailable, true);
-    assert.deepEqual(Object.keys(payload.data[0]).sort(), ["id", "name", "brand", "imageUrl", "status", "price", "promotionalPrice", "priceAvailable", "cashbackEnabled", "cashbackRateBps", "updatedAt", "isPopularPharmacy", "requiresPrescription"].sort());
+    assert.deepEqual(Object.keys(payload.data[0]).sort(), ["id", "name", "brand", "imageUrl", "status", "price", "promotionalPrice", "priceAvailable", "cashbackEnabled", "cashbackRateBps", "updatedAt", "isPopularPharmacy", "requiresPrescription", "cashbackEligible"].sort());
     assert.doesNotMatch(JSON.stringify(payload), /private-offer|unitCostCents|supplierOffers|supplierMarkupBps|catalogClassification|eanNormalized|stockQuantity|must-not-leak|36\.90|35\.00/);
   }
 });
@@ -91,4 +91,13 @@ test("cashback preserva promoção PHARMACY e exclui removidos da lista e dos co
   const payload = await pricingFixture([{ ...product, inventorySource: "PHARMACY", price: "20.50", promotionalPrice: "15.12" }, { ...product, id: "deleted", deletedAt: new Date(now) }]);
   assert.equal(payload.total, 1); assert.equal(payload.active, 1); assert.equal(payload.data.length, 1);
   assert.equal(payload.data[0].price, "20.50"); assert.equal(payload.data[0].promotionalPrice, "15.12"); assert.equal(payload.data[0].priceAvailable, true);
+});
+
+test("lista ADMIN informa elegibilidade Rx sem expor classificacao nem entradas privadas", async () => {
+  for (const [medicineClass, expected] of [["GENERIC", true], ["SIMILAR", true], ["REFERENCE", false], ["UNCLASSIFIED", false]] as const) {
+    const payload = await pricingFixture([{ ...product, inventorySource: "PHARMACY", requiresPrescription: true, prescriptionType: "ORDINARY",
+      catalogClassification: { kind: "MEDICINE", medicineClass, ethical: false, otc: false } }]);
+    assert.equal(payload.data[0].cashbackEligible, expected);
+    assert.doesNotMatch(JSON.stringify(payload), /catalogClassification|privateCanary|unitCostCents/);
+  }
 });

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cashbackProductIsEligible } from "@/features/cashback/rules";
 import { gtinVariants, normalizeGtin } from "@/features/supplier-catalog/commerce";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireAdminApi } from "@/features/auth/permissions";
@@ -118,9 +119,6 @@ export async function PATCH(
   if (parsed.data.wimicoinsEnabled && (parsed.data.requiresPrescription || parsed.data.isPopularPharmacy)) {
     return NextResponse.json({ error: "WimiCoins não disponíveis para produtos com receita ou Farmácia Popular." }, { status: 422 });
   }
-  if (parsed.data.cashbackEnabled && (parsed.data.requiresPrescription || parsed.data.isPopularPharmacy)) {
-    return NextResponse.json({ error: "Cashback nao disponivel para produtos com receita ou Farmacia Popular." }, { status: 422 });
-  }
   const imageAssetId = normalizeOptional(parsed.data.imageAssetId);
   const imageAsset = imageAssetId
     ? await prisma.productImage.findUnique({
@@ -143,7 +141,7 @@ export async function PATCH(
     wimicoinsEnabled: parsed.data.requiresPrescription || parsed.data.isPopularPharmacy ? false : parsed.data.wimicoinsEnabled,
     wimicoinsRateBps: parsed.data.wimicoinsRateBps,
     shippingProfile: parsed.data.shippingProfile,
-    cashbackEnabled: parsed.data.requiresPrescription || parsed.data.isPopularPharmacy ? false : parsed.data.cashbackEnabled,
+    cashbackEnabled: parsed.data.cashbackEnabled,
     cashbackRateBps: parsed.data.cashbackRateBps,
     activeIngredients: parsed.data.activeIngredients,
     brand: parsed.data.brand,
@@ -187,6 +185,9 @@ export async function PATCH(
       const prescriptionType = resolvePrescriptionType(current.prescriptionType, parsed.data.prescriptionType, identityChanged);
       const catalogClassification = identityChanged ? emptyClassification : readClassification(parsed.data.catalogClassification ?? current.catalogClassification);
       if (!classificationIsConsistent(catalogClassification, { ...productData, prescriptionType })) throw new ProductMutationError("Classificação incompatível com o cadastro de receita. Revise a classificação antes de salvar.");
+      const cashbackEligible = cashbackProductIsEligible({ ...current, ...productData, catalogClassification, prescriptionType });
+      if (parsed.data.cashbackEnabled && !cashbackEligible) throw new ProductMutationError("Este produto não é elegível ao cashback.", 422);
+      if (!cashbackEligible) productData.cashbackEnabled = false;
       await validateSupplierMarkupChange(transaction, current, parsed.data.supplierMarkupBps);
       if (current.requiresPrescription && !productData.requiresPrescription && guard.session?.user.role !== "ADMIN") throw new ProductMutationError("Somente o administrador pode retirar a exigência de receita.", 403);
       if (!prescriptionClassificationIsConsistent({ requiresPrescription: productData.requiresPrescription, prescriptionType })) throw new ProductMutationError("Atualize o tipo de receita antes de retirar a exigência de receita.", 422);
