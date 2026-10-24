@@ -1,5 +1,15 @@
 # 34 - Organização do painel de pedidos
 
+## Contraste e leitura — 24/10/2026
+
+O painel usa cores locais por situação: âmbar para novos, azul para andamento, verde para concluídos e vermelho para cancelados/estornados. As mesmas cores aparecem no resumo, na faixa lateral da linha e no rótulo de situação. Os textos e estados acessíveis continuam identificando cada situação sem depender apenas da cor.
+
+Cabeçalho da lista e origens dos itens recebem fundo azul-escuro; textos secundários e divisórias são mais escuros, e os rótulos principais passam de 10/11 px para pelo menos 12 px. A linha expandida recebe fundo azul-claro, e cliente/atendimento/itens ficam em blocos delimitados. Etapas concluídas e atual têm fundos fortes, enquanto futuras e ações bloqueadas mantêm texto legível. Avisos de homologação continuam destacados em âmbar. Foco de teclado permanece explícito.
+
+As cores ficam restritas a `.admin-orders-panel`; o site e os demais painéis mantêm seus tokens. Não há mudança em classificação de pedidos, transições, permissões, bloqueios financeiros, confirmação de receita, gateway ou envio de mensagens. As regressões visuais usam pedidos sintéticos em 320/390/1440 px, medem contraste mínimo de texto 4,5:1 e verificam foco, ausência de transbordamento e controles bloqueados.
+
+Validação local: 12 testes de apresentação/interface, 485 de segurança, lint completo e typecheck aprovados; revisão independente sem achados remanescentes. Capturas sintéticas em `outputs/admin-orders-contrast-2026-10-24/`, fora do Git. Auditorias completa e de produção sem high/critical; permanece um moderate conhecido em `fast-uri`, sem alteração de dependências. A publicação recompila somente o app com a imagem anterior preservada; não exige migração ou reinício do banco.
+
 ## Apresentação operacional
 
 `/admin/pedidos` aparece primeiro na navegação administrativa e separa os últimos 100 pedidos carregados em filtros de situação. A busca aceita número, cliente, telefone, produto, EAN e origem. Status, distribuidora e cidade de postagem combinam com a situação selecionada. Trocar a situação limpa apenas o filtro de status; a busca permanece.

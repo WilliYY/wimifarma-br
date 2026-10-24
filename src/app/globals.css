@@ -70,6 +70,161 @@ textarea {
   font-size: 16px;
 }
 
+/* Cores locais do painel de pedidos; não alteram o restante do admin ou do site. */
+.admin-orders-panel {
+  --muted: #475569;
+  --line: #b8c4d4;
+  --surface-subtle: #edf2f7;
+  --order-navy: #172b4d;
+  --order-blue: #1d4ed8;
+  --order-green: #166534;
+  --order-warning-bg: #fef3c7;
+  --order-warning-ink: #78350f;
+}
+
+.admin-orders-panel [data-order-tone="NEW"] {
+  --order-tone-bg: #fef3c7;
+  --order-tone-ink: #78350f;
+  --order-tone-accent: #b45309;
+}
+
+.admin-orders-panel [data-order-tone="ACTIVE"] {
+  --order-tone-bg: #dbeafe;
+  --order-tone-ink: #1e40af;
+  --order-tone-accent: #1d4ed8;
+}
+
+.admin-orders-panel [data-order-tone="COMPLETED"] {
+  --order-tone-bg: #dcfce7;
+  --order-tone-ink: #166534;
+  --order-tone-accent: #166534;
+}
+
+.admin-orders-panel [data-order-tone="CANCELED"] {
+  --order-tone-bg: #fee2e2;
+  --order-tone-ink: #991b1b;
+  --order-tone-accent: #b91c1c;
+}
+
+.admin-orders-panel .admin-order-metric-icon {
+  background: var(--order-tone-accent);
+  color: #fff;
+}
+
+.admin-orders-panel .admin-order-table-header {
+  background: var(--order-navy);
+  color: #fff;
+}
+
+.admin-orders-panel .admin-order-toggle {
+  background: #fff;
+  box-shadow: inset 4px 0 var(--order-tone-accent);
+}
+
+.admin-orders-panel .admin-order-row:nth-of-type(even) > .admin-order-toggle {
+  background: #f3f6fa;
+}
+
+.admin-orders-panel .admin-order-row > .admin-order-toggle:hover,
+.admin-orders-panel .admin-order-row > .admin-order-toggle[aria-expanded="true"] {
+  background: #e8efff;
+}
+
+.admin-orders-panel .admin-order-toggle:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+}
+
+.admin-orders-panel .admin-order-status {
+  border: 1px solid var(--order-tone-accent);
+  background: var(--order-tone-bg);
+  color: var(--order-tone-ink);
+}
+
+.admin-orders-panel .admin-order-payment-status,
+.admin-orders-panel .admin-order-step {
+  border: 1px solid #94a3b8;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.admin-orders-panel .admin-order-payment-status[data-paid="true"] {
+  border-color: var(--order-green);
+  background: #dcfce7;
+  color: var(--order-green);
+}
+
+.admin-orders-panel .admin-order-warning {
+  border: 1px solid #b45309;
+  border-left-width: 4px;
+  background: var(--order-warning-bg);
+  color: var(--order-warning-ink);
+}
+
+.admin-orders-panel .admin-order-step[data-step-state="current"],
+.admin-orders-panel .admin-order-next {
+  border-color: var(--order-blue);
+  background: var(--order-blue);
+  color: #fff;
+}
+
+.admin-orders-panel .admin-order-step[data-step-state="done"] {
+  border-color: var(--order-green);
+  background: var(--order-green);
+  color: #fff;
+}
+
+.admin-orders-panel .admin-order-step[data-step-state="canceled"] {
+  border-color: #b91c1c;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.admin-orders-panel .admin-order-info-grid > div {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  padding: 1rem;
+}
+
+.admin-orders-panel .admin-order-supply-header {
+  --ink: #fff;
+  --muted: #e2e8f0;
+  background: var(--order-navy);
+}
+
+.admin-orders-panel .admin-order-quantity {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.admin-orders-panel .admin-order-actions {
+  background: var(--surface-subtle);
+}
+
+.admin-orders-panel input:not([type="checkbox"]),
+.admin-orders-panel select {
+  border-color: #64748b;
+}
+
+.admin-orders-panel :is(input, select):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.admin-orders-panel .admin-order-next:hover:not(:disabled) {
+  background: #1e40af;
+}
+
+.admin-orders-panel .admin-order-actions button:disabled,
+.admin-orders-panel .admin-order-actions select:disabled {
+  border-color: #94a3b8;
+  background: #e2e8f0;
+  color: #475569;
+  opacity: 1;
+}
+
 .checkout-field:-webkit-autofill,
 .checkout-field:-webkit-autofill:hover,
 .checkout-field:-webkit-autofill:focus {

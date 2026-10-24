@@ -7,7 +7,32 @@ import { runInNewContext } from "node:vm";
 import { build } from "esbuild";
 import postcss from "postcss";
 import tailwind from "@tailwindcss/postcss";
-import { chromium, expect } from "@playwright/test";
+import { chromium, expect, type Locator } from "@playwright/test";
+
+async function assertReadable(locator: Locator, label: string) {
+  const result = await locator.evaluate(element => {
+    const style = getComputedStyle(element);
+    let background = style.backgroundColor;
+    let parent = element.parentElement;
+    while (background === "rgba(0, 0, 0, 0)" && parent) {
+      background = getComputedStyle(parent).backgroundColor;
+      parent = parent.parentElement;
+    }
+    return { color: style.color, background, fontSize: parseFloat(style.fontSize) };
+  });
+  const luminance = (color: string) => {
+    const channels = color.match(/[\d.]+/g)!.slice(0, 3).map(Number).map(value => {
+      const channel = value / 255;
+      return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+    return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+  };
+  const foreground = luminance(result.color);
+  const backdrop = luminance(result.background);
+  const ratio = (Math.max(foreground, backdrop) + 0.05) / (Math.min(foreground, backdrop) + 0.05);
+  assert.ok(ratio >= 4.5, `${label}: contraste ${ratio.toFixed(2)}:1, mínimo 4.5:1`);
+  assert.ok(result.fontSize >= 12, `${label}: rótulo menor que 12px`);
+}
 
 function fixtures() {
   return Array.from({ length: 31 }, (_, index) => ({
@@ -25,6 +50,7 @@ function fixtures() {
 
 test("lista única de 30 pedidos agrupa origens nos detalhes e separa filas encerradas", { timeout: 90000 }, async () => {
   const orders = [...fixtures(), { ...fixtures()[0], id: "completed", number: "WIM-CONCLUIDO", status: "COMPLETED" }, { ...fixtures()[0], id: "refunded", number: "WIM-ESTORNADO", paymentStatus: "REFUNDED" }];
+  orders[30].status = "PREPARING";
   orders[0].items.push({ ...orders[0].items[0], id: "pharmacy-item", inventorySource: "PHARMACY", supplierCode: "", productName: "Estoque da farmácia" });
   orders[0].items.push({ ...orders[0].items[0], id: "anb-item", supplierCode: "ANB", productName: "Produto ANB" });
   const bundle = await build({ stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';import {OrdersPanel} from './src/components/admin/orders-panel';function Fixture(){const [value,setValue]=React.useState(${JSON.stringify(orders)});window.refreshOrders=()=>setValue(current=>current.map(order=>({...order})));return <OrdersPanel initialOrders={value} canManageCredits miaubyOrderAlertsEnabled/>;}createRoot(document.getElementById('root')).render(<Fixture/>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' }, plugins: [{ name: "isolated-orders-navigation", setup(builder) {
@@ -55,36 +81,51 @@ test("lista única de 30 pedidos agrupa origens nos detalhes e separa filas ence
       await expect(toggle).toHaveAttribute("aria-expanded", "false");
       assert.ok((await first.boundingBox())!.height < (width < 600 ? 210 : 130), "a linha fechada precisa manter a densidade operacional");
       await expect(page.getByText("Miauby · avisos habilitados", { exact: true })).toBeVisible();
-      await toggle.focus(); await page.keyboard.press("Enter");
+      const metricColors = await page.locator(".admin-order-metric-icon").evaluateAll(elements => elements.map(element => getComputedStyle(element).backgroundColor));
+      assert.equal(new Set(metricColors).size, 4, "as quatro situações precisam de cores distintas");
+      await assertReadable(first.locator(".admin-order-status"), "situação pendente");
+      await assertReadable(first.locator(".admin-order-payment-status"), "pagamento pendente");
+      await assertReadable(first.locator(".text-muted").first(), "horário secundário");
+      await toggle.focus();
+      assert.equal(await toggle.evaluate(element => getComputedStyle(element).outlineStyle), "solid", "o foco por teclado precisa continuar visível");
+      await page.keyboard.press("Enter");
       await expect(toggle).toHaveAttribute("aria-expanded", "true");
       await expect(first.getByText("EAN da oferta vinculada", { exact: true }).first()).toBeVisible();
       await expect(first.getByText("7891234567895", { exact: true }).first()).toBeVisible();
       await expect(first.getByRole("heading", { name: "Farmácia", exact: true })).toBeVisible();
       await expect(first.getByRole("heading", { name: "ANB", exact: true })).toBeVisible();
       await expect(first.getByText("Profarma", { exact: true }).last()).toBeVisible();
+      await assertReadable(first.locator('[aria-current="step"]'), "etapa atual");
+      await assertReadable(first.locator('[data-step-state="pending"]').first(), "etapa futura");
+      await assertReadable(first.locator(".admin-order-next"), "ação principal");
+      await assertReadable(first.locator(".admin-order-supply-header h3").first(), "origem dos itens");
       await toggle.click();
       await page.getByRole("button", { name: "Próxima página", exact: true }).click();
       await expect(page.locator("article[data-order-id]")).toHaveCount(1);
       await expect(page.getByRole("heading", { name: "WIM-TESTE-031", exact: true })).toBeVisible();
+      await assertReadable(page.locator('article[data-order-id="synthetic-order-30"] .admin-order-status'), "situação em andamento");
       await page.getByRole("textbox", { name: "Buscar pedido", exact: true }).fill("7891234567895");
       await expect(page.locator("article[data-order-id]")).toHaveCount(30);
       await page.getByRole("textbox", { name: "Buscar pedido", exact: true }).fill("");
       await page.getByRole("button", { name: /^Concluídos/ }).click();
       await expect(page.locator("article[data-order-id]")).toHaveCount(1);
       await expect(page.getByRole("heading", { name: "WIM-CONCLUIDO", exact: true })).toBeVisible();
+      await assertReadable(page.locator('article[data-order-id="completed"] .admin-order-status'), "situação concluída");
       await page.getByRole("button", { name: /^Cancelados \/ estornados/ }).click();
       await expect(page.getByRole("heading", { name: "WIM-ESTORNADO", exact: true })).toBeVisible();
+      await assertReadable(page.locator('article[data-order-id="refunded"] .admin-order-status'), "situação cancelada");
       await page.getByRole("button", { name: /^Todos / }).click();
       await expect(page.locator("article[data-order-id]")).toHaveCount(30);
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), "sem rolagem horizontal da página");
       if (process.env.ADMIN_ORDERS_QA_OUTPUT) {
         await fs.mkdir(process.env.ADMIN_ORDERS_QA_OUTPUT, { recursive: true });
-        await page.screenshot({ path: path.join(process.env.ADMIN_ORDERS_QA_OUTPUT, `pedidos-${width}.png`), fullPage: width < 600 });
+        await page.screenshot({ path: path.join(process.env.ADMIN_ORDERS_QA_OUTPUT, `pedidos-${width}.png`), fullPage: width < 600, animations: "disabled" });
         await first.getByRole("button", { name: "Ver detalhes do pedido WIM-TESTE-001", exact: true }).click();
-        await page.screenshot({ path: path.join(process.env.ADMIN_ORDERS_QA_OUTPUT, `detalhes-${width}.png`), fullPage: false });
+        await page.screenshot({ path: path.join(process.env.ADMIN_ORDERS_QA_OUTPUT, `detalhes-${width}.png`), fullPage: false, animations: "disabled" });
       }
       await page.goto("http://127.0.0.1:3198/admin/pedidos?pedido=synthetic-order-30");
       await expect(page.getByRole("button", { name: "Ver detalhes do pedido WIM-TESTE-031", exact: true })).toHaveAttribute("aria-expanded", "true");
+      await assertReadable(page.locator('article[data-order-id="synthetic-order-30"] [data-step-state="done"]').first(), "etapa concluída");
       await expect(page.getByText("Página 2 de 2 · até 30 pedidos por página", { exact: true })).toBeVisible();
       await page.goto("http://127.0.0.1:3198/admin/pedidos?pedido=completed");
       await expect(page.getByRole("button", { name: "Ver detalhes do pedido WIM-CONCLUIDO", exact: true })).toHaveAttribute("aria-expanded", "true");
@@ -126,15 +167,19 @@ test("avisos financeiros ficam visíveis recolhidos e pagamentos incertos ou de 
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
+    const css = (await postcss([tailwind()]).process(await fs.readFile("src/app/globals.css", "utf8"), { from: "src/app/globals.css" })).css;
     await page.route("**/*", route => route.request().method() === "GET" && new URL(route.request().url()).hostname === "127.0.0.1"
       ? route.fulfill({ contentType: "text/html", body: '<div id="root"></div>' }) : route.abort());
     await page.goto("http://127.0.0.1:3199");
     await page.addScriptTag({ content: bundle.outputFiles[0].text });
+    await page.addStyleTag({ content: css });
     for (const [index, scenario] of scenarios.entries()) {
       const row = page.locator(`article[data-order-id="synthetic-order-${index}"]`);
       await expect(row.getByText(scenario.warning, { exact: true })).toBeVisible();
+      await assertReadable(row.getByText(scenario.warning, { exact: true }), "aviso financeiro");
       await row.getByRole("button", { name: `Ver detalhes do pedido ${orders[index].number}`, exact: true }).click();
       await expect(row.getByRole("button", { name: "Confirmar", exact: true })).toBeDisabled();
+      await assertReadable(row.getByRole("button", { name: "Confirmar", exact: true }), "ação bloqueada");
       await expect(row.getByRole("combobox", { name: /^Pagamento/ })).toBeDisabled();
     }
   } finally { await browser.close(); }
@@ -167,7 +212,7 @@ test("ações percorrem etapas em ordem, conferem receita e reservam envio para 
       await page.getByRole("button", { name: `Ver detalhes do pedido ${order.number}`, exact: true }).click();
       if (fulfillmentMethod === "PICKUP") await expect(page.getByText("Saiu para entrega / envio", { exact: true })).toHaveCount(0);
       await page.getByRole("button", { name: "Confirmar", exact: true }).click();
-      await expect(page.getByRole("listitem").filter({ hasText: "Confirmar" })).toHaveClass(/bg-emerald-50/);
+      await expect(page.getByRole("listitem").filter({ hasText: "Confirmar" })).toHaveAttribute("data-step-state", "done");
       await page.getByRole("button", { name: "Separar", exact: true }).click();
       const ready = fulfillmentMethod === "PICKUP" ? "Pronto para retirada" : "Pronto para envio";
       if (fulfillmentMethod === "PICKUP") {
