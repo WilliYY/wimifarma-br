@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-24 — Trinta novos capilares Dove/TRESemmé publicados
+
+- Resultado: oito condicionadores Dove e 22 shampoos/condicionadores TRESemmé criados com foto real, custo final ANB e regra específica capilar de 20%. Os 30 EANs eram novos; aplicação única, 60 auditorias, registros e tabelas protegidas preservados. Páginas e imagens públicas conferidas individualmente por HTTP e hash.
+- Controles: fonte e imagem imutáveis, revisão independente, 485 testes de segurança, 111 de fornecedores, 25 controles negativos, QA isolado, backup e CAS com mutex. Janela encerrada sem concessão ativa; somente o QA próprio foi removido. Auditorias mantêm um alerta moderado, sem altos/críticos.
+- Contrato esclarecido: `reviewerThreadId` identifica o revisor; `approved-eans.reviewedBy` identifica o ADMIN ativo usado pelo servidor. A autorização existente deve corresponder ao status e à ordem exata dos EANs exigidos. Tentativas anteriores sem aplicação foram arquivadas; uma concessão foi desfeita somente após provar zero dos EANs no banco e ausência do marcador de aplicação, restaurando o snapshot canônico exato.
+- Pendências: apresentações divergentes e a nova pesquisa de 19 EANs na Profarma continuam fora deste lote até fechar identidade/condição comercial. Não se afirma cobertura de todo o mercado. Relatório, provas e cuidados em `96-catalogo-por-principio-ativo-2026-10-22.md`.
+
 ## 2026-10-24 — Mais 38 apresentações Above publicadas; repelentes retidos por lote
 
 - Operação: incluir 20 aerossóis, sete apresentações capilares e 11 outros cosméticos Above, com oferta ANB, ST numérica, foto real e conferência individual. Os 13 lotes próprios somam 224 EANs distintos com fotos, sendo 51 Above; nenhum lote encerrado foi reaplicado.

@@ -1,5 +1,19 @@
 # 96 — Cadastro por família de princípio ativo
 
+## 24/10/2026 — Primeiro lote capilar: Dove8 e TRESemmé22 publicado
+
+Foram criados **30 produtos novos com 30 fotos reais**: oito condicionadores Dove e 22 shampoos/condicionadores TRESemmé. A aplicação única terminou em `2026-10-24T22:36:51.465Z`; as 30 páginas e as 30 imagens públicas responderam HTTP 200, com os hashes WebP conferidos. A janela `chat5-capilares-30-v3-20261024-223500` terminou `completed_released`, sem concessão ativa. O QA exclusivo foi removido após conferir nome e proprietário.
+
+- Comércio: apresentação/EAN, custo final já com ST, condição e disponibilidade ANB foram conferidos individualmente. Foi mantida a regra específica capilar de **20% sobre o custo final**, anterior à regra de 35% para novas marcas sem regra própria. Indicadores `+100` conservam quantidade exata desconhecida; cota operacional e estoque do fornecedor são dados separados. A validade da cotação permanece a da observação original.
+- Preservação: 30 EANs novos e 60 auditorias de criação/foto, com comparação dos registros existentes e tabelas protegidas de pedidos, usuários, clientes, reservas e créditos. Nenhum pedido de compra ou pagamento foi feito nas distribuidoras por esta operação.
+- Validação: 485 testes de segurança e 111 de fornecedores aprovados no fingerprint final, 25 controles negativos e QA com 30 inclusões/fotos. Lint, typecheck, build, Prisma e testes de base foram reutilizados da mesma fonte imutável `532e96c` e imagem, após reconciliar os logs originais e o mapa de 988 arquivos. Auditorias atualizadas conservaram um alerta moderado e zero alto/crítico; a auditoria completa foi mantida.
+- Identidades operacionais: `reviewerThreadId` identifica o revisor independente. `approved-eans.reviewedBy` é o ID de um ADMIN ativo do banco, consumido por `actor()` e revalidado pelo importador; não deve receber o nome do agente. Essa atribuição de ator não comprova clique humano no painel. O registro da autorização existente deve usar o status e a ordem de EANs exigidos pelo protocolo.
+- Recuperação: duas tentativas preparatórias foram preservadas antes de qualquer aplicação do catálogo. Uma concessão interrompida no baseline foi revertida por CAS e pelo mutex existente, restaurando os bytes exatos anteriores depois de SQL de leitura comprovar zero dos 30 EANs e ausência de marcador de aplicação. Não foram fabricadas provas de produção ou liberação. Backups, snapshots, revisões e QAs das tentativas foram conservados antes da execução final.
+
+A pesquisa por palavra completa na ANB retornou 142 resultados de shampoo e 66 de condicionador; isso não comprova cobertura de descrições abreviadas nem de todo o mercado. Na Profarma autenticada, 19 EANs com foto conferida foram consultados: 13 Head & Shoulders localizados, um explicitamente indisponível; seis EANs Pantene sem resultado. Base/ST `-`, quantidade desconhecida e ofertas `PAGUE` não foram presumidas nem usadas para aprovar esses 19 nesta etapa. Divergências de EAN, apresentação e imagem continuam retidas.
+
+Relatório e relação pública dos 30 produtos: `outputs/capilares-chat5-2026-10-24/RELATORIO-CAPILARES-2026-10-24.md` e `produtos30-publicados.csv`. Provas privadas finais em `runtime-evidence30-v3/`; revisões finais em `final-review30-v4/`; manifestos e originais em `capilares30-root-data-v1/`.
+
 Atualização de 23/10/2026: novos genéricos e similares com classificação confirmada recebem cashback de compra de 1%, inclusive receita comum/antimicrobiana classificada, conforme [15](15-cashback-produtos.md). O importador aplica o padrão somente na criação; atualizar ofertas de cadastro existente preserva a configuração ADMIN. Controlados, receita pendente e Farmácia Popular ficam excluídos. Essa autorização não transforma segmento comercial em classificação regulatória e não libera selos promocionais ou fotos públicas de receitas.
 
 ## Escopo autorizado
