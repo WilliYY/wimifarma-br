@@ -2,35 +2,59 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { VISIT_HEARTBEAT_MS } from "@/features/analytics/online-presence";
 import { getVisitSessionId, rememberVisitSessionId } from "@/features/analytics/visitor-client";
 
 export function SiteVisitTracker() {
   const pathname = usePathname();
 
   useEffect(() => {
+    let disposed = false;
+    let registered = false;
+    let inFlight = false;
+    let controller: AbortController | undefined;
     async function track() {
-      const sessionId = await getVisitSessionId(window);
-      const payload = JSON.stringify({
-        path: pathname || window.location.pathname || "/",
-        referrer: document.referrer,
-        sessionId,
-      });
-
-      const response = await fetch("/api/visitas", {
-        body: payload,
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        keepalive: true,
-        method: "POST",
-      });
-      if (response.ok) {
-        const result = await response.json();
-        rememberVisitSessionId(window, result.visitorId);
+      if (disposed || inFlight || document.visibilityState !== "visible" || !navigator.onLine) return;
+      inFlight = true;
+      let timeout: ReturnType<typeof setTimeout> | undefined;
+      try {
+        const sessionId = registered ? undefined : await getVisitSessionId(window);
+        if (disposed || document.visibilityState !== "visible") return;
+        controller = new AbortController();
+        timeout = setTimeout(() => controller?.abort(), 10_000);
+        const response = await fetch("/api/visitas", {
+          body: JSON.stringify(registered ? { type: "heartbeat" } : {
+            path: pathname || window.location.pathname || "/", referrer: document.referrer, sessionId,
+          }),
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          method: "POST",
+          signal: controller.signal,
+        });
+        if (response.ok && !registered) {
+          const result = await response.json();
+          rememberVisitSessionId(window, result.visitorId);
+          registered = true;
+        }
+      } catch {
+        // Analytics must not interfere with shopping. Retry on the next scheduled signal.
+      } finally {
+        if (timeout !== undefined) clearTimeout(timeout);
+        inFlight = false;
       }
     }
-    void track().catch(() => {
-      // A visita nao deve interferir na navegacao do cliente.
-    });
+    const refresh = () => { void track(); };
+    const timer = setInterval(refresh, VISIT_HEARTBEAT_MS);
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("online", refresh);
+    refresh();
+    return () => {
+      disposed = true;
+      clearInterval(timer);
+      controller?.abort();
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("online", refresh);
+    };
   }, [pathname]);
 
   return null;

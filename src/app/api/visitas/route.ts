@@ -31,7 +31,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Visita invalida." }, { status: 400 });
   }
   const body = payload as Record<string, unknown>;
+  if (body.type !== undefined && body.type !== "view" && body.type !== "heartbeat") {
+    return NextResponse.json({ message: "Tipo de visita invalido." }, { status: 400, headers: { "Cache-Control": "no-store" } });
+  }
   const cookieId = readVisitorId(request.cookies.get(VISITOR_COOKIE)?.value, secret);
+  if (body.type === "heartbeat") {
+    // Presence only renews an existing, signed identity; it never creates visitors or page views.
+    if (!cookieId) return new NextResponse(null, { status: 204, headers: { "Cache-Control": "no-store" } });
+    try {
+      const now = new Date();
+      await getPrisma().siteVisit.updateMany({
+        where: { sessionId: cookieId, lastSeenAt: { lte: new Date(now.getTime() - 20_000) } },
+        data: { lastSeenAt: now },
+      });
+      return new NextResponse(null, { status: 204, headers: { "Cache-Control": "no-store" } });
+    } catch {
+      return NextResponse.json({ message: "Registro de visitas indisponivel." }, { status: 503, headers: { "Cache-Control": "no-store" } });
+    }
+  }
   if (!cookieId && body.sessionId != null && !validVisitorId(body.sessionId)) {
     return NextResponse.json(
       { message: "Sessao invalida para registrar visita." },
@@ -42,22 +59,24 @@ export async function POST(request: NextRequest) {
   // Preserve identifiers already stored by the previous tracker, including legacy IDs.
   const sessionId = cookieId || (validVisitorId(body.sessionId) ? body.sessionId : randomUUID());
   const path = cleanPath(body.path);
-  const prisma = getPrisma();
-
-  await prisma.siteVisit.upsert({
-    create: {
-      firstPath: path,
-      lastPath: path,
-      referrer: cleanReferrer(body.referrer),
-      sessionId,
-    },
-    update: {
-      lastPath: path,
-      lastSeenAt: new Date(),
-      views: { increment: 1 },
-    },
-    where: { sessionId },
-  });
+  try {
+    await getPrisma().siteVisit.upsert({
+      create: {
+        firstPath: path,
+        lastPath: path,
+        referrer: cleanReferrer(body.referrer),
+        sessionId,
+      },
+      update: {
+        lastPath: path,
+        lastSeenAt: new Date(),
+        views: { increment: 1 },
+      },
+      where: { sessionId },
+    });
+  } catch {
+    return NextResponse.json({ message: "Registro de visitas indisponivel." }, { status: 503, headers: { "Cache-Control": "no-store" } });
+  }
 
   const response = NextResponse.json({ ok: true, visitorId: sessionId });
   response.headers.set("Cache-Control", "no-store");

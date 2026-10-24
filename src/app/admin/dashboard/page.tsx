@@ -13,9 +13,10 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { AdminChart } from "@/components/admin/admin-chart";
-import { AdminDataTable } from "@/components/admin/admin-data-table";
+import { OnlineVisitorsCard } from "@/components/admin/online-visitors-card";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { getDashboardOrderSummary } from "@/features/analytics/dashboard-metrics";
+import { getOnlineVisitorSummary } from "@/features/analytics/online-presence";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -164,11 +165,11 @@ const quickActions: DashboardAction[] = [
 ];
 
 async function getDashboardMetrics(): Promise<DashboardMetric[]> {
-  const prisma = getPrisma();
   const now = new Date();
   const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
   try {
+    const prisma = getPrisma();
     const [
       totalProducts,
       activeProducts,
@@ -180,6 +181,7 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
       whatsappContacts,
       siteVisitors,
       recentSiteVisitors,
+      orderSummary,
     ] = await Promise.all([
       prisma.product.count(),
       prisma.product.count({ where: { status: "ACTIVE" } }),
@@ -207,6 +209,7 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
       prisma.whatsAppContact.count(),
       prisma.siteVisit.count(),
       prisma.siteVisit.count({ where: { lastSeenAt: { gte: last24Hours } } }),
+      getDashboardOrderSummary(prisma),
     ]);
 
     return [
@@ -220,19 +223,19 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
         value: numberFormatter.format(totalProducts),
       },
       {
-        description: "campanhas publicadas agora",
+        description: "campanhas publicadas e dentro da vigência; não conta descontos do catálogo",
         href: "/admin/ofertas",
         icon: Gift,
-        label: "Ofertas ativas",
+        label: "Campanhas ativas",
         roles: ["ADMIN", "MANAGER", "STAFF"],
         tone: "amber",
         value: numberFormatter.format(activeOffers),
       },
       {
-        description: `${numberFormatter.format(activeCustomers)} ativos`,
+        description: `${numberFormatter.format(activeCustomers)} cadastros habilitados; não mede presença online`,
         href: "/admin/clientes",
         icon: Users,
-        label: "Clientes",
+        label: "Clientes cadastrados",
         roles: ["ADMIN", "MANAGER", "STAFF"],
         tone: "blue",
         value: numberFormatter.format(totalCustomers),
@@ -250,26 +253,44 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
         description: "contatos registrados",
         href: "/admin/clientes",
         icon: MessageCircle,
-        label: "Pedidos via WhatsApp",
+        label: "Contatos via WhatsApp",
         roles: ["ADMIN", "MANAGER", "STAFF"],
         tone: "green",
         value: numberFormatter.format(whatsappContacts),
       },
       {
-        description: `${numberFormatter.format(recentSiteVisitors)} navegadores ativos nas ultimas 24h`,
+        description: `${numberFormatter.format(recentSiteVisitors)} identificadores vistos nas últimas 24h; não representa pessoas`,
         icon: Eye,
-        label: "Visitantes únicos do site",
+        label: "Navegadores registrados",
         roles: ["ADMIN", "MANAGER", "STAFF"],
         tone: "teal",
         value: numberFormatter.format(siteVisitors),
       },
       {
-        description: "banco e app respondendo",
+        description: "Consultas do resumo respondendo. Pagamentos e frete não foram verificados.",
         icon: Activity,
         label: "Status do sistema",
         roles: ["ADMIN", "MANAGER", "STAFF"],
         tone: "green",
         value: "Ativo",
+      },
+      {
+        description: `${numberFormatter.format(orderSummary.orders.withAccount)} com conta vinculada · ${numberFormatter.format(orderSummary.orders.withoutAccount)} sem conta vinculada`,
+        href: "/admin/pedidos",
+        icon: Package,
+        label: "Pedidos registrados",
+        roles: [...adminRoutePermissions["/admin/pedidos"]],
+        tone: "blue",
+        value: numberFormatter.format(orderSummary.orders.total),
+      },
+      {
+        description: `${numberFormatter.format(orderSummary.purchases.withAccount)} com conta vinculada · ${numberFormatter.format(orderSummary.purchases.withoutAccount)} sem conta vinculada`,
+        href: "/admin/pedidos",
+        icon: BadgePercent,
+        label: "Compras concluídas e pagas",
+        roles: [...adminRoutePermissions["/admin/pedidos"]],
+        tone: "green",
+        value: numberFormatter.format(orderSummary.purchases.total),
       },
     ];
   } catch (error) {
@@ -277,12 +298,12 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
 
     return [
       {
-        description: "verifique DATABASE_URL e Prisma",
+        description: "Resumo indisponível. Não foi possível concluir as consultas ao banco.",
         icon: BadgePercent,
         label: "Status do sistema",
         roles: ["ADMIN", "MANAGER", "STAFF"],
         tone: "slate",
-        value: "Instavel",
+        value: "Indisponível",
       },
     ];
   }
@@ -315,7 +336,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
               tone.badge,
             )}
           >
-            ao vivo
+            nesta consulta
           </span>
         </div>
         <p className="mt-4 text-sm font-bold leading-tight text-ink">
@@ -377,11 +398,11 @@ function SystemStatusCard({ metric }: { metric?: DashboardMetric }) {
                 : "bg-[#f2f4f7] text-[#475467]",
             )}
           >
-            {isActive ? "online" : "atencao"}
+            {isActive ? "consultado" : "atenção"}
           </span>
         </div>
 
-        <p className="mt-5 text-sm font-bold text-muted">Saude operacional</p>
+        <p className="mt-5 text-sm font-bold text-muted">Consulta ao banco</p>
         <p className="mt-1 text-3xl font-black text-ink">{metric.value}</p>
         <p className="mt-2 text-sm font-semibold leading-5 text-muted">
           {metric.description}
@@ -395,7 +416,7 @@ function SystemStatusCard({ metric }: { metric?: DashboardMetric }) {
                 isActive ? "bg-[#12b76a]" : "bg-[#98a2b3]",
               )}
             />
-            Banco conectado
+            {isActive ? "Consultas concluídas" : "Consultas indisponíveis"}
           </span>
           <span className="flex items-center gap-2 rounded-md bg-white px-3 py-2 shadow-sm">
             <span
@@ -404,7 +425,7 @@ function SystemStatusCard({ metric }: { metric?: DashboardMetric }) {
                 isActive ? "bg-[#12b76a]" : "bg-[#98a2b3]",
               )}
             />
-            Aplicacao respondendo
+            Página renderizada; integrações não verificadas
           </span>
         </div>
       </CardContent>
@@ -472,6 +493,13 @@ function QuickActions({ actions }: { actions: DashboardAction[] }) {
 
 export default async function Page() {
   const { role } = await requireAdminPageRoute("/admin/dashboard");
+  const measuredAt = new Date().toISOString();
+  let onlineCount: number | null = null;
+  try {
+    onlineCount = (await getOnlineVisitorSummary(getPrisma())).online;
+  } catch (error) {
+    console.error("Erro ao consultar presença online do dashboard", error);
+  }
   const metrics = await getDashboardMetrics();
   const visibleMetrics = metrics.filter(
     (metric) => metric.roles.includes(role),
@@ -491,7 +519,7 @@ export default async function Page() {
       allowedRoles={adminRoutePermissions["/admin/dashboard"]}
       title="Dashboard"
     >
-      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
+      <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-3">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -501,45 +529,31 @@ export default async function Page() {
               <h2 className="text-xl font-black text-ink">Visao do painel</h2>
             </div>
             <p className="text-sm font-semibold text-muted">
-              Dados reais para decidir o proximo atendimento.
+              Resumo consultado em {new Date(measuredAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} (Brasília).
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {commercialMetrics.map((metric) => (
               <MetricCard key={metric.label} metric={metric} />
             ))}
           </div>
         </div>
 
-        <SystemStatusCard metric={statusMetric} />
+        <div className="space-y-4">
+          <OnlineVisitorsCard initialCount={onlineCount} measuredAt={measuredAt} />
+          <SystemStatusCard metric={statusMetric} />
+        </div>
       </section>
 
       <QuickActions actions={visibleActions} />
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
-          <CardContent className="p-5">
-            <h2 className="text-lg font-black text-ink">Interesse comercial</h2>
-            <p className="mt-1 text-sm text-muted">
-              Exemplo visual com Recharts. Dados reais entram depois.
-            </p>
-            <AdminChart />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-5">
-            <h2 className="text-lg font-black text-ink">Roadmap modular</h2>
-            <p className="mt-1 text-sm text-muted">
-              Tabela usando TanStack Table para o painel crescer.
-            </p>
-            <div className="mt-5">
-              <AdminDataTable />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <p className="mt-6 text-sm text-muted">
+        Pedidos incluem todos os estados, exceto pagamentos online de teste. Compras exigem conclusão e pagamento confirmado;
+        pagamentos online em produção também precisam estar sem revisão, disputa ou estorno.
+        Sem conta vinculada não comprova compra sem login: uma conta excluída pode desvincular o pedido.
+        Os totais comerciais são atualizados ao recarregar a página.
+      </p>
     </AdminShell>
   );
 }

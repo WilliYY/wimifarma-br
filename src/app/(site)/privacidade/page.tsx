@@ -32,7 +32,7 @@ const sections = [
   },
   {
     title: "Armazenamento local e cookies",
-    text: "O carrinho usa o armazenamento local do navegador para lembrar produtos e quantidades. Cookies estritamente necessarios podem manter login e seguranca da sessao. Para contar visitantes sem repetir recargas e retornos, usamos um identificador aleatorio no armazenamento local e o cookie assinado wimi-visitor, valido por 365 dias e renovado a cada acesso registrado. O identificador local permanece ate voce limpar os dados do site. Essa contagem representa navegadores, sem identificar uma pessoa entre dispositivos; nao usa IP ou fingerprinting. Registramos paginas visitadas sem parametros da URL e apenas a origem do site de referencia. Atualmente nao usamos cookies de publicidade; se isso mudar, o aviso e os controles de consentimento deverao ser atualizados.",
+    text: "O carrinho usa o armazenamento local do navegador para lembrar produtos e quantidades. Cookies estritamente necessarios podem manter login e seguranca da sessao. Para contar visitantes sem repetir recargas e retornos, usamos um identificador aleatorio no armazenamento local e o cookie assinado wimi-visitor, valido por 365 dias e renovado a cada acesso registrado. O identificador local permanece ate voce limpar os dados do site. Essa contagem representa navegadores, sem identificar uma pessoa entre dispositivos; nao usa IP ou fingerprinting. Enquanto o site estiver visivel, enviamos um sinal de presenca a cada 30 segundos para estimar navegadores ativos nos ultimos dois minutos, sem acrescentar visualizacoes. A contagem agregada fica restrita ao painel autorizado da equipe. Registramos paginas visitadas sem parametros da URL e apenas a origem do site de referencia. Atualmente nao usamos cookies de publicidade; se isso mudar, o aviso e os controles de consentimento deverao ser atualizados.",
   },
   {
     title: "Avaliacoes de produtos",
@@ -68,7 +68,7 @@ export default function Page() {
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-md bg-brand-soft text-brand"><ShieldCheck className="h-5 w-5" /></span>
           <h1 className="mt-5 text-3xl font-black text-ink sm:text-4xl">Politica de Privacidade</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Transparencia sobre os dados usados pela Wimifarma no site, na conta e nos pedidos.</p>
-          <p className="mt-3 text-xs font-bold text-muted">Atualizada em 19 de outubro de 2026.</p>
+          <p className="mt-3 text-xs font-bold text-muted">Atualizada em 24 de outubro de 2026.</p>
         </div>
 
         <div className="grid gap-8 py-8">

@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-24 — Dashboard com contagens reais e presença por navegador
+
+- Decisão: remover as demonstrações de interesse comercial e roadmap do dashboard; distinguir cadastros, contatos, campanhas, pedidos e compras concluídas e pagas, incluindo pedidos sem conta vinculada e excluindo pagamentos de teste.
+- Presença: reutilizar a identidade assinada e o índice de `SiteVisit.lastSeenAt`, com janela de dois minutos e sinais a cada 30 segundos somente na página pública visível. Sinais não acrescentam visualizações. O total agregado exige acesso ao dashboard e falhas não são apresentadas como zero.
+- Limites: um navegador com várias abas conta uma vez; outros navegadores ou perfis no mesmo aparelho podem contar separadamente. Não há identificação de pessoas, fingerprinting, deduplicação por IP ou associação automática de pedidos a contas. As consultas não representam fechamento financeiro.
+- Impacto: dashboard, tracker, APIs de visitas e presença, política de privacidade e testes. Sem migração, remoção de dados ou mudanças nos pedidos. Contratos em `31-visitas-do-site.md` e `32-dashboard-confiabilidade.md`.
+
 ## 2026-10-24 — Perfumes não usa característica de fragrância como tipo de produto
 
 - Correção: remover da seleção Perfumes os cuidados pessoais que só mencionam perfume, inclusive o Rexona Clinical Sem Perfume. Preservar perfumes, colônias e desodorante colônia.

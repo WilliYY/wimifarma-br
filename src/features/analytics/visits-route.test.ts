@@ -7,27 +7,34 @@ import { NextRequest, type NextResponse } from "next/server";
 
 const cookieName = "wimi-visitor";
 const id = "12345678-1234-4123-8123-123456789012";
-type Visit = { sessionId: string; views: number; firstPath: string; lastPath: string; ipHash?: string | null; referrer?: string | null };
+type Visit = { sessionId: string; views: number; firstPath: string; lastPath: string; lastSeenAt: Date; ipHash?: string | null; referrer?: string | null };
 type Upsert = { where: { sessionId: string }; create: Omit<Visit, "views">; update: { lastPath: string; views: { increment: number } } };
 const bundlePromise = build({ entryPoints: ["src/app/api/visitas/route.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "visits-fixture", setup(builder) {
   builder.onResolve({ filter: /lib\/prisma$/ }, args => ({ path: args.path, namespace: "fixture" }));
   builder.onLoad({ filter: /.*/, namespace: "fixture" }, () => ({ contents: "export const getPrisma=()=>globalThis.fixture.db;" }));
 } }] });
 
-async function harness(secret: string | null = "synthetic-visitor-secret") {
+async function harness(secret: string | null = "synthetic-visitor-secret", databaseFailure = false) {
   const visits = new Map<string, Visit>();
   const bundle = await bundlePromise;
   const loaded = { exports: {} as { POST: (request: NextRequest) => Promise<NextResponse> } };
   const db = { siteVisit: { upsert: async ({ where, create, update }: Upsert) => {
+    if (databaseFailure) throw new Error("private database detail");
     const existing = visits.get(where.sessionId);
     if (existing) { existing.views += update.views.increment; existing.lastPath = update.lastPath; }
-    else visits.set(where.sessionId, { ...create, views: 1 });
+    else visits.set(where.sessionId, { ...create, views: 1, lastSeenAt: new Date() });
+  }, updateMany: async ({ where, data }: { where: { sessionId: string; lastSeenAt: { lte: Date } }; data: { lastSeenAt: Date } }) => {
+    if (databaseFailure) throw new Error("private database detail");
+    const existing = visits.get(where.sessionId);
+    if (!existing || existing.lastSeenAt > where.lastSeenAt.lte) return { count: 0 };
+    existing.lastSeenAt = data.lastSeenAt;
+    return { count: 1 };
   } } };
   vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, Buffer, Date, console, TextDecoder, Uint8Array, setTimeout, clearTimeout, process: { env: { AUTH_URL: "https://example.com", AUTH_SECRET: secret } }, fixture: { db } });
-  const post = (sessionId: unknown = id, token?: string, path = "/", origin = "https://example.com") => {
+  const post = (sessionId: unknown = id, token?: string, path = "/", origin = "https://example.com", type?: string) => {
     const headers = new Headers({ "Content-Type": "application/json", "Origin": origin, "x-real-ip": "192.0.2.1" });
     if (token) headers.set("Cookie", `${cookieName}=${token}`);
-    return loaded.exports.POST(new NextRequest("https://example.com/api/visitas", { method: "POST", headers, body: JSON.stringify({ sessionId, path, referrer: "https://example.com/?email=private@example.com" }) }));
+    return loaded.exports.POST(new NextRequest("https://example.com/api/visitas", { method: "POST", headers, body: JSON.stringify({ sessionId, path, type, referrer: "https://example.com/?email=private@example.com" }) }));
   };
   return { visits, post };
 }
@@ -112,4 +119,58 @@ test("foreign-origin requests and missing signing secret do not write visits", a
   const unconfigured = await harness(null);
   assert.equal((await unconfigured.post()).status, 503);
   assert.equal(unconfigured.visits.size, 0);
+});
+
+test("signed heartbeats renew one browser without inflating views or changing page history", async () => {
+  const f = await harness();
+  const first = await f.post(id, undefined, "/ofertas");
+  const token = first.cookies.get(cookieName)?.value;
+  const row = f.visits.get(id)!;
+  row.lastSeenAt = new Date(Date.now() - 60_000);
+  const previous = row.lastSeenAt;
+  const response = await f.post("different-browser-id", token, "/checkout?private=1", "https://example.com", "heartbeat");
+  assert.equal(response.status, 204);
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.ok(row.lastSeenAt > previous);
+  assert.equal(row.views, 1);
+  assert.equal(row.lastPath, "/ofertas");
+  assert.equal(f.visits.size, 1);
+  const renewed = row.lastSeenAt;
+  await Promise.all(Array.from({ length: 25 }, () => f.post(id, token, "/", "https://example.com", "heartbeat")));
+  assert.equal(row.lastSeenAt, renewed, "rapid tabs must not rewrite the timestamp");
+  assert.equal(row.views, 1);
+});
+
+test("missing, tampered and deleted visitor identities cannot create visitors through heartbeats", async () => {
+  const f = await harness();
+  for (const token of [undefined, "tampered-cookie"]) {
+    assert.equal((await f.post(id, token, "/", "https://example.com", "heartbeat")).status, 204);
+    assert.equal(f.visits.size, 0);
+  }
+  const signed = await f.post();
+  f.visits.clear();
+  await f.post(id, signed.cookies.get(cookieName)?.value, "/", "https://example.com", "heartbeat");
+  assert.equal(f.visits.size, 0);
+  assert.equal((await f.post(id, undefined, "/", "https://example.com", "unexpected")).status, 400);
+});
+
+test("cross-origin heartbeats are rejected before writing", async () => {
+  const f = await harness();
+  const first = await f.post();
+  const previous = f.visits.get(id)!.lastSeenAt;
+  assert.equal((await f.post(id, first.cookies.get(cookieName)?.value, "/", "https://foreign.example", "heartbeat")).status, 403);
+  assert.equal(f.visits.get(id)!.lastSeenAt, previous);
+});
+
+test("database failure returns a generic unavailable response for views and signed presence", async () => {
+  const valid = await harness();
+  const token = (await valid.post()).cookies.get(cookieName)?.value;
+  const failed = await harness("synthetic-visitor-secret", true);
+  for (const type of ["view", "heartbeat"]) {
+    const response = await failed.post(id, token, "/", "https://example.com", type);
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.equal(JSON.stringify(await response.json()).includes("private"), false);
+  }
+  assert.equal(failed.visits.size, 0);
 });
