@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-24 — Dove21, Lux11 e TheraSkin8 encerrados com prova pública
+
+- Operação: publicar 21 apresentações Dove, 11 Lux e oito cosméticos TheraSkin, com revisão por EAN, foto real, ST numérica e deduplicação atual. A união dos dez lotes desta frente contém 186 EANs distintos com fotos; os lotes anteriores não foram reaplicados.
+- Identidade: nomes atuais dos rótulos preservados sem inferir equivalência de fórmula; aerossóis Dove declaram massa e volume conjuntamente; o kit Lux mantém seis barras de 85 g. As referências TheraSkin sustentam natureza/família, sem alegar comprovação do EAN, tom ou formulação pela página atual.
+- Evidência: fonte `532e96c`, mapa completo de 988 arquivos e fundação de 904 testes; cada lote repetiu segurança/fornecedores/auditorias e novo QA isolado, seguido de backup, dry-run, aplicação única, persistência em outro contêiner e conferência pública. Todas as janelas foram liberadas e os QAs próprios removidos, com backups preservados.
+- Limites: a coleta comercial Dove terminou em 204 apresentações, mas suas fotos oficiais foram observadas parcialmente. A lista pública Lux teve 38 links e cinco avanços até o controle desaparecer. Cetrilan, Papuless e medicamentos TheraSkin continuam fora do lote cosmético, sem inferência regulatória a partir de documentação histórica. Um alerta moderado em `fast-uri` permanece, sem altos/críticos. Provas e detalhes em `96-catalogo-por-principio-ativo-2026-10-22.md`.
+
 ## 2026-10-24 — Inclusões individuais Nivea18 e Above13 com fotos auditadas
 
 - Operação: adicionar 18 apresentações Nivea e 13 Above, com ofertas ANB, ST numérica, fotos reais e revisão de cada EAN/variante/embalagem. A frente das 17 marcas soma 146 EANs distintos publicados, sem reaplicar lotes anteriores ou atribuir inclusões de outras frentes a esta.
