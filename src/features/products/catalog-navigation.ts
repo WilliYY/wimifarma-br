@@ -25,7 +25,7 @@ export const catalogSections: CatalogSection[] = [
   { id: "deodorant", label: "Desodorantes", group: "beauty", pattern: /\b(desodorante|antitranspirante)\b/ },
   { id: "oral", label: "Higiene bucal", group: "beauty", pattern: /\b(dental|bucal|dentais|dentifricio)\b/ },
   { id: "intimate", label: "Higiene íntima", group: "beauty", pattern: /\b(intimo|intima|absorvente)\b/ },
-  { id: "perfume", label: "Perfumes", group: "beauty", pattern: /\b(perfume|colonia|eau de)\b/ },
+  { id: "perfume", label: "Perfumes", group: "beauty", pattern: /\b(perfume|colonia|eau de (parfum|toilette|cologne))\b/ },
   { id: "sun", label: "Proteção solar", group: "dermo", pattern: /\b(protetor solar|protecao solar|fps\s*\d+)\b/ },
   { id: "hydration", label: "Hidratação", group: "dermo", pattern: /\b(hidratante|hidratacao|locao corporal)\b/ },
   { id: "face", label: "Cuidados com o rosto", group: "dermo", pattern: /\b(facial|rosto|serum|micelar)\b/ },
@@ -85,7 +85,19 @@ export function matchesCatalogSection(product: Omit<SearchRankableProduct, "sear
   if (section.topic) return matchesSearchTopic({ ...product, searchText: "" }, searchTopics.find(topic => topic.id === section.topic)!);
   const classification = product.catalogClassification as { kind?: string } | null;
   if (classification?.kind === "MEDICINE" || /^medicamentos?$/.test(normalizeProductSearch(product.category ?? ""))) return false;
-  return section.pattern?.test(normalizeProductSearch(product.name)) ?? false;
+  let name = normalizeProductSearch(product.name);
+  if (section.id === "perfume") {
+    name = name.replace(/\b(sem|livre de|isento de) (perfume|fragrancia)\b/g, "");
+    const fragrance = section.pattern?.exec(name);
+    if (!fragrance) return false;
+    const care = /\b(antitranspirante|antiperspirante|sabonete|shampoo|condicionador|hidratante|creme|locao corporal|oleo de banho|lencos?|talco)\b/.exec(name);
+    if (care && care.index < fragrance.index) return false;
+    // Desodorante colônia é uma fragrância; perfume no nome de um aerossol não muda seu tipo.
+    const deodorant = /\bdesodorantes?\b/.exec(name);
+    if (deodorant && deodorant.index < fragrance.index && !/\b(colonia|eau de (parfum|toilette|cologne))\b/.test(name)) return false;
+    return true;
+  }
+  return section.pattern?.test(name) ?? false;
 }
 
 export function catalogGroupNames(categories: readonly { name: string; names?: string[] }[], group: CatalogGroup) {

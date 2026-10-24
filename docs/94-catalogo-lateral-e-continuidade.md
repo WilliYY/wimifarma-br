@@ -1,5 +1,13 @@
 # Catálogo lateral e continuidade das ofertas — 22/10/2026
 
+## Correção do filtro Perfumes — 24/10/2026
+
+O filtro identificava qualquer ocorrência de `perfume` no nome e incluía indevidamente o Desodorante Rexona Aerossol Clinical Sem Perfume 150ml. Agora ignora expressões negativas de fragrância e exclui tipos de cuidados pessoais que apenas mencionam perfume, como desodorantes, antitranspirantes, sabonetes e hidratantes. Perfumes, colônias e as apresentações `eau de parfum`, `eau de toilette` e `eau de cologne` continuam aceitos; `desodorante colônia` é preservado como fragrância.
+
+A regra compartilhada em `matchesCatalogSection` determina tanto a disponibilidade da subcategoria na lateral quanto os produtos da seleção. O desodorante permanece em Desodorantes e no catálogo geral. Não há reclassificação persistente, alteração de busca, preços, estoque ou checkout. As regressões cobrem a apresentação informada, cuidados com e sem perfume e fragrâncias legítimas.
+
+Validação: 29 testes de catálogo/busca, 485 testes de segurança, lint completo, typecheck e Prisma validate passaram. Revisão independente aprovada após incluir lenços/talco e preservar perfume sólido em creme pela posição da identidade do produto no nome. Auditorias completa e de produção sem high/critical; permanece um moderate em `fast-uri`, sem mudança de dependências. A publicação reconstrói somente o app, com imagem anterior preservada e conferência pública das duas seleções, sem migration ou escrita comercial.
+
 ## Simplificação visual — 23/10/2026
 
 A navegação lateral usa categorias recolhíveis nativas (`details`/`summary`), com apenas um grupo aberto por vez. O grupo da URL atual começa aberto; sua subcategoria recebe `aria-current="page"` e destaque vermelho. Categorias sem subcategorias continuam sendo links diretos. Os atalhos Todos os produtos e Ofertas ficam no início, seguidos por grupos com ícones e rótulos legíveis; cada grupo expandido inclui Ver tudo e suas opções internas.

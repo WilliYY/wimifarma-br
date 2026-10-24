@@ -40,3 +40,47 @@ test("subcategorias usam curadoria clínica existente e apresentação de cuidad
   assert.equal(matchesCatalogSection({ ...base, name: "Shampoo 200ml", category: "Higiene" }, hair), true);
   assert.equal(matchesCatalogSection({ ...base, name: "Shampoo 200ml", catalogClassification: { kind: "MEDICINE" } }, hair), false);
 });
+
+test("Perfumes não confunde características de fragrância com o tipo do produto", () => {
+  const perfume = catalogSections.find(section => section.id === "perfume")!;
+  for (const name of [
+    "Desodorante Rexona Aerossol Clinical Sem Perfume 150ml",
+    "Desodorante Roll-on Com Perfume 50ml",
+    "Desodorante Aerossol Perfume Suave 150ml",
+    "Antitranspirante Perfume Floral 150ml",
+    "Sabonete Com Perfume de Colônia 90g",
+    "Shampoo Perfume Prolongado 200ml",
+    "Creme Hidratante Perfume Floral 200ml",
+    "Creme Corporal Com Perfume 200ml",
+    "Loção Corporal Perfume Floral 200ml",
+    "Óleo de Banho Perfume Floral 200ml",
+    "Lenços Umedecidos Com Perfume 50 Unidades",
+    "Talco Perfume Floral 100g",
+    "Cuidados Sem Perfume 100ml",
+    "Cuidados Livre de Perfume 100ml",
+    "Cuidados Isento de Perfume 100ml",
+  ]) {
+    assert.equal(matchesCatalogSection({ id: "care", name, category: "Higiene pessoal" }, perfume), false, name);
+  }
+});
+
+test("Perfumes preserva perfumes e colônias, inclusive desodorante colônia", () => {
+  const perfume = catalogSections.find(section => section.id === "perfume")!;
+  for (const name of [
+    "Perfume Floral 50ml",
+    "Perfume Sólido em Creme 10g",
+    "Colônia Infantil 100ml",
+    "Desodorante Colônia Floral 100ml",
+    "Colônia Desodorante Floral 100ml",
+    "Fragrância Eau de Parfum 50ml",
+    "Fragrância Eau de Toilette 100ml",
+    "Fragrância Eau de Cologne 100ml",
+  ]) {
+    assert.equal(matchesCatalogSection({ id: "fragrance", name, category: "Perfumaria" }, perfume), true, name);
+  }
+});
+
+test("o desodorante sem perfume continua na seção Desodorantes", () => {
+  const deodorant = catalogSections.find(section => section.id === "deodorant")!;
+  assert.equal(matchesCatalogSection({ id: "rexona", name: "Desodorante Rexona Aerossol Clinical Sem Perfume 150ml", category: "Higiene pessoal" }, deodorant), true);
+});

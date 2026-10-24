@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-24 — Perfumes não usa característica de fragrância como tipo de produto
+
+- Correção: remover da seleção Perfumes os cuidados pessoais que só mencionam perfume, inclusive o Rexona Clinical Sem Perfume. Preservar perfumes, colônias e desodorante colônia.
+- Impacto: filtro compartilhado da navegação e listagem, com regressões específicas; nenhum cadastro comercial ou fluxo de compra alterado. Detalhes em `94-catalogo-lateral-e-continuidade.md`.
+
 ## 2026-10-23 — Cashback de compra em genéricos e similares com receita
 
 - Decisão do lojista: aplicar 1% em genéricos/similares, inclusive com receita classificada. Controlados, receita pendente e Farmácia Popular permanecem excluídos; WimiCoins e bônus de avaliação não foram ampliados.
