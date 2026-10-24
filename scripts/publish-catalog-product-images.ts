@@ -27,10 +27,10 @@ export const catalogImageManifestSchema = z.object({ images: z.array(z.object({
   publishOnApproval: z.boolean().default(false),
 }).strict().refine(row => {
   const classification = row.catalogClassification;
-  return ["MEDICINE", "PERFUMERY", "HYGIENE"].includes(classification.kind) &&
+  return ["MEDICINE", "PERFUMERY", "HYGIENE", "OTHER"].includes(classification.kind) &&
     (classification.kind !== "MEDICINE" || (classification.otc && classification.medicineClass !== "UNCLASSIFIED")) &&
     classificationIsConsistent(classification, { requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false });
-}, "Only explicitly classified OTC, perfumery or hygiene presentations are allowed.")).min(1).max(50)
+}, "Only explicitly classified OTC, perfumery, hygiene or non-medicinal goods are allowed.")).min(1).max(50)
   .refine(rows => new Set(rows.map(row => normalizeGtin(row.ean))).size === rows.length, "Duplicate GTIN.") }).strict();
 
 type ImageRow = z.infer<typeof catalogImageManifestSchema>["images"][number];

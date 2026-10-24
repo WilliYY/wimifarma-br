@@ -4,6 +4,10 @@ Atualização de 23/10/2026: novos genéricos e similares com classificação co
 
 ## Escopo autorizado
 
+Em novo pedido nesta conversa, o lojista autorizou expansão por marca/linha de higiene, perfumaria, tinturas e acessórios, incluindo Farmax/Hidraderm, linhas de coloração, acessórios de cabelo/unhas, BIC, Duracell, Rayovac e Band-Aid, além de Dorflex, Doricin e demais apresentações MIP confirmadas. O alcance é a identidade real da marca e apresentação: buscas parciais por Enox ou Vertix também podem retornar medicamentos alheios ao grupo de acessórios, que não são aprovados por esse resultado.
+
+Pilhas e outros itens não medicamentosos usam `OTHER`, sem flags medicinais, em vez de classificação artificial de higiene. O manifesto misto e o publicador de fotos aceitam essa classificação explícita, preservando revisão ADMIN, foto por EAN, fonte/hash/consentimento de reutilização, bloqueio de receita/Farmácia Popular e promoção DRAFT→ACTIVE somente após aprovação da imagem. Alimentos e suplementos não foram adicionados implicitamente a esse publicador. O acréscimo comercial continua explícito por lote aprovado; o padrão técnico de importação não substitui autorização do lojista.
+
 Em 22/10/2026, o lojista substituiu a prioridade da planilha histórica pela pesquisa de uma família completa por vez. A inclusão deve comparar ANB e Profarma e preservar marcas, fabricantes, doses, formas e quantidades diferentes. Associações entram quando contêm o princípio ativo solicitado; nomes apenas parecidos não são equivalentes.
 
 Primeira etapa: levotiroxina, nimesulida, simeticona, tadalafila, ibuprofeno e loratadina. Em novo pedido na mesma conversa, o lojista acrescentou paracetamol, acetilcisteína, dexclorfeniramina, fexofenadina e ambroxol, incluindo a orientação de mostrar “Avise-me” quando houver falta de estoque confirmada. Desloratadina encontrada por busca parcial fica fora desta autorização. Não iniciar outras famílias sem novo pedido.

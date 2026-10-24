@@ -68,6 +68,19 @@ test("mixed OTC/hygiene accepts no ceiling; prescription needs ceiling and never
   assert.equal(supplierImportManifestSchema.safeParse({ products: [{ ...row, offers: [offer] }] }).success, false);
 });
 
+test("explicit non-medicinal OTHER imports keep evidence and cannot acquire prescription or medicine flags", () => {
+  const input = mixed();
+  const classification = { kind: "OTHER", medicineClass: "UNCLASSIFIED", ethical: false, otc: false };
+  Object.assign(input.products[0], { requiresPrescription: false, prescriptionType: "NONE", activeIngredients: [], offers: [offer], catalogClassification: classification });
+  assert.equal(supplierImportManifestSchema.safeParse(input).success, true);
+  for (const patch of [
+    { requiresPrescription: true, prescriptionType: "ORDINARY" },
+    { catalogClassification: { ...classification, medicineClass: "GENERIC" } },
+    { catalogClassification: { ...classification, otc: true } },
+    { catalogClassification: { ...classification, ethical: true } },
+  ]) assert.equal(supplierImportManifestSchema.safeParse({ ...input, products: [{ ...input.products[0], ...patch }] }).success, false);
+});
+
 test("a single mixed batch keeps prescription, OTC and perfumery rules separate", () => {
   const rx = mixed().products[0];
   const otc = { ...rx, ean: "7896181915638", slug: "otc-sintetico", requiresPrescription: false, prescriptionType: "NONE",
