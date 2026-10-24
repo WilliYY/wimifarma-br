@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Farmácia Popular com orientação em três etapas
+
+- Decisão: reduzir blocos repetidos, ampliar a foto ilustrativa, usar verde como apoio e destacar WhatsApp, etapas e checklist em uma composição responsiva.
+- Impacto: somente página pública e CSS local; selo, assinatura oficial, metadata e links existentes preservados. Nenhuma alteração em requisitos, disponibilidade, compra, dados ou confirmação humana.
+
 ## 2026-10-23 — Catálogo com cinco cartões por fileira
 
 - Decisão: ampliar a largura útil de `CatalogPage` para até 1680 px e apresentar cinco produtos por fileira a partir de 1280 px, preservando a grade de uma/duas/três colunas em telas menores.

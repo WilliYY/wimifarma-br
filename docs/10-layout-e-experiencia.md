@@ -1,5 +1,13 @@
 # 10 - Layout e Experiencia
 
+## Farmácia Popular com foco no atendimento — 23/10/2026
+
+A página usa hero com título amplo, verde de apoio, foto maior sem textos sobre os rostos e CTA principal para o WhatsApp existente. “Como funciona” leva às três etapas em lista ordenada; documentos ficam reunidos em um checklist, com confirmação da equipe antes da separação. O acesso às ofertas permanece ao final. Metadata, regras do programa, disponibilidade, retirada/entrega e atendimento assistido são preservados; não há formulário, consulta automática, nova promessa comercial ou integração.
+
+Direção: institucional acolhedora, com Barlow, superfícies claras, verde e cores existentes. DFII 15: impacto 4, adequação 5, implementação 4, desempenho 5, risco 3. Composição em duas colunas no desktop e uma no celular; texto principal a partir de 16 px, CTAs de 52 px e foco visível. O CSS é local em `popular.module.css`, sem JavaScript, fonte, dependência ou imagem nova. Preservados selo oficial, `BrandSignature`, imagem ilustrativa existente, animação do cabeçalho e as 128 bolhas do rodapé.
+
+Prévia com página e estilos reais em 320, 390, 768 e 1440 px: sem overflow, uma H1, três etapas, imagens carregadas e CTAs sem corte. Evidências e publicação em `outputs/farmacia-popular-ui-2026-10-23/`, fora do Git.
+
 ## Cinco produtos por fileira no catálogo — 23/10/2026
 
 Catálogo, ofertas e categorias que compartilham `CatalogPage` exibem cinco cartões por fileira a partir de 1280 px. O conteúdo passa a ter limite de 1680 px, com lateral de 220 px e espaçamento menor entre cartões no desktop, para preservar a leitura das fotos, preços e ações. Telas menores usam uma coluna abaixo de 380 px, duas até 767 px e três de 768 a 1279 px. Não há mudança de paginação, filtros, produtos, preços ou fluxo de compra.

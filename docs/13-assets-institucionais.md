@@ -1,5 +1,9 @@
 # 13 - Assets institucionais
 
+## Farmácia Popular — composição de 23/10/2026
+
+A página reutiliza `banners/farmacia-popular-atendimento.webp`, o selo `brand/farmacia-popular.webp` e a assinatura oficial `BrandSignature`, sem gerar ou alterar imagens. A foto tem enquadramento responsivo, marcas separadas em HTML e legenda explícita de imagem ilustrativa. Os textos não apresentam as pessoas da cena como equipe ou clientes reais. A identidade verde e o checklist passam a usar CSS local; contrato em [10](10-layout-e-experiencia.md).
+
 ## Fundo decorativo das categorias — 20/10/2026
 
 `public/banners/contato-farmaceutica.webp` também compõe o fundo da faixa de categorias da home, com baixa opacidade, saturação reduzida e sobreposição clara. A cena existente é ilustrativa; não é apresentada como retrato da equipe real. Não houve geração, redesenho ou novo arquivo de imagem. Entrega responsiva pelo Next Image, qualidade 75, com alternativa vazia por ser decoração. Contrato em [88](88-faixa-categorias-visual.md).
