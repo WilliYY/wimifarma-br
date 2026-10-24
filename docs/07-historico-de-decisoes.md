@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-24 — Inclusões individuais Nivea18 e Above13 com fotos auditadas
+
+- Operação: adicionar 18 apresentações Nivea e 13 Above, com ofertas ANB, ST numérica, fotos reais e revisão de cada EAN/variante/embalagem. A frente das 17 marcas soma 146 EANs distintos publicados, sem reaplicar lotes anteriores ou atribuir inclusões de outras frentes a esta.
+- Evidência: Nivea usa 17 fotos de distribuidor e uma do fabricante; Above usa objetos de imagem de catálogos públicos de distribuidores, preservando a procedência e as limitações. Divergências de unidade foram documentadas; nenhuma equivalência entre massa e volume foi inferida.
+- Controles: fonte imutável `af659a0`, 988 arquivos conferidos e 904 testes aprovados; cada lote repetiu segurança/fornecedores/auditorias, QA isolado, deduplicação atual, ADMIN ativo, backup, baseline, dry-run, aplicação única e verificação pública. As duas janelas terminaram liberadas, com QA próprio removido e backups preservados.
+- Limites: auditorias mantêm um alerta moderado em `fast-uri`, sem altos/críticos. Três fotos Above conservam a resolução original de 99 × 240 pixels, sem ampliação. A coleta ANB Dove terminou em 204 apresentações; a pesquisa de fotos segue parcial. Provas e detalhes em `96-catalogo-por-principio-ativo-2026-10-22.md`.
+
 ## 2026-10-24 — Dashboard com contagens reais e presença por navegador
 
 - Decisão: remover as demonstrações de interesse comercial e roadmap do dashboard; distinguir cadastros, contatos, campanhas, pedidos e compras concluídas e pagas, incluindo pedidos sem conta vinculada e excluindo pagamentos de teste.
