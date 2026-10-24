@@ -10,7 +10,7 @@ import type { PublicProductSearchItem } from "@/features/products/public-search"
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName, productTitleBrand } from "@/features/products/display-name";
 import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
-import { canDisplayPmcSavings, pmcSavingsPercent } from "@/features/products/cmed-reference";
+import { productOfferDiscount } from "@/features/offers/daily-rotation";
 import { ProductPmcBadge, ProductPmcPrice } from "./product-pmc";
 
 export type RelatedProductCardItem = PublicProductSearchItem & {
@@ -30,11 +30,9 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
   const hasPromotion = Boolean(
     product.promotionalPrice && currentPrice < normalPrice,
   );
-  const discount = hasPromotion
-    ? Math.round(((normalPrice - currentPrice) / normalPrice) * 100)
-    : 0;
+  const discount = productOfferDiscount(product);
   const pmc = product.pmcReference;
-  const pmcSavings = pmc && canDisplayPmcSavings(product) ? pmcSavingsPercent(pmc.amountCents, Math.round(currentPrice * 100)) : null;
+  const pmcSavings = pmc ? discount : null;
   const cartProduct = {
     supplierDemandAllowed: product.supplierDemandAllowed,
     inventorySource: product.inventorySource,
@@ -74,7 +72,7 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
         ) : (
           <ProductImagePlaceholder catalogClassification={product.catalogClassification} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" showLabel />
         )}
-        {pmcSavings !== null ? <ProductPmcBadge percent={pmcSavings} className="absolute right-2 top-2" /> : hasPromotion && !pmc ? (
+        {pmcSavings !== null ? <ProductPmcBadge percent={pmcSavings} className="absolute right-2 top-2" /> : discount !== null && !pmc ? (
           <span className="absolute left-2 top-2 rounded-sm bg-brand-soft px-1.5 py-1 text-[0.625rem] font-black text-brand">
             {discount}% OFF
           </span>

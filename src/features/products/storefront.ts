@@ -7,6 +7,7 @@ import { type CatalogGroup } from "./home-shortcuts";
 import { catalogGroupNames, catalogSections, matchesCatalogSection, sortCatalogProducts, type CatalogSort } from "./catalog-navigation";
 import { buildProductSearchText, rankProductsForQuery } from "./public-search";
 import { buildPublicBrands, matchingBrandNames, type PublicBrand } from "./brands";
+import { isDiscountedOffer, rotateDailyOffers } from "@/features/offers/daily-rotation";
 
 export const PAGE_SIZE = 24;
 const getPublicBrandRecords = cache(async () => getPrisma().product.findMany({ where: { status: "ACTIVE", brand: { not: null } }, select: { brand: true, category: true, requiresPrescription: true, catalogClassification: true }, orderBy: { brand: "asc" } }));
@@ -45,15 +46,17 @@ export async function getStorefrontProducts({ page = 1, categories, offers = fal
   const prisma = getPrisma();
   const groupedNames = group ? catalogGroupNames(await getPublicCategories(), group) : undefined;
   const brandNames = brand !== undefined ? matchingBrandNames(await getPublicBrandRecords(), brand) : undefined;
-  const where: Prisma.ProductWhereInput = { status: "ACTIVE", ...(categories ? { category: { in: categories } } : {}), ...(brandNames ? { brand: { in: brandNames } } : {}), ...(offers ? { promotionalPrice: { lt: prisma.product.fields.price } } : {}), ...(group ? { OR: [{ category: { in: groupedNames } }, ...(group === "medicines" ? [{ catalogClassification: { path: ["kind"], equals: "MEDICINE" } }] : [])] } : {}) };
+  const where: Prisma.ProductWhereInput = { status: "ACTIVE", ...(categories ? { category: { in: categories } } : {}), ...(brandNames ? { brand: { in: brandNames } } : {}), ...(group ? { OR: [{ category: { in: groupedNames } }, ...(group === "medicines" ? [{ catalogClassification: { path: ["kind"], equals: "MEDICINE" } }] : [])] } : {}) };
   // Resolve supplier availability before sorting the full result and paginating.
   const rows = await prisma.product.findMany({ where, select: storefrontSelect });
   const now = Date.now();
   const subsection = catalogSections.find(item => item.id === section);
   const filtered = subsection ? rows.filter(row => matchesCatalogSection(row, subsection)) : rows;
   const matches = query ? rankProductsForQuery(filtered.map(row => ({ ...row, searchText: row.searchText || buildProductSearchText(row) })), query) : filtered;
-  const resolved = matches.map(item => toSaleProduct(item, now));
-  const products = query && (!sort || sort === "relevantes")
+  const resolved = matches.map(item => toSaleProduct(item, now)).filter(item => !offers || isDiscountedOffer(item));
+  const products = offers && !query && (!sort || sort === "relevantes")
+    ? rotateDailyOffers(resolved, new Date(now))
+    : query && (!sort || sort === "relevantes")
     ? resolved.sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0))
     : sortCatalogProducts(resolved, sort ?? (categories || group || brand !== undefined ? "preco-asc" : "relevantes"));
   return { count: products.length, products: products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) };

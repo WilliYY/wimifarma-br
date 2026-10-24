@@ -119,8 +119,36 @@ test("disponibilidade comercial usa cotação preservada por demanda antes de or
     assert.equal(query().take, undefined);
   }
   const offers = await service.getStorefrontProducts({ offers: true });
-  assert.deepEqual(offers.products.map(product => product.id), ["expired", "physical", "fresh"]);
-  assert.equal(JSON.stringify(query().where), JSON.stringify({ status: "ACTIVE", promotionalPrice: { lt: "fixture-price" } }));
+  assert.deepEqual(offers.products.map(product => product.id), ["physical"]);
+  assert.equal(JSON.stringify(query().where), JSON.stringify({ status: "ACTIVE" }));
+});
+
+test("ofertas usam preço resolvido, PMC atual, disponibilidade e paginação estável", async () => {
+  const now = Date.now();
+  const ean = "1234567890128";
+  const reference = { version: 1, eanNormalized: "01234567890128", product: "MIP sintético", presentation: "10 MG CT 10 COM", laboratory: "Laboratório sintético", registration: "123", sourceUrl: "https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos/arquivos/lista_sintetica.xlsx/@@download/file", sourceSha256: "a".repeat(64), publishedOn: new Date(now - 86_400_000).toISOString().slice(0, 10), observedAt: new Date(now - 60_000).toISOString(), rates: [{ label: "PMC 20%", cents: 3000 }] };
+  const base = { stock: 2, price: "20", promotionalPrice: "10", requiresPrescription: false, isPopularPharmacy: false, activeIngredients: [] };
+  const rows: object[] = Array.from({ length: 30 }, (_, index) => ({ ...base, id: `manual-${index}`, name: `Produto ${index}` }));
+  rows.push({ ...base, id: "supplier-pmc", name: "MIP sintético", promotionalPrice: null, inventorySource: "DISTRIBUTOR", ean, cmedReference: reference, catalogClassification: { kind: "MEDICINE", medicineClass: "OTHER", ethical: false, otc: true }, supplierOffers: [{ id: "offer", supplier: "ANB", eanNormalized: reference.eanNormalized, unitCostCents: 1000, substitutionTaxCents: 0, available: true, stockQuantity: 5, allocationQuantity: 5, reservedQuantity: 0, committedQuantity: 0, observedAt: new Date(now - 60_000), validUntil: new Date(now + 3_600_000) }] });
+  rows.push(...[
+    { id: "expired-pmc", ean, cmedReference: { ...reference, publishedOn: "2020-01-01" }, promotionalPrice: null },
+    { id: "unavailable", stock: 0 }, { id: "rx", requiresPrescription: true }, { id: "popular", isPopularPharmacy: true }, { id: "no-discount", promotionalPrice: null },
+  ].map(patch => ({ ...base, name: patch.id, ...patch })));
+  const { service, query } = await fixture(rows);
+  const first = await service.getStorefrontProducts({ offers: true });
+  const second = await service.getStorefrontProducts({ offers: true, page: 2 });
+  const repeated = await service.getStorefrontProducts({ offers: true });
+  assert.equal(first.count, 31);
+  assert.equal(first.products.length, 24);
+  assert.equal(second.products.length, 7);
+  assert.deepEqual(first.products.map(product => product.id), repeated.products.map(product => product.id));
+  const all = [...first.products, ...second.products];
+  assert.equal(new Set(all.map(product => product.id)).size, 31);
+  assert.equal(all.find(product => product.id === "supplier-pmc")?.price, "16.00");
+  assert.equal(JSON.stringify(query().where), JSON.stringify({ status: "ACTIVE" }));
+  const byPrice = await service.getStorefrontProducts({ offers: true, sort: "preco-desc" });
+  assert.equal(byPrice.products[0].id, "supplier-pmc");
+  assert.equal((await service.getStorefrontProducts()).count, 36);
 });
 
 test("ordena todos os resultados por preço decrescente e nomes antes de paginar", async () => {

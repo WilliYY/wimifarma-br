@@ -12,7 +12,7 @@ export function commercialPrice(product: { price: string; promotionalPrice: stri
   return Number(product.promotionalPrice ?? product.price);
 }
 
-function dailyRank(day: string, id: string) {
+export function dailyRank(day: string, id: string) {
   let hash = 2166136261;
   for (const char of `${day}:${id}`) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
   return hash >>> 0;

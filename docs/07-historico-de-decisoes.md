@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Ofertas com rotação diária
+
+- Decisão: incluir em `/ofertas` os produtos disponíveis com promoção real ou economia PMC elegível e ordenar a seleção padrão por ID e dia de Brasília antes de paginar.
+- Motivo: permitir descoberta diária dos descontos já existentes, incluindo distribuidoras, sem depender de marcação manual de promoção nem criar preços fictícios.
+- Impacto: seleção pública de ofertas e condição compartilhada do selo; ordenações explícitas e buscas mantêm seu comportamento. Não há cron, IA, escrita diária ou migration.
+- Cuidados: preservar a política de PMC, receita e Farmácia Popular, disponibilidade comercial e preço real do carrinho; Pix permanece condicionado ao checkout. Contrato em `103-ofertas-com-rotacao-diaria.md`.
+
 ## 2026-10-23 — Referência PMC por apresentação oficial
 
 - Acrescentar referência CMED opcional por GTIN exato, com origem, hash, edição e colunas oficiais. Identificar o PMC como referência comparativa, sem tratá-lo como preço anterior da loja; percentual conservador somente para MIP/OTC explicitamente elegível e informação neutra para receita.
