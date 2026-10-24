@@ -152,16 +152,23 @@ test("retailer provenance never permits prescription products in OTC photo publi
   }
 });
 
-test("reviewed non-medicinal OTHER photos publish a draft with exact identity and never allow medicine flags", async () => {
+for (const kind of ["OTHER", "SUPPLEMENT", "FOOD"]) test(`reviewed non-medicinal ${kind} photos publish a draft with exact identity and never allow medicine flags`, async () => {
   const f = await fixture();
   try {
-    const classification = { kind: "OTHER", medicineClass: "UNCLASSIFIED", ethical: false, otc: false };
+    const classification = { kind, medicineClass: "UNCLASSIFIED", ethical: false, otc: false };
     f.input.images[0].catalogClassification = classification;
     Object.assign(f.input.images[0], { publishOnApproval: true });
     f.change({ catalogClassification: classification, status: "DRAFT" });
     assert.equal(catalogImageManifestSchema.safeParse(f.input).success, true);
     for (const patch of [{ medicineClass: "GENERIC" }, { otc: true }, { ethical: true }]) {
       assert.equal(catalogImageManifestSchema.safeParse({ images: [{ ...f.input.images[0], catalogClassification: { ...classification, ...patch } }] }).success, false);
+    }
+    for (const patch of [{ requiresPrescription: true }, { prescriptionType: "ORDINARY" }, { prescriptionType: "ANTIMICROBIAL" },
+      { name: "Identidade divergente" }, { catalogClassification: { ...classification, kind: "HYGIENE" } }] as const) {
+      f.change({ catalogClassification: classification, status: "DRAFT", ...patch });
+      await assert.rejects(f.run(true), /Identity or non-prescription classification changed/);
+      assert.equal(f.writes.length, 0);
+      f.change({ catalogClassification: classification, status: "DRAFT" });
     }
     const result = await f.run(true);
     assert.equal(result.images[0].action, "PUBLISH_IMAGE");

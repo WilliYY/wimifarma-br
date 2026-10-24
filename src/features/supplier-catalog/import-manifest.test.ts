@@ -68,13 +68,15 @@ test("mixed OTC/hygiene accepts no ceiling; prescription needs ceiling and never
   assert.equal(supplierImportManifestSchema.safeParse({ products: [{ ...row, offers: [offer] }] }).success, false);
 });
 
-test("explicit non-medicinal OTHER imports keep evidence and cannot acquire prescription or medicine flags", () => {
+for (const kind of ["OTHER", "SUPPLEMENT", "FOOD"]) test(`explicit non-medicinal ${kind} imports keep evidence and cannot acquire prescription or medicine flags`, () => {
   const input = mixed();
-  const classification = { kind: "OTHER", medicineClass: "UNCLASSIFIED", ethical: false, otc: false };
+  const classification = { kind, medicineClass: "UNCLASSIFIED", ethical: false, otc: false };
   Object.assign(input.products[0], { requiresPrescription: false, prescriptionType: "NONE", activeIngredients: [], offers: [offer], catalogClassification: classification });
   assert.equal(supplierImportManifestSchema.safeParse(input).success, true);
   for (const patch of [
     { requiresPrescription: true, prescriptionType: "ORDINARY" },
+    { requiresPrescription: true, prescriptionType: "ANTIMICROBIAL" },
+    { requiresPrescription: false, prescriptionType: "ORDINARY" },
     { catalogClassification: { ...classification, medicineClass: "GENERIC" } },
     { catalogClassification: { ...classification, otc: true } },
     { catalogClassification: { ...classification, ethical: true } },

@@ -53,7 +53,7 @@ export const supplierImportManifestSchema = z.object({ manifestVersion: z.litera
         issue("Use manifestVersion 1 for explicit mixed imports; legacy imports are prescription-only.");
       }
       const classification = row.catalogClassification;
-      if (classification && (!["MEDICINE", "HYGIENE", "PERFUMERY", "OTHER"].includes(classification.kind) ||
+      if (classification && (!["MEDICINE", "HYGIENE", "PERFUMERY", "SUPPLEMENT", "FOOD", "OTHER"].includes(classification.kind) ||
         (classification.kind === "MEDICINE" && (classification.medicineClass === "UNCLASSIFIED" || (!row.requiresPrescription && !classification.otc))) ||
         !classificationIsConsistent(classification, { requiresPrescription: row.requiresPrescription, prescriptionType: persistedPrescriptionType(row), isPopularPharmacy: false }))) issue("Unsupported or inconsistent catalog classification.");
       if (row.evidence && Object.values(row.evidence).some(item => Date.parse(item.observedAt) > Date.now())) issue("Evidence must already have been observed.");
