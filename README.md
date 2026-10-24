@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Vitrines com âncoras por família, pesquisa de mercado e rotação diária inclusive nos primeiros espaços de economia: [104](docs/104-vitrines-ancoras-e-rotacao.md). Não altera preços ou margem; comparação de apresentações e lacunas de catálogo documentadas.
+
 Auditoria de compra em 23/10: frete consultado nas 27 UFs, escolha efetiva de Mercado Pago/Asaas, rota de dados logísticos por EAN e testes de segurança/concorrência: [99](docs/99-auditoria-frete-checkout-seguranca.md). A cobertura da consulta não substitui os perfis físicos dos produtos.
 
 Carrinho e checkout compactos no celular, conta logada, WhatsApp dentro da Miauby, grade de produtos uniforme e revisão de frete com referência de caixa 24 × 15 × 10 cm: [98](docs/98-compra-mobile-e-referencia-de-caixa.md). O frete nacional ainda depende dos perfis logísticos revisados; a caixa informada não substitui peso e conferência.

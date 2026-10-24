@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Âncoras por família e rotação das vitrines
+
+- Decisão: usar famílias editoriais e apresentações de entrada para diversificar as primeiras posições das três vitrines e rotacionar também a abertura da economia por dia de Brasília.
+- Motivo: evitar cinco fragrâncias do mesmo sabonete na economia e a repetição de princípio ativo na Farmacinha. Sinais nacionais de ABIHPEC/Abrafarma orientam hipóteses; não são vendas locais comprovadas.
+- Impacto: somente seleção das vitrines, com os mesmos produtos, preços, fotos e regras comerciais. Não fixar EANs, criar descontos, reclassificar medicamentos ou importar produtos para completar espaços. A política anterior de cinco preços fixos é substituída conforme `104-vitrines-ancoras-e-rotacao.md`.
+
 ## 2026-10-23 — Categorias laterais mais simples
 
 - Decisão: apresentar os grupos laterais como acordeão nativo, com um grupo aberto por vez, ícones e seleção ativa clara. A categoria atual da URL começa expandida; os atalhos gerais e o acesso Ver tudo preservam os filtros existentes.

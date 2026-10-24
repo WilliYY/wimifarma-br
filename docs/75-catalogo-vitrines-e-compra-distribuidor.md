@@ -1,5 +1,7 @@
 # 75 — Catálogo, vitrines e compra de distribuidor
 
+Atualização de 23/10/2026: as três vitrines passam a variar famílias e opções de entrada, inclusive nos cinco primeiros espaços de economia. O contrato de cinco menores preços fixos abaixo foi substituído pela seleção rotativa e diversificada do [documento 104](104-vitrines-ancoras-e-rotacao.md), com pesquisa de mercado e comparação comercial delimitada. Elegibilidade, fotos, exclusividade e política de fornecedor permanecem preservadas.
+
 Atualização de 22/10/2026: o catálogo ADMIN renderiza 100 itens por página; busca/filtros continuam sobre todos os metadados carregados. A seleção de lote não atravessa páginas e mantém limite de 50. Não há nova paginação de banco. Contrato em [97](97-operacao-admin-e-etapas-whatsapp.md).
 
 ## Pedido e alcance

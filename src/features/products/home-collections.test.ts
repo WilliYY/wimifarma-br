@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildHomeCollections, brasiliaDay, commercialPrice } from "./home-collections";
+import { buildHomeCollections, brasiliaDay, commercialPrice, homeProductFamily } from "./home-collections";
 import { readClassification } from "./catalog-operations";
 
 const item = (id: string, extra = {}) => ({ id, name: id, slug: id, imageUrl: `/uploads/products/${id}.webp`, price: "10.00", promotionalPrice: null, brand: null, category: "Perfumaria", stock: 2, requiresPrescription: false, prescriptionType: "UNREVIEWED" as const, isPopularPharmacy: false, activeIngredients: [], searchTerms: [], ...extra });
@@ -50,13 +50,13 @@ test("rotação usa dia de Brasília e é determinística, sem duplicar produtos
   assert.notDeepEqual(first.care, build(products, new Date("2026-10-20T12:00:00Z")).care);
 });
 
-test("menores preços mantém os cinco mais baratos e completa sem repetir outras vitrines", () => {
+test("economia rotaciona a faixa de entrada e completa sem repetir outras vitrines", () => {
   const products = Array.from({ length: 30 }, (_, i) => item(`p-${i}`, { price: String(i + 2) }));
   products.push(item("promo", { price: "100", promotionalPrice: "1" }));
   for (const date of [new Date("2026-10-19"), new Date("2026-10-20")]) {
     const result = build(products, date);
-    assert.equal(result.affordable[0].id, "promo");
-    assert.deepEqual(result.affordable.slice(0, 5).map(commercialPrice), [1, 2, 3, 4, 5]);
+    assert.ok(result.affordable.slice(0, 5).some(product => product.id === "promo"));
+    assert.ok(result.affordable.slice(0, 5).every(product => commercialPrice(product) <= 8));
     assert.equal(result.affordable.length, 15);
     const careIds = new Set(result.care.map(product => product.id));
     assert.ok(result.affordable.every(product => !careIds.has(product.id)));
@@ -99,6 +99,48 @@ test("acervo pequeno de cuidados mantém duas vitrines com produtos distintos", 
   const products = Array.from({ length: 9 }, (_, i) => item(`care-${i}`, { price: String(i + 1) }));
   const result = build(products);
   assert.equal(result.care.length, 5);
-  assert.deepEqual(result.affordable.map(product => product.id), ["care-0", "care-1", "care-2", "care-3"]);
+  assert.deepEqual(result.affordable.map(product => product.id).sort(), ["care-0", "care-1", "care-2", "care-3"]);
   assert.equal(new Set([...result.care, ...result.affordable].map(product => product.id)).size, 9);
+});
+
+test("famílias agrupam variações e princípios ativos sem classificar nem liberar medicamentos", () => {
+  assert.equal(homeProductFamily(item("soap-a", { name: "Sabonete Nivea Aveia 85g" })), homeProductFamily(item("soap-b", { name: "Sabonete Nivea Leite 85g" })));
+  assert.equal(homeProductFamily(item("mip-a", { catalogClassification: otc, activeIngredients: ["simeticona"] })), homeProductFamily(item("mip-b", { catalogClassification: otc, activeIngredients: ["SIMETICONA"] })));
+  assert.notEqual(homeProductFamily(item("lip", { name: "Hidratante LAB NIVEA FPS15" })), homeProductFamily(item("sun", { name: "Nivea SUN Protetor solar FPS50 200ml" })));
+  assert.notEqual(homeProductFamily(item("bronze", { name: "Nivea SUN FPS6 125ml" })), "sun");
+  assert.notEqual(homeProductFamily(item("low-spf", { name: "Anthelios FPS20 50ml" })), "sun");
+});
+
+test("cuidados começa por cinco famílias diferentes e alterna suas âncoras diariamente", () => {
+  const families = ["Sabonete", "Desodorante", "Shampoo", "Protetor solar", "Fralda", "Creme dental", "Hidratante corporal"];
+  const products = families.flatMap((name, family) => Array.from({ length: 10 }, (_, variant) => item(`f-${family}-${variant}`, { name: `${name} Marca ${variant}`, price: String(10 + family * 10 + variant), catalogClassification: hygiene })));
+  const first = build(products);
+  assert.equal(first.care.length, 15);
+  assert.equal(new Set(first.care.slice(0, 5).map(homeProductFamily)).size, 5);
+  assert.notDeepEqual(first.care.slice(0, 5), build(products, new Date("2026-10-20T12:00:00Z")).care.slice(0, 5));
+  assert.deepEqual(first, build([...products].reverse()));
+});
+
+test("economia não ocupa os cinco primeiros espaços com fragrâncias do mesmo sabonete", () => {
+  const products = ["Sabonete", "Shampoo", "Desodorante", "Fralda", "Creme dental"].flatMap((name, family) => Array.from({ length: 20 }, (_, variant) => item(`a-${family}-${variant}`, { name: `${name} Variação ${variant}`, price: String(3 + family + variant / 100), catalogClassification: hygiene })));
+  const first = build(products);
+  assert.ok(new Set(first.affordable.slice(0, 5).map(homeProductFamily)).size >= 2);
+  assert.notDeepEqual(first.affordable.slice(0, 5), build(products, new Date("2026-10-20T12:00:00Z")).affordable.slice(0, 5));
+});
+
+test("Farmacinha diversifica princípios ativos antes de repetir laboratórios ou embalagens", () => {
+  const medicines = ["simeticona", "paracetamol", "loratadina", "ibuprofeno", "acetilcisteina", "dipirona"].flatMap((ingredient, group) => Array.from({ length: 8 }, (_, variant) => item(`m-${group}-${variant}`, { name: `${ingredient} Laboratório ${variant}`, activeIngredients: [ingredient], category: "Medicamentos", catalogClassification: otc, price: String(20 + group + variant) })));
+  const cheap = Array.from({ length: 10 }, (_, index) => item(`cheap-${index}`, { price: "1" }));
+  const first = build([...cheap, ...medicines]);
+  assert.equal(new Set(first.otc.slice(0, 5).map(homeProductFamily)).size, 5);
+});
+
+test("pacote infantil caro não toma a posição de entrada quando há lenços acessíveis", () => {
+  const types = ["Sabonete", "Desodorante", "Shampoo", "Hidratante", "Protetor solar", "Creme dental"];
+  const products = types.flatMap((name, group) => Array.from({ length: 10 }, (_, index) => item(`p-${group}-${index}`, { name: `${name} ${index}`, price: "10", catalogClassification: hygiene })));
+  products.push(item("baby-cheap", { name: "Lenços umedecidos 48 unidades", price: "10.72", catalogClassification: hygiene }), item("baby-middle", { name: "Toalhinhas 44 unidades", price: "16.67", catalogClassification: hygiene }), item("baby-expensive", { name: "Fralda Pampers M70", price: "183.63", catalogClassification: hygiene }));
+  for (let day = 1; day <= 14; day++) {
+    const result = build(products, new Date(`2026-10-${String(day).padStart(2, "0")}T12:00:00Z`));
+    assert.equal(result.care.slice(0, 5).some(product => product.id === "baby-expensive"), false);
+  }
 });
