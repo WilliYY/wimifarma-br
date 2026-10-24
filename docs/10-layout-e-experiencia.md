@@ -1,5 +1,15 @@
 # 10 - Layout e Experiencia
 
+## Categorias da home em cartões — 23/10/2026
+
+A faixa Ofertas, Infantil, Medicamentos, Vitaminas e suplementos, Dermo e Perfumaria passa a usar cartões com o título “Encontre seu cuidado” e um atalho adicional “Ver catálogo”. Ofertas tem fundo vermelho; as demais categorias usam superfície clara, ícones consistentes e nomes inteiros. Os seis destinos existentes e a ordenação por preço crescente permanecem intactos.
+
+A grade apresenta duas colunas no celular, três a partir de 640 px e seis a partir de 1024 px. Todas as categorias ficam disponíveis sem rolagem horizontal. Cartões têm pelo menos 118 px de altura no celular; o link do catálogo tem 44 px. Links mantêm nomes acessíveis, foco visível e navegação pelo teclado. `prefers-reduced-motion` remove a transição e o deslocamento de hover.
+
+Direção: navegação de varejo enxuta, com Barlow, cores e ícones existentes. DFII 15: impacto 4, adequação 5, implementação 4, desempenho 4, risco 2. O destaque de Ofertas orienta a leitura sem percentual ou promessa comercial adicional. CSS fica no módulo do componente; nenhuma fonte, dependência ou imagem é acrescentada. A foto de fundo, os botões de rolagem, `ResizeObserver` e estado de rolagem deixam de ser necessários. Cabeçalho, animação da logo, rodapé, preços, seleção diária das vitrines e checkout não são alterados.
+
+Verificação visual local em 320, 390, 768, 1024 e 1440 px: seis cartões sem recorte ou overflow, destinos preservados e foco de teclado visível. Evidências e conferência da publicação ficam em `outputs/home-categories-2026-10-23/`, fora do Git.
+
 ## Atalhos compactos no cabeçalho — 23/10/2026
 
 Conforme ajuste posterior do lojista, o atalho WhatsApp foi retirado do cabeçalho público. O atendimento continua pelo atalho inferior existente, integrado à Miauby no celular. O espaço liberado fica disponível para a busca.

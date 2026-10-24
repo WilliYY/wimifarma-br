@@ -1,19 +1,5 @@
-"use client";
-
-import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ArrowUpRight,
-  Baby,
-  BadgePercent,
-  ChevronLeft,
-  ChevronRight,
-  Droplets,
-  Leaf,
-  Pill,
-  SprayCan,
-} from "lucide-react";
+import { ArrowRight, ArrowUpRight, Baby, BadgePercent, Droplets, Leaf, Pill, SprayCan } from "lucide-react";
 import type { HomeShortcutItem } from "@/features/products/home-shortcuts";
 import styles from "./home-shortcuts.module.css";
 
@@ -27,102 +13,35 @@ const shortcutIcons = {
 };
 
 export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
-  const listRef = useRef<HTMLUListElement>(null);
-  const [controls, setControls] = useState({ previous: false, next: false });
-
-  const updateControls = useCallback(() => {
-    const list = listRef.current;
-    if (!list) return;
-    const maximumScroll = Math.max(0, list.scrollWidth - list.clientWidth);
-    setControls({ previous: list.scrollLeft > 2, next: list.scrollLeft < maximumScroll - 2 });
-  }, []);
-
-  useEffect(() => {
-    const list = listRef.current;
-    if (!list) return;
-    const frame = window.requestAnimationFrame(updateControls);
-    const observer = new ResizeObserver(updateControls);
-    observer.observe(list);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      observer.disconnect();
-    };
-  }, [items, updateControls]);
-
-  function scrollShortcuts(direction: -1 | 1) {
-    const list = listRef.current;
-    if (!list) return;
-    list.scrollBy({
-      left: direction * list.clientWidth,
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-    });
-  }
-
   return (
-    <nav aria-label="Categorias de produtos" className={`${styles.panel} relative mb-7 px-11 sm:mb-9 sm:px-12`}>
-      <div aria-hidden="true" className={styles.scenery}>
-        <Image
-          alt=""
-          className={styles.backdrop}
-          fill
-          quality={75}
-          sizes="(min-width: 1280px) 1280px, 100vw"
-          src="/banners/contato-farmaceutica.webp"
-        />
-        <span className={styles.wash} />
+    <nav aria-label="Categorias de produtos" className={styles.panel}>
+      <div className={styles.heading}>
+        <p className={styles.title}>Encontre seu cuidado</p>
+        <Link className={styles.catalog} href="/catalogo">
+          Ver catálogo <ArrowRight aria-hidden="true" size={15} />
+        </Link>
       </div>
-      <button
-        aria-controls="home-shortcuts"
-        aria-label="Ver atalhos anteriores"
-        className={`${styles.control} absolute left-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-brand transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:invisible`}
-        disabled={!controls.previous}
-        onClick={() => scrollShortcuts(-1)}
-        type="button"
-      >
-        <ChevronLeft aria-hidden="true" className="h-6 w-6" />
-      </button>
 
-      <ul
-        className="relative flex snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-2 pt-1 scroll-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand motion-reduce:scroll-auto sm:gap-4 lg:justify-between [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        id="home-shortcuts"
-        onScroll={updateControls}
-        ref={listRef}
-        tabIndex={0}
-      >
+      <ul className={styles.list} id="home-shortcuts">
         {items.map((item) => {
           const Icon = shortcutIcons[item.id];
           return (
-            <li className="w-24 shrink-0 snap-start sm:w-28" key={item.id}>
+            <li key={item.id}>
               <Link
                 aria-label={item.label}
-                className={`${styles.link} group flex flex-col items-center gap-3 rounded-xl text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand`}
+                className={`${styles.link}${item.id === "offers" ? ` ${styles.offer}` : ""}`}
                 href={item.href}
               >
-                <span className={`${styles.icon} relative flex h-20 w-20 items-center justify-center rounded-full text-brand transition duration-200 group-hover:-translate-y-1 motion-reduce:transform-none motion-reduce:transition-none sm:h-24 sm:w-24`}>
-                  <Icon aria-hidden="true" className="h-9 w-9 sm:h-10 sm:w-10" strokeWidth={1.6} />
-                  <span aria-hidden="true" className={styles.open}>
-                    <ArrowUpRight className="h-3 w-3" strokeWidth={2} />
-                  </span>
+                <span aria-hidden="true" className={styles.icon}>
+                  <Icon size={28} strokeWidth={1.7} />
                 </span>
-                <span className="min-h-10 text-sm font-semibold leading-5 text-ink transition-colors group-hover:text-brand">
-                  {item.label}
-                </span>
+                <span className={styles.label}>{item.label}</span>
+                <ArrowUpRight aria-hidden="true" className={styles.open} size={16} />
               </Link>
             </li>
           );
         })}
       </ul>
-
-      <button
-        aria-controls="home-shortcuts"
-        aria-label="Ver próximos atalhos"
-        className={`${styles.control} absolute right-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-brand transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:invisible`}
-        disabled={!controls.next}
-        onClick={() => scrollShortcuts(1)}
-        type="button"
-      >
-        <ChevronRight aria-hidden="true" className="h-6 w-6" />
-      </button>
     </nav>
   );
 }

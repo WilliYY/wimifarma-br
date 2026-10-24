@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Categorias da home sem rolagem horizontal
+
+- Decisão: substituir os atalhos circulares por seis cartões, com Ofertas em vermelho, grade responsiva de duas/três/seis colunas e atalho Ver catálogo.
+- Motivo: melhorar leitura e toque no celular, mostrar todas as categorias e retirar a foto de fundo e os controles de rolagem desnecessários.
+- Impacto: componente e CSS local, preservando os mesmos destinos, nomes acessíveis, foco de teclado e movimento reduzido. Nenhuma mudança em produtos, seleção diária, preços ou checkout. Contrato em `10-layout-e-experiencia.md`.
+
 ## 2026-10-23 — Âncoras por família e rotação das vitrines
 
 - Decisão: usar famílias editoriais e apresentações de entrada para diversificar as primeiras posições das três vitrines e rotacionar também a abertura da economia por dia de Brasília.
