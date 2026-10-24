@@ -1,5 +1,17 @@
 # Catálogo lateral e continuidade das ofertas — 22/10/2026
 
+## Simplificação visual — 23/10/2026
+
+A navegação lateral usa categorias recolhíveis nativas (`details`/`summary`), com apenas um grupo aberto por vez. O grupo da URL atual começa aberto; sua subcategoria recebe `aria-current="page"` e destaque vermelho. Categorias sem subcategorias continuam sendo links diretos. Os atalhos Todos os produtos e Ofertas ficam no início, seguidos por grupos com ícones e rótulos legíveis; cada grupo expandido inclui Ver tudo e suas opções internas.
+
+As categorias estão em `src/components/site/catalog-category-navigation.tsx`, componente de servidor que reutiliza a mesma composição de grupos, curadoria e construção de URLs. A alteração não cria classificações, altera consultas comerciais ou muda resultados. Busca, marca, ordenação e contexto de ofertas são preservados pelos links existentes; mudar seleção continua reiniciando a página.
+
+O painel mantém o controle Categorias e filtros no celular, foco visível, áreas de toque de pelo menos 44 px e posição fixa abaixo do cabeçalho no desktop. A barra de rolagem fica mais discreta. Os grupos abrem por teclado sem JavaScript adicional; a preferência de movimento reduzido é respeitada no indicador de expansão. Animações de marca, produtos, preço, Pix e checkout permanecem fora deste ajuste.
+
+Seis regressões focadas passaram: 320/390/1.280 px, expansão por teclado, apenas um grupo aberto, abertura da seleção pela URL, destaque acessível, preservação de filtros/ordenação/paginação e ausência de transbordamento ou erro de JavaScript. Capturas em `outputs/catalogo-lateral-simples-2026-10-23/`, fora do Git.
+
+Typecheck, lint completo, Prisma validate e 484 testes de segurança aprovados. Revisão independente sem achados; auditorias completa e de produção sem high/critical, mantendo um moderate em `fast-uri`, sem alteração de dependências nesta tarefa. A publicação reconstrói somente o app e preserva a imagem anterior, sem migration ou escrita comercial.
+
 ## Pedido e limites
 
 O lojista solicitou categorias laterais com subcategorias, ordenação explícita e páginas numeradas. Também autorizou manter a compra pelo último dado comercial registrado quando a consulta à distribuidora falhar ou não produzir uma atualização. Esta decisão substitui o bloqueio automático exclusivamente pelo vencimento descrito nos documentos 67, 68 e 75.

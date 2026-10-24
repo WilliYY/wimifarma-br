@@ -3,8 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CatalogProductCard } from "./catalog-product-card";
 import { CatalogFilterPanel } from "./catalog-filter-panel";
+import { CatalogCategoryNavigation } from "./catalog-category-navigation";
 import { getPublicCategories, getPublicCatalogSections, getStorefrontProducts, PAGE_SIZE, catalogPageHref } from "@/features/products/storefront";
-import { catalogCategoryGroups, catalogFilterHref, catalogPagination, catalogSections, catalogSorts, type CatalogSort } from "@/features/products/catalog-navigation";
+import { catalogFilterHref, catalogPagination, catalogSections, catalogSorts, type CatalogSort } from "@/features/products/catalog-navigation";
 import { productSearchPlan } from "@/features/products/public-search";
 import { breadcrumbData, SITE_URL } from "@/lib/seo";
 import { serializeProductStructuredData } from "@/features/products/product-detail";
@@ -14,7 +15,6 @@ export async function CatalogPage({ title, description, path, page, categoryName
     getStorefrontProducts({ page, categories: categoryNames, offers, group, sort, brand, section, query }), getPublicCategories(), getPublicCatalogSections(),
   ]);
   if (page > 1 && products.length === 0) notFound();
-  const { groups, others } = catalogCategoryGroups(categories);
   const selectedSection = catalogSections.find(item => item.id === section);
   const topicSearch = Boolean(selectedSection?.topic || (query && productSearchPlan(query).topics.length));
   const basePath = path.split("?")[0];
@@ -23,7 +23,6 @@ export async function CatalogPage({ title, description, path, page, categoryName
   const crumbs = [{ name: "Início", path: "/" }, { name: "Catálogo", path: "/catalogo" }, ...(basePath !== "/catalogo" || group || section ? [{ name: title, path }] : [])];
   const structured = [breadcrumbData(crumbs), { "@context": "https://schema.org", "@type": "CollectionPage", name: title, url: `${SITE_URL}${catalogPageHref(path, page)}`, mainEntity: { "@type": "ItemList", itemListElement: products.map((product, i) => ({ "@type": "ListItem", position: (page - 1) * PAGE_SIZE + i + 1, url: `${SITE_URL}/produto/${encodeURIComponent(product.slug)}`, name: product.name })) } }];
   const linkClass = "flex min-h-11 items-center rounded-lg px-3 py-2 text-sm text-muted hover:bg-surface-subtle hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand aria-[current=page]:bg-brand/5 aria-[current=page]:font-bold aria-[current=page]:text-brand";
-  const changeGroup = (id?: string, subsection?: string) => catalogFilterHref(path, { grupo: id, assunto: subsection, ...(offers ? { ofertas: "1" } : {}) }, "/catalogo");
 
   return <section className="bg-surface-subtle pb-16 pt-36 sm:pt-40 lg:pt-56">
     <script dangerouslySetInnerHTML={{ __html: serializeProductStructuredData(structured) }} type="application/ld+json" />
@@ -32,21 +31,8 @@ export async function CatalogPage({ title, description, path, page, categoryName
       <header className="border-b border-line pb-6"><h1 className="text-3xl font-black tracking-tight text-ink sm:text-4xl">{title}</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{description}</p></header>
       <div className="mt-7 grid items-start gap-6 lg:grid-cols-[230px_minmax(0,1fr)] lg:gap-8">
         <CatalogFilterPanel>
-          <nav aria-label="Categorias de produtos" className="p-3">
-            <h2 className="px-3 pb-3 pt-2 text-xs font-bold uppercase tracking-wider text-ink">Explore o catálogo</h2>
-            <Link aria-current={!group && !categoryNames && !offers ? "page" : undefined} className={linkClass} href={catalogFilterHref(path, { grupo: undefined, assunto: undefined, ofertas: undefined }, "/catalogo")}>Todos os produtos</Link>
-            <Link aria-current={offers && !group && !categoryNames ? "page" : undefined} className={linkClass} href={catalogFilterHref(path, { grupo: undefined, assunto: undefined, ofertas: undefined }, "/ofertas")}>Ofertas</Link>
-            <div className="my-3 border-t border-line" />
-            {groups.map(item => {
-              const children = catalogSections.filter(child => child.group === item.id && availableSections.includes(child.id));
-              return <div className="mb-2" key={item.id}>
-                <Link aria-current={group === item.id && !section ? "page" : undefined} className={`${linkClass} font-semibold text-ink`} href={changeGroup(item.id)}>{item.label}</Link>
-                {children.length ? <ul className="ml-3 border-l border-line pl-2">{children.map(child => <li key={child.id}><Link aria-current={section === child.id ? "page" : undefined} className={linkClass} href={changeGroup(item.id, child.id)}>{child.label}</Link></li>)}</ul> : null}
-              </div>;
-            })}
-            {others.length ? <div className="mt-3 border-t border-line pt-3">{others.map(category => <Link aria-current={basePath === `/categorias/${category.slug}` ? "page" : undefined} className={linkClass} href={catalogFilterHref(path, { grupo: undefined, assunto: undefined, ...(offers ? { ofertas: "1" } : {}) }, `/categorias/${category.slug}`)} key={category.slug}>{category.name}</Link>)}</div> : null}
-          </nav>
-          <form action={basePath} className="border-t border-line p-5" role="search">
+          <CatalogCategoryNavigation categories={categories} availableSections={availableSections} path={path} group={group} section={section} offers={offers} categorySelected={Boolean(categoryNames)} />
+          <form action={basePath} className="border-t border-line p-4" role="search">
             {parameters.filter(([key]) => key !== "q").map(([key, value]) => <input key={key} name={key} type="hidden" value={value} />)}
             {sort !== "relevantes" ? <input name="ordem" type="hidden" value={sort} /> : null}
             <label className="text-xs font-bold text-ink" htmlFor="catalog-search">Buscar nesta seleção</label>

@@ -8,7 +8,7 @@ import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
 import { catalogFilters, catalogFiltersPath } from "./catalog-navigation";
 
-const output = "outputs/catalogo-lateral-2026-10-22";
+const output = "outputs/catalogo-lateral-simples-2026-10-23";
 const base = "http://127.0.0.1:3197";
 const rows = Array.from({ length: 600 }, (_, index) => ({ id: `qa-${index}`, slug: `qa-${index}`, name: `Shampoo sintético ${String(index).padStart(3, "0")} 200ml`, brand: "Marca QA", category: "Higiene", activeIngredients: [], searchTerms: [], imageUrl: null, price: String(index + 1), promotionalPrice: null, stock: 3, requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false, cashbackEnabled: false, catalogClassification: { kind: "HYGIENE" } }));
 const medicine = { ...rows[0], id: "rx", slug: "rx", name: "Metformina sintética 500mg", category: "Medicamentos", activeIngredients: ["cloridrato de metformina"], requiresPrescription: true, prescriptionType: "COMMON", catalogClassification: { kind: "MEDICINE" } };
@@ -61,7 +61,17 @@ test("catálogo responsivo mantém filtros, paginação, teclado e Rx neutro", a
         await expect(toggle).toHaveAttribute("aria-expanded", "true");
       }
       await expect(categories).toBeVisible();
-      await expect(categories.getByRole("link", { name: "Higiene e beleza", exact: true })).toHaveCount(1);
+      const beautyToggle = categories.locator("summary").filter({ hasText: "Higiene e beleza" });
+      await expect(beautyToggle).toBeVisible();
+      await expect(categories.getByRole("link", { name: "Cabelos", exact: true })).toBeHidden();
+      await beautyToggle.focus();
+      await page.keyboard.press("Enter");
+      await expect(categories.getByRole("link", { name: "Cabelos", exact: true })).toBeVisible();
+      await expect(categories.getByRole("link", { name: "Ver tudo em Higiene e beleza", exact: true })).toHaveCount(1);
+      await categories.locator("summary").filter({ hasText: "Medicamentos" }).click();
+      await expect(categories.getByRole("link", { name: "Cabelos", exact: true })).toBeHidden();
+      await expect(categories.getByRole("link", { name: "Diabetes", exact: true })).toBeVisible();
+      await beautyToggle.click();
       await expect(categories.getByRole("link", { name: "Higiene pessoal", exact: true })).toHaveCount(0);
       await expect(categories.getByRole("link", { name: "Cabelos", exact: true })).toHaveAttribute("href", /marca=Marca\+QA.*q=shampoo.*ordem=preco-desc.*grupo=beauty.*assunto=hair/);
       await expect(page.getByRole("link", { name: "Página 2", exact: true })).toHaveAttribute("aria-current", "page");
@@ -82,6 +92,10 @@ test("catálogo responsivo mantém filtros, paginação, teclado e Rx neutro", a
       await page.screenshot({ path: `${output}/catalogo-${width}.png`, fullPage: true });
       await page.screenshot({ path: `${output}/catalogo-topo-${width}.png` });
       await page.goto(`${base}/catalogo?grupo=medicines&assunto=diabetes`);
+      if (width <= 390) await page.getByRole("button", { name: "Categorias e filtros" }).click();
+      await expect(categories.getByRole("link", { name: "Diabetes", exact: true })).toBeVisible();
+      await expect(categories.getByRole("link", { name: "Diabetes", exact: true })).toHaveAttribute("aria-current", "page");
+      await expect(categories.locator("details[open]")).toHaveCount(1);
       await expect(page.locator("[data-prescription-search]")).toHaveCount(1);
       const neutralCard = page.locator("article").filter({ has: page.locator("[data-prescription-search]") });
       await expect(neutralCard).toHaveCount(1);

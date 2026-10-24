@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Categorias laterais mais simples
+
+- Decisão: apresentar os grupos laterais como acordeão nativo, com um grupo aberto por vez, ícones e seleção ativa clara. A categoria atual da URL começa expandida; os atalhos gerais e o acesso Ver tudo preservam os filtros existentes.
+- Motivo: reduzir a lista longa de subcategorias e facilitar a navegação em celular e desktop.
+- Impacto: somente navegação e apresentação do catálogo, categorias e ofertas; sem alteração de preços, classificação, checkout, banco ou dependências. Contrato e regressões em `94-catalogo-lateral-e-continuidade.md`.
+
 ## 2026-10-23 — Ofertas com rotação diária
 
 - Decisão: incluir em `/ofertas` os produtos disponíveis com promoção real ou economia PMC elegível e ordenar a seleção padrão por ID e dia de Brasília antes de paginar.
