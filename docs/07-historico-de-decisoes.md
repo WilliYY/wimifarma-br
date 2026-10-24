@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-23 — Catálogo com cinco cartões por fileira
+
+- Decisão: ampliar a largura útil de `CatalogPage` para até 1680 px e apresentar cinco produtos por fileira a partir de 1280 px, preservando a grade de uma/duas/três colunas em telas menores.
+- Motivo e impacto: aproveitar melhor o desktop sem reduzir a tipografia ou mudar filtros, paginação, preço e compra. Lateral de 220 px e espaçamento de 12 px entre cartões na grade de cinco colunas.
+
 ## 2026-10-23 — Categorias da home sem rolagem horizontal
 
 - Decisão: substituir os atalhos circulares por seis cartões, com Ofertas em vermelho, grade responsiva de duas/três/seis colunas e atalho Ver catálogo.

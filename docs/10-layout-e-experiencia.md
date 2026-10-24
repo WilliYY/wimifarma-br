@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Cinco produtos por fileira no catálogo — 23/10/2026
+
+Catálogo, ofertas e categorias que compartilham `CatalogPage` exibem cinco cartões por fileira a partir de 1280 px. O conteúdo passa a ter limite de 1680 px, com lateral de 220 px e espaçamento menor entre cartões no desktop, para preservar a leitura das fotos, preços e ações. Telas menores usam uma coluna abaixo de 380 px, duas até 767 px e três de 768 a 1279 px. Não há mudança de paginação, filtros, produtos, preços ou fluxo de compra.
+
 ## Categorias da home em cartões — 23/10/2026
 
 A faixa Ofertas, Infantil, Medicamentos, Vitaminas e suplementos, Dermo e Perfumaria passa a usar cartões com o título “Encontre seu cuidado” e um atalho adicional “Ver catálogo”. Ofertas tem fundo vermelho; as demais categorias usam superfície clara, ícones consistentes e nomes inteiros. Os seis destinos existentes e a ordenação por preço crescente permanecem intactos.

@@ -26,10 +26,10 @@ export async function CatalogPage({ title, description, path, page, categoryName
 
   return <section className="bg-surface-subtle pb-16 pt-36 sm:pt-40 lg:pt-56">
     <script dangerouslySetInnerHTML={{ __html: serializeProductStructuredData(structured) }} type="application/ld+json" />
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-[1680px] px-4 sm:px-6 lg:px-8">
       <nav aria-label="Navegação estrutural" className="mb-6 flex flex-wrap gap-2 text-xs text-muted">{crumbs.map((crumb, i) => <span key={`${crumb.path}-${i}`}>{i > 0 && <span aria-hidden="true" className="mr-2">/</span>}<Link className="underline" href={crumb.path}>{crumb.name}</Link></span>)}</nav>
       <header className="border-b border-line pb-6"><h1 className="text-3xl font-black tracking-tight text-ink sm:text-4xl">{title}</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{description}</p></header>
-      <div className="mt-7 grid items-start gap-6 lg:grid-cols-[230px_minmax(0,1fr)] lg:gap-8">
+      <div className="mt-7 grid items-start gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
         <CatalogFilterPanel>
           <CatalogCategoryNavigation categories={categories} availableSections={availableSections} path={path} group={group} section={section} offers={offers} categorySelected={Boolean(categoryNames)} />
           <form action={basePath} className="border-t border-line p-4" role="search">
@@ -51,7 +51,7 @@ export async function CatalogPage({ title, description, path, page, categoryName
           </div>
           {brand || query || section ? <div className="mb-5 flex flex-wrap gap-2 text-xs">{[["marca", brand], ["q", query], ["assunto", selectedSection?.label]].map(([key, value]) => value ? <Link aria-label={`Remover filtro ${value}`} className="inline-flex min-h-11 items-center gap-3 rounded-full border border-line bg-white px-4 font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" href={catalogFilterHref(path, { [key!]: undefined })} key={key}>{value}<span aria-hidden="true">×</span></Link> : null)}</div> : null}
           {topicSearch ? <p className="mb-5 text-xs leading-6 text-muted">Navegação por assunto. A escolha ou troca de medicamento deve seguir a orientação do profissional de saúde.</p> : null}
-          {products.length ? <div className="grid grid-cols-1 items-stretch gap-4 min-[380px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">{products.map(product => <CatalogProductCard key={product.id} product={product} topicSearch={topicSearch} />)}</div> : <div className="rounded-xl border border-line bg-white p-8"><h2 className="font-bold text-ink">Nenhum produto nesta seleção</h2><p className="mt-2 text-sm text-muted">Tente outra categoria ou remova um filtro para explorar o catálogo.</p><Link className="mt-4 inline-flex min-h-11 items-center font-bold text-brand" href="/catalogo">Ver catálogo</Link></div>}
+          {products.length ? <div className="grid grid-cols-1 items-stretch gap-4 min-[380px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 xl:gap-3">{products.map(product => <CatalogProductCard key={product.id} product={product} topicSearch={topicSearch} />)}</div> : <div className="rounded-xl border border-line bg-white p-8"><h2 className="font-bold text-ink">Nenhum produto nesta seleção</h2><p className="mt-2 text-sm text-muted">Tente outra categoria ou remova um filtro para explorar o catálogo.</p><Link className="mt-4 inline-flex min-h-11 items-center font-bold text-brand" href="/catalogo">Ver catálogo</Link></div>}
           <nav aria-label="Páginas do catálogo" className="mt-8 flex flex-wrap items-center justify-center gap-1.5">
             {page > 1 ? <><Link aria-label="Primeira página" className={linkClass} href={catalogPageHref(path, 1)}>«</Link><Link aria-label="Página anterior" className={linkClass} href={catalogPageHref(path, page - 1)}>‹</Link></> : null}
             {catalogPagination(page, pages).map(item => typeof item === "number" ? <Link aria-current={item === page ? "page" : undefined} aria-label={`Página ${item}`} className={`${linkClass} min-w-11 justify-center border border-line bg-white`} href={catalogPageHref(path, item)} key={item}>{item}</Link> : <span aria-hidden="true" className="px-1 text-muted" key={item}>…</span>)}
