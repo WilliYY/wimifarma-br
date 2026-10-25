@@ -333,8 +333,8 @@ test("PMC identificado destaca economia conservadora sem virar preço anterior o
     await expect(prices.getByText(/PMC CMED/)).toBeVisible();
     await expect(prices.locator("s")).toHaveText(/10,00/);
     await expect(prices.locator("strong")).toHaveText(/6,87/);
-    await expect(page.getByText("31% abaixo do PMC", { exact: true })).toBeVisible();
-    await expect(page.getByText(/32%|34%|OFF|Pix/)).toHaveCount(0);
+    await expect(page.getByText("31% OFF", { exact: true })).toBeVisible();
+    await expect(page.getByText(/32%|34%|Pix/)).toHaveCount(0);
     for (const width of [320, 390, 768, 1280]) {
       await page.setViewportSize({ width, height: 760 });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `PMC overflow at ${width}px`);
@@ -378,7 +378,7 @@ test("PMC mantém cards mistos alinhados e detalhes oficiais legíveis no celula
   await fixture(async page => {
     const cards = page.getByRole("article");
     await expect(cards).toHaveCount(4);
-    await expect(page.getByText(/abaixo do PMC/)).toHaveCount(2);
+    await expect(page.getByTitle(/abaixo do PMC/)).toHaveCount(2);
     for (const width of [320, 390, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));

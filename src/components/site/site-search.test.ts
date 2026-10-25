@@ -67,14 +67,14 @@ for (const width of [320, 390, 1280]) test(`autocomplete PMC ${width}px identifi
     await input.fill("pmc");
     const item = page.getByRole("option", { name: /Produto sintético/ });
     await expect(item.getByText(/PMC CMED/)).toContainText(/40,00/);
-    await expect(item.getByText("25% abaixo do PMC", { exact: true })).toBeVisible();
+    await expect(item.getByText("25% OFF", { exact: true })).toBeVisible();
     await expect(item.locator("strong")).toHaveText(/29,90/);
     await expect(item.getByText(/Pix/)).toHaveCount(0);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     if (captureRoot) { await mkdir(captureRoot, { recursive: true }); await page.screenshot({ path: join(captureRoot, `search-pmc-${width}.png`) }); }
     await input.fill("pmc-rx");
     await expect(item.getByText(/PMC CMED/)).toBeVisible();
-    await expect(item.getByText(/abaixo do PMC/)).toHaveCount(0);
+    await expect(item.getByText(/% OFF/)).toHaveCount(0);
     await expect(item.locator("s")).toHaveCount(0);
   });
 });

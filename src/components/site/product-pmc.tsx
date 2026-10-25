@@ -11,7 +11,7 @@ export function ProductPmcPrice({ reference, strike = false }: { reference: Publ
 }
 
 export function ProductPmcBadge({ percent, className = "" }: { percent: number; className?: string }) {
-  return <span className={`inline-block max-w-32 rounded-lg bg-brand px-2 py-1.5 text-center text-[0.65rem] font-black leading-tight text-white shadow-sm ${className}`}>{percent}% abaixo do PMC</span>;
+  return <span title={`${percent}% abaixo do PMC`} className={`inline-block max-w-32 whitespace-nowrap rounded-lg bg-brand px-2 py-1.5 text-center text-[0.65rem] font-black leading-tight text-white shadow-sm ${className}`}>{percent}% OFF</span>;
 }
 
 export function ProductPmcDetails({ reference }: { reference: PublicPmcReference }) {
