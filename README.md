@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Coleta offline de XML NF-e, com proveniência, cruzamento por GTIN e fila revisável sem alterar dados comerciais ou habilitar frete automaticamente: [109](docs/109-coleta-xml-e-logistica.md).
+
 Frete por CEP e contribuição projetada, com limites ADMIN, reserva de custos, teto da modalidade econômica, cotação normal quando dados estão pendentes e fila global de perfis logísticos: [107](docs/107-frete-cep-e-contribuicao.md). Esta regra substitui o limite universal de R$ 99,90 para transportadoras; preços e acréscimos por produto permanecem preservados.
 
 Cashback de compra de 1% para genéricos e similares com classificação confirmada, inclusive receita comum/antimicrobiana, com ativação auditada e sem selo promocional público em receitas: [15](docs/15-cashback-produtos.md). Controlados, receita pendente e Farmácia Popular permanecem excluídos; WimiCoins e bônus de avaliação mantêm seus limites.
