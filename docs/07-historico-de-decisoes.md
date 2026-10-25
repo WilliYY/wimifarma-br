@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-25 — Marcas sem duplicidade e com identidade visual
+
+- Reunir Johnson’s e Johnson’s Baby em um cartão com filtro completo, preservando links antigos e a distinção de Johnson & Johnson.
+- Usar foto pública válida da própria marca quando não houver logo; manter fora da faixa marcas sem mídia conferida e campos que contenham título completo/dosagem. Tratar a descrição legada dos lenços como Natural Baby, sem reescrever cadastros.
+- Preservar nomes, preços, estoque e regras de venda dos produtos. Contrato e regressões em [82](82-marcas-do-catalogo.md).
+
 ## 2026-10-25 — Frete por CEP, teto e contribuição projetada
 
 - Autorização: o lojista pediu substituir a promessa nacional de R$ 99,90 por consulta de CEP, limites no painel e orçamento baseado em margem, preservando os percentuais de preço dos produtos.

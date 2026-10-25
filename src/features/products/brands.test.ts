@@ -50,3 +50,52 @@ test("nomes comerciais já triados não aparecem mesmo com classificação incom
   const names = ["Ablok", "Ablok Plus", "Adipept", "Angipress", "Aradois", "Corus", "Creslip", "Dispetic", "Divelol", "Galvus Met", "Glifage", "Meritor", "Plenance", "Renitec", "Rosucor", "Runner", "Sinvascor", "Sitglu Met", "Trezor", "Vaslip", "Vasopril", "Vasopril Plus"];
   assert.deepEqual(buildPublicBrands(names.map(brand => ({ brand, category: "Outros", requiresPrescription: false, catalogClassification: null }))), []);
 });
+
+test("Johnson’s e Baby formam uma marca e preservam o filtro das duas grafias", () => {
+  const records = [{ brand: "Johnson’s Baby" }, { brand: "Johnson's" }, { brand: "JOHNSONS BABY" }, { brand: "Johnson & Johnson" }];
+  const brands = buildPublicBrands(records);
+  assert.equal(brands.length, 2);
+  assert.deepEqual(brands.find(brand => brand.key === "johnson s"), { key: "johnson s", name: "Johnson’s", href: "/catalogo?marca=Johnson%E2%80%99s&ordem=preco-asc" });
+  for (const selected of ["Johnson’s", "Johnson's Baby", "JOHNSONS"]) {
+    assert.deepEqual(matchingBrandNames(records, selected), ["Johnson’s Baby", "Johnson's", "JOHNSONS BABY"]);
+  }
+  assert.equal(buildPublicBrands([...records].reverse()).find(brand => brand.key === "johnson s")?.name, "Johnson’s");
+  assert.deepEqual(matchingBrandNames(records, "Johnson & Johnson"), ["Johnson & Johnson"]);
+});
+
+test("vitrine não transforma nome completo ou apresentação de produto em marca", () => {
+  const records = [
+    { brand: "Sabonete Sintético 90 g", name: "Sabonete Sintético 90 g", category: "Perfumaria" },
+    { brand: "Hidratante Sintético 200mL", name: "Outro nome importado", category: "Perfumaria" },
+    { brand: "Título indevido", name: " título indevido ", category: "Perfumaria" },
+    { brand: "Marca Correta", name: "Sabonete Marca Correta 90 g", category: "Perfumaria" },
+  ];
+  assert.deepEqual(buildPublicBrands(records).map(brand => brand.name), ["Marca Correta"]);
+  assert.deepEqual(matchingBrandNames(records, "Título indevido"), ["Título indevido"], "o filtro direto continua exato, sem reescrever cadastro");
+});
+
+test("descrição legada dos lenços usa a marca Natural Baby sem perder o filtro original", () => {
+  const records = [{ brand: "Natural Baby Wipes Mãe e Filho", name: "Lenços Umedecidos Natural Baby Wipes Mãe e Filho 50 Folhas" }, { brand: "Natural Baby", name: "Toalhas infantis" }];
+  assert.deepEqual(buildPublicBrands(records), [{ key: "natural baby", name: "Natural Baby", href: "/catalogo?marca=Natural%20Baby&ordem=preco-asc" }]);
+  assert.deepEqual(matchingBrandNames(records, "Natural Baby"), ["Natural Baby Wipes Mãe e Filho", "Natural Baby"]);
+});
+
+test("foto representativa vem da biblioteca pública da mesma marca, com escolha estável", () => {
+  const records = ["b", "a"].map(key => ({ brand: "Marca Correta", name: `Sabonete ${key}`, category: "Perfumaria", imageUrl: `/uploads/products/${key}.webp`, imageAsset: { url: `/uploads/products/${key}.webp` } }));
+  const expected = [{ key: "marca correta", name: "Marca Correta", href: "/catalogo?marca=Marca%20Correta&ordem=preco-asc", imageUrl: "/uploads/products/a.webp" }];
+  assert.deepEqual(buildPublicBrands(records), expected);
+  assert.deepEqual(buildPublicBrands([...records].reverse()), expected);
+});
+
+test("marca não usa embalagem medicinal, imagem privada, remota ou placeholder", () => {
+  const records = [
+    { brand: "EMS", name: "Medicamento sintético", category: "Medicamentos", imageUrl: "/uploads/products/medicine.webp", imageAsset: { url: "/uploads/products/medicine.webp" } },
+    { brand: "Privada", imageUrl: "/api/private/image.webp", imageAsset: { url: "/api/private/image.webp" } },
+    { brand: "Remota", imageUrl: "https://example.invalid/photo.webp", imageAsset: { url: "https://example.invalid/photo.webp" } },
+    { brand: "Genérica", imageUrl: "/brand/placeholder.webp", imageAsset: { url: "/brand/placeholder.webp" } },
+    { brand: "Divergente", imageUrl: "/uploads/products/photo.webp", imageAsset: { url: "/uploads/products/other.webp" } },
+    { brand: "Sem biblioteca", imageUrl: "/uploads/products/photo.webp" },
+    { brand: "Popular", isPopularPharmacy: true, imageUrl: "/uploads/products/photo.webp", imageAsset: { url: "/uploads/products/photo.webp" } },
+  ];
+  assert.ok(buildPublicBrands(records).every(brand => !("imageUrl" in brand)));
+});

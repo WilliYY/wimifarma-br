@@ -8,10 +8,26 @@ import { catalogGroupNames, catalogSections, matchesCatalogSection, sortCatalogP
 import { buildProductSearchText, rankProductsForQuery } from "./public-search";
 import { buildPublicBrands, matchingBrandNames, type PublicBrand } from "./brands";
 import { isDiscountedOffer, rotateDailyOffers } from "@/features/offers/daily-rotation";
+import { validatedHomePhotos } from "./home-photos";
+import { brandLogo } from "./brand-logos";
 
 export const PAGE_SIZE = 24;
-const getPublicBrandRecords = cache(async () => getPrisma().product.findMany({ where: { status: "ACTIVE", brand: { not: null } }, select: { brand: true, category: true, requiresPrescription: true, catalogClassification: true }, orderBy: { brand: "asc" } }));
-export const getPublicBrands = cache(async (): Promise<PublicBrand[]> => buildPublicBrands(await getPublicBrandRecords()));
+const getPublicBrandRecords = cache(async () => getPrisma().product.findMany({ where: { status: "ACTIVE", brand: { not: null } }, select: { brand: true, name: true, category: true, requiresPrescription: true, isPopularPharmacy: true, catalogClassification: true, imageUrl: true, imageAsset: { select: { url: true } } }, orderBy: { brand: "asc" } }));
+export const getPublicBrands = cache(async (): Promise<PublicBrand[]> => {
+  const records = await getPublicBrandRecords();
+  const brands = buildPublicBrands(records);
+  const photos = await validatedHomePhotos(brands.map(brand => brand.imageUrl ?? null));
+  const missingPhotos = new Set(brands.filter(brand => brand.imageUrl && !photos.has(brand.imageUrl)).map(brand => brand.key));
+  if (missingPhotos.size) {
+    const firstCandidates = new Set(brands.map(brand => brand.imageUrl));
+    // Only inspect additional files for groups whose first candidate failed.
+    const alternatives = records.flatMap(record => buildPublicBrands([record]))
+      .filter(brand => missingPhotos.has(brand.key) && brand.imageUrl && !firstCandidates.has(brand.imageUrl))
+      .map(brand => brand.imageUrl!);
+    if (alternatives.length) for (const photo of await validatedHomePhotos(alternatives)) photos.add(photo);
+  }
+  return buildPublicBrands(records, photos).filter(brand => brand.imageUrl || brandLogo(brand.name));
+});
 const storefrontSelect = { ...supplierOfferInclude, cmedReference: true, sku: true, searchText: true, ean: true, inventorySource: true, id: true, name: true, slug: true, brand: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, activeIngredients: true, searchTerms: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, cashbackEnabled: true, cashbackRateBps: true } satisfies Prisma.ProductSelect;
 export const getPublicCatalogSections = cache(async () => {
   const rows = await getPrisma().product.findMany({ where: { status: "ACTIVE" }, select: { id: true, name: true, category: true, activeIngredients: true, searchTerms: true, catalogClassification: true } });

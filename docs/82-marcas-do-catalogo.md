@@ -1,5 +1,17 @@
 # 82 — Marcas do catálogo na home
 
+## Identidade única e foto alternativa — 25/10/2026
+
+Cada cartão representa uma marca, sem título completo, dosagem ou apresentação de produto. Johnson’s e Johnson’s Baby passam a formar um único cartão Johnson’s; o filtro canônico e os links antigos incluem ambas as grafias, sem incluir Johnson & Johnson. Esta decisão substitui a separação descrita no histórico abaixo. Não há agrupamento genérico por fabricante ou por semelhança de imagem.
+
+A descrição legada “Natural Baby Wipes Mãe e Filho” aparece como Natural Baby, preservando a busca pelo valor original. Referência comercial: [CDA, lenços Natural Baby, EAN 7896064490818](https://www.cdadistribuidora.com.br/lencos-umedecidos-natural-baby-wipes-mae-e-filho-50-folhas-1571-1). Registros cujo campo marca repete o nome completo ou contém quantidade/dosagem saem somente da vitrine; os produtos e seus dados permanecem preservados.
+
+Logos locais já conferidos têm prioridade. Na ausência de logo, o cartão usa uma foto pública de produto da própria marca, com o nome da marca abaixo. Exige vínculo correspondente à biblioteca, caminho local de produto e arquivo válido, usando `validatedHomePhotos`; não usa imagens privadas, remotas, ilustrativas, de laboratório, medicamentos ou Farmácia Popular. A escolha é determinística. Valida-se inicialmente uma candidata por marca; se falhar, procuram-se alternativas apenas nos grupos afetados. Uma primeira foto ausente não elimina uma marca com outra foto válida.
+
+Sem logo conferido ou foto válida, a marca aguarda fora dessa faixa, mantendo seus produtos e filtros disponíveis no catálogo. Marcas novas com imagem elegível entram automaticamente. Falha de mídia no navegador tenta a alternativa disponível e preserva o nome e o link acessível. Não há novos assets, importação, alteração de preço/estoque, ou alegação de parceria.
+
+O DTO `PublicBrand` acrescenta apenas `imageUrl` opcional. O carrossel mantém arraste, toque, teclado, setas, movimento reduzido e carregamento sob demanda. As regressões cobrem aliases nas duas direções, título indevido, mídia inválida, seleção estável e alternativa após falha, além dos filtros e gestos existentes.
+
 ## Johnson’s e Pampers — 23/10/2026
 
 Acrescentados os logos oficiais de Johnson’s e Pampers para as marcas já publicadas. As grafias `Johnson’s` e `Johnson’s Baby` usam a mesma arte, mantendo seus filtros separados; `Pampers` recebe seu próprio asset. São apenas três entradas no mapa visual existente, sem mudança na inclusão automática, na ordem ou em produtos/preços/estoque. Não usar o logo corporativo Johnson & Johnson para representar a linha Johnson’s.
@@ -70,7 +82,7 @@ O cache React compartilha a leitura dentro da requisição. As rotas são dinâm
 - Destino: `/catalogo?marca=<nome>&ordem=preco-asc`. O servidor resolve as grafias completas equivalentes e usa igualdade no campo de marca; não pesquisa por substring, nome, princípio ativo ou descrição.
 - Marca, grupo e ordenação permanecem na paginação de 24 itens. O catálogo identifica a marca selecionada e oferece `Limpar marca`. Marca desconhecida resulta em lista vazia.
 - As regras de preço comercial, estoque, receita, fotografias e checkout continuam nos serviços existentes. O bloco de marcas é navegação, sem declaração de parceria oficial ou de disponibilidade de todos os itens.
-- A lista parte do catálogo, com o filtro de identidade descrito na atualização de 20/10. As onze marcas originais mantêm prioridade visual; as demais seguem em ordem alfabética. Marca elegível sem logo aparece pelo nome e possui o mesmo link funcional. Se uma imagem falhar, o nome também permanece disponível.
+- A lista parte do catálogo, com os filtros de identidade e mídia descritos na atualização de 25/10. As onze marcas originais mantêm prioridade visual; as demais seguem em ordem alfabética. Marca elegível sem logo usa foto pública válida; sem identidade visual conferida, aguarda fora da faixa. Se a mídia falhar no navegador, o nome e o link permanecem disponíveis.
 
 ## Direção visual e acessibilidade
 
@@ -78,7 +90,7 @@ Direção de varejo claro, usando Barlow, tokens existentes e cartões cinza arr
 
 Uma linha com rolagem horizontal nativa, encaixe dos cartões, toque, teclado e setas de 44 px. Limites desabilitam as setas; não há reprodução automática. Movimento reduzido elimina a rolagem suave. Links têm nome acessível e foco visível. Nenhuma marca publicada significa ausência do bloco. Header e animação da logo, atalhos existentes e 128 bolhas do rodapé preservados.
 
-Os cartões aparecem após a campanha principal e antes das vitrines de produtos. `BrandCarousel` recebe apenas `PublicBrand[]` (`key`, `name`, `href`). Destinos não são pré-carregados em massa. Imagens locais, WebP lossless, carregamento sob demanda e dimensões reservadas evitam requisições a fabricantes durante a navegação.
+Os cartões aparecem após a campanha principal e antes das vitrines de produtos. `BrandCarousel` recebe apenas `PublicBrand[]` (`key`, `name`, `href`, `imageUrl` opcional). Destinos não são pré-carregados em massa. Logos e fotos locais, carregamento sob demanda e dimensões reservadas evitam requisições a fabricantes durante a navegação.
 
 ## Logos oficiais e origem
 

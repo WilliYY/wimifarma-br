@@ -1,7 +1,7 @@
 import { normalizeProductSearch } from "./public-search";
 
 // Official assets identify brands already present in the public catalog.
-// New brands are still shown by name when no checked logo is available.
+// Brands without a checked logo require a validated public product photo in the carousel.
 const logos: Record<string, { src: string; dark?: boolean }> = {
   nivea: { src: "/brands/nivea.webp" },
   dove: { src: "/brands/dove.webp" },

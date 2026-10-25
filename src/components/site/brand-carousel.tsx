@@ -12,7 +12,7 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
   const listRef = useRef<HTMLUListElement>(null);
   const dragState = useRef({ moved: false, pointerId: null as number | null, scrollLeft: 0, startX: 0 });
   const [controls, setControls] = useState({ previous: false, next: false });
-  const [failedLogos, setFailedLogos] = useState<Set<string>>(() => new Set());
+  const [failedImages, setFailedImages] = useState<Set<string>>(() => new Set());
   const orderedBrands = [...brands].sort((a, b) => {
     const aPosition = featuredBrandNames.indexOf(normalizeProductSearch(a.name));
     const bPosition = featuredBrandNames.indexOf(normalizeProductSearch(b.name));
@@ -130,28 +130,32 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
             tabIndex={0}
           >
             {orderedBrands.map((brand) => {
-              const logo = failedLogos.has(brand.key) ? null : brandLogo(brand.name);
+              const registeredLogo = brandLogo(brand.name);
+              const logo = registeredLogo && !failedImages.has(registeredLogo.src) ? registeredLogo : null;
+              const photo = brand.imageUrl && !failedImages.has(brand.imageUrl) ? brand.imageUrl : null;
+              const imageSrc = logo?.src ?? photo;
               return (
                 <li className="shrink-0 snap-start" key={brand.key}>
                   <Link
                     aria-label={`Ver produtos de ${brand.name}`}
-                    className={`group flex h-28 w-28 items-center justify-center rounded-2xl border border-transparent p-4 text-center transition-colors hover:border-brand/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand motion-reduce:transition-none sm:h-40 sm:w-40 sm:p-6 ${logo?.dark ? "bg-ink text-white" : "bg-surface-subtle text-ink hover:bg-brand-soft"}`}
+                    className={`group flex h-28 w-28 flex-col items-center justify-center gap-2 rounded-2xl border border-transparent p-4 text-center transition-colors hover:border-brand/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand motion-reduce:transition-none sm:h-40 sm:w-40 sm:p-6 ${logo?.dark ? "bg-ink text-white" : "bg-surface-subtle text-ink hover:bg-brand-soft"}`}
                     href={brand.href}
                     draggable={false}
                     prefetch={false}
                   >
-                    {logo ? (
+                    {imageSrc ? (
                       <Image
                         alt=""
-                        className="h-16 w-full object-contain sm:h-24"
+                        className={logo ? "h-16 w-full object-contain sm:h-24" : "h-12 w-full object-contain sm:h-20"}
                         height={120}
                         draggable={false}
-                        onError={() => setFailedLogos(current => new Set(current).add(brand.key))}
+                        onError={() => setFailedImages(current => new Set(current).add(imageSrc))}
                         sizes="(min-width: 640px) 112px, 80px"
-                        src={logo.src}
+                        src={imageSrc}
                         width={320}
                       />
                     ) : <span className="text-lg font-bold leading-tight [overflow-wrap:anywhere] sm:text-xl">{brand.name}</span>}
+                    {imageSrc && !logo ? <span className="line-clamp-2 text-xs font-semibold leading-tight sm:text-sm">{brand.name}</span> : null}
                   </Link>
                 </li>
               );

@@ -42,7 +42,7 @@ Rodapé com bandeiras automáticas do meio de pagamento, Pix, consultas oficiais
 
 Desconto de 3% no Pix para novos pedidos, banner e discriminação no checkout: [documento 83](docs/83-desconto-pix.md).
 
-Faixa de marcas na home com toque/arraste por mouse, logos oficiais (incluindo Johnson’s e Pampers), exclusão de nomes comerciais de medicamentos e filtro exclusivo no catálogo: [documento 82](docs/82-marcas-do-catalogo.md).
+Faixa de marcas na home com identidade única (incluindo Johnson’s/Baby), logos oficiais ou fotos públicas válidas, exclusão de títulos de produtos e filtro completo da marca no catálogo: [documento 82](docs/82-marcas-do-catalogo.md).
 
 Fotos conferidas para os 44 itens de higiene/perfumaria/dermo pendentes, publicação dos próximos cadastros condicionada à revisão de capa/galeria e comparação de oito ofertas eGAM: [documento 81](docs/81-fotos-publicas-e-gam.md). Preserva percentuais ADMIN, estoque físico e validade real das outras fontes; a rotina permanece pausada.
 
