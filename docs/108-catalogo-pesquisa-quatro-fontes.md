@@ -12,7 +12,7 @@ Tamanho, quantidade, capacidade, material, faixa etária, cor e compatibilidade 
 
 ## Situação verificada desta frente
 
-A união dos 21 lotes de marcas encerrados tem 357 EANs distintos. Essa contagem é independente dos produtos publicados por outras frentes e das inclusões históricas de medicamentos. O último lote foi `paixao21-v1`, com 21 produtos e 21 fotos; não deve ser reaplicado.
+A união dos 22 lotes de marcas encerrados tem 369 EANs distintos. Essa contagem é independente dos produtos publicados por outras frentes e das inclusões históricas de medicamentos. O último lote foi `linhas12-v2`, com 12 produtos e 12 fotos; nenhum lote encerrado deve ser reaplicado.
 
 Os 20 lotes anteriores, que somam 336 EANs, antecedem a nova exigência das quatro fontes. A pesquisa complementar dessas apresentações permanece pendente e deve conservar os horários originais das evidências válidas. Nenhuma contagem histórica é apresentada como uma nova consulta comercial.
 
@@ -27,6 +27,16 @@ A pesquisa Herbamed na DM percorreu seis páginas e registrou 111 EANs distintos
 Uma consulta somente leitura do banco às 14:01:27 UTC de 25/10 encontrou os 94 EANs de fraldas da outra frente ativos, distribuídos em Bigfral, Huggies, Mili, Pampers, Geriamax e Natural Master. Foram também verificadas páginas públicas representativas de piscina, pants e fralda adulta, com foto decodificada e opção de compra. Isso não substitui a comparação atual de ofertas por apresentação nem comprova que toda a grade possível está completa. As lacunas devem ser confrontadas com o catálogo atual antes de novos cadastros.
 
 Custos, capturas autenticadas, referências de acesso, imagens de entrada, logs, backups e comprovantes completos permanecem privados. A coordenação autorizada com o chat 5 limita-se a reservas, sobreposição, versões e encerramentos; cada frente continua trabalhando individualmente. Mensagens não substituem os controles físicos de publicação.
+
+## Farmax, Hidraderm, Sunless, Moskitoff e Suprinutri
+
+A pesquisa GAM dessas cinco linhas registrou 163 ocorrências, com sobreposição entre buscas. Foram separados 40 EANs novos disponíveis e consultados individualmente nas quatro distribuidoras, totalizando 160 registros. Isso não comprova cobertura integral dessas marcas nem encerra a revisão das demais apresentações encontradas.
+
+Doze apresentações foram publicadas em `linhas12-v2`: quatro Farmax, seis Hidraderm e duas Sunless. O conjunto inclui água oxigenada cremosa 40 volumes 90ml, óleo de banana 28ml, hidratante de vaselina líquida Vasemax 100ml, óleo capilar de rícino 30ml, sabonetes e esfoliantes Hidraderm e dois produtos solares. Foram preservadas apresentação e finalidade observadas; Vasemax não foi anunciado como vaselina 100% pura. As 12 fotos são endereços reais observados na DM, com revisão visual, sem recorte ou ampliação: 182.920 bytes originais e 176.148 bytes WebP.
+
+A aplicação única terminou às 20:20:16 UTC de 25/10; as 12 páginas e imagens foram verificadas por HTTP e hash às 20:20:30, com liberação às 20:20:32. Foram preservados os 2.431 produtos anteriores e as oito tabelas protegidas. O QA próprio foi removido. A preparação v1 foi retirada sem publicação, antes de concessão ou aplicação, após detectar uma validação que confundia janela com entrada da fila. A v2 separou os contratos e passou em dez controles negativos específicos; os dois QAs próprios foram removidos conferindo nome, proprietário e conexões, sem remoção forçada. Não houve alteração no importador da aplicação.
+
+Continuam pendentes 28 dos 40 EANs pesquisados: 19 ainda sem foto candidata e nove retidos por identidade, qualidade da imagem ou classificação. Entre as retenções estão body splash com 190ml no fornecedor e 180ml na foto, imagens com bordas/ícones e produtos antissépticos ou com finalidade conflitante. Não houve conversão entre massa e volume, liberação automática por marca ou descarte dessas pendências. Herbamed continua com 111 EANs coletados somente na DM, aguardando as outras fontes e revisão individual. As demais famílias solicitadas permanecem na fila integral.
 
 ## Fixture visual do cashback
 

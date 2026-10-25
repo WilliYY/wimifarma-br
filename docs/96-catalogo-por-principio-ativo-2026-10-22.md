@@ -393,6 +393,20 @@ Comprovantes privados encerrados:
 
 Depois desses encerramentos, o lojista exigiu pesquisa em ANB, Profarma, GAM e DM para todos os produtos e suspendeu Santa Cruz. A complementação das pesquisas anteriores continua pendente; os lotes encerrados não são reaplicados nem têm consultas históricas redatadas. O escopo ampliado e a continuidade estão documentados em [108](108-catalogo-pesquisa-quatro-fontes.md).
 
+## Encerramento Linhas12-v2 em 25/10/2026
+
+Foram incluídos quatro produtos Farmax, seis Hidraderm e dois Sunless, com 12 fotos reais e 24 auditorias. A união dos 22 lotes desta frente contém 369 EANs distintos, sem somar medicamentos históricos ou outras frentes. Aplicação única às `20:20:16.618Z`, prova pública às `20:20:30.927Z` e liberação às `20:20:32.918693Z` de 25/10. Os 2.431 produtos anteriores e as oito tabelas protegidas foram preservados; o QA próprio foi removido. Nenhum lote encerrado deve ser reaplicado.
+
+Os 12 EANs receberam 48 pesquisas nas quatro fontes. O manifesto contém 23 ofertas elegíveis; a seleção principal ficou em três DM, oito GAM e uma ANB. Permanecem custo final, acréscimo de 20%, validade limitada à observação/campanha e alocação máxima de cinco, sem renovação artificial. Estoque numérico desconhecido permanece nulo; o indicador ANB `+100` é limite inferior, não contagem exata. Campanhas e limites GAM foram consultados na interface; imposto genérico não foi convertido em ST e caixa não virou mínimo. A DM usa o EAN visível como referência externa, sem inventar código interno.
+
+As 12 imagens foram observadas nos cartões DM correspondentes e conferidas visualmente: 182.920 bytes originais e 176.148 bytes WebP, preservando dimensões e enquadramento, sem ampliação ou recorte. A pesquisa maior abrangeu 40 EANs e 160 registros nas quatro fontes. Os outros 28 continuam pendentes: 19 sem foto candidata e nove por imagem, identidade ou classificação. Detalhes e alcance em [108](108-catalogo-pesquisa-quatro-fontes.md).
+
+OPS imutável `cb2b395` e ferramentas correspondentes conservaram os mapas e a fundação de 1.051 execuções. Foram executados novamente 485 testes de segurança e 111 de fornecedores, auditorias, QA 12/12/24, 32 controles negativos de dados, 11 de compatibilidade APP/OPS e 25 por predecessor físico. Somaram-se dez controles da distinção entre janela e fila. ADMIN, mutex/CAS, concessão exclusiva, backup, baseline, dry-run, persistência e prova pública foram conferidos. A compatibilidade APP continua restrita aos dois arquivos revisados da interface da conta, com hashes exatos, além de documentação; não se afirma equivalência global APP/OPS. Auditoria completa preserva um alerta moderado `fast-uri`, sem high/critical.
+
+A preparação `linhas12-v1` foi retirada sem publicação. O pregrant detectou que o validador de entrada de fila, que exige `threadId`, estava sendo aplicado à janela, cujo campo é `ownerThreadId`. A v2 separou os validadores, sem relaxar os controles. Não houve grant, intenção, backup de aplicação ou mutação de produção na v1. Seu QA também foi removido com conferência exata de nome/proprietário/conexões, sem `FORCE`; os comprovantes e insumos permanecem preservados.
+
+Comprovantes privados: janela `chat10-linhas12-v2-20261025-201858`; fingerprint `bafd495c99aac0e9483611eb5e7072c66ee36bb3980939436afbcf3958239fc3`; TAR de 19 arquivos SHA-256 `280b0291c9e2129d47a9b224b8adc4e56a23e7d17ea0440a959b3332fe1fbc95`. Recebimento e hashes conferidos localmente. Estado após liberação: SHA-256 `82e6f6a69b2e3426559452a9028abb45a536a11a34d9f99adfa04b7b2f97c587`, sem grant desta publicação.
+
 ## Encerramento Paixão21 em 25/10/2026
 
 Foram incluídos 21 produtos de perfumaria Paixão com 21 fotos e 42 auditorias. A união desta frente passou a 357 EANs distintos em 21 lotes, sem duplicidade e sem somar medicamentos históricos ou outras frentes. A aplicação única ocorreu às 16:39:15 UTC, a verificação pública às 16:39:30 e a liberação às 16:39:32. Os 2.410 produtos anteriores e as oito tabelas protegidas foram preservados; o QA próprio foi removido. O lote não deve ser reaplicado.

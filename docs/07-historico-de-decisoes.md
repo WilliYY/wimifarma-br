@@ -1326,6 +1326,12 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Preparação atual: Paixão21 tem 84 consultas por EAN nas quatro fontes, 21 fotos conferidas e 25 controles negativos locais aprovados. Continua preparado, sem publicação ou concessão. As condições e os tributos GAM foram registrados por apresentação, mantendo estoque numérico desconhecido e sem interpretar caixa fechada como mínimo.
 - Validação: a suíte visual de `bcc32ee` encontrou uma fixture sem receita que herdava tipo `ORDINARY` e, por isso, ocultava corretamente o cashback esperado pelo teste. Corrigiu-se a fixture elegível para `UNREVIEWED`, com conferência de ausência do selo nos cards com receita. A regra pública de benefícios não foi alterada. A fundação e a versão da próxima publicação precisam ser renovadas; o resultado parcial da suíte anterior não é tratado como aprovação completa.
 
+## 2026-10-25 — Linhas12 publicado e pendências preservadas
+
+- Resultado: quatro Farmax, seis Hidraderm e dois Sunless incluídos uma vez, com 12 fotos, 24 auditorias e páginas/imagens públicas conferidas por hash. União desta frente: 369 EANs únicos em 22 lotes; os 2.431 produtos anteriores e as oito tabelas protegidas foram preservados. Janela liberada e QA próprio removido. Provas em [96](96-catalogo-por-principio-ativo-2026-10-22.md).
+- Pesquisa: 40 EANs novos das cinco linhas Farmax/Hidraderm/Sunless/Moskitoff/Suprinutri receberam 160 consultas nas quatro fontes. Outros 28 permanecem pendentes por foto, identidade ou classificação, sem declarar a grade completa. Herbamed e demais famílias continuam no escopo; Santa Cruz suspensa. Detalhes em [108](108-catalogo-pesquisa-quatro-fontes.md).
+- Recuperação: a preparação v1 parou antes de grant/aplicação por confundir o contrato da janela com o de uma entrada da fila. A v2 usa o validador correspondente a cada estrutura e passou em dez controles negativos adicionais. A v1 foi retirada sem publicação e seu QA foi removido após validação exata de propriedade; não deve ser reaplicada.
+
 ## 2026-10-25 — Paixão21 publicado e coleta Herbamed preservada
 
 - Paixão21 foi aplicado uma vez, com 21 produtos, 21 fotos e 42 auditorias; 84 pesquisas nas quatro distribuidoras. As páginas e imagens públicas, os 2.410 produtos anteriores, as oito tabelas protegidas, a liberação e a limpeza exata do QA foram conferidos. Esta frente soma 357 EANs de marcas em 21 lotes, sem contar medicamentos históricos ou outras frentes. Detalhes e hashes em [96](96-catalogo-por-principio-ativo-2026-10-22.md).
