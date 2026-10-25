@@ -1,5 +1,34 @@
 # 96 — Cadastro por família de princípio ativo
 
+## 24/10/2026 — Todos os 96 candidatos aptos desta consolidação publicados
+
+O pedido de publicar os itens aptos das pesquisas atuais e anteriores foi executado em dois lotes exclusivos, de 46 e 50 produtos. As aplicações ocorreram em `2026-10-25T00:36:18.246Z` e `2026-10-25T00:45:00.262Z` (noite de 24/10 em Ivaté). Foram verificados 96 EANs distintos, 96 páginas públicas, 96 fotos por hash e 192 registros de auditoria. O snapshot da segunda aplicação registrou 1.981 produtos ativos.
+
+| Marca | Novos produtos |
+| --- | ---: |
+| Principia | 25 |
+| Centrum | 17 |
+| Ensure | 10 |
+| Hidraderm | 10 |
+| Nutren | 8 |
+| Dr.Good | 6 |
+| PediaSure | 6 |
+| Secret | 5 |
+| Equaliv | 4 |
+| Glucerna | 4 |
+| Farmax | 1 |
+| **Total** | **96** |
+
+Os 25 Principia mantêm o acréscimo anterior de 20% sobre o custo final; os outros 71 usam os 35% autorizados. São 18 ofertas da ANB, 31 da DM e 47 da Profarma. Foram preservados os horários e custos originais das cotações, sem renovar validade artificialmente. Os 78 componentes de ST desconhecidos continuam nulos; o preço usa o total final com ST comprovado nas fontes revisadas. Também foram corrigidas 11 condições comerciais Farmax e conferidos 47 códigos nativos Profarma. Os 31 totais finais DM foram confirmados literalmente na interface e coincidiram com os custos originais.
+
+Cada lote teve revisão independente, QA próprio, 485 testes de segurança, 111 de fornecedores, 25 controles negativos, backup, simulação e uma única aplicação. As páginas e os arquivos públicos foram verificados antes da liberação das janelas. Os dois bancos de QA pertencentes à tarefa foram removidos. Pedidos, usuários, clientes, reservas e créditos permaneceram preservados conforme as provas. A auditoria atual continua com um alerta moderado em `fast-uri`, sem alertas altos ou críticos.
+
+A fonte imutável `532e96c7cf77dd916aea920f9a626d68cff18a0c` e a imagem tools `sha256:1c51bd4fa6017624dccfb67fd4ac8cef8399320aae258892cb05629894e4c0b7` foram reutilizadas. As provas anteriores de lint, typecheck, build, Prisma, testes gerais, publicação de imagens e navegação conservaram seus hashes e horários; não foram apresentadas como novas execuções. Segurança, fornecedores, controles e QA foram executados novamente para cada fingerprint.
+
+Fingerprints: A46 `685765834dc0e7aefc158fe86afd07a756459736a3933b2bc295187464eee70f`; B50 `6edcc8ea3ba96dbefae9e848ecb0fc842a05739934df90a74374860e285100d1`. O estado final B foi encerrado sem grant ativo, com hash `29198112627b35b1de2fc313a7f2306813cdc5c679ac01612197dcfd2803428d`.
+
+Relatório com quantidades e links dos produtos: `outputs/publicacao-total-chat5-2026-10-24/RELATORIO-FINAL.md`; resultado estruturado em `RESULTADO-FINAL.json`, no mesmo diretório. As provas privadas estão em `runtime-evidence-a-v1/` e `runtime-evidence-b-v1/`. Os 50 Farmax e 30 capilares publicados anteriormente não foram reaplicados. Outros candidatos sem foto exata, identidade, classificação ou evidência comercial confirmada continuam retidos; ausência de informação não foi transformada em falta de estoque. A SantaCruz não foi apresentada como nova fonte de ofertas verificadas.
+
 ## 24/10/2026 — Primeiro lote capilar: Dove8 e TRESemmé22 publicado
 
 Foram criados **30 produtos novos com 30 fotos reais**: oito condicionadores Dove e 22 shampoos/condicionadores TRESemmé. A aplicação única terminou em `2026-10-24T22:36:51.465Z`; as 30 páginas e as 30 imagens públicas responderam HTTP 200, com os hashes WebP conferidos. A janela `chat5-capilares-30-v3-20261024-223500` terminou `completed_released`, sem concessão ativa. O QA exclusivo foi removido após conferir nome e proprietário.

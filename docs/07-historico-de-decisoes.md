@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-24 — Noventa e seis itens aptos das pesquisas publicados
+
+O lojista autorizou publicar todos os candidatos aptos das pesquisas atuais e anteriores. A consolidação resultou em 96 novos produtos, publicados em lotes exclusivos A46 e B50, com 96 fotos e páginas públicas verificadas, sem EAN duplicado. A execução encerrou as duas janelas e removeu somente os dois bancos de QA pertencentes à tarefa. A relação por marca, horários, fingerprints e limites está em `docs/96-catalogo-por-principio-ativo-2026-10-22.md`; relatório privado com links em `outputs/publicacao-total-chat5-2026-10-24/RELATORIO-FINAL.md`.
+
+Foram mantidos o acréscimo anterior de 20% para 25 Principia e os 35% autorizados para outros 71 itens, sempre sobre o custo final. Componente de ST desconhecido permanece `null`: sua ausência não significa isenção nem autoriza custo zero. Para estas ofertas, o total final incluindo ST foi comprovado por fonte física, vínculo exato de produto/oferta e revisão independente. Não houve renovação artificial de cotações ou invenção de quantidades de estoque.
+
+Cada lote executou 485 testes de segurança, 111 de fornecedores, 25 controles negativos, QA, backup e simulação antes de uma única aplicação. A base imutável de código e os checks de fundação foram reutilizados com seus hashes e datas originais. A auditoria completa manteve visível um alerta moderado em `fast-uri`, sem alertas altos ou críticos. Candidatos sem evidência suficiente permaneceram retidos, sem desativação dos itens existentes ou reimportação dos lotes anteriores.
+
 ## 2026-10-24 — Trinta novos capilares Dove/TRESemmé publicados
 
 - Resultado: oito condicionadores Dove e 22 shampoos/condicionadores TRESemmé criados com foto real, custo final ANB e regra específica capilar de 20%. Os 30 EANs eram novos; aplicação única, 60 auditorias, registros e tabelas protegidas preservados. Páginas e imagens públicas conferidas individualmente por HTTP e hash.
