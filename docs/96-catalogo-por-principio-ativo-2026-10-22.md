@@ -375,3 +375,20 @@ Comprovantes privados recebidos e conferidos:
 O usuário autorizou coordenação leve com o chat 5 para evitar sobreposição ou disputa de publicação, mantendo pesquisa e execução individuais e sem espera por respostas rotineiras. Foram enviados seleção, prontidão e encerramento; as provas físicas prevalecem sobre avisos. O identificador incorreto de uma mensagem foi corrigido para a janela `014446` acima. Mensagens não concedem grant, não autorizam pacotes alheios e não substituem o mutex/CAS. A atualização documental desta frente foi preparada após o encerramento técnico do lote comunicado pela outra frente.
 
 O kit Seda Regeneração Intensa `07891150097360` ficou explicitamente em conferência: nova consulta ANB mostrou estoque zero, e a busca exata Profarma na condição Fixa à Vista 7 retornou nenhum resultado. Isso não prova indisponibilidade global e não permite reaproveitar o antigo estoque 41 como atual. Nivea Acne Control 50g/foto 50ml e máscara Seda 300ml/foto 300g seguem retidos. Os Baby Dove 200ml e 75g tiveram identidade resolvida posteriormente por páginas oficiais e retornaram à próxima seleção, ainda sem publicação nesta contagem. Continuam as demais retenções anteriores e a conferência de toda a lista. Não reaplicar os lotes fechados; fotos, capturas, custos, logs, backups e comprovantes completos permanecem privados. Nenhum código da aplicação foi alterado nesta etapa.
+
+## Encerramentos adicionais de 25/10/2026: 336 apresentações de marcas
+
+Os lotes `marcascomplemento20-v1` e `marcascomplemento17-v1` acrescentaram 37 produtos, 37 fotos e 74 auditorias. A união dos 20 manifestos desta frente foi conferida: 336 EANs distintos e nenhuma repetição. As inclusões de outras frentes e os medicamentos históricos não foram somados a esse total.
+
+O lote de 20 teve aplicação às 02:43:59 UTC, validação pública às 02:44:13 e liberação às 02:44:14. O lote de 17 teve aplicação às 03:47:00 UTC, validação pública às 03:47:14 e liberação às 03:47:15. Ambos terminaram com concessão encerrada, imagens persistentes verificadas e remoção exata do QA próprio. Foram preservados todos os produtos anteriores e as oito tabelas protegidas. Nenhum desses lotes deve ser reaplicado.
+
+As 37 imagens somavam 2.851.597 bytes originais e resultaram em 418.168 bytes WebP; são 36 fotos de distribuidor e uma de fabricante. O publicador preservou enquadramento e dimensões sem recorte ou ampliação. A origem da foto não foi usada para inferir preço, estoque ou equivalência de fórmula. A observação comercial, a apresentação completa, os tributos e as condições foram mantidos por EAN, com acréscimo de 20%, validade máxima de 24 horas da consulta real e alocação máxima de cinco.
+
+A fonte imutável era `cbbb607009f8e1a0bdbda645110a8bdcd8c48056`, com mapa de 988 arquivos e ferramentas conferidas. A fundação aprovada manteve as 904 execuções e seus horários originais. Cada lote teve novos testes de segurança e fornecedores, auditorias, QA isolado, controles negativos, deduplicação e verificação física separada da própria fila anterior e do encerramento da outra frente. Mantiveram-se o mutex/CAS, ADMIN ativo, concessão exclusiva, backup, baseline, dry-run, aplicação única, segundo contêiner e prova pública. O alerta moderado de `fast-uri` permanece registrado, sem high/critical.
+
+Comprovantes privados encerrados:
+
+- Lote 20: TAR com 14 arquivos, SHA-256 `4782bb9af3e269915b376bcc8b1c5b8ac08025c0d71e1a9a4cbdea15631b7ecf`; fingerprint `24615fa983cfbed17e0e19c2f83a247ddf67a5d61c71953aeb2b861a6d419c71`.
+- Lote 17: TAR com 14 arquivos, SHA-256 `c57807fca9a488aee35e3b96bcc9c4011cf04f2db548c667bc734647a656f753`; fingerprint `633a87d22ba96f7c628b5a1d6fc95fa927ecb3d964c7545676bcadaf8dd3f435`.
+
+Depois desses encerramentos, o lojista exigiu pesquisa em ANB, Profarma, GAM e DM para todos os produtos e suspendeu Santa Cruz. A complementação das pesquisas anteriores continua pendente; os lotes encerrados não são reaplicados nem têm consultas históricas redatadas. O escopo ampliado e o grupo Paixão de 21 apresentações **preparadas, não publicadas** estão documentados em [108](108-catalogo-pesquisa-quatro-fontes.md).

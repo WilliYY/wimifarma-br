@@ -27,7 +27,7 @@ const bundle = build({
           pmcReference:{amountCents:kind==='pmc-above'?7000:1000,column:'PMC 0 %',publishedOn:'2026-10-09',sourceUrl:'https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos/arquivos/lista_pmc__20261009_115232671.xlsx/@@download/file',presentation:'10 MG COM X 10',laboratory:'Laboratório sintético',registration:'1234567890123',rates:[{label:'PMC 0 %',cents:1000},{label:'PMC 19,5 %',cents:1250},{label:'PMC 19,5 %  ALC',cents:1200}]}}:{}),
         inventorySource:kind==='demand'?'DISTRIBUTOR':'PHARMACY',supplierDemandAllowed:kind==='demand'};
       const cards=(kind==='grid'||kind==='large-grid'||kind==='pmc-grid')?[
-        {...product,price:kind==='large-grid'?'1299.90':'6.90',promotionalPrice:kind==='large-grid'?'999.99':'4.99',cashbackEnabled:true,cashbackRateBps:200},
+        {...product,prescriptionType:'UNREVIEWED',price:kind==='large-grid'?'1299.90':'6.90',promotionalPrice:kind==='large-grid'?'999.99':'4.99',cashbackEnabled:true,cashbackRateBps:200},
         {...product,id:'synthetic-demand',slug:'sob-demanda',name:'Tadalafila 20 mg 4 comprimidos revestidos',price:kind==='large-grid'?'0.01':'4.85',inventorySource:'DISTRIBUTOR',supplierDemandAllowed:true,
           brand:'EUROFARMA LABORATÓRIOS S.A',activeIngredients:['Composição sintética longa para conferir a linha de detalhes']},
         {...product,id:'synthetic-generic',slug:'generico-sintetico',name:'Loratadina 10 mg 12 comprimidos',brand:'BIOLAB SANUS FARMACÊUTICA LTDA',price:'19.90',requiresPrescription:true,prescriptionType:'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
@@ -96,6 +96,8 @@ test("cards compactos mantêm benefícios fora do preço e altura uniforme sem e
   await fixture(async page => {
     const cards = page.getByRole("article");
     await expect(cards).toHaveCount(4);
+    await expect(cards.nth(2).getByText(/cashback/)).toHaveCount(0);
+    await expect(cards.nth(3).getByText(/cashback/)).toHaveCount(0);
     const title = cards.first().getByRole("link", { name: "Ver Produto sintético · Marca sintética", exact: true });
     await expect(title).toHaveText("Produto sintético Marca sintética");
     await expect(title.locator(".font-black")).toHaveText("Marca sintética");
