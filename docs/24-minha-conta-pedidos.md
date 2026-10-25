@@ -11,6 +11,14 @@
 
 ## Implementação
 
+### Benefícios com apresentação leve — 25/10/2026
+
+A aba Benefícios usa cartões brancos, bordas neutras, tipografia Barlow e acentos discretos de dourado para WimiCoins e verde para cashback. A quantidade disponível e sua equivalência em desconto ficam separadas dos totais acumulados, pendentes e utilizados. A conversão em reais continua restrita à apresentação completa dos WimiCoins; a visão geral compacta mantém somente os pontos e o acesso ao detalhe. Direção visual: carteira de benefícios clara, com hierarquia de saldos e extratos (DFII 14), sem nova animação, imagem ou dependência.
+
+As regras dos WimiCoins permanecem acessíveis em um expansor por teclado. Extratos de WimiCoins e cashback têm linhas mais leves, descrição/data e valor separados. O cashback distribui seus indicadores em uma grade e mantém links para avaliações e regras. Em telas estreitas, os blocos se empilham; saldos e descrições extensas podem quebrar linha. Adesão, carregamento, atualização, erros e estados vazios preservam os contratos existentes. Nenhuma alteração em API, carteira, conversão, cálculos, resgate, concessão de bônus ou associação de clientes.
+
+Conferência com componentes, CSS e fontes reais e dados sintéticos em 320/390/768/1440 px: saldos, equivalência, sinais dos extratos, links, modo compacto, navegação por teclado, valores extensos e ausência de transbordamento. Também conferidos loading, erro com nova tentativa, extratos vazios e adesão somente após clique explícito, com POST interceptado localmente. Zero operações comerciais reais. TypeScript, ESLint dirigido, 485 testes de segurança e revisão independente aprovados. Auditorias completa e de produção mantêm um alerta moderado em `fast-uri`, sem high/critical. Evidências locais em `outputs/benefits-ui-2026-10-25/`.
+
 ### Histórico de compras organizado — 25/10/2026
 
 Direção visual: área pessoal de varejo clara, com vermelho Wimifarma nos filtros e nas ações (DFII 14). Preserva Barlow, cores e espaçamentos do site. Os filtros apresentam ícone, quantidade e seleção explícita em duas colunas no celular e quatro nas telas maiores. Cada pedido separa identificação/data/status, prévia dos produtos com nome e fotos, modalidade/quantidade e total. Cancelamentos e conclusões usam ícones e textos, além da cor.

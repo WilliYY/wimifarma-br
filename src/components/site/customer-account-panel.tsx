@@ -363,7 +363,7 @@ export function CustomerAccountPanel({
             </div>
             <a className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-line bg-white p-3 text-sm font-bold text-ink lg:hidden" href={supportUrl} target="_blank" rel="noopener noreferrer"><MessageCircle className="h-4 w-4 text-emerald-600" />Precisa de ajuda? Fale com a equipe</a>
           </div>}
-          {(activeTab === "inicio" || activeTab === "beneficios") && <CustomerStoreCredit key={customer.id} customerId={customer.id} />}
+          {(activeTab === "inicio" || activeTab === "beneficios") && <div className="mb-5"><CustomerStoreCredit key={customer.id} customerId={customer.id} /></div>}
 
           {activeTab === "pedidos" && <div className="rounded-2xl border border-line bg-white p-4 sm:p-6"><CustomerOrderHistoryPanel onShortageChanged={() => void refreshAfterShortage()} error={ordersError} history={orders} loading={ordersLoading} onLoad={(filter, page) => void loadOrders(filter, page)} /></div>}
           {activeTab === "avisos" && <CustomerRestockPanel />}
@@ -523,65 +523,60 @@ export function CustomerAccountPanel({
 
           {activeTab === "beneficios" ? (
             <div className="min-w-0 space-y-5"><ClubBenefits club={club} />
-            <div className="grid gap-5 xl:grid-cols-[17rem_minmax(0,1fr)]">
-              <div className="rounded-2xl border border-emerald-100 bg-[#edf8f2] p-5">
-                <p className="flex items-center gap-2 text-sm font-black text-brand">
-                  <Coins className="h-4 w-4" />
+            <div className="grid items-start gap-5 lg:grid-cols-2">
+              <section aria-label="Seu saldo de cashback" className="min-w-0 rounded-2xl border border-line bg-white p-5 shadow-sm sm:p-6">
+                <h3 className="flex items-center gap-2.5 text-sm font-black text-ink">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50"><Coins aria-hidden="true" className="h-4 w-4 text-emerald-700" /></span>
                   Cashback liberado
-                </p>
-                <p className="mt-3 text-4xl font-black text-ink">
+                </h3>
+                <p className="mt-5 break-all text-4xl font-black tracking-tight tabular-nums text-ink">
                   {formatCurrency(balance)}
                 </p>
-                <div className="mt-5 grid gap-2 text-sm font-bold text-ink">
-                  <span>Pendente: {formatCurrency((cashback?.pendingCents ?? 0) / 100)}</span>
-                  <span>Reservado em pedidos: {formatCurrency((cashback?.reservedCents ?? 0) / 100)}</span>
-                  <span>
-                    Creditos apos estornos:{" "}
-                    {formatCurrency(cashback?.lifetimeEarned ?? "0")}
-                  </span>
-                  <span>
-                    Usado total:{" "}
-                    {formatCurrency(cashback?.lifetimeRedeemed ?? "0")}
-                  </span>
-                </div>
-                <p className="mt-4 text-xs leading-5 text-muted">Use o saldo disponível como desconto no checkout. Benefícios de compras são liberados após conclusão e pagamento. Avaliações elegíveis recebem um agradecimento de 1%, qualquer que seja a nota. Confira as condições nas regras.</p>
-                <a className="mt-4 inline-flex min-h-11 items-center text-sm font-bold text-brand underline" href="/minha-conta/avaliacoes">Avaliar minhas compras</a>
-                <a className="mt-2 block text-xs font-bold text-muted underline" href="/cashback">Regras do cashback</a>
-              </div>
+                <p className="mt-2 text-sm leading-6 text-muted">Disponível para usar como desconto no checkout.</p>
+                <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-5 rounded-xl bg-surface-subtle p-4">
+                  <div className="min-w-0"><dt className="text-xs leading-5 text-muted">Pendente</dt><dd className="mt-1 break-all text-sm font-bold tabular-nums text-ink">{formatCurrency((cashback?.pendingCents ?? 0) / 100)}</dd></div>
+                  <div className="min-w-0"><dt className="text-xs leading-5 text-muted">Reservado em pedidos</dt><dd className="mt-1 break-all text-sm font-bold tabular-nums text-ink">{formatCurrency((cashback?.reservedCents ?? 0) / 100)}</dd></div>
+                  <div className="min-w-0"><dt className="text-xs leading-5 text-muted">Créditos após estornos</dt><dd className="mt-1 break-all text-sm font-bold tabular-nums text-ink">{formatCurrency(cashback?.lifetimeEarned ?? "0")}</dd></div>
+                  <div className="min-w-0"><dt className="text-xs leading-5 text-muted">Total utilizado</dt><dd className="mt-1 break-all text-sm font-bold tabular-nums text-ink">{formatCurrency(cashback?.lifetimeRedeemed ?? "0")}</dd></div>
+                </dl>
+                <div className="mt-5 flex flex-wrap gap-x-4 gap-y-1 border-t border-line pt-3"><a className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand hover:underline focus-visible:outline-2 focus-visible:outline-brand" href="/minha-conta/avaliacoes">Avaliar minhas compras<ArrowRight aria-hidden="true" className="h-4 w-4" /></a><a className="inline-flex min-h-11 items-center text-xs font-bold text-muted underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-brand" href="/cashback">Regras do cashback</a></div>
+                <p className="mt-2 text-xs leading-5 text-muted">Benefícios de compras são liberados após conclusão e pagamento. Avaliações elegíveis recebem um agradecimento de 1%, qualquer que seja a nota.</p>
+              </section>
 
-              <div className="min-w-0 rounded-2xl border border-line bg-white p-5">
-                <p className="flex items-center gap-2 text-sm font-black text-ink">
-                  <Gift className="h-4 w-4 text-brand" />
-                  Historico recente
-                </p>
-                <div className="mt-4 grid gap-3">
+              <section aria-label="Extrato de cashback" className="min-w-0 rounded-2xl border border-line bg-white p-5 shadow-sm sm:p-6">
+                <h3 className="flex items-center gap-2.5 text-sm font-black text-ink">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-subtle"><Gift aria-hidden="true" className="h-4 w-4 text-muted" /></span>
+                  Extrato de cashback
+                </h3>
+                <p className="mt-3 text-xs leading-5 text-muted">Confira as últimas movimentações do seu saldo.</p>
+                <div className="mt-3 divide-y divide-line">
                   {cashback?.transactions.length ? (
                     cashback.transactions.map((transaction) => (
                       <div
-                        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line p-3"
+                        className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 py-4"
                         key={transaction.id}
                       >
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1 basis-40">
                           <p className="break-words text-sm font-bold text-ink">
                             {transaction.description}
                           </p>
-                          <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-muted">
-                            {transaction.type === "CREDIT" ? "Credito" : transaction.type === "DEBIT" ? "Estorno / debito" : transaction.type} -{" "}
+                          <p className="mt-1 text-xs leading-5 text-muted">
+                            {transaction.type === "CREDIT" ? "Crédito" : transaction.type === "DEBIT" ? "Estorno / débito" : transaction.type} ·{" "}
                             {formatDate(transaction.createdAt)}
                           </p>
                         </div>
-                        <span className="shrink-0 text-sm font-black text-brand">
+                        <span className="max-w-full break-words rounded-lg bg-surface-subtle px-2.5 py-1 text-sm font-bold tabular-nums text-ink">
                           {transaction.type === "DEBIT" || transaction.type === "EXPIRE" ? "- " : "+ "}{formatCurrency(transaction.amount)}
                         </span>
                       </div>
                     ))
                   ) : (
-                    <p className="rounded-lg border border-dashed border-line p-4 text-sm leading-6 text-muted">
-                      Sem movimentacoes de cashback por enquanto.
+                    <p className="rounded-xl bg-surface-subtle p-4 text-sm leading-6 text-muted">
+                      Sem movimentações de cashback por enquanto.
                     </p>
                   )}
                 </div>
-              </div>
+              </section>
             </div>
             </div>
           ) : null}
