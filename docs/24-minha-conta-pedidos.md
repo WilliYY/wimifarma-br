@@ -11,6 +11,14 @@
 
 ## Implementação
 
+### Histórico de compras organizado — 25/10/2026
+
+Direção visual: área pessoal de varejo clara, com vermelho Wimifarma nos filtros e nas ações (DFII 14). Preserva Barlow, cores e espaçamentos do site. Os filtros apresentam ícone, quantidade e seleção explícita em duas colunas no celular e quatro nas telas maiores. Cada pedido separa identificação/data/status, prévia dos produtos com nome e fotos, modalidade/quantidade e total. Cancelamentos e conclusões usam ícones e textos, além da cor.
+
+Os detalhes continuam expansíveis por teclado e agora agrupam acompanhamento, produtos, entrega ou retirada, pagamento e resumo de valores em blocos próprios. Ações ocupam a largura disponível no celular. A mesma apresentação atende o pedido em destaque da visão geral. Nenhuma alteração em consultas, associação de clientes, status, valores, descontos, faltas, links de pagamento ou regras comerciais; nenhuma dependência adicional.
+
+Validação dirigida: componentes reais com fixtures sintéticas em 320/390/768/1440 px, CSS e fontes Barlow do projeto; sem transbordamento horizontal. Conferidos filtros, seleção, paginação, atualização, erro/nova tentativa, vazio, destaque, detalhes por teclado e links condicionais de pagamento/avaliação. Nenhuma escrita comercial real. Três testes de acompanhamento e 485 testes de segurança aprovados, além de TypeScript, ESLint dirigido, revisão independente e `git diff --check`. Auditorias de dependências registram um alerta moderado em `fast-uri`, sem high/critical; não houve alteração de dependências. Evidências locais em `outputs/customer-orders-2026-10-25/`.
+
 ### Benefícios e participação no Club — 13/10/2026
 
 Direção visual: área pessoal de varejo, com saldos em primeiro plano, dourado para o Club, verde para cashback e cartões compactos para pedidos. Mantém a tipografia, marca oficial e navegação existentes. O destaque vem da hierarquia dos valores e do status de participação, sem dependências adicionais (avaliação de design DFII: 14).
