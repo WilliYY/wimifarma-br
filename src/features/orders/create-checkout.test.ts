@@ -169,7 +169,7 @@ test("classification becoming antimicrobial while checkout waits cannot bypass u
   await assert.rejects(f.run, /envie a receita/); assert.equal(f.order(), null);
 });
 
-async function pixCheckout(options: { paymentMethod?: string; onlineMethod?: string; cashback?: number; coins?: number; subtotal?: number; shipping?: number; previousTotal?: number; secondProduct?: boolean; quantity?: number } = {}) {
+async function pixCheckout(options: { paymentMethod?: string; onlineMethod?: string; cashback?: number; coins?: number; subtotal?: number; shipping?: number; shippingCustomerPrice?: number; previousTotal?: number; secondProduct?: boolean; quantity?: number } = {}) {
   let saved: Record<string, unknown> = {};
   let productReads = 0;
   let reservedCashback: unknown;
@@ -184,7 +184,7 @@ async function pixCheckout(options: { paymentMethod?: string; onlineMethod?: str
     cashbackEnabled: true, cashbackRateBps: 200, wimicoinsEnabled: true, wimicoinsRateBps: 200 };
   const previous = options.previousTotal === undefined ? null : { id: "synthetic-old-order", customerId: "synthetic-customer", totalCents: options.previousTotal,
     checkoutRequestHash: createHash("sha256").update(JSON.stringify({ ...input, checkoutRequestId: undefined })).digest("hex") };
-  const state = { shippingQuote: options.shipping ? { priceCents: options.shipping } : null, routed: undefined as { amountCents: number } | undefined, reservedCoins: 0 };
+  const state = { shippingQuote: options.shipping ? { priceCents: options.shipping, ...(options.shippingCustomerPrice !== undefined ? { benefit: { customerPriceCents: options.shippingCustomerPrice } } : {}) } : null, routed: undefined as { amountCents: number } | undefined, reservedCoins: 0 };
   const tx = {
     $queryRaw: async () => [], $executeRaw: async () => 0,
     customer: { findFirst: async () => ({ id: "synthetic-customer" }) }, clubMembership: { findUnique: async () => ({ active: true }) },
@@ -238,13 +238,19 @@ test("cartão e dinheiro não recebem desconto Pix mesmo com onlineMethod pix", 
   }
 });
 
-test("Pix preserva valor do frete e limiar de gratuidade anterior ao desconto Pix", async () => {
+test("Pix preserva preço do frete validado e subtotal não concede gratuidade sozinho", async () => {
   const paid = await pixCheckout({ subtotal: 10000, cashback: 1000, coins: 500, shipping: 1200 });
   assert.equal(paid.saved.deliveryFeeCents, 1200);
   assert.equal(paid.saved.totalCents, 9445);
-  const free = await pixCheckout({ subtotal: 10000, shipping: 1200 });
+  const regular = await pixCheckout({ subtotal: 10000, shipping: 1200 });
+  assert.equal(regular.saved.deliveryFeeCents, 1200);
+  assert.equal(regular.saved.totalCents, 10900);
+  const free = await pixCheckout({ subtotal: 10000, shipping: 1200, shippingCustomerPrice: 0 });
   assert.equal(free.saved.deliveryFeeCents, 0);
   assert.equal(free.saved.totalCents, 9700);
+  const partial = await pixCheckout({ subtotal: 10000, shipping: 1200, shippingCustomerPrice: 700 });
+  assert.equal(partial.saved.deliveryFeeCents, 700);
+  assert.equal(partial.saved.totalCents, 10400);
 });
 
 test("Pix rateia centavos líquidos entre produtos antes das recompensas", async () => {

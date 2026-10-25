@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { normalizeBrazilianPhone } from "@/lib/brazilian-phone";
-import { customerShippingFee, FREE_SHIPPING_THRESHOLD_CENTS, isLocalDeliveryAddress } from "@/features/shipping/delivery-policy";
+import { isLocalDeliveryAddress } from "@/features/shipping/delivery-policy";
 
 import {
   canTransitionStatus,
@@ -45,14 +45,6 @@ test("telefone brasileiro aceita DDI sem confundir DDD 55 e rejeita números inv
     assert.equal(normalizeBrazilianPhone(phone), null);
     assert.equal(checkoutRequestSchema.safeParse({ ...baseRequest, customer: { ...baseRequest.customer, phone } }).success, false);
   }
-});
-
-test("frete grátis usa total dos produtos após desconto e preserva custo da transportadora", () => {
-  assert.equal(FREE_SHIPPING_THRESHOLD_CENTS, 9990);
-  assert.equal(customerShippingFee(2300, 9989, 0), 2300);
-  assert.equal(customerShippingFee(2300, 9990, 0), 0);
-  assert.equal(customerShippingFee(2300, 10000, 11), 2300);
-  assert.equal(customerShippingFee(2300, 10000, 10), 0);
 });
 
 test("dinheiro e maquininha são locais ou retirada; cidade digitada não amplia CEP", () => {

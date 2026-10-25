@@ -8,9 +8,9 @@ import styles from "./announcement-bar.module.css";
 const announcements = [
   {
     theme: "delivery",
-    title: "Frete grátis",
-    detail: "Em compras a partir de",
-    highlight: "R$ 99,90",
+    title: "Consulte seu CEP",
+    detail: "Benefícios na cotação",
+    highlight: "para frete grátis",
     action: "Confira a entrega",
     href: "/delivery",
   },

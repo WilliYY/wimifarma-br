@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-25 — Frete por CEP, teto e contribuição projetada
+
+- Autorização: o lojista pediu substituir a promessa nacional de R$ 99,90 por consulta de CEP, limites no painel e orçamento baseado em margem, preservando os percentuais de preço dos produtos.
+- Decisão: benefício calculado no servidor com custos atuais, reservas conservadoras, embalagem por volume e extras de rota confirmados. Configuração incompleta impede o subsídio, mantendo cotação normal; não presumir impostos, custo zero ou renovação de ofertas. Sem migration ou alteração de preços/pedidos anteriores.
+- Fluxo: token vincula benefício público, CEP, resgates e revisão; checkout recalcula e exige recotação se o preço mudou. Fila global ADMIN e diagnóstico distinguem perfil pendente de CEP sem cobertura. Nenhuma liberação logística em massa.
+- Contrato e limitações em `107-frete-cep-e-contribuicao.md`.
+
 ## 2026-10-24 — Noventa e seis itens aptos das pesquisas publicados
 
 O lojista autorizou publicar todos os candidatos aptos das pesquisas atuais e anteriores. A consolidação resultou em 96 novos produtos, publicados em lotes exclusivos A46 e B50, com 96 fotos e páginas públicas verificadas, sem EAN duplicado. A execução encerrou as duas janelas e removeu somente os dois bancos de QA pertencentes à tarefa. A relação por marca, horários, fingerprints e limites está em `docs/96-catalogo-por-principio-ativo-2026-10-22.md`; relatório privado com links em `outputs/publicacao-total-chat5-2026-10-24/RELATORIO-FINAL.md`.

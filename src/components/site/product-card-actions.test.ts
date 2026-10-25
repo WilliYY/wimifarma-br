@@ -188,7 +188,7 @@ test("cards alinham preços e ações com promoção, cashback, fornecedor e gen
       for (const index of [2, 3]) {
         await expect(cards.nth(index).getByText("Frete grátis", { exact: true })).toBeVisible();
         await expect(cards.nth(index).getByText(/cashback/)).toHaveCount(0);
-        await expect(cards.nth(index).getByText(/Consulte o CEP/)).toBeVisible();
+        await expect(cards.nth(index).getByText(/Consulte seu CEP para frete grátis/)).toBeVisible();
       }
     }
     assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1") ?? "[]")), []);

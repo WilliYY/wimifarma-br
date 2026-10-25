@@ -7,7 +7,6 @@ import { postalAddressSchema } from "@/features/orders/postal-code";
 import { formatPostalCode, getDeliveryAvailability, normalizePostalCode } from "@/features/products/product-detail";
 import { CheckoutShippingOptions } from "./checkout-shipping-options";
 import type { ShippingSelection } from "@/features/shipping/schema";
-import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/features/shipping/delivery-policy";
 import { getPickupEstimate, pickupTimeLabel, pickupWaitLabel, synchronizedPickupTime } from "@/features/orders/pickup-estimate";
 import { useCart } from "./cart-provider";
 import { SupplierPreparationNotice } from "./supplier-preparation-notice";
@@ -125,6 +124,6 @@ export function CheckoutDeliveryStep({ address, fulfillmentMethod, onAddress, on
       <p className="mt-2 text-xs leading-5 text-muted">30 minutos de preparo após a confirmação do pedido, contados no horário de atendimento: todos os dias, das 7h30 às 18h30.</p></>}
       <p className="mt-3 flex items-start gap-2 text-xs leading-5 text-pharma-green"><Store aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />Aguarde a equipe confirmar que o pedido está pronto.</p>
     </div>}
-    <p className="mt-4 text-xs leading-5 text-muted">Frete grátis a partir de {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(FREE_SHIPPING_THRESHOLD_CENTS / 100)} em produtos após descontos, inclusive para outras cidades com frete disponível.</p>
+    <p className="mt-4 text-xs leading-5 text-muted">Consulte seu CEP para frete grátis. O benefício depende dos produtos, da composição do pedido e da cotação atual.</p>
   </div>;
 }

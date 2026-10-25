@@ -3,6 +3,7 @@ import { z } from "zod";
 import { shippingReferenceSchema } from "./product-reference";
 import { shippingCargoKindsSchema } from "./cargo-policy";
 import { shippingOperationalCostSchema } from "./operational-cost-schema";
+import { shippingBenefitPolicySchema, shippingBenefitSchema } from "./benefit-policy";
 
 export const shippingServiceIdsSchema = z.array(z.number().int().positive()).max(50);
 const citySchema = z.string().trim().min(2).max(100);
@@ -24,6 +25,7 @@ export const shippingSettingsSchema = z.object({
   operationalCosts: z.array(shippingOperationalCostSchema).max(50).optional()
     .refine(entries => !entries || new Set(entries.map(entry => entry.serviceId)).size === entries.length, "Informe um custo por serviço."),
   contactEmail: z.string().email().max(160),
+  freeShippingPolicy: shippingBenefitPolicySchema.optional(),
 });
 export const defaultShippingSettings = {
   enabled: false, environment: "production" as const, originPostalCode: "87525000",
@@ -48,7 +50,9 @@ export const shippingItemsSchema = z.array(z.object({
   productId: z.string().min(1).max(64), quantity: z.number().int().min(1).max(MAX_ORDER_ITEM_QUANTITY),
   expectedUnitPriceCents: z.number().int().positive().max(1_000_000),
 })).min(1).max(30).refine((items) => new Set(items.map((item) => item.productId)).size === items.length, "Produto repetido.");
-export const quoteRequestSchema = z.object({ postalCode: z.string().regex(/^(?!0{8}$)\d{8}$/), items: shippingItemsSchema });
+export const quoteRequestSchema = z.object({ postalCode: z.string().regex(/^(?!0{8}$)\d{8}$/), items: shippingItemsSchema,
+  discountCents: z.number().int().min(0).max(100_000_000).optional(),
+});
 export const shippingPackagingSchema = z.object({
   version: z.literal(1),
   calculationMethod: z.enum(["provider", "provider-conservative-envelope"]).default("provider"),
@@ -67,6 +71,7 @@ export const shippingOptionSchema = z.object({
   priceCents: z.number().int().positive().max(10_000_000),
   deliveryDays: z.number().int().min(0).max(365),
   packaging: shippingPackagingSchema.optional(),
+  benefit: shippingBenefitSchema.optional(),
 });
 export const shippingSelectionSchema = shippingOptionSchema.extend({ token: z.string().min(1).max(8000) });
 export type ShippingOption = z.infer<typeof shippingOptionSchema>;
@@ -76,6 +81,8 @@ export const shippingQuotePayloadSchema = shippingOptionSchema.extend({
   postalCode: z.string().regex(/^\d{8}$/), fingerprint: z.string().length(64),
   revision: z.number().int(), expiresAt: z.number().int(),
   postingLocation: postingPlanSchema.optional(),
+  economicPriceCents: z.number().int().positive().max(10_000_000).optional(),
+  discountCents: z.number().int().min(0).max(100_000_000).optional(),
 });
 export type ShippingQuotePayload = z.infer<typeof shippingQuotePayloadSchema>;
 

@@ -12,10 +12,17 @@ test("freight catalog pages beyond 500, searches globally and exposes only its a
   } }] });
   const queries: Record<string, unknown>[] = [];
   const counted: Record<string, unknown>[] = [];
+  let configured = false;
   const products = Array.from({ length: 805 }, (_, i) => ({ id: `synthetic-${i}`, name: `Produto ${String(i).padStart(4, "0")}` }));
   const fixture = { guard: { session: { user: { id: "synthetic-admin" } } }, integration: { settings: defaultShippingSettings, revision: 7, credentials: { accessToken: "synthetic-private-token", clientSecret: "synthetic-secret" } }, prisma: { product: {
-    count: async (query: Record<string, unknown>) => { counted.push(query); return products.length; },
-    findMany: async (query: Record<string, unknown>) => { queries.push(query); return products.slice(Number(query.skip ?? 0), Number(query.skip ?? 0) + Number(query.take)); },
+    count: async (query: Record<string, unknown>) => { counted.push(query); const ids = (query.where as { id?: { in: string[] } })?.id?.in; return ids ? ids.length : products.length; },
+    findMany: async (query: Record<string, unknown>) => {
+      if (query.take === undefined) return products.map((product, index) => ({ id: product.id, category: "Higiene", shippingProfile: configured && index === 804 ? { enabled: true, transportReviewed: true, weightGrams: 300, widthCm: 10, heightCm: 10, lengthCm: 20 } : null }));
+      queries.push(query);
+      const ids = (query.where as { id?: { in: string[] } })?.id?.in;
+      const matching = ids ? products.filter(product => ids.includes(product.id)) : products;
+      return matching.slice(Number(query.skip ?? 0), Number(query.skip ?? 0) + Number(query.take));
+    },
   } } };
   const loaded = { exports: {} as { GET: (request: Request) => Promise<Response> } };
   vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, console, process, Buffer, fixture });
@@ -25,6 +32,7 @@ test("freight catalog pages beyond 500, searches globally and exposes only its a
   assert.equal(data.products.length, 100);
   assert.equal(data.products[0].id, "synthetic-700");
   assert.deepEqual(data.pagination, { page: 8, pageSize: 100, total: 805, totalPages: 9 });
+  assert.deepEqual(data.readinessSummary, { total: 805, missing: 805, review: 0, disabled: 0, configured: 0, assisted: 0 });
   assert.equal(JSON.stringify(data).includes("synthetic-private"), false);
   assert.equal(JSON.stringify(data).includes("synthetic-secret"), false);
   assert.deepEqual(Object.keys(queries[0].select as object).sort(), ["category", "id", "isPopularPharmacy", "name", "prescriptionType", "requiresPrescription", "shippingProfile", "updatedAt"].sort());
@@ -40,4 +48,13 @@ test("freight catalog pages beyond 500, searches globally and exposes only its a
     assert.equal(invalid.status, 422, query);
   }
   assert.equal(queries.length, 2);
+  configured = true;
+  const ready = await (await loaded.exports.GET(new Request("https://example.com/api/admin/fretes?readiness=CONFIGURED"))).json();
+  assert.equal(ready.data.products.length, 1);
+  assert.equal(ready.data.products[0].id, "synthetic-804", "global filter reaches a product beyond the first eight pages");
+  assert.equal(ready.data.readinessSummary.configured, 1);
+  const pending = await (await loaded.exports.GET(new Request("https://example.com/api/admin/fretes?readiness=PENDING&page=8"))).json();
+  assert.equal(pending.data.pagination.total, 804);
+  assert.equal(pending.data.products.some((product: { id: string }) => product.id === "synthetic-804"), false);
+  assert.equal((await loaded.exports.GET(new Request("https://example.com/api/admin/fretes?readiness=INVALID"))).status, 422);
 });

@@ -62,7 +62,8 @@ export function validateShippingProduct(product: ShippingProduct) {
     throw new ShippingError(`${product.name}: o envio precisa de atendimento da farmácia.`);
   }
   const parsed = shippingProfileSchema.safeParse(product.shippingProfile);
-  if (!parsed.success || !parsed.data.enabled) throw new ShippingError(`${product.name}: o envio por transportadora ainda não foi liberado. Consulte a equipe ou escolha retirada.`);
+  if (!parsed.success) throw new ShippingError(`${product.name}: o peso, as medidas ou a revisão da embalagem estão pendentes. Isso não indica falta de cobertura do CEP. Consulte a equipe para preparar o envio.`);
+  if (!parsed.data.enabled) throw new ShippingError(`${product.name}: o perfil de envio está desativado e precisa de conferência da equipe. Isso não indica falta de cobertura do CEP.`);
   return parsed.data;
 }
 export function shippingFingerprint(items: { productId: string; quantity: number; expectedUnitPriceCents: number }[], products: ShippingProduct[]) {

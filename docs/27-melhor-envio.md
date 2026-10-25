@@ -1,5 +1,9 @@
 # 27 - Melhor Envio e frete por transportadora
 
+## Frete por CEP e contribuição — 25/10/2026
+
+A gratuidade fixa por subtotal de R$ 99,90 descrita no histórico foi substituída pela política ajustável de subsídio por CEP, cotação e contribuição projetada. O benefício começa desativado até confirmação dos custos e limites no ADMIN; a cotação normal continua disponível para produtos habilitados. Contrato e validações em [107](107-frete-cep-e-contribuicao.md).
+
 ## Comparação operacional e mercadorias — 20/10/2026
 
 O ADMIN compara o catálogo completo por custo interno da rota e aceitação da carga. Viagem rateada, coleta, seguro externo, provisão de retornos e adicionais ficam pendentes enquanto desconhecidos; não alteram a cobrança pública. Características da mercadoria restringem serviços sem superar proibições ou ativar transportadoras automaticamente. Contrato, matriz, fontes e limites em [91](91-comparacao-transportadoras-custos.md).

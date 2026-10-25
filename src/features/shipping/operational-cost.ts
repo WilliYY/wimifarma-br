@@ -9,7 +9,7 @@ export function shippingOperationalRouteKey(settings: ShippingSettings, serviceI
   return [settings.originPostalCode, normalized(settings.originCity), settings.originState, normalized(route.city), route.state, normalized(route.pointName ?? "")].join("|");
 }
 
-/** Internal operational estimate. It never changes a label price or a customer delivery fee. */
+/** Internal expense estimate; the carrier label stays intact. Confirmed totals can fund the benefit policy. */
 export function estimateShippingOperationalCost(quote: { serviceId: number; priceCents: number }, settings: ShippingSettings) {
   const routeKey = shippingOperationalRouteKey(settings, quote.serviceId);
   const route = routeKey ? resolvePostingLocation(settings, quote.serviceId)! : null;

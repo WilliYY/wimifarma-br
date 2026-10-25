@@ -1,5 +1,7 @@
 # 32 - Checkout e confiança
 
+Atualização de 25/10/2026: o benefício de frete de transportadoras depende do CEP, da cotação e da contribuição projetada, conforme `107-frete-cep-e-contribuicao.md`. A regra anterior de gratuidade por subtotal de R$ 99,90 foi substituída. A retirada e a entrega local mantêm suas regras.
+
 Revisão nacional/Miauby de 03/10: ver `27-melhor-envio.md` para a configuração ativa e a regra atual de medicamentos sem receita. Ainda é obrigatória a aprovação de peso/embalagem por produto; categoria sem receita não exige atendimento por si só. Retirada/entrega local mantêm as mesmas regras. Prévia de futuros e-mails, sem envio ativo: `33-emails-clientes.md`.
 
 ## Experiência atual

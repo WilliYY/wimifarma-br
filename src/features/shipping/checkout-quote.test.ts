@@ -10,6 +10,7 @@ test("checkout quote waits 450 ms and replacement cart cancels the previous debo
   context.mock.timers.enable({ apis: ["setTimeout"] });
   const calls: string[] = [];
   context.mock.method(globalThis, "fetch", async (_url: unknown, init: RequestInit) => {
+    assert.equal(new Headers(init.headers).get("X-Wimifarma-Shipping-Benefit"), "1");
     calls.push(String(init.body));
     return Response.json({ data: [option] });
   });

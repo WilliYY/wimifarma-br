@@ -45,7 +45,7 @@ export async function saveShippingSettings(settings: ShippingSettings, revision:
       ? await tx.shippingIntegration.updateMany({ where: { id: SHIPPING_INTEGRATION_ID, revision }, data: { ...data, revision: { increment: 1 } } })
       : await tx.shippingIntegration.create({ data: { id: SHIPPING_INTEGRATION_ID, ...data } });
     if ("count" in saved && saved.count !== 1) throw new ShippingError("A configuração mudou. Atualize a página.", 409);
-    await tx.auditLog.create({ data: { userId, action: "SHIPPING_SETTINGS_UPDATED", entity: "ShippingIntegration", entityId: SHIPPING_INTEGRATION_ID, metadata: { enabled: settings.enabled, environment: settings.environment, credentialsChanged: reset } } });
+    await tx.auditLog.create({ data: { userId, action: "SHIPPING_SETTINGS_UPDATED", entity: "ShippingIntegration", entityId: SHIPPING_INTEGRATION_ID, metadata: { enabled: settings.enabled, environment: settings.environment, credentialsChanged: reset, freeShippingPolicy: settings.freeShippingPolicy ?? null } } });
   });
 }
 

@@ -1,5 +1,13 @@
 # 06 - Pendencias
 
+## Preparação logística e parâmetros do benefício — 25/10/2026
+
+- Consulta produtiva somente de leitura encontrou 2.267 produtos ativos: 1.992 sem perfil logístico, 273 com rascunho desativado e sem revisão, e dois perfis habilitados, de base estimada já autorizada. A contagem é um retrato da data, não acompanha futuras inclusões.
+- A fila global do painel de fretes permite localizar e revisar os cadastros em todas as páginas. Cada apresentação/EAN precisa de peso e dimensões do pacote, proteção, revisão e serviço que aceite a carga. Pesquisas que descrevem somente embalagem comercial ou não comprovam unidades permanecem como referência, sem aprovação automática.
+- Imposto efetivo e piso de contribuição após despesas ainda precisam de documentação financeira e configuração; preservar os acréscimos de preço por produto não equivale a definir esse piso. O sistema não presume alíquota ou custo zero. A falta desses parâmetros impede o subsídio e conserva a cotação normal.
+- A caixa informada pelo lojista não comprova o custo ou encaixe de todos os volumes. Endereços de origem alternativos para Douradina/Umuarama também exigem validação operacional, além do local de postagem cadastrado.
+- Contrato e verificações da implementação em [107](107-frete-cep-e-contribuicao.md).
+
 ## Conferência ST de medicamentos Profarma — 19/10/2026
 
 - Regra publicada no código `dd31610`, sem preencher ST ou renovar ofertas antigas por inferência. Na implantação, 33 produtos tinham oferta Profarma sem comprovação registrada: 23 com alternativa elegível do mesmo EAN e 10 sem oferta elegível. Exigem nova conferência real; o cadastro não é excluído.

@@ -1,6 +1,6 @@
 import { quoteRequestSchema, shippingSelectionSchema, type ShippingSelection } from "./schema";
 
-type QuoteRequest = { postalCode: string; items: { productId: string; quantity: number; expectedUnitPriceCents: number }[] };
+type QuoteRequest = { postalCode: string; items: { productId: string; quantity: number; expectedUnitPriceCents: number }[]; discountCents?: number };
 export type CheckoutQuoteState = { options: ShippingSelection[]; busy: boolean; message: string };
 
 export function createCheckoutQuote() {
@@ -31,7 +31,7 @@ export function createCheckoutQuote() {
       timer = undefined;
       try {
         const response = await fetch("/api/fretes/cotacao", {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST", headers: { "Content-Type": "application/json", "X-Wimifarma-Shipping-Benefit": "1" },
           body: JSON.stringify(request), signal: currentController.signal,
         });
         const payload = await response.json().catch(() => null);

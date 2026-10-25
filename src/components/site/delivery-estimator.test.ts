@@ -217,18 +217,23 @@ for (const prescriptionType of ["CONTROLLED", "ANTIMICROBIAL"] as const) {
   });
 }
 
-test("gratuidade nacional respeita o limiar de R$ 99,90 sem dispensar cotação", async () => {
-  await fixture(async page => {
-    let requests = 0;
-    await page.route("**/api/fretes/cotacao", route => { requests++; return route.fulfill({ json: { data: [quote] } }); });
-    await page.goto(origin);
-    await consult(page, "80010-000");
-    await expect(page.getByRole("status")).toContainText("PAC");
-    await expect(page.getByRole("status")).toContainText("Grátis");
-    assert.equal(requests, 1);
-    await page.getByLabel("Quantidade de teste").fill("1");
-    await consult(page, "80010-000");
-    await expect(page.getByRole("status")).toContainText(/18,75/);
-    assert.equal(requests, 2);
-  }, false, { ...product, unitPriceCents: 4995 });
-});
+for (const width of [320, 390, 1440]) {
+  test(`benefício exibido vem do servidor e mantém leitura em ${width}px`, async () => {
+    await fixture(async page => {
+      await page.setViewportSize({ width, height: 900 });
+      let requests = 0;
+      await page.route("**/api/fretes/cotacao", route => {
+        requests++;
+        return route.fulfill({ json: { data: [{ ...quote, benefit: { status: "discounted", customerPriceCents: 375, subsidyCents: 1500, minimumOrderCents: 15000, remainingCents: 5010 } }] } });
+      });
+      await page.goto(origin);
+      await consult(page, "80010-000");
+      await expect(page.getByRole("status")).toContainText(/3,75/);
+      await expect(page.getByRole("status")).toContainText(/15,00/);
+      await expect(page.getByRole("status")).toContainText(/estimativa/i);
+      await expect(page.getByRole("status")).not.toContainText("Grátis");
+      assert.equal(requests, 1);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+    }, false, { ...product, unitPriceCents: 4995 });
+  });
+}

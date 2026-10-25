@@ -7,10 +7,11 @@ import { shippingAdminProfileSchema } from "@/features/shipping/product-draft";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
 import type { PrescriptionType } from "@/features/products/purchase-policy";
 import { SHIPPING_CARGO_LABELS, type ShippingCargo } from "@/features/shipping/cargo-policy";
+import { ShippingBenefitFields } from "./shipping-benefit-fields";
 import { ShippingOperationalCostFields, ShippingCostComparisons } from "./shipping-operational-costs";
 
 type Product = { id: string; name: string; category: string | null; shippingProfile: unknown; requiresPrescription: boolean; prescriptionType?: PrescriptionType; isPopularPharmacy: boolean; updatedAt: string };
-type Data = { settings: ShippingSettings; revision: number; applicationConfigured: boolean; connected: boolean; expiresAt: number | null; products: Product[]; pagination: { page: number; pageSize: number; total: number; totalPages: number } };
+type Data = { settings: ShippingSettings; revision: number; applicationConfigured: boolean; connected: boolean; expiresAt: number | null; products: Product[]; readinessSummary?: { total: number; missing: number; review: number; disabled: number; configured: number; assisted: number }; pagination: { page: number; pageSize: number; total: number; totalPages: number } };
 type Service = Pick<ShippingOption, "serviceId" | "service" | "carrier">;
 const defaultServices: Service[] = [{ serviceId: 1, carrier: "Correios", service: "PAC" }, { serviceId: 2, carrier: "Correios", service: "SEDEX" }];
 const field = "min-h-11 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/10";
@@ -31,18 +32,19 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
   const [services, setServices] = useState<Service[]>([]);
   const [search, setSearch] = useState("");
   const [catalogQuery, setCatalogQuery] = useState("");
+  const [readiness, setReadiness] = useState<"ALL" | "PENDING" | "CONFIGURED">("ALL");
   const [catalogPage, setCatalogPage] = useState(1);
   const [catalogRequest, setCatalogRequest] = useState(0);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState("");
   const catalogInitialized = useRef(false);
-  const catalogUrl = `/api/admin/fretes?${new URLSearchParams({ q: catalogQuery, page: String(catalogPage) })}`;
+  const catalogUrl = `/api/admin/fretes?${new URLSearchParams({ q: catalogQuery, page: String(catalogPage), readiness })}`;
   const [simulationCargo, setSimulationCargo] = useState<{ cargoKinds: ShippingCargo[]; acceptanceConfirmed: boolean }>({ cargoKinds: ["unspecified"], acceptanceConfirmed: false });
   const simulationSettingsChanged = !!data && ["environment", "originPostalCode", "originCity", "originState", "preparationDays"].some(key => settings[key as keyof ShippingSettings] !== data.settings[key as keyof ShippingSettings]);
   async function load(refreshSettings = true) {
     const result = await request(catalogUrl);
     if (refreshSettings) { setData(result.data); setSettings(result.data.settings); }
-    else setData(current => current ? { ...current, products: result.data.products, pagination: result.data.pagination } : result.data);
+    else setData(current => current ? { ...current, products: result.data.products, pagination: result.data.pagination, readinessSummary: result.data.readinessSummary } : result.data);
   }
   useEffect(() => {
     const status = new URLSearchParams(window.location.search).get("connection");
@@ -54,7 +56,7 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
     request(catalogUrl, "GET", undefined, controller.signal).then((result: { data: Data }) => {
       if (controller.signal.aborted) return;
       if (!catalogInitialized.current) { setSettings(result.data.settings); catalogInitialized.current = true; }
-      setData(current => current ? { ...current, products: result.data.products, pagination: result.data.pagination } : result.data);
+      setData(current => current ? { ...current, products: result.data.products, pagination: result.data.pagination, readinessSummary: result.data.readinessSummary } : result.data);
     }).catch(error => {
       if (!controller.signal.aborted) setCatalogError(error instanceof Error ? error.message : "Falha ao consultar os produtos.");
     }).finally(() => { if (!controller.signal.aborted) setCatalogLoading(false); });
@@ -93,6 +95,7 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
       <p className="text-xs leading-5 text-muted">Permissões solicitadas: cotar fretes, consultar transportadoras e rastreamento. O aplicativo não recebe permissão para gastar o saldo da carteira.</p>
       {data?.expiresAt && <p className="text-xs text-muted">Acesso válido até {new Date(data.expiresAt).toLocaleDateString("pt-BR")}. A renovação é automática durante o uso; após longa inatividade pode ser necessário reconectar.</p>}
       <label className="flex items-start gap-3 rounded-lg border border-line p-4 text-sm"><input checked={settings.enabled} className="mt-1 h-4 w-4 accent-brand" onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })} type="checkbox" /><span><strong>Exibir frete por transportadora no checkout</strong><span className="mt-1 block text-xs text-muted">Ative após validar a origem, os serviços, a documentação fiscal e as embalagens dos produtos.</span></span></label>
+      <ShippingBenefitFields value={settings.freeShippingPolicy} onChange={freeShippingPolicy => setSettings(current => ({ ...current, freeShippingPolicy }))} />
       <fieldset className="grid min-w-0 gap-4 rounded-xl border border-line p-4"><legend className="px-1 text-sm font-black">Locais de postagem por serviço</legend>
         <p className="text-xs leading-5 text-muted">Informe o local confirmado de cada serviço selecionado. Deixe a cidade vazia para remover o local e manter a confirmação pendente. O endereço do destinatário é separado. Salvar não altera o local registrado em pedidos anteriores.</p>
         {settings.serviceIds.length === 0 && <p className="text-sm text-muted">Selecione os serviços na simulação abaixo para configurar a postagem.</p>}
@@ -131,8 +134,15 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
       <p className="mt-3 text-xs text-muted">Serviços selecionados: {settings.serviceIds.join(", ") || "nenhum"}. Use “Salvar configuração” para aplicar.</p>
     </section>
     <section className="rounded-2xl border border-line bg-white p-5 sm:p-7"><h2 className="flex items-center gap-2 text-lg font-black"><Package className="h-5 w-5 text-brand" />Produtos e embalagens</h2><p className="mt-2 text-sm leading-6 text-muted">Cadastre o peso e as medidas externas de cada unidade já protegida. O Melhor Envio recebe a quantidade e calcula os pacotes, sem forçar uma remessa por unidade. Os dados existentes já incluem caixa e proteção: não some tara novamente nem substitua por peso líquido ou medidas internas. O empacotamento é uma previsão; pese e meça a caixa final antes de emitir a etiqueta. Medicamentos sem receita e de receita comum classificada pelo administrador usam PAC ou SEDEX após revisão do transporte; a receita comum é conferida pelo farmacêutico antes da dispensação. Controlados, receita ainda não classificada e Farmácia Popular seguem no atendimento assistido. Líquidos, aerossóis e produtos sensíveis ao calor precisam de revisão de conservação e transporte.</p>
+      {data?.readinessSummary && <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3" aria-label="Situação dos perfis de envio">{[
+        ["Produtos no catálogo", data.readinessSummary.total], ["Sem perfil", data.readinessSummary.missing],
+        ["Aguardando revisão", data.readinessSummary.review], ["Envio desabilitado", data.readinessSummary.disabled],
+        ["Configurados", data.readinessSummary.configured], ["Atendimento assistido", data.readinessSummary.assisted],
+      ].map(([label, count]) => <div key={label} className="min-w-0 rounded-lg border border-line bg-surface-subtle p-3"><strong className="block text-lg text-ink">{count}</strong><span className="text-xs leading-5 text-muted">{label}</span></div>)}</div>}
+      <p className="mt-3 text-xs leading-5 text-muted">O filtro ajuda a preparar o catálogo. Configurado não comprova cobertura ou aceitação da carga; confira peso, medidas, embalagem e restrições antes de liberar.</p>
       <form className="mt-5 flex flex-wrap items-end gap-3" onSubmit={event => { event.preventDefault(); setCatalogQuery(search.trim()); setCatalogPage(1); setCatalogRequest(current => current + 1); }}>
         <div className="min-w-0 flex-1"><Label text="Buscar produto por nome, EAN ou SKU"><input className={field} disabled={busy} maxLength={120} onChange={event => setSearch(event.target.value)} type="search" value={search} /></Label></div>
+        <Label text="Situação de envio"><select aria-label="Situação de envio" className={field} value={readiness} disabled={busy} onChange={event => { setReadiness(event.target.value as typeof readiness); setCatalogPage(1); }}><option value="ALL">Todos os produtos</option><option value="PENDING">Pendências de envio</option><option value="CONFIGURED">Perfis configurados</option></select></Label>
         <button className={button} disabled={busy || catalogLoading} type="submit">Buscar produtos</button>
         {(search || catalogQuery) && <button className={`${button} bg-ink`} disabled={busy || catalogLoading} onClick={() => { setSearch(""); setCatalogQuery(""); setCatalogPage(1); }} type="button">Limpar busca</button>}
       </form>

@@ -1,5 +1,7 @@
 # 79 - Cálculo de CEP e frete no produto e no delivery
 
+Atualização de 25/10/2026: a política por CEP e contribuição do [documento 107](107-frete-cep-e-contribuicao.md) substitui o limite universal de R$ 99,90 citado nos registros históricos abaixo. Falta de perfil logístico e falta de cobertura têm diagnósticos distintos; não houve liberação de medidas ou carga sem revisão.
+
 Correção de 19/10/2026, limitada ao simulador público e à quantidade compartilhada da página de produto. Não altera transportadoras, preços, estoque, perfis logísticos ou regras de compra.
 
 ## Causa e reprodução

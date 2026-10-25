@@ -7,6 +7,8 @@ import { defaultShippingSettings, type ShippingSelection, type ShippingSettings 
 import { shippingFingerprint, signShippingQuote, verifyShippingQuote } from "./rules";
 import { checkoutRequestSchema, type CheckoutRequest } from "@/features/orders/checkout";
 import type { PrescriptionType } from "@/features/products/purchase-policy";
+import { shippingOperationalRouteKey } from "./operational-cost";
+import type { SupplierCommerceOffer } from "@/features/supplier-catalog/commerce";
 
 test("medication carrier acceptance is enforced both when quoting and submitting a signed quote", async () => {
   const bundle = await build({ entryPoints: ["src/features/shipping/service.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "isolated-shipping-service", setup(builder) {
@@ -19,17 +21,18 @@ test("medication carrier acceptance is enforced both when quoting and submitting
   } }] });
   const key = "synthetic-shipping-service-key";
   const profile = { enabled: true, transportReviewed: true, weightGrams: 350, widthCm: 15, heightCm: 10, lengthCm: 20, approvedServiceIds: undefined as number[] | undefined };
-  const baseProduct = { id: "fixture-product", name: "Produto sintético", slug: "fixture", imageUrl: null, category: "Medicamentos", price: "10.00", promotionalPrice: null, status: "ACTIVE" as const, stock: 10, requiresPrescription: false, prescriptionType: undefined as PrescriptionType | undefined, isPopularPharmacy: false, shippingProfile: profile, updatedAt: new Date(0) };
+  const baseProduct = { id: "fixture-product", name: "Produto sintético", slug: "fixture", imageUrl: null, category: "Medicamentos", price: "10.00", promotionalPrice: null, status: "ACTIVE" as const, stock: 10, requiresPrescription: false, prescriptionType: undefined as PrescriptionType | undefined, isPopularPharmacy: false, shippingProfile: profile, updatedAt: new Date(0), inventorySource: "PHARMACY" as "PHARMACY" | "DISTRIBUTOR", ean: "7891234567895", supplierMarkupBps: 10000, supplierOffers: [] as SupplierCommerceOffer[] };
   let products = [baseProduct];
   const integration: { settings: ShippingSettings; revision: number } = { settings: { ...defaultShippingSettings, enabled: true, serviceIds: [1, 2, 3], contactEmail: "shipping@example.invalid" }, revision: 7 };
-  const requests: { services: string; products: { id: string; weight: number; width: number; height: number; length: number; insurance_value: number; quantity: number }[]; volumes?: unknown }[] = [];
+  let providerPrice = "10.00";
+  const requests: { services: string; to?: { postal_code: string }; products: { id: string; weight: number; width: number; height: number; length: number; insurance_value: number; quantity: number }[]; volumes?: unknown }[] = [];
   const tx = { product: { findMany: async () => products }, shippingIntegration: { findUnique: async () => integration } };
   const fixture = { tx, integration, provider: async (...args: unknown[]) => {
     const request = args[3] as typeof requests[number];
     requests.push(request);
     const units = request.products ?? [];
     const packages = [{ dimensions: { width: 15, height: units.reduce((sum, item) => sum + item.height * item.quantity, 0), length: 20 }, weight: units.reduce((sum, item) => sum + item.weight * item.quantity, 0), insurance_value: units.reduce((sum, item) => sum + item.insurance_value * item.quantity, 0), products: units.map(({ id, quantity }) => ({ id, quantity })) }];
-    return [1, 3].map(id => ({ id, name: `Serviço ${id}`, price: "10.00", delivery_time: 3, company: { name: "Transportadora sintética" }, packages }));
+    return [1, 3].map(id => ({ id, name: `Serviço ${id}`, price: providerPrice, delivery_time: 3, company: { name: "Transportadora sintética" }, packages }));
   } };
   const loaded = { exports: {} as { quoteCart: (cep: string, items: CheckoutRequest["items"]) => Promise<ShippingSelection[]>; validateOrderShipping: (transaction: unknown, input: CheckoutRequest) => Promise<unknown> } };
   vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), process: { env: { ...process.env, AUTH_SECRET: key } }, Buffer, Date, fixture, console });
@@ -65,8 +68,9 @@ test("medication carrier acceptance is enforced both when quoting and submitting
   const ordinaryIncompatible = signShippingQuote({ provider: "melhor-envio", serviceId: 3, carrier: "Outra transportadora", service: "Teste", priceCents: 1000, deliveryDays: 4, postalCode: "01001000", fingerprint: shippingFingerprint(items, products), revision: 7, expiresAt: Date.now() + 900000 }, key);
   await assert.rejects(loaded.exports.validateOrderShipping(tx, { ...input, shippingToken: ordinaryIncompatible }), /não aceita/);
   products = [{ ...baseProduct, category: "Perfumaria" }];
-  assert.deepEqual(Array.from(await loaded.exports.quoteCart("01001000", items), option => option.serviceId), [1, 3]);
-  await loaded.exports.validateOrderShipping(tx, { ...input, shippingToken: signShippingQuote({ provider: "melhor-envio", serviceId: 3, carrier: "Outra transportadora", service: "Teste", priceCents: 1000, deliveryDays: 4, postalCode: "01001000", fingerprint: shippingFingerprint(items, products), revision: 7, expiresAt: Date.now() + 900000 }, key) });
+  const nonMedicineOptions = await loaded.exports.quoteCart("01001000", items);
+  assert.deepEqual(Array.from(nonMedicineOptions, option => option.serviceId), [1, 3]);
+  await loaded.exports.validateOrderShipping(tx, { ...input, shippingToken: nonMedicineOptions.find(option => option.serviceId === 3)!.token });
   products = [{ ...baseProduct, category: "Perfumaria", shippingProfile: { ...profile, approvedServiceIds: [1] } }];
   assert.deepEqual(Array.from(await loaded.exports.quoteCart("01001000", items), option => option.serviceId), [1]);
   assert.equal(requests.at(-1)?.services, "1");
@@ -76,7 +80,7 @@ test("medication carrier acceptance is enforced both when quoting and submitting
   products = [{ ...baseProduct, category: "Perfumaria", shippingProfile: { ...profile, approvedServiceIds: [] } }];
   await assert.rejects(loaded.exports.quoteCart("01001000", items), /transporte autorizado/);
   products = [{ ...baseProduct, shippingProfile: { ...profile, enabled: false } }];
-  await assert.rejects(loaded.exports.quoteCart("01001000", items), /não foi liberado/);
+  await assert.rejects(loaded.exports.quoteCart("01001000", items), /perfil de envio está desativado/);
   products = [{ ...baseProduct, requiresPrescription: true }];
   await assert.rejects(loaded.exports.quoteCart("01001000", items), /atendimento/);
   assert.equal(requests.length, 4, "drafts and unclassified prescription items never reach the provider");
@@ -92,4 +96,29 @@ test("medication carrier acceptance is enforced both when quoting and submitting
   const before = requests.length;
   await assert.rejects(loaded.exports.quoteCart("01001000", [{ ...items[0], quantity: 21 }]), /farmácia/);
   assert.equal(requests.length, before, "oversized carts never reach the provider");
+
+  integration.settings.freeShippingPolicy = { enabled: true, maximumSubsidyCents: 1000, minimumContributionBps: 1000, variableCostReserveBps: 700, packagingCostCents: 100, costMaxAgeHours: 24 };
+  integration.settings.postingLocations = [1, 3].map(serviceId => ({ serviceId, city: "Ivaté", state: "PR" }));
+  integration.settings.operationalCosts = [1, 3].map(serviceId => ({ serviceId, routeKey: shippingOperationalRouteKey(integration.settings, serviceId), tripCostCents: 0, parcelsPerTrip: 1, collectionFeeCents: 0, extraInsuranceCents: 0, returnReserveCents: 0, otherFeesCents: 0 }));
+  const offer: SupplierCommerceOffer = { id: "synthetic-commercial", supplier: "ANB", eanNormalized: "07891234567895", unitCostCents: 10000, available: true, stockQuantity: 30, allocationQuantity: 5, reservedQuantity: 0, committedQuantity: 0, observedAt: new Date(Date.now() - 60_000), validUntil: new Date(Date.now() + 60_000) };
+  products = [{ ...baseProduct, category: "Higiene", price: "200.00", inventorySource: "DISTRIBUTOR", supplierOffers: [offer] }];
+  const commercialItems = [{ productId: baseProduct.id, quantity: 1, expectedUnitPriceCents: 20000 }];
+  const near = await loaded.exports.quoteCart("01001000", commercialItems);
+  assert.equal(near[0].benefit?.customerPriceCents, 0);
+  const publicToken = Buffer.from(near[0].token.split(".")[0], "base64url").toString();
+  for (const hidden of ["unitCostCents", "supplierOffers", "minimumContributionBps", "variableCostReserveBps"]) assert.equal(publicToken.includes(hidden), false);
+  const commercialInput = { ...input, items: commercialItems, shippingToken: near[0].token };
+  await loaded.exports.validateOrderShipping(tx, commercialInput);
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, { ...commercialInput, cashbackRedeemCents: 1 }), /descontos ou as condições/);
+  offer.validUntil = new Date(Date.now() - 1);
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, commercialInput), /condições do frete mudaram/, "expired acquisition cost revokes the subsidy before order creation");
+  offer.validUntil = new Date(Date.now() + 60_000);
+  providerPrice = "30.00";
+  const far = await loaded.exports.quoteCart("69005070", commercialItems);
+  assert.equal(requests.at(-1)?.to?.postal_code, "69005070");
+  assert.equal(far[0].priceCents, 3000);
+  assert.equal(far[0].benefit?.customerPriceCents, 2000, "a costly destination never bypasses the subsidy cap");
+  const legacy = { ...verifyShippingQuote(near[0].token, key) };
+  delete legacy.benefit; delete legacy.economicPriceCents; delete legacy.discountCents;
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, { ...commercialInput, shippingToken: signShippingQuote(legacy, key) }), /condições do frete mudaram/, "old quotes require fresh customer consent");
 });

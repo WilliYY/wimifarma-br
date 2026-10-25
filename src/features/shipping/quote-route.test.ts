@@ -25,7 +25,11 @@ test("invalid freight input, including zero CEP, is rejected before calculating 
     assert.equal(response.headers.get("cache-control"), "private, no-store");
     assert.equal(fixture.calls.length, 0, "invalid input must not consume a provider calculation");
   }
-  const response = await loaded.exports.POST(new Request(`${origin}/api/fretes/cotacao`, { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify({ postalCode: "01001000", items }) }));
+  const legacy = await loaded.exports.POST(new Request(`${origin}/api/fretes/cotacao`, { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify({ postalCode: "01001000", items }) }));
+  assert.equal(legacy.status, 409);
+  assert.equal(fixture.calls.length, 0, "old pages must refresh before receiving a new-price token");
+  const response = await loaded.exports.POST(new Request(`${origin}/api/fretes/cotacao`, { method: "POST", headers: { origin, "content-type": "application/json", "X-Wimifarma-Shipping-Benefit": "1" }, body: JSON.stringify({ postalCode: "01001000", items, discountCents: 3 }) }));
   assert.equal(response.status, 200);
   assert.equal(fixture.calls.length, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(fixture.calls[0])), ["01001000", items, 3]);
 });

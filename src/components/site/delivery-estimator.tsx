@@ -8,7 +8,8 @@ import {
   getDeliveryAvailability,
 } from "@/features/products/product-detail";
 import { createCheckoutQuote, type CheckoutQuoteState } from "@/features/shipping/checkout-quote";
-import { customerShippingFee } from "@/features/shipping/delivery-policy";
+import { shippingCustomerPrice } from "@/features/shipping/benefit-policy";
+import { ShippingBenefitNote } from "./shipping-benefit-note";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { formatCurrency } from "@/lib/utils";
@@ -29,7 +30,6 @@ export function DeliveryEstimator({ product, quantity }: { product?: CartProduct
   const request = { postalCode: normalizedPostalCode, items: items.map(item => ({ productId: item.id, quantity: item.quantity, expectedUnitPriceCents: item.unitPriceCents })) };
   const requestKey = JSON.stringify(request);
   const result = estimate?.key === requestKey ? estimate : null;
-  const subtotalCents = items.reduce((sum, item) => sum + item.unitPriceCents * item.quantity, 0);
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   useLayoutEffect(() => {
@@ -116,9 +116,9 @@ export function DeliveryEstimator({ product, quantity }: { product?: CartProduct
             {result.options.length > 0 && <>
               <ul className="mt-3 grid gap-2">
                 {result.options.map(option => {
-                  const fee = customerShippingFee(option.priceCents, subtotalCents, 0);
+                  const fee = shippingCustomerPrice(option);
                   return <li className="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-white p-3 text-sm" key={option.serviceId}>
-                    <span><strong className="block">{option.carrier} · {option.service}</strong><span className="mt-1 block text-xs text-muted">Até {option.deliveryDays} dias úteis estimados, incluindo preparação</span></span>
+                    <div className="min-w-0 flex-1"><strong className="block">{option.carrier} · {option.service}</strong><span className="mt-1 block text-xs text-muted">Até {option.deliveryDays} dias úteis estimados, incluindo preparação</span><ShippingBenefitNote benefit={option.benefit} /></div>
                     <strong className="text-pharma-green">{fee === 0 ? "Grátis" : formatCurrency(fee / 100)}</strong>
                   </li>;
                 })}

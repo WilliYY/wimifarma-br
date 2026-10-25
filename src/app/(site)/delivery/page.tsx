@@ -29,7 +29,7 @@ const steps = [
 ];
 const questions = [
   { title: "A Wimifarma entrega no meu endereço?", text: "Há entrega local em Ivaté e Douradina nos CEPs atendidos. Para outras cidades, adicione os produtos ao carrinho e consulte o CEP: as opções dependem da transportadora e da liberação dos itens para envio." },
-  { title: "Como funciona o frete grátis?", text: "A entrega local nos CEPs atendidos é gratuita. Para outras cidades, o frete é grátis a partir de R$ 99,90 em produtos após os descontos, desde que haja uma opção de transporte disponível. O checkout confirma o valor final." },
+  { title: "Como funciona o frete grátis?", text: "A entrega local nos CEPs atendidos é gratuita. Para outras cidades, consulte seu CEP com os produtos no carrinho. O benefício depende da modalidade, do pacote e das condições do pedido, e pode ser gratuidade ou desconto no frete. O checkout confirma o valor antes de finalizar." },
   { title: "Qual é o prazo de entrega?", text: "A consulta mostra o prazo estimado em dias úteis das transportadoras, incluindo a preparação. Na entrega local, a equipe confirma o horário conforme o endereço e o estoque." },
   { title: "E os medicamentos com receita?", text: "Medicamentos com receita e itens da Farmácia Popular precisam de atendimento pelo WhatsApp. A equipe confere a receita e orienta sobre documentos e disponibilidade antes da confirmação." },
 ];
@@ -68,7 +68,7 @@ export default function Page() {
             </figure>
           </div>
           <div className="mt-9 grid divide-y divide-line rounded-2xl border border-line bg-surface-subtle px-5 sm:mt-12 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-0">
-            {[{ icon: Truck, title: "Frete grátis a partir de R$ 99,90", text: "Para endereços na área atendida." }, { icon: Store, title: "Também pode retirar na loja", text: "Sem taxa de retirada." }, { icon: MessageCircle, title: "Atendimento de perto", text: "A equipe confirma os detalhes com você." }].map(item => <div className="flex items-start gap-3 py-5 sm:px-5" key={item.title}><item.icon className="mt-0.5 h-5 w-5 shrink-0 text-brand" aria-hidden="true" /><div><p className="text-sm font-bold text-ink">{item.title}</p><p className="mt-1 text-xs leading-5 text-muted">{item.text}</p></div></div>)}
+            {[{ icon: Truck, title: "Consulte seu CEP para frete grátis", text: "Condições conforme os produtos e o endereço." }, { icon: Store, title: "Também pode retirar na loja", text: "Sem taxa de retirada." }, { icon: MessageCircle, title: "Atendimento de perto", text: "A equipe confirma os detalhes com você." }].map(item => <div className="flex items-start gap-3 py-5 sm:px-5" key={item.title}><item.icon className="mt-0.5 h-5 w-5 shrink-0 text-brand" aria-hidden="true" /><div><p className="text-sm font-bold text-ink">{item.title}</p><p className="mt-1 text-xs leading-5 text-muted">{item.text}</p></div></div>)}
           </div>
         </div>
       </section>

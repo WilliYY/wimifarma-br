@@ -11,6 +11,8 @@ import { ProductImagePlaceholder } from "./product-image-placeholder";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { useCheckoutSession } from "@/hooks/use-checkout-session";
 import { checkoutStepError, type CheckoutDraft } from "@/features/orders/checkout-draft";
+import { shippingCustomerPrice } from "@/features/shipping/benefit-policy";
+import { ShippingBenefitNote } from "./shipping-benefit-note";
 import { CheckoutDeliveryStep } from "./checkout-delivery-step";
 import { CheckoutStoreCredit } from "./checkout-store-credit";
 import { CheckoutCashback } from "./checkout-cashback";
@@ -18,7 +20,7 @@ import { CheckoutWimiCoins } from "./checkout-wimicoins";
 import { CheckoutPrescriptionUpload, type CheckoutPrescription } from "./checkout-prescription";
 import { normalizePostalCode } from "@/features/products/product-detail";
 import { productDisplayName } from "@/features/products/display-name";
-import { customerShippingFee, FREE_SHIPPING_THRESHOLD_CENTS, isLocalDeliveryAddress } from "@/features/shipping/delivery-policy";
+import { isLocalDeliveryAddress } from "@/features/shipping/delivery-policy";
 import { OnlinePayment, type PaymentView } from "./online-payment";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
 import { allocateOrderBenefits } from "@/features/orders/benefits";
@@ -44,6 +46,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   const { customer, fulfillmentMethod, address, notes, shippingSelection: storedShippingSelection } = draft;
   const requiresShippingSupport = items.some(requiresPharmacyShippingSupport);
   const shippingSelection = carrierShippingAvailable && !requiresShippingSupport ? storedShippingSelection : undefined;
+  const [shippingQuoteRevision, setShippingQuoteRevision] = useState(0);
   const [privacyConsent, setPrivacyConsent] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -98,7 +101,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
   const paymentMethod = online ? "ONLINE" : method === "cash" ? "CASH" : method === "manual-card" ? "CARD_ON_DELIVERY" : "PIX";
   const pixDiscount = method === "pix" ? pixDiscountCents(subtotalCents - discountCents) : 0;
   const deliveryKnown = fulfillmentMethod === "PICKUP" || Boolean(shippingSelection) || isLocalDeliveryAddress(address);
-  const fee = fulfillmentMethod === "PICKUP" ? 0 : customerShippingFee(shippingSelection?.priceCents ?? 0, subtotalCents, discountCents);
+  const fee = fulfillmentMethod === "PICKUP" ? 0 : shippingCustomerPrice(shippingSelection);
   const total = subtotalCents - discountCents - pixDiscount + fee;
   const contactReady = !checkoutStepError(0, draft) && (!online || Boolean(customer.email.trim()));
   const deliveryReady = !checkoutStepError(1, { ...draft, shippingSelection });
@@ -153,6 +156,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
       try { sessionStorage.setItem(storageKey, JSON.stringify(requestAttempt.current)); } catch { /* Optional persistence. */ }
       const response = await fetch("/api/pedidos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, checkoutRequestId: requestAttempt.current.id }) });
       const payload = await response.json().catch(() => null);
+      if (response.status === 409 && body.shippingToken) { setDraft(current => ({ ...current, shippingSelection: undefined })); setShippingQuoteRevision(current => current + 1); }
       if (!response.ok || typeof payload?.data?.id !== "string" || typeof payload.data.number !== "string" || !Number.isSafeInteger(payload.data.totalCents)) throw new Error(payload?.error || "Não foi possível confirmar o envio. Consulte a equipe antes de repetir.");
       const result = payload.data as Result;
       if (result.paymentMethod === "ONLINE") {
@@ -209,7 +213,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
           <Link href="/carrinho" className="mt-4 inline-flex min-h-8 items-center gap-1 text-xs font-bold text-brand hover:underline">Editar minha cesta<ArrowRight className="h-3 w-3" /></Link>
         </details>}
       </section>
-      <section className={panelClass} data-checkout-panel="delivery"><PanelTitle number="2" Icon={Truck} title="Entrega ou retirada" description="Escolha a opção mais conveniente." complete={deliveryReady} /><fieldset disabled={Boolean(onlineOrder) || submitting} className="mt-5 min-w-0 disabled:opacity-70"><legend className="sr-only">Dados da entrega</legend><CheckoutDeliveryStep compact carrierShippingAvailable={carrierShippingAvailable} address={address} fulfillmentMethod={fulfillmentMethod} onAddress={setAddress} discountCents={discountCents} shippingSelection={shippingSelection} onMethod={value => setDraft(current => ({ ...current, fulfillmentMethod: value, shippingSelection: undefined }))} onShipping={value => setDraft(current => ({ ...current, shippingSelection: value }))} /></fieldset></section>
+      <section className={panelClass} data-checkout-panel="delivery"><PanelTitle number="2" Icon={Truck} title="Entrega ou retirada" description="Escolha a opção mais conveniente." complete={deliveryReady} /><fieldset disabled={Boolean(onlineOrder) || submitting} className="mt-5 min-w-0 disabled:opacity-70"><legend className="sr-only">Dados da entrega</legend><CheckoutDeliveryStep key={shippingQuoteRevision} compact carrierShippingAvailable={carrierShippingAvailable} address={address} fulfillmentMethod={fulfillmentMethod} onAddress={setAddress} discountCents={discountCents} shippingSelection={shippingSelection} onMethod={value => setDraft(current => ({ ...current, fulfillmentMethod: value, shippingSelection: undefined }))} onShipping={value => setDraft(current => ({ ...current, shippingSelection: value }))} /></fieldset></section>
       <section className={`${panelClass} relative md:col-span-2 min-[86.25rem]:col-span-1`} data-checkout-panel="payment">
         <div aria-hidden="true" className="absolute inset-x-0 top-0 h-0.5 bg-brand" />
         <PanelTitle number="3" Icon={CreditCard} title="Pagamento" description="Confira o total e finalize com segurança." />
@@ -225,7 +229,7 @@ export function CheckoutPage({ initialCustomer, draftOwner = "guest", isCustomer
             <dl className="grid gap-3 px-4 py-4 text-sm"><SummaryLine label="Produtos" value={money(subtotalCents)} /><SummaryLine label={fulfillmentMethod === "PICKUP" ? "Retirada" : shippingSelection ? `${shippingSelection.carrier} · ${shippingSelection.service}` : deliveryKnown ? "Entrega local" : "Frete"} value={!deliveryKnown ? shippingStatus : fee === 0 ? "Grátis" : money(fee)} />{wimicoinsDiscountCents > 0 && <SummaryLine label="WimiCoins" value={`− ${money(wimicoinsDiscountCents)}`} />}{cashbackDiscountCents > 0 && <SummaryLine label="Cashback" value={`− ${money(cashbackDiscountCents)}`} />}{storeCreditDiscountCents > 0 && <SummaryLine label="Crédito de compra" value={`− ${money(storeCreditDiscountCents)}`} />}{pixDiscount > 0 && <SummaryLine label={`Desconto no Pix (${PIX_DISCOUNT_PERCENT}%)`} value={`− ${money(pixDiscount)}`} />}</dl>
             <div className="border-t border-line bg-white px-4 py-4"><div className="flex flex-wrap items-end justify-between gap-2"><span className="text-sm font-bold text-ink">{deliveryKnown ? "Total do pedido" : "Subtotal"}</span><strong className="text-3xl font-black tracking-tight text-brand">{money(total)}</strong></div>{!deliveryKnown && <p className="mt-2 text-xs leading-5 text-muted">O total será atualizado ao escolher uma entrega disponível.</p>}</div>
           </section>
-          <FreeShippingProgress eligibleCents={subtotalCents - discountCents} />
+          {fulfillmentMethod === "DELIVERY" && carrierDestination && <ShippingBenefitNote benefit={shippingSelection?.benefit} />}
           <label className="mt-5 flex items-start gap-3 text-sm leading-6 text-muted"><input checked={privacyConsent} className="mt-1 h-5 w-5 shrink-0 accent-brand" onChange={event => setPrivacyConsent(event.target.checked)} type="checkbox" /><span>Finalizar com os dados informados, conforme a <Link className="font-bold text-brand underline" href="/privacidade" target="_blank">Política de Privacidade</Link>.</span></label>
           {error && <p className="mt-4 rounded-lg bg-brand-soft p-3 text-sm text-brand" role="alert">{error}</p>}
           {method === "card" && paymentConfig && <label className="mt-5 grid gap-2 text-sm font-semibold">Como pagar no cartão<select className={fieldClass} value={draft.onlineInstallments ?? 1} onChange={event => setDraft(current => ({ ...current, onlineInstallments: Number(event.target.value) }))}><option value={1}>À vista · uma parcela</option><option value={12}>Parcelar · escolher parcelas no formulário</option></select><span className="text-xs leading-5 text-muted">Você confere os campos seguros, as parcelas e o total antes de pagar.</span></label>}
@@ -253,12 +257,4 @@ function PaymentChoice({ selected, onSelect, label, detail, Icon, disabled = fal
   </label>;
 }
 function SummaryLine({ label, value }: { label: string; value: string }) { return <div className="flex min-w-0 flex-wrap justify-between gap-x-3 gap-y-1"><dt className="min-w-0 break-words text-muted">{label}</dt><dd className="ml-auto max-w-full break-words text-right font-semibold text-ink">{value}</dd></div>; }
-function FreeShippingProgress({ eligibleCents }: { eligibleCents: number }) {
-  const reached = eligibleCents >= FREE_SHIPPING_THRESHOLD_CENTS;
-  const percent = Math.min(100, Math.max(0, eligibleCents / FREE_SHIPPING_THRESHOLD_CENTS * 100));
-  return <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/60 p-3.5">
-    <p className="flex items-start gap-2 text-xs leading-5 text-emerald-800"><Truck className="mt-0.5 h-4 w-4 shrink-0" /><span>{reached ? <><strong>Frete grátis alcançado.</strong> Sujeito a CEP e serviço disponível.</> : <>Faltam <strong>{money(FREE_SHIPPING_THRESHOLD_CENTS - eligibleCents)}</strong> para frete grátis por transportadora.</>}</span></p>
-    <div role="progressbar" aria-label="Valor em produtos para frete grátis" aria-valuemin={0} aria-valuemax={FREE_SHIPPING_THRESHOLD_CENTS / 100} aria-valuenow={Math.min(FREE_SHIPPING_THRESHOLD_CENTS, Math.max(0, eligibleCents)) / 100} className="mt-3 h-1.5 overflow-hidden rounded-full bg-emerald-100"><div style={{ width: `${percent}%` }} className="h-full rounded-full bg-emerald-600 transition-[width] motion-reduce:transition-none" /></div>
-  </div>;
-}
 function CheckoutSuccess({ order }: { order: Result }) { return <CheckoutShell><div className="mx-auto max-w-2xl rounded-2xl border border-line bg-white p-8 text-center"><Check className="mx-auto h-12 w-12 text-pharma-green" /><h1 className="mt-5 text-3xl font-black">Pedido recebido</h1><p className="mt-3 text-sm text-muted">A farmácia confirmará a preparação e os detalhes da entrega ou retirada.</p>{order.preparationReadyAt && <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-ink"><strong>Preparação prevista até {new Date(order.preparationReadyAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })}.</strong><br />Pedidos sem pagamento ou confirmação da loja podem expirar após 24 horas.</p>}<p className="mt-5 break-all font-bold text-brand">{order.number}</p><strong className="mt-2 block text-2xl">{money(order.totalCents)}</strong><div className="mt-6 flex flex-wrap justify-center gap-4"><Link href="/minha-conta" className="font-bold text-brand">Ver meus pedidos</Link><a href={buildWhatsAppUrl(`Olá, enviei o pedido ${order.number} pelo site.`)} target="_blank" rel="noreferrer" className="font-bold text-pharma-green">Falar com a farmácia</a></div></div></CheckoutShell>; }

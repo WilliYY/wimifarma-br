@@ -324,7 +324,7 @@ test("catalog can save partial drafts but cannot approve a carrier profile", () 
   assert.equal(productCreateSchema.safeParse({ name: "Produto sintético", price: 10, shippingProfile: draft }).success, true);
   assert.equal(productCreateSchema.safeParse({ name: "Produto sintético", price: 10, shippingProfile: { ...draft, enabled: true, transportReviewed: true } }).success, false);
   const product = { id: "fixture", name: "Produto", category: "Higiene", requiresPrescription: false, isPopularPharmacy: false, shippingProfile: draft, updatedAt: new Date() };
-  assert.throws(() => validateShippingProduct(product), /não foi liberado/);
+  assert.throws(() => validateShippingProduct(product), /embalagem estão pendentes/);
   const approved = { enabled: true, transportReviewed: true, weightGrams: 350, widthCm: 8, heightCm: 20, lengthCm: 10 };
   assert.deepEqual(validateShippingProduct({ ...product, category: "Medicamentos", shippingProfile: approved }), { ...approved, measurementBasis: "measured" });
   assert.throws(() => validateShippingProduct({ ...product, requiresPrescription: true, shippingProfile: approved }), /atendimento/);

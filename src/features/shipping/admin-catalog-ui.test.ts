@@ -22,10 +22,10 @@ test("freight catalog searches all pages, preserves settings and applies the rep
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text });
       if (url.pathname === "/api/admin/fretes") {
         gets.push(url);
-        const filtered = products.filter(product => product.name.includes(url.searchParams.get("q") ?? ""));
+        const filtered = products.filter(product => product.name.includes(url.searchParams.get("q") ?? "") && (url.searchParams.get("readiness") !== "PENDING" || !product.shippingProfile.transportReviewed) && (url.searchParams.get("readiness") !== "CONFIGURED" || product.shippingProfile.transportReviewed));
         const totalPages = Math.max(1, Math.ceil(filtered.length / 100));
         const pageNumber = Math.min(Number(url.searchParams.get("page") ?? 1), totalPages);
-        return json({ data: { settings: defaultShippingSettings, revision: 7, connected: true, applicationConfigured: true, expiresAt: null, products: filtered.slice((pageNumber - 1) * 100, pageNumber * 100), pagination: { page: pageNumber, pageSize: 100, total: filtered.length, totalPages } } });
+        return json({ data: { settings: defaultShippingSettings, revision: 7, connected: true, applicationConfigured: true, expiresAt: null, readinessSummary: { total: 805, missing: 0, review: 1, disabled: 1, configured: 804, assisted: 0 }, products: filtered.slice((pageNumber - 1) * 100, pageNumber * 100), pagination: { page: pageNumber, pageSize: 100, total: filtered.length, totalPages } } });
       }
       if (url.pathname.startsWith("/api/admin/fretes/produtos/")) { saved.push(route.request().postDataJSON()); return json({}); }
       return route.abort();
@@ -73,6 +73,12 @@ test("freight catalog searches all pages, preserves settings and applies the rep
     await page.getByRole("button", { name: "Limpar busca", exact: true }).click();
     await expect(page.getByText("Produto 0000", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Salvar rascunho", exact: true })).toHaveCount(100);
+    await page.getByLabel("Situação de envio", { exact: true }).selectOption("PENDING");
+    await expect(page.getByText("Produto 0804", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Salvar rascunho", exact: true })).toHaveCount(1);
+    assert.equal(gets.at(-1)?.searchParams.get("readiness"), "PENDING");
+    await expect(page.getByLabel("Situação dos perfis de envio")).toContainText("805");
+    await expect(page.getByText("Configurado não comprova", { exact: false })).toBeVisible();
     assert.equal(saved.length, 1);
   } finally { await browser.close(); }
 });

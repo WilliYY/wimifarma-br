@@ -12,7 +12,6 @@ import { validateOrderShipping } from "@/features/shipping/service";
 import { PaymentError } from "@/features/payments/schema";
 import { allocatePixDiscount, PIX_DISCOUNT_PERCENT, pixDiscountCents } from "@/features/payments/pix-discount";
 import { queueCommerceOrder } from "@/features/miauby/commerce-service";
-import { customerShippingFee } from "@/features/shipping/delivery-policy";
 import { requiresPrescriptionReview } from "@/features/products/purchase-policy";
 import { checkoutPaymentConnections, resolveCheckoutPayment } from "@/features/payments/routing";
 import { resolveSupplierOffer, supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
@@ -87,7 +86,7 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   const preparation = hasSupplierItems ? getSupplierPreparationEstimate(new Date()) : null;
   const shippingQuote = await validateOrderShipping(tx, input);
   const carrierPriceCents = shippingQuote?.priceCents ?? prepared.deliveryFeeCents;
-  const deliveryFeeCents = customerShippingFee(carrierPriceCents, prepared.subtotalCents, input.cashbackRedeemCents + coins + credit);
+  const deliveryFeeCents = shippingQuote?.benefit?.customerPriceCents ?? carrierPriceCents;
   const redeem = input.cashbackRedeemCents;
   if (redeem + credit + coins > prepared.subtotalCents || (redeem > 0 && (!account || account.balance.lessThan((redeem / 100).toFixed(2))))) {
     throw new CashbackRuleError("Saldo de cashback alterado ou insuficiente. Atualize o saldo e revise o desconto.");
