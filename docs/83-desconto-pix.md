@@ -10,6 +10,10 @@ O cenário isolado `banner Pix` em `checkout-pix.test.ts` usa o CSS real e verif
 
 Validação: cenário visual aprovado antes e após o ajuste de espera do carregamento da logo; capturas locais conferidas. Build com lint/tipos e 485 testes de segurança aprovados. Revisão independente sem achados restantes. Contraste calculado: texto branco 10,75:1, percentual 8,82:1, condição 8,33:1 e texto do botão 12,18:1 em seus fundos. Auditorias completa e de produção mantêm um alerta moderado preexistente em `fast-uri`, zero high/critical. Comandos: `tsx --test --test-name-pattern 'banner Pix' src/components/site/checkout-pix.test.ts`, `npm run build`, `npm run test:security`, `npm audit --json` e `npm audit --omit=dev --audit-level=high --json`. Sem atualização de dependências.
 
+A primeira CI de `50329ef` passou 1272 testes e falhou no cenário de vitrines porque seu empacotador sintético ainda não reconhecia o CSS local novo do banner. Carregar esse módulo vazio deixou a logo sem seu dimensionamento e reproduziu overflow apenas na fixture. O cenário de vitrines passa a isolar `PixDiscountBanner`, como já fazia com `BrandCarousel` e `HeroProductStage`; o cenário dedicado do banner mantém a validação com CSS real e quatro larguras. Correção restrita ao teste e à documentação, sem alteração do código publicado ou necessidade de reconstruir a aplicação.
+
+Depois da correção, `tsx --test --test-name-pattern 'Farmacinha|banner Pix' src/components/site/home-showcases.test.ts src/components/site/checkout-pix.test.ts` aprovou os dois cenários. Nenhum cenário funcional de checkout foi executado nessa repetição.
+
 ## Seleção explícita no checkout — 22/10/2026
 
 O lojista determinou preço público igual ao valor atual do carrinho, sem antecipar Pix. A vitrine não apresenta valor já reduzido nem selo Pix por produto; a arte promocional permanece, com a condição de escolher Pix no checkout. Apresentação dos cards em [86](86-precos-e-desconto-real-nos-cards.md).

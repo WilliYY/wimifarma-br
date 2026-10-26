@@ -15,6 +15,7 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
     "next/navigation": "export const useRouter=()=>({push:()=>{}});",
     "@/hooks/use-club-summary": "export const useClubSummary=()=>({guest:true,loading:false,joining:false,error:null,summary:null});",
     "@/components/site/brand-carousel": "export const BrandCarousel=()=>null;",
+    "@/components/site/pix-discount-banner": "export const PixDiscountBanner=()=>null;",
     "@/components/site/hero-product-stage": "export const HeroProductStage=()=>null;",
     "./home-campaign.module.css": "export default {};",
     "./home-shortcuts.module.css": "export default {};",
