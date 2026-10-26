@@ -138,7 +138,65 @@ test("movimento reduzido usa logo estática e recolhimento sem transição perce
     await expect(page.getByRole("link", { name: "Campanha de teste" })).toBeHidden();
     const logo = page.locator('[data-animated-brand] img');
     await expect.poll(() => logo.evaluate(el => (el as HTMLImageElement).currentSrc)).toContain("logo-wimifarma-compact.webp");
-    const durations = await page.locator("header").evaluate(el => [el, ...el.querySelectorAll("[data-header-collapsible]")].map(node => getComputedStyle(node).transitionDuration));
+    const durations = await page.locator("header").evaluate(el => [el, ...el.querySelectorAll("[data-header-collapsible], [data-header-brand], [data-header-brand-panel], [data-animated-brand]")].map(node => getComputedStyle(node).transitionDuration));
     assert.ok(durations.every(value => value.split(",").every(part => Number.parseFloat(part) <= 0.001)));
+  });
+});
+
+for (const role of [null, "CUSTOMER", "ADMIN"] as const) {
+  test(`logo compacta ocupa a largura disponível sem deformação: ${role ?? "visitante"}`, async () => {
+    await fixture(1536, role, false, async page => {
+      await page.evaluate(() => scrollTo({ top: 400, behavior: "instant" }));
+      await expect(page.locator("header")).toHaveAttribute("data-compact", "true");
+      for (const width of [320, 360, 390, 640, 768, 1024, 1280, 1536, 1920]) {
+        await page.setViewportSize({ width, height: 900 });
+        await expect.poll(() => page.locator('[data-animated-brand] img').evaluate(element => {
+          const image = element as HTMLImageElement;
+          const box = image.getBoundingClientRect();
+          const link = image.closest('[data-header-brand]')!.getBoundingClientRect();
+          return Math.min(box.width, box.height * image.naturalWidth / image.naturalHeight) / link.width;
+        })).toBeGreaterThanOrEqual(0.96);
+        const geometry = await page.locator('[data-header-brand]').evaluate(element => {
+          const image = element.querySelector('img')!;
+          const picture = image.getBoundingClientRect();
+          const panel = element.parentElement!.getBoundingClientRect();
+          return { fit: getComputedStyle(image).objectFit, centerDifference: Math.abs(picture.y + picture.height / 2 - panel.y - panel.height / 2), overflow: document.documentElement.scrollWidth > innerWidth };
+        });
+        assert.equal(geometry.fit, "contain");
+        assert.ok(geometry.centerDifference <= 1, `${width}: marca centralizada na área preta`);
+        assert.equal(geometry.overflow, false);
+        await expect(page.locator('[data-animated-brand] img')).toHaveAttribute("src", "/brand/logo-wimifarma-animated.svg");
+        if (role === "ADMIN") await expect(page.getByRole("link", { name: "Painel admin", exact: true }).locator("visible=true")).toHaveCount(1);
+      }
+    });
+  });
+}
+
+test("marca e área preta percorrem tamanhos intermediários ao recolher e restaurar", async () => {
+  await fixture(1536, "ADMIN", false, async page => {
+    for (const top of [400, 0]) {
+      const frames = await page.evaluate(async target => {
+        const header = document.querySelector('header')!;
+        const brand = header.querySelector('[data-header-brand]')!;
+        const image = brand.querySelector('img') as HTMLImageElement;
+        const measurements: { width: number; panelWidth: number; overflow: boolean }[] = [];
+        const start = performance.now();
+        scrollTo({ top: target, behavior: "instant" });
+        while (performance.now() - start < 420) {
+          await new Promise(requestAnimationFrame);
+          const box = image.getBoundingClientRect();
+          measurements.push({ width: Math.min(box.width, box.height * image.naturalWidth / image.naturalHeight), panelWidth: brand.parentElement!.getBoundingClientRect().width, overflow: document.documentElement.scrollWidth > innerWidth });
+        }
+        return measurements;
+      }, top);
+      const first = frames[0].width;
+      const last = frames.at(-1)!.width;
+      assert.ok(Math.abs(first - last) > 30);
+      assert.ok(frames.some(frame => frame.width > Math.min(first, last) + 5 && frame.width < Math.max(first, last) - 5), "tamanhos intermediários sem troca abrupta de imagem");
+      const firstPanel = frames[0].panelWidth;
+      const lastPanel = frames.at(-1)!.panelWidth;
+      assert.ok(frames.some(frame => frame.panelWidth > Math.min(firstPanel, lastPanel) + 5 && frame.panelWidth < Math.max(firstPanel, lastPanel) - 5), "área preta acompanha o redimensionamento");
+      assert.ok(frames.every(frame => !frame.overflow));
+    }
   });
 });

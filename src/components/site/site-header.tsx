@@ -81,7 +81,7 @@ export async function SiteHeader() {
           />
         </div>
 
-        <div className="relative z-10 -my-1.5 -ml-1 flex shrink-0 self-stretch items-center gap-2 rounded-r-full border-r-2 border-brand bg-[#121820] py-1.5 pr-2 motion-reduce:bg-white min-[360px]:-ml-2 min-[360px]:pr-3 sm:-ml-6 sm:rounded-r-[3.5rem] sm:pl-6 sm:pr-5 sm:shadow-[14px_0_30px_rgba(17,24,39,0.12)] sm:motion-reduce:bg-[#121820] lg:-ml-8 lg:pl-8 xl:pr-7">
+        <div data-header-brand-panel className="relative z-10 -my-1.5 -ml-1 flex shrink-0 self-stretch items-center gap-2 rounded-r-full border-r-2 border-brand bg-[#121820] py-1.5 pr-2 motion-reduce:bg-white min-[360px]:-ml-2 min-[360px]:pr-3 sm:-ml-6 sm:rounded-r-[3.5rem] sm:pl-6 sm:pr-5 sm:shadow-[14px_0_30px_rgba(17,24,39,0.12)] sm:motion-reduce:bg-[#121820] lg:-ml-8 lg:pl-8 xl:pr-7">
           <Link
             aria-label="Wimifarma"
             data-header-brand
