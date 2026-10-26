@@ -1,5 +1,15 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-26 — Duas ezetimibas EMS publicadas após QA do fingerprint atual
+
+- Ezetimiba EMS 10 mg com 30 e 60 comprimidos foi incluída uma vez, com pesquisa ANB/Profarma/GAM/DM, apresentação e bula verificadas, acréscimo de 50%, receita comum e cashback de 1%. As três associações existentes foram preservadas; imagem pública institucional e nenhum perfil de frete novo.
+- A compatibilidade da aplicação foi revisada por hashes, caminhos e modos exatos, incluindo alterações funcionais de marcas/atalhos e os ajustes posteriores de cabeçalho. Tentativas pré-grant conservaram suas provas; o fingerprint final recebeu segurança 485, fornecedores 111 e QA novo em base vazia. Backup, baseline, dry-run, aplicação, páginas públicas, liberação e limpeza do QA foram comprovados. Dois produtos e duas auditorias, com 2.477 produtos anteriores e oito tabelas protegidas intactos. Um alerta moderado `fast-uri` permanece, zero high/critical. Relatório e limites em [111](111-expansao-medicamentos-e-politica-de-precos.md).
+
+## 2026-10-26 — Três genéricos EMS publicados com cashback vigente
+
+- Incluídos dorzolamida 20 mg/mL 5 mL, pitavastatina 2 mg com 30 comprimidos e bimatoprosta 0,3 mg/mL 5 mL, após pesquisa ANB/Profarma/GAM/DM, conferência de bula/apresentação e teto CMED. Acréscimo de 50%, receita comum, cashback de 1%, ilustração institucional e nenhum perfil logístico habilitado.
+- O importador privado manteve criação exclusiva e passou a usar o helper existente de cashback, com auditoria e QA dos campos, sem alterar o código da aplicação ou produtos existentes. Revisão independente, 27 testes locais, novos 485 de segurança e 111 de fornecedores, QA isolado, backup, baseline, dry-run e prova pública precederam o encerramento. Fundação do mesmo código/imagem reutilizada por hash, sem alegar novo build. Um alerta moderado `fast-uri` permanece, sem high/critical. Detalhes e provas em [111](111-expansao-medicamentos-e-politica-de-precos.md).
+
 ## 2026-10-25 — Acréscimo dos novos medicamentos e expansão por fabricante
 
 - Autorização direta do lojista: 50% sobre o custo final de novos genéricos/similares e 10% para novas marcas éticas. Preservar percentuais existentes, classificação por apresentação e teto CMED; acima do teto, aguardar custo menor sem reduzir o percentual. Não mudar o fallback do importador nem criar promoções fictícias.

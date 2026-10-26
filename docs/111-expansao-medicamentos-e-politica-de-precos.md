@@ -1,5 +1,27 @@
 # 111 — Expansão de medicamentos e preços dos novos cadastros
 
+## 26/10/2026 — Mais duas ezetimibas publicadas; cinco medicamentos nesta frente
+
+Ezetimiba EMS 10 mg foi incluída em duas apresentações: 60 comprimidos, GTIN `07896004746920`, preço base de R$ 61,55; e 30 comprimidos, GTIN `07896004746937`, R$ 37,05. A aplicação única ocorreu às 11:19 de Brasília (`2026-10-26T14:19:17.964Z`). Ambas as páginas públicas retornaram HTTP 200 e a leitura posterior do banco confirmou `ACTIVE`, fornecimento por distribuidora, estoque físico zero, acréscimo de 50%, cashback de compra de 1% e WimiCoins desabilitado. São genéricos com receita comum e ilustração institucional pública; não foram habilitados perfis logísticos.
+
+As duas identidades foram comparadas nas quatro distribuidoras e reconciliadas com as apresentações CMED e a bula original encaminhada pela EMS, que cobre 30 e 60 comprimidos. A seleção ANB conserva custo final, ST, campanha, cota e horários realmente observados; não se renovaram datas pela releitura. Não houve duplicação nem alteração das associações de ezetimiba já existentes.
+
+A publicação usou OPS/TOOLS imutáveis e os 1.002 hashes de fonte, com exceções exatas para a aplicação `badd09e` e imagem `18396d4…` revisadas independentemente. As exceções incluem arquivos funcionais de marcas e atalhos, além de UI e assets; não são uma permissão genérica para backend. O resolvedor comercial, receita, preço e cashback permaneceram intactos. Testes dirigidos das guardas, novos 485 de segurança, 111 de fornecedores, auditorias e novo QA transacional isolado passaram. Logs originais da fundação do mesmo código/imagem foram reutilizados por hash, sem alegar novo build/typecheck. Permanece um alerta moderado `fast-uri`, sem high/critical.
+
+Tentativas anteriores interrompidas por atualização da aplicação terminaram antes de intent/grant/apply. O QA V1 foi removido com proprietário e zero conexões verificados. Na V2, 89 arquivos da tentativa `286a` foram arquivados fisicamente por hash; cinco provas recriáveis saíram da raiz somente após essa preservação e o QA próprio foi removido sem FORCE. O fingerprint novo recebeu testes e QA reais em base vazia; nenhuma prova antiga foi relabelada. O registro de correção do Compose ausente também precedeu a execução.
+
+Backup, baseline, dry-run, aplicação, prova pública e liberação concluídos. Os 2.477 produtos anteriores e oito tabelas protegidas foram preservados; houve duas auditorias de inclusão. A janela `chat5-ezetimiba2-v2-20261026-141804`, fingerprint `925e090580634ced1fe2e786fd0d976f6c50b904d5b8fe096db02ebf75d7bcce`, terminou liberada e o QA próprio foi removido. A leitura final contou 2.479 produtos totais e 2.476 ativos. Prova privada: `outputs/medicamentos-grade111-chat5-2026-10-25/ezetimiba2-v2-final-readonly-proof.json`. Somadas às três inclusões abaixo, são cinco apresentações EMS nesta frente; demais fabricantes, doses, associações e famílias continuam pendentes. Os 16 condicionadores Elseve da outra frente foram apenas verificados como predecessor, sem reaplicação ou atribuição a este lote.
+
+## 26/10/2026 — Três apresentações EMS publicadas
+
+Foram incluídos uma única vez cloridrato de dorzolamida 20 mg/mL com 5 mL, pitavastatina cálcica 2 mg com 30 comprimidos e bimatoprosta 0,3 mg/mL com 5 mL. A aplicação ocorreu às 08:52 de Brasília (`2026-10-26T11:52:45.173Z`). As três páginas públicas responderam HTTP 200; a configuração persistida de cada produto confirmou cashback de compra de 1%, sem WimiCoins. Permaneceram acréscimo de 50%, receita comum, ilustração institucional pública, estoque físico zero e fornecimento por distribuidora. Nenhum perfil logístico foi habilitado.
+
+Cada EAN recebeu pesquisa ANB/Profarma/GAM/DM. As ofertas selecionadas são ANB, com custo final e ST conferidos, preservando as datas reais. A revisão documental independente foi complementada pela releitura dos três PDFs originais encaminhados pela EMS. Identidade, apresentação, classificação e teto foram conferidos; isso não substitui a receita ou a conferência farmacêutica antes da dispensação.
+
+A execução usou OPS imutável `cb2b395` e imagem de ferramentas correspondente, com 1.002 hashes conferidos. A revisão independente do pacote e 27 testes locais cobriram o escopo, as guardas e a adaptação necessária do importador privado para usar o helper atual de cashback no cadastro novo. Passaram novos 485 testes de segurança, 111 de fornecedores e QA transacional isolado. Os logs da fundação do mesmo código/imagem foram reutilizados com hashes e datas preservados; não se afirma novo build ou typecheck nessa etapa. Auditorias completa e de produção registraram um alerta moderado de `fast-uri`, sem high/critical.
+
+Backup, baseline, dry-run, concessão exclusiva, aplicação única e prova pública foram concluídos. Os 2.458 produtos anteriores e as oito tabelas protegidas foram preservados; houve três auditorias de inclusão. A janela `chat5-rx3-v2-20261026-115132` terminou liberada, sem concessão ativa, e o QA exclusivo foi removido após conferir sua identidade. Provas privadas em `outputs/medicamentos-grade111-chat5-2026-10-25/rx3-final-readonly-proof.json`. Os demais candidatos e famílias continuam em pesquisa; esta inclusão não significa cobertura completa.
+
 ## Regra comercial autorizada em 25/10/2026
 
 O lojista respondeu diretamente: **“50% em genéricos/similares e 10% nas marcas éticas”**. A regra vale para os novos medicamentos desta expansão, sobre o custo final unitário da distribuidora, incluindo os tributos e condições comerciais aplicáveis. São acréscimos sobre custo, não margens sobre faturamento nem descontos ao consumidor.
@@ -32,4 +54,4 @@ A instalação 13.0.003 permitiu observar resultados de EZE, mas o controle da j
 
 ## Evidências desta etapa
 
-As transcrições, autorização direta, observações comerciais, fontes oficiais e pendências ficam em `outputs/medicamentos-grade111-chat5-2026-10-25`, fora do Git. As contagens de pesquisa não são contagens de produtos publicados. Este documento registra a regra e a preparação; não comprova inclusão em produção.
+As transcrições, autorização direta, observações comerciais, fontes oficiais e pendências ficam em `outputs/medicamentos-grade111-chat5-2026-10-25`, fora do Git. As contagens de pesquisa não são contagens de produtos publicados. As seções de 26/10 registram as cinco inclusões efetivamente publicadas; os demais candidatos permanecem pesquisa ou preparação, sem inclusão presumida.

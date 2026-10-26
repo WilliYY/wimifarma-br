@@ -1,5 +1,13 @@
 # 96 — Cadastro por família de princípio ativo
 
+## 26/10/2026 — Ezetimiba EMS com 30 e 60 comprimidos incluída
+
+Foram publicadas duas apresentações simples de ezetimiba EMS 10 mg: 30 comprimidos por R$ 37,05 e 60 por R$ 61,55 de preço base. GTINs `07896004746937` e `07896004746920`, pesquisa nas quatro fontes, acréscimo de 50%, receita comum, cashback de compra de 1% e ilustração institucional. Ambas as páginas e os campos persistidos foram conferidos; 2.477 produtos anteriores e oito tabelas protegidas permaneceram intactos. Janela encerrada sem grant e QA próprio removido. Com os três medicamentos anteriores desta frente, são cinco apresentações novas; não foi alegada cobertura completa de EMS, marcas éticas/similares ou das 111 famílias. Detalhes de compatibilidade, preservação de provas e validação em [111](111-expansao-medicamentos-e-politica-de-precos.md).
+
+## 26/10/2026 — Três genéricos EMS incluídos e conferidos
+
+Cloridrato de dorzolamida 20 mg/mL 5 mL, pitavastatina cálcica 2 mg com 30 comprimidos e bimatoprosta 0,3 mg/mL 5 mL foram publicados uma vez, com pesquisa nas quatro fontes, receita comum, acréscimo de 50% e cashback de compra de 1%. As três páginas públicas e os campos persistidos foram conferidos; os produtos anteriores e as tabelas protegidas permaneceram intactos. A operação terminou liberada, com QA próprio removido. A imagem pública é institucional e nenhum perfil de frete foi habilitado. Validação, limites de reuso da fundação e alerta moderado existente em [111](111-expansao-medicamentos-e-politica-de-precos.md).
+
 ## 25/10/2026 — Regra explícita para os novos medicamentos
 
 O lojista autorizou 50% sobre o custo final para novos genéricos/similares e 10% para novas marcas éticas. Percentuais dos produtos existentes permanecem intactos. Apresentações acima do teto conservador CMED aguardam custo menor, sem redução automática do acréscimo. A regra não usa os 35% de novas marcas não medicamentosas nem altera o fallback técnico. Escopo das 111 famílias, distinção das marcas Eze, pesquisa ANB/Profarma/GAM/DM e avaliação da rota SantaCruz em [111](111-expansao-medicamentos-e-politica-de-precos.md). Esta decisão registra autorização e pesquisa, sem afirmar nova publicação.
