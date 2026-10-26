@@ -26,11 +26,18 @@ const bundle = build({
       "next/image": "import React from 'react';export default ({unoptimized,priority,fill,...props})=><img {...props}/>;",
       "next/script": "export default ()=>null;",
     };
-    builder.onResolve({ filter: /^next\/(link|image|script)$/ }, args => ({ path: args.path, namespace: "fixture" }));
-    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: mocks[args.path], loader: "tsx", resolveDir: process.cwd() }));
+    builder.onResolve({ filter: /^next\/(link|image|script)$|pix-discount-banner\.module\.css$/ }, args => ({ path: args.path, namespace: "fixture" }));
+    builder.onLoad({ filter: /.*/, namespace: "fixture" }, async args => {
+      if (args.path.endsWith(".css")) {
+        const source = await readFile("src/components/site/pix-discount-banner.module.css", "utf8");
+        const classes = Object.fromEntries([...source.matchAll(/\.([a-zA-Z][\w-]*)/g)].map(match => [match[1], match[1]]));
+        return { contents: `export default ${JSON.stringify(classes)}` };
+      }
+      return { contents: mocks[args.path], loader: "tsx", resolveDir: process.cwd() };
+    });
   } }],
 });
-const css = captureRoot ? readFile("src/app/globals.css", "utf8").then(source => postcss([tailwind()]).process(source, { from: "src/app/globals.css" })).then(result => result.css) : Promise.resolve("");
+const css = (captureRoot ? readFile("src/app/globals.css", "utf8").then(source => postcss([tailwind()]).process(source, { from: "src/app/globals.css" })).then(result => result.css) : Promise.resolve("")).then(async source => `${source}\n${await readFile("src/components/site/pix-discount-banner.module.css", "utf8")}`);
 
 async function fixture(width: number, run: (page: Page, orders: Record<string, unknown>[]) => Promise<void>, path = "/checkout") {
   if (captureRoot) await mkdir(captureRoot, { recursive: true });
@@ -170,12 +177,14 @@ test("Pix combina resgates e preserva o valor na resposta de pagamento", async (
 
 test("banner Pix mantém marca, oferta e link em telas pequenas e grandes", async () => {
   for (const width of [320, 390, 768, 1440]) await fixture(width, async page => {
-    await expect(page.getByRole("heading", { name: "Pague com Pix e ganhe 3% de desconto." })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Aproveitar no Pix" })).toHaveAttribute("href", "/catalogo?ordem=preco-asc");
+    await expect(page.getByRole("heading", { name: "3% de desconto no Pix", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Aproveitar", exact: true })).toHaveAttribute("href", "/catalogo?ordem=preco-asc");
+    await expect(page.getByText("Escolha Pix no checkout. Frete à parte.", { exact: true })).toBeVisible();
+    await expect(page.getByText("Seu cuidado com mais economia", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("img", { name: "Wimifarma" })).toBeVisible();
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await expect.poll(() => page.getByRole("img", { name: "Wimifarma" }).evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
     if (captureRoot) {
-      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-      assert.equal(await page.getByRole("img", { name: "Wimifarma" }).evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0), true);
       await mkdir(captureRoot, { recursive: true });
       await page.screenshot({ path: join(captureRoot, `pix-banner-${width}.png`), fullPage: true });
     }

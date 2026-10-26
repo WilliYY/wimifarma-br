@@ -1,0 +1,42 @@
+.section {
+  --pix-background: #06463e;
+  --pix-highlight: #d6f493;
+  --pix-text: #ffffff;
+  --pix-muted: #d3e7e0;
+  --pix-action-text: #063d34;
+  padding: 0 16px 32px;
+  background: var(--surface);
+}
+.card { display: grid; max-width: 1280px; align-items: center; gap: 24px; margin-inline: auto; border-radius: 24px; padding: 24px; background: var(--pix-background); color: var(--pix-text); }
+.brand { display: inline-flex; width: fit-content; align-items: center; border-radius: 999px; padding: 8px 12px; background: var(--pix-text); }
+.logo { display: block; width: 128px; height: auto; }
+.offer { min-width: 0; }
+.title { display: flex; align-items: center; gap: 16px; margin: 0; font-weight: 800; }
+.amount { flex-shrink: 0; color: var(--pix-highlight); font-size: 96px; line-height: 0.85; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; }
+.amount > span { margin-left: 3px; font-size: 0.5em; letter-spacing: -0.04em; }
+.message { display: flex; flex-direction: column; gap: 3px; }
+.off { font-size: 18px; font-weight: 600; letter-spacing: 0.16em; line-height: 1; }
+.method { white-space: nowrap; font-size: 32px; line-height: 1.1; letter-spacing: -0.03em; }
+.conditions { margin: 12px 0 0; color: var(--pix-muted); font-size: 13px; line-height: 1.5; }
+.action { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 20px; border-radius: 999px; padding: 14px 24px; background: var(--pix-text); color: var(--pix-action-text); font-size: 14px; font-weight: 700; text-decoration: none; transition: background 180ms ease; }
+.action > svg { flex-shrink: 0; transition: transform 220ms ease; }
+.action:hover { background: var(--pix-highlight); }
+.action:hover > svg { transform: translateX(3px); }
+.action:focus-visible { outline: 2px solid var(--pix-highlight); outline-offset: 4px; }
+@media (min-width: 640px) {
+  .section { padding-inline: 24px; }
+}
+@media (min-width: 768px) {
+  .card { grid-template-columns: auto minmax(0, 1fr) auto; gap: 32px; padding: 32px; }
+  .offer { justify-self: center; }
+  .amount { font-size: 112px; }
+  .logo { width: 144px; }
+}
+@media (min-width: 1024px) {
+  .section { padding-inline: 32px; }
+  .card { padding-inline: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .action, .action > svg { transition: none; }
+  .action:hover > svg { transform: none; }
+}

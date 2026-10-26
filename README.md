@@ -46,7 +46,7 @@ Cards com preço atual do carrinho e “de/por” somente em promoções cadastr
 
 Rodapé com bandeiras automáticas do meio de pagamento, Pix, consultas oficiais da Anvisa e canais de reputação conferidos: [documento 84](docs/84-rodape-pagamentos-e-consultas.md).
 
-Desconto de 3% no Pix para novos pedidos, banner e discriminação no checkout: [documento 83](docs/83-desconto-pix.md).
+Desconto de 3% no Pix para novos pedidos, banner compacto de alto contraste e discriminação no checkout: [documento 83](docs/83-desconto-pix.md).
 
 Faixa de marcas em largura total, título centralizado e movimento lento em loop, com pausa, arraste por mouse/toque e navegação por teclado. Identidade única (incluindo Johnson’s/Baby e Kit Kat/KitKat), logos oficiais ou nome legível, exclusão de fotos/títulos de produtos e filtro completo da marca no catálogo: [documento 82](docs/82-marcas-do-catalogo.md).
 

@@ -1,5 +1,15 @@
 # 83 — Desconto de 3% no Pix
 
+## Banner com oferta direta — 26/10/2026
+
+A home passa a destacar “3% OFF no Pix”, logo oficial completa sobre branco e ação curta “Aproveitar”. A condição fica em uma linha curta: “Escolha Pix no checkout. Frete à parte.”. O percentual continua vindo de `PIX_DISCOUNT_PERCENT`, e o link permanece `/catalogo?ordem=preco-asc`. Esta apresentação substitui a faixa verde clara descrita no histórico; nenhuma regra financeira, valor, gateway ou seleção de pagamento foi alterada.
+
+Direção: varejo gráfico com composição mínima, ancorada no percentual amplo. DFII 14 (impacto 4, adequação 4, viabilidade 4, desempenho 5, risco 3). Mantém Barlow e a fonte do site; verde profundo `--pix-background`, verde claro `--pix-highlight` e branco organizam contraste. Espaços em múltiplos de 8 px e layout de uma coluna até 767 px, três a partir de 768 px, com limite de 1280 px. O único movimento é o retorno de hover do CTA, removido com movimento reduzido. Sem JavaScript, imagem, fonte ou dependência nova; CSS local em `pix-discount-banner.module.css`.
+
+O cenário isolado `banner Pix` em `checkout-pix.test.ts` usa o CSS real e verifica oferta, logo carregada, condição, link e ausência de overflow em 320/390/768/1440 px. Os cenários funcionais de checkout não fazem parte da execução manual deste ajuste visual.
+
+Validação: cenário visual aprovado antes e após o ajuste de espera do carregamento da logo; capturas locais conferidas. Build com lint/tipos e 485 testes de segurança aprovados. Revisão independente sem achados restantes. Contraste calculado: texto branco 10,75:1, percentual 8,82:1, condição 8,33:1 e texto do botão 12,18:1 em seus fundos. Auditorias completa e de produção mantêm um alerta moderado preexistente em `fast-uri`, zero high/critical. Comandos: `tsx --test --test-name-pattern 'banner Pix' src/components/site/checkout-pix.test.ts`, `npm run build`, `npm run test:security`, `npm audit --json` e `npm audit --omit=dev --audit-level=high --json`. Sem atualização de dependências.
+
 ## Seleção explícita no checkout — 22/10/2026
 
 O lojista determinou preço público igual ao valor atual do carrinho, sem antecipar Pix. A vitrine não apresenta valor já reduzido nem selo Pix por produto; a arte promocional permanece, com a condição de escolher Pix no checkout. Apresentação dos cards em [86](86-precos-e-desconto-real-nos-cards.md).

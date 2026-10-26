@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Banner Pix com foco na oferta — 26/10/2026
+
+Faixa em verde profundo, percentual amplo em verde claro e chamada “3% OFF no Pix”, com logo completa sobre branco, condição curta e CTA “Aproveitar”. Retira o texto promocional secundário e o QR decorativo; preserva percentual, destino e condição de escolha Pix no checkout. CSS local, uma coluna no celular e três a partir de 768 px, sem novos assets ou scripts. Contrato em [83](83-desconto-pix.md).
+
 ## Marcas em largura total com movimento contínuo — 26/10/2026
 
 A faixa mantém apenas “Suas marcas favoritas, aqui.”, centralizado; o eyebrow e o subtítulo são removidos. Os cartões percorrem lentamente a largura da página em loop, mantendo logos/nome e os mesmos filtros. Mouse, toque, teclado e setas continuam disponíveis. Há pausa manual, e o movimento cessa durante hover/foco/gestos, fora da área visível, em aba oculta e com movimento reduzido. A sequência acessível não repete marcas; listas curtas ficam estáticas. Contrato em [82](82-marcas-do-catalogo.md).

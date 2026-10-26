@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-26 — Banner Pix com menos texto e oferta em destaque
+
+- A faixa usa contraste verde profundo/verde claro, “3% OFF no Pix” em escala maior, logo oficial completa e CTA curto. Mantém condição e link; nenhum cálculo, preço ou fluxo de pagamento foi alterado. Direção e validação em [83](83-desconto-pix.md).
+
 ## 2026-10-26 — Marcas com título centralizado e loop suave
 
 - A faixa de marcas usa a largura total e apenas o título centralizado. Rolagem lenta em loop mantém mouse/toque/teclado/setas e controles de pausa; movimento reduzido, foco, hover, gestos e visibilidade são respeitados. Logos, identidade e destinos não mudam. Contrato e regressões em [82](82-marcas-do-catalogo.md).
