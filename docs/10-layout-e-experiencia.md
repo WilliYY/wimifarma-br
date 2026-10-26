@@ -296,6 +296,8 @@ Alinhamento móvel das sessões administrativas: abaixo de 768 px, a lupa reserv
 
 O canvas normal passa de altura percentual para alturas explícitas equivalentes (52 px no mobile e 96 px a partir de 640 px); o compacto continua em 44/56/68 px. Isso elimina a interpolação sobre a altura do link que também estava encolhendo: o teste determinístico revelou uma redução transitória para cerca de 167 px antes de estabilizar em 174 px. Os estados finais e a arte permanecem iguais; a escala percorre o intervalo entre eles sem essa oscilação. São 14 cenários de UI aprovados após o refinamento.
 
+No botão compacto da conta móvel, o padding horizontal fica em 4 px para dar espaço ao nome Admin também com a fonte de fallback, preservando o alvo de 44 px. A regressão verifica que o texto cabe sem reticências nas sete larguras.
+
 Ao voltar aos primeiros 8 px, o cabeçalho restaura o tamanho original. A faixa entre os dois limites preserva o estado para evitar oscilações. A compactação aguarda a saída do foco de qualquer controle que seria ocultado, incluindo Farmácia Popular e Maps. As faixas recolhidas usam `inert` e `aria-hidden`, sem recortar o autocomplete da busca. A preferência de movimento reduzido elimina a transição perceptível.
 
 `SiteHeader` continua no servidor, incluindo autenticação, permissões e saída. Somente `SiteHeaderShell` observa a rolagem com listener passivo e `requestAnimationFrame`. Os elementos e provedores permanecem montados, preservando a busca e os recursos de saldo compartilhados. A limpeza remove listeners, observador e a propriedade CSS aplicada à raiz.

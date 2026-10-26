@@ -423,6 +423,7 @@ textarea {
   .site-header[data-compact="true"] [data-header-account-link] {
     width: 2.75rem;
     max-width: 2.75rem;
+    padding-inline: 0.25rem;
   }
 
   .site-header[data-compact="true"] [data-header-account-icon],

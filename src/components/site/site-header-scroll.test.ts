@@ -229,10 +229,12 @@ test("ações móveis do administrador ficam alinhadas no topo e ao rolar", asyn
           const header = document.querySelector('header')!;
           const boxes = ['button[aria-label="Abrir carrinho"]', 'a[aria-label="Abrir minha conta"]', 'button[aria-label="Sair"]', 'button[aria-label="Abrir busca de produtos"]'].map(selector => Array.from(header.querySelectorAll(selector)).find(element => element.getClientRects().length)!.getBoundingClientRect());
           const admin = Array.from(header.querySelectorAll('a[href="/admin/dashboard"]')).find(element => element.getClientRects().length)!.getBoundingClientRect();
-          return { separated: admin.bottom <= boxes[0].top, targets: boxes.every(box => box.width >= 44 && box.height >= 44), overflow: document.documentElement.scrollWidth > innerWidth };
+          const name = header.querySelector('a[aria-label="Abrir minha conta"] [data-header-account-name]') as HTMLElement;
+          return { separated: admin.bottom <= boxes[0].top, targets: boxes.every(box => box.width >= 44 && box.height >= 44), nameFits: name.scrollWidth <= name.clientWidth, overflow: document.documentElement.scrollWidth > innerWidth };
         });
         assert.ok(geometry.separated, `${width}/${top}: Painel admin separado dos ícones`);
         assert.ok(geometry.targets);
+        assert.ok(geometry.nameFits, `${width}/${top}: nome Admin sem corte`);
         assert.equal(geometry.overflow, false);
       }
     }
