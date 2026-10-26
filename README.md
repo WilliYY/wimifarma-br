@@ -48,7 +48,7 @@ Rodapé com bandeiras automáticas do meio de pagamento, Pix, consultas oficiais
 
 Desconto de 3% no Pix para novos pedidos, banner e discriminação no checkout: [documento 83](docs/83-desconto-pix.md).
 
-Faixa de marcas na home com identidade única (incluindo Johnson’s/Baby e Kit Kat/KitKat), logos oficiais ou nome legível, exclusão de fotos/títulos de produtos e filtro completo da marca no catálogo: [documento 82](docs/82-marcas-do-catalogo.md).
+Faixa de marcas em largura total, título centralizado e movimento lento em loop, com pausa, arraste por mouse/toque e navegação por teclado. Identidade única (incluindo Johnson’s/Baby e Kit Kat/KitKat), logos oficiais ou nome legível, exclusão de fotos/títulos de produtos e filtro completo da marca no catálogo: [documento 82](docs/82-marcas-do-catalogo.md).
 
 Fotos conferidas para os 44 itens de higiene/perfumaria/dermo pendentes, publicação dos próximos cadastros condicionada à revisão de capa/galeria e comparação de oito ofertas eGAM: [documento 81](docs/81-fotos-publicas-e-gam.md). Preserva percentuais ADMIN, estoque físico e validade real das outras fontes; a rotina permanece pausada.
 

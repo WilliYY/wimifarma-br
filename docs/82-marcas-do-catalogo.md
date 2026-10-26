@@ -1,5 +1,17 @@
 # 82 — Marcas do catálogo na home
 
+## Faixa contínua em largura total — 26/10/2026
+
+O cabeçalho exibe somente “Suas marcas favoritas, aqui.”, centralizado. Foram retirados “Explore por marca” e “Perfumaria, medicamentos e mais para a sua rotina.”. A seção ocupa 100% da largura normal da página, sem container de largura máxima. Logos oficiais, nomes alternativos, ordem de destaque, agrupamento e destinos permanecem iguais.
+
+Quando os cartões excedem a largura disponível, a rolagem avança 24 pixels CSS por segundo, independentemente da taxa de atualização da tela. O loop mede a distância entre grupos incluindo os espaços. Cópias laterais apenas sustentam a continuidade visual; são omitidas da sequência acessível e do Tab, impedem foco e mantêm clique. A lista central contém cada marca uma vez para teclado/leitores de tela. Nomes legados `imageUrl` continuam ignorados.
+
+Mouse e toque mantêm arraste, clique e rolagem vertical da página. Foco e hover pausam o movimento; gestos, inércia e setas recebem um intervalo antes da retomada. Normalização aguarda o fim da interação para não disputar o gesto. Botão Pausar/Retomar dá controle explícito. `prefers-reduced-motion`, aba oculta e seção fora da área visível suspendem o avanço; listas que cabem ficam estáticas, sem cópias ou controles vazios. Não há nova consulta ao banco, dependência, logo ou promessa de disponibilidade.
+
+CSS local em `brand-carousel.module.css`. Testes de UI usam esse CSS real e cobrem títulos, largura 320–1920 px, emendas nas duas direções, pausa/retomada, foco, clique nas cópias, mouse, toque, movimento reduzido e listas curtas. O teste de identidade preserva a exclusão de fotos de produtos e as regras de agrupamento.
+
+Validação local: 21 testes dirigidos de UI/identidade, repetição dos oito de UI após o ajuste final de alinhamento, 485 testes de segurança e build com lint/tipos aprovados. Revisão independente sem achados. Auditorias completa e de produção mantêm somente `fast-uri` moderado, zero high/critical. Comandos: `tsx --test src/features/products/brand-carousel-ui.test.ts src/features/products/brands.test.ts`, `npm run build`, `npm run test:security`, `npm audit --json` e `npm audit --omit=dev --audit-level=high --json`. Não houve atualização de dependências.
+
 ## Apenas identidade da marca — 26/10/2026
 
 Esta decisão substitui a alternativa por foto de produto de 25/10, mantida no histórico abaixo. Cada cartão usa exclusivamente logo oficial local conferido ou nome legível. Nunca usa embalagem, foto do produto ou imagem inferida do fabricante. Falha do logo preserva o nome e o mesmo link. `getPublicBrands` deixa de consultar `imageUrl`/`imageAsset` e de validar arquivos de fotos, retornando apenas as identidades filtradas. `PublicBrand.imageUrl` permanece opcional por compatibilidade, mas não é preenchido pelo builder nem usado na renderização.

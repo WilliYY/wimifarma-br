@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-26 — Marcas com título centralizado e loop suave
+
+- A faixa de marcas usa a largura total e apenas o título centralizado. Rolagem lenta em loop mantém mouse/toque/teclado/setas e controles de pausa; movimento reduzido, foco, hover, gestos e visibilidade são respeitados. Logos, identidade e destinos não mudam. Contrato e regressões em [82](82-marcas-do-catalogo.md).
+
 ## 2026-10-26 — Atalhos livres com símbolos em toda a largura
 
 - A faixa “Encontre seu cuidado” troca fotos e círculos por símbolos das seis categorias, sem caixa externa, com largura total. O banner mantém suas margens; nomes, destinos, mouse, toque, teclado e setas permanecem. Entrada e hover leves respeitam movimento reduzido. Não há nova dependência nem alteração comercial. Contrato em [88](88-faixa-categorias-visual.md).

@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Marcas em largura total com movimento contínuo — 26/10/2026
+
+A faixa mantém apenas “Suas marcas favoritas, aqui.”, centralizado; o eyebrow e o subtítulo são removidos. Os cartões percorrem lentamente a largura da página em loop, mantendo logos/nome e os mesmos filtros. Mouse, toque, teclado e setas continuam disponíveis. Há pausa manual, e o movimento cessa durante hover/foco/gestos, fora da área visível, em aba oculta e com movimento reduzido. A sequência acessível não repete marcas; listas curtas ficam estáticas. Contrato em [82](82-marcas-do-catalogo.md).
+
 ## Categorias com símbolos livres e identidade das marcas — 26/10/2026
 
 “Encontre seu cuidado” apresenta seis símbolos livres, sem fotos, círculos ou caixa externa. Os ícones representam Ofertas, Infantil, Medicamentos, Vitaminas e suplementos, Dermo e Perfumaria, com nomes legíveis abaixo e os mesmos destinos. A faixa ocupa toda a largura da página; o banner seguinte mantém seu limite e suas margens. Esta direção substitui os círculos com fotos e a grade de cartões descritos no histórico.

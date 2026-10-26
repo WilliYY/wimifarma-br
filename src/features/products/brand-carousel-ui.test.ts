@@ -1,15 +1,18 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
 import type { PublicBrand } from "./brands";
 
 async function fixture(brands: PublicBrand[] = Array.from({ length: 14 }, (_, i) => ({ key: i ? `marca ${i}` : "nivea", name: i ? `Marca ${i}` : "Nivea", href: `/catalogo?marca=${i || "Nivea"}` }))) {
+  const css = await readFile("src/components/site/brand-carousel.module.css", "utf8");
+  const classes = Object.fromEntries([...css.matchAll(/\.([a-zA-Z][\w-]*)/g)].map(match => [match[1], match[1]]));
   const bundle = await build({ stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';import {BrandCarousel} from './src/components/site/brand-carousel';createRoot(document.getElementById('root')).render(<BrandCarousel brands={${JSON.stringify(brands)}}/>);`, loader: "tsx", resolveDir: process.cwd() }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' }, plugins: [{ name: "navigation-fixture", setup(builder) {
-    builder.onResolve({ filter: /^next\/(link|image)$/ }, args => ({ path: args.path, namespace: "fixture" }));
-    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("link") ? "import React from 'react';export default function Link({prefetch,...props}){return React.createElement('a',props)}" : "import React from 'react';export default function Image({onError,sizes,...props}){return React.createElement('img',{...props,onError})}", resolveDir: process.cwd() }));
+    builder.onResolve({ filter: /^next\/(link|image)$|brand-carousel\.module\.css$/ }, args => ({ path: args.path, namespace: "fixture" }));
+    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith(".css") ? `export default ${JSON.stringify(classes)}` : args.path.endsWith("link") ? "import React from 'react';export default function Link({prefetch,...props}){return React.createElement('a',props)}" : "import React from 'react';export default function Image({onError,sizes,...props}){return React.createElement('img',{...props,onError})}", resolveDir: process.cwd() }));
   } }] });
-  return { html: '<meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}section{padding:20px}nav{position:relative}ul{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:0;list-style:none;touch-action:auto}li{flex-shrink:0;scroll-snap-align:start}li a{display:flex;width:140px;height:140px;align-items:center;justify-content:center}img{width:90px;height:90px}ul[data-dragging=true]{scroll-snap-type:none;scroll-behavior:auto}button{min-width:44px;min-height:44px}</style><div id="root"></div><script src="/fixture.js"></script>', script: bundle.outputFiles[0].text };
+  return { html: `<meta name="viewport" content="width=device-width,initial-scale=1"><style>:root{--ink:#111827;--surface:#fff;--surface-subtle:#f5f6f8;--line:#e1e5eb;--brand:#cb0733;--brand-strong:#b9002b;--brand-soft:#fff1f4;--muted:#64748b}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif}button{font:inherit}${css}</style><div id="root"></div><script src="/fixture.js"></script>`, script: bundle.outputFiles[0].text };
 }
 
 test("brands drag from a logo without navigating and retain clicks, keyboard and arrows", async () => {
@@ -27,7 +30,7 @@ test("brands drag from a logo without navigating and retain clicks, keyboard and
     });
     await page.goto("http://127.0.0.1:3194");
     const list = page.locator("#home-brands-list");
-    const logo = await list.locator("img").first().boundingBox();
+    const logo = await list.locator('li[data-copy="original"] img').first().boundingBox();
     assert.ok(logo);
     await page.mouse.move(logo.x + logo.width / 2, logo.y + logo.height / 2);
     await page.mouse.down();
@@ -99,5 +102,156 @@ test("brands support a trusted touch swipe while the page remains vertically scr
     for (let step = 1; step <= 12; step++) await touch("touchMove", 230, y - step * 12);
     await touch("touchEnd", 230, y - 144);
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(50);
+  } finally { await browser.close(); }
+});
+
+test("brands show only a centered title and move slowly in a continuous loop", async () => {
+  const content = await fixture();
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ viewport: { width: 780, height: 800 } });
+    await page.route("**/*", route => {
+      const path = new URL(route.request().url()).pathname;
+      if (path === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: content.script });
+      if (path.startsWith("/brands/")) return route.fulfill({ status: 404 });
+      return route.fulfill({ contentType: "text/html", body: content.html });
+    });
+    await page.goto("http://127.0.0.1:3196");
+    await expect(page.getByText("Explore por marca", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Perfumaria, medicamentos e mais para a sua rotina.", { exact: true })).toHaveCount(0);
+    const list = page.locator("#home-brands-list");
+    await expect(list).toHaveAttribute("data-looping", "true");
+    assert.equal(await page.locator("#home-brands-title").evaluate(el => getComputedStyle(el).textAlign), "center");
+    const start = await list.evaluate(el => el.scrollLeft);
+    await expect.poll(() => list.evaluate(el => el.scrollLeft)).toBeGreaterThan(start + 10);
+    await page.getByRole("button", { name: "Pausar movimento das marcas", exact: true }).click();
+    const stopped = await list.evaluate(el => el.scrollLeft);
+    await page.waitForTimeout(300);
+    assert.equal(await list.evaluate(el => el.scrollLeft), stopped);
+    await expect(page.getByRole("link", { name: /^Ver produtos de / })).toHaveCount(14);
+    const cycle = await list.locator('li[data-copy="original"]').first().evaluate(el => (el as HTMLElement).offsetLeft - (el.parentElement!.firstElementChild as HTMLElement).offsetLeft);
+    const rightSeam = await list.evaluate((el, value) => {
+      el.scrollLeft = value * 2 + 30;
+      return el.querySelector('li[data-copy="after"]')!.getBoundingClientRect().x;
+    }, cycle);
+    await expect.poll(() => list.evaluate(el => el.scrollLeft)).toBe(cycle + 30);
+    assert.equal(await list.locator('li[data-copy="original"]').first().evaluate(el => el.getBoundingClientRect().x), rightSeam);
+    const leftSeam = await list.evaluate((el, value) => {
+      el.scrollLeft = value - 30;
+      return [...el.querySelectorAll('li[data-copy="before"]')].at(-1)!.getBoundingClientRect().x;
+    }, cycle);
+    await expect.poll(() => list.evaluate(el => el.scrollLeft)).toBe(cycle * 2 - 30);
+    assert.equal(await list.locator('li[data-copy="original"]').last().evaluate(el => el.getBoundingClientRect().x), leftSeam);
+  } finally { await browser.close(); }
+});
+
+test("brand motion pauses for hover, focus and offscreen, then resumes without taking focus", async () => {
+  const content = await fixture();
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ viewport: { width: 780, height: 800 } });
+    await page.route("**/*", route => new URL(route.request().url()).pathname === "/fixture.js" ? route.fulfill({ contentType: "text/javascript", body: content.script }) : route.fulfill({ contentType: "text/html", body: content.html.replace('<div id="root"></div>', '<div id="root"></div><div style="height:1600px"></div>') }));
+    await page.goto("http://127.0.0.1:3199");
+    const list = page.locator("#home-brands-list");
+    await expect(list).toHaveAttribute("data-looping", "true");
+    await list.hover();
+    const hoverPosition = await list.evaluate(el => el.scrollLeft);
+    await page.waitForTimeout(300);
+    assert.equal(await list.evaluate(el => el.scrollLeft), hoverPosition);
+    await page.mouse.move(779, 700);
+    await expect.poll(() => list.evaluate(el => el.scrollLeft)).toBeGreaterThan(hoverPosition + 5);
+    const original = page.getByRole("link", { name: "Ver produtos de Nivea", exact: true });
+    await original.focus();
+    const focusPosition = await list.evaluate(el => el.scrollLeft);
+    await page.waitForTimeout(300);
+    assert.equal(await list.evaluate(el => el.scrollLeft), focusPosition);
+    await expect(original).toBeFocused();
+    await page.locator("#home-brands-title").click();
+    await expect.poll(() => list.evaluate(el => el.scrollLeft)).toBeGreaterThan(focusPosition + 5);
+    await page.evaluate(() => window.scrollTo(0, 700));
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(600);
+    await page.waitForTimeout(100);
+    const offscreen = await list.evaluate(el => el.scrollLeft);
+    await page.waitForTimeout(300);
+    assert.equal(await list.evaluate(el => el.scrollLeft), offscreen);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect.poll(() => list.evaluate(el => el.scrollLeft)).toBeGreaterThan(offscreen + 5);
+  } finally { await browser.close(); }
+});
+
+test("visible loop copies remain clickable without receiving focus", async () => {
+  const content = await fixture();
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ viewport: { width: 780, height: 800 }, reducedMotion: "reduce" });
+    const navigations: string[] = [];
+    await page.route("**/*", route => {
+      const url = new URL(route.request().url());
+      if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: content.script });
+      if (url.pathname === "/catalogo") { navigations.push(url.search); return route.fulfill({ body: "Marca selecionada" }); }
+      return route.fulfill({ contentType: "text/html", body: content.html });
+    });
+    await page.goto("http://127.0.0.1:3200");
+    const list = page.locator("#home-brands-list");
+    await expect(list).toHaveAttribute("data-looping", "true");
+    await list.evaluate(el => {
+      const first = el.querySelector<HTMLElement>('li[data-copy="original"]')!;
+      const before = el.querySelector<HTMLElement>('li[data-copy="before"]')!;
+      el.scrollLeft = (first.offsetLeft - before.offsetLeft) * 2 - 50;
+    });
+    const copy = list.locator('li[data-copy="after"] a').first();
+    const box = await copy.boundingBox();
+    assert.ok(box);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    assert.equal(await page.evaluate(() => document.activeElement?.closest('li[aria-hidden="true"]') !== null), false);
+    await page.mouse.up();
+    await expect.poll(() => navigations.length).toBe(1);
+    assert.equal(navigations[0], "?marca=Nivea");
+  } finally { await browser.close(); }
+});
+
+test("brands keep full width, one keyboard sequence and manual navigation with reduced motion", async () => {
+  const content = await fixture();
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ reducedMotion: "reduce" });
+    await page.route("**/*", route => {
+      if (new URL(route.request().url()).pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: content.script });
+      return route.fulfill({ contentType: "text/html", body: content.html });
+    });
+    await page.goto("http://127.0.0.1:3197");
+    for (const width of [320, 390, 768, 1440, 1920]) {
+      await page.setViewportSize({ width, height: 800 });
+      const layout = await page.locator("#marcas").evaluate(el => ({ width: el.getBoundingClientRect().width, pageWidth: document.documentElement.clientWidth, overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth, centered: getComputedStyle(el.querySelector("h2")!).textAlign }));
+      assert.equal(layout.width, layout.pageWidth);
+      assert.equal(layout.overflow, false);
+      assert.equal(layout.centered, "center");
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByRole("button", { name: /movimento das marcas/ })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /^Ver produtos de / })).toHaveCount(14);
+    const list = page.locator("#home-brands-list");
+    await expect(list).toHaveAttribute("data-looping", "true");
+    const before = await list.evaluate(el => el.scrollLeft);
+    await page.waitForTimeout(300);
+    assert.equal(await list.evaluate(el => el.scrollLeft), before);
+    await list.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect.poll(() => list.evaluate(el => el.scrollLeft)).toBeGreaterThan(before + 100);
+    assert.equal(await list.locator('li[aria-hidden="true"] a').evaluateAll(links => links.every(link => (link as HTMLAnchorElement).tabIndex === -1)), true);
+  } finally { await browser.close(); }
+});
+
+test("short brand lists remain static without duplicate cards or empty controls", async () => {
+  const content = await fixture([{ key: "nivea", name: "Nivea", href: "/catalogo?marca=Nivea" }]);
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await page.route("**/*", route => new URL(route.request().url()).pathname === "/fixture.js" ? route.fulfill({ contentType: "text/javascript", body: content.script }) : route.fulfill({ contentType: "text/html", body: content.html }));
+    await page.goto("http://127.0.0.1:3198");
+    await expect(page.locator("#home-brands-list")).toHaveAttribute("data-looping", "false");
+    await expect(page.locator("#home-brands-list li")).toHaveCount(1);
+    await expect(page.getByRole("button")).toHaveCount(0);
   } finally { await browser.close(); }
 });
