@@ -18,6 +18,23 @@ A auditoria de 25/10/2026 às 13:41:48 UTC confirmou os 359 EANs ativos, 359 ví
 
 Esses lotes foram publicados antes da nova exigência de pesquisar cada produto em quatro distribuidoras. Essa auditoria histórica não comprova comparação completa entre quatro fontes nem renovação de preço ou estoque.
 
+## Complemento Huggies com quatro fontes
+
+Em 25/10/2026 às 21:06 no horário de Ivaté (26/10 às 00:06 UTC), foram incluídos mais dois produtos com foto, levando esta frente a 361 inclusões. O complemento foi pesquisado em ANB, Profarma, GAM e DM; Santa Cruz continuou suspensa.
+
+| EAN | Produto | Preço cadastrado sem desconto Pix |
+| --- | --- | ---: |
+| 07896007553709 | [Fralda Huggies M 36 unidades](https://wimifarma.com.br/produto/fralda-huggies-m-36-unidades) | R$ 45,85 |
+| 07896007549719 | [Fralda-calça Huggies G 60 unidades](https://wimifarma.com.br/produto/fralda-calca-huggies-g-60-unidades) | R$ 116,87 |
+
+Foi usada a oferta de pacote de varejo observada na GAM, com acréscimo comercial autorizado de 35% sobre o custo final. As ofertas de caixa/fardo sem equivalência comprovada não foram divididas. Saldo exato, ST isolada, mínimo e múltiplo desconhecidos permanecem nulos; a cota interna do piloto não representa estoque físico medido. As duas fotos foram conferidas por EAN, tamanho e quantidade. A apresentação M contém 36 unidades ao todo, incluindo o bônus impresso na embalagem.
+
+A tentativa v1 foi encerrada como `aborted_no_apply`: o campo do ator da auditoria estava preenchido com a identidade técnica do revisor, e a checagem de ADMIN ativo bloqueou o fluxo antes do baseline e de qualquer importação produtiva. A v2 separou o ator ADMIN do revisor técnico e acrescentou preflight somente de leitura e validação do predecessor abortado. Não houve nova assinatura humana de fingerprint ou clique administrativo alegado.
+
+A v2 executou QA real isolado, 485 testes de segurança, 111 de fornecedores e 50 controles físicos negativos. As validações fundacionais da mesma fonte e imagem foram reaproveitadas por hash; não houve novo build da aplicação. As auditorias npm completa e de produção registraram um aviso moderado em `fast-uri`, sem avisos altos ou críticos.
+
+A aplicação confirmou dois produtos, duas fotos e quatro auditorias novas, preservando integralmente o baseline e oito tabelas protegidas. As duas páginas e imagens públicas responderam HTTP 200. O encerramento retirou o grant, e os bancos QA próprios das duas tentativas foram removidos com propriedade conferida. A reconciliação posterior encontrou os 359 históricos ativos e com imagem, além dos dois novos. Provas e relatório permanecem privados em `outputs/higiene-bebe-auditoria-2026-10-24/RESULTADO-HUGGIES2-PUBLICADOS-v2.json`, `huggies2-four-sources-v2/runtime-v2-independent-final-review-v1.json` e `RELATORIO-ETAPA-361-PUBLICADOS.md`.
+
 ## Pesquisa comercial seguinte
 
 Seguir a orientação vigente em [108-catalogo-pesquisa-quatro-fontes.md](108-catalogo-pesquisa-quatro-fontes.md): ANB, Profarma, GAM e DM para cada candidato; Santa Cruz suspensa. Reaproveitar evidências válidas com seus horários originais. Falha de acesso ou captura parcial não equivale a falta de estoque ou ausência de resultado.
@@ -33,6 +50,12 @@ Uma consulta somente de leitura em `Product`, às 17:25:01 UTC, conferiu os 296 
 ## Transporte
 
 Os perfis das 94 fraldas e dos 26 produtos do complemento permanecem desabilitados para cotação nacional: medidas e peso de transporte ainda não foram revisados. Retirada e entrega local elegível seguem suas regras existentes. Não preencher dimensões como se fossem medições reais.
+
+Os dois novos Huggies seguem esse mesmo contrato: cotação nacional desabilitada e quatro medidas de transporte nulas até revisão.
+
+## Pesquisa ainda pendente
+
+Foram selecionados mais 20 candidatos Mili, ainda sem liberação. A consulta da DM foi reaproveitada com seu horário original; a pesquisa nova na ANB foi apenas pelo termo `mili`, sem consultas individuais por EAN. Profarma exibiu login vazio e GAM não foi consultada nessa sequência. O controle do navegador interrompeu a operação porque não conseguiu validar a URL do Chrome com confiança suficiente. Todos permanecem `HOLD/PENDING`; ausência na captura ou falha de acesso não representa estoque zero. A captura parcial está em `four-source-research-v1/next-family20-four-sources-v1/research-partial-v1.json`, fora do Git. Os demais candidatos retidos também dependem das consultas e conferências pendentes; o total de 361 não significa liberação de toda a lista anterior.
 
 ## Correção das descrições
 
