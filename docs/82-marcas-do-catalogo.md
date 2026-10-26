@@ -19,6 +19,8 @@ Hydraporin mantém o nome: não foi localizado um logo avulso oficial validado n
 
 Regressões cobrem a ausência de requisições de fotos de produto, nomes após erro de logo, gestos existentes, agrupamento KitKat nas duas direções e separação de Nestlé. Dados e filtros originais do catálogo permanecem preservados.
 
+Publicado no app em `1749a08`. Conferência em 1280 e 390 px: 97 marcas, nenhuma foto de produto na faixa, quatro logos novos carregados e KitKat em um único cartão. Seu link abriu `/catalogo?marca=KitKat&ordem=preco-asc`, com o produto da marca. Os quatro WebP retornaram HTTP 200 e hashes idênticos aos arquivos locais. Capturas e validações em `outputs/home-categories-brands-2026-10-26/`, fora do Git. Lint, TypeScript, build, 42 testes direcionados e 485 de segurança aprovados; auditorias mantêm somente o moderado preexistente `fast-uri`.
+
 ## Identidade única e foto alternativa — 25/10/2026
 
 Cada cartão representa uma marca, sem título completo, dosagem ou apresentação de produto. Johnson’s e Johnson’s Baby passam a formar um único cartão Johnson’s; o filtro canônico e os links antigos incluem ambas as grafias, sem incluir Johnson & Johnson. Esta decisão substitui a separação descrita no histórico abaixo. Não há agrupamento genérico por fabricante ou por semelhança de imagem.

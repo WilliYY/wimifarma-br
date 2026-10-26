@@ -10,7 +10,9 @@ Cada círculo recebe uma foto real de produto do respectivo grupo, usando a cons
 
 A seleção das imagens de categorias é independente da faixa de marcas: nesta última, fotos de produtos são proibidas; contrato em [82](82-marcas-do-catalogo.md).
 
-Regressões direcionadas: quatro de seleção e quatro de UI em Chromium. Cobrem cinco larguras entre 320 e 1440 px, círculos, destinos, arraste sem navegação, clique/Enter, teclado/setas, toque horizontal e página vertical, imagem ausente e movimento reduzido. A evidência de publicação é registrada ao concluir a validação.
+Regressões direcionadas: quatro de seleção e quatro de UI em Chromium. Cobrem cinco larguras entre 320 e 1440 px, círculos, destinos, arraste sem navegação, clique/Enter, teclado/setas, toque horizontal e página vertical, imagem ausente e movimento reduzido.
+
+Publicado no app em `1749a08`: imagem `sha256:ae88a40a5161375cc55d30d35c50e6516035784fe1ef8c9267b6d782e963a853`, app saudável e zero reinícios inesperados. A imagem anterior fica em `wimifarma-br-app:pre-categories-brands-1749a08`; PostgreSQL permaneceu saudável com início em `2026-10-03T17:26:23.117826283Z`, sem reinício ou migração. Conferência pública em 1280 e 390 px: seis círculos, fotos carregadas conforme visibilidade, links preservados, avanço até o fim e setas nos limites, sem transbordamento da página. Evidências em `outputs/home-categories-brands-2026-10-26/`, fora do Git. Viewport de QA restaurado.
 
 ## Pedido e direção visual — 20/10/2026
 

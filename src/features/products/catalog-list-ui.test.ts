@@ -79,7 +79,7 @@ test("painel mostra totais completos, abre a maior origem e acompanha novo cadas
     assert.equal(writes.length, 1);
     assert.equal(writes[0].inventorySource, "PHARMACY");
     assert.equal(writes[0].category, "Higiene");
-    assert.equal(writes[0].catalogClassification, undefined);
+    assert.deepEqual(writes[0].catalogClassification, { kind: "UNCLASSIFIED", medicineClass: "UNCLASSIFIED", ethical: false, otc: false });
   });
 });
 
