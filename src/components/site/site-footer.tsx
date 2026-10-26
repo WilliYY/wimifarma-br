@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { publicNavItems, siteConfig } from "@/lib/site";
 import { FooterPaymentMethods } from "./footer-payment-methods";
 import { FooterPaymentMethodsContent } from "./footer-payment-methods-content";
+import { FooterBubbles } from "./footer-bubbles";
 
 type BubbleStyle = CSSProperties & Record<`--${string}`, string>;
 
@@ -41,9 +42,9 @@ const linkStyle = "inline-flex min-h-11 w-fit items-center gap-2 rounded-sm text
 export function SiteFooter() {
   return (
     <footer className="site-gooey-footer text-white" aria-label="Informações da Wimifarma">
-      <div aria-hidden="true" className="site-gooey-footer__bubbles">
+      <FooterBubbles>
         {footerBubbles.map((style, index) => <div className="site-gooey-footer__bubble" key={index} style={style} />)}
-      </div>
+      </FooterBubbles>
       <div className="relative z-10">
         <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 lg:px-8 lg:py-10">
           <h2 className="mb-6 text-xs font-semibold uppercase tracking-[0.18em] text-white/85">Da nossa farmácia para você</h2>

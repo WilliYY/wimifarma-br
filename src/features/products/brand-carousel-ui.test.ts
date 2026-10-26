@@ -122,9 +122,10 @@ test("brands show only a centered title and move slowly in a continuous loop", a
     const list = page.locator("#home-brands-list");
     await expect(list).toHaveAttribute("data-looping", "true");
     assert.equal(await page.locator("#home-brands-title").evaluate(el => getComputedStyle(el).textAlign), "center");
-    const start = await list.evaluate(el => el.scrollLeft);
-    await expect.poll(() => list.evaluate(el => el.scrollLeft)).toBeGreaterThan(start + 10);
-    await page.getByRole("button", { name: "Pausar movimento das marcas", exact: true }).click();
+    const firstBrand = list.locator('li[data-copy="original"]').first();
+    const start = await firstBrand.evaluate(el => el.getBoundingClientRect().x);
+    await expect.poll(() => firstBrand.evaluate(el => el.getBoundingClientRect().x)).toBeLessThan(start - 10);
+    await list.hover();
     const stopped = await list.evaluate(el => el.scrollLeft);
     await page.waitForTimeout(300);
     assert.equal(await list.evaluate(el => el.scrollLeft), stopped);
@@ -145,6 +146,41 @@ test("brands show only a centered title and move slowly in a continuous loop", a
   } finally { await browser.close(); }
 });
 
+test("automatic brand motion has fractional steps without scrolling every frame or a pause button", async () => {
+  const content = await fixture();
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ viewport: { width: 780, height: 800 } });
+    await page.route("**/*", route => new URL(route.request().url()).pathname === "/fixture.js" ? route.fulfill({ contentType: "text/javascript", body: content.script }) : route.fulfill({ contentType: "text/html", body: content.html }));
+    await page.goto("http://127.0.0.1:3201");
+    const list = page.locator("#home-brands-list");
+    await expect(list).toHaveAttribute("data-looping", "true");
+    await expect(page.getByRole("button", { name: /movimento das marcas/ })).toHaveCount(0);
+    const motion = await list.evaluate(async element => {
+      let scrolls = 0;
+      const controller = new AbortController();
+      element.addEventListener("scroll", () => { scrolls++; }, { signal: controller.signal });
+      const positions: number[] = [];
+      for (let frame = 0; frame < 30; frame++) {
+        await new Promise(requestAnimationFrame);
+        positions.push(element.querySelector('li[data-copy="original"]')!.getBoundingClientRect().x);
+      }
+      controller.abort();
+      return { scrolls, positions };
+    });
+    assert.ok(motion.positions.at(-1)! < motion.positions[0] - 2, "brands keep advancing");
+    assert.ok(motion.positions.some(x => Math.abs(x - Math.round(x)) > 0.05), "motion retains fractional pixels");
+    assert.ok(motion.scrolls < 3, `automatic motion emitted ${motion.scrolls} scroll events`);
+    for (const width of [390, 1440, 320]) {
+      await page.setViewportSize({ width, height: 800 });
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+      const first = list.locator('li[data-copy="original"]').first();
+      const x = await first.evaluate(el => el.getBoundingClientRect().x);
+      await expect.poll(() => first.evaluate(el => el.getBoundingClientRect().x)).toBeLessThan(x - 3);
+    }
+  } finally { await browser.close(); }
+});
+
 test("brand motion pauses for hover, focus and offscreen, then resumes without taking focus", async () => {
   const content = await fixture();
   const browser = await chromium.launch();
@@ -156,26 +192,30 @@ test("brand motion pauses for hover, focus and offscreen, then resumes without t
     await expect(list).toHaveAttribute("data-looping", "true");
     await list.hover();
     const hoverPosition = await list.evaluate(el => el.scrollLeft);
+    const firstBrand = list.locator('li[data-copy="original"]').first();
+    const hoverX = await firstBrand.evaluate(el => el.getBoundingClientRect().x);
     await page.waitForTimeout(300);
     assert.equal(await list.evaluate(el => el.scrollLeft), hoverPosition);
     await page.mouse.move(779, 700);
-    await expect.poll(() => list.evaluate(el => el.scrollLeft)).toBeGreaterThan(hoverPosition + 5);
+    await expect.poll(() => firstBrand.evaluate(el => el.getBoundingClientRect().x)).toBeLessThan(hoverX - 5);
     const original = page.getByRole("link", { name: "Ver produtos de Nivea", exact: true });
     await original.focus();
     const focusPosition = await list.evaluate(el => el.scrollLeft);
+    const focusX = await firstBrand.evaluate(el => el.getBoundingClientRect().x);
     await page.waitForTimeout(300);
     assert.equal(await list.evaluate(el => el.scrollLeft), focusPosition);
     await expect(original).toBeFocused();
     await page.locator("#home-brands-title").click();
-    await expect.poll(() => list.evaluate(el => el.scrollLeft)).toBeGreaterThan(focusPosition + 5);
+    await expect.poll(() => firstBrand.evaluate(el => el.getBoundingClientRect().x)).toBeLessThan(focusX - 5);
     await page.evaluate(() => window.scrollTo(0, 700));
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(600);
     await page.waitForTimeout(100);
     const offscreen = await list.evaluate(el => el.scrollLeft);
+    const offscreenX = await firstBrand.evaluate(el => el.getBoundingClientRect().x);
     await page.waitForTimeout(300);
     assert.equal(await list.evaluate(el => el.scrollLeft), offscreen);
     await page.evaluate(() => window.scrollTo(0, 0));
-    await expect.poll(() => list.evaluate(el => el.scrollLeft)).toBeGreaterThan(offscreen + 5);
+    await expect.poll(() => firstBrand.evaluate(el => el.getBoundingClientRect().x)).toBeLessThan(offscreenX - 5);
   } finally { await browser.close(); }
 });
 

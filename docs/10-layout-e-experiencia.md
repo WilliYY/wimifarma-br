@@ -1,5 +1,11 @@
 # 10 - Layout e Experiencia
 
+## Suavidade das marcas e custo do rodapé — 26/10/2026
+
+A faixa de marcas troca escrita de rolagem por quadro por deslocamento fracionário da trilha, com transferência para rolagem nativa durante interação. O botão Pausar/Retomar foi removido a pedido do lojista; foco, hover, gestos, movimento reduzido e visibilidade continuam respeitados. Contrato em [82](82-marcas-do-catalogo.md).
+
+O rodapé mantém as 128 bolhas, gerador, tempos, trajetórias, keyframes e filtro originais. Uma camada cliente pequena suspende as animações fora da área próxima à tela ou com a aba oculta, sem remontar as bolhas. A retomada antecipa a entrada em 200 px e mantém a fase. Contenção de layout/estilos na camada decorativa não recorta pintura nem oculta o transbordamento superior. Esta mitigação reduz trabalho desnecessário; não garante ausência de engasgos com o filtro visível em qualquer equipamento. Contrato em [61](61-avaliacoes-e-rodape.md).
+
 ## Produto sem faixas de atendimento e avaliações públicas — 26/10/2026
 
 A página individual não exibe a faixa “Cuidado de perto, também online.”, os três benefícios de atendimento, estrelas, chamadas para avaliar, contador, opiniões ou formulário público. Produto/entrega, correlatos, navegação e informações permanecem. O espaço inferior da barra fixa passa às informações, última seção. Avaliações existentes não foram apagadas; Avaliar/Editar funciona em `minha-conta/avaliacoes` para compras elegíveis, com um formulário por seleção. A home mantém seus depoimentos reais e links para o produto sem a antiga âncora. Detalhes e limites em [68](68-busca-e-galeria.md) e [16](16-cashback-avaliacoes-resgate.md).
@@ -14,7 +20,7 @@ Faixa em verde profundo, percentual amplo em verde claro e chamada “3% OFF no 
 
 ## Marcas em largura total com movimento contínuo — 26/10/2026
 
-A faixa mantém apenas “Suas marcas favoritas, aqui.”, centralizado; o eyebrow e o subtítulo são removidos. Os cartões percorrem lentamente a largura da página em loop, mantendo logos/nome e os mesmos filtros. Mouse, toque, teclado e setas continuam disponíveis. Há pausa manual, e o movimento cessa durante hover/foco/gestos, fora da área visível, em aba oculta e com movimento reduzido. A sequência acessível não repete marcas; listas curtas ficam estáticas. Contrato em [82](82-marcas-do-catalogo.md).
+A faixa mantém apenas “Suas marcas favoritas, aqui.”, centralizado; o eyebrow e o subtítulo são removidos. Os cartões percorrem lentamente a largura da página em loop, mantendo logos/nome e os mesmos filtros. Mouse, toque, teclado e setas continuam disponíveis. O movimento cessa durante hover/foco/gestos, fora da área visível, em aba oculta e com movimento reduzido. A sequência acessível não repete marcas; listas curtas ficam estáticas. Contrato em [82](82-marcas-do-catalogo.md).
 
 ## Categorias com símbolos livres e identidade das marcas — 26/10/2026
 

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { PublicBrand } from "@/features/products/brands";
 import { brandLogo, featuredBrandNames } from "@/features/products/brand-logos";
@@ -10,12 +10,12 @@ import { normalizeProductSearch } from "@/features/products/public-search";
 import styles from "./brand-carousel.module.css";
 
 export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
-  const listRef = useRef<HTMLUListElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLUListElement>(null);
   const dragState = useRef({ moved: false, pointerId: null as number | null, scrollLeft: 0, startX: 0 });
   const [controls, setControls] = useState({ previous: false, next: false });
   const [failedImages, setFailedImages] = useState<Set<string>>(() => new Set());
   const [looping, setLooping] = useState(false);
-  const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(true);
@@ -23,6 +23,8 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
   const [pageVisible, setPageVisible] = useState(true);
   const cycleWidth = useRef(0);
   const position = useRef(0);
+  const motionOffset = useRef(0);
+  const scrollAnchor = useRef(0);
   const manualUntil = useRef(0);
   const touchActive = useRef(false);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -33,16 +35,28 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
     return (aPosition < 0 ? featuredBrandNames.length : aPosition) - (bPosition < 0 ? featuredBrandNames.length : bPosition) || a.name.localeCompare(b.name, "pt-BR");
   }), [brands]);
 
+  const settleMotion = useCallback(() => {
+    const list = listRef.current;
+    const track = trackRef.current;
+    if (!list || !track) return;
+    // Hand the visual position back to native scrolling only at interaction boundaries.
+    if (motionOffset.current) list.scrollLeft += motionOffset.current;
+    motionOffset.current = 0;
+    track.style.transform = "";
+    position.current = scrollAnchor.current = list.scrollLeft;
+  }, []);
+
   const normalizeLoop = useCallback(() => {
     const list = listRef.current;
     const cycle = cycleWidth.current;
     if (!list || !looping || !cycle || touchActive.current || dragState.current.pointerId !== null) return;
+    settleMotion();
     if (list.scrollLeft < cycle || list.scrollLeft >= cycle * 2) {
       const offset = ((list.scrollLeft - cycle) % cycle + cycle) % cycle;
       list.scrollLeft = cycle + offset;
     }
-    position.current = list.scrollLeft;
-  }, [looping]);
+    position.current = scrollAnchor.current = list.scrollLeft;
+  }, [looping, settleMotion]);
 
   function settleInteraction() {
     if (settleTimer.current) clearTimeout(settleTimer.current);
@@ -61,12 +75,13 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
     if (!list) return;
     function measure() {
       if (!list) return;
+      settleMotion();
       const originals = list.querySelectorAll<HTMLElement>('li[data-copy="original"]');
       if (!originals.length) return;
       const first = originals[0];
       const last = originals[originals.length - 1];
       const contentWidth = last.offsetLeft + last.offsetWidth - first.offsetLeft;
-      const gap = Number.parseFloat(getComputedStyle(list).columnGap) || 0;
+      const gap = Number.parseFloat(getComputedStyle(trackRef.current ?? list).columnGap) || 0;
       // Adjacent group starts include the final gap: scrollWidth / 3 does not.
       const duplicate = list.querySelector<HTMLElement>('li[data-copy="before"]');
       const nextCycle = duplicate ? first.offsetLeft - duplicate.offsetLeft : contentWidth + gap;
@@ -77,7 +92,7 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
       if (canLoop && looping) {
         const phase = oldCycle ? ((list.scrollLeft - oldCycle) % oldCycle + oldCycle) % oldCycle : 0;
         list.scrollLeft = nextCycle + Math.min(phase, nextCycle - 1);
-        position.current = list.scrollLeft;
+        position.current = scrollAnchor.current = list.scrollLeft;
       }
       updateControls();
     }
@@ -85,7 +100,7 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
     const observer = new ResizeObserver(measure);
     observer.observe(list);
     return () => observer.disconnect();
-  }, [orderedBrands, looping, updateControls]);
+  }, [orderedBrands, looping, updateControls, settleMotion]);
 
   useEffect(() => {
     const list = listRef.current;
@@ -109,12 +124,14 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
 
   useEffect(() => {
     const list = listRef.current;
-    if (!list || !looping || paused || hovered || focused || reducedMotion || !visible || !pageVisible) return;
+    const track = trackRef.current;
+    if (!list || !track || !looping || hovered || focused || reducedMotion || !visible || !pageVisible) return;
     let previousTime = 0;
     let frame = 0;
-    position.current = list.scrollLeft;
+    settleMotion();
+    track.dataset.moving = "true";
     function advance(time: number) {
-      if (!list) return;
+      if (!track) return;
       const delta = previousTime ? Math.min(time - previousTime, 64) : 0;
       previousTime = time;
       if (!touchActive.current && dragState.current.pointerId === null && time >= manualUntil.current) {
@@ -122,24 +139,29 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
         if (cycle) {
           position.current += delta * 0.024; // 24 CSS pixels per second, independent of refresh rate.
           if (position.current >= cycle * 2) position.current -= cycle;
-          list.scrollLeft = position.current;
+          motionOffset.current = position.current - scrollAnchor.current;
+          track.style.transform = `translate3d(${-motionOffset.current}px, 0, 0)`;
         }
       }
       frame = window.requestAnimationFrame(advance);
     }
     frame = window.requestAnimationFrame(advance);
-    return () => window.cancelAnimationFrame(frame);
-  }, [looping, paused, hovered, focused, reducedMotion, visible, pageVisible]);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      delete track.dataset.moving;
+      settleMotion();
+    };
+  }, [looping, hovered, focused, reducedMotion, visible, pageVisible, settleMotion]);
 
   function handleScroll() {
     const list = listRef.current;
     if (!list) return;
     if (!looping) { updateControls(); return; }
     if (touchActive.current || dragState.current.pointerId !== null || performance.now() < manualUntil.current) {
-      position.current = list.scrollLeft;
+      position.current = scrollAnchor.current = list.scrollLeft;
       manualUntil.current = performance.now() + 1200;
       settleInteraction();
-    } else if (Math.abs(list.scrollLeft - position.current) > 1) {
+    } else if (!motionOffset.current && Math.abs(list.scrollLeft - position.current) > 1) {
       normalizeLoop();
     }
   }
@@ -147,6 +169,7 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
   function scrollBrands(direction: -1 | 1) {
     const list = listRef.current;
     if (!list) return;
+    settleMotion();
     manualUntil.current = performance.now() + 1800;
     list.scrollBy({
       left: direction * list.clientWidth,
@@ -154,15 +177,16 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
     });
   }
 
-  function handlePointerDown(event: React.PointerEvent<HTMLUListElement>) {
+  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (!event.isPrimary) return;
+    settleMotion();
     dragState.current.moved = false;
     manualUntil.current = performance.now() + 1800;
     if (event.pointerType !== "mouse" || event.button !== 0) return;
     dragState.current = { moved: false, pointerId: event.pointerId, scrollLeft: event.currentTarget.scrollLeft, startX: event.clientX };
   }
 
-  function handlePointerMove(event: React.PointerEvent<HTMLUListElement>) {
+  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
     const drag = dragState.current;
     if (drag.pointerId !== event.pointerId) return;
     if (event.buttons !== 1) { finishPointerDrag(event); return; }
@@ -178,7 +202,7 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
     event.currentTarget.scrollLeft = drag.scrollLeft - movement;
   }
 
-  function finishPointerDrag(event: React.PointerEvent<HTMLUListElement>) {
+  function finishPointerDrag(event: React.PointerEvent<HTMLDivElement>) {
     if (dragState.current.pointerId !== event.pointerId) return;
     dragState.current.pointerId = null;
     delete event.currentTarget.dataset.dragging;
@@ -187,13 +211,13 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
     settleInteraction();
   }
 
-  function preventClickAfterDrag(event: React.MouseEvent<HTMLUListElement>) {
+  function preventClickAfterDrag(event: React.MouseEvent<HTMLDivElement>) {
     if (!dragState.current.moved) return;
     if (event.detail !== 0) { event.preventDefault(); event.stopPropagation(); }
     dragState.current.moved = false;
   }
 
-  function cancelPointerDrag(event: React.PointerEvent<HTMLUListElement>) {
+  function cancelPointerDrag(event: React.PointerEvent<HTMLDivElement>) {
     if (dragState.current.pointerId !== event.pointerId) return;
     finishPointerDrag(event);
     dragState.current.moved = false;
@@ -226,9 +250,9 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
           >
             <ChevronLeft aria-hidden="true" className="h-5 w-5" />
           </button>
-          <ul
+          <div
             aria-label="Escolha uma marca para ver seus produtos"
-            className={styles.list}
+            className={styles.viewport}
             data-looping={looping}
             id="home-brands-list"
             onClickCapture={preventClickAfterDrag}
@@ -243,13 +267,14 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
             onPointerMove={handlePointerMove}
             onPointerUp={finishPointerDrag}
             onScroll={handleScroll}
-            onTouchStart={() => { touchActive.current = true; manualUntil.current = performance.now() + 1800; }}
+            onTouchStart={() => { settleMotion(); touchActive.current = true; manualUntil.current = performance.now() + 1800; }}
             onTouchEnd={() => { touchActive.current = false; manualUntil.current = performance.now() + 1800; settleInteraction(); }}
             onTouchCancel={() => { touchActive.current = false; manualUntil.current = performance.now() + 1800; settleInteraction(); }}
-            onWheel={() => { manualUntil.current = performance.now() + 1800; }}
+            onWheel={() => { settleMotion(); manualUntil.current = performance.now() + 1800; }}
             ref={listRef}
             tabIndex={0}
           >
+            <ul className={styles.list} ref={trackRef}>
             {(looping ? ["before", "original", "after"] : ["original"]).flatMap(copy => orderedBrands.map((brand) => {
               const registeredLogo = brandLogo(brand.name);
               const logo = registeredLogo && !failedImages.has(registeredLogo.src) ? registeredLogo : null;
@@ -283,7 +308,8 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
                 </li>
               );
             }))}
-          </ul>
+            </ul>
+          </div>
           <button
             aria-controls="home-brands-list"
             aria-label="Ver próximas marcas"
@@ -295,14 +321,6 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
             <ChevronRight aria-hidden="true" className="h-5 w-5" />
           </button>
         </nav>
-        {looping && !reducedMotion && (
-          <div className={styles.playback}>
-            <button aria-label={paused ? "Retomar movimento das marcas" : "Pausar movimento das marcas"} aria-pressed={paused} className={styles.pause} onClick={() => setPaused(value => !value)} type="button">
-              {paused ? <Play aria-hidden="true" size={14} /> : <Pause aria-hidden="true" size={14} />}
-              {paused ? "Retomar" : "Pausar"}
-            </button>
-          </div>
-        )}
     </section>
   );
 }

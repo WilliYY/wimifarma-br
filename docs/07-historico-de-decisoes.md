@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-26 — Movimento fracionário das marcas e atividade do rodapé
+
+- A pedido do lojista, a faixa de marcas remove Pausar/Retomar e troca escrita de `scrollLeft` por quadro por uma trilha com `transform` fracionário, mantendo interação nativa, filtros, loop e preferência de movimento reduzido. O rodapé preserva as 128 bolhas, keyframes, tempos, trajetórias e filtro; somente pausa fora da área próxima à tela/aba oculta e contenção sem recorte são acrescentadas. Contratos em [82](82-marcas-do-catalogo.md) e [61](61-avaliacoes-e-rodape.md); evidências e limites em `outputs/motion-smooth-2026-10-26/`.
+
 ## 2026-10-26 — Produto sem avaliações públicas e faixas de atendimento
 
 - A pedido do lojista, estrelas/opiniões/estado vazio/formulário público e as duas faixas de atendimento deixam a página de produto. Registros e regras financeiras permanecem; Avaliar/Editar passa a funcionar na área autenticada de compras, com seleção restrita aos produtos elegíveis visíveis. A página pública deixa de consultar avaliações/sessão e de anunciar nota não exibida no JSON-LD. Contrato em [16](16-cashback-avaliacoes-resgate.md); composição em [68](68-busca-e-galeria.md).

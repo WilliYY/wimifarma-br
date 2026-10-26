@@ -1,12 +1,20 @@
 # 82 — Marcas do catálogo na home
 
+## Movimento fracionário e retirada do botão de pausa — 26/10/2026
+
+A pedido do lojista, o botão Pausar/Retomar deixa a faixa. O avanço automático permanece em 24 pixels CSS por segundo, agora por `transform` fracionário em uma única trilha, evitando escrever `scrollLeft` e disparar eventos de rolagem a cada quadro. A posição visual volta à rolagem nativa somente nas transições de interação; mouse, toque, teclado, setas, foco, hover, emendas do loop e redimensionamento continuam disponíveis. Apenas a trilha em movimento recebe `will-change`; movimento reduzido, aba oculta e faixa fora da tela suspendem o avanço.
+
+Os testes dirigidos verificam deslocamento fracionário, ausência de rolagem por quadro e do botão, continuidade após redimensionamento, arraste, toque, links, emendas, foco, movimento reduzido e listas curtas. Nenhuma consulta, identidade, logo, filtro ou dependência é alterada. Resultados e limites das medições ficam em `outputs/motion-smooth-2026-10-26/`; não representam garantia de FPS em todos os dispositivos.
+
+Validação desta alteração: 25 testes dirigidos de marcas/identidade/rodapé e 491 regressões de segurança aprovados; build local com lint e tipos aprovado. Auditorias completas e de produção retornaram somente um alerta moderado transitivo em `fast-uri`, zero high/critical; nenhuma dependência foi alterada. Revisão independente sem achados bloqueantes. A conferência em produção é registrada separadamente nas evidências da entrega.
+
 ## Faixa contínua em largura total — 26/10/2026
 
 O cabeçalho exibe somente “Suas marcas favoritas, aqui.”, centralizado. Foram retirados “Explore por marca” e “Perfumaria, medicamentos e mais para a sua rotina.”. A seção ocupa 100% da largura normal da página, sem container de largura máxima. Logos oficiais, nomes alternativos, ordem de destaque, agrupamento e destinos permanecem iguais.
 
 Quando os cartões excedem a largura disponível, a rolagem avança 24 pixels CSS por segundo, independentemente da taxa de atualização da tela. O loop mede a distância entre grupos incluindo os espaços. Cópias laterais apenas sustentam a continuidade visual; são omitidas da sequência acessível e do Tab, impedem foco e mantêm clique. A lista central contém cada marca uma vez para teclado/leitores de tela. Nomes legados `imageUrl` continuam ignorados.
 
-Mouse e toque mantêm arraste, clique e rolagem vertical da página. Foco e hover pausam o movimento; gestos, inércia e setas recebem um intervalo antes da retomada. Normalização aguarda o fim da interação para não disputar o gesto. Botão Pausar/Retomar dá controle explícito. `prefers-reduced-motion`, aba oculta e seção fora da área visível suspendem o avanço; listas que cabem ficam estáticas, sem cópias ou controles vazios. Não há nova consulta ao banco, dependência, logo ou promessa de disponibilidade.
+Mouse e toque mantêm arraste, clique e rolagem vertical da página. Foco e hover pausam o movimento; gestos, inércia e setas recebem um intervalo antes da retomada. Normalização aguarda o fim da interação para não disputar o gesto. O botão Pausar/Retomar desta versão foi retirado pelo ajuste descrito acima. `prefers-reduced-motion`, aba oculta e seção fora da área visível suspendem o avanço; listas que cabem ficam estáticas, sem cópias ou controles vazios. Não há nova consulta ao banco, dependência, logo ou promessa de disponibilidade.
 
 CSS local em `brand-carousel.module.css`. Testes de UI usam esse CSS real e cobrem títulos, largura 320–1920 px, emendas nas duas direções, pausa/retomada, foco, clique nas cópias, mouse, toque, movimento reduzido e listas curtas. O teste de identidade preserva a exclusão de fotos de produtos e as regras de agrupamento.
 

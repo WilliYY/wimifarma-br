@@ -585,12 +585,17 @@ textarea {
 
 .site-gooey-footer__bubbles {
   background: var(--footer-background);
+  contain: layout style;
   filter: url("#wimifarma-footer-blob");
   height: 1rem;
   inset: 0 0 auto;
   pointer-events: none;
   position: absolute;
   z-index: 0;
+}
+
+.site-gooey-footer__bubbles[data-animating="false"] > .site-gooey-footer__bubble {
+  animation-play-state: paused;
 }
 
 .site-gooey-footer__bubble {

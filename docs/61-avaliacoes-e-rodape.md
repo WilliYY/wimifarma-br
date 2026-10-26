@@ -1,5 +1,11 @@
 # 61 — Avaliações e rodapé
 
+## Controle de atividade das bolhas — 26/10/2026
+
+`FooterBubbles` controla exclusivamente a atividade da camada decorativa. O efeito original conserva 128 elementos, gerador, tempos, trajetórias, keyframes e filtro `wimifarma-footer-blob`. `IntersectionObserver` retoma o efeito 200 px antes da entrada; distância maior e aba oculta pausam as animações sem reiniciar sua fase. `contain: layout style` limita o escopo do trabalho geométrico sem contenção de pintura ou recorte. A preferência global de movimento reduzido permanece intacta.
+
+Regressões com movimento normal verificam pausa fora da tela, continuidade de fase, evento de visibilidade, retomada, quantidade/filtro e overflow visível; os cenários existentes conferem conteúdo, pagamento e telas pequenas/grandes. Não há consulta, dependência, troca de efeito ou mudança comercial. Medições e limitações ficam em `outputs/motion-smooth-2026-10-26/`.
+
 ## Atualização — 20/10/2026
 
 Pagamentos e consultas oficiais foram acrescentados ao rodapé; links Google e Reclame AQUI passaram para “Avaliações e atendimento”. Não houve mudança nas notas, relatos ou cashback. Perfil RA confirmado sem verificação/reputação definida, Ebit não localizado nesta consulta e reCAPTCHA ausente: não foram reproduzidos selos. Fontes e limites em [84](84-rodape-pagamentos-e-consultas.md).

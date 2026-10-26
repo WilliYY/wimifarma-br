@@ -88,3 +88,42 @@ test("indisponibilidade do catálogo mantém Pix e cartão sem inventar bandeira
     await expect(footer.getByText("Confira as opções e as condições disponíveis ao finalizar sua compra.")).toBeVisible();
   });
 });
+
+test("bolhas preservam fase e efeito, suspendem fora da tela e retomam sem remontar", async () => {
+  await fixture("/fallback", async page => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    const layer = page.locator(".site-gooey-footer__bubbles");
+    const bubble = layer.locator(".site-gooey-footer__bubble").first();
+    await expect(layer).toHaveAttribute("data-animating", "true");
+    const original = await bubble.evaluate(el => ({ time: (el as HTMLElement).style.getPropertyValue("--time"), delay: (el as HTMLElement).style.getPropertyValue("--delay"), names: getComputedStyle(el).animationName }));
+    assert.deepEqual(original, { time: "2.0s", delay: "-2.0s", names: "footer-bubble-size, footer-bubble-move" });
+    await page.evaluate(() => {
+      const spacer = document.createElement("div");
+      spacer.style.height = "2400px";
+      document.getElementById("root")!.before(spacer);
+      window.scrollTo(0, 0);
+    });
+    await expect(layer).toHaveAttribute("data-animating", "false");
+    const frozen = await bubble.evaluate(el => el.getAnimations().map(animation => animation.currentTime));
+    await page.waitForTimeout(180);
+    assert.deepEqual(await bubble.evaluate(el => el.getAnimations().map(animation => animation.currentTime)), frozen);
+    await page.evaluate(() => window.scrollTo(0, 2300));
+    await expect(layer).toHaveAttribute("data-animating", "true");
+    await expect.poll(() => bubble.evaluate(el => Number(el.getAnimations()[0]?.currentTime))).toBeGreaterThan(Number(frozen[0]));
+    assert.equal(await layer.evaluate(el => getComputedStyle(el).overflow), "visible");
+    await expect(layer.locator(".site-gooey-footer__bubble")).toHaveCount(128);
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", { configurable: true, value: true });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await expect(layer).toHaveAttribute("data-animating", "false");
+    const hidden = await bubble.evaluate(el => el.getAnimations().map(animation => animation.currentTime));
+    await page.waitForTimeout(180);
+    assert.deepEqual(await bubble.evaluate(el => el.getAnimations().map(animation => animation.currentTime)), hidden);
+    await page.evaluate(() => {
+      Reflect.deleteProperty(document, "hidden");
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await expect(layer).toHaveAttribute("data-animating", "true");
+  });
+});
