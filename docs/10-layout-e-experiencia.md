@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Correlatos antes das informações complementares — 26/10/2026
+
+“Produtos correlatos” fica imediatamente após galeria e painel do produto escolhido, incluindo sua consulta de entrega. Benefícios de atendimento, navegação, descrição e avaliações vêm depois. Cards e critérios de correlação não mudam. Mouse arrasta também sobre imagem/link sem abrir o produto por acidente; clique, toque, quantidade, setas e teclado são preservados. Reserva inferior da barra de compra acompanha a última seção. Contrato em [68](68-busca-e-galeria.md).
+
 ## Banner Pix com foco na oferta — 26/10/2026
 
 Faixa em verde profundo, percentual amplo em verde claro e chamada “3% OFF no Pix”, com logo completa sobre branco, condição curta e CTA “Aproveitar”. Retira o texto promocional secundário e o QR decorativo; preserva percentual, destino e condição de escolha Pix no checkout. CSS local, uma coluna no celular e três a partir de 768 px, sem novos assets ou scripts. Contrato em [83](83-desconto-pix.md).

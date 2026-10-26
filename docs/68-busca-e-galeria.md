@@ -1,5 +1,13 @@
 # Busca de produtos e galeria
 
+## Correlatos logo após o produto — 26/10/2026
+
+A página individual apresenta galeria/painel de compra/consulta de entrega, correlatos, benefícios de atendimento, atalhos de navegação, informações e avaliações, nesta ordem. `#relacionados` mantém o destino existente; a seção tem respiro normal de conteúdo e a reserva inferior para a barra fixa de compra fica na última seção, avaliações. Ranking, limite de dez produtos, imagens, preços, disponibilidade, compra assistida e aviso de que correlação não é substituição permanecem iguais. Ausência de candidatos mantém o estado vazio verdadeiro.
+
+O carrossel permite arraste por mouse sobre imagem e link, com limiar de 6 px e captura somente após o gesto começar. Clique normal e Enter continuam abrindo o produto; botões e campos de quantidade não iniciam arraste. Toque conserva a rolagem nativa horizontal e vertical; região focável, setas e ArrowLeft/ArrowRight atendem teclado, com rolagem imediata em movimento reduzido. Não há rotação automática ou nova dependência. Foco visível e alvos de 44 px são preservados.
+
+Validação local: quatro cenários Chromium com componentes e Tailwind reais, dados sintéticos e rede interceptada passaram em 320/390/1280/1440 px. A revisão encontrou estado pendente após sair/soltar fora; a regressão reproduziu RED antes da correção e passou depois, junto de clique/Enter/quantidade, gesto horizontal e rolagem vertical. O estado é limpo antes dos controles e ao sair sem iniciar arraste. Build local com lint/tipos, lint dirigido dos três arquivos e 485 testes de segurança aprovados; revisão final sem achados. Auditorias completa e de produção mantêm um moderado preexistente em `fast-uri`, zero high/critical. Comandos: `tsx --test src/components/site/related-products-carousel.test.ts`, `npm run build`, `eslint` dos arquivos envolvidos, `npm run test:security`, `npm audit --json` e `npm audit --omit=dev --audit-level=high --json`.
+
 ## Correção de digitação — 23/10/2026
 
 A busca mantém resultados literais e prefixos como prioridade. Quando não encontra correspondência, tenta corrigir palavras usando somente nomes, marcas, princípios ativos e termos dos produtos ativos cadastrados. Não há chamada de IA por digitação nem criação de sinônimos clínicos.

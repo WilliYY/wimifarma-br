@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-26 — Correlatos após o produto e arraste sobre cards
+
+- A seção de correlatos passa a vir antes de atendimento, informações e avaliações. O arraste por mouse inclui imagem e link, preservando clique, quantidade, toque e teclado; critérios comerciais/regulatórios e seleção dos correlatos permanecem. Reserva para compra fixa acompanha a seção final. Contrato em [68](68-busca-e-galeria.md).
+
 ## 2026-10-26 — Banner Pix com menos texto e oferta em destaque
 
 - A faixa usa contraste verde profundo/verde claro, “3% OFF no Pix” em escala maior, logo oficial completa e CTA curto. Mantém condição e link; nenhum cálculo, preço ou fluxo de pagamento foi alterado. Direção e validação em [83](83-desconto-pix.md).

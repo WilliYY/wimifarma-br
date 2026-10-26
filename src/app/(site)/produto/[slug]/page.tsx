@@ -329,7 +329,28 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
           </div>
 
-          <div className="mt-8 grid overflow-hidden rounded-2xl border border-line bg-white sm:grid-cols-3">
+        </div>
+      </section>
+
+      <section className="scroll-mt-52 bg-white px-4 py-8 sm:px-6 sm:py-10 lg:px-8" id="relacionados">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-4 border-b border-line pb-7 md:grid-cols-[1fr_auto] md:items-end">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-black uppercase text-brand"><BadgeCheck className="h-5 w-5" aria-hidden="true" />Voce pode gostar</p>
+              <h2 className="mt-2 text-3xl font-black text-ink">Produtos correlatos</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Relacionados por principio ativo, termo de busca ou categoria cadastrada.</p>
+            </div>
+            <p className="flex max-w-md items-start gap-2 text-xs font-semibold leading-5 text-muted"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-pharma-green" aria-hidden="true" />Correlato nao significa substituto. Confirme a opcao adequada com a equipe.</p>
+          </div>
+          {relatedProducts.length > 0 ? (
+            <RelatedProductsCarousel products={relatedProducts} />
+          ) : <div className="mt-7 flex min-h-36 items-center justify-center border border-dashed border-line px-5 text-center text-sm font-semibold text-muted">Ainda nao ha correlatos publicados para este produto.</div>}
+        </div>
+      </section>
+
+      <section aria-label="Atendimento da Wimifarma" className="bg-[#f7f8fa] px-3 pb-8 sm:px-6 sm:pb-10 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid overflow-hidden rounded-2xl border border-line bg-white sm:grid-cols-3">
             <div className="flex items-center gap-3 border-b border-line p-4 sm:border-b-0 sm:border-r">
               <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-pharma-green"><MapPin className="h-5 w-5" aria-hidden="true" /></span>
               <span><strong className="block text-sm text-ink">Retirada gratuita</strong><span className="mt-0.5 block text-xs font-semibold text-muted">Na loja em Ivate</span></span>
@@ -393,7 +414,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       </section>
 
-      <section className="scroll-mt-52 border-y border-line bg-[#f7f8fa] px-4 py-14 sm:px-6 lg:px-8" id="avaliacoes">
+      <section className="scroll-mt-52 border-y border-line bg-[#f7f8fa] px-4 pb-28 pt-14 sm:px-6 lg:px-8" id="avaliacoes">
         <div className="mx-auto max-w-7xl">
           {reviews.length > 0 ? (
           <div className="grid gap-8 lg:grid-cols-[16rem_minmax(0,1fr)_22rem] lg:items-start">
@@ -477,21 +498,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       </section>
 
-      <section className="scroll-mt-52 bg-white px-4 pb-28 pt-14 sm:px-6 lg:px-8" id="relacionados">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-4 border-b border-line pb-7 md:grid-cols-[1fr_auto] md:items-end">
-            <div>
-              <p className="flex items-center gap-2 text-sm font-black uppercase text-brand"><BadgeCheck className="h-5 w-5" aria-hidden="true" />Voce pode gostar</p>
-              <h2 className="mt-2 text-3xl font-black text-ink">Produtos correlatos</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Relacionados por principio ativo, termo de busca ou categoria cadastrada.</p>
-            </div>
-            <p className="flex max-w-md items-start gap-2 text-xs font-semibold leading-5 text-muted"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-pharma-green" aria-hidden="true" />Correlato nao significa substituto. Confirme a opcao adequada com a equipe.</p>
-          </div>
-          {relatedProducts.length > 0 ? (
-            <RelatedProductsCarousel products={relatedProducts} />
-          ) : <div className="mt-7 flex min-h-36 items-center justify-center border border-dashed border-line px-5 text-center text-sm font-semibold text-muted">Ainda nao ha correlatos publicados para este produto.</div>}
-        </div>
-      </section>
     </>
   );
 }

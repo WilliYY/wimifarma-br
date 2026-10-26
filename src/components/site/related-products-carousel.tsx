@@ -44,7 +44,7 @@ export function RelatedProductsCarousel({
       window.cancelAnimationFrame(animationFrame);
       resizeObserver.disconnect();
     };
-  }, [updateControls]);
+  }, [products.length, updateControls]);
 
   function scrollProducts(direction: -1 | 1) {
     const carousel = carouselRef.current;
@@ -62,16 +62,20 @@ export function RelatedProductsCarousel({
     );
 
     carousel.scrollBy({
-      behavior: "smooth",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
       left: direction * visibleCards * cardStep,
     });
   }
 
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (!event.isPrimary) return;
+    dragState.current.moved = false;
     if (event.pointerType !== "mouse" || event.button !== 0) return;
+    dragState.current.pointerId = null;
+    delete event.currentTarget.dataset.dragging;
     if (
       event.target instanceof Element &&
-      event.target.closest("a, button, input, select, textarea, label")
+      event.target.closest("button, input, select, textarea, label")
     ) {
       return;
     }
@@ -82,15 +86,21 @@ export function RelatedProductsCarousel({
       scrollLeft: event.currentTarget.scrollLeft,
       startX: event.clientX,
     };
-    event.currentTarget.setPointerCapture(event.pointerId);
   }
 
   function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
     const drag = dragState.current;
     if (drag.pointerId !== event.pointerId) return;
+    if (event.buttons !== 1) { finishPointerDrag(event); return; }
 
     const movement = event.clientX - drag.startX;
-    if (Math.abs(movement) > 4) drag.moved = true;
+    if (!drag.moved) {
+      if (Math.abs(movement) <= 6) return;
+      drag.moved = true;
+      event.currentTarget.dataset.dragging = "true";
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+    event.preventDefault();
     event.currentTarget.scrollLeft = drag.scrollLeft - movement;
   }
 
@@ -98,25 +108,22 @@ export function RelatedProductsCarousel({
     const drag = dragState.current;
     if (drag.pointerId !== event.pointerId) return;
 
+    drag.pointerId = null;
+    delete event.currentTarget.dataset.dragging;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    drag.pointerId = null;
-    window.setTimeout(() => {
-      drag.moved = false;
-    }, 0);
   }
 
   function cancelPointerDrag(event: React.PointerEvent<HTMLDivElement>) {
     if (dragState.current.pointerId !== event.pointerId) return;
-    dragState.current.pointerId = null;
+    finishPointerDrag(event);
     dragState.current.moved = false;
   }
 
   function preventClickAfterDrag(event: React.MouseEvent<HTMLDivElement>) {
     if (!dragState.current.moved) return;
-    event.preventDefault();
-    event.stopPropagation();
+    if (event.detail !== 0) { event.preventDefault(); event.stopPropagation(); }
     dragState.current.moved = false;
   }
 
@@ -150,16 +157,27 @@ export function RelatedProductsCarousel({
       <div
         aria-label="Produtos correlatos"
         aria-roledescription="carrossel"
-        className="flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-3 select-none active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_img]:pointer-events-none"
+        className="flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-3 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand motion-reduce:scroll-auto data-[dragging=true]:cursor-grabbing data-[dragging=true]:snap-none data-[dragging=true]:scroll-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_img]:pointer-events-none data-[dragging=true]:[&_a]:cursor-grabbing"
         id="related-products-carousel"
         onClickCapture={preventClickAfterDrag}
+        onDragStart={event => event.preventDefault()}
+        onKeyDown={event => {
+          if (event.target !== event.currentTarget) return;
+          if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+            event.preventDefault();
+            scrollProducts(event.key === "ArrowLeft" ? -1 : 1);
+          }
+        }}
+        onLostPointerCapture={finishPointerDrag}
         onPointerCancel={cancelPointerDrag}
         onPointerDown={handlePointerDown}
+        onPointerLeave={event => { if (!dragState.current.moved) cancelPointerDrag(event); }}
         onPointerMove={handlePointerMove}
         onPointerUp={finishPointerDrag}
         onScroll={updateControls}
         ref={carouselRef}
         role="region"
+        tabIndex={0}
       >
         {products.map((product, index) => (
           <div
