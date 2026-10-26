@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
-import test from "node:test";
+import test, { after } from "node:test";
 import { build } from "esbuild";
 import postcss from "postcss";
 import tailwindcss from "@tailwindcss/postcss";
 import { chromium, expect, type Page } from "@playwright/test";
 
 const origin = "http://127.0.0.1:3197";
+let browserPromise: ReturnType<typeof chromium.launch> | undefined;
+after(async () => { if (browserPromise) await (await browserPromise).close(); });
 const cssPath = path.resolve("src/app/globals.css");
 const css = fs.readFile(cssPath, "utf8").then(source => postcss([tailwindcss()]).process(source, { from: cssPath })).then(result => result.css);
 const mocks: Record<string, string> = {
@@ -31,9 +33,10 @@ const bundle = build({
 });
 
 async function fixture(width: number, role: "ADMIN" | "CUSTOMER" | null, reduced: boolean, run: (page: Page) => Promise<void>) {
-  const browser = await chromium.launch();
+  const browser = await (browserPromise ??= chromium.launch());
+  const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: reduced ? "reduce" : "no-preference" });
   try {
-    const page = await browser.newPage({ viewport: { width, height: 900 }, reducedMotion: reduced ? "reduce" : "no-preference" });
+    const page = await context.newPage();
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
     const session = role ? { user: { id: "synthetic", name: "Cliente sintético", role, customerId: "synthetic-customer" } } : null;
@@ -59,7 +62,7 @@ async function fixture(width: number, role: "ADMIN" | "CUSTOMER" | null, reduced
       throw error;
     }
     assert.deepEqual(errors, []);
-  } finally { await browser.close(); }
+  } finally { await context.close(); }
 }
 
 for (const [width, role] of [[320, null], [320, "ADMIN"], [390, "ADMIN"], [768, "CUSTOMER"], [768, "ADMIN"], [1536, null], [1536, "ADMIN"]] as const) {
@@ -71,6 +74,7 @@ for (const [width, role] of [[320, null], [320, "ADMIN"], [390, "ADMIN"], [768, 
       if (width >= 768) await page.locator('input[aria-label="Buscar produtos"]').fill("texto preservado");
       await page.evaluate(() => scrollTo({ top: 400, behavior: "instant" }));
       await expect.poll(() => header.evaluate(el => el.getBoundingClientRect().height)).toBeLessThan(height - 30);
+      await expect.poll(() => header.evaluate(el => el.getBoundingClientRect().height)).toBeLessThan(role === "ADMIN" ? 105 : 74);
       assert.ok(Math.abs(await page.evaluate(() => scrollY) - 400) < 2, "encolher não muda a posição de rolagem");
       assert.equal(await page.locator("[data-content]").evaluate(el => el.getBoundingClientRect().top + scrollY), contentY);
       await expect(page.getByRole("link", { name: "Wimifarma", exact: true })).toBeVisible();

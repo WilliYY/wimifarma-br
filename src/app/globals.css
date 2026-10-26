@@ -372,6 +372,7 @@ textarea {
 .site-header[data-compact="true"] [data-header-popular],
 .site-header[data-compact="true"] [data-header-maps] {
   width: 0;
+  height: 0;
   opacity: 0;
   visibility: hidden;
   margin-inline: 0;
