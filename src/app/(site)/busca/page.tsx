@@ -88,7 +88,7 @@ export default async function SearchPage({ searchParams }: Props) {
             {topicSearch || sections.some(section => section.id !== "resultados") ? <p className="text-xs leading-6 text-muted">A escolha ou troca de medicamento deve seguir a orientação do profissional de saúde.</p> : null}
           </div>
 
-          <aside aria-label={sidebar.title} className="min-w-0 rounded-2xl border border-line bg-white lg:sticky lg:top-40">
+          <aside aria-label={sidebar.title} className="min-w-0 rounded-2xl border border-line bg-white lg:sticky lg:top-[var(--site-header-offset,10rem)]">
             <div className="border-b border-line px-5 py-5"><TrendingUp aria-hidden="true" className="mb-3 h-5 w-5 text-brand" /><h2 className="text-lg font-black leading-6 text-ink">{sidebar.title}</h2><p className="mt-2 text-xs leading-5 text-muted">{sidebar.title.startsWith("Mais vendidos") ? "Pedidos concluídos e pagos da Wimifarma." : "Uma seleção de produtos encontrados no catálogo."}</p></div>
             <ol className="divide-y divide-line px-4">{sidebar.products.map((product, index) => <li key={product.id}>
               <Link className="group flex min-h-28 items-center gap-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" href={`/produto/${product.slug}`}>

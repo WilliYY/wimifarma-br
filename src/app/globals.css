@@ -338,6 +338,83 @@ textarea {
   to { transform: translate3d(22px, 12px, 0) scale(1.03); }
 }
 
+.site-header-band {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition: grid-template-rows 240ms ease, opacity 160ms ease, visibility 0s;
+}
+
+.site-header-band > div {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.site-header [data-header-brand],
+.site-header [data-header-popular],
+.site-header [data-header-account-link] {
+  transition: width 240ms ease, height 240ms ease, opacity 160ms ease;
+}
+
+.site-header[data-compact="true"] .site-header-band {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition: grid-template-rows 240ms ease, opacity 160ms ease, visibility 0s 240ms;
+}
+
+.site-header[data-compact="true"] [data-header-brand] {
+  width: 6rem;
+  height: 2.75rem;
+}
+
+.site-header[data-compact="true"] [data-header-popular],
+.site-header[data-compact="true"] [data-header-maps] {
+  width: 0;
+  opacity: 0;
+  visibility: hidden;
+  margin-inline: 0;
+  border-width: 0;
+}
+
+.site-header[data-compact="true"] [data-header-account-balance] {
+  display: none;
+}
+
+.site-header[data-compact="true"] [data-header-account-link] {
+  height: 2.75rem;
+}
+
+@media (width < 48rem) {
+  .site-header[data-compact="true"] [data-header-account-link] {
+    width: 2.75rem;
+    max-width: 2.75rem;
+  }
+
+  .site-header[data-compact="true"] [data-header-account-icon],
+  .site-header[data-compact="true"] [data-header-account-name] {
+    display: block;
+  }
+}
+
+@media (width >= 48rem) {
+  .site-header[data-compact="true"] [data-header-brand] {
+    width: 8rem;
+  }
+
+  .site-header[data-compact="true"] [data-header-search] {
+    height: 3rem;
+    padding-block: 0.125rem;
+  }
+}
+
+@media (width >= 64rem) {
+  .site-header[data-compact="true"] [data-header-brand] {
+    width: 11rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .account-welcome::before,
   .account-welcome::after,

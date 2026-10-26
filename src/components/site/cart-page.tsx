@@ -101,7 +101,7 @@ export function CartPage() {
               ))}
             </div>
 
-            <aside className="rounded-lg border border-line bg-white p-5 shadow-[0_18px_50px_rgba(17,24,39,0.08)] lg:sticky lg:top-56">
+            <aside className="rounded-lg border border-line bg-white p-5 shadow-[0_18px_50px_rgba(17,24,39,0.08)] lg:sticky lg:top-[var(--site-header-offset,14rem)]">
               <h2 className="text-lg font-black text-ink">Resumo</h2>
               <div className="mt-5 flex justify-between text-sm text-muted"><span>Produtos</span><span>{currency.format(subtotalCents / 100)}</span></div>
               <div className="mt-3 flex justify-between text-sm text-muted"><span>Entrega em Ivate ou retirada</span><span className="font-bold text-pharma-green">Gratis</span></div>

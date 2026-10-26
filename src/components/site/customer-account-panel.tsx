@@ -324,7 +324,7 @@ export function CustomerAccountPanel({
         </header>
 
         <div className="mt-6 grid items-start gap-5 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-7">
-          <aside className="min-w-0 lg:sticky lg:top-60">
+          <aside className="min-w-0 lg:sticky lg:top-[var(--site-header-offset,15rem)]">
             <nav aria-label="Área da conta" className="flex gap-1 overflow-x-auto rounded-2xl border border-line bg-white p-2 lg:grid">
               {tabs.map(tab => {
                 const Icon = tab.icon;

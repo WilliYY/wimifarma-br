@@ -277,3 +277,15 @@ Quando o admin de temas existir, documentar:
 - quais banners/videos sao editaveis;
 - onde salvar assets;
 - como validar tamanho e formato de imagens/videos.
+
+### Cabecalho compacto durante a rolagem
+
+Em 26/10/2026, o lojista solicitou mais espaço de leitura durante a navegação. O cabeçalho completo permanece no topo; após 72 px de rolagem, a campanha e o menu recolhem com transição de 240 ms. A faixa principal mantém a marca oficial, busca, carrinho, login/conta, Sair e o atalho textual Painel admin para os mesmos perfis autorizados. A logo reduz suas dimensões sem trocar o SVG, reiniciar sua montagem ou alterar o fallback estático. Os saldos do cabeçalho deixam de ocupar espaço no modo compacto, mas continuam disponíveis na conta.
+
+Ao voltar aos primeiros 8 px, o cabeçalho restaura o tamanho original. A faixa entre os dois limites preserva o estado para evitar oscilações. A compactação aguarda a saída do foco de qualquer controle que seria ocultado, incluindo Farmácia Popular e Maps. As faixas recolhidas usam `inert` e `aria-hidden`, sem recortar o autocomplete da busca. A preferência de movimento reduzido elimina a transição perceptível.
+
+`SiteHeader` continua no servidor, incluindo autenticação, permissões e saída. Somente `SiteHeaderShell` observa a rolagem com listener passivo e `requestAnimationFrame`. Os elementos e provedores permanecem montados, preservando a busca e os recursos de saldo compartilhados. A limpeza remove listeners, observador e a propriedade CSS aplicada à raiz.
+
+Um `ResizeObserver` publica a altura efetiva mais 16 px em `--site-header-offset`. Filtros do catálogo e busca, resumo do carrinho, painel da conta e compra do produto usam esse deslocamento, com os valores anteriores como fallback sem JavaScript. Os paddings iniciais das páginas permanecem intactos para evitar deslocamento do conteúdo ao recolher o header.
+
+Validação direcionada: nove cenários hidratados com sessões sintéticas cobrem 320/390/768/1536 px, visitante, cliente e ADMIN, preservação da rolagem e do texto buscado, retorno ao topo, filtros, foco, autocomplete, Sair/Painel admin, ausência de overflow, movimento reduzido e descarte dos recursos. Revisão independente aprovada, além de 70 cenários de acesso e duas regressões existentes de UI. Lint, typecheck, build e 485 testes de segurança aprovados. As auditorias completa e de produção mantêm somente o alerta moderado preexistente de `fast-uri`, sem high/critical. A publicação segue o procedimento de atualizar somente o app, com a imagem anterior preservada e conferência pública após a troca.

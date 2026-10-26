@@ -15,6 +15,7 @@ import { CartHeaderButton } from "@/components/site/cart-header-button";
 import { CustomerCashbackBalance, CustomerCashbackProvider } from "@/components/site/customer-cashback-balance";
 import { sessionCustomerId } from "@/features/auth/customer-session";
 import { AnnouncementBar } from "@/components/site/announcement-bar";
+import { SiteHeaderShell } from "@/components/site/site-header-shell";
 import { publicNavItems, siteConfig } from "@/lib/site";
 
 function AdminPanelShortcut() {
@@ -67,10 +68,9 @@ export async function SiteHeader() {
 
   return (
     <CustomerCashbackProvider enabled={hasCustomer} key={sessionCustomerId(session) ?? "anonymous"}>
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white/96 shadow-[0_10px_30px_rgba(17,24,39,0.08)] backdrop-blur-md">
-      <AnnouncementBar />
+    <SiteHeaderShell announcement={<AnnouncementBar />} navigation={<SiteNav items={[{ href: "/", label: "Home" }, ...publicNavItems]} />}>
 
-      <div className="relative isolate z-20 flex min-h-16 items-center gap-0 bg-[#f7fbf9] px-1 py-1.5 min-[360px]:gap-0.5 min-[360px]:px-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
+      <div data-header-main className="relative isolate z-20 flex min-h-16 items-center gap-0 bg-[#f7fbf9] px-1 py-1.5 min-[360px]:gap-0.5 min-[360px]:px-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <Image
             alt=""
@@ -84,6 +84,7 @@ export async function SiteHeader() {
         <div className="relative z-10 -my-1.5 -ml-1 flex shrink-0 self-stretch items-center gap-2 rounded-r-full border-r-2 border-brand bg-[#121820] py-1.5 pr-2 motion-reduce:bg-white min-[360px]:-ml-2 min-[360px]:pr-3 sm:-ml-6 sm:rounded-r-[3.5rem] sm:pl-6 sm:pr-5 sm:shadow-[14px_0_30px_rgba(17,24,39,0.12)] sm:motion-reduce:bg-[#121820] lg:-ml-8 lg:pl-8 xl:pr-7">
           <Link
             aria-label="Wimifarma"
+            data-header-brand
             className="relative flex h-[52px] w-32 shrink-0 items-center justify-start min-[360px]:w-[136px] sm:h-24 sm:w-64 sm:overflow-hidden md:w-32 lg:w-64 xl:w-72"
             href="/"
           >
@@ -105,6 +106,7 @@ export async function SiteHeader() {
 
           <Link
             aria-label="Farmacia Popular"
+            data-header-popular
             className="hidden h-[5.5rem] w-[5.5rem] shrink-0 items-center justify-center overflow-hidden xl:flex"
             href="/farmacia-popular"
           >
@@ -127,13 +129,14 @@ export async function SiteHeader() {
               <>
                 <Link
                   aria-label="Abrir minha conta"
+                  data-header-account-link
                   className={`inline-flex h-11 w-11 flex-col gap-0.5 px-1 min-[360px]:w-16 min-[360px]:px-1.5 ${hasCustomer ? "min-[480px]:w-auto min-[480px]:max-w-28 min-[480px]:px-2" : ""} items-center justify-center overflow-hidden rounded-2xl border border-brand/15 bg-white text-ink shadow-[0_6px_18px_rgba(17,24,39,0.06)] transition duration-300 hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
                   href="/minha-conta"
                   title={displayName}
                 >
                   {hasCustomer ? <>
-                    <UserRound aria-hidden="true" className="h-4 w-4 text-brand min-[480px]:hidden" />
-                    <span className="hidden min-[480px]:contents"><CustomerCashbackBalance /></span>
+                    <UserRound aria-hidden="true" data-header-account-icon className="h-4 w-4 text-brand min-[480px]:hidden" />
+                    <span data-header-account-balance className="hidden min-[480px]:contents"><CustomerCashbackBalance /></span>
                   </> : userImage ? (
                     <Image
                       alt=""
@@ -147,7 +150,7 @@ export async function SiteHeader() {
                   ) : (
                     <UserRound className="h-4 w-4 text-brand" />
                   )}
-                  <span className={`block w-full truncate text-center text-[10px] font-bold leading-3 ${hasCustomer ? "min-[480px]:hidden" : ""}`}>{compactDisplayName}</span>
+                  <span data-header-account-name className={`block w-full truncate text-center text-[10px] font-bold leading-3 ${hasCustomer ? "min-[480px]:hidden" : ""}`}>{compactDisplayName}</span>
                 </Link>
                 <form
                   className="shrink-0"
@@ -182,6 +185,7 @@ export async function SiteHeader() {
         <div className="ml-auto hidden min-w-0 shrink-0 items-center justify-end md:flex">
           <a
             aria-label="Abrir localizacao da Wimifarma no Google Maps"
+            data-header-maps
             className="soft-breathe mr-2 hidden h-14 w-14 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white text-ink shadow-[0_14px_34px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.9)] transition duration-300 hover:-translate-y-0.5 hover:border-brand/30 hover:bg-[#fff7f8] hover:text-brand 2xl:inline-flex"
             href={siteConfig.mapsUrl}
             rel="noreferrer"
@@ -206,6 +210,7 @@ export async function SiteHeader() {
                 <div className={hasAdminAccess ? "flex w-44 shrink-0 flex-col gap-0.5 rounded-2xl border border-brand/10 bg-white p-0.5 shadow-[0_6px_20px_rgba(17,24,39,0.06)] lg:w-48" : "contents"}>
                 <Link
                   aria-label={`Abrir conta de ${displayName}`}
+                  data-header-account-link
                   className={hasAdminAccess
                     ? "inline-flex h-14 min-w-0 items-center gap-3 rounded-xl px-2 font-body text-sm font-bold text-ink transition-colors hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                     : `inline-flex ${hasCustomer ? "h-16 max-w-[11rem]" : "h-11 max-w-[9rem]"} min-w-0 items-center justify-start gap-2 rounded-full border border-line bg-white py-2 pl-2 pr-3 font-body text-sm font-bold text-ink shadow-[0_10px_24px_rgba(17,24,39,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-brand hover:text-brand xl:max-w-[11rem] xl:pr-4`}
@@ -227,7 +232,7 @@ export async function SiteHeader() {
                       <UserRound className="h-4 w-4 text-brand" />
                     </span>
                   )}
-                  <span className="min-w-0"><span className="block truncate">{compactDisplayName}</span>{hasCustomer ? <CustomerCashbackBalance /> : null}</span>
+                  <span className="min-w-0"><span className="block truncate">{compactDisplayName}</span>{hasCustomer ? <span data-header-account-balance><CustomerCashbackBalance /></span> : null}</span>
                 </Link>
                 {hasAdminAccess && <AdminPanelShortcut />}
                 </div>
@@ -263,8 +268,7 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <SiteNav items={[{ href: "/", label: "Home" }, ...publicNavItems]} />
-    </header>
+    </SiteHeaderShell>
     </CustomerCashbackProvider>
   );
 }

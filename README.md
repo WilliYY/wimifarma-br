@@ -20,6 +20,8 @@ Preços públicos iguais aos do carrinho; 3% Pix somente após escolher Pix no c
 
 Página de produto organizada para celular, com cabeçalho compacto, logo em cápsula arredondada, formas de pagamento claras e atalhos de atendimento sem cobrir os controles: [documento 19](docs/19-produtos-e-campanhas.md#logo-e-formas-de-pagamento-no-mobile-em-23102026).
 
+Cabeçalho que recolhe campanha e navegação ao rolar, mantendo marca, busca e conta em uma faixa menor; os painéis laterais acompanham a altura real. Contrato e validação em [10](docs/10-layout-e-experiencia.md#cabecalho-compacto-durante-a-rolagem).
+
 Pedidos no início do menu, aviso global, lista compacta com 30 por página e conferência por distribuidora/EAN/quantidade: [documento 34](docs/34-pedidos-operacao.md). Alertas novos da Miauby também identificam o fornecimento: [documento 30](docs/30-miauby-whatsapp-comercio.md).
 
 Cadastro por família de princípio ativo, comparação ANB/Profarma e fotos reais por apresentação de venda livre: [documento 96](docs/96-catalogo-por-principio-ativo-2026-10-22.md).

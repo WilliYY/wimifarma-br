@@ -260,7 +260,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </nav>
 
           <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-start lg:gap-10">
-            <div className="grid min-w-0 gap-4 lg:sticky lg:top-52">
+            <div className="grid min-w-0 gap-4 lg:sticky lg:top-[var(--site-header-offset,13rem)]">
               <ProductImageViewer catalogClassification={product.catalogClassification} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} imageUrls={product.imageUrls} imageUrl={product.imageUrl} key={product.id} name={product.name} />
               <div className="hidden items-center gap-3 px-2 text-sm text-muted sm:flex">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-brand"><Headphones className="h-5 w-5" aria-hidden="true" /></span>
