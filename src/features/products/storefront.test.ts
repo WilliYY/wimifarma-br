@@ -45,10 +45,10 @@ test("marcas consultam publicados e metadados mínimos sem perder registros conf
   const brands = await service.getPublicBrands();
   assert.equal(brands.length, 1);
   assert.equal(brands[0].name, "Marca Nova");
-  assert.equal(JSON.stringify(queries[0]), JSON.stringify({ where: { status: "ACTIVE", brand: { not: null } }, select: { brand: true, name: true, category: true, requiresPrescription: true, isPopularPharmacy: true, catalogClassification: true, imageUrl: true, imageAsset: { select: { url: true } } }, orderBy: { brand: "asc" } }));
+  assert.equal(JSON.stringify(queries[0]), JSON.stringify({ where: { status: "ACTIVE", brand: { not: null } }, select: { brand: true, name: true, category: true, requiresPrescription: true, isPopularPharmacy: true, catalogClassification: true }, orderBy: { brand: "asc" } }));
 });
 
-test("marcas reutilizam uma foto pública válida por grupo e rejeitam arquivos não conferidos", async () => {
+test("marcas não consultam nem repassam fotos de embalagens", async () => {
   const photo = "/uploads/products/synthetic.webp";
   const missing = "/uploads/products/missing.webp";
   const { service, photoChecks } = await fixture([], [
@@ -58,10 +58,9 @@ test("marcas reutilizam uma foto pública válida por grupo e rejeitam arquivos 
   ], [photo]);
   const brands = await service.getPublicBrands();
   assert.equal(brands.filter(brand => brand.key === "johnson s").length, 1);
-  assert.equal(brands.find(brand => brand.key === "johnson s")?.imageUrl, photo);
+  assert.equal(brands.find(brand => brand.key === "johnson s")?.imageUrl, undefined);
   assert.equal(brands.find(brand => brand.key === "outra")?.imageUrl, undefined);
-  assert.equal(photoChecks.length, 1);
-  assert.equal(photoChecks[0].filter(url => url === photo).length, 1);
+  assert.equal(photoChecks.length, 0);
 });
 
 test("cartão Johnson’s e link antigo Baby consultam todas as grafias da mesma marca", async () => {
@@ -72,14 +71,15 @@ test("cartão Johnson’s e link antigo Baby consultam todas as grafias da mesma
   }
 });
 
-test("foto ausente não oculta marca que possui outra foto pública válida", async () => {
+test("existência e ordem das fotos não alteram identidade nem inclusão da marca", async () => {
   const records = ["a", "b"].map(key => ({ brand: "Marca Alternativa", name: `Sabonete ${key}`, category: "Perfumaria", imageUrl: `/uploads/products/${key}.webp`, imageAsset: { url: `/uploads/products/${key}.webp` } }));
   for (const ordered of [records, [...records].reverse()]) {
     const { service, photoChecks } = await fixture([], ordered, ["/uploads/products/b.webp"]);
     const brands = await service.getPublicBrands();
     assert.equal(brands.length, 1);
-    assert.equal(brands[0].imageUrl, "/uploads/products/b.webp");
-    assert.equal(photoChecks.length, 2);
+    assert.equal(brands[0].name, "Marca Alternativa");
+    assert.equal(brands[0].imageUrl, undefined);
+    assert.equal(photoChecks.length, 0);
   }
 });
 
@@ -99,9 +99,9 @@ test("consulta de marcas separa laboratórios de medicamentos sem alterar filtro
   assert.equal(JSON.stringify(query().where), JSON.stringify({ status: "ACTIVE", brand: { in: ["Aradois"] } }));
 });
 
-test("marca sem identidade visual conferida não ocupa cartão apenas textual", async () => {
+test("marca elegível sem logo mantém nome sem usar fotos de produtos", async () => {
   const { service } = await fixture([], [{ brand: "Nova sem foto" }, { brand: "Eurofarma", category: "Medicamentos" }, { brand: "Nivea" }]);
-  assert.deepEqual(Array.from(await service.getPublicBrands(), brand => brand.name), ["Nivea"]);
+  assert.deepEqual(Array.from(await service.getPublicBrands(), brand => brand.name), ["Eurofarma", "Nivea", "Nova sem foto"]);
 });
 
 test("marca filtra variantes exatas e marca desconhecida mantém filtro vazio", async () => {

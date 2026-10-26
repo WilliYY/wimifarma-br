@@ -1,5 +1,13 @@
 # 10 - Layout e Experiencia
 
+## Categorias circulares e identidade das marcas — 26/10/2026
+
+“Encontre seu cuidado” apresenta seis círculos com foto de produto elegível do próprio grupo, nome abaixo e indicação de acesso. A escolha usa os mesmos produtos e fotos já validados para a home, com ordem diária estável; sem foto válida, mantém o ícone. Medicamentos exigem classificação consistente como isentos de prescrição para representar o grupo; Ofertas exige desconto efetivo. Os destinos existentes permanecem disponíveis mesmo sem foto ou produto. Substitui a grade de cartões de 23/10 descrita abaixo.
+
+A faixa rola horizontalmente com mouse, toque, teclado e setas de 44 px, mantendo a página vertical livre. Arraste a partir de seis pixels não navega; clique e Enter continuam abrindo o catálogo. Imagens contidas, foco visível, falha de mídia e movimento reduzido têm regressões. O CSS fica no módulo; não há dependência, consulta de banco ou asset adicional para as categorias. Contrato em [88](88-faixa-categorias-visual.md).
+
+Na faixa separada de marcas, embalagem de produto deixa de ser alternativa de logo. Logos oficiais são locais; ausência ou falha mantém nome e link. KitKat é marca Nestlé, preservada como identidade própria, com Kit Kat/KitKat agrupados sem juntar Nestlé ou outras marcas do fabricante. Quatro logos oficiais adicionados; fontes e limites em [82](82-marcas-do-catalogo.md).
+
 ## Farmácia Popular com foco no atendimento — 23/10/2026
 
 A página usa hero com título amplo, verde de apoio, foto maior sem textos sobre os rostos e CTA principal para o WhatsApp existente. “Como funciona” leva às três etapas em lista ordenada; documentos ficam reunidos em um checklist, com confirmação da equipe antes da separação. O acesso às ofertas permanece ao final. Metadata, regras do programa, disponibilidade, retirada/entrega e atendimento assistido são preservados; não há formulário, consulta automática, nova promessa comercial ou integração.

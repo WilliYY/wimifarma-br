@@ -1,5 +1,17 @@
 # 88 — Faixa de categorias com imagem suave
 
+## Círculos ligados ao catálogo — 26/10/2026
+
+Esta atualização substitui a grade de cartões de 23/10 e a fotografia institucional descrita no histórico de 20/10 abaixo. Ofertas, Infantil, Medicamentos, Vitaminas e suplementos, Dermo e Perfumaria continuam com seus seis nomes, ordem e destinos internos.
+
+Cada círculo recebe uma foto real de produto do respectivo grupo, usando a consulta de produtos e `validatedHomePhotos` já existentes na home, sem nova consulta ao banco. A seleção é determinística por dia de Brasília e exige caminho local de produto validado, disponibilidade comercial e preço positivo. Receita e Farmácia Popular não entram na escolha visual; em Medicamentos é exigida classificação consistente `MEDICINE`, `otc: true`. Ofertas usa `isDiscountedOffer`, sem inventar desconto nem antecipar Pix. Ausência de candidata ou falha de carregamento conserva ícone e nome; o destino do grupo continua acessível.
+
+`HomeShortcuts` usa uma linha horizontal com círculos de 108, 128 ou 152 px, foto contida e nomes abaixo. Arraste com mouse inicia após seis pixels e suprime somente o clique do gesto; toque usa rolagem nativa, preservando a página vertical. Setas de 44 px, foco visível, teclado e movimento reduzido permanecem disponíveis. Limites das setas acompanham rolagem e redimensionamento; listeners, observer e frames são removidos no unmount. Não há rotação automática da faixa nem dependência adicional.
+
+A seleção das imagens de categorias é independente da faixa de marcas: nesta última, fotos de produtos são proibidas; contrato em [82](82-marcas-do-catalogo.md).
+
+Regressões direcionadas: quatro de seleção e quatro de UI em Chromium. Cobrem cinco larguras entre 320 e 1440 px, círculos, destinos, arraste sem navegação, clique/Enter, teclado/setas, toque horizontal e página vertical, imagem ausente e movimento reduzido. A evidência de publicação é registrada ao concluir a validação.
+
 ## Pedido e direção visual — 20/10/2026
 
 O lojista pediu mais presença visual e confiança na faixa de seis categorias entre o cabeçalho e o carrossel principal. A direção é varejo acolhedor: fotografia discreta ao fundo, círculos claros com acabamento no vermelho da marca e nomes sempre legíveis. DFII 14 (impacto 4, adequação 5, implementação 4, desempenho 4, risco 3).

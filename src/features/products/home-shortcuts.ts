@@ -1,7 +1,13 @@
+import type { RelatedProductCardItem } from "@/components/site/public-product-card";
+import { isDiscountedOffer } from "@/features/offers/daily-rotation";
+import { classificationIsConsistent, readClassification } from "./catalog-operations";
+import { brasiliaDay, commercialPrice, dailyRank } from "./home-collections";
+
 export type HomeShortcutItem = {
   id: "offers" | CatalogGroup;
   label: string;
   href: string;
+  imageUrl?: string | null;
 };
 
 export const categoryShortcuts = [
@@ -25,9 +31,28 @@ export function groupCategoryNames(categories: readonly { name: string; names?: 
   return categories.filter(category => shortcut.names.some(name => ` ${normalizeName(category.name)} `.includes(` ${name} `))).flatMap(category => category.names ?? [category.name]);
 }
 
-export function buildHomeShortcuts(): HomeShortcutItem[] {
-  return [
+export function buildHomeShortcuts(products: readonly RelatedProductCardItem[] = [], verifiedPhotos: ReadonlySet<string> = new Set(), date = new Date()): HomeShortcutItem[] {
+  const day = brasiliaDay(date);
+  const eligible = products.filter(product => product.imageUrl && verifiedPhotos.has(product.imageUrl)
+    && /^\/(uploads\/products|banners\/products)\/[a-zA-Z0-9_-]+\.(webp|png|jpe?g|avif)$/.test(product.imageUrl)
+    && product.stock > 0 && Number.isFinite(commercialPrice(product)) && commercialPrice(product) > 0
+    && !product.requiresPrescription && !product.isPopularPharmacy
+    && (!product.prescriptionType || product.prescriptionType === "UNREVIEWED"))
+    .slice().sort((a, b) => dailyRank(day, a.id) - dailyRank(day, b.id) || a.id.localeCompare(b.id));
+  const categories = [...new Set(eligible.flatMap(product => product.category ? [product.category] : []))].map(name => ({ name }));
+  const shortcuts: HomeShortcutItem[] = [
     { id: "offers", label: "Ofertas", href: "/ofertas" },
     ...categoryShortcuts.map(({ id, label }) => ({ id, label, href: `/catalogo?grupo=${id}&ordem=preco-asc` })),
   ];
+  return shortcuts.map(item => {
+    const names = item.id === "offers" ? [] : groupCategoryNames(categories, item.id);
+    const product = eligible.find(product => {
+      if (item.id === "offers") return isDiscountedOffer(product);
+      if (!product.category || !names.includes(product.category)) return false;
+      if (item.id !== "medicines") return true;
+      const classification = readClassification(product.catalogClassification);
+      return classification.kind === "MEDICINE" && classification.otc && classificationIsConsistent(classification, product);
+    });
+    return { ...item, imageUrl: product?.imageUrl ?? null };
+  });
 }

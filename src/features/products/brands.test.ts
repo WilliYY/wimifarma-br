@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildPublicBrands, matchingBrandNames } from "./brands";
+import { brandLogo } from "./brand-logos";
+import { existsSync } from "node:fs";
+import path from "node:path";
 
 test("marcas públicas removem vazios, agrupam grafias equivalentes e ordenam por nome", () => {
   const brands = buildPublicBrands([{ brand: " Zeta " }, { brand: null }, { brand: " " }, { brand: "Água & Sol" }, { brand: "agua sol" }, { brand: "Beta" }]);
@@ -80,11 +83,30 @@ test("descrição legada dos lenços usa a marca Natural Baby sem perder o filtr
   assert.deepEqual(matchingBrandNames(records, "Natural Baby"), ["Natural Baby Wipes Mãe e Filho", "Natural Baby"]);
 });
 
-test("foto representativa vem da biblioteca pública da mesma marca, com escolha estável", () => {
+test("marca nunca recebe foto de produto como identidade visual", () => {
   const records = ["b", "a"].map(key => ({ brand: "Marca Correta", name: `Sabonete ${key}`, category: "Perfumaria", imageUrl: `/uploads/products/${key}.webp`, imageAsset: { url: `/uploads/products/${key}.webp` } }));
-  const expected = [{ key: "marca correta", name: "Marca Correta", href: "/catalogo?marca=Marca%20Correta&ordem=preco-asc", imageUrl: "/uploads/products/a.webp" }];
+  const expected = [{ key: "marca correta", name: "Marca Correta", href: "/catalogo?marca=Marca%20Correta&ordem=preco-asc" }];
   assert.deepEqual(buildPublicBrands(records), expected);
   assert.deepEqual(buildPublicBrands([...records].reverse()), expected);
+});
+
+test("KitKat e Kit Kat formam uma marca própria sem agrupar o fabricante", () => {
+  const records = [{ brand: "Kit Kat" }, { brand: "KitKat" }, { brand: "Nestlé" }, { brand: "Huggies" }, { brand: "Kimberly-Clark" }];
+  const brands = buildPublicBrands(records);
+  assert.equal(brands.length, 4);
+  assert.deepEqual(brands.find(brand => brand.key === "kitkat"), { key: "kitkat", name: "KitKat", href: "/catalogo?marca=KitKat&ordem=preco-asc" });
+  for (const alias of ["Kit Kat", "KITKAT"]) assert.deepEqual(matchingBrandNames(records, alias), ["Kit Kat", "KitKat"]);
+  assert.deepEqual(matchingBrandNames(records, "Huggies"), ["Huggies"]);
+});
+
+test("Huggies, Huppy Baby, Intimus e KitKat usam assets locais de logo próprios", () => {
+  for (const name of ["Huggies", "Huppy Baby", "Intimus", "KitKat", "Kit Kat"]) {
+    const logo = brandLogo(name);
+    assert.ok(logo);
+    assert.match(logo.src, /^\/brands\/(?:huggies|huppy-baby|intimus|kitkat)\.webp$/);
+    assert.ok(existsSync(path.join(process.cwd(), "public", logo.src)));
+  }
+  assert.equal(brandLogo("Hydraporin"), null);
 });
 
 test("marca não usa embalagem medicinal, imagem privada, remota ou placeholder", () => {

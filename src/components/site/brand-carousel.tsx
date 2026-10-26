@@ -132,8 +132,7 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
             {orderedBrands.map((brand) => {
               const registeredLogo = brandLogo(brand.name);
               const logo = registeredLogo && !failedImages.has(registeredLogo.src) ? registeredLogo : null;
-              const photo = brand.imageUrl && !failedImages.has(brand.imageUrl) ? brand.imageUrl : null;
-              const imageSrc = logo?.src ?? photo;
+              const imageSrc = logo?.src;
               return (
                 <li className="shrink-0 snap-start" key={brand.key}>
                   <Link
@@ -146,7 +145,7 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
                     {imageSrc ? (
                       <Image
                         alt=""
-                        className={logo ? "h-16 w-full object-contain sm:h-24" : "h-12 w-full object-contain sm:h-20"}
+                        className="h-16 w-full object-contain sm:h-24"
                         height={120}
                         draggable={false}
                         onError={() => setFailedImages(current => new Set(current).add(imageSrc))}
@@ -155,7 +154,6 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
                         width={320}
                       />
                     ) : <span className="text-lg font-bold leading-tight [overflow-wrap:anywhere] sm:text-xl">{brand.name}</span>}
-                    {imageSrc && !logo ? <span className="line-clamp-2 text-xs font-semibold leading-tight sm:text-sm">{brand.name}</span> : null}
                   </Link>
                 </li>
               );

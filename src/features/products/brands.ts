@@ -8,6 +8,7 @@ const johnsonsKeys = new Set(["johnson s", "johnson s baby", "johnsons", "johnso
 function brandIdentity(name: string) {
   const key = normalizeProductSearch(name);
   if (key === "natural baby wipes mae e filho") return "natural baby";
+  if (key === "kit kat") return "kitkat";
   return johnsonsKeys.has(key) ? "johnson s" : key;
 }
 
@@ -27,7 +28,7 @@ function isMedicineRecord(record: BrandRecord) {
     || Boolean(record.category && groupCategoryNames([{ name: record.category }], "medicines").length);
 }
 
-export function buildPublicBrands(records: BrandRecord[], validPhotos?: ReadonlySet<string>): PublicBrand[] {
+export function buildPublicBrands(records: BrandRecord[]): PublicBrand[] {
   const brands = new Map<string, PublicBrand>();
   const hiddenKeys = new Set<string>();
   for (const record of records) {
@@ -38,12 +39,8 @@ export function buildPublicBrands(records: BrandRecord[], validPhotos?: Readonly
     // A product title or presentation is not a brand. Keep the original catalog record unchanged.
     if (!key || (record.name && normalizeProductSearch(record.name) === normalizeProductSearch(registeredName))
       || /\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|g|kg|ml|l|un|unid|unidades|comprimidos|cápsulas)\b/i.test(registeredName)) continue;
-    const name = key === "johnson s" ? "Johnson’s" : key === "natural baby" ? "Natural Baby" : registeredName;
+    const name = key === "johnson s" ? "Johnson’s" : key === "natural baby" ? "Natural Baby" : key === "kitkat" ? "KitKat" : registeredName;
     const brand: PublicBrand = brands.get(key) ?? { key, name, href: `/catalogo?marca=${encodeURIComponent(name)}&ordem=preco-asc` };
-    const photo = record.imageUrl;
-    if (!laboratoryKeys.has(key) && !isMedicineRecord(record) && !record.isPopularPharmacy
-      && photo && (!validPhotos || validPhotos.has(photo)) && record.imageAsset?.url === photo && /^\/uploads\/products\/[a-zA-Z0-9_-]+\.(webp|png|jpe?g|avif)$/.test(photo)
-      && (!brand.imageUrl || photo < brand.imageUrl)) brand.imageUrl = photo;
     brands.set(key, brand);
   }
   return [...brands.values()].filter(brand => !hiddenKeys.has(brand.key)).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));

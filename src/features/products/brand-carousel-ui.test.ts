@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
+import type { PublicBrand } from "./brands";
 
-async function fixture() {
-  const brands = Array.from({ length: 14 }, (_, i) => ({ key: i ? `marca ${i}` : "nivea", name: i ? `Marca ${i}` : "Nivea", href: `/catalogo?marca=${i || "Nivea"}` }));
+async function fixture(brands: PublicBrand[] = Array.from({ length: 14 }, (_, i) => ({ key: i ? `marca ${i}` : "nivea", name: i ? `Marca ${i}` : "Nivea", href: `/catalogo?marca=${i || "Nivea"}` }))) {
   const bundle = await build({ stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';import {BrandCarousel} from './src/components/site/brand-carousel';createRoot(document.getElementById('root')).render(<BrandCarousel brands={${JSON.stringify(brands)}}/>);`, loader: "tsx", resolveDir: process.cwd() }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' }, plugins: [{ name: "navigation-fixture", setup(builder) {
     builder.onResolve({ filter: /^next\/(link|image)$/ }, args => ({ path: args.path, namespace: "fixture" }));
-    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("link") ? "import React from 'react';export default function Link({prefetch,...props}){return React.createElement('a',props)}" : "import React from 'react';export default function Image({onError,sizes,...props}){return React.createElement('img',{...props,src:'/logo.svg',onError})}", resolveDir: process.cwd() }));
+    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("link") ? "import React from 'react';export default function Link({prefetch,...props}){return React.createElement('a',props)}" : "import React from 'react';export default function Image({onError,sizes,...props}){return React.createElement('img',{...props,onError})}", resolveDir: process.cwd() }));
   } }] });
   return { html: '<meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}section{padding:20px}nav{position:relative}ul{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:0;list-style:none;touch-action:auto}li{flex-shrink:0;scroll-snap-align:start}li a{display:flex;width:140px;height:140px;align-items:center;justify-content:center}img{width:90px;height:90px}ul[data-dragging=true]{scroll-snap-type:none;scroll-behavior:auto}button{min-width:44px;min-height:44px}</style><div id="root"></div><script src="/fixture.js"></script>', script: bundle.outputFiles[0].text };
 }
@@ -21,7 +21,7 @@ test("brands drag from a logo without navigating and retain clicks, keyboard and
     await page.route("**/*", route => {
       const url = new URL(route.request().url());
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: content.script });
-      if (url.pathname === "/logo.svg") return route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="90" height="90"><circle cx="45" cy="45" r="40" fill="blue"/></svg>' });
+      if (url.pathname.startsWith("/brands/")) return route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="90" height="90"><circle cx="45" cy="45" r="40" fill="blue"/></svg>' });
       if (url.pathname === "/catalogo") { navigations.push(url.search); return route.fulfill({ body: "Marca selecionada" }); }
       return route.fulfill({ contentType: "text/html", body: content.html });
     });
@@ -46,6 +46,34 @@ test("brands drag from a logo without navigating and retain clicks, keyboard and
     await page.getByRole("link", { name: "Ver produtos de Nivea", exact: true }).focus();
     await page.keyboard.press("Enter");
     await expect.poll(() => navigations.length).toBe(2);
+  } finally { await browser.close(); }
+});
+
+test("brands use names without product photos and retain names after logo errors", async () => {
+  const content = await fixture([
+    { key: "nivea", name: "Nivea", href: "/catalogo?marca=Nivea", imageUrl: "/uploads/products/package.webp" },
+    { key: "sem logo", name: "Sem logo", href: "/catalogo?marca=Sem%20logo", imageUrl: "/uploads/products/another-package.webp" },
+  ]);
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    const productRequests: string[] = [];
+    await page.route("**/*", route => {
+      const path = new URL(route.request().url()).pathname;
+      if (path.startsWith("/uploads/products/")) productRequests.push(path);
+      if (path === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: content.script });
+      if (path.startsWith("/brands/")) return route.fulfill({ status: 404, body: "Missing logo" });
+      return route.fulfill({ contentType: "text/html", body: content.html });
+    });
+    await page.goto("http://127.0.0.1:3195");
+    const missingLogo = page.getByRole("link", { name: "Ver produtos de Sem logo", exact: true });
+    await expect(missingLogo).toHaveText("Sem logo");
+    await expect(missingLogo.locator("img")).toHaveCount(0);
+    const failedLogo = page.getByRole("link", { name: "Ver produtos de Nivea", exact: true });
+    await expect(failedLogo).toHaveText("Nivea");
+    await expect(failedLogo.locator("img")).toHaveCount(0);
+    assert.equal(await failedLogo.getAttribute("href"), "/catalogo?marca=Nivea");
+    assert.deepEqual(productRequests, []);
   } finally { await browser.close(); }
 });
 

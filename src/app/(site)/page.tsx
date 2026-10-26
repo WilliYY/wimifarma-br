@@ -67,7 +67,7 @@ export default async function Page() {
       brands={brands}
       collections={collections}
       customerReviews={customerReviews}
-      shortcuts={buildHomeShortcuts()}
+      shortcuts={buildHomeShortcuts(saleProducts, photos, now)}
     />
   );
 }

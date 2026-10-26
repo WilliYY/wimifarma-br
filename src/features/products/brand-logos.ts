@@ -1,7 +1,7 @@
 import { normalizeProductSearch } from "./public-search";
 
 // Official assets identify brands already present in the public catalog.
-// Brands without a checked logo require a validated public product photo in the carousel.
+// Brands without a checked logo appear by name, never by a product photo.
 const logos: Record<string, { src: string; dark?: boolean }> = {
   nivea: { src: "/brands/nivea.webp" },
   dove: { src: "/brands/dove.webp" },
@@ -12,6 +12,11 @@ const logos: Record<string, { src: string; dark?: boolean }> = {
   "johnson s": { src: "/brands/johnsons.webp" },
   "johnson s baby": { src: "/brands/johnsons.webp" },
   pampers: { src: "/brands/pampers.webp" },
+  huggies: { src: "/brands/huggies.webp" },
+  "huppy baby": { src: "/brands/huppy-baby.webp" },
+  intimus: { src: "/brands/intimus.webp" },
+  kitkat: { src: "/brands/kitkat.webp" },
+  "kit kat": { src: "/brands/kitkat.webp" },
   isdin: { src: "/brands/isdin.webp" },
   ems: { src: "/brands/ems.webp" },
   teuto: { src: "/brands/teuto.webp", dark: true },

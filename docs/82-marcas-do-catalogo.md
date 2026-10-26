@@ -1,5 +1,24 @@
 # 82 — Marcas do catálogo na home
 
+## Apenas identidade da marca — 26/10/2026
+
+Esta decisão substitui a alternativa por foto de produto de 25/10, mantida no histórico abaixo. Cada cartão usa exclusivamente logo oficial local conferido ou nome legível. Nunca usa embalagem, foto do produto ou imagem inferida do fabricante. Falha do logo preserva o nome e o mesmo link. `getPublicBrands` deixa de consultar `imageUrl`/`imageAsset` e de validar arquivos de fotos, retornando apenas as identidades filtradas. `PublicBrand.imageUrl` permanece opcional por compatibilidade, mas não é preenchido pelo builder nem usado na renderização.
+
+KitKat é uma marca de chocolates da Nestlé no Brasil, conforme a [página da marca](https://www.nestle.com.br/marcas/chocolates/kitkat) e o [catálogo de marcas Nestlé Professional](https://www.nestleprofessional.com.br/marcas). A distinção é marca versus fabricante: não se troca automaticamente KitKat por Nestlé, Huggies por Kimberly-Clark ou Johnson’s por Johnson & Johnson. As grafias Kit Kat/KitKat formam um cartão KitKat e consultam todos os valores originais equivalentes; Nestlé permanece separada. Regras existentes de títulos completos, apresentação/dosagem, nomes comerciais de medicamentos e agrupamento Johnson’s/Baby são preservadas.
+
+Quatro logos oficiais acrescentados em `public/brands`, WebP lossless, proporção preservada e sem ampliar bitmaps:
+
+| Marca / arquivo | Dimensões | Bytes | Fonte oficial / original |
+| --- | --- | --- | --- |
+| Huggies — `huggies.webp` | 130 × 27 | 830 | [Huggies Brasil](https://www.huggies.com.br/cancelar-inscricao), [PNG](https://www.huggies.com.br/-/media/feature/huggies/emea/ua/navigation/logo/huggies-logo.png) |
+| Huppy Baby — `huppy-baby.webp` | 480 × 221 | 51.774 | [Fabricante Ever Green](https://www.evergreen.com.br/huppy-baby), [arte original](https://static.wixstatic.com/media/c23d53_eb2a54183cbb4ee681db082281697d69~mv2.png/v1/fill/w_734,h_338,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/huppy.png) |
+| Intimus — `intimus.webp` | 480 × 134 | 29.466 | [Intimus](https://www.promo.intimus.com.br/app/), [PNG](https://www.promo.intimus.com.br/static/logo-lg-c5c9f3f4b1349842cf34579ffc634382.png) |
+| KitKat — `kitkat.webp` | 255 × 255 | 15.760 | [Nestlé Professional](https://www.nestleprofessional.com.br/marcas), [PNG](https://www.nestleprofessional.com.br/sites/default/files/styles/np_brand_logo_list/public/2023-02/Logo-kitkat.png?itok=6biTY8xa) |
+
+Hydraporin mantém o nome: não foi localizado um logo avulso oficial validado nesta consulta. Não foi usado recorte de produto nem logo redesenhado. Direitos permanecem com os titulares, sem alegação de parceria. Novas marcas elegíveis continuam aparecendo por nome enquanto não houver asset conferido.
+
+Regressões cobrem a ausência de requisições de fotos de produto, nomes após erro de logo, gestos existentes, agrupamento KitKat nas duas direções e separação de Nestlé. Dados e filtros originais do catálogo permanecem preservados.
+
 ## Identidade única e foto alternativa — 25/10/2026
 
 Cada cartão representa uma marca, sem título completo, dosagem ou apresentação de produto. Johnson’s e Johnson’s Baby passam a formar um único cartão Johnson’s; o filtro canônico e os links antigos incluem ambas as grafias, sem incluir Johnson & Johnson. Esta decisão substitui a separação descrita no histórico abaixo. Não há agrupamento genérico por fabricante ou por semelhança de imagem.
@@ -82,7 +101,7 @@ O cache React compartilha a leitura dentro da requisição. As rotas são dinâm
 - Destino: `/catalogo?marca=<nome>&ordem=preco-asc`. O servidor resolve as grafias completas equivalentes e usa igualdade no campo de marca; não pesquisa por substring, nome, princípio ativo ou descrição.
 - Marca, grupo e ordenação permanecem na paginação de 24 itens. O catálogo identifica a marca selecionada e oferece `Limpar marca`. Marca desconhecida resulta em lista vazia.
 - As regras de preço comercial, estoque, receita, fotografias e checkout continuam nos serviços existentes. O bloco de marcas é navegação, sem declaração de parceria oficial ou de disponibilidade de todos os itens.
-- A lista parte do catálogo, com os filtros de identidade e mídia descritos na atualização de 25/10. As onze marcas originais mantêm prioridade visual; as demais seguem em ordem alfabética. Marca elegível sem logo usa foto pública válida; sem identidade visual conferida, aguarda fora da faixa. Se a mídia falhar no navegador, o nome e o link permanecem disponíveis.
+- A lista parte do catálogo, com os filtros de identidade descritos na atualização de 26/10. As onze marcas originais mantêm prioridade visual; as demais seguem em ordem alfabética. Marca elegível sem logo aparece pelo nome; fotos de produtos não são alternativas de logo. Se a mídia falhar no navegador, o nome e o link permanecem disponíveis.
 
 ## Direção visual e acessibilidade
 
@@ -90,7 +109,7 @@ Direção de varejo claro, usando Barlow, tokens existentes e cartões cinza arr
 
 Uma linha com rolagem horizontal nativa, encaixe dos cartões, toque, teclado e setas de 44 px. Limites desabilitam as setas; não há reprodução automática. Movimento reduzido elimina a rolagem suave. Links têm nome acessível e foco visível. Nenhuma marca publicada significa ausência do bloco. Header e animação da logo, atalhos existentes e 128 bolhas do rodapé preservados.
 
-Os cartões aparecem após a campanha principal e antes das vitrines de produtos. `BrandCarousel` recebe apenas `PublicBrand[]` (`key`, `name`, `href`, `imageUrl` opcional). Destinos não são pré-carregados em massa. Logos e fotos locais, carregamento sob demanda e dimensões reservadas evitam requisições a fabricantes durante a navegação.
+Os cartões aparecem após a campanha principal e antes das vitrines de produtos. `BrandCarousel` recebe `PublicBrand[]` (`key`, `name`, `href`); o campo legado `imageUrl` é ignorado. Destinos não são pré-carregados em massa. Logos locais, carregamento sob demanda e dimensões reservadas evitam requisições a fabricantes durante a navegação.
 
 ## Logos oficiais e origem
 
