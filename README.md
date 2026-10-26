@@ -40,7 +40,7 @@ Comparação ADMIN de transportadoras por etiqueta, viagem rateada, coleta, segu
 
 Cotação por quantidade com empacotamento do Melhor Envio, conferência de peso/medidas e pacotes preservados no pedido: [documento 89](docs/89-consolidacao-embalagens.md).
 
-Faixa de categorias em círculos com fotos reais do catálogo, arraste por mouse/toque e seis destinos preservados: [documento 88](docs/88-faixa-categorias-visual.md).
+Faixa de categorias com símbolos livres, sem fotos ou caixa, em toda a largura da página, com arraste por mouse/toque e seis destinos preservados: [documento 88](docs/88-faixa-categorias-visual.md).
 
 Cards com preço atual do carrinho e “de/por” somente em promoções cadastradas, sem antecipar o desconto Pix: [documento 86](docs/86-precos-e-desconto-real-nos-cards.md).
 
@@ -80,7 +80,7 @@ Correções comerciais de 14/10/2026: rateio exato dos ganhos cashback/WimiCoins
 
 Club Wimifarma com adesão gratuita e explícita, participantes no ADMIN e WimiCoins separados do cashback. ADMIN define elegibilidade e percentual por produto; checkout permite acumular e usar os dois saldos. Conversão: 100 WimiCoins = R$ 1. Regras, migração e limites em [docs/63-club-wimicoins.md](docs/63-club-wimicoins.md). O crédito de 500 pontos solicitado pelo titular é único; adesões comuns não recebem bônus automático.
 
-Home com seis categorias circulares para Ofertas, Infantil, Medicamentos, Vitaminas e suplementos, Dermo e Perfumaria. Fotos elegíveis vêm dos próprios produtos; na ausência de foto válida, aparece o ícone da categoria. A faixa permite arraste com mouse, toque, teclado e setas, com destaque vermelho para Ofertas. Cada atalho abre sua área do catálogo, mesmo quando vazia. Contrato visual em [docs/10-layout-e-experiencia.md](docs/10-layout-e-experiencia.md). Identidade local preservada nos metadados e dados estruturados; diagnóstico de indexação em [docs/62-presenca-google-e-identidade.md](docs/62-presenca-google-e-identidade.md).
+Home com seis símbolos livres para Ofertas, Infantil, Medicamentos, Vitaminas e suplementos, Dermo e Perfumaria, sem fotos, círculos ou caixa externa. A faixa ocupa toda a largura da página e permite arraste com mouse, toque, teclado e setas, com destaque vermelho para Ofertas e efeitos leves que respeitam movimento reduzido. Cada atalho abre sua área do catálogo, mesmo quando vazia. Contrato visual em [docs/10-layout-e-experiencia.md](docs/10-layout-e-experiencia.md). Identidade local preservada nos metadados e dados estruturados; diagnóstico de indexação em [docs/62-presenca-google-e-identidade.md](docs/62-presenca-google-e-identidade.md).
 
 Avaliações com iniciais e rodapé claro com selos próprios, preservando as 128 bolhas. A home reúne avaliações de compras e 15 relatos reais recebidos pelo WhatsApp, fornecidos pelo lojista e exibidos sem indicação do canal, conforme solicitado. Relatos externos não entram nas notas dos produtos ou no cashback: [docs/61-avaliacoes-e-rodape.md](docs/61-avaliacoes-e-rodape.md).
 

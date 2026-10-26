@@ -1,10 +1,10 @@
 # 10 - Layout e Experiencia
 
-## Categorias circulares e identidade das marcas — 26/10/2026
+## Categorias com símbolos livres e identidade das marcas — 26/10/2026
 
-“Encontre seu cuidado” apresenta seis círculos com foto de produto elegível do próprio grupo, nome abaixo e indicação de acesso. A escolha usa os mesmos produtos e fotos já validados para a home, com ordem diária estável; sem foto válida, mantém o ícone. Medicamentos exigem classificação consistente como isentos de prescrição para representar o grupo; Ofertas exige desconto efetivo. Os destinos existentes permanecem disponíveis mesmo sem foto ou produto. Substitui a grade de cartões de 23/10 descrita abaixo.
+“Encontre seu cuidado” apresenta seis símbolos livres, sem fotos, círculos ou caixa externa. Os ícones representam Ofertas, Infantil, Medicamentos, Vitaminas e suplementos, Dermo e Perfumaria, com nomes legíveis abaixo e os mesmos destinos. A faixa ocupa toda a largura da página; o banner seguinte mantém seu limite e suas margens. Esta direção substitui os círculos com fotos e a grade de cartões descritos no histórico.
 
-A faixa rola horizontalmente com mouse, toque, teclado e setas de 44 px, mantendo a página vertical livre. Arraste a partir de seis pixels não navega; clique e Enter continuam abrindo o catálogo. Imagens contidas, foco visível, falha de mídia e movimento reduzido têm regressões. O CSS fica no módulo; não há dependência, consulta de banco ou asset adicional para as categorias. Contrato em [88](88-faixa-categorias-visual.md).
+A faixa rola horizontalmente com mouse, toque, teclado e setas de 44 px, mantendo a página vertical livre. Arraste a partir de seis pixels não navega; clique e Enter continuam abrindo o catálogo. Entrada e hover são leves e respeitam movimento reduzido; foco, largura responsiva e ausência de requisições de fotos têm regressões. O componente ignora `imageUrl` dos atalhos; não há dependência, consulta ou asset adicional. Contrato em [88](88-faixa-categorias-visual.md).
 
 Na faixa separada de marcas, embalagem de produto deixa de ser alternativa de logo. Logos oficiais são locais; ausência ou falha mantém nome e link. KitKat é marca Nestlé, preservada como identidade própria, com Kit Kat/KitKat agrupados sem juntar Nestlé ou outras marcas do fabricante. Quatro logos oficiais adicionados; fontes e limites em [82](82-marcas-do-catalogo.md).
 

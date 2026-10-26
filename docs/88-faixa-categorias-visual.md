@@ -1,4 +1,14 @@
-# 88 — Faixa de categorias com imagem suave
+# 88 — Faixa de categorias da home
+
+## Símbolos livres em largura total — 26/10/2026
+
+A pedido do lojista, esta direção substitui os círculos com fotos descritos no histórico abaixo. Os seis atalhos usam somente os símbolos já existentes: desconto, bebê, cápsula, folha, gotas e perfumaria. Nomes, ordem e destinos permanecem iguais. Não há foto, fundo ou contorno nos itens, nem caixa externa; `imageUrl` recebido pelo componente é ignorado.
+
+A faixa usa 100% da largura normal da página, com respiros responsivos nas extremidades, sem `100vw` que poderia gerar transbordamento. O banner mantém seu limite de largura anterior. Arraste por mouse, toque nativo, teclado, clique e setas são preservados; as setas ficam ocultas quando todos os atalhos cabem. Não há rotação automática. A entrada escalonada ocorre uma vez; hover e toque dão retorno leve. `prefers-reduced-motion` remove animação e suavização.
+
+Ícones de 56 px no celular e 72 px no desktop, rótulos de 14/16 px e setas de 44 px mantêm leitura e acesso. Regressões cobrem 320–1920 px, ausência de fotos e molduras, overflow restrito à faixa, arraste sem navegação acidental, toque sem bloquear a página, destinos, foco e movimento reduzido.
+
+Validação local: cinco testes dirigidos de UI/vitrines, 485 testes de segurança e build com lint e tipos passaram. Revisão independente sem achados acionáveis. Auditorias completa e de produção mantêm um alerta moderado preexistente em `fast-uri`, zero high/critical; não houve alteração de dependências. Comandos: `tsx --test src/features/products/home-shortcuts-ui.test.ts src/components/site/home-showcases.test.ts`, `npm run test:security`, `npm run build`, `npm audit --json` e `npm audit --omit=dev --audit-level=high --json`.
 
 ## Correção dos agrupamentos — 26/10/2026
 

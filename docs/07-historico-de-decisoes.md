@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-26 — Atalhos livres com símbolos em toda a largura
+
+- A faixa “Encontre seu cuidado” troca fotos e círculos por símbolos das seis categorias, sem caixa externa, com largura total. O banner mantém suas margens; nomes, destinos, mouse, toque, teclado e setas permanecem. Entrada e hover leves respeitam movimento reduzido. Não há nova dependência nem alteração comercial. Contrato em [88](88-faixa-categorias-visual.md).
+
 ## 2026-10-26 — Agrupamentos de categorias preservando classificação persistida
 
 - A auditoria identificou um alias amplo que incluía fraldas adultas em Infantil e categorias de cabelos, lenços e pele fora dos grupos esperados. A correção limita a regra infantil e acrescenta aliases temáticos específicos, preservando links próprios, Nutrição FOOD, classificação regulatória, receita, preço, estoque, benefícios e checkout.

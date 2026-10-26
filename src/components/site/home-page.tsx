@@ -486,11 +486,13 @@ export function HomePage({
 }) {
   return (
     <>
-      <section className="pharma-clouds bg-white px-4 pb-8 pt-36 sm:px-6 sm:pt-40 lg:px-8 lg:pt-56">
-        <div className="mx-auto max-w-7xl">
-          <h1 className="sr-only">Wimifarma</h1>
-          <HomeShortcuts items={shortcuts} />
-          <HeroCarousel />
+      <section className="pharma-clouds bg-white pb-8 pt-36 sm:pt-40 lg:pt-56">
+        <h1 className="sr-only">Wimifarma</h1>
+        <HomeShortcuts items={shortcuts} />
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <HeroCarousel />
+          </div>
         </div>
       </section>
 

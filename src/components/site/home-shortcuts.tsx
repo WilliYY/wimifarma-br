@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { ArrowRight, ArrowUpRight, Baby, BadgePercent, ChevronLeft, ChevronRight, Droplets, Leaf, Pill, SprayCan } from "lucide-react";
@@ -15,18 +14,6 @@ const shortcutIcons = {
   dermo: Droplets,
   beauty: SprayCan,
 };
-
-function ShortcutPhoto({ item }: { item: HomeShortcutItem }) {
-  const [failedUrl, setFailedUrl] = useState<string | null>(null);
-  const Icon = shortcutIcons[item.id];
-  return (
-    <span aria-hidden="true" className={styles.circle}>
-      {item.imageUrl && failedUrl !== item.imageUrl ? (
-        <Image alt="" className={styles.photo} draggable={false} height={152} onError={() => setFailedUrl(item.imageUrl ?? null)} sizes="(min-width: 1024px) 152px, (min-width: 640px) 128px, 108px" src={item.imageUrl} width={152} />
-      ) : <Icon size={38} strokeWidth={1.5} />}
-    </span>
-  );
-}
 
 export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
   const listRef = useRef<HTMLUListElement>(null);
@@ -106,7 +93,9 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
         ref={listRef}
         tabIndex={0}
       >
-        {items.map(item => (
+        {items.map(item => {
+          const Icon = shortcutIcons[item.id];
+          return (
             <li key={item.id}>
               <Link
                 aria-label={item.label}
@@ -115,16 +104,17 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
                 href={item.href}
                 prefetch={false}
               >
-                <ShortcutPhoto item={item} />
+                <span aria-hidden="true" className={styles.symbol}><Icon size={64} strokeWidth={1.5} /></span>
                 <span className={styles.label}>{item.label}</span>
                 <span aria-hidden="true" className={styles.open}><ArrowUpRight size={14} /></span>
               </Link>
             </li>
-        ))}
+          );
+        })}
       </ul>
       <div className={styles.footer}>
-        <span className={styles.hint}>Arraste para explorar</span>
-        <div className={styles.controls}>
+        <span className={styles.hint}>{edges.start && edges.end ? "Escolha por onde começar" : "Arraste ou deslize para explorar"}</span>
+        <div className={styles.controls} data-static={edges.start && edges.end}>
           <button aria-controls="home-shortcuts" aria-label="Ver categorias anteriores" className={styles.arrow} disabled={edges.start} onClick={() => scroll(-1)} type="button"><ChevronLeft aria-hidden="true" size={18} /></button>
           <button aria-controls="home-shortcuts" aria-label="Ver próximas categorias" className={styles.arrow} disabled={edges.end} onClick={() => scroll(1)} type="button"><ChevronRight aria-hidden="true" size={18} /></button>
         </div>
