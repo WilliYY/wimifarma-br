@@ -76,3 +76,29 @@ test("foto ausente, privada, sem estoque, Rx e Popular mantêm ícone sem invent
   assert.ok(shortcuts.every(item => !item.imageUrl));
   assert.ok(shortcuts.every(item => item.href.startsWith("/")));
 });
+
+test("fraldas adultas não entram no Infantil e Fraldas legada conserva seu grupo", () => {
+  const categories = ["Fraldas adultas", "Fraldas", "Fraldas infantis", "Cuidados infantis"].map(name => ({ name }));
+  assert.deepEqual(groupCategoryNames(categories, "baby"), ["Fraldas", "Fraldas infantis", "Cuidados infantis"]);
+});
+
+test("categorias de cabelo, pele e lenços usam os grupos próprios sem converter Nutrição", () => {
+  const categories = ["Cabelos", "Cuidados com os cabelos", "Proteção solar", "Cuidados com a pele", "Lenços e toalhas umedecidas", "Nutrição", "Suplementos"].map(name => ({ name }));
+  const original = structuredClone(categories);
+  assert.deepEqual(groupCategoryNames(categories, "beauty"), ["Cabelos", "Cuidados com os cabelos", "Lenços e toalhas umedecidas"]);
+  assert.deepEqual(groupCategoryNames(categories, "dermo"), ["Proteção solar", "Cuidados com a pele"]);
+  assert.deepEqual(groupCategoryNames(categories, "baby"), []);
+  assert.deepEqual(groupCategoryNames(categories, "vitamins"), ["Suplementos"]);
+  assert.deepEqual(categories, original);
+});
+
+test("foto de fralda adulta ou lenços genéricos não representa o atalho Infantil", () => {
+  for (const category of ["Fraldas adultas", "Lenços e toalhas umedecidas"]) {
+    const product = shortcutProduct("care", category);
+    const shortcuts = buildHomeShortcuts([product], new Set([product.imageUrl]));
+    assert.equal(shortcuts.find(item => item.id === "baby")?.imageUrl, null, category);
+    if (category === "Lenços e toalhas umedecidas") {
+      assert.equal(shortcuts.find(item => item.id === "beauty")?.imageUrl, product.imageUrl);
+    }
+  }
+});

@@ -11,11 +11,11 @@ export type HomeShortcutItem = {
 };
 
 export const categoryShortcuts = [
-  { id: "baby", label: "Infantil", names: ["infantil", "bebes", "bebe", "cuidados infantis", "fraldas"] },
+  { id: "baby", label: "Infantil", names: ["infantil", "bebes", "bebe", "cuidados infantis", "fraldas infantis"] },
   { id: "medicines", label: "Medicamentos", names: ["medicamentos", "remedios", "medicamento", "genericos", "generico", "similares", "similar", "eticos", "etico", "mip", "otc", "antimicrobianos", "antibioticos", "controlados"] },
   { id: "vitamins", label: "Vitaminas e suplementos", names: ["vitaminas e suplementos", "vitaminas", "suplementos alimentares", "suplementos"] },
-  { id: "dermo", label: "Dermo", names: ["dermo", "dermocosmeticos", "dermocosmetica"] },
-  { id: "beauty", label: "Perfumaria", names: ["perfumaria", "higiene e beleza", "beleza", "cosmeticos"] },
+  { id: "dermo", label: "Dermo", names: ["dermo", "dermocosmeticos", "dermocosmetica", "protecao solar", "cuidados com a pele"] },
+  { id: "beauty", label: "Perfumaria", names: ["perfumaria", "higiene e beleza", "beleza", "cosmeticos", "cabelos", "cuidados com os cabelos", "lencos e toalhas umedecidas"] },
 ] as const;
 
 function normalizeName(name: string) {
@@ -28,7 +28,11 @@ export function catalogGroup(value: unknown): CatalogGroup | undefined {
 }
 export function groupCategoryNames(categories: readonly { name: string; names?: string[] }[], group: CatalogGroup) {
   const shortcut = categoryShortcuts.find(item => item.id === group)!;
-  return categories.filter(category => shortcut.names.some(name => ` ${normalizeName(category.name)} `.includes(` ${name} `))).flatMap(category => category.names ?? [category.name]);
+  return categories.filter(category => {
+    const name = normalizeName(category.name);
+    return (group === "baby" && name === "fraldas")
+      || shortcut.names.some(alias => ` ${name} `.includes(` ${alias} `));
+  }).flatMap(category => category.names ?? [category.name]);
 }
 
 export function buildHomeShortcuts(products: readonly RelatedProductCardItem[] = [], verifiedPhotos: ReadonlySet<string> = new Set(), date = new Date()): HomeShortcutItem[] {

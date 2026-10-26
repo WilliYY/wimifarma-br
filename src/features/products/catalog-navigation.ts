@@ -82,6 +82,7 @@ export function catalogPagination(page: number, pages: number): (number | string
 }
 
 export function matchesCatalogSection(product: Omit<SearchRankableProduct, "searchText">, section: CatalogSection) {
+  if (section.group === "baby" && !groupCategoryNames([{ name: product.category ?? "" }], "baby").length) return false;
   if (section.topic) return matchesSearchTopic({ ...product, searchText: "" }, searchTopics.find(topic => topic.id === section.topic)!);
   const classification = product.catalogClassification as { kind?: string } | null;
   if (classification?.kind === "MEDICINE" || /^medicamentos?$/.test(normalizeProductSearch(product.category ?? ""))) return false;

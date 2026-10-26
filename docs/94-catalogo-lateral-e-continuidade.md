@@ -1,5 +1,11 @@
 # Catálogo lateral e continuidade das ofertas — 22/10/2026
 
+## Revisão dos grupos de categorias — 26/10/2026
+
+Fraldas adultas deixam de entrar no grupo Infantil pelo alias `fraldas`; a categoria legada exata `Fraldas` continua reconhecida. As subseções infantis exigem que a categoria já pertença ao grupo, sem puxar lenços genéricos ou adultos apenas pelo nome. Cabelos, Cuidados com os cabelos e Lenços e toalhas umedecidas passam a ser alcançáveis no grupo de perfumaria/higiene e beleza; Proteção solar e Cuidados com a pele, em Dermo. Nutrição permanece separada, sem converter FOOD em suplemento.
+
+A correção preserva categorias persistidas, links próprios, receita/classificação regulatória, preços, estoque, cashback e checkout. A auditoria Product somente leitura confirmou 26 categorias e 25 slugs, com Medicamento/Medicamentos já normalizados. Os 25 nomes baby/bebê/infantil fora do grupo exigem conferência individual; não foram movidos automaticamente. Detalhes, regressões e limites em [88](88-faixa-categorias-visual.md#correcao-dos-agrupamentos--26102026).
+
 ## Correção do filtro Perfumes — 24/10/2026
 
 O filtro identificava qualquer ocorrência de `perfume` no nome e incluía indevidamente o Desodorante Rexona Aerossol Clinical Sem Perfume 150ml. Agora ignora expressões negativas de fragrância e exclui tipos de cuidados pessoais que apenas mencionam perfume, como desodorantes, antitranspirantes, sabonetes e hidratantes. Perfumes, colônias e as apresentações `eau de parfum`, `eau de toilette` e `eau de cologne` continuam aceitos; `desodorante colônia` é preservado como fragrância.

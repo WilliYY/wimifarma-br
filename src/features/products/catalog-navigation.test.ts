@@ -84,3 +84,28 @@ test("o desodorante sem perfume continua na seção Desodorantes", () => {
   const deodorant = catalogSections.find(section => section.id === "deodorant")!;
   assert.equal(matchesCatalogSection({ id: "rexona", name: "Desodorante Rexona Aerossol Clinical Sem Perfume 150ml", category: "Higiene pessoal" }, deodorant), true);
 });
+
+test("lateral mantém categorias auditadas acessíveis sem pôr fraldas adultas em Infantil", () => {
+  const names = ["Fraldas adultas", "Fraldas", "Cabelos", "Cuidados com os cabelos", "Proteção solar", "Cuidados com a pele", "Lenços e toalhas umedecidas", "Nutrição", "Suplementos"];
+  const categories = names.map((name, index) => ({ name, slug: String(index), names: [name] }));
+  const original = structuredClone(categories);
+  const result = catalogCategoryGroups(categories);
+  const grouped = (id: string) => result.groups.find(group => group.id === id)!.categories.map(category => category.name);
+  assert.deepEqual(grouped("baby"), ["Fraldas"]);
+  assert.deepEqual(grouped("beauty"), ["Cabelos", "Cuidados com os cabelos", "Lenços e toalhas umedecidas"]);
+  assert.deepEqual(grouped("dermo"), ["Proteção solar", "Cuidados com a pele"]);
+  assert.deepEqual(grouped("vitamins"), ["Suplementos"]);
+  assert.deepEqual(result.others.map(category => category.name), ["Fraldas adultas", "Nutrição"]);
+  assert.deepEqual([...result.groups.flatMap(group => group.categories), ...result.others].map(category => category.slug).sort(), categories.map(category => category.slug).sort());
+  assert.deepEqual(categories, original);
+});
+
+test("subcategorias infantis exigem categoria infantil, sem inferir pelo nome baby ou pelos lenços", () => {
+  const diapers = catalogSections.find(section => section.id === "diapers")!;
+  const care = catalogSections.find(section => section.id === "baby-care")!;
+  assert.equal(matchesCatalogSection({ id: "adult", name: "Fraldas adultas", category: "Fraldas adultas" }, diapers), false);
+  assert.equal(matchesCatalogSection({ id: "infant", name: "Fraldas infantis", category: "Fraldas" }, diapers), true);
+  assert.equal(matchesCatalogSection({ id: "generic-wipes", name: "Lenços umedecidos", category: "Lenços e toalhas umedecidas" }, care), false);
+  assert.equal(matchesCatalogSection({ id: "infant-wipes", name: "Lenços umedecidos", category: "Infantil" }, care), true);
+  assert.equal(matchesCatalogSection({ id: "unreviewed-baby", name: "Baby cuidados infantis", category: "Perfumaria" }, care), false);
+});

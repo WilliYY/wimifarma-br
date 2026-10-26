@@ -1,5 +1,15 @@
 # 88 — Faixa de categorias com imagem suave
 
+## Correção dos agrupamentos — 26/10/2026
+
+A auditoria somente leitura encontrou 24 apresentações de fraldas adultas incluídas indevidamente em Infantil pelo alias amplo `fraldas`. O agrupamento agora usa `fraldas infantis`, preservando somente a categoria legada exata `Fraldas`. Fraldas adultas continuam acessíveis por sua categoria própria; não foram reclassificadas ou desativadas.
+
+As categorias Cabelos e Cuidados com os cabelos, com 39 produtos ativos no snapshot, e Lenços e toalhas umedecidas, com 25, passam a compor o grupo `beauty` de perfumaria/higiene e beleza. Proteção solar e Cuidados com a pele, com 12 ativos, passam ao grupo Dermo. As 25 apresentações de Nutrição, classificadas como FOOD, conservam sua categoria própria e não viram vitaminas/suplementos. Os números descrevem o snapshot de 26/10 às 14:38:39 UTC, não estoque garantido ou novas inclusões.
+
+As subseções de Infantil exigem uma categoria já pertencente ao grupo antes de aplicar padrões de nome. Isso impede que lenços genéricos ou fraldas adultas entrem em Infantil só pelo texto. Os 25 produtos com baby/bebê/infantil em outras categorias continuam para revisão individual, sem heurística de transferência automática.
+
+Mudança restrita a agrupamento e seleção visual, sem escrita em produtos, ofertas, receita, preços, benefícios ou política de compra. Cinco regressões reproduziram os erros antes da correção; 38 testes ampliados, lint focado, typecheck e build local passaram. Revisão independente aprovou o escopo e reproduziu 34 casos dirigidos. Passaram os 485 testes de segurança. Auditorias completa e de produção registram um alerta moderado `fast-uri`, zero high/critical. Provas e limites da publicação ficam em `outputs/catalogo-auditoria-integral-2026-10-26/categorias/`.
+
 ## Círculos ligados ao catálogo — 26/10/2026
 
 Esta atualização substitui a grade de cartões de 23/10 e a fotografia institucional descrita no histórico de 20/10 abaixo. Ofertas, Infantil, Medicamentos, Vitaminas e suplementos, Dermo e Perfumaria continuam com seus seis nomes, ordem e destinos internos.

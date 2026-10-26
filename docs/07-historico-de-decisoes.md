@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-26 — Agrupamentos de categorias preservando classificação persistida
+
+- A auditoria identificou um alias amplo que incluía fraldas adultas em Infantil e categorias de cabelos, lenços e pele fora dos grupos esperados. A correção limita a regra infantil e acrescenta aliases temáticos específicos, preservando links próprios, Nutrição FOOD, classificação regulatória, receita, preço, estoque, benefícios e checkout.
+- Cinco regressões reproduziram os erros; 38 testes ampliados, lint, typecheck, build e 485 testes de segurança passaram. Revisão independente aprovada. Auditorias completa e de produção mantêm `fast-uri` moderado, sem high/critical. Não houve escrita corretiva no catálogo. Contratos em [88](88-faixa-categorias-visual.md) e [94](94-catalogo-lateral-e-continuidade.md); provas privadas em `outputs/catalogo-auditoria-integral-2026-10-26/categorias/`.
+
 ## 2026-10-26 — Duas ezetimibas EMS publicadas após QA do fingerprint atual
 
 - Ezetimiba EMS 10 mg com 30 e 60 comprimidos foi incluída uma vez, com pesquisa ANB/Profarma/GAM/DM, apresentação e bula verificadas, acréscimo de 50%, receita comum e cashback de 1%. As três associações existentes foram preservadas; imagem pública institucional e nenhum perfil de frete novo.
