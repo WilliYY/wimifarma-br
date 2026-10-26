@@ -12,7 +12,7 @@ Tamanho, quantidade, capacidade, material, faixa etária, cor e compatibilidade 
 
 ## Situação verificada desta frente
 
-A união dos 23 lotes de marcas encerrados tem 382 EANs distintos. Essa contagem é independente dos produtos publicados por outras frentes e das inclusões históricas de medicamentos. O último lote foi `imagem13-v2`, com 13 produtos e 13 fotos; nenhum lote encerrado deve ser reaplicado.
+A união dos 25 lotes de marcas encerrados tem 409 EANs distintos. Essa contagem é independente dos produtos publicados por outras frentes e das inclusões históricas de medicamentos. O último lote foi `complementos11-v3`, com 11 produtos e 11 fotos; nenhum lote encerrado deve ser reaplicado.
 
 Os 20 lotes anteriores, que somam 336 EANs, antecedem a nova exigência das quatro fontes. A pesquisa complementar dessas apresentações permanece pendente e deve conservar os horários originais das evidências válidas. Nenhuma contagem histórica é apresentada como uma nova consulta comercial.
 
@@ -26,7 +26,7 @@ A pesquisa Herbamed na DM percorreu seis páginas e registrou 111 EANs distintos
 
 Uma consulta somente leitura do banco às 14:01:27 UTC de 25/10 encontrou os 94 EANs de fraldas da outra frente ativos, distribuídos em Bigfral, Huggies, Mili, Pampers, Geriamax e Natural Master. Foram também verificadas páginas públicas representativas de piscina, pants e fralda adulta, com foto decodificada e opção de compra. Isso não substitui a comparação atual de ofertas por apresentação nem comprova que toda a grade possível está completa. As lacunas devem ser confrontadas com o catálogo atual antes de novos cadastros.
 
-Custos, capturas autenticadas, referências de acesso, imagens de entrada, logs, backups e comprovantes completos permanecem privados. A coordenação autorizada com o chat 5 limita-se a reservas, sobreposição, versões e encerramentos; cada frente continua trabalhando individualmente. Mensagens não substituem os controles físicos de publicação.
+Custos, capturas autenticadas, referências de acesso, imagens de entrada, logs, backups e comprovantes completos permanecem privados. A coordenação autorizada com os chats 5 e 9 limita-se a reservas, sobreposição, versões e encerramentos, incluindo a janela de atualização da interface; cada frente continua trabalhando individualmente. Mensagens não substituem os controles físicos de publicação.
 
 ## Farmax, Hidraderm, Sunless, Moskitoff e Suprinutri
 
@@ -79,3 +79,17 @@ Passaram schemas atuais, 27 controles locais de dados, 32 do pacote, 33 dos vín
 A V1 foi instalada, mas bloqueada antes de QA, concessão ou aplicação quando a interface avançou em outra frente. A V2 preservou a pesquisa e os dados, incorporou a revisão de compatibilidade e concluiu a publicação. Uma nova mudança da interface após a aplicação bloqueou o comando padrão de limpeza; a manutenção usou apenas a liberação concluída e as verificações do QA criado nesta execução, sem executar código da aplicação ou modificar o pacote congelado. Próximos lotes exigem nova comparação do APP e do predecessor físico corrente.
 
 A grade permanece parcial: conferir também Longo dos Sonhos e demais apresentações, máscaras e cremes sem enxágue Elseve e tratamentos TRESemmé. As demais solicitações continuam preservadas na fila integral. Comprovantes, relatório com os 16 links e a união de EANs permanecem privados em `expansao49-20261025`; os lotes encerrados não devem ser reaplicados.
+
+## Máscaras e cremes sem enxágue Elseve em 26/10/2026
+
+O lote `complementos11-v3` acrescentou seis máscaras de 300g, quatro cremes para pentear de 250ml e um leave-in de 50ml, todos classificados individualmente como perfumaria sem receita. A pesquisa preserva 44 registros por EAN nas quatro distribuidoras. A oferta selecionada da GAM usa o custo final observado, com acréscimo de 20%; imposto genérico não foi apresentado como ST e estoque numérico desconhecido permaneceu desconhecido. A descrição GAM de 300ml da máscara Liso dos Sonhos foi reconciliada com o mesmo EAN na Profarma e o rótulo de 300g, sem converter massa em volume.
+
+As 11 fotos reais da Profarma foram conferidas por apresentação e comparadas visualmente aos originais. Os arquivos originais somam 1.121.381 bytes e os WebP publicados, 148.594 bytes, mantendo 352 × 352 pixels, enquadramento e conteúdo, sem recorte ou ampliação.
+
+A produção foi verificada às 15:02:13 de Brasília, com as 11 páginas e imagens públicas conferidas às 15:02:27 e liberação às 15:02:29. Foram preservados os 2.479 produtos anteriores e as oito tabelas protegidas; havia 2.487 produtos ativos na conferência. O lote gerou 22 registros de auditoria. O QA próprio foi removido após conferir nome, proprietário e zero conexões, sem FORCE. A união desta frente foi recalculada em 409 EANs distintos e 25 lotes, sem duplicidades.
+
+Passaram 32 controles locais de dados, 75 dos predecessores físicos, 29 negativos e dois positivos de transição, além do preflight completo dos contratos de aprovação. Houve novos 485 testes de segurança, 111 de fornecedores e QA isolado com 11 produtos, 11 fotos e 22 auditorias. A auditoria manteve um alerta moderado de `fast-uri`, sem alto/crítico. A fundação de OPS preservou as 1.051 execuções, 1.002 arquivos e datas originais; a compatibilidade do APP `b6b22f0` durante a operação foi limitada aos 38 hashes/modos revisados, sem afirmar um novo build completo da interface.
+
+As versões V1 e V2 deste lote foram retiradas antes de QA, concessão ou aplicação em produção: faltava um vínculo de hash no contrato V1 e campos de revisão da suíte no V2. A V2 chegou a produzir logs reais dos 596 testes; esses logs foram usados somente como referência histórica no preflight da V3, que executou seus próprios testes operacionais. Os pacotes selados foram preservados e não devem ser reaplicados. Foram exportados e conferidos por hash 32 arquivos de comprovação; capturas, relatórios, fotos e a união de EANs continuam privados.
+
+O chat 9 recebeu a liberação da janela de atualização da interface após o encerramento e a limpeza do QA; o chat 5 recebeu os vínculos físicos do novo fechamento. A pesquisa segue individualmente. Longo dos Sonhos, tratamentos TRESemmé e as demais famílias solicitadas permanecem na fila, assim como a pesquisa complementar dos 336 cadastros anteriores à exigência das quatro fontes. Esta publicação não encerra a grade integral solicitada.
