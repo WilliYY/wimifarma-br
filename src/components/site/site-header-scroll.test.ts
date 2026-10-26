@@ -175,28 +175,71 @@ for (const role of [null, "CUSTOMER", "ADMIN"] as const) {
 test("marca e área preta percorrem tamanhos intermediários ao recolher e restaurar", async () => {
   await fixture(1536, "ADMIN", false, async page => {
     for (const top of [400, 0]) {
-      const frames = await page.evaluate(async target => {
+      const frames = await page.evaluate(target => {
         const header = document.querySelector('header')!;
         const brand = header.querySelector('[data-header-brand]')!;
         const image = brand.querySelector('img') as HTMLImageElement;
-        const measurements: { width: number; panelWidth: number; overflow: boolean }[] = [];
-        const start = performance.now();
-        scrollTo({ top: target, behavior: "instant" });
-        while (performance.now() - start < 420) {
-          await new Promise(requestAnimationFrame);
-          const box = image.getBoundingClientRect();
-          measurements.push({ width: Math.min(box.width, box.height * image.naturalWidth / image.naturalHeight), panelWidth: brand.parentElement!.getBoundingClientRect().width, overflow: document.documentElement.scrollWidth > innerWidth });
-        }
-        return measurements;
+        image.getBoundingClientRect(); // Establish the previous layout before starting the CSS transitions.
+        return new Promise<{ width: number; panelWidth: number; overflow: boolean }[]>((resolve, reject) => {
+          const observer = new MutationObserver(() => {
+            if (header.getAttribute('data-compact') !== String(target > 0)) return;
+            observer.disconnect();
+            clearTimeout(timeout);
+            const animations = header.getAnimations({ subtree: true }).filter(animation => animation instanceof CSSTransition);
+            animations.forEach(animation => animation.pause());
+            const samples = [0, 0.25, 0.5, 0.75, 1].map(fraction => {
+              animations.forEach(animation => { animation.currentTime = Number(animation.effect!.getTiming().duration) * fraction; });
+              const box = image.getBoundingClientRect();
+              return { width: Math.min(box.width, box.height * image.naturalWidth / image.naturalHeight), panelWidth: brand.parentElement!.getBoundingClientRect().width, overflow: document.documentElement.scrollWidth > innerWidth };
+            });
+            animations.forEach(animation => animation.finish());
+            resolve(samples);
+          });
+          const timeout = setTimeout(() => { observer.disconnect(); reject(new Error('Header state did not change')); }, 5000);
+          observer.observe(header, { attributes: true, attributeFilter: ['data-compact'] });
+          scrollTo({ top: target, behavior: "instant" });
+        });
       }, top);
       const first = frames[0].width;
       const last = frames.at(-1)!.width;
       assert.ok(Math.abs(first - last) > 30);
-      assert.ok(frames.some(frame => frame.width > Math.min(first, last) + 5 && frame.width < Math.max(first, last) - 5), "tamanhos intermediários sem troca abrupta de imagem");
+      assert.ok(frames.some(frame => frame.width > Math.min(first, last) + 5 && frame.width < Math.max(first, last) - 5), `tamanhos intermediários sem troca abrupta de imagem: ${top} ${JSON.stringify(frames)}`);
       const firstPanel = frames[0].panelWidth;
       const lastPanel = frames.at(-1)!.panelWidth;
       assert.ok(frames.some(frame => frame.panelWidth > Math.min(firstPanel, lastPanel) + 5 && frame.panelWidth < Math.max(firstPanel, lastPanel) - 5), "área preta acompanha o redimensionamento");
       assert.ok(frames.every(frame => !frame.overflow));
     }
+  });
+});
+
+test("ações móveis do administrador ficam alinhadas no topo e ao rolar", async () => {
+  await fixture(390, "ADMIN", false, async page => {
+    for (const width of [320, 360, 390, 414, 480, 640, 767]) {
+      await page.setViewportSize({ width, height: 844 });
+      for (const top of [0, 400]) {
+        await page.evaluate(y => scrollTo({ top: y, behavior: "instant" }), top);
+        await expect(page.locator("header")).toHaveAttribute("data-compact", String(top > 0));
+        const controls = [page.getByRole("button", { name: "Abrir carrinho", exact: true }), page.getByRole("link", { name: "Abrir minha conta", exact: true }), page.getByRole("button", { name: "Sair", exact: true }).locator("visible=true"), page.getByRole("button", { name: "Abrir busca de produtos", exact: true })];
+        await expect.poll(async () => {
+          const boxes = await Promise.all(controls.map(control => control.boundingBox()));
+          const centers = boxes.map(box => box!.y + box!.height / 2);
+          return Math.max(...centers) - Math.min(...centers);
+        }, { message: `${width}/${top}: carrinho, conta, saída e lupa na mesma linha` }).toBeLessThanOrEqual(1);
+        const geometry = await page.evaluate(() => {
+          const header = document.querySelector('header')!;
+          const boxes = ['button[aria-label="Abrir carrinho"]', 'a[aria-label="Abrir minha conta"]', 'button[aria-label="Sair"]', 'button[aria-label="Abrir busca de produtos"]'].map(selector => Array.from(header.querySelectorAll(selector)).find(element => element.getClientRects().length)!.getBoundingClientRect());
+          const admin = Array.from(header.querySelectorAll('a[href="/admin/dashboard"]')).find(element => element.getClientRects().length)!.getBoundingClientRect();
+          return { separated: admin.bottom <= boxes[0].top, targets: boxes.every(box => box.width >= 44 && box.height >= 44), overflow: document.documentElement.scrollWidth > innerWidth };
+        });
+        assert.ok(geometry.separated, `${width}/${top}: Painel admin separado dos ícones`);
+        assert.ok(geometry.targets);
+        assert.equal(geometry.overflow, false);
+      }
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole("button", { name: "Abrir busca de produtos", exact: true }).click();
+    await expect(page.getByRole("dialog", { name: "Busca de produtos" })).toBeVisible();
+    await page.getByRole("button", { name: "Fechar busca", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Abrir busca de produtos", exact: true })).toBeFocused();
   });
 });

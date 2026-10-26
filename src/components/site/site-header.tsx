@@ -70,7 +70,7 @@ export async function SiteHeader() {
     <CustomerCashbackProvider enabled={hasCustomer} key={sessionCustomerId(session) ?? "anonymous"}>
     <SiteHeaderShell announcement={<AnnouncementBar />} navigation={<SiteNav items={[{ href: "/", label: "Home" }, ...publicNavItems]} />}>
 
-      <div data-header-main className="relative isolate z-20 flex min-h-16 items-center gap-0 bg-[#f7fbf9] px-1 py-1.5 min-[360px]:gap-0.5 min-[360px]:px-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
+      <div data-header-main data-header-staff={hasAdminAccess || undefined} className="relative isolate z-20 flex min-h-16 items-center gap-0 bg-[#f7fbf9] px-1 py-1.5 min-[360px]:gap-0.5 min-[360px]:px-2 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <Image
             alt=""

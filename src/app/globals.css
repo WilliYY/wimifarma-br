@@ -370,7 +370,7 @@ textarea {
   position: relative;
   display: block;
   width: 100%;
-  height: 100%;
+  height: 3.25rem;
   flex-shrink: 0;
   transition: height var(--header-resize-duration) var(--header-resize-ease);
 }
@@ -392,6 +392,10 @@ textarea {
   gap: 0;
 }
 
+.site-header[data-compact="true"] [data-animated-brand] {
+  height: 2.75rem;
+}
+
 .site-header[data-compact="true"] [data-header-popular],
 .site-header[data-compact="true"] [data-header-maps] {
   width: 0;
@@ -411,6 +415,11 @@ textarea {
 }
 
 @media (width < 48rem) {
+  /* Match the 32px admin shortcut and 4px gap above the mobile icon row. */
+  .site-header [data-header-staff] [data-header-mobile-search] {
+    margin-block-start: 2.25rem;
+  }
+
   .site-header[data-compact="true"] [data-header-account-link] {
     width: 2.75rem;
     max-width: 2.75rem;
@@ -419,6 +428,12 @@ textarea {
   .site-header[data-compact="true"] [data-header-account-icon],
   .site-header[data-compact="true"] [data-header-account-name] {
     display: block;
+  }
+}
+
+@media (width >= 40rem) {
+  .site-header [data-animated-brand] {
+    height: 6rem;
   }
 }
 

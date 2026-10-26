@@ -296,6 +296,7 @@ export function SiteSearch() {
       <button
         aria-expanded={isMobileOpen}
         aria-label="Abrir busca de produtos"
+        data-header-mobile-search
         className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white text-brand shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white md:hidden"
         onClick={() => setIsMobileOpen(true)}
         ref={mobileTriggerRef}
