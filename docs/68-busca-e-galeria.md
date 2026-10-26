@@ -2,7 +2,7 @@
 
 ## Correlatos logo após o produto — 26/10/2026
 
-A página individual apresenta galeria/painel de compra/consulta de entrega, correlatos, benefícios de atendimento, atalhos de navegação, informações e avaliações, nesta ordem. `#relacionados` mantém o destino existente; a seção tem respiro normal de conteúdo e a reserva inferior para a barra fixa de compra fica na última seção, avaliações. Ranking, limite de dez produtos, imagens, preços, disponibilidade, compra assistida e aviso de que correlação não é substituição permanecem iguais. Ausência de candidatos mantém o estado vazio verdadeiro.
+A página individual apresenta galeria/painel de compra/consulta de entrega, correlatos, atalhos de navegação e informações, nesta ordem. As faixas de atendimento e a apresentação pública de avaliações foram retiradas a pedido do lojista. `#relacionados` mantém o destino existente; a seção tem respiro normal de conteúdo e a reserva inferior para a barra fixa de compra fica na última seção, informações. Ranking, limite de dez produtos, imagens, preços, disponibilidade, compra assistida e aviso de que correlação não é substituição permanecem iguais. Ausência de candidatos mantém o estado vazio verdadeiro.
 
 O carrossel permite arraste por mouse sobre imagem e link, com limiar de 6 px e captura somente após o gesto começar. Clique normal e Enter continuam abrindo o produto; botões e campos de quantidade não iniciam arraste. Toque conserva a rolagem nativa horizontal e vertical; região focável, setas e ArrowLeft/ArrowRight atendem teclado, com rolagem imediata em movimento reduzido. Não há rotação automática ou nova dependência. Foco visível e alvos de 44 px são preservados.
 

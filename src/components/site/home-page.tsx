@@ -449,7 +449,7 @@ function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
                   <span className="block text-xs text-muted">Sobre o produto</span>
                   <Link
                     className="mt-1 inline-flex min-h-11 max-w-full items-center gap-2 rounded-sm text-sm font-bold text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                    href={`/produto/${review.productSlug}#avaliacoes`}
+                    href={`/produto/${review.productSlug}`}
                   >
                     <span className="line-clamp-2 break-words">{review.productName}</span><ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0" />
                   </Link>

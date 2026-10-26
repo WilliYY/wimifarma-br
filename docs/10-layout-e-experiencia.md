@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Produto sem faixas de atendimento e avaliações públicas — 26/10/2026
+
+A página individual não exibe a faixa “Cuidado de perto, também online.”, os três benefícios de atendimento, estrelas, chamadas para avaliar, contador, opiniões ou formulário público. Produto/entrega, correlatos, navegação e informações permanecem. O espaço inferior da barra fixa passa às informações, última seção. Avaliações existentes não foram apagadas; Avaliar/Editar funciona em `minha-conta/avaliacoes` para compras elegíveis, com um formulário por seleção. A home mantém seus depoimentos reais e links para o produto sem a antiga âncora. Detalhes e limites em [68](68-busca-e-galeria.md) e [16](16-cashback-avaliacoes-resgate.md).
+
 ## Correlatos antes das informações complementares — 26/10/2026
 
 “Produtos correlatos” fica imediatamente após galeria e painel do produto escolhido, incluindo sua consulta de entrega. Benefícios de atendimento, navegação, descrição e avaliações vêm depois. Cards e critérios de correlação não mudam. Mouse arrasta também sobre imagem/link sem abrir o produto por acidente; clique, toque, quantidade, setas e teclado são preservados. Reserva inferior da barra de compra acompanha a última seção. Contrato em [68](68-busca-e-galeria.md).

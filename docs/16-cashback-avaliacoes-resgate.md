@@ -1,5 +1,15 @@
 # 16 - Bonus por avaliacao e uso do cashback
 
+## Entrada privada para avaliações — 26/10/2026
+
+O lojista retirou as avaliações da apresentação pública do produto. Foram removidos estrelas, estados vazios, opiniões, links e formulário dessa página; as consultas de avaliações e sessão que serviam apenas a essa apresentação também saíram. Seus dados estruturados não incluem mais `aggregateRating`, pois a nota não é exibida ali. Nenhuma avaliação, saldo ou histórico foi excluído.
+
+Avaliar/Editar permanece em `/minha-conta/avaliacoes?page=N&produto=ID#avaliar`. A página continua exigindo sessão CUSTOMER, cadastro ACTIVE e produto de compra COMPLETED/PAID da própria conta. Somente um produto entre os 24 visíveis abre um formulário; ID arbitrário ou item sentinela da próxima página não abre formulário. Comentário/nota existentes são filtrados pelo cliente e reaproveitados na edição. API, elegibilidade do bônus, unicidade, cálculos, auditoria, resgate e estorno permanecem iguais. A API continua sendo a autoridade de permissão e concessão, independentemente do formulário exibido.
+
+Regressões sintéticas validam autenticação, filtros, paginação, seleção, edição sem novo bônus e receita/Farmácia Popular sem bônus. A página pública tem regressão renderizada para ausência de avaliações/faixas, manutenção de produto/correlatos/informações, ausência de consultas desnecessárias e de nota oculta no JSON-LD. Os depoimentos reais da home permanecem, com links para o produto sem `#avaliacoes`.
+
+Validação local: oito cenários dirigidos aprovados, com RED anterior da apresentação pública e da nova entrada privada. Build com lint/tipos e 491 testes de segurança aprovados. Revisão independente sem achados. Auditorias de produção e completa mantêm um moderado preexistente em `fast-uri`, zero high/critical; dependências inalteradas. Comandos: `tsx --test src/components/site/product-page-presentation.test.ts src/features/product-images/private-supplier-reviews.test.ts`, `npm run build`, `npm run test:security`, `npm audit --omit=dev --audit-level=high --json` e `npm audit --json`. Sem migração, escrita em avaliações ou alteração de saldo.
+
 Atualização de 23/10/2026: o cashback **de compra** de 1% em genéricos/similares com receita foi autorizado separadamente em [15](15-cashback-produtos.md). Isso não amplia o bônus por avaliação: produtos com receita e Farmácia Popular continuam sem esse bônus. Resgates, estornos e snapshots mantêm as regras abaixo.
 
 Atualização de 23/10/2026: a seleção da compra elegível filtra no banco ao menos uma unidade recebida do produto (`quantity > shortageQuantity`), antes da escolha por data. Assim uma compra recente integralmente faltante não oculta uma compra anterior válida; não há corte arbitrário do histórico. Revalidação após lock, bônus único e cálculo permanecem. Regressões e limites em [101](101-auditoria-funcional-e-acessos.md).

@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-26 — Produto sem avaliações públicas e faixas de atendimento
+
+- A pedido do lojista, estrelas/opiniões/estado vazio/formulário público e as duas faixas de atendimento deixam a página de produto. Registros e regras financeiras permanecem; Avaliar/Editar passa a funcionar na área autenticada de compras, com seleção restrita aos produtos elegíveis visíveis. A página pública deixa de consultar avaliações/sessão e de anunciar nota não exibida no JSON-LD. Contrato em [16](16-cashback-avaliacoes-resgate.md); composição em [68](68-busca-e-galeria.md).
+
 ## 2026-10-26 — Correlatos após o produto e arraste sobre cards
 
 - A seção de correlatos passa a vir antes de atendimento, informações e avaliações. O arraste por mouse inclui imagem e link, preservando clique, quantidade, toque e teclado; critérios comerciais/regulatórios e seleção dos correlatos permanecem. Reserva para compra fixa acompanha a seção final. Contrato em [68](68-busca-e-galeria.md).
