@@ -1,5 +1,9 @@
 # 96 — Cadastro por família de princípio ativo
 
+## 25/10/2026 — Regra explícita para os novos medicamentos
+
+O lojista autorizou 50% sobre o custo final para novos genéricos/similares e 10% para novas marcas éticas. Percentuais dos produtos existentes permanecem intactos. Apresentações acima do teto conservador CMED aguardam custo menor, sem redução automática do acréscimo. A regra não usa os 35% de novas marcas não medicamentosas nem altera o fallback técnico. Escopo das 111 famílias, distinção das marcas Eze, pesquisa ANB/Profarma/GAM/DM e avaliação da rota SantaCruz em [111](111-expansao-medicamentos-e-politica-de-precos.md). Esta decisão registra autorização e pesquisa, sem afirmar nova publicação.
+
 ## 24/10/2026 — Todos os 96 candidatos aptos desta consolidação publicados
 
 O pedido de publicar os itens aptos das pesquisas atuais e anteriores foi executado em dois lotes exclusivos, de 46 e 50 produtos. As aplicações ocorreram em `2026-10-25T00:36:18.246Z` e `2026-10-25T00:45:00.262Z` (noite de 24/10 em Ivaté). Foram verificados 96 EANs distintos, 96 páginas públicas, 96 fotos por hash e 192 registros de auditoria. O snapshot da segunda aplicação registrou 1.981 produtos ativos.

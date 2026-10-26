@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Novos medicamentos desta expansão: acréscimo autorizado de 50% para genéricos/similares e 10% para marcas éticas, preservando percentuais existentes, teto CMED e pesquisa nas quatro distribuidoras: [111](docs/111-expansao-medicamentos-e-politica-de-precos.md).
+
 Coleta offline de XML NF-e, com proveniência, cruzamento por GTIN e fila revisável sem alterar dados comerciais ou habilitar frete automaticamente: [109](docs/109-coleta-xml-e-logistica.md).
 
 Frete por CEP e contribuição projetada, com limites ADMIN, reserva de custos, teto da modalidade econômica, cotação normal quando dados estão pendentes e fila global de perfis logísticos: [107](docs/107-frete-cep-e-contribuicao.md). Esta regra substitui o limite universal de R$ 99,90 para transportadoras; preços e acréscimos por produto permanecem preservados.

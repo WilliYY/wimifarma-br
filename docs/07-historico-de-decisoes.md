@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-25 — Acréscimo dos novos medicamentos e expansão por fabricante
+
+- Autorização direta do lojista: 50% sobre o custo final de novos genéricos/similares e 10% para novas marcas éticas. Preservar percentuais existentes, classificação por apresentação e teto CMED; acima do teto, aguardar custo menor sem reduzir o percentual. Não mudar o fallback do importador nem criar promoções fictícias.
+- O escopo atual contém 111 famílias e a reconciliação das marcas Eze, com pesquisa em ANB, Profarma, GAM e DM. A rota de relatório por laboratório SantaCruz está em avaliação, sem reativação automática da coleta suspensa. Regra e limites em [111](111-expansao-medicamentos-e-politica-de-precos.md). Documentação e pesquisa não equivalem a publicação.
+
 ## 2026-10-25 — Marcas sem duplicidade e com identidade visual
 
 - Reunir Johnson’s e Johnson’s Baby em um cartão com filtro completo, preservando links antigos e a distinção de Johnson & Johnson.
