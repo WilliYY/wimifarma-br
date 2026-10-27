@@ -4,6 +4,7 @@ import { activeLogisticsObservations, evidenceStatus, logisticsEvidenceSchema } 
 type BaseShippingIdentity = {
   name: string;
   category?: string | null;
+  activeIngredients?: string[];
   requiresPrescription: boolean;
   prescriptionType?: string | null;
   isPopularPharmacy: boolean;
@@ -20,7 +21,7 @@ function normalized(value: string) {
 }
 
 export const WEIGHT_ESTIMATE_POLICY = {
-  version: "weight-only-v1",
+  version: "weight-only-v2",
   densityHypothesisGramsPerMl: 1.3,
   oralUnitHypothesisGrams: 1.5,
   retailPackagingReserveGrams: 30,
@@ -48,8 +49,20 @@ export function estimateWeightOnly(input: WeightOnlyIdentity): WeightOnlyEstimat
     (input.requiresPrescription && input.prescriptionType !== "ORDINARY")) return null;
   const name = normalized(input.name);
   const contentName = name.replace(/\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|ug|g)\s*(?:\/|por|em)\s*(?:\d+(?:[.,]\d+)?\s*)?(?:ml|g|l)\b/g, " ");
-  const presentationName = contentName.replace(/\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|ug)(?:\s*\+\s*\d+(?:[.,]\d+)?\s*(?:mg|mcg|ug)){1,6}\b/g, " ");
-  if (unsafe.test(`${name} ${normalized(input.category ?? "")}`) || multipack.test(presentationName) || /\b(?:efervescent\w*|mastigav\w*)\b|(?:^|\s)-\s*\d/.test(name)) return null;
+  const oral = [...contentName.matchAll(/\b(\d+(?:[.,]\d+)?)\s*(?:comprimidos?|capsulas?|drageas?|cp|cps|comp|caps)\b/g)];
+  const medicine = input.requiresPrescription || /\bmedicamentos?\b/.test(normalized(input.category ?? ""));
+  let presentationName = contentName.replace(/\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|ug)(?:\s*\+\s*\d+(?:[.,]\d+)?\s*(?:mg|mcg|ug)){1,6}\b/g, " ");
+  // Only a composition matching the registered ingredients may bypass the kit guard.
+  if (medicine && oral.length === 1) {
+    const doseStart = contentName.search(/\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|ug|g)\b/);
+    const prefix = contentName.slice(0, doseStart >= 0 ? doseStart : oral[0].index).trim();
+    const parts = prefix.split("+").map(part => part.trim());
+    const ingredients = (input.activeIngredients ?? []).flatMap(value => normalized(value).split("+").map(part => part.trim()));
+    if (parts.length >= 2 && new Set(parts).size === parts.length && parts.every(part => part.length >= 3 && ingredients.includes(part))) {
+      presentationName = presentationName.replace(prefix, prefix.replaceAll("+", " "));
+    }
+  }
+  if (unsafe.test(`${name} ${normalized(input.category ?? "")}`) || /\b(?:efervescent\w*|mastigav\w*|brindes?)\b|(?:^|\s)-\s*\d/.test(name)) return null;
   const policy = WEIGHT_ESTIMATE_POLICY;
   let family: WeightOnlyEstimate["family"];
   let declaredContent: number | null = null;
@@ -69,15 +82,17 @@ export function estimateWeightOnly(input: WeightOnlyIdentity): WeightOnlyEstimat
     sourceObservationIds = gross.map(item => item.id);
     formula = `Referência bruta comercial declarada para o GTIN: ${estimatedRetailGrams} g; embalagem comercial já incluída.`;
   } else {
-    const oral = [...name.matchAll(/\b(\d+(?:[.,]\d+)?)\s*(?:comprimidos?|capsulas?|drageas?|cp|cps|comp|caps)\b/g)];
-    const amounts = [...contentName.matchAll(/\b(\d+(?:[.,]\d+)?)\s*(kg|gramas?|g|ml|litros?|l)\b/g)];
-    if (oral.length === 1 && !amounts.length && (input.requiresPrescription || /\bmedicamentos?\b/.test(normalized(input.category ?? "")))) {
+    if (multipack.test(presentationName)) return null;
+    const amounts = [...contentName.matchAll(/\b(\d+(?:[.,]\d+)?)\s*(kg|gramas?|g|ml|litros?|l)\b/g)]
+      .filter(match => !(medicine && oral.length === 1 && match[2] === "g" && /^\d+(?:[.,]\d{1,2})?$/.test(match[1]) &&
+        Number(match[1].replace(",", ".")) > 0 && Number(match[1].replace(",", ".")) <= policy.oralUnitHypothesisGrams && match.index! < oral[0].index!));
+    if (oral.length === 1 && !amounts.length && medicine) {
       const count = Number(oral[0][1]);
       const identity = name.replace(oral[0][0], "").replace(/\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|ug)\b/g, "").trim();
       if (!/^\d+$/.test(oral[0][1]) || count < 1 || count > 120 || !/[a-z]{3}/.test(identity)) return null;
       family = "ORAL_SOLID"; declaredContent = count; declaredUnit = "count";
       estimatedRetailGrams = Math.ceil((count * policy.oralUnitHypothesisGrams + retailPackagingReserveGrams) / 10) * 10;
-      formula = `Hipótese operacional: ${count} unidades inteiras × ${policy.oralUnitHypothesisGrams} g + ${retailPackagingReserveGrams} g de reserva comercial. Dosagem mg/mcg não é massa do comprimido.`;
+      formula = `Hipótese operacional: ${count} unidades inteiras × ${policy.oralUnitHypothesisGrams} g + ${retailPackagingReserveGrams} g de reserva comercial. Dosagem mg/mcg/g não é massa do comprimido.`;
     } else if (!oral.length && amounts.length === 1) {
       const amount = amounts[0];
       if (!/^\d+(?:[.,]\d{1,2})?$/.test(amount[1])) return null;

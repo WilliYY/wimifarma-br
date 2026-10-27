@@ -8,11 +8,12 @@ import { getPrisma } from "../src/lib/prisma";
 import { lockProductCatalog } from "../src/features/products/mutations";
 import { estimateWeightOnly } from "../src/features/shipping/base-estimate";
 import { logisticsGtinSchema, normalizeLogisticsGtin } from "../src/features/shipping/logistics-evidence";
+import { shippingDraftSchema } from "../src/features/shipping/product-draft";
 
 const inputSchema = z.array(logisticsGtinSchema).min(1).max(5000)
   .refine(items => new Set(items).size === items.length, "GTIN repetido no lote.");
 
-export async function applyProductWeightDrafts(db: Pick<PrismaClient, "$transaction">, values: unknown, actorId: string, apply: boolean, expectedPlan?: string) {
+export async function applyProductWeightDrafts(db: Pick<PrismaClient, "$transaction">, values: unknown, actorId: string, apply: boolean, expectedPlan?: string, options: { refineReferences?: boolean } = {}) {
   const gtins = inputSchema.parse(values);
   if (apply && !/^[a-f0-9]{64}$/.test(expectedPlan ?? "")) throw new Error("Aplicação exige o SHA-256 do dry-run revisado.");
   return db.$transaction(async tx => {
@@ -21,7 +22,7 @@ export async function applyProductWeightDrafts(db: Pick<PrismaClient, "$transact
     const rawEans = [...new Set(gtins.flatMap(gtin => [gtin, gtin.slice(-13), gtin.slice(-12), gtin.slice(-8)]))];
     const products = await tx.product.findMany({
       where: { status: "ACTIVE", deletedAt: null, OR: [{ eanNormalized: { in: gtins } }, { ean: { in: rawEans } }] },
-      select: { id: true, name: true, ean: true, eanNormalized: true, category: true, requiresPrescription: true, prescriptionType: true,
+      select: { id: true, name: true, ean: true, eanNormalized: true, category: true, activeIngredients: true, requiresPrescription: true, prescriptionType: true,
         isPopularPharmacy: true, shippingProfile: true, logisticsEvidence: true, updatedAt: true },
     });
     const plans = gtins.map(gtin => {
@@ -29,21 +30,34 @@ export async function applyProductWeightDrafts(db: Pick<PrismaClient, "$transact
       if (matches.length !== 1) throw new Error(`GTIN ${gtin}: correspondência ausente ou ambígua; lote cancelado.`);
       const product = matches[0];
       const identity = { productId: product.id, gtin, revision: product.updatedAt.toISOString() };
+      if (options.refineReferences) {
+        const previousProfile = product.shippingProfile;
+        const preserve = { ...identity, action: "PRESERVE_EXISTING_PROFILE" as const, previousProfile, estimate: null };
+        const parsed = shippingDraftSchema.safeParse(previousProfile);
+        if (!parsed.success || !previousProfile || typeof previousProfile !== "object" || Array.isArray(previousProfile) ||
+          previousProfile.measurementBasis !== "estimated" || previousProfile.reference !== null || parsed.data.approvedServiceIds?.length) return preserve;
+        const estimate = estimateWeightOnly({ ...product, gtin });
+        if (estimate?.family !== "EXACT_GROSS_REFERENCE" || !estimate.sourceObservationIds.length || previousProfile.weightGrams === estimate.draft.weightGrams) return preserve;
+        return { ...identity, action: "REFINE_EXACT_GROSS_WEIGHT_ONLY" as const, previousProfile,
+          estimate: { ...estimate, draft: { ...previousProfile, weightGrams: estimate.draft.weightGrams } } };
+      }
       if (product.shippingProfile !== null) return { ...identity, action: "PRESERVE_EXISTING_PROFILE" as const, estimate: null };
       const estimate = estimateWeightOnly({ ...product, gtin });
       return { ...identity, action: estimate ? "SAVE_ESTIMATED_WEIGHT_ONLY" as const : "PENDING_PHYSICAL_REVIEW" as const, estimate };
     });
-    const planSha256 = createHash("sha256").update(JSON.stringify(plans)).digest("hex");
+    const planSha256 = createHash("sha256").update(JSON.stringify(options.refineReferences ? { operation: "REFINE_REFERENCES", products: plans } : plans)).digest("hex");
     if (apply && expectedPlan !== planSha256) throw new Error("Plano mudou desde o dry-run; nenhuma gravação aplicada.");
     for (const plan of plans) {
-      if (!apply || plan.action !== "SAVE_ESTIMATED_WEIGHT_ONLY" || !plan.estimate) continue;
+      if (!apply || (plan.action !== "SAVE_ESTIMATED_WEIGHT_ONLY" && plan.action !== "REFINE_EXACT_GROSS_WEIGHT_ONLY") || !plan.estimate) continue;
       const changed = await tx.product.updateMany({
         where: { id: plan.productId, status: "ACTIVE", deletedAt: null, updatedAt: new Date(plan.revision) },
         data: { shippingProfile: plan.estimate.draft },
       });
       if (changed.count !== 1) throw new Error("Produto mudou durante a aplicação; lote revertido.");
-      await tx.auditLog.create({ data: { userId: actorId, action: "PRODUCT_WEIGHT_DRAFT_ESTIMATED", entity: "Product", entityId: plan.productId,
-        metadata: { gtin: plan.gtin, planSha256, ...plan.estimate, basis: "Cenário aproximado autorizado, sem medição, dimensões ou aceitação de carga confirmadas." } } });
+      await tx.auditLog.create({ data: { userId: actorId, action: plan.action === "REFINE_EXACT_GROSS_WEIGHT_ONLY" ? "PRODUCT_WEIGHT_DRAFT_REFINED" : "PRODUCT_WEIGHT_DRAFT_ESTIMATED", entity: "Product", entityId: plan.productId,
+        metadata: { gtin: plan.gtin, planSha256, ...plan.estimate,
+          ...(plan.action === "REFINE_EXACT_GROSS_WEIGHT_ONLY" ? { previousProfile: plan.previousProfile } : {}),
+          basis: "Cenário aproximado autorizado, sem medição, dimensões ou aceitação de carga confirmadas." } } });
     }
     return { applied: apply, planSha256, products: plans };
   }, { timeout: 180000 });
@@ -52,9 +66,9 @@ export async function applyProductWeightDrafts(db: Pick<PrismaClient, "$transact
 async function main() {
   const args = process.argv.slice(2);
   for (let index = 0; index < args.length; index++) {
-    if (args[index] === "--apply") continue;
+    if (["--apply", "--refine-references"].includes(args[index])) continue;
     if (["--input", "--actor-id", "--expect-plan"].includes(args[index]) && args[index + 1] && !args[index + 1].startsWith("--")) { index++; continue; }
-    throw new Error("Use --input <GTINs.json> --actor-id <ADMIN> [--apply --expect-plan <SHA-256>].");
+    throw new Error("Use --input <GTINs.json> --actor-id <ADMIN> [--refine-references] [--apply --expect-plan <SHA-256>].");
   }
   if (!args.includes("--input") || !args.includes("--actor-id")) throw new Error("Informe --input e --actor-id. Dry-run é o padrão.");
   const input = args[args.indexOf("--input") + 1], actor = args[args.indexOf("--actor-id") + 1];
@@ -62,7 +76,7 @@ async function main() {
   const values: unknown = JSON.parse(await readFile(input, "utf8"));
   inputSchema.parse(values);
   const db = getPrisma();
-  try { console.log(JSON.stringify(await applyProductWeightDrafts(db, values, actor, args.includes("--apply"), args.includes("--expect-plan") ? args[args.indexOf("--expect-plan") + 1] : undefined))); }
+  try { console.log(JSON.stringify(await applyProductWeightDrafts(db, values, actor, args.includes("--apply"), args.includes("--expect-plan") ? args[args.indexOf("--expect-plan") + 1] : undefined, { refineReferences: args.includes("--refine-references") }))); }
   finally { await db.$disconnect(); }
 }
 if (process.argv[1] && resolve(process.argv[1]).replaceAll("\\", "/").endsWith("/apply-product-weight-drafts.ts")) {

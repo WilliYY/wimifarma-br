@@ -1,10 +1,12 @@
 # 118 — Pesos aproximados para conferência
 
+Refinamento de 27/10, versão 2: comparação documental, regras de apresentação e modo explícito `--refine-references` em [119](119-comparacao-e-refinamento-dos-pesos.md). As fórmulas numéricas abaixo permanecem hipóteses; os resultados produtivos ao final desta página registram a entrega original v1.
+
 ## Escopo autorizado em 27/10/2026
 
 O lojista autorizou iniciar conversões e pesos aproximados para adiantar a conferência. Esta etapa gera **cenários de planejamento**, sem afirmar pesagem, densidade, tara, dimensões, encaixe ou aceite de transportadora confirmados. Complementa [115](115-evidencias-logisticas-e-receitas.md) e [117](117-rota-dados-logisticos-e-frenet.md). A aproximação não é gravada como evidência documental e não habilita frete.
 
-`estimateWeightOnly`, em `base-estimate.ts`, reutiliza identidade e bloqueios existentes. O estimador legado `estimateBaseShipping` não muda; seus rascunhos e todos os demais perfis já existentes são preservados. O novo caminho preenche somente perfis inicialmente nulos, com `measurementBasis:estimated`, `enabled:false`, `transportReviewed:false`, referência nula e três dimensões nulas. A API/painel existentes já aceitam esse contrato parcial. Não há migration, dependência, mudança de checkout ou nova ativação de serviço.
+`estimateWeightOnly`, em `base-estimate.ts`, reutiliza identidade e bloqueios existentes. O estimador legado `estimateBaseShipping` não muda. No modo padrão, todos os perfis existentes são preservados; o preenchimento alcança somente perfis inicialmente nulos, com `measurementBasis:estimated`, `enabled:false`, `transportReviewed:false`, referência nula e três dimensões nulas. Na versão 2, somente o modo explícito de refinamento pode alterar peso de rascunho elegível usando fonte bruta exata, conforme 119. A API/painel existentes já aceitam esse contrato parcial. Não há migration, dependência, mudança de checkout ou nova ativação de serviço.
 
 ## Política explícita `weight-only-v1`
 
@@ -32,7 +34,7 @@ node --import tsx scripts/apply-product-weight-drafts.ts --input <GTINs.json> --
 node --import tsx scripts/apply-product-weight-drafts.ts --input <GTINs.json> --actor-id <ADMIN> --apply --expect-plan <SHA-256-do-dry-run>
 ```
 
-As únicas gravações são `shippingProfile`, `updatedAt` automático e auditorias `PRODUCT_WEIGHT_DRAFT_ESTIMATED` na mesma transação. Perfis existentes, inclusive estimados, são preservados. Preços, estoque, ofertas, evidências, cadastros sanitários e configurações de serviço não mudam. Falha de CAS ou auditoria reverte o lote. Repetição preserva os perfis sem nova gravação; uma nova aplicação ainda exige o hash do novo dry-run.
+As únicas gravações são `shippingProfile`, `updatedAt` automático e auditorias na mesma transação. Preenchimento usa `PRODUCT_WEIGHT_DRAFT_ESTIMATED`; refinamento explícito usa `PRODUCT_WEIGHT_DRAFT_REFINED`, guardando perfil anterior, novo peso e fonte. No modo padrão os perfis existentes, inclusive estimados, são preservados. Preços, estoque, ofertas, evidências, cadastros sanitários e configurações de serviço não mudam. Falha de CAS ou auditoria reverte o lote. Repetição preserva os perfis sem nova gravação; uma nova aplicação ainda exige o hash do novo dry-run.
 
 Dados, nomes, GTINs, planilha de conferência, planos e provas ficam em `outputs/pesos-aproximados-2026-10-27/`, ignorado pelo Git. O CSV é auxiliar de conferência; hipóteses permanecem discriminadas. Importação em produção exige backup, revisão, prova transacional isolada e comparação dos campos preservados. Esta documentação descreve o contrato; o resultado produtivo deve ser registrado separadamente após a aplicação.
 

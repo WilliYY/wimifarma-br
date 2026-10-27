@@ -44,6 +44,16 @@ test("oral liquids exclude concentration denominators from the declared package 
   for (const name of ["Creme sintético 10 g/100 g", "Gel sintético 1g/g", "Xarope sintético 20mg por5ml", "Xarope sintético 20mg em5ml"]) assert.equal(estimateWeightOnly({ ...hygiene, name }), null, name);
   assert.equal(estimateWeightOnly({ ...hygiene, name: "Creme sintético 10g/100g 30g" })?.declaredContent, 30);
   assert.equal(estimateWeightOnly({ ...medicine, name: "Medicamento sintético 50mg + 12,5mg 30 comprimidos" })?.draft.weightGrams, 180);
+  assert.equal(estimateWeightOnly({ ...medicine, activeIngredients: ["Substância A", "substância B"], name: "Substância A + substância B 50mg + 12,5mg 30 comprimidos" })?.draft.weightGrams, 180);
+  for (const name of ["Medicamento A + medicamento B 30 comprimidos", "Medicamento sintético + porta-comprimidos 30 comprimidos", "Medicamento sintético 50mg + nécessaire 30 comprimidos", "Substância A + substância B + porta-comprimidos 50mg + 12,5mg 30 comprimidos"]) assert.equal(estimateWeightOnly({ ...medicine, activeIngredients: ["Substância A", "substância B"], name }), null, name);
+  assert.equal(estimateWeightOnly({ ...medicine, name: "Substância A + substância B 50mg + 12,5mg 30 comprimidos" }), null);
+  for (const strength of ["0,5", "1", "1,5"]) {
+    const solid = estimateWeightOnly({ ...medicine, name: `Medicamento sintético ${strength} g 30 comprimidos` });
+    assert.equal(solid?.declaredUnit, "count");
+    assert.equal(solid?.declaredContent, 30);
+    assert.equal(solid?.draft.weightGrams, 180);
+  }
+  for (const name of ["Medicamento 2 g 30 comprimidos", "Medicamento A 30 comprimidos + brinde", "Kit medicamento A + medicamento B 30 comprimidos", "Medicamento A + medicamento B sem contagem"]) assert.equal(estimateWeightOnly({ ...medicine, name }), null, name);
   for (const name of ["Sérum sintético 50ml", "Hidratante sintético 200ml", "Desodorante sintético roll-on 50ml"]) assert.ok(estimateWeightOnly({ ...hygiene, name }), name);
 });
 
@@ -65,4 +75,8 @@ test("exact retail gross source takes priority without altering evidence or doub
   assert.equal(JSON.stringify(source), original);
   assert.equal(estimateWeightOnly({ ...medicine, gtin: "00000000000000", logisticsEvidence: source }), null);
   assert.equal(estimateWeightOnly({ ...medicine, gtin: source.gtin, logisticsEvidence: { ...source, observations: [...source.observations, { ...source.observations[0], id: "different", weightGrams: 80 }] } }), null);
+  const packet = estimateWeightOnly({ ...medicine, name: "Toalhas umedecidas sintéticas 48 unidades", category: "Higiene infantil", requiresPrescription: false, gtin: source.gtin, logisticsEvidence: { ...source, observations: [{ ...source.observations[0], weightGrams: 301 }] } });
+  assert.equal(packet?.family, "EXACT_GROSS_REFERENCE");
+  assert.equal(packet?.draft.weightGrams, 410);
+  assert.equal(estimateWeightOnly({ ...medicine, name: "Toalhas umedecidas sintéticas 48 unidades", category: "Higiene infantil", requiresPrescription: false }), null);
 });

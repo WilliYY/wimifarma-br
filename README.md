@@ -12,6 +12,8 @@ Rota para dados físicos em lote, consulta GS1, práticas documentadas das redes
 
 Pesos aproximados para conferência, com hipóteses explícitas, dimensões pendentes e aplicação auditada sem habilitar envio: [118](docs/118-pesos-aproximados-para-conferencia.md).
 
+Comparação por GTIN, prioridade de peso bruto documental e refinamento explícito somente do peso de rascunhos elegíveis: [119](docs/119-comparacao-e-refinamento-dos-pesos.md).
+
 Novos medicamentos desta expansão: acréscimo autorizado de 50% para genéricos/similares e 10% para marcas éticas, preservando percentuais existentes, teto CMED e pesquisa nas quatro distribuidoras: [111](docs/111-expansao-medicamentos-e-politica-de-precos.md).
 
 Coleta offline de XML NF-e, com proveniência, cruzamento por GTIN e fila revisável sem alterar dados comerciais ou habilitar frete automaticamente: [109](docs/109-coleta-xml-e-logistica.md).

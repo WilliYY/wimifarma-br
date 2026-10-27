@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-27 — Peso bruto por GTIN antes de estimativa genérica
+
+- Política v2 mantém coeficientes hipotéticos, prioriza fonte bruta da apresentação exata e distingue composição cadastrada de kits. Refinamento explícito permite alterar somente peso de rascunho estimado/desativado, sem referência/serviços, por fonte bruta vigente. Plano com perfil anterior, ADMIN/CAS e auditoria própria preservam demais campos; [119](119-comparacao-e-refinamento-dos-pesos.md).
+
 ## 2026-10-27 — Cenários de peso aproximado separados da conferência física
 
 - A pedido do lojista, massas declaradas e hipóteses por apresentação geram rascunhos de peso, sem dimensões ou ativação. Dosagem e concentração não viram massa da embalagem. Reserva externa é explícita e não medida. Aplicação por GTIN exige ADMIN, dry-run com hash, concorrência e auditoria; preserva perfis anteriores e campos comerciais. Política e limites em [118](118-pesos-aproximados-para-conferencia.md).
