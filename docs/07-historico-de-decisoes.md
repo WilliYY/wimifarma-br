@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-27 — Animações com geometria preservada e trabalho localizado
+
+- Bolhas do rodapé passam de dimensões/bottom animados a translate/scale equivalentes, preservando 128 elementos, trajetórias, tempos, fases e filtro. O cabeçalho conserva sua transição; deslocamentos intermediários atingem consumidores sticky locais, enquanto a raiz recebe a altura estável. Medições, testes, revisão e limites em [10](10-layout-e-experiencia.md).
+- Dados físicos em lote passam a priorizar fontes de fabricantes/distribuidores e avaliação de cobertura GS1. Consulta GS1 autorizada, sem contratação. Benchmark de redes distingue cadastro por SKU/GTIN de estoque regional e não comprova medidas universais por NCM. Frenet continua candidata sujeita ao contrato/carga, sem integração ativada; [117](117-rota-dados-logisticos-e-frenet.md).
+
 ## 2026-10-27 — Elegibilidade do provedor antes de integrar o envio
 
 - A recomendação de Resend ficou suspensa após verificação da restrição a conteúdo farmacêutico/suplementos. Resend e Brevo receberam consultas autorizadas pelo Gmail, sem dados de clientes. Não houve cadastro Google concluído, chave, DNS ou disparos pelo serviço. React Email continua independente do provedor. Condições Correios/Frenet/Rodonaves verificadas, sem contratos criados; [114](114-elegibilidade-email-e-condicoes-transportadoras.md).

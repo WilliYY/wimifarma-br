@@ -1,5 +1,19 @@
 # 10 - Layout e Experiencia
 
+## Custo das animações visíveis e do cabeçalho — 27/10/2026
+
+O diagnóstico em Chromium isolado identificou dois custos distintos: as bolhas visíveis animavam `width`, `height` e `bottom`, provocando layout contínuo; a transição do cabeçalho publicava `--site-header-offset` na raiz a cada altura intermediária observada, invalidando os consumidores de uma propriedade herdada.
+
+As 128 bolhas mantêm o gerador, os nomes das duas animações, o `ease-in`, durações, atrasos, fases e o filtro `wimifarma-footer-blob`. O tamanho de layout agora é fixo. A escala parte do centro superior e a translação percorre a mesma distância que o `bottom` original, mantendo a caixa visual em cada instante. A comparação automatizada usa as propriedades geométricas originais como referência em 390, 768 e 1440 px, incluindo o trecho final de redução do tamanho. Pausa fora da tela, retomada, aba oculta e movimento reduzido continuam preservados. Esta conversão substitui a preservação literal das propriedades dos keyframes registrada em 26/10, mantendo seu efeito visual.
+
+O cabeçalho mantém a transição CSS de 280 ms, a logo original e os controles. Durante o redimensionamento, a altura intermediária é aplicada localmente apenas aos consumidores de `--site-header-offset`, identificados pelas classes que usam essa propriedade. Os painéis fixos acompanham cada medição, inclusive após mudança de largura ou de conteúdo, sem salto final nem reserva de altura obsoleta. Após 80 ms sem nova medição, a raiz recebe a altura final e os estilos locais anteriores são restaurados. Temporizador e estilos temporários também são limpos ao desmontar. Contenção de layout e estilo limita o trabalho do cabeçalho sem recortar sugestões, logo ou menus; nenhum `contain: paint` é aplicado. Os controles de busca, conta e Painel admin mantêm seus contratos.
+
+Uma observação temporária de inserções DOM inclui painéis que montam durante a transição, preservando o valor e a prioridade do estilo inline de cada consumidor uma única vez. A observação não acompanha alterações de atributos, não publica alturas adicionais na raiz e termina junto com os estilos locais, ao estabilizar ou desmontar.
+
+Regressões e perfis comparativos ficam em `outputs/motion-precision-2026-10-27/`, fora do Git. Passaram 18 cenários do cabeçalho e quatro do rodapé, incluindo montagem tardia de consumidor, restauração de estilo com prioridade, redimensionamento e descarte. Lint, typecheck e build passaram no candidato final. A suíte de segurança exigida pelo projeto passou com 491 testes; auditoria de produção não apontou high/critical. A auditoria completa mantém um alerta moderado preexistente em `fast-uri`, sem alteração de dependências. Revisão independente aprovada.
+
+A geometria das bolhas foi comparada em sete fases, para cada uma das 128 bolhas nas três larguras, com diferença máxima inferior a 0,05 px. Na fixture, layouts visíveis do rodapé passaram de 70/46/42 para zero em 1,2 s; isso não representa todo o site. A amostra pública anterior à implantação registrou 75/51 layouts em 1,4 s na página inteira em 390/1440 px. A comparação posterior usa o mesmo script, navegador isolado e bloqueio de visitas/mutações. As amostras não comprovam ausência universal de engasgos; o filtro SVG visível continua exigindo composição/pintura.
+
 ## Suavidade das marcas e custo do rodapé — 26/10/2026
 
 A faixa de marcas troca escrita de rolagem por quadro por deslocamento fracionário da trilha, com transferência para rolagem nativa durante interação. O botão Pausar/Retomar foi removido a pedido do lojista; foco, hover, gestos, movimento reduzido e visibilidade continuam respeitados. Contrato em [82](82-marcas-do-catalogo.md).

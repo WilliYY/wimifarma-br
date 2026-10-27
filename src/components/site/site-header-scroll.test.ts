@@ -143,6 +143,129 @@ test("movimento reduzido usa logo estática e recolhimento sem transição perce
   });
 });
 
+test("recolhimento publica o deslocamento global somente ao estabilizar", async () => {
+  await fixture(1440, "ADMIN", false, async page => {
+    await page.waitForTimeout(400);
+    await page.evaluate(() => {
+      const offsets: string[] = [];
+      Object.assign(window, { headerOffsets: offsets });
+      new MutationObserver(() => offsets.push(document.documentElement.style.getPropertyValue("--site-header-offset")))
+        .observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
+      scrollTo({ top: 400, behavior: "instant" });
+    });
+    await expect(page.locator("header")).toHaveAttribute("data-compact", "true");
+    await page.waitForTimeout(450);
+    const offsets = await page.evaluate(() => (window as unknown as { headerOffsets: string[] }).headerOffsets);
+    assert.ok(offsets.length <= 2, `atualizações globais durante recolhimento: ${offsets.length}`);
+  });
+});
+
+test("expansão mantém deslocamento seguro após resize compacto ou carregamento de fonte", async () => {
+  await fixture(1440, "ADMIN", false, async page => {
+    for (const invalidate of ["resize", "font"] as const) {
+      await page.evaluate(() => scrollTo({ top: 400, behavior: "instant" }));
+      await expect(page.locator("header")).toHaveAttribute("data-compact", "true");
+      await page.waitForTimeout(400);
+      if (invalidate === "resize") await page.setViewportSize({ width: 1280, height: 900 });
+      else await page.evaluate(() => {
+        document.querySelector<HTMLElement>("[data-header-main]")!.style.minHeight = "120px";
+        document.fonts.dispatchEvent(new Event("loadingdone"));
+      });
+      await page.waitForTimeout(400);
+      await page.evaluate(() => {
+        const samples: number[] = [];
+        Object.assign(window, { headerSamples: samples });
+        const observer = new ResizeObserver(([entry]) => {
+          const height = entry.borderBoxSize[0]?.blockSize ?? entry.contentRect.height;
+          const offset = Number.parseFloat(getComputedStyle(document.querySelector("[data-sticky]")!).top);
+          samples.push(Math.abs(offset - Math.ceil(height) - 16));
+        });
+        observer.observe(document.querySelector("header")!);
+        setTimeout(() => observer.disconnect(), 1200);
+        scrollTo({ top: 0, behavior: "instant" });
+      });
+      await page.waitForTimeout(450);
+      const samples = await page.evaluate(() => (window as unknown as { headerSamples: number[] }).headerSamples);
+      assert.ok(samples.length >= 4, "mediu posições intermediárias do painel fixo");
+      assert.ok(Math.max(...samples) <= 1, `offset acompanha expansão após ${invalidate}: ${JSON.stringify(samples)}`);
+    }
+  });
+});
+
+test("painel sticky acompanha posições intermediárias sem salto e limpa o estilo temporário", async () => {
+  await fixture(1440, "ADMIN", false, async page => {
+    for (const top of [400, 0]) {
+      await page.evaluate(target => {
+        const samples: { expected: number; actual: number }[] = [];
+        Object.assign(window, { stickySamples: samples });
+        const observer = new ResizeObserver(([entry]) => {
+          if (document.querySelector("header")!.getAttribute("data-compact") !== String(target > 0)) return;
+          const sticky = document.querySelector("[data-sticky]")!;
+          samples.push({ expected: Math.ceil(entry.borderBoxSize[0]?.blockSize ?? entry.contentRect.height) + 16, actual: target ? sticky.getBoundingClientRect().top : Number.parseFloat(getComputedStyle(sticky).top) });
+        });
+        observer.observe(document.querySelector("header")!);
+        setTimeout(() => observer.disconnect(), 450);
+        scrollTo({ top: target, behavior: "instant" });
+      }, top);
+      await page.waitForTimeout(500);
+      const samples = await page.evaluate(() => (window as unknown as { stickySamples: { expected: number; actual: number }[] }).stickySamples);
+      assert.ok(samples.length >= 4, "registra posições intermediárias");
+      assert.ok(samples.every(sample => Math.abs(sample.expected - sample.actual) <= 1), JSON.stringify(samples));
+      assert.equal(await page.locator("[data-sticky]").evaluate(element => (element as HTMLElement).style.getPropertyValue("--site-header-offset")), "");
+    }
+    await page.evaluate(() => scrollTo({ top: 400, behavior: "instant" }));
+    await page.waitForTimeout(50);
+    await page.evaluate("window.unmountHeader()");
+    assert.equal(await page.locator("[data-sticky]").evaluate(element => (element as HTMLElement).style.getPropertyValue("--site-header-offset")), "");
+  });
+});
+
+test("painel montado durante recolhimento acompanha a altura e preserva seu estilo anterior", async () => {
+  await fixture(1440, "ADMIN", false, async page => {
+    await page.waitForTimeout(400);
+    await page.evaluate(() => {
+      const samples: number[] = [];
+      const writes: number[] = [];
+      Object.assign(window, { lateStickySamples: samples, lateRootWrites: writes });
+      new MutationObserver(records => writes.push(records.length)).observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
+      const observer = new ResizeObserver(([entry]) => {
+        if (document.querySelector("header")!.getAttribute("data-compact") !== "true") return;
+        if (!document.querySelector("[data-late-sticky]")) {
+          for (const custom of [false, true]) {
+            const element = document.createElement("aside");
+            element.className = document.querySelector("[data-sticky]")!.className;
+            element.dataset.lateSticky = custom ? "custom" : "inherited";
+            if (custom) element.style.setProperty("--site-header-offset", "77px", "important");
+            document.querySelector("main")!.append(element);
+          }
+          return;
+        }
+        const height = Math.ceil(entry.borderBoxSize[0]?.blockSize ?? entry.contentRect.height) + 16;
+        document.querySelectorAll("[data-late-sticky]").forEach(element => samples.push(Math.abs(Number.parseFloat(getComputedStyle(element).top) - height)));
+      });
+      observer.observe(document.querySelector("header")!);
+      setTimeout(() => observer.disconnect(), 450);
+      scrollTo({ top: 400, behavior: "instant" });
+    });
+    await page.waitForTimeout(500);
+    const samples = await page.evaluate(() => (window as unknown as { lateStickySamples: number[] }).lateStickySamples);
+    assert.ok(samples.length >= 4);
+    assert.ok(Math.max(...samples) <= 1, `novo painel acompanha alturas intermediárias: ${JSON.stringify(samples)}`);
+    const restored = await page.locator("[data-late-sticky]").evaluateAll(elements => elements.map(element => ({ value: (element as HTMLElement).style.getPropertyValue("--site-header-offset"), priority: (element as HTMLElement).style.getPropertyPriority("--site-header-offset") })));
+    assert.deepEqual(restored, [{ value: "", priority: "" }, { value: "77px", priority: "important" }]);
+    assert.ok(await page.evaluate(() => (window as unknown as { lateRootWrites: number[] }).lateRootWrites.reduce((sum, count) => sum + count, 0)) <= 2, "montagem tardia não acrescenta invalidações globais por quadro");
+    await page.evaluate("window.unmountHeader()");
+    await page.evaluate(() => {
+      const element = document.createElement("aside");
+      element.dataset.afterUnmount = "true";
+      element.className = document.querySelector("[data-sticky]")!.className;
+      document.querySelector("main")!.append(element);
+    });
+    await page.waitForTimeout(50);
+    assert.equal(await page.locator("[data-after-unmount]").evaluate(element => (element as HTMLElement).style.getPropertyValue("--site-header-offset")), "", "observador de consumidores foi descartado");
+  });
+});
+
 for (const role of [null, "CUSTOMER", "ADMIN"] as const) {
   test(`logo compacta ocupa a largura disponível sem deformação: ${role ?? "visitante"}`, async () => {
     await fixture(1536, role, false, async page => {

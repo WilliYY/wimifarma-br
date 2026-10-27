@@ -127,3 +127,54 @@ test("bolhas preservam fase e efeito, suspendem fora da tela e retomam sem remon
     await expect(layer).toHaveAttribute("data-animating", "true");
   });
 });
+
+test("bolhas preservam a trajetória original sem animar dimensões ou bottom", async () => {
+  await fixture("/fallback", async page => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await expect(page.locator(".site-gooey-footer__bubbles")).toHaveAttribute("data-animating", "true");
+    await page.addStyleTag({ content: `
+      .legacy-reference { width: auto; height: auto; bottom: auto; translate: none; transform-origin: 50% 50%; transform: translate(-50%, 100%); animation-name: legacy-size, legacy-move; }
+      @keyframes legacy-size { 0%, 75% { height: var(--size, 4rem); width: var(--size, 4rem); } 100% { height: 0; width: 0; } }
+      @keyframes legacy-move { 0% { bottom: -4rem; } 100% { bottom: var(--distance, 10rem); } }
+    ` });
+    const evidence = [];
+    for (const width of [390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 950 });
+      evidence.push(await page.evaluate(() => {
+        const layer = document.querySelector(".site-gooey-footer__bubbles")!;
+        const originals = [...layer.children] as HTMLElement[];
+        const references = originals.map(element => {
+          const reference = element.cloneNode() as HTMLElement;
+          reference.classList.add("legacy-reference");
+          layer.append(reference);
+          return reference;
+        });
+        let maximumError = 0;
+        let geometryStable = true;
+        for (const phase of [0, 0.25, 0.5, 0.75, 0.8, 0.9, 0.99]) {
+          for (const element of [...originals, ...references]) {
+            for (const animation of element.getAnimations()) {
+              const timing = animation.effect!.getTiming();
+              animation.pause();
+              animation.currentTime = Number(timing.duration) * (phase + 3) + (timing.delay ?? 0);
+            }
+          }
+          originals.forEach((element, index) => {
+            const a = element.getBoundingClientRect();
+            const b = references[index].getBoundingClientRect();
+            for (const key of ["x", "y", "width", "height"] as const) maximumError = Math.max(maximumError, Math.abs(a[key] - b[key]));
+            const style = getComputedStyle(element);
+            geometryStable &&= Math.abs(Number.parseFloat(style.width) - Number.parseFloat(element.style.getPropertyValue("--size")) * 16) < 0.05 && style.bottom === "-64px";
+          });
+        }
+        references.forEach(element => element.remove());
+        return { width: innerWidth, count: originals.length, maximumError, geometryStable };
+      }));
+    }
+    for (const result of evidence) {
+      assert.equal(result.count, 128);
+      assert.ok(result.maximumError < 0.05, `trajetória ${result.width}px: erro máximo ${result.maximumError}px`);
+      assert.equal(result.geometryStable, true, `dimensões/bottom estáveis em ${result.width}px`);
+    }
+  });
+});

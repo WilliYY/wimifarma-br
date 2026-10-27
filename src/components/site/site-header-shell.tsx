@@ -21,6 +21,38 @@ export function SiteHeaderShell({ announcement, children, navigation }: SiteHead
     const previousOffset = root.style.getPropertyValue("--site-header-offset");
     let frame = 0;
     let lastHeight = 0;
+    let offsetTimer = 0;
+    let observedHeight = 0;
+    const localOffsets = new Map<HTMLElement, { value: string; priority: string }>();
+    const consumerObserver = new MutationObserver(() => stageLocalOffset(observedHeight || lastHeight));
+
+    function publishOffset(height: number) {
+      if (height === lastHeight) return;
+      lastHeight = height;
+      root.style.setProperty("--site-header-offset", `${height}px`);
+    }
+
+    function stageLocalOffset(height: number) {
+      if (!height) return;
+      // Only sticky consumers need intermediate heights; inheriting them from
+      // the document root invalidates unrelated content on every resize frame.
+      consumerObserver.observe(root, { childList: true, subtree: true });
+      document.querySelectorAll<HTMLElement>('[class*="--site-header-offset"]').forEach(element => {
+        if (!localOffsets.has(element)) {
+          localOffsets.set(element, { value: element.style.getPropertyValue("--site-header-offset"), priority: element.style.getPropertyPriority("--site-header-offset") });
+        }
+      });
+      for (const element of localOffsets.keys()) element.style.setProperty("--site-header-offset", `${height}px`);
+    }
+
+    function restoreLocalOffsets() {
+      consumerObserver.disconnect();
+      for (const [element, previous] of localOffsets) {
+        if (previous.value) element.style.setProperty("--site-header-offset", previous.value, previous.priority);
+        else element.style.removeProperty("--site-header-offset");
+      }
+      localOffsets.clear();
+    }
 
     function refresh() {
       frame = 0;
@@ -28,6 +60,8 @@ export function SiteHeaderShell({ announcement, children, navigation }: SiteHead
         && document.activeElement?.closest("[data-header-collapsible], [data-header-popular], [data-header-maps]");
       const next = window.scrollY <= 8 ? false : window.scrollY > 72 && !focusedControl ? true : compactRef.current;
       if (next !== compactRef.current) {
+        window.clearTimeout(offsetTimer);
+        stageLocalOffset(observedHeight || lastHeight);
         compactRef.current = next;
         setCompact(next);
       }
@@ -39,10 +73,14 @@ export function SiteHeaderShell({ announcement, children, navigation }: SiteHead
 
     const observer = new ResizeObserver(([entry]) => {
       const height = Math.ceil(entry.borderBoxSize[0]?.blockSize ?? entry.contentRect.height) + 16;
-      if (height !== lastHeight) {
-        lastHeight = height;
-        root.style.setProperty("--site-header-offset", `${height}px`);
-      }
+      observedHeight = height;
+      if (!lastHeight) { publishOffset(height); return; }
+      stageLocalOffset(height);
+      window.clearTimeout(offsetTimer);
+      offsetTimer = window.setTimeout(() => {
+        publishOffset(height);
+        restoreLocalOffsets();
+      }, 80);
     });
     observer.observe(header);
     window.addEventListener("scroll", schedule, { passive: true });
@@ -55,7 +93,9 @@ export function SiteHeaderShell({ announcement, children, navigation }: SiteHead
       header.removeEventListener("focusin", schedule);
       header.removeEventListener("focusout", schedule);
       if (frame) window.cancelAnimationFrame(frame);
+      window.clearTimeout(offsetTimer);
       observer.disconnect();
+      restoreLocalOffsets();
       if (previousOffset) root.style.setProperty("--site-header-offset", previousOffset);
       else root.style.removeProperty("--site-header-offset");
     };
