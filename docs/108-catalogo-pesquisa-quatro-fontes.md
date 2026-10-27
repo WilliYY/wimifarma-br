@@ -12,7 +12,7 @@ Tamanho, quantidade, capacidade, material, faixa etária, cor e compatibilidade 
 
 ## Situação verificada desta frente
 
-A união dos 25 lotes de marcas encerrados tem 409 EANs distintos. Essa contagem é independente dos produtos publicados por outras frentes e das inclusões históricas de medicamentos. O último lote foi `complementos11-v3`, com 11 produtos e 11 fotos; nenhum lote encerrado deve ser reaplicado.
+A união verificada em 27/10/2026 tem 650 EANs distintos em 31 lotes de marcas encerrados. Essa contagem é independente dos produtos publicados por outras frentes e das inclusões históricas de medicamentos. O último grupo acrescentou 238 produtos e 238 fotos em cinco etapas técnicas; a etapa final foi `coorte238-e05-v1`, com 38 itens. Nenhum lote encerrado deve ser reaplicado.
 
 Os 20 lotes anteriores, que somam 336 EANs, antecedem a nova exigência das quatro fontes. A pesquisa complementar dessas apresentações permanece pendente e deve conservar os horários originais das evidências válidas. Nenhuma contagem histórica é apresentada como uma nova consulta comercial.
 
@@ -107,3 +107,38 @@ Houve novos 485 testes de segurança, 111 de fornecedores, auditorias completa e
 A fundação imutável de OPS conserva 1.051 execuções e 1.002 arquivos com hashes e datas originais. A compatibilidade do APP `42cb73d` foi verificada por 43 hashes/modos, com revisão independente; somente declarações estáticas da guarda mudaram, com lógica AST preservada. Isso não afirma um novo build completo da interface. O pacote congelado passou por preflight completo em cópia descartável antes da aprovação persistida. Os 36 arquivos de comprovação exportados foram conferidos por hash e permanecem privados, junto com relatório, captura pública e união de EANs.
 
 Os chats 9 e 5 receberam o encerramento da janela e os vínculos necessários para evitar conflitos. A pesquisa continua individualmente. As demais apresentações capilares, complementos Farmax, Veet, famílias infantis, saúde e higiene solicitadas, bem como o cruzamento complementar dos 336 cadastros anteriores, continuam pendentes na fila integral. Os lotes encerrados não devem ser reaplicados.
+
+## Coorte de 238 apresentações encerrada em 27/10/2026
+
+Foram publicados e conferidos 238 novos EANs, com 238 fotos reais otimizadas e 476 registros de auditoria de produção. A coorte lógica atende ao pedido de reunir pelo menos 200 itens; os limites técnicos dos importadores e publicadores permaneceram em 50, com cinco etapas sequenciais de 50, 50, 50, 50 e 38 itens.
+
+| Marca | Novas apresentações |
+| --- | ---: |
+| Colgate | 64 |
+| Oral-B | 31 |
+| Elmex | 5 |
+| Sorriso | 1 |
+| Tandy | 5 |
+| Palmolive | 5 |
+| Protex | 28 |
+| Pantene | 44 |
+| Sensodyne | 34 |
+| Corega | 13 |
+| Veet | 7 |
+| Listerine | 1 |
+
+Cada apresentação mantém evidências das quatro fontes, inclusive ausências explícitas e resultados sem correspondência. As ofertas elegíveis selecionadas foram 168 Profarma, 68 GAM e duas ANB. A Profarma foi observada em consultas amplas com identificação individual dos cards; isso não foi apresentado como uma pesquisa exata por EAN que não ocorreu. As demais fontes preservam a pesquisa complementar por EAN. O menor custo foi escolhido entre ofertas elegíveis da mesma apresentação; 27 cotações alternativas retidas continuaram excluídas da comparação, sem aprovação implícita.
+
+Foram aprovadas individualmente 187 apresentações de higiene e 51 de perfumaria, sem receita. Custos, datas de observação e validade original de até 24 horas foram preservados. O imposto desconhecido da Profarma/GAM permaneceu nulo; o custo final exibido não recebeu imposto ou desconto novamente. Nas duas ofertas ANB, ST e estoque numérico observados foram conservados. A alocação comercial de até cinco unidades, sem reposição automática, não foi declarada como estoque numérico do distribuidor quando este era desconhecido.
+
+Os PNG originais aprovados foram usados como entrada do publicador. As imagens foram conferidas visualmente com as prévias; o manifesto operacional estrito conserva os campos aceitos pelo produtor e mantém os demais metadados em um anexo privado vinculado por hash. A origem distribuidora e as datas distintas da página e do arquivo foram preservadas. As descrições receberam apenas contexto factual da família e instrução de consultar a embalagem, sem acrescentar eficácia, composição, faixa etária ou indicação não verificadas.
+
+As cinco etapas passaram pelos schemas reais dos produtores, seis controles negativos desses schemas, 13 testes JS e dez testes Python com 55 controles negativos dos predecessores. Cada etapa teve revisão independente do runtime, novos 485 testes de segurança e 111 de fornecedores, auditorias de dependências e QA isolado com a sua quantidade exata de produtos, fotos e duas auditorias por produto. As cinco auditorias de produção foram conferidas contra o hash do respectivo `security-proof`; produção e auditoria completa mantiveram um alerta moderado de `fast-uri`, com zero alto/crítico. A fundação imutável de OPS preservou suas 1.051 execuções históricas e o mapa de 1.002 arquivos, sem renovar datas nem afirmar um novo build completo da interface APP `cd566d1`.
+
+Cada aplicação teve ADMIN ativo, deduplicação, controles físicos dos predecessores, concessão canônica exclusiva, backup, baseline e dry-run. A E01 parou na proposta anterior à concessão por ausência de uma comprovação física persistida; a retomada comprovou estado canônico inalterado e ausência de marcadores de aplicação, gerou essa comprovação e continuou do ponto revisado. Nenhuma importação foi repetida. Nas etapas seguintes, os três controles físicos passaram a ser persistidos após o QA e antes da proposta de concessão.
+
+Todas as páginas e imagens públicas foram conferidas por EAN e hash. As cinco janelas foram encerradas com concessão falsa; os cinco bancos exclusivos de QA foram removidos após conferir identidade e zero conexões, sem FORCE. Cada etapa comprovou a preservação da sua base anterior e das oito tabelas protegidas. O retrato final, somente leitura de `Product`, em `2026-10-27T04:08:21.682Z`, contém 2.738 cadastros, dos quais 2.735 ativos não excluídos. A comparação dos campos selecionados conservou os 2.500 cadastros da base inicial e confirmou os 238 EANs novos ativos, sem sobreposição com a união histórica de 412 desta frente.
+
+As capturas, originais, relatórios, auditorias completas, cinco fechamentos e a consolidação permanecem privados em `expansao49-20261025`. O fechamento desta coorte não conclui a lista integral solicitada: 39 apresentações do pool de 277 ficaram retidas, sendo 28 com pendências comerciais e 11 visuais adicionais. Problemas de unidade/pack, MIME e variante podem se sobrepor; não devem ser somados como grupos distintos nem confundidos com as 27 cotações alternativas excluídas.
+
+A auditoria nominal preservou uma fila de 37 das 77 marcas solicitadas sem correspondência no recorte histórico após 150 inclusões, observado às `03:33:20.488Z`, considerando também os candidatos então pendentes. Esse levantamento não foi atualizado com o retrato final de 2.738 cadastros; ausência nominal não significa inexistência ou estoque zero. Descarpack foi registrada separadamente como referência complementar. O plano de 229 termos não comprova execução por manter `DISCOVERY_PENDING`; foram localizadas oito varreduras Profarma completas em arquivos posteriores ao índice antigo, mas nenhuma varredura completa comprovada para essas 37 marcas. A prioridade continua Profarma e depois GAM, com comparação nas quatro fontes por produto e Santa Cruz suspensa. Famílias, princípios ativos e complementações anteriores permanecem no escopo; a continuação deve registrar o avanço real sem reaplicar os cinco lotes encerrados.
