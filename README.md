@@ -2,7 +2,11 @@
 
 Modelos React Email com marca oficial integrados à prévia Miauby ADMIN, sem disparos; comparação atual de Resend/Brevo/SES e pendências operacionais em [112](docs/112-react-email-modelos.md).
 
+Elegibilidade Resend/Brevo em consulta escrita e condições verificadas de Correios, Frenet e Rodonaves: [114](docs/114-elegibilidade-email-e-condicoes-transportadoras.md).
+
 Pesquisa física por GTIN, famílias de embalagem revisáveis e alternativas Correios/Frenet, sem ativação automática de frete: [113](docs/113-referencias-fisicas-e-alternativas-frete.md).
+
+Evidências comerciais separadas do perfil protegido, receitas calibráveis, revisão ADMIN auditada e importação conservadora: [115](docs/115-evidencias-logisticas-e-receitas.md).
 
 Novos medicamentos desta expansão: acréscimo autorizado de 50% para genéricos/similares e 10% para marcas éticas, preservando percentuais existentes, teto CMED e pesquisa nas quatro distribuidoras: [111](docs/111-expansao-medicamentos-e-politica-de-precos.md).
 

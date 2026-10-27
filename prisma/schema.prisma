@@ -191,6 +191,7 @@ model Product {
   wimicoinsEnabled Boolean @default(false)
   wimicoinsRateBps Int @default(200)
   shippingProfile Json?
+  logisticsEvidence Json?
   cashbackEnabled Boolean @default(false)
   cashbackRateBps Int @default(200)
   id                   String        @id @default(cuid())
@@ -827,6 +828,15 @@ model SiteVisit {
 
   @@index([firstSeenAt])
   @@index([lastSeenAt])
+}
+
+model PackagingRecipe {
+  id String @id @default(cuid())
+  name String
+  data Json
+  revision Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model AuditLog {

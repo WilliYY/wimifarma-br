@@ -1,5 +1,13 @@
 # 113 — Referências físicas, famílias de embalagem e alternativas de frete
 
+## Complemento de 27/10 — fichas Torrent e contrato persistente
+
+Após a coleta descrita abaixo, quatro PDFs oficiais Torrent acrescentaram **11 apresentações por GTIN exato**, com peso bruto/líquido separados e três lados C/L/A em mm. As linhas das tabelas foram extraídas e conferidas visualmente; PDFs históricos não comprovam embalagem/lote atual. Fontes: [bisoprolol](https://www.torrent.com.br/uploads/BISOPROLOL.pdf), [carvedilol](https://www.torrent.com.br/uploads/CARVEDILOL%20ficha.pdf), [rosuvastatina](https://www.torrent.com.br/uploads/ROSUVASTATINA%20CALCICA.pdf), [telmisartana/HCTZ](https://www.torrent.com.br/uploads/FICHA%20T%C3%89CNICA%20-%20TELMISARTANA%20HCTZ%20-%20Unica.pdf).
+
+O lote acumulado de **47 GTINs válidos e únicos** foi convertido ao contrato estrito [115](115-evidencias-logisticas-e-receitas.md): **16 referências completas com peso bruto explícito, 27 parciais e quatro conflitos**. A classificação é mais conservadora que a antiga contagem de “campos completos”: peso unitário sem definição bruto/líquido continua parcial. Todas as confirmações ADMIN permanecem falsas; referências não são perfis protegidos nem ativam envio. Lote, manifesto e prova visual em `outputs/logistica-enriquecimento-2026-10-27/`, fora do Git. A aplicação produtiva deve ter comprovação própria em [115](115-evidencias-logisticas-e-receitas.md).
+
+Condições complementares de Correios, Frenet e Rodonaves verificadas em [114](114-elegibilidade-email-e-condicoes-transportadoras.md); nenhum desses contratos foi criado.
+
 ## Coleta de 26–27/10/2026
 
 O lojista autorizou continuar a pesquisa de pesos/medidas em fabricantes e distribuidoras, comparando embalagens para preparar o catálogo. A coleta permanece offline e revisável. Não modifica preços, estoque, perfis logísticos, transportadoras habilitadas ou condições comerciais.

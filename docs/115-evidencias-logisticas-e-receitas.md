@@ -1,0 +1,56 @@
+# 115 — Evidências da unidade comercial e receitas de embalagem
+
+Implementação local de 27/10/2026, autorizada pelo lojista. Complementa [113](113-referencias-fisicas-e-alternativas-frete.md), [109](109-coleta-xml-e-logistica.md) e [29](29-cadastro-logistica-ia.md). A implantação, a migration e a importação produtivas dependem de backup, revisão e validação pelo responsável pela entrega. Código e testes locais não comprovam aplicação na base produtiva.
+
+## Persistência separada
+
+`Product.logisticsEvidence` guarda um documento JSON estrito, versão 1, por GTIN normalizado com 14 dígitos e dígito verificador válido. Cada observação registra identificador estável, URL HTTPS pública sem credenciais/parâmetros, data da coleta, SHA-256 do documento-fonte, GTIN literal normalizado, trecho, nível da embalagem, quantidade de unidades, conflito de identidade, peso em gramas e sua natureza, três lados em milímetros e sua ordem literal explícita (`sideOrder`). O hash registra a proveniência do documento coletado; o servidor não baixa a URL nem comprova sozinho o conteúdo dessa fonte.
+
+Peso bruto exige declaração explícita. Peso líquido, massa de princípio ativo, ml, master e unidade desconhecida continuam identificados e não geram uma unidade protegida. Eixos sem identificação não se tornam comprimento/largura/altura. Cartonagem com faca declarada pode informar a geometria, preservando a natureza do peso.
+
+O estado é calculado: sem referência, parcial, conflito ou referência completa. Divergência entre pesos brutos ou geometrias por GTIN gera conflito; não se faz média nem escolhe silenciosamente uma fonte. Referência completa exige peso bruto e três lados na mesma observação da unidade comercial fechada. Confirmação ADMIN é separada e não comprova aceitação sanitária ou da transportadora.
+
+`sourceDecisions` separa decisões atuais de fontes: identificador da observação, estado `rejected` ou `superseded` e justificativa obrigatória. Ausência de decisão significa fonte vigente. A observação e a proveniência são preservadas; somente fontes vigentes participam do estado e da preparação. Decisões duplicadas ou que apontam para fonte inexistente após o merge são rejeitadas. Alterar, remover ou reativar uma decisão exige `decisionReason`, registra antes/depois e motivo no AuditLog e invalida a confirmação, mesmo que o mesmo PUT peça `confirmed:true`. Uma segunda revisão pode confirmar o documento estabilizado. O importador não aplica decisões contidas no arquivo e preserva as decisões existentes.
+
+`shippingProfile` permanece com seu significado anterior de unidade protegida. Nenhuma importação, revisão ou receita deste fluxo altera esse perfil, preços, estoque, classificação de receita, ofertas ou serviços habilitados. A gravação da evidência atualiza `Product.updatedAt`; tokens/cotações que dependem dessa revisão poderão exigir atualização, conforme o contrato já existente.
+
+## Receita reutilizável
+
+`PackagingRecipe` possui nome, JSON estrito versão 1, revisão inteira e timestamps. O contrato registra os três lados internos e externos do recipiente, tara do recipiente externo, tara da proteção, folgas por face/eixo, descrição da proteção, data e nota da calibração e lista explícita dos GTINs fisicamente compatíveis. Campos físicos desconhecidos permanecem `null`; nenhuma medida padrão foi inventada. Zero só é permitido para proteção/folga quando informado explicitamente; não substitui a descrição e a calibração obrigatórias.
+
+A compatibilidade exige confirmação de apresentação, material, fechamento, proteção e encaixe. Igualdade de categoria, dose, conteúdo ou contagem não basta. A geometria/receita pode ser compartilhada por embalagens confirmadas; o peso bruto continua específico do produto.
+
+A receita declara `allowedOrientations` explicitamente: permutações de índices 0/1/2 da ordem literal dos lados da fonte; não há orientação padrão. A convenção literal de eixos é declarada em `unitSideOrder`; divergência em qualquer fonte com lados bloqueia a prévia. GTINs compartilhados devem ter essa ordem e a mesma política de orientação conferidas na calibração, inclusive restrições de frascos em pé. O preparador puro examina somente as orientações declaradas da unidade, acresce duas folgas por eixo e confere o encaixe nas medidas internas. O peso da prévia é o peso bruto comercial mais a tara externa e a proteção, arredondado para cima em gramas. As medidas da prévia vêm do recipiente externo. Não há empacotamento de carrinho nem suposição de múltiplas unidades por caixa nesta etapa.
+
+A prévia exige referência completa confirmada, ausência de conflitos/master/peso líquido ou desconhecido, receita calibrada, todas as medidas/taras/folgas explícitas, GTIN compatível, classificação de carga separada e elegibilidade vigente. Perfil protegido preexistente bloqueia a composição para evitar dupla tara. O resultado, quando possível, é apenas um rascunho `enabled:false`, `transportReviewed:false`, `measurementBasis:estimated`, sem aprovação de serviços. Não há ação automática para aplicar a prévia.
+
+## API e painel
+
+- `GET /api/admin/fretes/produtos/[id]/evidencias`: evidência, GTIN, estado e revisão do produto.
+- `PUT` na mesma rota: acréscimo de observações e revisão explícita, com `updatedAt`. Fontes anteriores são preservadas; identificador existente com conteúdo divergente é rejeitado. Nova fonte invalida a confirmação e exige uma revisão posterior.
+- `POST` na mesma rota: `recipeId` e `cargoKinds`, retornando somente bloqueios ou prévia. Nenhum dado é gravado.
+- `GET /api/admin/fretes/embalagens`: até 100 receitas cadastradas.
+- `PUT` na rota de embalagens: cria com revisão zero ou altera por `id` e revisão existente. Limite de 100 receitas e controle concorrente nas criações.
+
+Todas as rotas exigem ADMIN; mutações revalidam ADMIN ativo dentro da transação. Mutações/prévias usam Origin da aplicação, JSON e limite de 32 KB. Salvamentos usam concorrência otimista e auditoria transacional; versões antigas retornam 409. URLs são somente evidência exibida como link; nenhum endpoint faz busca remota ou fetch dessas fontes.
+
+O painel de fretes carrega a ficha somente ao abrir “Unidade comercial e receitas de embalagem”. Mostra peso/natureza, lados, conflito e fonte. Permite importar referência estruturada, revisar, manter receitas estruturadas e conferir a preparação sem aplicar. O formulário anterior de perfil protegido continua com sua revisão própria.
+
+Ao confirmar ou alterar decisões sem edição estruturada, o painel envia `observations:[]`, mantendo o histórico no servidor. Isso permite revisar documentos importados maiores que o limite do corpo HTTP, sem ampliá-lo. A edição estruturada continua sujeita aos 32 KB; para acrescentar fontes, pode enviar somente as novas observações. A existência dos IDs das decisões é verificada depois do merge com o histórico, permitindo delta de novas fontes e decisões de fontes anteriores na mesma solicitação.
+
+## Importação operacional
+
+`scripts/import-logistics-evidence.ts` recebe um arquivo JSON privado com array de documentos no contrato `logisticsEvidenceSchema`. Não recebe documentos NF-e brutos nem URLs para download. O arquivo tem limite de 10 MB e 5.000 GTINs; duplicatas e correspondências ausentes/ambíguas cancelam o lote. Não fazer correspondência por nome ou categoria.
+
+```text
+node --import tsx scripts/import-logistics-evidence.ts --input <arquivo-privado.json> --actor-id <ADMIN-ativo>
+node --import tsx scripts/import-logistics-evidence.ts --input <arquivo-privado.json> --actor-id <ADMIN-ativo> --apply
+```
+
+O primeiro comando é dry-run e não grava. O segundo somente deve ser usado pelo responsável pela aplicação após backup, QA e revisão do plano. O importador valida ADMIN ativo, faz merge conservador e idempotente, preserva revisões existentes no no-op e invalida confirmação quando surgem observações. Na aplicação, atualiza exclusivamente `logisticsEvidence`, com CAS por `updatedAt` e auditoria na mesma transação. Qualquer falha reverte o lote. O resumo não imprime descrições comerciais, dados de pacientes ou segredos; arquivo-fonte e relatórios ficam em `outputs` privado, fora do Git.
+
+## Verificação
+
+Testes sintéticos cobrem contrato estrito, URL sem segredos, GTIN, bruto/líquido/master, eixos, conflitos, merge, calibração, tare/proteção/folga, seis orientações/encaixe, compatibilidade explícita, elegibilidade/carga separadas, preservação de perfil protegido, prévia desativada, ADMIN/Origin/CAS, auditoria, importação dry-run/idempotente e painel sob demanda. Executar também regressões de frete, Prisma validate, typecheck, lint, build e segurança antes de publicar.
+
+Pendências operacionais: transformar e revisar as observações já coletadas no contrato versionado, medir tara/encaixe/proteção das embalagens reais, confirmar apresentações/lotes, revisar carga e serviços por produto. Sem esses dados, os bloqueios continuam visíveis. A caixa informada de 24 × 15 × 10 cm não ganha tara ou medidas internas presumidas.

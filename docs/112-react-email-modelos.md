@@ -14,7 +14,7 @@ Não há envio automático, provedor conectado, chave de API, novo endpoint púb
 
 Consulta agregada somente leitura em 27/10 indica escala inicial; totais comerciais permanecem na evidência privada da tarefa. Excluídos somente pedidos vinculados a `OnlinePayment.environment=test`; testes manuais podem permanecer. Campo e-mail preenchido não comprova destinatário verificado ou consentimento de marketing. Não há tráfego automático de e-mail ativo. O número de produtos não define a quantidade de envios.
 
-Recomendação: Resend Free para começar os transacionais, desde que a conta/remetente sejam aprovados e a projeção caiba em 3.000 mensagens/mês e 100 por dia. Brevo é preferível quando a operação deseja campanhas pelo painel e aceita as condições de branding/contatos. SES tem menor tarifa por uso, mas implica configurar produção AWS, eventos, supressões, filas e monitoramento; não há razão econômica comprovada para adicionar essa operação agora.
+**Recomendação condicionada à atividade:** pesquisa posterior no mesmo dia encontrou produtos farmacêuticos/suplementos na lista de conteúdo proibido do Resend e restrições/avaliação prévia no Brevo. Foram enviadas consultas autorizadas aos dois serviços antes de cadastro ou integração. Nenhuma exceção transacional foi presumida. SES permanece alternativa sujeita à aprovação AWS e ao custo operacional. Detalhes em [114](114-elegibilidade-email-e-condicoes-transportadoras.md). Os valores abaixo comparam capacidade/preço, sem comprovar elegibilidade da farmácia.
 
 Valores públicos em US$, consulta de 27/10/2026, antes de impostos, câmbio e extras; cenários mensais de 30 dias e um destinatário por mensagem:
 

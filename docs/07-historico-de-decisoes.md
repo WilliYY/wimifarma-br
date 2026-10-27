@@ -1,5 +1,13 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-27 — Elegibilidade do provedor antes de integrar o envio
+
+- A recomendação de Resend ficou suspensa após verificação da restrição a conteúdo farmacêutico/suplementos. Resend e Brevo receberam consultas autorizadas pelo Gmail, sem dados de clientes. Não houve cadastro Google concluído, chave, DNS ou disparos pelo serviço. React Email continua independente do provedor. Condições Correios/Frenet/Rodonaves verificadas, sem contratos criados; [114](114-elegibilidade-email-e-condicoes-transportadoras.md).
+
+## 2026-10-27 — Unidade comercial e embalagem de transporte separadas
+
+- Acrescentados documento físico versionado por GTIN e receitas de embalagem. Fontes preservam proveniência, bruto/líquido/master, ordem de eixos e decisões auditadas; reativação exige revisão posterior. Receita exige tara, proteção, encaixe e orientações explícitas e gera somente prévia desativada. Importação atualiza apenas evidências, com ADMIN ativo, CAS, auditoria e idempotência; não muda `shippingProfile`, preço ou estoque. Migração aditiva e operação em [115](115-evidencias-logisticas-e-receitas.md).
+
 ## 2026-10-27 — React Email independente do provedor
 
 - Integrados modelos HTML no servidor com `react-email` 6.11.3 fixado, React 19 e logo oficial derivada em PNG. A prévia ADMIN reutiliza os exemplos e regras canônicas, sem credenciais, migração ou envio. Resend é a recomendação inicial para transacionais; Brevo atende operação de campanhas e SES depende de escala/gestão que compensem. Contrato, custos, checks e limites em [112](112-react-email-modelos.md).

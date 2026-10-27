@@ -9,6 +9,7 @@ import type { PrescriptionType } from "@/features/products/purchase-policy";
 import { SHIPPING_CARGO_LABELS, type ShippingCargo } from "@/features/shipping/cargo-policy";
 import { ShippingBenefitFields } from "./shipping-benefit-fields";
 import { ShippingOperationalCostFields, ShippingCostComparisons } from "./shipping-operational-costs";
+import { ProductLogisticsEvidence } from "./product-logistics-evidence";
 
 type Product = { id: string; name: string; category: string | null; shippingProfile: unknown; requiresPrescription: boolean; prescriptionType?: PrescriptionType; isPopularPharmacy: boolean; updatedAt: string };
 type Data = { settings: ShippingSettings; revision: number; applicationConfigured: boolean; connected: boolean; expiresAt: number | null; products: Product[]; readinessSummary?: { total: number; missing: number; review: number; disabled: number; configured: number; assisted: number }; pagination: { page: number; pageSize: number; total: number; totalPages: number } };
@@ -155,7 +156,7 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
       {catalogLoading && <p className="mt-4 text-sm text-muted" role="status">Carregando produtos…</p>}
       {catalogError && <p className="mt-4 text-sm text-red-700" role="alert">{catalogError}</p>}
       {!catalogLoading && !catalogError && data?.products.length === 0 && <p className="mt-4 text-sm text-muted">Nenhum produto encontrado.</p>}
-      <div className="mt-5 grid gap-4">{!catalogLoading && !catalogError && data?.products.map((product) => <ProductShippingForm key={`${product.id}:${product.updatedAt}`} product={product} busy={busy} services={[...defaultServices, ...services, ...quotes]} configured={settings.serviceIds} onSave={(profile) => run(async () => { await request(`/api/admin/fretes/produtos/${product.id}`, "PUT", { profile, updatedAt: product.updatedAt }); await load(false); setMessage("Dados de transporte salvos."); })} />)}</div></section>
+      <div className="mt-5 grid gap-4">{!catalogLoading && !catalogError && data?.products.map((product) => <div key={`${product.id}:${product.updatedAt}`}><ProductShippingForm product={product} busy={busy} services={[...defaultServices, ...services, ...quotes]} configured={settings.serviceIds} onSave={(profile) => run(async () => { await request(`/api/admin/fretes/produtos/${product.id}`, "PUT", { profile, updatedAt: product.updatedAt }); await load(false); setMessage("Dados de transporte salvos."); })} /><ProductLogisticsEvidence productId={product.id} onSaved={() => { void load(false); }} /></div>)}</div></section>
   </div>;
 }
 function Label({ text, children }: { text: string; children: React.ReactNode }) { return <label className="grid min-w-0 gap-2 text-xs font-bold text-muted"><span>{text}</span>{children}</label>; }
