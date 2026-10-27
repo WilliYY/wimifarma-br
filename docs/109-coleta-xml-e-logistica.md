@@ -1,5 +1,7 @@
 # Coleta local de XML para revisão logística
 
+Ampliação de fontes físicas em 26–27/10/2026: fichas de fabricante e páginas de distribuidoras, agrupamentos de embalagem e fila de todo o catálogo em [113](113-referencias-fisicas-e-alternativas-frete.md). Esses dados continuam referências offline, sem habilitação automática; o extrator XML abaixo não foi alterado.
+
 Implementação de 25/10/2026. O lojista autorizou procurar documentos reais em suas contas para preparar o catálogo para envio. Esta entrega acrescenta uma ferramenta offline de extração e cruzamento; não é importação de estoque, preço, custo vigente, nota fiscal contábil ou perfil logístico no banco.
 
 ## Uso
