@@ -35,3 +35,11 @@ Fontes: [React Email render](https://react.email/docs/utilities/render), [licen�
 Regressões sintéticas cobrem renderização HTML, texto canônico, escape, privacidade, estados financeiros incompatíveis, seis exemplos e caminhos de imagem na prévia. `npm.cmd run test:commerce` passou com 24 testes. Lint, typecheck, build e 491 testes de segurança passaram. Auditorias npm completa e de produção retornaram um alerta moderado preexistente em `fast-uri`, zero high/critical; não houve atualização forçada.
 
 Inspeção em fixture com o componente real, HTML gerado, CSS e CSP do aplicativo: 390/1440 px, seis eventos, sem erros JavaScript ou transbordamento horizontal. Isso não equivale a homologação em Gmail/Outlook nem envio real. Revisão independente aprovou os limites de autorização, dados e dependência; o ajuste de caminho da logo na prévia recebeu regressão própria. Evidência local em `outputs/react-email-2026-10-27/`, fora do Git. Publicação e validação do ambiente real devem ser distinguidas desses checks locais.
+
+## Publicação em 27/10/2026
+
+Implementação `7b7c780`, documentação logística `bd5b077`, enviadas ao GitHub. Servidor atualizado por fast-forward com checkout limpo e concessão canônica de catálogo inativa. Build Linux/Docker passou e somente `app` foi recriado com `--no-deps`; identidade/início do PostgreSQL foram preservados, sem migration.
+
+Imagem ativa `sha256:29c5ead199b6e206ba3a867e5375ead2ab81db6ea89d19c07e651f727107ae84`, saudável e zero reinícios. Recuperação preservada em `wimifarma-br-app:pre-react-email-bd5b077`, imagem anterior `sha256:0b713f2b912732d99ea35bf5459dffeb4d18fe1d1ce54dc3ac833eeb20a8c7a6`.
+
+HTTPS: health, home e checkout 200; Miauby ADMIN redireciona sessão ausente com 307 e sua API recusa com 401, `private, no-store`, CSP, nosniff e DENY. PNG público com SHA-256 `bb09fb50a5c8b063f1adfa7f555827def40b3c11caf70f6592380e87c4affbd5`. A inspeção visual autenticada em produção e homologação de entrega em clientes de e-mail não foram realizadas; os seis modelos foram exercitados na fixture local. Nenhuma mensagem ou contratação foi criada.
