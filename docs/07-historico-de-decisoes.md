@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-27 — Piloto de cobertura antes de adotar fonte física em lote
+
+- Priorizar unidade comercial por GTIN com bruto/líquido, unidade e hierarquia explícitos; preparar amostra de dez itens antes de contratar ou mapear provedores. Campos Cosmos exigem acesso/semântica/licença; ConsultaProdutos ainda não comprova API operacional para os pesos. Amostra complementa a consulta GS1 autorizada. Nenhum peso ou integração foi ativado; [120](120-rotas-para-dados-fisicos-em-lote.md).
+
 ## 2026-10-27 — Peso bruto por GTIN antes de estimativa genérica
 
 - Política v2 mantém coeficientes hipotéticos, prioriza fonte bruta da apresentação exata e distingue composição cadastrada de kits. Refinamento explícito permite alterar somente peso de rascunho estimado/desativado, sem referência/serviços, por fonte bruta vigente. Plano com perfil anterior, ADMIN/CAS e auditoria própria preservam demais campos; [119](119-comparacao-e-refinamento-dos-pesos.md).
