@@ -2,6 +2,8 @@
 
 ## Situação e proposta
 
+Atualização de 27/10/2026: modelos React Email integrados à prévia ADMIN, sem envio. Recomendação atual é Resend Free para transacionais na escala observada; Brevo permanece opção para campanhas. Comparação de custos, implementação, validação e pendências em [112](112-react-email-modelos.md). As recomendações anteriores abaixo são históricas, não uma conta contratada.
+
 Comparação de 04/10: `35-referencias-catalogo-e-emails.md`. Para começar sem mensalidade, Brevo Free e créditos pré-pagos; alternativa com cobrança por uso é SES, com listmonk para campanhas. Hospedagem/manutenção e autenticação de domínio continuam necessárias. Nenhum serviço novo foi contratado ou conectado.
 
 Pedido do lojista em 03/10/2026: confirmação de compra, recuperação de carrinho e novidades. **O site ainda não envia e-mails.** Não existe provedor de e-mail configurado, remetente autenticado, fila de e-mails ou consentimento específico de marketing persistido. A proposta abaixo não habilita disparos nem importa clientes para terceiros.

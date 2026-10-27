@@ -3,47 +3,15 @@
 import { useState } from "react";
 import { Copy, Mail, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { buildCustomerMessage, type CustomerMessageData, type CustomerMessageEvent } from "@/features/communications/customer-messages";
+import { buildCustomerMessage, type CustomerMessageEvent } from "@/features/communications/customer-messages";
+import type { CustomerEmailPreviews } from "@/features/communications/customer-email";
+import { customerMessageEvents, customerMessageSample, customerMessageSampleOptions } from "@/features/communications/customer-message-samples";
 
-const events: { value: CustomerMessageEvent; label: string }[] = [
-  { value: "CART_ABANDONED", label: "Carrinho aguardando" },
-  { value: "ORDER_RECEIVED", label: "Pedido recebido" },
-  { value: "PIX_CREATED", label: "Pix criado" },
-  { value: "PAYMENT_REMINDER", label: "Lembrete de pagamento" },
-  { value: "PAYMENT_CONFIRMED", label: "Pagamento confirmado" },
-  { value: "POST_SALE", label: "Pós-venda e avaliação" },
-];
-
-function sampleMessage(event: CustomerMessageEvent) {
-  const completed = event === "POST_SALE";
-  const paid = completed || event === "PAYMENT_CONFIRMED";
-  const sample: CustomerMessageData = {
-    event,
-    environment: "TEST",
-    firstName: "Cliente Exemplo",
-    orderNumber: event === "CART_ABANDONED" ? undefined : "WBR-FICTICIO-001",
-    items: [
-      { name: "Sabonete fictício para demonstração", quantity: 2, unitPriceCents: 1500, totalCents: 3000 },
-      { name: "Shampoo fictício para demonstração", quantity: 1, unitPriceCents: 2000, totalCents: 2000 },
-    ],
-    subtotalCents: 5000,
-    deliveryFeeCents: 790,
-    discounts: [{ label: "Cupom fictício", amountCents: 500 }, { label: "Cashback utilizado fictício", amountCents: 500 }],
-    totalCents: 4790,
-    fulfillmentMethod: "DELIVERY",
-    orderStatus: completed ? "COMPLETED" : "PENDING",
-    paymentStatus: paid ? "PAID" : "PENDING",
-    cashback: completed ? { earnedCents: 80, balanceCents: 280 } : { pendingCents: 80 },
-    paymentPage: event === "PIX_CREATED" ? { url: "https://loja.example/checkout/pagamento/fixture-order", orderId: "fixture-order", authorizedForRecipient: true } : undefined,
-  };
-  return buildCustomerMessage(sample, { includeItems: true, recipientVerified: true, trustedOrigin: "https://loja.example" })!;
-}
-
-export function CustomerMessagePreview() {
+export function CustomerMessagePreview({ emailPreviews }: { emailPreviews: CustomerEmailPreviews }) {
   const [event, setEvent] = useState<CustomerMessageEvent>("ORDER_RECEIVED");
   const [channel, setChannel] = useState<"whatsapp" | "email">("whatsapp");
   const [notice, setNotice] = useState("");
-  const message = sampleMessage(event);
+  const message = buildCustomerMessage(customerMessageSample(event), customerMessageSampleOptions)!;
   const text = channel === "email" ? message.email.text : message.whatsappText;
 
   async function copyText() {
@@ -69,7 +37,7 @@ export function CustomerMessagePreview() {
         <label className="grid min-w-0 gap-2 text-sm font-bold text-ink">
           Etapa da compra
           <select className="h-11 w-full min-w-0 rounded-lg border border-line bg-white px-3 text-sm font-medium outline-none focus:border-brand focus:ring-2 focus:ring-brand/15" onChange={change => { setEvent(change.target.value as CustomerMessageEvent); setNotice(""); }} value={event}>
-            {events.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+            {customerMessageEvents.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
         </label>
         <label className="grid min-w-0 gap-2 text-sm font-bold text-ink">
@@ -86,7 +54,9 @@ export function CustomerMessagePreview() {
           {channel === "email" ? "Prévia de e-mail" : "Prévia de WhatsApp"}
         </div>
         {channel === "email" && <p className="border-b border-line px-4 py-3 text-sm leading-6 text-ink [overflow-wrap:anywhere]"><span className="font-bold">Assunto: </span>{message.email.subject}</p>}
-        <p className="whitespace-pre-wrap px-4 py-5 text-sm leading-7 text-ink [overflow-wrap:anywhere]">{text}</p>
+        {channel === "email"
+          ? <iframe title="Modelo de e-mail com dados fictícios" sandbox="" referrerPolicy="no-referrer" srcDoc={emailPreviews[event]} className="h-[600px] w-full border-0 bg-white" />
+          : <p className="whitespace-pre-wrap px-4 py-5 text-sm leading-7 text-ink [overflow-wrap:anywhere]">{text}</p>}
       </div>
       <p className="mt-3 text-xs leading-5 text-muted">Itens exibidos apenas para esta simulação de destinatário autorizado. No envio futuro, detalhes exigem canal verificado; cashback creditado só aparece após pedido concluído e pago. O endereço loja.example é fictício.</p>
       <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center">

@@ -2,6 +2,8 @@
 
 ## Escopo desta etapa
 
+Desde 27/10/2026, a prévia ADMIN de e-mail renderiza os seis exemplos com React Email no servidor e os mostra em iframe isolado. O gerador canônico e o texto WhatsApp permanecem. Entrega por provedor continua pendente; contrato em [112](112-react-email-modelos.md).
+
 O painel Miauby ADMIN integra uma prévia de seis eventos, seleção WhatsApp/e-mail e cópia local. Cada exemplo é marcado como TESTE e fictício; não envia nada. Alertas já existentes ao proprietário também passam a incluir valores dos itens/subtotal/frete/descontos, preservando destinatário fixo e estados reais.
 
 `src/features/communications/customer-messages.ts` prepara uma representação única para WhatsApp e e-mail: saudação da Miauby, evento, número do pedido, subtotal, frete, descontos, total, modalidade, estados reais e cashback informado. Os itens, quando autorizados, mostram quantidade, preço unitário e total. O texto do WhatsApp é o mesmo do e-mail; o HTML escapa o conteúdo recebido. Os assuntos são genéricos e nunca incluem produtos ou inferências de saúde.

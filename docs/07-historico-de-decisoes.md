@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-27 — React Email independente do provedor
+
+- Integrados modelos HTML no servidor com `react-email` 6.11.3 fixado, React 19 e logo oficial derivada em PNG. A prévia ADMIN reutiliza os exemplos e regras canônicas, sem credenciais, migração ou envio. Resend é a recomendação inicial para transacionais; Brevo atende operação de campanhas e SES depende de escala/gestão que compensem. Contrato, custos, checks e limites em [112](112-react-email-modelos.md).
+
 ## 2026-10-26 — Movimento fracionário das marcas e atividade do rodapé
 
 - A pedido do lojista, a faixa de marcas remove Pausar/Retomar e troca escrita de `scrollLeft` por quadro por uma trilha com `transform` fracionário, mantendo interação nativa, filtros, loop e preferência de movimento reduzido. O rodapé preserva as 128 bolhas, keyframes, tempos, trajetórias e filtro; somente pausa fora da área próxima à tela/aba oculta e contenção sem recorte são acrescentadas. Contratos em [82](82-marcas-do-catalogo.md) e [61](61-avaliacoes-e-rodape.md); evidências e limites em `outputs/motion-smooth-2026-10-26/`.

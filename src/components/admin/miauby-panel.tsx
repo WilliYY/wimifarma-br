@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CustomerMessagePreview } from "@/components/admin/customer-message-preview";
+import type { CustomerEmailPreviews } from "@/features/communications/customer-email";
 
 type Settings = {
   enabled: boolean;
@@ -95,7 +96,7 @@ function formatDate(value: string) {
   return new Date(value).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
 
-export function MiaubyPanel() {
+export function MiaubyPanel({ emailPreviews }: { emailPreviews: CustomerEmailPreviews }) {
   const [data, setData] = useState<PanelData | null>(null);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [error, setError] = useState("");
@@ -199,7 +200,7 @@ export function MiaubyPanel() {
         </div>
       </section>
 
-      <CustomerMessagePreview />
+      <CustomerMessagePreview emailPreviews={emailPreviews} />
 
       {error && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">{error} {data && "Os dados exibidos podem estar desatualizados."}</div>}
       <p className="sr-only" role="status">{notice}</p>

@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Modelos React Email com marca oficial integrados à prévia Miauby ADMIN, sem disparos; comparação atual de Resend/Brevo/SES e pendências operacionais em [112](docs/112-react-email-modelos.md).
+
 Novos medicamentos desta expansão: acréscimo autorizado de 50% para genéricos/similares e 10% para marcas éticas, preservando percentuais existentes, teto CMED e pesquisa nas quatro distribuidoras: [111](docs/111-expansao-medicamentos-e-politica-de-precos.md).
 
 Coleta offline de XML NF-e, com proveniência, cruzamento por GTIN e fila revisável sem alterar dados comerciais ou habilitar frete automaticamente: [109](docs/109-coleta-xml-e-logistica.md).

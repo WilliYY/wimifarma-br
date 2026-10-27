@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/admin/admin-shell";
 import { MiaubyPanel } from "@/components/admin/miauby-panel";
+import { renderSampleEmails } from "@/features/communications/customer-email";
 import {
   adminRoutePermissions,
   requireAdminPageRoute,
@@ -10,7 +11,7 @@ export default async function Page() {
 
   return (
     <AdminShell allowedRoles={adminRoutePermissions["/admin/miauby"]} title="Miauby">
-      <MiaubyPanel />
+      <MiaubyPanel emailPreviews={await renderSampleEmails()} />
     </AdminShell>
   );
 }
