@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-27 — Cenários de peso aproximado separados da conferência física
+
+- A pedido do lojista, massas declaradas e hipóteses por apresentação geram rascunhos de peso, sem dimensões ou ativação. Dosagem e concentração não viram massa da embalagem. Reserva externa é explícita e não medida. Aplicação por GTIN exige ADMIN, dry-run com hash, concorrência e auditoria; preserva perfis anteriores e campos comerciais. Política e limites em [118](118-pesos-aproximados-para-conferencia.md).
+
 ## 2026-10-27 — Animações com geometria preservada e trabalho localizado
 
 - Bolhas do rodapé passam de dimensões/bottom animados a translate/scale equivalentes, preservando 128 elementos, trajetórias, tempos, fases e filtro. O cabeçalho conserva sua transição; deslocamentos intermediários atingem consumidores sticky locais, enquanto a raiz recebe a altura estável. Medições, testes, revisão e limites em [10](10-layout-e-experiencia.md).

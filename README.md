@@ -10,6 +10,8 @@ Evidências comerciais separadas do perfil protegido, receitas calibráveis, rev
 
 Rota para dados físicos em lote, consulta GS1, práticas documentadas das redes e restrições Frenet por carga/contrato: [117](docs/117-rota-dados-logisticos-e-frenet.md).
 
+Pesos aproximados para conferência, com hipóteses explícitas, dimensões pendentes e aplicação auditada sem habilitar envio: [118](docs/118-pesos-aproximados-para-conferencia.md).
+
 Novos medicamentos desta expansão: acréscimo autorizado de 50% para genéricos/similares e 10% para marcas éticas, preservando percentuais existentes, teto CMED e pesquisa nas quatro distribuidoras: [111](docs/111-expansao-medicamentos-e-politica-de-precos.md).
 
 Coleta offline de XML NF-e, com proveniência, cruzamento por GTIN e fila revisável sem alterar dados comerciais ou habilitar frete automaticamente: [109](docs/109-coleta-xml-e-logistica.md).
