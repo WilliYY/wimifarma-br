@@ -53,7 +53,7 @@ O primeiro comando é dry-run e não grava. O segundo somente deve ser usado pel
 
 Testes sintéticos cobrem contrato estrito, URL sem segredos, GTIN, bruto/líquido/master, eixos, conflitos, merge, calibração, tare/proteção/folga, seis orientações/encaixe, compatibilidade explícita, elegibilidade/carga separadas, preservação de perfil protegido, prévia desativada, ADMIN/Origin/CAS, auditoria, importação dry-run/idempotente e painel sob demanda. Executar também regressões de frete, Prisma validate, typecheck, lint, build e segurança antes de publicar.
 
-Pendências operacionais: transformar e revisar as observações já coletadas no contrato versionado, medir tara/encaixe/proteção das embalagens reais, confirmar apresentações/lotes, revisar carga e serviços por produto. Sem esses dados, os bloqueios continuam visíveis. A caixa informada de 24 × 15 × 10 cm não ganha tara ou medidas internas presumidas.
+Pendências operacionais: revisar as observações importadas, buscar as referências restantes, medir tara/encaixe/proteção das embalagens reais, confirmar apresentações/lotes, revisar carga e serviços por produto. Sem esses dados, os bloqueios continuam visíveis. A caixa informada de 24 × 15 × 10 cm não ganha tara ou medidas internas presumidas.
 
 ## Validação integrada e estado operacional em 27/10
 
@@ -63,6 +63,20 @@ Passaram `npm.cmd run test:shipping` (126 testes), `npm.cmd run test:security` (
 
 PostgreSQL 17 isolado, sem rede externa/portas publicadas e somente dados sintéticos: todas as migrations aplicadas, importação de 47 referências, dry-run sem escrita, repetição sem novas gravações, reversão integral de lote inválido, recusa de ADMIN inativo e preservação de campos comerciais/perfis protegidos comprovadas. O contêiner próprio foi encerrado ao final. Evidência privada: `outputs/logistica-enriquecimento-2026-10-27/qa-postgres-proof.json` e `local-validation.json`.
 
-Código `3f5c9ae` enviado ao GitHub. Imagens de ferramentas e aplicação foram construídas em fonte isolada, sem alterar o checkout ativo do servidor: tools `sha256:e12a62c363bce3dcdd77f01d899ade091f42b3e9884008d30d1f117993ce7e2d`, app candidata `sha256:b3cdbeb03542e64c24001e71c9a395a4531f47febb72d071c9b08e8d0a387b8e`. No momento deste registro, migração, importação e ativação da imagem **ainda não foram executadas em produção**, pois outra publicação pediu manutenção temporária do HEAD `02f6241`. A aplicação existente e o PostgreSQL permanecem saudáveis.
+Código `3f5c9ae` enviado ao GitHub. Imagens de ferramentas e aplicação foram construídas em fonte isolada: tools `sha256:e12a62c363bce3dcdd77f01d899ade091f42b3e9884008d30d1f117993ce7e2d`, app `sha256:b3cdbeb03542e64c24001e71c9a395a4531f47febb72d071c9b08e8d0a387b8e`. Inicialmente, a operação produtiva aguardou o encerramento da publicação de outro chat, preservando seu HEAD `02f6241`. O resultado da janela posterior está abaixo.
 
 Usar o serviço oficial Compose `migrate` com a imagem de ferramentas desta entrega. `docker run --env-file .env` não reproduz a interpretação do Compose e falhou antes de conectar; não alterar ou imprimir credenciais para contornar isso. O serviço Compose confirmou o ADMIN ativo corretamente. Antes da operação produtiva: verificar a liberação da outra janela, checkout limpo, única migration esperada, backup custom válido, dry-run e auditoria. Importar somente evidências e verificar hashes dos campos comerciais/perfis antes/depois. Não restaurar banco global nem habilitar frete automaticamente.
+
+## Aplicação produtiva — 27/10/2026, prova às 14h49 UTC
+
+Após autorização humana para alinhar com o chat 10, sua publicação foi encerrada e o estado canônico **do servidor** confirmou `completed_released`, `productionGrant:false`, `uncertainApply:false`, sem outros grants. O arquivo equivalente do checkout Windows era antigo e não foi usado como concessão. Fonte vigente: `/home/ubuntu/projetos/wimifarma-br/outputs/catalogo-paralelo-2026-10-20/estado-orquestracao.json`. O outro chat confirmou que não iniciaria novo apply durante a operação.
+
+Servidor atualizado por fast-forward até `4818a07`. Uma única migration pendente, `20261027140000_logistics_evidence`, foi verificada e aplicada pelo serviço oficial Compose. Backup custom restrito a modo 600, 1.679.337 bytes, com SHA-256 e catálogo de restauração conferidos; não foi ensaiada restauração global com dados de clientes. Recuperação: `/home/ubuntu/backups/wimifarma-br/logistics-01a15b8f-20261027/pre-logistics.dump`.
+
+Dry-run confirmou 47 correspondências únicas. Aplicação gravou **47 evidências e 47 auditorias**; nova simulação retornou no-op para todas. Fingerprints dos campos comerciais de todos os **2.739 produtos**, incluindo o item recém-publicado pelo outro chat, e de todos os perfis protegidos permaneceram iguais. Preços, estoque, status, receita e `shippingProfile` não foram alterados.
+
+A imagem app acima foi ativada às 14h46m48 UTC, recriando somente `app` com `--no-deps --no-build`. Aplicação e PostgreSQL saudáveis, zero reinícios; identidade/início do PostgreSQL preservados desde 03/10. Tag de recuperação: `wimifarma-br-app:pre-logistics-3f5c9ae`.
+
+HTTPS: home, checkout e health **200**; as duas novas APIs ADMIN sem sessão **401**, com `Cache-Control: private, no-store, max-age=0`. A fixture autenticada/UI foi verificada localmente; não se afirma inspeção visual autenticada em produção. Contagem real após a entrega: **2.736 ativos, 47 com evidência, 2.689 sem evidência e os mesmos dois perfis habilitados anteriores**. Referência completa continua diferente de envio liberado: as 47 revisões seguem não confirmadas, e receita de proteção/carga/serviços exige conferência própria.
+
+Provas privadas: `production-proof.json` e `post-deploy-proof.json`, em `outputs/logistica-enriquecimento-2026-10-27/`. Nenhum segredo, backup, prova privada ou cadastro de cliente foi versionado.
