@@ -49,3 +49,15 @@ As sete páginas e suas imagens responderam HTTP 200 com os hashes esperados. Al
 ## Continuidade
 
 A coorte mantém seus 1.491 candidatos e os arquivos originais de pesquisa. **9 inclusões foram comprovadas; 1.482 candidatos continuam em conferência**, sem aprovação coletiva de preço, foto, estoque ou classificação. O histórico privado de publicação está em `outputs/catalogo-lotes200-2026-10-26/lotes1000-v1-20261027/publication-ledger-v1.json`. Os próximos candidatos dependem de conferência individual das quatro fontes, identidade, classificação, condição comercial e imagem; não foi exigida a presença de quatro ofertas positivas para cada produto.
+
+### Conferência de continuidade em 28/10/2026
+
+Uma nova leitura produtiva somente de consulta cruzou os 1.491 EANs do CSV original com Product, considerando registros ativos, inativos e excluídos e variantes físicas de EAN. Foram encontrados exatamente os nove EANs do ledger, todos ativos e sem exclusão; os outros 1.482 continuam ausentes. Isso confirma a ausência de novas inclusões dessa coorte nesta retomada, sem atribuir cadastros sintéticos ou de outras frentes a este total.
+
+Os 14 itens preparados para stage03 conservam fotos e conferências documentais, mas suas ofertas originais venceram em 27/10. A leitura do SupplierCatalogOffer não encontrou ofertas desses EANs que pudessem substituir os dados vencidos. O runtime mantém execução e concessão desabilitadas; datas, preços e estoque não foram renovados por inferência. Falhas técnicas de leitura do navegador não foram tratadas como ausência comercial do produto. Nenhum produto existente foi desativado por essa pendência.
+
+Às 11:14 UTC, a janela canônica ainda era a etapa MIP7/stage02 concluída e liberada, sem concessão ativa. Os controles privados de continuidade, cruzamento da coorte e expiração dos 14 itens estão em `outputs/catalogo-lotes200-2026-10-26/lotes1000-v1-20261027/continuidade-20261028-v1/`.
+
+A revisão independente local do runtime permaneceu limitada, sem aprovação operacional: os 27 executáveis foram preservados e uma fixture da fase de preparação passou por 20 negativos e três controles de metadados. O comando direto conserva uma premissa PENDING incompatível com os metadados já aprovados e falhou com `Missing expected exception.`; essa falha não foi ocultada nem apresentada como suíte produtiva aprovada. O relógio atual recusou as 14 ofertas vencidas. Antes de prosseguir, também é necessário revisar os vínculos do APP atual e o pin literal de identidade do revisor, sem atribuir o parecer a outro agente. Não houve nova QA PostgreSQL, concessão ou aplicação produtiva.
+
+O lojista pediu a criação de um chat chamado **11 somente depois de concluir as inclusões dos itens já analisados**. O roteiro foi preparado em `CHAT11-PREPARACAO-AGUARDAR.md`, na pasta de continuidade, mas a condição ainda não foi cumprida e o chat não foi criado. Quando for criado, deverá receber os resultados reais, pendências e regras, com instrução expressa para apenas confirmar recebimento e aguardar novo comando, sem iniciar pesquisa ou execução.
