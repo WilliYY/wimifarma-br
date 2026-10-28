@@ -46,3 +46,15 @@ Prévia, manifesto, fontes, hashes, comandos e provas privados ficam em `outputs
 Testes direcionados de frete/importadores: 168 passaram. O QA PostgreSQL isolado passou 11 verificações, incluindo manifesto alterado, ADMIN, peso existente e nulo, preservação dos demais campos, idempotência e reversão integral após falha na segunda auditoria ou CAS zero. Sequência não transacional comprova que houve tentativa de escrita antes das reversões. Os recursos exclusivos do QA foram removidos.
 
 O módulo é consumido apenas pelo CLI; não há mudança de rota pública, schema ou migration. Não é necessário reconstruir o app para executar o aplicador revisado. Revisão independente aprovou o contrato; 491 testes de segurança, ESLint completo e typecheck sem incremental passaram. Auditorias completa e de produção retornaram três alertas low e um moderate, zero high/critical, em `@react-email/render`, `deepmerge`, `fast-uri` e `html-to-text`. Nenhuma dependência foi alterada; os alertas não bloqueantes permanecem registrados.
+
+## Resultado produtivo
+
+Código `fcebf6e` enviado ao GitHub e sincronizado no servidor, na janela alinhada com a frente de catálogo. Backup custom verificado por catálogo/hash, fontes de execução idênticas às revisadas e seis planos transacionais iguais à prévia aprovada. Foram importadas uma referência própria e seis trincas de dimensões, com sete auditorias novas.
+
+Cinco alterações usam família e uma usa geometria do próprio GTIN. Em Nivea 200 ml, os dois alvos de família recebem 20,5 × 8,5 × 6 cm, enquanto o Milk com fonte própria recebe 20 × 8 × 6 cm. O Soft Milk 400 ml recebe 23 × 10 × 7 cm. Dois Huggies recebem 24 × 13 × 7 cm; Rosto e Corpo, anteriormente sem perfil, recebe cenário de 430 g. Recém Nascido preserva o peso nulo de seu rascunho anterior e continua incompleto. Os cinco pesos existentes foram preservados, inclusive esse nulo.
+
+Comparação integral comprovou preservação dos outros campos de todos os produtos, perfis/evidências fora do lote, timestamps fora dos alvos e `PackagingRecipe`. A repetição preservou os registros, sem novas gravações. App e PostgreSQL mantiveram identidades, imagens e horários de início. Saúde local/HTTPS passou e acesso anônimo ao admin de fretes retornou 401. Não houve migration ou reconstrução/reinício dos serviços.
+
+Estado final deste corte: **2.814 ativos, 2.224 com algum perfil, 590 sem perfil, 354 com peso e três dimensões e os mesmos dois perfis habilitados anteriores**. Os novos rascunhos permanecem estimados, desativados e sem revisão de transporte. Estes números não significam que todo o catálogo está pronto para postagem.
+
+Backup restrito: `/home/ubuntu/backups/wimifarma-br/logistics-groups-01a15b8f-20261028/`. Provas privadas no diretório local acima e em `/home/ubuntu/.codex-taskdata/logistics-groups-01a15b8f-20261028/`. A reserva desta rodada é liberada após registrar e sincronizar o encerramento; não existe aplicação pendente ou incerta.
