@@ -4,6 +4,7 @@ import { activeLogisticsObservations, evidenceStatus, logisticsEvidenceSchema } 
 type BaseShippingIdentity = {
   name: string;
   category?: string | null;
+  brand?: string | null;
   activeIngredients?: string[];
   requiresPrescription: boolean;
   prescriptionType?: string | null;
@@ -21,7 +22,7 @@ function normalized(value: string) {
 }
 
 export const WEIGHT_ESTIMATE_POLICY = {
-  version: "weight-only-v2",
+  version: "weight-only-v3",
   densityHypothesisGramsPerMl: 1.3,
   oralUnitHypothesisGrams: 1.5,
   retailPackagingReserveGrams: 30,
@@ -29,6 +30,8 @@ export const WEIGHT_ESTIMATE_POLICY = {
 } as const;
 
 type WeightOnlyIdentity = BaseShippingIdentity & { gtin?: string; logisticsEvidence?: unknown };
+const contentHygieneCategories = new Set(["dermocosmeticos", "perfumaria", "higiene e beleza", "higiene", "higiene infantil", "cabelos", "higiene pessoal", "cuidados com a pele", "cuidados com os cabelos", "protecao solar", "cuidados pessoais", "higiene e cuidados do bebe", "higiene bucal", "higiene e cuidados pessoais"]);
+const contentNutritionCategories = new Set(["suplementos", "vitaminas e suplementos", "nutricao"]);
 export type WeightOnlyEstimate = {
   policyVersion: typeof WEIGHT_ESTIMATE_POLICY.version;
   family: "EXACT_GROSS_REFERENCE" | "ORAL_SOLID" | "ORAL_LIQUID" | "HYGIENE_VOLUME" | "HYGIENE_MASS" | "TOPICAL_MASS";
@@ -48,7 +51,14 @@ export function estimateWeightOnly(input: WeightOnlyIdentity): WeightOnlyEstimat
   if (!input.name?.trim() || input.name.length > 500 || input.isPopularPharmacy || input.prescriptionType === "CONTROLLED" ||
     (input.requiresPrescription && input.prescriptionType !== "ORDINARY")) return null;
   const name = normalized(input.name);
-  const contentName = name.replace(/\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|ug|g)\s*(?:\/|por|em)\s*(?:\d+(?:[.,]\d+)?\s*)?(?:ml|g|l)\b/g, " ");
+  const category = normalized(input.category ?? "").trim();
+  const brand = normalized(input.brand ?? "").trim();
+  const identifiedBrand = brand.length >= 2 && /[a-z]/.test(brand) && !/^(?:nao informado|desconhecid[oa]|generico|sem marca|n\/?a|consulte os detalhes)$/.test(brand);
+  const classifiedContent = identifiedBrand && !input.requiresPrescription && (contentHygieneCategories.has(category) || contentNutritionCategories.has(category));
+  // Catalog abbreviations can join the product line and its declared content (e.g. INF200ML).
+  // This boundary repair is limited to identified non-medicine categories, never a dose parser.
+  const contentTitle = classifiedContent ? name.replace(/([a-z])(?=\d)/g, "$1 ").replace(/(\d)(?=[a-z])/g, "$1 ") : name;
+  const contentName = contentTitle.replace(/\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|ug|g)\s*(?:\/|por|em)\s*(?:\d+(?:[.,]\d+)?\s*)?(?:ml|g|l)\b/g, " ");
   const oral = [...contentName.matchAll(/\b(\d+(?:[.,]\d+)?)\s*(?:comprimidos?|capsulas?|drageas?|cp|cps|comp|caps)\b/g)];
   const medicine = input.requiresPrescription || /\bmedicamentos?\b/.test(normalized(input.category ?? ""));
   let presentationName = contentName.replace(/\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|ug)(?:\s*\+\s*\d+(?:[.,]\d+)?\s*(?:mg|mcg|ug)){1,6}\b/g, " ");
@@ -62,7 +72,9 @@ export function estimateWeightOnly(input: WeightOnlyIdentity): WeightOnlyEstimat
       presentationName = presentationName.replace(prefix, prefix.replaceAll("+", " "));
     }
   }
-  if (unsafe.test(`${name} ${normalized(input.category ?? "")}`) || /\b(?:efervescent\w*|mastigav\w*|brindes?)\b|(?:^|\s)-\s*\d/.test(name)) return null;
+  const abbreviatedCargo = classifiedContent && (/\b(?:aero\w*|spray\w*|perf\w*|edt|edp|colonia\w*|acetona\w*|esmalte\w*|alc|alco|gelalc)\b/.test(contentTitle) ||
+    /\b(?:desod\w*|deo\w*)\b/.test(contentTitle) && !/\b(?:roll[ -]?on|stick|bastao|creme)\b/.test(contentTitle));
+  if (unsafe.test(`${contentTitle} ${category}`) || abbreviatedCargo || /\b(?:efervescent\w*|mastigav\w*|brindes?)\b|(?:^|\s)-\s*\d/.test(name)) return null;
   const policy = WEIGHT_ESTIMATE_POLICY;
   let family: WeightOnlyEstimate["family"];
   let declaredContent: number | null = null;
@@ -100,7 +112,10 @@ export function estimateWeightOnly(input: WeightOnlyIdentity): WeightOnlyEstimat
       const volume = /^(?:ml|l|litros?)$/.test(unit);
       const size = Number(amount[1].replace(",", ".")) * (/^(?:kg|l|litros?)$/.test(unit) ? 1000 : 1);
       if (!Number.isFinite(size) || size <= 0 || size > 2000) return null;
-      const hygiene = (hygieneFamily.test(name) || /\b(?:serum|hidratantes?|roll[ -]?on|esfoliantes?|demaquilantes?|agua micelar|protetor(?:es)? solar(?:es)?)\b/.test(name)) && !input.requiresPrescription && !/\bmedicamentos?\b/.test(normalized(input.category ?? ""));
+      const categoryContent = classifiedContent && (contentHygieneCategories.has(category) || !volume && contentNutritionCategories.has(category));
+      if (categoryContent && /\b(?:doses?|porcao|porcoes|servings?|portions?|saches?|sachets?|envelopes?)\b/.test(contentTitle)) return null;
+      if (categoryContent && contentNutritionCategories.has(category) && /\b(?:pastilhas?|tabletes?|gomas?|gomad\w*|gummy|gummies|balas?|barras?|barrinhas?|tablets?|chews?|lozenges?|sticks?|shots?|unid(?:ades?)?)\b/.test(contentTitle)) return null;
+      const hygiene = (categoryContent || hygieneFamily.test(name) || /\b(?:serum|hidratantes?|roll[ -]?on|esfoliantes?|demaquilantes?|agua micelar|protetor(?:es)? solar(?:es)?)\b/.test(name)) && !input.requiresPrescription && !/\bmedicamentos?\b/.test(category);
       const oralLiquid = /\b(?:xarope|elixir|(?:suspensao|solucao)\s+oral)\b/.test(name) && !/\b(?:oftalm\w*|otolog\w*|nasal\w*)\b/.test(name);
       const topicalMass = !volume && /\b(?:pomada|creme|gel|pasta)\b/.test(name);
       if (!hygiene && !(volume && oralLiquid) && !topicalMass) return null;
@@ -111,6 +126,7 @@ export function estimateWeightOnly(input: WeightOnlyIdentity): WeightOnlyEstimat
       formula = volume
         ? `Cenário: ${size} ml × densidade hipotética de ${densityHypothesisGramsPerMl} g/ml + ${retailPackagingReserveGrams} g de reserva comercial; densidade não medida.`
         : `Conteúdo declarado normalizado: ${size} g + ${retailPackagingReserveGrams} g de reserva comercial.`;
+      if (categoryContent) formula += " Categoria e marca identificadas no cadastro; conteúdo explícito em título abreviado, sem inferir recipiente ou dimensões.";
     } else return null;
   }
   const weightGrams = Math.ceil((estimatedRetailGrams + policy.externalPackagingReserveGrams) / 10) * 10;

@@ -19,7 +19,7 @@ A caixa informada de 24 × 15 × 10 cm não é atribuída universalmente. As med
 
 `scripts/apply-product-average-drafts.ts` usa dry-run por padrão, ADMIN ativo, lock de catálogo, GTIN único, SHA-256 do plano, revisões/evidências das coortes, CAS e auditoria transacional `PRODUCT_PACKAGE_DRAFT_ESTIMATED`.
 
-Preservar perfis medidos, ativos, revisados, inválidos, com referência, serviços aprovados ou qualquer dimensão já preenchida. Para um rascunho estimado e desativado com os três lados nulos, preencher somente os lados e preservar literalmente as demais chaves. O peso existente só pode mudar quando uma auditoria anterior `PRODUCT_WEIGHT_DRAFT_ESTIMATED`, política v1/v2, comprova que o perfil atual é integralmente igual ao rascunho gerado anteriormente. Peso arbitrário ou alterado permanece intacto. Perfil nulo pode receber uma proposta completa quando elegível.
+Preservar perfis medidos, ativos, revisados, inválidos, com referência, serviços aprovados ou qualquer dimensão já preenchida. Para um rascunho estimado e desativado com os três lados nulos, preencher somente os lados e preservar literalmente as demais chaves. O peso existente só pode mudar quando uma auditoria anterior `PRODUCT_WEIGHT_DRAFT_ESTIMATED`, política v1/v2/v3, comprova que o perfil atual é integralmente igual ao rascunho gerado anteriormente. Peso arbitrário ou alterado permanece intacto. Perfil nulo pode receber uma proposta completa quando elegível. A extensão v3 está documentada em [122](122-validacao-global-de-pesos-e-medidas.md).
 
 ```text
 node --import tsx scripts/apply-product-average-drafts.ts --input <GTINs.json> --actor-id <ADMIN>

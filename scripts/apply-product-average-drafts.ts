@@ -29,7 +29,7 @@ export async function applyProductAverageDrafts(db: Pick<PrismaClient, "$transac
     if (!await tx.user.findFirst({ where: { id: actorId, role: "ADMIN", isActive: true }, select: { id: true } })) throw new Error("ADMIN ativo obrigatório.");
     const products = await tx.product.findMany({
       where: { status: "ACTIVE", deletedAt: null }, orderBy: { id: "asc" },
-      select: { id: true, name: true, ean: true, eanNormalized: true, category: true, activeIngredients: true, requiresPrescription: true, prescriptionType: true,
+      select: { id: true, name: true, ean: true, eanNormalized: true, category: true, brand: true, activeIngredients: true, requiresPrescription: true, prescriptionType: true,
         isPopularPharmacy: true, shippingProfile: true, logisticsEvidence: true, updatedAt: true },
     });
     const catalog = products.map(product => ({ ...product, gtin: normalizeLogisticsGtin(product.eanNormalized ?? product.ean) }))
@@ -52,7 +52,7 @@ export async function applyProductAverageDrafts(db: Pick<PrismaClient, "$transac
       const weightSourceAudit = previousProfile === null ? null : weightAudits.find(audit => {
         const metadata = audit.metadata;
         return audit.entityId === product.id && metadata !== null && typeof metadata === "object" && !Array.isArray(metadata) &&
-          ["weight-only-v1", "weight-only-v2"].includes(String(metadata.policyVersion)) && isDeepStrictEqual(metadata.draft, previousProfile);
+          ["weight-only-v1", "weight-only-v2", "weight-only-v3"].includes(String(metadata.policyVersion)) && isDeepStrictEqual(metadata.draft, previousProfile);
       }) ?? null;
       // Only an intact draft from our earlier weight policy permits refining an existing weight.
       const draft = previousProfile === null ? estimate.draft : { ...previousProfile as Record<string, unknown>,

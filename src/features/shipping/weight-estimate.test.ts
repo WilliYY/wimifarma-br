@@ -80,3 +80,41 @@ test("exact retail gross source takes priority without altering evidence or doub
   assert.equal(packet?.draft.weightGrams, 410);
   assert.equal(estimateWeightOnly({ ...medicine, name: "Toalhas umedecidas sintéticas 48 unidades", category: "Higiene infantil", requiresPrescription: false }), null);
 });
+
+test("identified hygiene categories and brands allow unambiguous abbreviated content without inventing dimensions", () => {
+  for (const [name, category, weight] of [
+    ["SUN PEH30 200ML", "Perfumaria", 390],
+    ["ANTHELIOS UVMUNE INF200ML", "Dermocosméticos", 390],
+    ["OLEO DEMAQ 125ML", "Higiene e beleza", 300],
+    ["CREATINA 300G", "Suplementos", 430],
+  ] as const) {
+    const result = estimateWeightOnly({ ...hygiene, brand: "Marca sintética", name, category });
+    assert.equal(result?.policyVersion, "weight-only-v3");
+    assert.equal(result?.draft.weightGrams, weight, name);
+    assert.deepEqual([result?.draft.lengthCm, result?.draft.widthCm, result?.draft.heightCm], [null, null, null]);
+    assert.equal(result?.draft.enabled, false);
+    assert.equal(result?.draft.transportReviewed, false);
+    assert.match(result?.explanation ?? "", /categoria.*marca/i);
+  }
+  for (const patch of [{ brand: undefined }, { brand: "" }, { brand: "Não informado" }, { category: "Outros" }, { category: "Medicamentos" }]) {
+    assert.equal(estimateWeightOnly({ ...hygiene, name: "SUN PEH30 200ML", brand: "Marca sintética", category: "Perfumaria", ...patch }), null);
+  }
+  assert.equal(estimateWeightOnly({ ...hygiene, brand: "Marca sintética", name: "Nutrição sintética 200ML", category: "Nutrição" }), null);
+});
+
+test("category fallback never bypasses abbreviated dangerous cargo, kit or ambiguous content guards", () => {
+  for (const name of ["AERO PEARL150ML", "DEO150ML", "DESOD CLINICAL150ML", "EDT100ML", "COLONIA100ML", "ESMALTE8ML", "ACETONA100ML", "ALC70 100ML", "KIT SUN200ML", "SUN2X200ML", "SUN200ML+100ML", "DUO+M40ML", "SUN200ML/500ML", "SUN -200ML", "SUN0ML", "SUN3000ML", "SUN500MG"]) {
+    assert.equal(estimateWeightOnly({ ...hygiene, brand: "Marca sintética", name, category: "Perfumaria" }), null, name);
+  }
+  assert.ok(estimateWeightOnly({ ...hygiene, brand: "Marca sintética", name: "Desodorante sintético roll-on 50ml", category: "Higiene pessoal" }));
+});
+
+test("nutrition dose, serving and sachet mass never become total packaged content", () => {
+  for (const name of ["Creatina dose de 3 g", "Creatina 3g por porção", "Colágeno 10 g 30 sachês", "Colágeno10g 30sachês", "Colágeno10g20envelopes", "Creatina300g90doses"]) {
+    assert.equal(estimateWeightOnly({ ...hygiene, brand: "Marca sintética", name, category: "Suplementos" }), null, name);
+  }
+  assert.equal(estimateWeightOnly({ ...hygiene, brand: "Marca sintética", name: "CREATINA300G", category: "Suplementos" })?.draft.weightGrams, 430);
+  for (const form of ["pastilhas", "tabletes", "gomas", "gummies", "balas", "barras", "barrinhas", "tablets", "chews", "lozenges", "sticks", "shots", "unidades"]) {
+    assert.equal(estimateWeightOnly({ ...hygiene, brand: "Marca sintética", name: `Vitamina sintética 1g 60${form}`, category: "Suplementos" }), null, form);
+  }
+});

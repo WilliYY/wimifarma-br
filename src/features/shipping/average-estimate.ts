@@ -3,7 +3,7 @@ import { activeLogisticsObservations, evidenceStatus, logisticsEvidenceSchema, n
 import { shippingDraftSchema, type ShippingDraft } from "./product-draft";
 
 export type AverageEstimateIdentity = {
-  gtin: string; name: string; category?: string | null; activeIngredients?: string[];
+  gtin: string; name: string; category?: string | null; brand?: string | null; activeIngredients?: string[];
   requiresPrescription: boolean; prescriptionType?: string | null; isPopularPharmacy: boolean;
   logisticsEvidence?: unknown;
 };

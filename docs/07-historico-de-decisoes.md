@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-28 — Validação global e conteúdo não medicinal abreviado
+
+- Auditoria por cadastro distingue estrutura válida de medição física. A v3 usa marca/categoria identificadas e conteúdo inequívoco em títulos abreviados, com as mesmas hipóteses anteriores e sem inventar dimensões; exclui doses, apresentações unitárias ambíguas e abreviações de carga especial. Modo explícito para peso nulo preserva perfil protegido, chaves, CAS/hash e auditoria. Duas fontes comerciais por EAN ficam separadas de aprovação de transporte; [122](122-validacao-global-de-pesos-e-medidas.md).
+
 ## 2026-10-27 — Médias aproximadas de pacote com proveniência
 
 - Nova autorização permite médias por apresentação comparável em rascunhos estimados. Fonte própria tem prioridade; coortes exigem composição, forma e contagem iguais, GTINs distintos e dispersão limitada. Médias são descritivas e o pacote usa envelope dos máximos com proteção hipotética. Aplicador preserva perfis protegidos e peso arbitrário, exige auditoria íntegra para refinar peso anterior e vincula fontes/revisões ao plano; [121](121-medias-logisticas-por-apresentacao.md). Nenhuma aprovação de carga ou liberação automática.

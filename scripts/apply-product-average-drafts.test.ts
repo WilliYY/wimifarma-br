@@ -21,7 +21,8 @@ async function fixture() {
   const tx = { $queryRaw: async () => { locked = true; return []; }, user: { findFirst: async ({ where }: { where: Record<string, unknown> }) => {
     assert.equal(locked, true); assert.equal(where.role, "ADMIN"); assert.equal(where.isActive, true); return active ? { id: "admin" } : null;
   } }, product: {
-    findMany: async ({ where, orderBy }: { where: Record<string, unknown>; orderBy: unknown }) => {
+    findMany: async ({ where, orderBy, select }: { where: Record<string, unknown>; orderBy: unknown; select: Record<string, unknown> }) => {
+      assert.equal(select.brand, true);
       assert.equal(where.status, "ACTIVE"); assert.equal(where.deletedAt, null); assert.equal(where.OR, undefined); assert.ok(orderBy); return products;
     },
     updateMany: async ({ data, where }: { data: { shippingProfile: Profile }; where: { id: string; updatedAt: Date; status: string; deletedAt: unknown } }) => {
@@ -106,6 +107,9 @@ test("only intact policy-proven weight drafts may receive a new estimated weight
   const source = { id: "weight-audit", entityId: f.products[0].id, metadata: { policyVersion: "weight-only-v2", draft: Object.fromEntries(Object.entries(originalDraft).reverse()) } };
   f.weightAudits.push(source);
   const dry = await f.run(); assert.equal(dry.products[0].estimate?.draft.weightGrams, 180);
+  source.metadata.policyVersion = "weight-only-v3";
+  assert.equal((await f.run()).products[0].estimate?.draft.weightGrams, 180);
+  source.metadata.policyVersion = "weight-only-v2";
   for (const mutation of [() => { source.metadata.policyVersion = "unknown"; }, () => { source.entityId = f.products[1].id; }, () => { source.metadata.draft = { ...originalDraft, weightGrams: 499 }; }]) {
     mutation(); assert.equal((await f.run()).products[0].estimate?.draft.weightGrams, 500);
     source.entityId = f.products[0].id; source.metadata.policyVersion = "weight-only-v2"; source.metadata.draft = structuredClone(originalDraft);
