@@ -62,4 +62,53 @@ O cruzamento somente leitura de 28/10/2026 às 16:19 UTC consultou 1.438 identif
 
 A tentativa de obter os bytes do novo link CMED apontado na página oficial devolveu uma página de manutenção, não uma planilha válida. A referência de 09/10/2026 usada na pesquisa permanece identificada como histórica; a tentativa não renovou a edição nem aprovou preços de medicamentos.
 
+## Terceiro lote publicado em 28/10/2026
+
+O pacote `fechamento-separados-v1-20261028` incluiu dez produtos e dez fotos às 20:17:49 UTC, com vinte auditorias. A verificação pública terminou às 20:18:04 UTC, e a janela `chat10-fechamento-separados-v1-20261028-201621` foi encerrada às 20:18:10 UTC. Os produtos anteriores e as nove tabelas protegidas foram preservados; a QA própria foi removida com zero conexões e sem FORCE. A retomada passou a somar 57 produtos, 57 fotos e 114 auditorias nos três lotes.
+
+| EAN | Apresentação publicada |
+| --- | --- |
+| 7896222720528 | Jontex Neutro, gel lubrificante 50 g |
+| 7500435150255 | Oral-B Extra Branco, kit com 12 tubos de 70 g, L12P10 |
+| 7794640173660 | Corega Proteção da Gengiva 40 g |
+| 7896009498282 | Corega Tabs Branqueador, 30 pastilhas |
+| 7896009498305 | Corega Tabs 3 Minutos, 30 pastilhas |
+| 7896009498312 | Corega em pó, kit com 3 frascos de 22 g |
+| 7500435241656 | Old Spice Refrescante em gel 80 g |
+| 7500435135030 | Old Spice Refrescante aerossol 90 g |
+| 7500435135061 | Old Spice VIP aerossol 90 g |
+| 7506339390216 | Old Spice Amadeirado em barra 50 g |
+
+O conflito anterior do Jontex Neutro foi resolvido por evidência de identidade e foto da apresentação exata, com distinção entre fabricante sem EAN visível e fonte comercial com EAN. O cadastro não reproduz a descrição conflitante de silicone. O kit Oral-B contém doze tubos, incluindo os dois gratuitos; os preços dos kits não foram divididos por unidades. Foram preservados os dados brutos das descrições divergentes.
+
+O lote fixou APP637 e as releases físicas relevantes own37 e stage05 do chat5, com nove produtos. Passaram revisão independente, schemas reais, 491 testes de segurança, 111 de fornecedores, 55 controles de conflito e a QA dos dez produtos/fotos. As auditorias atuais de produção e completa registraram três alertas baixos e um moderado, sem high/critical. As imagens publicadas foram verificadas por hash, dimensões e tamanho; todas ficaram abaixo de 100 KB. As fontes originais permanecem preservadas; a conversão WebP da publicação não é declarada como idêntica em pixels.
+
+Provas SHA-256: produção `7d3a7115e0392cacb49c5375c1df02025ed62d803d90ca57eea82ff3074635e4`; público `79f5ca767c00d38a097819e7dfbaac0917b6257c631fa346d7e6e83f4f30afeb`; release `2cd08940f847441b7a79f3cec731072d7321f8ad2c2610cb23e796304d49d585`; limpeza `d776383a3fd2beba495e0baec434c513725433d7a9d468994acd23277ca349c6`. O estado final ficou `completed_released`, `productionGrant:false` e sem apply incerto. O app permaneceu saudável, sem reinício.
+
+## Tentativa dos seis e subconjunto de cinco
+
+O pacote `fechamento-seis-v1-20261028` passou na revisão estática, nos schemas reais, nos guards de domínio, na QA isolada de seis produtos/fotos, nas verificações atuais de segurança/fornecedores e nos 55 controles. A aplicação em produção foi interrompida em 28/10/2026 por `Product_slug_key`: o Colgate Tripla Ação Menta Original 180 g solicitado com EAN `7891024037973` usa o mesmo nome e slug de um produto ativo com EAN `7891024132371`. O item ficou em HOLD para esclarecer essa diferença; não se renomeou a página existente nem se repetiu o apply.
+
+O importador envolve todos os produtos em uma única transação. A reconciliação real, em transação somente leitura às 21:19:03 UTC, confirmou igualdade integral com o baseline: produtos e todas as suas colunas, ofertas, imagens, auditorias e as nove tabelas protegidas permaneceram idênticos. Foram criados zero produtos e zero fotos nessa tentativa. Prova SHA-256 `aecf9cdb14585f33de2afa613a27e0ee80d8972c94fccb8b00799880c21025b4`.
+
+O protocolo de sucesso não oferece release vazio. Por isso, a concessão da janela `chat10-fechamento-seis-v1-20261028-210847` foi encerrada por recuperação separada de metadados, revisada independentemente, após 15 testes negativos e dry-run real com zero transações ativas. Mutex/CAS, proprietário, fingerprints, snapshots, delta permitido e provas físicas foram conferidos. Às 21:38:12 UTC foram restaurados exatamente os bytes do estado pré-grant `1bb828cbe73bc29f28e1fdfcda348a0c76e7353792007eaf41c7539de8152f42`, com a janela anterior dos dez encerrada, sem grants ou apply incerto. Não houve rollback de banco. Receipt SHA-256 `4132e275779806ca6b81095d8afc3d9b293a65a148e621955c36ab193e4eaf01`. O marcador e as provas da tentativa foram preservados; não se fabricaram provas positivas de produção/publicação dos seis. A QA sintética dos seis foi removida às 21:49:49 UTC, com proprietário validado, zero conexões e sem FORCE.
+
+Os cinco restantes foram separados em `fechamento-cinco-v1-20261028`: quatro apresentações Jontex e Gillette Sensitive 150 g. Passaram 11 guards diretos, sete contratos locais, schemas reais e revisão estática independente. O schema real dos cinco tem SHA-256 `bb245ad72b4e45596587fee264b40dcdae9319151a6175ea02c998d0e61e6b24`; o freeze final v2 tem `a57729fa38da91ab3c4a897f65b517c0cbc4bc69fd4eeb8dc94c9fb734cf7988`. As ofertas originais começam a vencer às 21:49:57 UTC; precisam de observação comercial atual antes de nova concessão. Nenhuma QA ou inclusão produtiva dos cinco foi declarada. O total verificado desta retomada permanece 57 produtos, 57 fotos e 114 auditorias.
+
+Para os próximos lotes, executar todos os guards de domínio nos documentos reais antes da revisão/freeze e conferir duplicidade por GTIN e slug/apresentação. A cópia de um documento factual não garante o formato exigido pelo runtime. Preservar fontes originais ao normalizar metadados; não mudar datas comerciais por cópia.
+
+## Nova lista de 17 famílias autorizada pelo lojista
+
+Em 28/10/2026, o lojista ampliou expressamente o escopo para meclozina, cinarizina, cimetidina, oxetacaína com hidróxidos de alumínio/magnésio, sais de reidratação oral, aceponato de metilprednisolona tópico, fludroxicortida, oxiconazol, calcipotriol com betametasona, betametasona com ácido salicílico, nistatina com óxido de zinco, valerato de betametasona com hialuronidase, diacereína, sulfatos de glicosamina/condroitina, naratriptana, carbômer oftálmico e acetazolamida. A pesquisa cobre as marcas e apresentações das famílias exatas; não se ampliou para associações próximas por inferência.
+
+A planilha oficial vinculada pela página da Anvisa foi recuperada com sucesso, edição identificada como 09/10/2026, 12.735.543 bytes, SHA-256 `3c94fa640c4fcdb6fb3cbb6a02e4a86da0707c90ade42608132d5033e9485b99`. A matriz contém 176 apresentações-alvo e 185 GTIN14 únicos com dígitos válidos. Os tipos literais CMED são Novo: 51; Genérico: 49; Similar: 50; Específico: 4; Biológico: 22. Novo não foi convertido automaticamente em ético ou referência.
+
+Foram separados um registro relacionado de carbômer com sorbitol e uma linha em quarentena por ácido acetilsalicílico versus ácido salicílico. Divergências de substância, concentração/unidade e registro permanecem identificadas, incluindo Daivobet, Advantan e oxiconazol. A referência oficial e o fabricante foram usados para conferir associações; não se corrigiram campos conflitantes da CMED silenciosamente. Os PDFs de referência têm divergência entre rótulo do portal e data interna, ambas preservadas. A tentativa de DCB consolidada retornou HTTP403.
+
+A QA documental reconferiu 178 registros literalmente no XLSX, consistência do CSV, hashes e dígitos verificadores. Matriz SHA-256 `2168fd8c653f3c0359c32b537075c0c751c2d5523add4d1703c587c7b06f3999`. Os arquivos completos ficam no diretório privado `nova-lista17-20261028-v1`. Às 21:57:34 UTC, o cruzamento real de todos os 185 GTINs com Product, inclusive excluídos e inventário físico, encontrou zero correspondências exatas e zero ambiguidades. A consulta terminou com código0, stderr vazio e os dois modos de transação somente leitura confirmados. Prova final SHA-256 `8259674c86848fabaca2c37c7fa8b6af099ba63e7a88ffb8b30b0df0b2e8ef34`. Ausência por GTIN não exclui cadastro com código incorreto ou nome semelhante.
+
+Esses números são documentais: ANB, Profarma, GAM, DM, receita, foto exata, disponibilidade e apresentação ainda precisam de confirmação antes de incluir medicamentos. O Computer Use encerrou o controle do Chrome nesta execução porque não conseguiu confirmar a URL no Windows com segurança; não houve contorno dessa interrupção. Nenhum medicamento dessa nova lista foi publicado.
+
+Fontes primárias: [CMED/Anvisa](https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos), [lista de medicamentos de referência](https://www.gov.br/anvisa/pt-br/setorregulado/regularizacao/medicamentos/medicamentos-de-referencia/lista-de-medicamentos-de-referencia), [produtos LEO](https://leo-pharma.com.br/produtos/).
+
 O chat 12 já existe e permanece aguardando comando humano. A pesquisa e os arquivos de continuidade desta retomada não autorizam iniciá-lo.
