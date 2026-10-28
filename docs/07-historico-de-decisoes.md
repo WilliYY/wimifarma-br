@@ -3,6 +3,7 @@
 ## 2026-10-28 — Caixa planejada para grupos maiores
 
 - A pedido do lojista, `PLANNED_OUTER_BOX` separa caixa externa planejada de geometria comercial e receita calibrada. `planned-container-v2` exige folga operacional inteira de 1–3 cm, aplicada uma única vez, referências vigentes e âncora de conteúdo superior. Formas separadas: comprimidos comuns 1–30, tubos dentais até 140 g e frascos de shampoo até 400 ml. A caixa informada de 24 × 15 × 10 cm não muda para acomodar hipóteses; envelope que atinja seu limite fica pendente. Peso individual registra unidade, densidade hipotética, reservas e arredondamento, separado do peso existente preservado por auditoria íntegra. Estimados/desativados, sem compatibilidade física nem transporte automático. Contrato e prévias em [127](127-caixa-planejada-para-grupo-amplo.md).
+- Aplicação conferida após liberação da janela: uma fonte própria de shampoo, preservando seu peso, seguida de 534 dimensões estimadas (419 comprimidos, 54 dentais, 61 shampoos), 527 pesos existentes intactos e sete perfis novos. Total de 916 ativos com peso/dimensões preenchidos, sem liberar transportes; backup, dry-run, proveniência, idempotência e preservação integral confirmados. Serviços saudáveis e sem reinício/migration; detalhes e limites em [127](127-caixa-planejada-para-grupo-amplo.md).
 
 ## 2026-10-28 — Famílias de roll-on e creme dental com bruto próprio
 
