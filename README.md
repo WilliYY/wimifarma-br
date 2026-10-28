@@ -20,7 +20,7 @@ Médias por apresentação comparável e medidas aproximadas com proveniência, 
 
 Conferência de todo o catálogo, conteúdo em nomes abreviados de higiene/nutrição, exclusão de doses e duas novas referências físicas por EAN: [122](docs/122-validacao-global-de-pesos-e-medidas.md).
 Continuidade por GTIN: cinco referências físicas importadas, quatro pesos refinados e três trincas de dimensões aplicadas com backup, auditoria e preservação dos demais dados: [123](docs/123-continuidade-dos-dados-fisicos.md).
-Correção de “sem álcool/sem perfume” nos cenários de peso, unidade comercial por SKU e nova rodada física revisada, ainda condicionada à janela de aplicação: [124](docs/124-rotas-fisicas-e-negacoes-no-peso.md).
+Correção de “sem álcool/sem perfume” nos cenários de peso e unidade comercial por SKU: cinco referências, 36 novos pesos, três refinamentos e três trincas aplicados com auditoria, backup e preservação dos demais dados: [124](docs/124-rotas-fisicas-e-negacoes-no-peso.md).
 
 Novos medicamentos desta expansão: acréscimo autorizado de 50% para genéricos/similares e 10% para marcas éticas, preservando percentuais existentes, teto CMED e pesquisa nas quatro distribuidoras: [111](docs/111-expansao-medicamentos-e-politica-de-precos.md).
 

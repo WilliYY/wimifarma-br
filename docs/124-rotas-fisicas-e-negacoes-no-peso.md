@@ -4,7 +4,7 @@
 
 Continuação autorizada em 28/10/2026 de [123](123-continuidade-dos-dados-fisicos.md), com foco em completar dados físicos e avaliar rotas de maior cobertura. Não altera preço, estoque, classificação sanitária ou liberação de transporte.
 
-O lote revisado contém cinco referências, 36 novos pesos, três refinamentos e três trincas de dimensões para 40 produtos distintos. Está preparado, ainda sem aplicação. A janela de outra publicação deve ser liberada antes de commit/pull e gravações; novas inclusões do catálogo não ampliam silenciosamente a lista revisada.
+O lote revisado de cinco referências, 36 novos pesos, três refinamentos e três trincas de dimensões foi aplicado a 40 produtos distintos, após liberação da outra publicação, backup e planos operacionais conferidos. As novas inclusões do catálogo não ampliaram a lista revisada.
 
 ## Correção de títulos e proveniência
 
@@ -52,3 +52,17 @@ Não foi comprovada API ou arquivo público consolidado apto a preencher todo o 
 Aplicação exige release real, novo snapshot dos alvos, código/fontes idênticos aos revisados, backup verificado, dry-runs sequenciais com hashes, CAS/auditorias e comparação integral posterior. Todos os resultados continuam estimados, desativados, sem revisão de transporte, referência ou serviços aprovados. Os dois perfis antes habilitados permanecem protegidos.
 
 Artefatos privados em `outputs/rotas-logistica-v4-2026-10-28/`: capturas, metadados do SKU principal, plano congelado, testes e roteiros operacionais. Não versionar esses dados ou assumir resultado produtivo a partir da prévia.
+
+## Resultado produtivo em 28/10
+
+Após a publicação dos 37 itens pela outra frente e a liberação expressa da janela, a leitura própria confirmou o servidor limpo em `fc0c8d8`. O novo snapshot às 14h25 de São Paulo contém **2.815 cadastros não excluídos, 2.814 ativos e um rascunho**. Os 40 alvos estavam integralmente iguais ao corte da aprovação. A regeneração mudou somente os metadados do snapshot; resultados, listas, fontes e hash da aprovação permaneceram iguais.
+
+O código `812b9c7` foi enviado e sincronizado no servidor, sem reconstruir o app. Backup custom, catálogo de restauração e SHA-256 foram verificados antes da escrita. Os importadores existentes rodaram com código idêntico ao revisado, imagem tools fixa e montagens somente de leitura, ADMIN ativo, CAS/auditorias e hashes dos novos dry-runs.
+
+Foram importadas **cinco referências**, criados **36 cenários de peso**, refinados **três pesos** e preenchidas **três trincas**, exatamente conforme a prévia congelada. Acrescentaram-se 47 auditorias: 36 de peso, três de refinamento, três de pacote e cinco de evidências. O Johnson’s manteve 650 g; seu líquido declarado não virou bruto. Os cenários de volume/massa, reservas hipotéticas e perfis continuam explicitamente estimados.
+
+A prova posterior confirmou preservação dos demais campos comerciais, de todos os perfis/evidências fora dos alvos e de `PackagingRecipe`. Repetições não encontraram novas gravações. Todos os alvos seguem desativados, sem revisão de transporte, referência ou serviços aprovados. O corte final tem **2.223 ativos com algum perfil, 591 sem perfil, 349 com peso e três dimensões e os mesmos dois perfis habilitados anteriores**. As inclusões comerciais e a conclusão dos dados físicos são contagens separadas.
+
+Identidades, imagens e início de app/PostgreSQL permaneceram iguais. Saúde local e HTTPS responderam normalmente; a API de fretes ADMIN anônima respondeu 401. Nenhuma migration, mudança de configuração, reconstrução ou reinicialização foi realizada. Os resultados não comprovam pesagem ou encaixe atuais e não habilitam automaticamente envio nacional.
+
+Prova integral, prévias congeladas, resultados, capturas e metadados ficam no diretório privado desta rodada. Backup de recuperação, somente no servidor: `/home/ubuntu/backups/wimifarma-br/logistics-v4-01a15b8f-20261028/`. O aplicador foi executado uma única vez e não deve ser repetido; novas rodadas precisam de fontes e planos próprios.
