@@ -109,6 +109,8 @@ test("only intact policy-proven weight drafts may receive a new estimated weight
   const dry = await f.run(); assert.equal(dry.products[0].estimate?.draft.weightGrams, 180);
   source.metadata.policyVersion = "weight-only-v3";
   assert.equal((await f.run()).products[0].estimate?.draft.weightGrams, 180);
+  source.metadata.policyVersion = "weight-only-v4";
+  assert.equal((await f.run()).products[0].estimate?.draft.weightGrams, 180);
   source.metadata.policyVersion = "weight-only-v2";
   for (const mutation of [() => { source.metadata.policyVersion = "unknown"; }, () => { source.entityId = f.products[1].id; }, () => { source.metadata.draft = { ...originalDraft, weightGrams: 499 }; }]) {
     mutation(); assert.equal((await f.run()).products[0].estimate?.draft.weightGrams, 500);

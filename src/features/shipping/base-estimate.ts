@@ -22,7 +22,7 @@ function normalized(value: string) {
 }
 
 export const WEIGHT_ESTIMATE_POLICY = {
-  version: "weight-only-v3",
+  version: "weight-only-v4",
   densityHypothesisGramsPerMl: 1.3,
   oralUnitHypothesisGrams: 1.5,
   retailPackagingReserveGrams: 30,
@@ -58,6 +58,10 @@ export function estimateWeightOnly(input: WeightOnlyIdentity): WeightOnlyEstimat
   // Catalog abbreviations can join the product line and its declared content (e.g. INF200ML).
   // This boundary repair is limited to identified non-medicine categories, never a dose parser.
   const contentTitle = classifiedContent ? name.replace(/([a-z])(?=\d)/g, "$1 ").replace(/(\d)(?=[a-z])/g, "$1 ") : name;
+  // Only explicit name negations may be ignored by cargo guards; keep other hazards and the category intact.
+  const cargoTitle = classifiedContent ? contentTitle
+    .replace(/\b(?:sem|zero)\s+alcool\b(?![^a-z0-9]*\d+(?:[.,]\d+)?\s*%)/g, " ")
+    .replace(/\bsem\s+perfume\b/g, " ") : contentTitle;
   const contentName = contentTitle.replace(/\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|ug|g)\s*(?:\/|por|em)\s*(?:\d+(?:[.,]\d+)?\s*)?(?:ml|g|l)\b/g, " ");
   const oral = [...contentName.matchAll(/\b(\d+(?:[.,]\d+)?)\s*(?:comprimidos?|capsulas?|drageas?|cp|cps|comp|caps)\b/g)];
   const medicine = input.requiresPrescription || /\bmedicamentos?\b/.test(normalized(input.category ?? ""));
@@ -72,9 +76,9 @@ export function estimateWeightOnly(input: WeightOnlyIdentity): WeightOnlyEstimat
       presentationName = presentationName.replace(prefix, prefix.replaceAll("+", " "));
     }
   }
-  const abbreviatedCargo = classifiedContent && (/\b(?:aero\w*|spray\w*|perf\w*|edt|edp|colonia\w*|acetona\w*|esmalte\w*|alc|alco|gelalc)\b/.test(contentTitle) ||
-    /\b(?:desod\w*|deo\w*)\b/.test(contentTitle) && !/\b(?:roll[ -]?on|stick|bastao|creme)\b/.test(contentTitle));
-  if (unsafe.test(`${contentTitle} ${category}`) || abbreviatedCargo || /\b(?:efervescent\w*|mastigav\w*|brindes?)\b|(?:^|\s)-\s*\d/.test(name)) return null;
+  const abbreviatedCargo = classifiedContent && (/\b(?:aero\w*|spray\w*|perf\w*|edt|edp|colonia\w*|acetona\w*|esmalte\w*|alc|alco|gelalc)\b/.test(cargoTitle) ||
+    /\b(?:desod\w*|deo\w*)\b/.test(cargoTitle) && !/\b(?:roll[ -]?on|stick|bastao|creme)\b/.test(cargoTitle));
+  if (unsafe.test(`${cargoTitle} ${category}`) || abbreviatedCargo || /\b(?:efervescent\w*|mastigav\w*|brindes?)\b|(?:^|\s)-\s*\d/.test(name)) return null;
   const policy = WEIGHT_ESTIMATE_POLICY;
   let family: WeightOnlyEstimate["family"];
   let declaredContent: number | null = null;

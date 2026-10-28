@@ -52,7 +52,7 @@ export async function applyProductAverageDrafts(db: Pick<PrismaClient, "$transac
       const weightSourceAudit = previousProfile === null ? null : weightAudits.find(audit => {
         const metadata = audit.metadata;
         return audit.entityId === product.id && metadata !== null && typeof metadata === "object" && !Array.isArray(metadata) &&
-          ["weight-only-v1", "weight-only-v2", "weight-only-v3"].includes(String(metadata.policyVersion)) && isDeepStrictEqual(metadata.draft, previousProfile);
+          ["weight-only-v1", "weight-only-v2", "weight-only-v3", "weight-only-v4"].includes(String(metadata.policyVersion)) && isDeepStrictEqual(metadata.draft, previousProfile);
       }) ?? null;
       // Only an intact draft from our earlier weight policy permits refining an existing weight.
       const draft = previousProfile === null ? estimate.draft : { ...previousProfile as Record<string, unknown>,

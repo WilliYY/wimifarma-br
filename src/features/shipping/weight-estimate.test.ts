@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { estimateWeightOnly } from "./base-estimate";
+import { estimateBaseShipping, estimateWeightOnly } from "./base-estimate";
 
 const medicine = { name: "Losartana 50 mg 30 comprimidos", category: "Medicamentos", requiresPrescription: true, prescriptionType: "ORDINARY", isPopularPharmacy: false };
 const hygiene = { ...medicine, name: "Shampoo sintético 200 ml", category: "Higiene", requiresPrescription: false };
@@ -89,7 +89,7 @@ test("identified hygiene categories and brands allow unambiguous abbreviated con
     ["CREATINA 300G", "Suplementos", 430],
   ] as const) {
     const result = estimateWeightOnly({ ...hygiene, brand: "Marca sintética", name, category });
-    assert.equal(result?.policyVersion, "weight-only-v3");
+    assert.equal(result?.policyVersion, "weight-only-v4");
     assert.equal(result?.draft.weightGrams, weight, name);
     assert.deepEqual([result?.draft.lengthCm, result?.draft.widthCm, result?.draft.heightCm], [null, null, null]);
     assert.equal(result?.draft.enabled, false);
@@ -117,4 +117,44 @@ test("nutrition dose, serving and sachet mass never become total packaged conten
   for (const form of ["pastilhas", "tabletes", "gomas", "gummies", "balas", "barras", "barrinhas", "tablets", "chews", "lozenges", "sticks", "shots", "unidades"]) {
     assert.equal(estimateWeightOnly({ ...hygiene, brand: "Marca sintética", name: `Vitamina sintética 1g 60${form}`, category: "Suplementos" }), null, form);
   }
+});
+
+test("explicit alcohol and perfume negations allow identified classified content only", () => {
+  for (const [name, category, weight] of [
+    ["Enxaguante Bucal Listerine Cool Mint Zero Álcool 250 ml", "Higiene bucal", 460],
+    ["Enxaguante sem álcool 250ml", "Higiene bucal", 460],
+    ["Sérum Hidratante Corporal Dove Pantenol Sem Perfume 380ml", "Cuidados com a pele", 630],
+    ["Desodorante Antitranspirante Above Creme Pote Sem Perfume 50g", "Higiene pessoal", 180],
+    ["Suplemento sem álcool 300g", "Nutrição", 430],
+  ] as const) {
+    const input = { ...hygiene, brand: "Marca sintética", name, category };
+    const result = estimateWeightOnly(input);
+    assert.ok(result, name);
+    assert.equal(result.policyVersion, "weight-only-v4");
+    assert.equal(result.draft.weightGrams, weight, name);
+    assert.equal(result.draft.enabled, false);
+    assert.equal(result.draft.transportReviewed, false);
+    assert.deepEqual([result.draft.lengthCm, result.draft.widthCm, result.draft.heightCm], [null, null, null]);
+    assert.equal(estimateBaseShipping(input), null, name);
+    for (const patch of [{ brand: undefined }, { brand: "Não informado" }, { category: undefined }, { category: "Outros" }, { category: "Medicamentos" }, { requiresPrescription: true }]) {
+      assert.equal(estimateWeightOnly({ ...input, ...patch }), null, `${name}: ${JSON.stringify(patch)}`);
+    }
+  }
+});
+
+test("negated cargo phrases never erase positive hazards, contradictory alcohol percentages or kit guards", () => {
+  for (const name of [
+    "Hidratante sem perfume álcool 70% 200ml", "Hidratante sem álcool perfume 200ml",
+    "Hidratante sem perfume perf 200ml", "Hidratante sem álcool etanol 200ml", "Hidratante sem álcool alc70 200ml",
+    "Hidratante sem álcool spray 200ml", "Hidratante sem perfume aerossol 200ml", "Hidratante sem perfume aero200ml",
+    "Hidratante sem perfume vidro 200ml", "Hidratante sem perfume refrigerado 200ml", "Kit hidratante sem perfume 200ml",
+    "Hidratante sem álcool70% 200ml", "Hidratante zero álcool 70 % 200ml", "Hidratante sem álcool 0,5% 200ml",
+    "Enxaguante sem álcool: 70% 250ml", "Enxaguante sem álcool (70%) 250ml",
+    "Enxaguante zero álcool - 70 % 250ml", "Enxaguante sem álcool; [70%] 250ml",
+    "Enxaguante sem álcool / 0,5% 250ml", "Enxaguante sem álcool — 70% 250ml",
+    "Hidratante sem álcool em gel álcool 200ml", "Hidratante sem álcool + creme 200ml",
+  ]) {
+    assert.equal(estimateWeightOnly({ ...hygiene, brand: "Marca sintética", name }), null, name);
+  }
+  assert.equal(estimateWeightOnly({ ...hygiene, brand: "Marca sintética", name: "Hidratante sem perfume 200ml", category: "Álcool" }), null);
 });

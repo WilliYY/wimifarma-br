@@ -139,7 +139,7 @@ test("fill-empty-weights only fills explicitly empty unapproved estimated profil
   await apply(plan.planSha256); assert.equal(audits.length, 1); assert.equal(audits[0].action, "PRODUCT_WEIGHT_DRAFT_ESTIMATED");
   assert.equal(JSON.stringify(audits[0].metadata.previousProfile), JSON.stringify(empty));
   assert.equal(JSON.stringify(audits[0].metadata.draft), JSON.stringify({ ...empty, weightGrams: 180 }));
-  assert.equal(audits[0].metadata.policyVersion, "weight-only-v3");
+  assert.equal(audits[0].metadata.policyVersion, "weight-only-v4");
   const noop = await dry(); assert.equal(noop.products[0].action, "PRESERVE_EXISTING_PROFILE"); await apply(noop.planSha256); assert.equal(audits.length, 1);
   for (const patch of [{ weightGrams: 1 }, { weightGrams: undefined }, { enabled: true }, { enabled: undefined }, { transportReviewed: true }, { measurementBasis: "measured" }, { measurementBasis: undefined }, { reference: undefined }, { reference: {} }, { approvedServiceIds: [1] }, { lengthCm: 1 }, { widthCm: 1 }, { heightCm: 1 }, { lengthCm: undefined }, { cargoKinds: ["liquid"] }, { cargoKinds: ["medication"] }, { cargoKinds: ["general", "unspecified"] }, { weightGrams: "1" }]) {
     profile = { ...empty, ...patch }; assert.equal((await dry()).products[0].action, "PRESERVE_EXISTING_PROFILE", JSON.stringify(patch));
