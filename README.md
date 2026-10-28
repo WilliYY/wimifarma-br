@@ -19,6 +19,7 @@ Rotas em lote para dados físicos, limites dos provedores e amostra de 10 GTINs 
 Médias por apresentação comparável e medidas aproximadas com proveniência, proteção hipotética e gravação auditada em rascunhos: [121](docs/121-medias-logisticas-por-apresentacao.md).
 
 Conferência de todo o catálogo, conteúdo em nomes abreviados de higiene/nutrição, exclusão de doses e duas novas referências físicas por EAN: [122](docs/122-validacao-global-de-pesos-e-medidas.md).
+Continuidade por GTIN: cinco referências físicas importadas, quatro pesos refinados e três trincas de dimensões aplicadas com backup, auditoria e preservação dos demais dados: [123](docs/123-continuidade-dos-dados-fisicos.md).
 
 Novos medicamentos desta expansão: acréscimo autorizado de 50% para genéricos/similares e 10% para marcas éticas, preservando percentuais existentes, teto CMED e pesquisa nas quatro distribuidoras: [111](docs/111-expansao-medicamentos-e-politica-de-precos.md).
 
