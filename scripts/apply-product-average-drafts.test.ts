@@ -7,12 +7,12 @@ import { createRequire } from "node:module";
 type Profile = Record<string, unknown> | null;
 const gtins = ["07890000000000", "07890000000017"];
 const originalDraft = { enabled: false, transportReviewed: false, measurementBasis: "estimated", weightGrams: 500, lengthCm: null, widthCm: null, heightCm: null, reference: null, cargoKinds: ["general"], approvedServiceIds: [], retainedNote: "preserve literally" };
-type Plan = { applied: boolean; planSha256: string; products: Array<{ action: string; previousProfile: Profile; estimate: { draft: Record<string, unknown> } | null }> };
+type Plan = { applied: boolean; planSha256: string; products: Array<{ action: string; previousProfile: Profile; estimate: { draft: Record<string, unknown>; weightAppliedFrom?: string } | null }> };
 
 async function fixture() {
   const bundle = await build({ entryPoints: ["scripts/apply-product-average-drafts.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "average-fixture", setup(builder) {
-    builder.onResolve({ filter: /lib\/prisma$|^dotenv\/config$|shipping\/(?:average|family)-estimate$/ }, args => ({ path: args.path, namespace: "fixture" }));
-    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("prisma") ? "export const getPrisma=()=>{throw new Error('No automatic connection')};" : args.path.endsWith("average-estimate") ? "export const estimateAverageShipping=(product,catalog)=>globalThis.averageFixture(product,catalog);" : args.path.endsWith("family-estimate") ? "export const familyGroupsSchema={parse:value=>value}; export const estimateFamilyShipping=(product,catalog,groups)=>globalThis.familyFixture(product,catalog,groups);" : "" }));
+    builder.onResolve({ filter: /lib\/prisma$|^dotenv\/config$|shipping\/(?:average-estimate|family-estimate|planned-container)$/ }, args => ({ path: args.path, namespace: "fixture" }));
+    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("prisma") ? "export const getPrisma=()=>{throw new Error('No automatic connection')};" : args.path.endsWith("average-estimate") ? "export const estimateAverageShipping=(product,catalog)=>globalThis.averageFixture(product,catalog);" : args.path.endsWith("family-estimate") ? "export const familyGroupsSchema={parse:value=>value}; export const estimateFamilyShipping=(product,catalog,groups)=>globalThis.familyFixture(product,catalog,groups);" : args.path.endsWith("planned-container") ? "export const plannedContainersSchema={parse:value=>value}; export const estimatePlannedContainer=(product,catalog,groups)=>globalThis.containerFixture(product,catalog,groups);" : "" }));
   } }] });
   let active = true, casAt = 0, auditFailureAt = 0, writes = 0, auditAttempts = 0, locked = false, averageAvailable = true;
   const products = gtins.map((gtin, index) => ({ id: `synthetic-${index}`, name: "Medicamento sintético 50mg 30 comprimidos", ean: gtin.slice(1), eanNormalized: gtin, category: "Medicamentos", activeIngredients: ["Sintético"], requiresPrescription: true, prescriptionType: "ORDINARY", isPopularPharmacy: false, shippingProfile: null as Profile, logisticsEvidence: { marker: "source-v1" }, updatedAt: new Date(0) }));
@@ -49,8 +49,9 @@ async function fixture() {
   vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, console, Buffer, process: { argv: ["node", "test.ts"], env: {} }, averageFixture: (product: { gtin: string }, catalog: unknown[]) => averageAvailable ? ({
     policyVersion: "synthetic-average-v1", basis: "ORAL_SOLID_COHORT", sourceGtins: [gtins[1]], sourceObservationIds: [JSON.stringify(catalog)], explanation: "Hipótese sintética de teste.",
     draft: { enabled: false, transportReviewed: false, measurementBasis: "estimated", weightGrams: 180, lengthCm: 12, widthCm: 8, heightCm: 5, reference: null },
-  }) : null, familyFixture: (_product: unknown, _catalog: unknown[], groups: unknown[]) => groups.length ? ({ ...estimate, basis: "REVIEWED_FAMILY", familyGroupId: "synthetic-family" }) : null });
-  const run = (apply = false, hash?: string, input = gtins, families: unknown = []) => loaded.exports.applyProductAverageDrafts(db, input, "admin", apply, hash, families);
+  }) : null, familyFixture: (_product: unknown, _catalog: unknown[], groups: unknown[]) => groups.length ? ({ ...estimate, basis: "REVIEWED_FAMILY", familyGroupId: "synthetic-family" }) : null,
+    containerFixture: (_product: unknown, _catalog: unknown[], groups: unknown[]) => groups.length ? ({ ...estimate, policyVersion: "planned-tablet-container-v1", basis: "PLANNED_OUTER_BOX", containerId: "synthetic-container", draft: { ...estimate.draft, lengthCm: 24, widthCm: 15, heightCm: 10 } }) : null });
+  const run = (apply = false, hash?: string, input = gtins, families: unknown = [], containers: unknown = []) => loaded.exports.applyProductAverageDrafts(db, input, "admin", apply, hash, families, containers);
   const cli = async (args: string[], size = 2, contents = JSON.stringify(gtins)) => {
     const errors: string[] = [], cliProcess = { argv: ["node", "scripts/apply-product-average-drafts.ts", ...args], env: {}, exitCode: 0 };
     const require = createRequire(import.meta.url), cliModule = { exports: {} };
@@ -62,6 +63,49 @@ async function fixture() {
   };
   return { run, cli, products, audits, weightAudits, stats: () => ({ writes, auditAttempts }), average: (value: boolean) => { averageAvailable = value; }, admin: (value: boolean) => { active = value; }, cas: (value: number) => { casAt = value; }, failAudit: (value: number) => { auditFailureAt = value; } };
 }
+
+test("planned boxes require intact policy provenance before filling an existing profile and never refine its weight", async () => {
+  const f = await fixture(); f.average(false); f.products[0].shippingProfile = structuredClone(originalDraft);
+  const containers = [{ id: "synthetic-container", packingHypothesis: "Unmeasured synthetic outer box" }];
+  const unproven = await f.run(false, undefined, gtins, [], containers);
+  assert.equal(unproven.products[0].action, "PRESERVE_EXISTING_PROFILE"); assert.equal(unproven.products[0].estimate, null);
+  assert.equal(unproven.products[1].estimate?.draft.lengthCm, 24);
+  const source = { id: "profile-source", entityId: f.products[0].id, metadata: { policyVersion: "weight-only-v4", draft: structuredClone(originalDraft) } };
+  f.weightAudits.push(source);
+  const dry = await f.run(false, undefined, gtins, [], containers);
+  assert.equal(dry.products[0].action, "FILL_ESTIMATED_DIMENSIONS_ONLY"); assert.equal(dry.products[0].estimate?.draft.weightGrams, 500);
+  assert.equal(dry.products[0].estimate?.weightAppliedFrom, "PRESERVED_EXISTING_PROFILE");
+  assert.equal(dry.products[1].estimate?.weightAppliedFrom, "INDIVIDUAL_ESTIMATE");
+  source.id = "changed-source"; await assert.rejects(f.run(true, dry.planSha256, gtins, [], containers), /Plano mudou/); source.id = "profile-source";
+  await assert.rejects(f.run(true, dry.planSha256, gtins, [], [{ ...containers[0], packingHypothesis: "Changed outer box hypothesis" }]), /Plano mudou/);
+  await f.run(true, dry.planSha256, gtins, [], containers);
+  assert.equal(f.products[0].shippingProfile?.weightGrams, 500); assert.equal(f.products[1].shippingProfile?.weightGrams, 180);
+  assert.ok(f.audits[0].metadata.profileSourceAudit); assert.equal(f.audits[0].metadata.weightSourceAudit, null);
+  assert.equal(f.audits[0].metadata.weightPolicy, "PRESERVE_EXISTING_WEIGHT"); assert.ok(f.audits[0].metadata.plannedContainersSha256);
+  assert.equal(f.audits[0].metadata.weightAppliedFrom, "PRESERVED_EXISTING_PROFILE");
+  assert.equal(f.audits[1].metadata.weightAppliedFrom, "INDIVIDUAL_ESTIMATE");
+  const repeat = await f.run(false, undefined, gtins, [], containers); assert.ok(repeat.products.every(p => p.action === "PRESERVE_EXISTING_PROFILE"));
+});
+
+test("planned boxes preserve altered, unknown-policy and missing-weight drafts", async () => {
+  const f = await fixture(); f.average(false); const containers = [{ id: "synthetic-container" }];
+  const source = { id: "profile-source", entityId: f.products[0].id, metadata: { policyVersion: "weight-only-v4", draft: structuredClone(originalDraft) } };
+  f.weightAudits.push(source);
+  for (const patch of [{ retainedNote: "manual change" }, { weightGrams: null }]) {
+    f.products[0].shippingProfile = { ...originalDraft, ...patch };
+    if (patch.weightGrams === null) source.metadata.draft = structuredClone(f.products[0].shippingProfile) as typeof originalDraft;
+    assert.equal((await f.run(false, undefined, gtins, [], containers)).products[0].estimate, null);
+  }
+  f.products[0].shippingProfile = structuredClone(originalDraft); source.metadata.draft = structuredClone(originalDraft); source.metadata.policyVersion = "unknown-policy";
+  assert.equal((await f.run(false, undefined, gtins, [], containers)).products[0].estimate, null);
+});
+
+test("planned containers remain a fallback after own averages and reviewed families", async () => {
+  const f = await fixture(), containers = [{ id: "synthetic-container" }];
+  assert.equal((await f.run(false, undefined, gtins, [], containers)).products[0].estimate?.draft.lengthCm, 12);
+  f.average(false);
+  assert.equal((await f.run(false, undefined, gtins, [{ id: "synthetic-family" }], containers)).products[0].estimate?.draft.lengthCm, 12);
+});
 
 test("reviewed families preserve existing weights even with policy provenance and bind the entire manifest", async () => {
   const f = await fixture(); f.average(false);
