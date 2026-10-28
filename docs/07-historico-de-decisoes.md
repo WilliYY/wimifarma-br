@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-28 — ANB prioritária na inclusão do catálogo
+
+- O lojista aprovou usar ANB como fonte principal e recorrer a Profarma, GAM e DM quando faltar apresentação, disponibilidade ou condição comercial válida. Oferta exata, atual e elegível na ANB dispensa novas consultas nas demais; não é declarada a menor entre todas. Custos que não comportem margem autorizada sob o teto comprovado também exigem alternativa. Preservar evidências históricas, sem inventar pesquisas negativas ou renovar datas. Santa Cruz continua suspensa. Conferências de identidade, duplicidade, receita/classificação, preço, estoque, foto e controles de publicação permanecem; detalhes em [108](108-catalogo-pesquisa-quatro-fontes.md).
+
 ## 2026-10-28 — Validação global e conteúdo não medicinal abreviado
 
 - Auditoria por cadastro distingue estrutura válida de medição física. A v3 usa marca/categoria identificadas e conteúdo inequívoco em títulos abreviados, com as mesmas hipóteses anteriores e sem inventar dimensões; exclui doses, apresentações unitárias ambíguas e abreviações de carga especial. Modo explícito para peso nulo preserva perfil protegido, chaves, CAS/hash e auditoria. Duas fontes comerciais por EAN ficam separadas de aprovação de transporte; [122](122-validacao-global-de-pesos-e-medidas.md).

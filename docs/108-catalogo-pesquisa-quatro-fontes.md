@@ -1,6 +1,14 @@
-# Pesquisa nas quatro distribuidoras
+# Pesquisa e prioridade das distribuidoras
 
-## Orientação vigente em 25/10/2026
+## Orientação vigente em 28/10/2026: ANB prioritária
+
+O lojista aprovou, nesta frente de expansão e sua continuidade, priorizar a ANB e consultar Profarma, GAM e DM quando faltar produto, estoque ou uma condição comercial válida. Uma oferta ANB exata, atual, disponível e com custo final/tributos e condições suficientes pode fundamentar a inclusão sem novas consultas obrigatórias nas outras três fontes. Isso substitui a exigência anterior de pesquisar as quatro fontes por apresentação para as próximas inclusões desta frente; não declara que a ANB tem o menor custo entre todas. Outras frentes devem preservar as instruções humanas específicas recebidas no próprio chat.
+
+Recorrer às demais fontes quando não houver a apresentação exata na ANB, a disponibilidade/alocação não bastar, a oferta estiver vencida ou sem custo/tributos/condições verificáveis, ou o custo não comportar a margem autorizada dentro do teto comprovado. Quando houver ANB válida e não for necessário consultar uma fonte alternativa, registrar esse motivo; não fabricar uma pesquisa negativa. Preservar evidências e datas históricas das outras fontes. Santa Cruz continua suspensa.
+
+Permanecem as conferências de EAN/apresentação, duplicidade em todas as situações do catálogo, classificação/receita, preço/CMED, disponibilidade e foto, além dos controles de publicação. A nova prioridade muda a ordem e a necessidade das consultas comerciais; não altera margens, limites de preço, qualidade de fotos, produtos já publicados ou regras de pedidos e pagamentos.
+
+## Histórico: orientação de 25/10/2026
 
 O lojista determinou pesquisar cada produto nas quatro fontes ANB, Profarma, GAM e DM antes de novas inclusões. Santa Cruz está suspensa por enquanto pela dificuldade de coleta. Uma eventual rota oficial de arquivo ou API poderá ser avaliada; essa possibilidade não retoma a coleta no aplicativo nem ativa uma integração.
 

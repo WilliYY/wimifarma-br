@@ -46,7 +46,7 @@ A execução final passou por 485 testes de segurança e 111 de fornecedores, QA
 
 As sete páginas e suas imagens responderam HTTP 200 com os hashes esperados. Além das oito tabelas protegidas pelo engine, uma comparação física adicional preservou os **2.741 produtos anteriores em todas as colunas**, incluindo logisticsEvidence. A janela `chat5-mip7-stage02-v1-20261027-180749` terminou completed_released, sem concessão ativa. O banco QA próprio foi removido após comprovar identidade e encerramento. Não houve migração produtiva, implantação de APP, compra de distribuidora ou alteração de pedidos, pagamentos e carteiras por esta etapa.
 
-## Continuidade
+## Continuidade — histórico após a segunda etapa
 
 A coorte mantém seus 1.491 candidatos e os arquivos originais de pesquisa. **9 inclusões foram comprovadas; 1.482 candidatos continuam em conferência**, sem aprovação coletiva de preço, foto, estoque ou classificação. O histórico privado de publicação está em `outputs/catalogo-lotes200-2026-10-26/lotes1000-v1-20261027/publication-ledger-v1.json`. Os próximos candidatos dependem de conferência individual das quatro fontes, identidade, classificação, condição comercial e imagem; não foi exigida a presença de quatro ofertas positivas para cada produto.
 
@@ -71,3 +71,33 @@ O primeiro preflight desta etapa recusou o avanço do APP antes de segurança, Q
 As 14 páginas e imagens responderam HTTP 200 com os hashes esperados. Foram preservados os **2.749 produtos anteriores em todas as colunas físicas**, incluindo logisticsEvidence, as oito tabelas protegidas pelo engine e PackagingRecipe. A janela `chat5-mip14-stage03-v1-20261027-135612` terminou completed_released, sem concessão ativa ou aplicação incerta. O banco QA próprio foi removido depois de verificar proprietário e encerramento. Não houve compra de distribuidora, alteração de pedidos, pagamentos ou carteiras, migração produtiva ou implantação de APP nesta etapa.
 
 O total desta coorte passa a **23 inclusões comprovadas e 1.468 candidatos ainda em conferência**, mantendo os 1.491 candidatos originais. Não somar cadastros de outras frentes nem os produtos sintéticos de QA. As provas privadas e o índice dos sete arquivos físicos estão em `next-mip14-stage03-control-v1/`; o runtime fechado está em `mip14-stage03-runtime-v1/`. Cinco próximos candidatos sem receita tiveram novas cotações coletadas, mas continuam em preparação; o chat 13 ainda não foi criado.
+
+Na retomada seguinte, o lojista aprovou **ANB prioritária**, com Profarma, GAM e DM apenas quando faltar apresentação, estoque ou condição comercial válida, conforme a orientação atual em [108](108-catalogo-pesquisa-quatro-fontes.md). As pendências históricas de consulta obrigatória às quatro fontes não impedem as próximas inclusões com ANB exata e elegível. Foi iniciada a preparação de um executor reutilizável para reduzir clones e revisões repetidas; essa preparação não é uma nova publicação. As demais conferências e os controles operacionais continuam exigidos.
+
+### Quarta etapa publicada e encerrada em 28/10/2026
+
+A Stage04 acrescentou **7 produtos, 7 fotos e 14 auditorias** em aplicação única às `16:04:38.895Z`. O namespace privado conserva o nome inicial `mip5-stage04-runtime-v1`, mas a contagem real é sete: cinco candidatos originais e dois adicionais revisados. Não somar novamente os cinco aos sete.
+
+| EAN14 | Apresentação publicada |
+| --- | --- |
+| 07896112127680 | Maleato de dexclorfeniramina Teuto 0,4 mg/mL, solução oral 100 mL |
+| 07896658026546 | Dorilax DT 450 mg + 50 mg + 35 mg, 12 comprimidos |
+| 07899095239227 | Acetilcisteína Geolab 600 mg, 16 envelopes de 5 g |
+| 07899095239340 | Cisteil acetilcisteína 200 mg, 16 envelopes de 5 g |
+| 07899095239401 | Cisteil acetilcisteína 600 mg, 16 envelopes de 5 g |
+| 07899095204867 | Cisteil acetilcisteína 600 mg, 10 envelopes de 5 g |
+| 07899470808628 | Paragripe Natulab 400 mg + 4 mg + 4 mg, 20 cápsulas |
+
+São dois genéricos e cinco similares, com acréscimo de 50% sobre o custo final incluindo ST uma única vez, teto conservador CMED, cashback de 1%, promoção nula e WimiCoins desabilitado. As ofertas ANB foram capturadas em 28/10, com EAN, apresentação e MS13 conferidos. A alocação interna de cinco unidades não transforma `+100` em saldo numérico ou compra mínima. Nesta frente vale **ANB primária**, recorrendo a Profarma/GAM/DM se faltar apresentação, disponibilidade suficiente ou condição comercial válida, inclusive quando o custo impedir a margem autorizada sob o teto. Alternativas não necessárias não foram apresentadas como novas consultas nem como prova de menor custo entre todas as distribuidoras.
+
+Os cinco PNGs anteriores foram reaproveitados. Os dois originais adicionais JPEG/WebP foram preservados separadamente e normalizados para PNG com pixels RGBA e dimensões idênticos, sem corte, ampliação ou filtro e com orientação EXIF ausente/1. Formosa foi identificada como varejista e Riomed como distribuidor, sem inferir licença. As sete imagens públicas foram verificadas por HTTP e hash; as páginas e imagens retornaram 200 às `16:04:52.987Z`.
+
+Revisões independentes, schemas reais, 485 testes de segurança, 111 de fornecedores, QA isolado 7/7/14, backup e simulação antecederam a aplicação. As auditorias completa e de produção mantiveram um alerta moderado conhecido em `fast-uri`, sem high/critical. O reuso dos contratos, geradores e adaptador privados reduziu repetição de execução; não representa um recurso global novo ou dispensa dos controles por lote. A fonte OPS imutável e as compatibilidades documentais do APP foram vinculadas a hashes, sem alegar novo build completo do APP.
+
+A comparação física preservou **todas as colunas das 2.773 linhas anteriores de Product**, incluindo logisticsEvidence; `PackagingRecipe` permaneceu com zero linhas e o mesmo hash, além das oito tabelas protegidas pelo engine. A janela `chat5-mip5-stage04-v1-20261028-160320` terminou `completed_released` às `16:04:55.298292Z`, com `productionGrant:false` e sem aplicação incerta. O QA próprio foi removido, com proprietário conferido e zero banco remanescente. Não reaplicar esta etapa encerrada.
+
+O ledger próprio passa a **30 inclusões comprovadas de 1.491 candidatos; 1.461 permanecem em conferência**. Provas locais: `outputs/catalogo-lotes200-2026-10-26/lotes1000-v1-20261027/next-mip5-stage04-control-v1/server-evidence-summary-r2.json` e `closed-physical-seven-proof-hashes.json`, na mesma pasta. Os totais anteriores de 9 e 23 são snapshots históricos, sem contar publicações de outras frentes ou QA.
+
+A [análise dos oito ativos](../outputs/catalogo-lotes200-2026-10-26/lotes1000-v1-20261027/cobertura8-ativos-20261028-v1/resumo.md) usa outro recorte: 1.099 EAN14 CMED, com **39 existentes e 1.060 ausentes no snapshot de `15:25:48.665418Z`, antes destas sete inclusões**. Não somar esse recorte à coorte de 1.491, atualizar seus números por inferência ou tratá-lo como oferta, estoque, prescrição ou prontidão para publicação. Repetir a deduplicação antes de nova inclusão.
+
+O Chat **13 não foi criado**. A condição permanece concluir os candidatos qualificados já separados antes da transferência; o fechamento destes sete não comprova conclusão das demais pendências nem autoriza iniciar o novo chat.
