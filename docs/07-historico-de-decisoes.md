@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-28 — Higiene por fonte confirmada e lotes com preservação
+
+- Nesta frente, o lojista autorizou higiene e perfumaria com uma fonte completa confirmada, comparando as outras depois. Os requisitos de medicamentos permanecem. Foram publicados 47 produtos em lotes de10 e37, com prova pública, preservação integral e QAs encerradas.
+- O contrato operacional reconhece explicitamente a release própria ou estrangeira corrente por identidade, fingerprint e conteúdo exatos; preserva55 negativos, CAS, mutex, backup, dry-run e aplicação única. Não exige uma publicação fictícia da outra frente. Revisão, resultados e pesquisa das21 famílias estão em [121](121-catalogo-higiene-uma-fonte.md).
+
 ## 2026-10-28 — ANB prioritária na inclusão do catálogo
 
 - O lojista aprovou usar ANB como fonte principal e recorrer a Profarma, GAM e DM quando faltar apresentação, disponibilidade ou condição comercial válida. Oferta exata, atual e elegível na ANB dispensa novas consultas nas demais; não é declarada a menor entre todas. Custos que não comportem margem autorizada sob o teto comprovado também exigem alternativa. Preservar evidências históricas, sem inventar pesquisas negativas ou renovar datas. Santa Cruz continua suspensa. Conferências de identidade, duplicidade, receita/classificação, preço, estoque, foto e controles de publicação permanecem; detalhes em [108](108-catalogo-pesquisa-quatro-fontes.md).
