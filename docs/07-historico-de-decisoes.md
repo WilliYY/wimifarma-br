@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-27 — Médias aproximadas de pacote com proveniência
+
+- Nova autorização permite médias por apresentação comparável em rascunhos estimados. Fonte própria tem prioridade; coortes exigem composição, forma e contagem iguais, GTINs distintos e dispersão limitada. Médias são descritivas e o pacote usa envelope dos máximos com proteção hipotética. Aplicador preserva perfis protegidos e peso arbitrário, exige auditoria íntegra para refinar peso anterior e vincula fontes/revisões ao plano; [121](121-medias-logisticas-por-apresentacao.md). Nenhuma aprovação de carga ou liberação automática.
+
 ## 2026-10-27 — Piloto de cobertura antes de adotar fonte física em lote
 
 - Priorizar unidade comercial por GTIN com bruto/líquido, unidade e hierarquia explícitos; preparar amostra de dez itens antes de contratar ou mapear provedores. Campos Cosmos exigem acesso/semântica/licença; ConsultaProdutos ainda não comprova API operacional para os pesos. Amostra complementa a consulta GS1 autorizada. Nenhum peso ou integração foi ativado; [120](120-rotas-para-dados-fisicos-em-lote.md).

@@ -16,6 +16,8 @@ Comparação por GTIN, prioridade de peso bruto documental e refinamento explíc
 
 Rotas em lote para dados físicos, limites dos provedores e amostra de 10 GTINs encaminhada à consulta GS1 já autorizada: [120](docs/120-rotas-para-dados-fisicos-em-lote.md).
 
+Médias por apresentação comparável e medidas aproximadas com proveniência, proteção hipotética e gravação auditada em rascunhos: [121](docs/121-medias-logisticas-por-apresentacao.md).
+
 Novos medicamentos desta expansão: acréscimo autorizado de 50% para genéricos/similares e 10% para marcas éticas, preservando percentuais existentes, teto CMED e pesquisa nas quatro distribuidoras: [111](docs/111-expansao-medicamentos-e-politica-de-precos.md).
 
 Coleta offline de XML NF-e, com proveniência, cruzamento por GTIN e fila revisável sem alterar dados comerciais ou habilitar frete automaticamente: [109](docs/109-coleta-xml-e-logistica.md).
