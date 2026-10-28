@@ -40,3 +40,15 @@ Prévia e capturas privadas: `outputs/grupos-logisticos-v2-2026-10-28/`. O QA us
 Validação local após a correção: 172 testes de frete/importadores e 491 de segurança, ESLint completo e typecheck passaram. QA PostgreSQL isolado passou 11 verificações com reversão comprovada e recursos removidos. Auditorias completa e de produção: três low, um moderate, zero high/critical; alertas em `@react-email/render`, `deepmerge`, `fast-uri` e `html-to-text`. Nenhuma dependência alterada; não ocultar os quatro alertas não bloqueantes. Revisão independente final sem bloqueios.
 
 Após o encerramento comprovado da publicação comercial, o snapshot de 28/10 às 20h20 UTC encontrou 2.833 ativos. A prévia foi recalculada e manteve as 28 propostas, cinco observações, três refinamentos próprios e um perfil novo. O HEAD de liberação `6379af0` mudou apenas a documentação do catálogo em relação ao código já validado; revisão e testes continuam aplicáveis. Aplicação produtiva depende do plano transacional correspondente a esse corte atualizado.
+
+## Resultado produtivo
+
+Código `22d6937` enviado ao GitHub e sincronizado no servidor após liberação da janela comercial. O lote foi congelado por SHA-256, com revisão dos bytes das fontes, código e propostas, backup custom verificado por catálogo/hash e dry-run transacional coincidente com as 28 propostas.
+
+Foram preenchidas **28 trincas de dimensões**, todas com peso estimado presente; refinados **três pesos próprios**; e importadas **cinco observações**, quatro referências utilizáveis e uma pendente por unidade desconhecida. São 13 roll-ons, 14 dentais de 90 g e um Luminous de 140 g. Vinte e nove produtos foram tocados, pois o Sensitive recebeu somente a evidência documental, com seu perfil preservado. Acrescentadas 33 auditorias, sem gravações na repetição.
+
+A prova integral passou: campos comerciais de todos os produtos, perfis/evidências fora do lote, timestamps fora dos alvos, receitas de embalagem e pesos fora dos três refinamentos foram preservados. Os novos rascunhos continuam estimados, desativados e sem revisão de transporte. App e PostgreSQL mantiveram identidades, imagens e início; saúde local/HTTPS passou e acesso anônimo ao admin de fretes retornou 401. Sem migration, reconstrução ou reinício de serviços.
+
+Estado deste corte: **2.833 ativos, 2.225 com algum perfil, 608 sem perfil e 382 com peso e três dimensões**, com os mesmos dois perfis habilitados anteriores. A contagem sem perfil inclui 19 produtos adicionados pela frente comercial desde o corte anterior; esta rodada criou um perfil e completou dimensões em outros 27. Não confundir estimativa completa com postagem aprovada.
+
+Provas privadas: `outputs/grupos-logisticos-v2-2026-10-28/` e `/home/ubuntu/.codex-taskdata/logistics-groups-v2-01a15b8f-20261028/`. Backup restrito: `/home/ubuntu/backups/wimifarma-br/logistics-groups-v2-01a15b8f-20261028/`. O marcador `apply-verified` comprova o encerramento; não há aplicação pendente ou incerta. A janela é liberada após sincronizar este registro.
