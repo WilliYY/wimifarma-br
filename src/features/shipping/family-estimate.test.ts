@@ -110,6 +110,18 @@ test("roll-on family accepts exact branded volume and rejects other packaging or
   for (const name of ["Desodorante roll-on tubo 50ml", "Desodorante roll-on aerossol 50ml", "Desodorante roll-on spray 50ml", "Desodorante roll-on vidro 50ml", "Desodorante roll-on perfume 50ml", "Desodorante roll-on inflamável 50ml", "Desodorante roll-on 50g", "Desodorante roll-on 100ml"]) assert.equal(estimateFamilyShipping({ ...rollon, name }, references, [rollonGroup]), null, name);
 });
 
+test("roll-on promotional L3P2 packs cannot be targets or dimensional references", () => {
+  const rollon = { ...target, name: "Desodorante roll-on sintético 50ml", category: "Higiene", requiresPrescription: false };
+  const references = catalog.map(item => ({ ...item, ...rollon, gtin: item.gtin, logisticsEvidence: item.logisticsEvidence }));
+  const rollonGroup = { ...group, kind: "ROLL_ON" as const, quantity: 50 };
+  assert.ok(estimateFamilyShipping(rollon, references, [rollonGroup]));
+  for (const promotion of ["L3P2", "L 3 P 2"]) {
+    const name = `Desodorante roll-on sintético ${promotion} 50ml`;
+    assert.equal(estimateFamilyShipping({ ...rollon, name }, references, [rollonGroup]), null, `target ${promotion}`);
+    assert.equal(estimateFamilyShipping(rollon, [references[0], { ...references[1], name }], [rollonGroup]), null, `reference ${promotion}`);
+  }
+});
+
 test("reference weight dispersion cannot replace own weight; geometry rounds conservatively", () => {
   const references = [sample(1, 10, [81, 51, 21]), sample(2, 1000, [89, 59, 29])];
   const result = estimateFamilyShipping(target, references, [group]);
@@ -151,4 +163,45 @@ test("non-prescription hygiene wipes accept default UNREVIEWED without bypassing
   assert.equal(estimateFamilyShipping({ ...wipes, requiresPrescription: true }, references, [wipesGroup]), null);
   assert.equal(estimateFamilyShipping({ ...wipes, prescriptionType: "CONTROLLED" }, references, [wipesGroup]), null);
   assert.equal(estimateFamilyShipping({ ...wipes, prescriptionType: "ANTIMICROBIAL" }, references, [wipesGroup]), null);
+});
+
+const dental = { ...target, name: "Creme dental sintético 90g", category: "Higiene bucal", requiresPrescription: false, prescriptionType: "UNREVIEWED" };
+const dentalGroup = { ...group, kind: "DENTAL_CREAM", quantity: 90 };
+function dentalSamples(weight: number | null = null) {
+  return [sample(1, weight, [170, 46, 38]), sample(2, weight, [170, 46, 38])].map(item => ({ ...item, ...dental, gtin: item.gtin, logisticsEvidence: item.logisticsEvidence }));
+}
+
+test("dental cream extends reviewed-family-v1 with exact branded grams and independent geometry", () => {
+  assert.equal(familyGroupSchema.safeParse(dentalGroup).success, true);
+  const references = dentalSamples();
+  const result = estimateFamilyShipping(dental, references, [dentalGroup]);
+  assert.ok(result);
+  assert.equal(result.policyVersion, "reviewed-family-v1");
+  assert.equal(result.weightBasis, "WEIGHT_POLICY");
+  assert.equal(result.draft.weightGrams, 220);
+  assert.equal(result.meanRetailWeightGrams, null);
+  assert.deepEqual([result.draft.lengthCm, result.draft.widthCm, result.draft.heightCm], [19, 7, 6]);
+  assert.equal(result.draft.enabled, false);
+  assert.equal(result.draft.transportReviewed, false);
+  assert.equal(result.draft.measurementBasis, "estimated");
+  for (const name of ["Gel dental sintético bisnaga 90g", "Pasta dental sintética tubo 90g"]) assert.ok(estimateFamilyShipping({ ...dental, name }, references, [dentalGroup]), name);
+  assert.equal(estimateFamilyShipping(dental, [references[0]], [dentalGroup]), null);
+  assert.equal(estimateFamilyShipping(dental, [references[0], references[0]], [dentalGroup]), null);
+});
+
+test("dental own gross takes precedence while dimensions come from separate GTINs", () => {
+  const own = { ...sample(99, 110), ...dental, gtin: gtin(99), logisticsEvidence: sample(99, 110).logisticsEvidence };
+  const evidence = own.logisticsEvidence as { observations: Array<{ sidesMm: number[] | null }> };
+  evidence.observations[0].sidesMm = null;
+  const result = estimateFamilyShipping(own, dentalSamples(109), [dentalGroup]);
+  assert.equal(result?.weightBasis, "EXACT_GTIN_GROSS");
+  assert.equal(result?.draft.weightGrams, 210);
+  assert.ok(result?.sourceObservationIds.includes(`${own.gtin}:sample-99`));
+  assert.deepEqual(result?.maximumRetailSidesCm, [17, 4.6, 3.8]);
+});
+
+test("dental family rejects mismatches, multiple packs, prescription and special cargo", () => {
+  const references = dentalSamples();
+  for (const patch of [{ brand: "Outra marca" }, { requiresPrescription: true, prescriptionType: "ORDINARY" }, { prescriptionType: "CONTROLLED" }, { isPopularPharmacy: true }, { category: "Medicamentos" }, { category: "Categoria desconhecida" }, ...["Creme dental 90ml", "Creme dental 100g", "Creme corporal 90g", "Creme dental refil 90g", "Creme dental pote 90g", "Creme dental 90g 3 doses", "Creme dental 90g porção", "Kit creme dental 90g", "Combo creme dental 90g", "Creme dental L3P2 90g", "Creme dental L 3 P 2 90g", "Creme dental leve3pague2 90g", "Creme dental 2x90g", "Creme dental 90g4un", "Creme dental vidro 90g", "Creme dental aerossol 90g", "Creme dental refrigerado 90g"].map(name => ({ name }))]) assert.equal(estimateFamilyShipping({ ...dental, ...patch }, references, [dentalGroup]), null, JSON.stringify(patch));
+  assert.equal(estimateFamilyShipping(dental, [references[0], { ...references[1], name: "Creme dental L3P2 90g" }], [dentalGroup]), null);
 });

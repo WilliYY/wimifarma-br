@@ -6,7 +6,7 @@ O lojista autorizou pesos e medidas aproximados e pediu reaproveitamento para gr
 
 Cada grupo contém identificador, marca ou aliases do mesmo fabricante, forma, conteúdo/contagem exatos, lista explícita de GTINs membros, pelo menos dois GTINs de referência, justificativa e hipótese de embalagem. A lista é revisada antes de cada lote; produtos novos não entram automaticamente por nome, categoria, NCM ou fotografia. Um GTIN não pode pertencer a dois grupos do mesmo manifesto.
 
-As formas implementadas são comprimidos orais comuns, hidratante corporal, roll-on e lenços/toalhas umedecidas de 48 unidades. Isso não significa que todas essas formas já tenham uma família com fontes suficientes. Não misturar frascos, tubos, potes, refis, kits, contagens, líquidos ou apresentações especiais. Ingredientes diferentes podem integrar uma família experimental de comprimidos do mesmo fabricante somente mediante lista e justificativa explícitas; não usar todos os medicamentos de 30 comprimidos como embalagem universal.
+As formas implementadas são comprimidos orais comuns, hidratante corporal, roll-on, creme/gel dental e lenços/toalhas umedecidas de 48 unidades. A extensão dental e a continuidade por grupo estão em [126](126-grupos-rollon-e-dental.md). Isso não significa que todas essas formas já tenham uma família com fontes suficientes. Não misturar frascos, tubos, potes, refis, kits, contagens, líquidos ou apresentações especiais. Ingredientes diferentes podem integrar uma família experimental de comprimidos do mesmo fabricante somente mediante lista e justificativa explícitas; não usar todos os medicamentos de 30 comprimidos como embalagem universal.
 
 ## Geometria e peso independentes
 

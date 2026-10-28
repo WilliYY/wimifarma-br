@@ -9,7 +9,7 @@ const gtinsSchema = z.array(logisticsGtinSchema).min(1).max(500).refine(values =
 export const familyGroupSchema = z.object({
   id: z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/), label: z.string().trim().min(3).max(200),
   brands: z.array(z.string().trim().min(2).max(150)).min(1).max(100),
-  kind: z.enum(["ORAL_TABLETS", "BODY_LOTION", "ROLL_ON", "WIPES"]), quantity: z.number().positive().max(2000),
+  kind: z.enum(["ORAL_TABLETS", "BODY_LOTION", "ROLL_ON", "WIPES", "DENTAL_CREAM"]), quantity: z.number().positive().max(2000),
   memberGtins: gtinsSchema, referenceGtins: gtinsSchema.refine(values => values.length >= 2, "São necessárias duas referências distintas."),
   rationale: z.string().trim().min(10).max(2000), packagingHypothesis: z.string().trim().min(10).max(2000),
 }).strict().superRefine((group, context) => {
@@ -55,7 +55,15 @@ function eligible(input: AverageEstimateIdentity, group: FamilyGroup) {
   if (group.kind === "ROLL_ON") {
     const base = estimateWeightOnly({ ...input, logisticsEvidence: null });
     return base?.family === "HYGIENE_VOLUME" && base.declaredContent === group.quantity && base.declaredUnit === "ml" &&
-      /\broll[ -]?on\b/.test(name) && !/\b(?:tubo\w*|bisnaga\w*|refil\w*|pote\w*|inflamav\w*|flammab\w*)\b/.test(name);
+      /\broll[ -]?on\b/.test(name) && !/\b(?:tubo\w*|bisnaga\w*|refil\w*|pote\w*|inflamav\w*|flammab\w*)\b|\bl\s*\d+\s*p\s*\d+\b/.test(name);
+  }
+  if (group.kind === "DENTAL_CREAM") {
+    const base = estimateWeightOnly({ ...input, logisticsEvidence: null });
+    return !input.requiresPrescription && !["CONTROLLED", "ANTIMICROBIAL"].includes(input.prescriptionType ?? "") &&
+      (hygieneCategories.has(normalize(input.category ?? "")) || normalize(input.category ?? "") === "higiene bucal") &&
+      base?.family === "HYGIENE_MASS" && base.declaredContent === group.quantity && base.declaredUnit === "g" &&
+      /\b(?:creme|gel|pasta)\s+dental\b/.test(name) &&
+      !/\b(?:refil\w*|pote\w*|doses?|porcao|porcoes|kits?|combo\w*|multipack|packs?|leve|pague|inflamav\w*|flammab\w*)\b|\bl\s*\d+\s*p\s*\d+\b|\b\d+\s*(?:unidades?|unid|und|un)\b/.test(name);
   }
   // Counted wet wipes do not fit the volume/mass policy. Keep this gate deliberately narrower.
   const counts = [...name.matchAll(/\b(\d+)\s*(?:unidades?|unid|und|un)\b/g)];

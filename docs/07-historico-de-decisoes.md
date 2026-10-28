@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-28 — Famílias de roll-on e creme dental com bruto próprio
+
+- A forma `DENTAL_CREAM` amplia o manifesto revisado sem alterar as famílias anteriores. Excluir kits e abreviações L3P2 também no roll-on. Capturas públicas preservadas vinculam EAN, unidade e bruto explícitos; pesos só são refinados por fonte do próprio GTIN com auditoria anterior íntegra. Material, lote e serviço continuam pendentes. Contrato e resultados em [126](126-grupos-rollon-e-dental.md).
+
 ## 2026-10-28 — Cenários logísticos por grupos explicitamente revisados
 
 - A autorização de médias passa a permitir famílias com lista revisada de GTINs, marca, forma, conteúdo/contagem, justificativa e hipótese de embalagem. Geometria pode usar duas referências sem bruto, sem promover sua massa; peso próprio/existente permanece separado. Dimensões próprias e coortes anteriores têm prioridade. Manifesto integral vinculado ao plano, ADMIN/lock/CAS/auditoria, rascunhos desativados e receitas calibradas preservados; contrato e primeiro lote em [125](125-grupos-logisticos-revisados.md).
