@@ -11,10 +11,10 @@ type Plan = { applied: boolean; planSha256: string; products: Array<{ action: st
 
 async function fixture() {
   const bundle = await build({ entryPoints: ["scripts/apply-product-average-drafts.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "average-fixture", setup(builder) {
-    builder.onResolve({ filter: /lib\/prisma$|^dotenv\/config$|shipping\/average-estimate$/ }, args => ({ path: args.path, namespace: "fixture" }));
-    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("prisma") ? "export const getPrisma=()=>{throw new Error('No automatic connection')};" : args.path.endsWith("average-estimate") ? "export const estimateAverageShipping=(product,catalog)=>globalThis.averageFixture(product,catalog);" : "" }));
+    builder.onResolve({ filter: /lib\/prisma$|^dotenv\/config$|shipping\/(?:average|family)-estimate$/ }, args => ({ path: args.path, namespace: "fixture" }));
+    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("prisma") ? "export const getPrisma=()=>{throw new Error('No automatic connection')};" : args.path.endsWith("average-estimate") ? "export const estimateAverageShipping=(product,catalog)=>globalThis.averageFixture(product,catalog);" : args.path.endsWith("family-estimate") ? "export const familyGroupsSchema={parse:value=>value}; export const estimateFamilyShipping=(product,catalog,groups)=>globalThis.familyFixture(product,catalog,groups);" : "" }));
   } }] });
-  let active = true, casAt = 0, auditFailureAt = 0, writes = 0, auditAttempts = 0, locked = false;
+  let active = true, casAt = 0, auditFailureAt = 0, writes = 0, auditAttempts = 0, locked = false, averageAvailable = true;
   const products = gtins.map((gtin, index) => ({ id: `synthetic-${index}`, name: "Medicamento sintético 50mg 30 comprimidos", ean: gtin.slice(1), eanNormalized: gtin, category: "Medicamentos", activeIngredients: ["Sintético"], requiresPrescription: true, prescriptionType: "ORDINARY", isPopularPharmacy: false, shippingProfile: null as Profile, logisticsEvidence: { marker: "source-v1" }, updatedAt: new Date(0) }));
   const audits: Array<{ action: string; metadata: Record<string, unknown> }> = [];
   const weightAudits: Array<{ id: string; entityId: string; metadata: Record<string, unknown> }> = [];
@@ -42,11 +42,15 @@ async function fixture() {
     try { return await callback(tx); } catch (error) { products.forEach((product, index) => { product.shippingProfile = before[index]; }); audits.length = count; throw error; }
   } };
   const loaded = { exports: {} as { applyProductAverageDrafts: (...args: unknown[]) => Promise<Plan> } };
-  vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, console, Buffer, process: { argv: ["node", "test.ts"], env: {} }, averageFixture: (product: { gtin: string }, catalog: unknown[]) => ({
+  const estimate = {
+    policyVersion: "synthetic-average-v1", basis: "ORAL_SOLID_COHORT", sourceGtins: [gtins[1]], explanation: "Hipótese sintética de teste.",
+    draft: { enabled: false, transportReviewed: false, measurementBasis: "estimated", weightGrams: 180, lengthCm: 12, widthCm: 8, heightCm: 5, reference: null },
+  };
+  vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, console, Buffer, process: { argv: ["node", "test.ts"], env: {} }, averageFixture: (product: { gtin: string }, catalog: unknown[]) => averageAvailable ? ({
     policyVersion: "synthetic-average-v1", basis: "ORAL_SOLID_COHORT", sourceGtins: [gtins[1]], sourceObservationIds: [JSON.stringify(catalog)], explanation: "Hipótese sintética de teste.",
     draft: { enabled: false, transportReviewed: false, measurementBasis: "estimated", weightGrams: 180, lengthCm: 12, widthCm: 8, heightCm: 5, reference: null },
-  }) });
-  const run = (apply = false, hash?: string, input = gtins) => loaded.exports.applyProductAverageDrafts(db, input, "admin", apply, hash);
+  }) : null, familyFixture: (_product: unknown, _catalog: unknown[], groups: unknown[]) => groups.length ? ({ ...estimate, basis: "REVIEWED_FAMILY", familyGroupId: "synthetic-family" }) : null });
+  const run = (apply = false, hash?: string, input = gtins, families: unknown = []) => loaded.exports.applyProductAverageDrafts(db, input, "admin", apply, hash, families);
   const cli = async (args: string[], size = 2, contents = JSON.stringify(gtins)) => {
     const errors: string[] = [], cliProcess = { argv: ["node", "scripts/apply-product-average-drafts.ts", ...args], env: {}, exitCode: 0 };
     const require = createRequire(import.meta.url), cliModule = { exports: {} };
@@ -56,8 +60,33 @@ async function fixture() {
     });
     await new Promise(resolve => setImmediate(resolve)); return { errors, exitCode: cliProcess.exitCode };
   };
-  return { run, cli, products, audits, weightAudits, stats: () => ({ writes, auditAttempts }), admin: (value: boolean) => { active = value; }, cas: (value: number) => { casAt = value; }, failAudit: (value: number) => { auditFailureAt = value; } };
+  return { run, cli, products, audits, weightAudits, stats: () => ({ writes, auditAttempts }), average: (value: boolean) => { averageAvailable = value; }, admin: (value: boolean) => { active = value; }, cas: (value: number) => { casAt = value; }, failAudit: (value: number) => { auditFailureAt = value; } };
 }
+
+test("reviewed families preserve existing weights even with policy provenance and bind the entire manifest", async () => {
+  const f = await fixture(); f.average(false);
+  f.products[0].shippingProfile = structuredClone(originalDraft);
+  f.weightAudits.push({ id: "weight-source", entityId: f.products[0].id, metadata: { policyVersion: "weight-only-v4", draft: structuredClone(originalDraft) } });
+  const groups = [{ id: "synthetic-family", rationale: "Reviewed synthetic grouping" }];
+  const dry = await f.run(false, undefined, gtins, groups);
+  assert.equal(dry.products[0].action, "FILL_ESTIMATED_DIMENSIONS_ONLY");
+  assert.equal(dry.products[0].estimate?.draft.weightGrams, 500);
+  assert.equal(dry.products[1].estimate?.draft.weightGrams, 180);
+  await assert.rejects(f.run(true, dry.planSha256, gtins, [{ ...groups[0], rationale: "Changed grouping" }]), /Plano mudou/);
+  await f.run(true, dry.planSha256, gtins, groups);
+  assert.equal(f.products[0].shippingProfile?.weightGrams, 500);
+  assert.equal(f.audits[0].metadata.weightPolicy, "PRESERVE_EXISTING_WEIGHT");
+  assert.ok(f.audits[0].metadata.familyGroupsSha256);
+  const repeat = await f.run(false, undefined, gtins, groups);
+  assert.ok(repeat.products.every(product => product.action === "PRESERVE_EXISTING_PROFILE"));
+  assert.equal(f.audits.length, 2);
+});
+
+test("own references and composition averages take precedence over reviewed family fallback", async () => {
+  const f = await fixture();
+  const dry = await f.run(false, undefined, gtins, [{ id: "synthetic-family" }]);
+  assert.equal((dry.products[0].estimate as unknown as { basis: string }).basis, "ORAL_SOLID_COHORT");
+});
 
 test("average drafts preserve existing weights and literal keys; dry-run, hash and repetition are safe", async () => {
   const f = await fixture(); f.products[0].shippingProfile = structuredClone(originalDraft);

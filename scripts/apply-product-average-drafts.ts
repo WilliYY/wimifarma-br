@@ -8,6 +8,7 @@ import type { PrismaClient } from "../src/generated/prisma/client";
 import { getPrisma } from "../src/lib/prisma";
 import { lockProductCatalog } from "../src/features/products/mutations";
 import { estimateAverageShipping } from "../src/features/shipping/average-estimate";
+import { estimateFamilyShipping, familyGroupsSchema } from "../src/features/shipping/family-estimate";
 import { logisticsGtinSchema, normalizeLogisticsGtin } from "../src/features/shipping/logistics-evidence";
 import { shippingDraftSchema } from "../src/features/shipping/product-draft";
 
@@ -21,8 +22,10 @@ function eligibleExistingDraft(value: unknown) {
     "lengthCm" in value && value.lengthCm === null && "widthCm" in value && value.widthCm === null && "heightCm" in value && value.heightCm === null;
 }
 
-export async function applyProductAverageDrafts(db: Pick<PrismaClient, "$transaction">, values: unknown, actorId: string, apply = false, expectedPlan?: string) {
+export async function applyProductAverageDrafts(db: Pick<PrismaClient, "$transaction">, values: unknown, actorId: string, apply = false, expectedPlan?: string, families: unknown = []) {
   const gtins = inputSchema.parse(values);
+  const groups = familyGroupsSchema.parse(families);
+  const familyGroupsSha256 = sha256(groups);
   if (apply && !/^[a-f0-9]{64}$/.test(expectedPlan ?? "")) throw new Error("Aplicação exige o SHA-256 do dry-run revisado.");
   return db.$transaction(async tx => {
     await lockProductCatalog(tx);
@@ -47,9 +50,10 @@ export async function applyProductAverageDrafts(db: Pick<PrismaClient, "$transac
       const identity = { productId: product.id, gtin, revision: product.updatedAt.toISOString(), previousProfile, weightSourceAudit: null };
       const preserve = { ...identity, action: "PRESERVE_EXISTING_PROFILE" as const, estimate: null };
       if (previousProfile !== null && !eligibleExistingDraft(previousProfile)) return preserve;
-      const estimate = estimateAverageShipping(product, catalog);
+      const estimate = estimateAverageShipping(product, catalog) ?? estimateFamilyShipping(product, catalog, groups);
       if (!estimate) return { ...identity, action: "PENDING_PHYSICAL_REVIEW" as const, estimate: null };
-      const weightSourceAudit = previousProfile === null ? null : weightAudits.find(audit => {
+      // Family geometry must never replace an existing weight, even when it came from our weight policy.
+      const weightSourceAudit = previousProfile === null || estimate.basis === "REVIEWED_FAMILY" ? null : weightAudits.find(audit => {
         const metadata = audit.metadata;
         return audit.entityId === product.id && metadata !== null && typeof metadata === "object" && !Array.isArray(metadata) &&
           ["weight-only-v1", "weight-only-v2", "weight-only-v3", "weight-only-v4"].includes(String(metadata.policyVersion)) && isDeepStrictEqual(metadata.draft, previousProfile);
@@ -62,7 +66,7 @@ export async function applyProductAverageDrafts(db: Pick<PrismaClient, "$transac
       return { ...identity, action: previousProfile === null ? "SAVE_ESTIMATED_PACKAGE" as const : weightSourceAudit ? "REFINE_ESTIMATED_PACKAGE" as const : "FILL_ESTIMATED_DIMENSIONS_ONLY" as const,
         weightSourceAudit, estimate: { ...estimate, draft } };
     });
-    const planSha256 = sha256({ operation: "ESTIMATE_PACKAGE_AVERAGES", cohortSha256, products: plans });
+    const planSha256 = sha256({ operation: "ESTIMATE_PACKAGE_AVERAGES", cohortSha256, familyGroupsSha256, products: plans });
     if (apply && expectedPlan !== planSha256) throw new Error("Plano mudou desde o dry-run; nenhuma gravação aplicada.");
     for (const plan of plans) {
       if (!apply || !plan.estimate) continue;
@@ -72,11 +76,11 @@ export async function applyProductAverageDrafts(db: Pick<PrismaClient, "$transac
       });
       if (changed.count !== 1) throw new Error("Produto mudou durante a aplicação; lote revertido.");
       await tx.auditLog.create({ data: { userId: actorId, action: "PRODUCT_PACKAGE_DRAFT_ESTIMATED", entity: "Product", entityId: plan.productId,
-        metadata: { gtin: plan.gtin, planSha256, cohortSha256, previousProfile: plan.previousProfile, weightSourceAudit: plan.weightSourceAudit, ...plan.estimate,
+        metadata: { gtin: plan.gtin, planSha256, cohortSha256, familyGroupsSha256, previousProfile: plan.previousProfile, weightSourceAudit: plan.weightSourceAudit, ...plan.estimate,
           weightPolicy: plan.action === "FILL_ESTIMATED_DIMENSIONS_ONLY" ? "PRESERVE_EXISTING_WEIGHT" : plan.weightSourceAudit ? "REFINE_INTACT_POLICY_DRAFT" : "ESTIMATE_NEW_PROFILE",
           authorizationBasis: "Médias aproximadas autorizadas para conferência; sem medição ou transporte liberado." } } });
     }
-    return { applied: apply, planSha256, cohortSha256, products: plans };
+    return { applied: apply, planSha256, cohortSha256, familyGroupsSha256, products: plans };
   }, { timeout: 180000 });
 }
 
@@ -84,16 +88,22 @@ async function main() {
   const args = process.argv.slice(2);
   for (let index = 0; index < args.length; index++) {
     if (args[index] === "--apply") continue;
-    if (["--input", "--actor-id", "--expect-plan"].includes(args[index]) && args[index + 1] && !args[index + 1].startsWith("--")) { index++; continue; }
-    throw new Error("Use --input <GTINs.json> --actor-id <ADMIN> [--apply --expect-plan <SHA-256>].");
+    if (["--input", "--actor-id", "--expect-plan", "--families"].includes(args[index]) && args[index + 1] && !args[index + 1].startsWith("--")) { index++; continue; }
+    throw new Error("Use --input <GTINs.json> --actor-id <ADMIN> [--families <grupos.json>] [--apply --expect-plan <SHA-256>].");
   }
   if (!args.includes("--input") || !args.includes("--actor-id")) throw new Error("Informe --input e --actor-id. Dry-run é o padrão.");
   const input = args[args.indexOf("--input") + 1], actor = args[args.indexOf("--actor-id") + 1];
   if ((await stat(input)).size > 1_000_000) throw new Error("Arquivo excede 1 MB.");
   const values: unknown = JSON.parse(await readFile(input, "utf8"));
   inputSchema.parse(values);
+  let families: unknown = [];
+  if (args.includes("--families")) {
+    const file = args[args.indexOf("--families") + 1];
+    if ((await stat(file)).size > 5_000_000) throw new Error("Manifesto de famílias excede 5 MB.");
+    families = familyGroupsSchema.parse(JSON.parse(await readFile(file, "utf8")));
+  }
   const db = getPrisma();
-  try { console.log(JSON.stringify(await applyProductAverageDrafts(db, values, actor, args.includes("--apply"), args.includes("--expect-plan") ? args[args.indexOf("--expect-plan") + 1] : undefined))); }
+  try { console.log(JSON.stringify(await applyProductAverageDrafts(db, values, actor, args.includes("--apply"), args.includes("--expect-plan") ? args[args.indexOf("--expect-plan") + 1] : undefined, families))); }
   finally { await db.$disconnect(); }
 }
 if (process.argv[1] && resolve(process.argv[1]).replaceAll("\\", "/").endsWith("/apply-product-average-drafts.ts")) {

@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-28 — Cenários logísticos por grupos explicitamente revisados
+
+- A autorização de médias passa a permitir famílias com lista revisada de GTINs, marca, forma, conteúdo/contagem, justificativa e hipótese de embalagem. Geometria pode usar duas referências sem bruto, sem promover sua massa; peso próprio/existente permanece separado. Dimensões próprias e coortes anteriores têm prioridade. Manifesto integral vinculado ao plano, ADMIN/lock/CAS/auditoria, rascunhos desativados e receitas calibradas preservados; contrato e primeiro lote em [125](125-grupos-logisticos-revisados.md).
+
 ## 2026-10-28 — Higiene por fonte confirmada e lotes com preservação
 
 - Nesta frente, o lojista autorizou higiene e perfumaria com uma fonte completa confirmada, comparando as outras depois. Os requisitos de medicamentos permanecem. Foram publicados 47 produtos em lotes de10 e37, com prova pública, preservação integral e QAs encerradas.

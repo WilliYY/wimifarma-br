@@ -22,6 +22,8 @@ Conferência de todo o catálogo, conteúdo em nomes abreviados de higiene/nutri
 Continuidade por GTIN: cinco referências físicas importadas, quatro pesos refinados e três trincas de dimensões aplicadas com backup, auditoria e preservação dos demais dados: [123](docs/123-continuidade-dos-dados-fisicos.md).
 Correção de “sem álcool/sem perfume” nos cenários de peso e unidade comercial por SKU: cinco referências, 36 novos pesos, três refinamentos e três trincas aplicados com auditoria, backup e preservação dos demais dados: [124](docs/124-rotas-fisicas-e-negacoes-no-peso.md).
 
+Padronização de cenários por famílias explicitamente revisadas, com geometria separada do peso, manifesto no hash e preservação dos perfis existentes: [125](docs/125-grupos-logisticos-revisados.md).
+
 Novos medicamentos desta expansão: acréscimo autorizado de 50% para genéricos/similares e 10% para marcas éticas, preservando percentuais existentes, teto CMED e pesquisa nas quatro distribuidoras: [111](docs/111-expansao-medicamentos-e-politica-de-precos.md).
 
 Coleta offline de XML NF-e, com proveniência, cruzamento por GTIN e fila revisável sem alterar dados comerciais ou habilitar frete automaticamente: [109](docs/109-coleta-xml-e-logistica.md).
