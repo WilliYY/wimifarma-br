@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-29 — Hipóteses de embalagem para medicamentos
+
+- O titular autorizou continuar as estimativas por seu exemplo aproximado de Losartana de 6 × 4 × 2 cm, sem contagem/GTIN conhecidos. A nova basis `OWNER_PACKAGE_HYPOTHESIS` mantém cenários explícitos para sólidos até 120 unidades, líquidos orais até 150 ml e tópicos em massa até 60 g, com folga de 1–3 cm e caixa nominal de 24 × 15 × 10 cm, sem inventar fontes ou amostras físicas. Reutiliza peso individual v4, prioriza referências próprias e exige auditoria original íntegra para preservar literalmente pesos de perfis existentes. Não altera coortes anteriores, dados comerciais, evidências ou receitas; sem transporte automático. Contrato em [128](128-hipoteses-de-embalagem-para-medicamentos.md).
+
 ## 2026-10-28 — Caixa planejada para grupos maiores
 
 - A pedido do lojista, `PLANNED_OUTER_BOX` separa caixa externa planejada de geometria comercial e receita calibrada. `planned-container-v2` exige folga operacional inteira de 1–3 cm, aplicada uma única vez, referências vigentes e âncora de conteúdo superior. Formas separadas: comprimidos comuns 1–30, tubos dentais até 140 g e frascos de shampoo até 400 ml. A caixa informada de 24 × 15 × 10 cm não muda para acomodar hipóteses; envelope que atinja seu limite fica pendente. Peso individual registra unidade, densidade hipotética, reservas e arredondamento, separado do peso existente preservado por auditoria íntegra. Estimados/desativados, sem compatibilidade física nem transporte automático. Contrato e prévias em [127](127-caixa-planejada-para-grupo-amplo.md).

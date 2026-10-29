@@ -10,6 +10,7 @@ import { lockProductCatalog } from "../src/features/products/mutations";
 import { estimateAverageShipping } from "../src/features/shipping/average-estimate";
 import { estimateFamilyShipping, familyGroupsSchema } from "../src/features/shipping/family-estimate";
 import { estimatePlannedContainer, plannedContainersSchema } from "../src/features/shipping/planned-container";
+import { estimateOwnerMedicineScenario, ownerMedicineScenariosSchema } from "../src/features/shipping/owner-medicine-scenario";
 import { logisticsGtinSchema, normalizeLogisticsGtin } from "../src/features/shipping/logistics-evidence";
 import { shippingDraftSchema } from "../src/features/shipping/product-draft";
 
@@ -23,12 +24,14 @@ function eligibleExistingDraft(value: unknown) {
     "lengthCm" in value && value.lengthCm === null && "widthCm" in value && value.widthCm === null && "heightCm" in value && value.heightCm === null;
 }
 
-export async function applyProductAverageDrafts(db: Pick<PrismaClient, "$transaction">, values: unknown, actorId: string, apply = false, expectedPlan?: string, families: unknown = [], plannedContainers: unknown = []) {
+export async function applyProductAverageDrafts(db: Pick<PrismaClient, "$transaction">, values: unknown, actorId: string, apply = false, expectedPlan?: string, families: unknown = [], plannedContainers: unknown = [], ownerMedicineScenarios: unknown = []) {
   const gtins = inputSchema.parse(values);
   const groups = familyGroupsSchema.parse(families);
   const containers = plannedContainersSchema.parse(plannedContainers);
+  const ownerScenarios = ownerMedicineScenariosSchema.parse(ownerMedicineScenarios);
   const familyGroupsSha256 = sha256(groups);
   const plannedContainersSha256 = sha256(containers);
+  const ownerMedicineScenariosSha256 = sha256(ownerScenarios);
   if (apply && !/^[a-f0-9]{64}$/.test(expectedPlan ?? "")) throw new Error("Aplicação exige o SHA-256 do dry-run revisado.");
   return db.$transaction(async tx => {
     await lockProductCatalog(tx);
@@ -53,19 +56,19 @@ export async function applyProductAverageDrafts(db: Pick<PrismaClient, "$transac
       const identity = { productId: product.id, gtin, revision: product.updatedAt.toISOString(), previousProfile, weightSourceAudit: null, profileSourceAudit: null };
       const preserve = { ...identity, action: "PRESERVE_EXISTING_PROFILE" as const, estimate: null };
       if (previousProfile !== null && !eligibleExistingDraft(previousProfile)) return preserve;
-      const estimate = estimateAverageShipping(product, catalog) ?? estimateFamilyShipping(product, catalog, groups) ?? estimatePlannedContainer(product, catalog, containers);
+      const estimate = estimateAverageShipping(product, catalog) ?? estimateFamilyShipping(product, catalog, groups) ?? estimatePlannedContainer(product, catalog, containers) ?? estimateOwnerMedicineScenario(product, ownerScenarios);
       if (!estimate) return { ...identity, action: "PENDING_PHYSICAL_REVIEW" as const, estimate: null };
       const policySourceAudit = previousProfile === null ? null : weightAudits.find(audit => {
         const metadata = audit.metadata;
         return audit.entityId === product.id && metadata !== null && typeof metadata === "object" && !Array.isArray(metadata) &&
           ["weight-only-v1", "weight-only-v2", "weight-only-v3", "weight-only-v4"].includes(String(metadata.policyVersion)) && isDeepStrictEqual(metadata.draft, previousProfile);
       }) ?? null;
-      const plannedBox = estimate.basis === "PLANNED_OUTER_BOX";
+      const scenarioBox = estimate.basis === "PLANNED_OUTER_BOX" || estimate.basis === "OWNER_PACKAGE_HYPOTHESIS";
       // Broad box scenarios may fill only intact, policy-generated drafts; manual or missing weights stay untouched.
-      if (plannedBox && previousProfile !== null && (!policySourceAudit || (previousProfile as Record<string, unknown>).weightGrams === null)) return preserve;
-      const profileSourceAudit = plannedBox ? policySourceAudit : null;
+      if (scenarioBox && previousProfile !== null && (!policySourceAudit || (previousProfile as Record<string, unknown>).weightGrams === null)) return preserve;
+      const profileSourceAudit = scenarioBox ? policySourceAudit : null;
       // Family and box geometry never replace an existing weight, even when it came from our weight policy.
-      const weightSourceAudit = estimate.basis === "REVIEWED_FAMILY" || plannedBox ? null : policySourceAudit;
+      const weightSourceAudit = estimate.basis === "REVIEWED_FAMILY" || scenarioBox ? null : policySourceAudit;
       // Only an intact draft from our earlier weight policy permits refining an existing weight.
       const draft = previousProfile === null ? estimate.draft : { ...previousProfile as Record<string, unknown>,
         ...(weightSourceAudit ? { weightGrams: estimate.draft.weightGrams } : {}),
@@ -73,9 +76,9 @@ export async function applyProductAverageDrafts(db: Pick<PrismaClient, "$transac
       if (!shippingDraftSchema.safeParse(draft).success) throw new Error(`GTIN ${gtin}: estimativa inválida; lote cancelado.`);
       return { ...identity, action: previousProfile === null ? "SAVE_ESTIMATED_PACKAGE" as const : weightSourceAudit ? "REFINE_ESTIMATED_PACKAGE" as const : "FILL_ESTIMATED_DIMENSIONS_ONLY" as const,
         weightSourceAudit, profileSourceAudit, estimate: { ...estimate, draft,
-          ...(plannedBox ? { weightAppliedFrom: previousProfile === null ? "INDIVIDUAL_ESTIMATE" as const : "PRESERVED_EXISTING_PROFILE" as const } : {}) } };
+          ...(scenarioBox ? { weightAppliedFrom: previousProfile === null ? "INDIVIDUAL_ESTIMATE" as const : "PRESERVED_EXISTING_PROFILE" as const } : {}) } };
     });
-    const planSha256 = sha256({ operation: "ESTIMATE_PACKAGE_AVERAGES", cohortSha256, familyGroupsSha256, plannedContainersSha256, products: plans });
+    const planSha256 = sha256({ operation: "ESTIMATE_PACKAGE_AVERAGES", cohortSha256, familyGroupsSha256, plannedContainersSha256, ownerMedicineScenariosSha256, products: plans });
     if (apply && expectedPlan !== planSha256) throw new Error("Plano mudou desde o dry-run; nenhuma gravação aplicada.");
     for (const plan of plans) {
       if (!apply || !plan.estimate) continue;
@@ -85,11 +88,11 @@ export async function applyProductAverageDrafts(db: Pick<PrismaClient, "$transac
       });
       if (changed.count !== 1) throw new Error("Produto mudou durante a aplicação; lote revertido.");
       await tx.auditLog.create({ data: { userId: actorId, action: "PRODUCT_PACKAGE_DRAFT_ESTIMATED", entity: "Product", entityId: plan.productId,
-        metadata: { gtin: plan.gtin, planSha256, cohortSha256, familyGroupsSha256, plannedContainersSha256, previousProfile: plan.previousProfile, weightSourceAudit: plan.weightSourceAudit, profileSourceAudit: plan.profileSourceAudit, ...plan.estimate,
+        metadata: { gtin: plan.gtin, planSha256, cohortSha256, familyGroupsSha256, plannedContainersSha256, ownerMedicineScenariosSha256, previousProfile: plan.previousProfile, weightSourceAudit: plan.weightSourceAudit, profileSourceAudit: plan.profileSourceAudit, ...plan.estimate,
           weightPolicy: plan.action === "FILL_ESTIMATED_DIMENSIONS_ONLY" ? "PRESERVE_EXISTING_WEIGHT" : plan.weightSourceAudit ? "REFINE_INTACT_POLICY_DRAFT" : "ESTIMATE_NEW_PROFILE",
-          authorizationBasis: plan.estimate.basis === "PLANNED_OUTER_BOX" ? "Grupos maiores e caixa planejada autorizados para conferência; encaixe, tara e transporte não aprovados." : "Médias aproximadas autorizadas para conferência; sem medição ou transporte liberado." } } });
+          authorizationBasis: plan.estimate.basis === "OWNER_PACKAGE_HYPOTHESIS" ? "Hipóteses aproximadas de embalagem para medicamentos autorizadas pelo lojista, a partir de seu exemplo; não são medição, coorte observada, encaixe ou aprovação de transporte." : plan.estimate.basis === "PLANNED_OUTER_BOX" ? "Grupos maiores e caixa planejada autorizados para conferência; encaixe, tara e transporte não aprovados." : "Médias aproximadas autorizadas para conferência; sem medição ou transporte liberado." } } });
     }
-    return { applied: apply, planSha256, cohortSha256, familyGroupsSha256, plannedContainersSha256, products: plans };
+    return { applied: apply, planSha256, cohortSha256, familyGroupsSha256, plannedContainersSha256, ownerMedicineScenariosSha256, products: plans };
   }, { timeout: 180000 });
 }
 
@@ -97,8 +100,8 @@ async function main() {
   const args = process.argv.slice(2);
   for (let index = 0; index < args.length; index++) {
     if (args[index] === "--apply") continue;
-    if (["--input", "--actor-id", "--expect-plan", "--families", "--planned-containers"].includes(args[index]) && args[index + 1] && !args[index + 1].startsWith("--")) { index++; continue; }
-    throw new Error("Use --input <GTINs.json> --actor-id <ADMIN> [--families <grupos.json>] [--planned-containers <caixas.json>] [--apply --expect-plan <SHA-256>].");
+    if (["--input", "--actor-id", "--expect-plan", "--families", "--planned-containers", "--owner-medicine-scenarios"].includes(args[index]) && args[index + 1] && !args[index + 1].startsWith("--")) { index++; continue; }
+    throw new Error("Use --input <GTINs.json> --actor-id <ADMIN> [--families <grupos.json>] [--planned-containers <caixas.json>] [--owner-medicine-scenarios <hipoteses.json>] [--apply --expect-plan <SHA-256>].");
   }
   if (!args.includes("--input") || !args.includes("--actor-id")) throw new Error("Informe --input e --actor-id. Dry-run é o padrão.");
   const input = args[args.indexOf("--input") + 1], actor = args[args.indexOf("--actor-id") + 1];
@@ -117,8 +120,14 @@ async function main() {
     if ((await stat(file)).size > 5_000_000) throw new Error("Manifesto de caixas planejadas excede 5 MB.");
     plannedContainers = plannedContainersSchema.parse(JSON.parse(await readFile(file, "utf8")));
   }
+  let ownerMedicineScenarios: unknown = [];
+  if (args.includes("--owner-medicine-scenarios")) {
+    const file = args[args.indexOf("--owner-medicine-scenarios") + 1];
+    if ((await stat(file)).size > 5_000_000) throw new Error("Manifesto de hipóteses de medicamentos excede 5 MB.");
+    ownerMedicineScenarios = ownerMedicineScenariosSchema.parse(JSON.parse(await readFile(file, "utf8")));
+  }
   const db = getPrisma();
-  try { console.log(JSON.stringify(await applyProductAverageDrafts(db, values, actor, args.includes("--apply"), args.includes("--expect-plan") ? args[args.indexOf("--expect-plan") + 1] : undefined, families, plannedContainers))); }
+  try { console.log(JSON.stringify(await applyProductAverageDrafts(db, values, actor, args.includes("--apply"), args.includes("--expect-plan") ? args[args.indexOf("--expect-plan") + 1] : undefined, families, plannedContainers, ownerMedicineScenarios))); }
   finally { await db.$disconnect(); }
 }
 if (process.argv[1] && resolve(process.argv[1]).replaceAll("\\", "/").endsWith("/apply-product-average-drafts.ts")) {
