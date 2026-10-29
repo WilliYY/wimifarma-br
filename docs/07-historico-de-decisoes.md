@@ -4,6 +4,7 @@
 
 - Banner movido para o intervalo solicitado entre as duas vitrines, com desconto em destaque, logo completa e símbolo Pix existentes, composição responsiva e CTA preservado. Nenhum produto, preço, regra de Pix ou gateway foi alterado.
 - Movimento decorativo em CSS transform, pausado por visibilidade da seção/aba e hover/foco, desativado com movimento reduzido. Observador/listener locais seguem o padrão da faixa de categorias, sem renderização por frame ou nova dependência. Direção, referências e limites em [83](83-desconto-pix.md).
+- Publicado na fonte `a5f8a10`, imagem Linux `pix-ready-a5f8a10` (`8f0e04c`), após janela exclusiva do app. Backup validado, imagem anterior e quatro conjuntos comerciais/canonical/banco preservados. QA pública 390/768/1440 px aprovou posição, apresentação, movimento e navegação do CTA, sem erros/overflow. Três regressões dirigidas, lint/tipos, revisão independente e 491 testes de segurança aprovados; auditorias com 3 low/1 moderate, zero high/critical. Não houve execução funcional de checkout nem mudança de regra comercial.
 
 ## 2026-10-29 — AFE confirmada na extração oficial da Anvisa
 
