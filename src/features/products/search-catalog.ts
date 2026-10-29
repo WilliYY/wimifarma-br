@@ -1,6 +1,7 @@
 import { Prisma } from "@/generated/prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
+import { gtinVariants, normalizeGtin } from "./gtin";
 import { correctProductSearchQuery, ingredientSearchIdentities, isPrescriptionSearchProduct, normalizeProductSearch, productSearchPlan, productSpellingVocabulary, topicNamePattern } from "./public-search";
 
 export const SEARCH_PAGE_SIZE = 24;
@@ -28,6 +29,11 @@ const searchSelect = {
   cashbackEnabled: true, cashbackRateBps: true,
 } satisfies Prisma.ProductSelect;
 
+function barcodeCondition(query: string) {
+  const gtin = normalizeGtin(query);
+  return gtin ? Prisma.sql`(p."eanNormalized" = ${gtin} OR p."ean" IN (${Prisma.join(gtinVariants(gtin))}))` : null;
+}
+
 function queryCondition(query: string) {
   const plan = productSearchPlan(query);
   if (plan.blocked) return Prisma.sql`FALSE`;
@@ -53,6 +59,8 @@ function queryCondition(query: string) {
   const condition = clauses.length
     ? Prisma.sql`(${Prisma.join(clauses, " AND ")})`
     : Prisma.sql`FALSE`;
+  const barcode = barcodeCondition(query);
+  if (barcode) return Prisma.sql`(${barcode} OR ${condition})`;
   return plan.topics.length ? Prisma.sql`(${condition} OR ${normalizedField(Prisma.sql`p."sku"`)} = ${normalizeProductSearch(query)})` : condition;
 }
 
@@ -63,7 +71,9 @@ function normalizedField(field: Prisma.Sql) {
 
 function searchOrder(query: string) {
   const normalized = normalizeProductSearch(query);
+  const barcode = barcodeCondition(query);
   return Prisma.sql`CASE
+    ${barcode ? Prisma.sql`WHEN ${barcode} THEN 1000` : Prisma.empty}
     WHEN lower(p."name") = ${normalized} THEN 500
     WHEN p."searchText" LIKE ${`${normalized}%`} THEN 350
     WHEN lower(p."name") LIKE ${`%${normalized}%`} THEN 250

@@ -1,5 +1,9 @@
 # 88 — Faixa de categorias da home
 
+## Revisão atual — 29/10/2026
+
+Substitui a apresentação histórica descrita abaixo: oito ícones em círculos menores, sem fotos e sem painel externo, ocupam uma faixa de até 180 px nas larguras verificadas. Ofertas mantém destaque vermelho; os outros círculos usam os tokens suaves da marca. Higiene bucal e Cabelos complementam os seis acessos anteriores e usam filtros existentes, sem duplicar o destino de Perfumaria. Movimento independente curto em CSS, com suspensão por visibilidade e preferência do sistema; arraste, teclado, foco e alvos de toque preservados. Contrato do banner e das dimensões em [10](10-layout-e-experiencia.md#home-compacta--29102026).
+
 ## Símbolos livres em largura total — 26/10/2026
 
 A pedido do lojista, esta direção substitui os círculos com fotos descritos no histórico abaixo. Os seis atalhos usam somente os símbolos já existentes: desconto, bebê, cápsula, folha, gotas e perfumaria. Nomes, ordem e destinos permanecem iguais. Não há foto, fundo ou contorno nos itens, nem caixa externa; `imageUrl` recebido pelo componente é ignorado.

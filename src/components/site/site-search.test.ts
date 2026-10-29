@@ -61,6 +61,18 @@ async function fixture(width: number, run: (page: Page, requests: string[]) => P
   } finally { await browser.close(); }
 }
 
+for (const width of [390, 1280]) test(`busca por EAN ${width}px consulta o código e preserva Enter`, async () => {
+  await fixture(width, async (page, requests) => {
+    const input = page.getByRole("combobox", { name: "Buscar produtos" });
+    await expect(input).toHaveAttribute("placeholder", /EAN/);
+    await input.fill("7896523200576");
+    await expect(page.getByRole("option", { name: /Produto sintético/ })).toBeVisible();
+    assert.deepEqual(requests, ["7896523200576"]);
+    await input.press("Enter");
+    assert.deepEqual(await page.evaluate("window.navigations"), ["/busca?q=7896523200576"]);
+  });
+});
+
 for (const width of [320, 390, 1280]) test(`autocomplete PMC ${width}px identifica referência sem antecipar Pix`, async () => {
   await fixture(width, async page => {
     const input = page.getByRole("combobox", { name: "Buscar produtos" });

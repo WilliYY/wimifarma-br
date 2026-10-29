@@ -251,7 +251,7 @@ export function SiteSearch() {
             setIsDesktopOpen(true);
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Busque por produto, principio ativo ou sintoma"
+          placeholder="Produto, EAN ou princípio ativo"
           ref={desktopInputRef}
           role="combobox"
           type="search"
@@ -343,7 +343,7 @@ export function SiteSearch() {
                 maxLength={80}
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Produto ou principio ativo"
+                placeholder="Produto, EAN ou princípio ativo"
                 ref={mobileInputRef}
                 role="combobox"
                 type="search"

@@ -42,14 +42,14 @@ async function fixture(options: BrowserContextOptions = {}) {
   return { page, context, navigations, photoRequests };
 }
 
-test("categorias usam símbolos livres em toda a largura de 320 a 1920 px", async () => {
+test("oito categorias circulares compactas ocupam a largura sem caixa ou overflow", async () => {
   const { page, context } = await fixture();
   try {
     for (const width of [320, 390, 768, 1280, 1440, 1920]) {
       await page.setViewportSize({ width, height: 844 });
       const list = page.locator("#home-shortcuts");
-      await expect(list.getByRole("link")).toHaveCount(6);
-      await expect(list.locator(".symbol > svg")).toHaveCount(6);
+      await expect(list.getByRole("link")).toHaveCount(8);
+      await expect(list.locator(".symbol > svg")).toHaveCount(8);
       const panel = page.getByRole("navigation", { name: "Categorias de produtos" });
       const geometry = await panel.evaluate(element => ({ width: element.getBoundingClientRect().width, x: element.getBoundingClientRect().x, viewport: document.documentElement.clientWidth, border: getComputedStyle(element).borderTopWidth, background: getComputedStyle(element).backgroundColor, shadow: getComputedStyle(element).boxShadow }));
       assert.ok(Math.abs(geometry.width - geometry.viewport) <= 1);
@@ -58,7 +58,12 @@ test("categorias usam símbolos livres em toda a largura de 320 a 1920 px", asyn
       assert.equal(geometry.background, "rgba(0, 0, 0, 0)");
       assert.equal(geometry.shadow, "none");
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-      if (width <= 1440) assert.equal(await list.evaluate(element => element.scrollWidth > element.clientWidth), true);
+      assert.equal(await list.evaluate(element => element.scrollWidth > element.clientWidth), width < 1024);
+      assert.ok((await panel.boundingBox())!.height <= 180, `altura em ${width}px`);
+      const circle = await list.locator(".symbol").first().evaluate(element => ({ width: element.getBoundingClientRect().width, radius: getComputedStyle(element).borderRadius, border: getComputedStyle(element).borderTopWidth }));
+      assert.ok(circle.width >= 52 && circle.width <= 76);
+      assert.equal(circle.radius, "50%");
+      assert.equal(circle.border, "1px");
       await expect(list.locator("img")).toHaveCount(0);
       for (const item of items) assert.equal(await list.getByRole("link", { name: item.label, exact: true }).getAttribute("href"), item.href);
     }
@@ -129,5 +134,26 @@ test("ícones ignoram fotos recebidas e mantêm foco, destino e movimento reduzi
     await expect(offers).toBeFocused();
     assert.equal(await list.evaluate(element => getComputedStyle(element).scrollBehavior), "auto");
     assert.equal(await offers.locator(".symbol").evaluate(element => getComputedStyle(element).animationName), "none");
+    assert.equal(await offers.locator(".symbol > svg").evaluate(element => getComputedStyle(element).animationName), "none");
+  } finally { await context.close(); }
+});
+
+test("movimentos independentes dos ícones pausam fora da tela", async () => {
+  const { page, context } = await fixture({ viewport: { width: 1280, height: 844 } });
+  try {
+    const list = page.locator("#home-shortcuts");
+    await expect(list).toHaveAttribute("data-motion", "active");
+    const animations = await list.locator(".symbol > svg").evaluateAll(elements => elements.map(element => {
+      const style = getComputedStyle(element);
+      return { duration: style.animationDuration, delay: style.animationDelay, state: style.animationPlayState };
+    }));
+    assert.equal(new Set(animations.map(item => item.duration)).size, 8);
+    assert.equal(new Set(animations.map(item => item.delay)).size, 8);
+    assert.ok(animations.every(item => item.state === "running"));
+    await page.evaluate(() => window.scrollTo(0, 800));
+    await expect(list).toHaveAttribute("data-motion", "paused");
+    assert.equal(await list.locator(".symbol > svg").first().evaluate(element => getComputedStyle(element).animationPlayState), "paused");
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(list).toHaveAttribute("data-motion", "active");
   } finally { await context.close(); }
 });

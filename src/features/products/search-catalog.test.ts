@@ -56,6 +56,38 @@ test("texto de busca nunca vira SQL e consulta vazia não usa banco", async () =
   assert.ok(queries[0].values.some(value => String(value).includes("drop table")));
 });
 
+test("busca GTIN usa identidade cadastrada parametrizada, prioriza exatos e preserva filtros e limites", async () => {
+  const queries: Prisma.Sql[] = [];
+  const service = await fixture({
+    $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return [{ id: "ean", total: 1 }]; },
+    product: { findMany: async ({ where }: { where: { status: string } }) => {
+      assert.equal(where.status, "ACTIVE");
+      return [product("ean", { ean: "7896004724577", imageUrl: "/api/admin/fornecedores/imagens/private.webp" })];
+    } },
+  });
+  for (const [query, canonical, variant] of [
+    ["78923454", "00000078923454", "78923454"],
+    ["0036000291452", "00036000291452", "036000291452"],
+    ["07896004724577", "07896004724577", "7896004724577"],
+    ["17896004724574", "17896004724574", "17896004724574"],
+  ]) {
+    const result = await service.getSearchCatalog(query, { page: 2, pageSize: 100, relatedLimit: 0 });
+    const sql = queries.at(-1)!;
+    assert.match(sql.text, /p\."status" = 'ACTIVE' AND/);
+    assert.match(sql.text, /p\."eanNormalized" = \$\d+/);
+    assert.match(sql.text, /p\."ean" IN \(/);
+    assert.match(sql.text, /ORDER BY CASE\s+WHEN .*p\."eanNormalized"[\s\S]+THEN 1000/);
+    assert.ok(sql.values.includes(canonical));
+    assert.ok(sql.values.includes(variant));
+    assert.doesNotMatch(sql.text, new RegExp(query));
+    assert.deepEqual(sql.values.slice(-2), [24, 24]);
+    assert.equal(result.correctedQuery, null);
+    assert.doesNotMatch(JSON.stringify(result.products), /\/api\/admin\/fornecedores\/imagens\//);
+  }
+  const packaging = queries.at(-1)!;
+  assert.equal(packaging.values.includes("7896004724577"), false);
+});
+
 test("correção usa vocabulário ativo em cache e mantém paginação/dose no SQL parametrizado", async () => {
   const queries: Prisma.Sql[] = [];
   let vocabularyReads = 0;

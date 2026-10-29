@@ -1,6 +1,7 @@
 import type { PrescriptionType } from "./purchase-policy";
 import type { PublicPmcReference } from "./cmed-reference";
 import { searchTopics, type SearchTopic } from "./search-topics";
+import { normalizeGtin } from "./gtin";
 
 export type ProductSearchSource = {
   activeIngredients: string[];
@@ -36,6 +37,8 @@ export type PublicProductSearchItem = {
 export type SearchRankableProduct = {
   id: string;
   name: string;
+  ean?: string | null;
+  eanNormalized?: string | null;
   brand?: string | null;
   searchText: string;
   activeIngredients?: string[];
@@ -253,19 +256,23 @@ function rankExactProductsForQuery<T extends SearchRankableProduct>(
   query: string,
 ) {
   const normalizedQuery = normalizeProductSearch(query);
+  const gtin = normalizeGtin(query);
+  const matchesGtin = (product: T) => gtin !== null &&
+    (product.eanNormalized === gtin || normalizeGtin(product.ean) === gtin);
   const plan = productSearchPlan(query);
   const patterns = plan.patterns.map(pattern => new RegExp(pattern));
   const doses = plan.dosePatterns.map(pattern => new RegExp(pattern, "i"));
   if (plan.blocked || (!patterns.length && !plan.topics.length)) return [];
 
   return products
-    .filter((product) => (product.sku && normalizeProductSearch(product.sku) === normalizedQuery) ||
+    .filter((product) => matchesGtin(product) || (product.sku && normalizeProductSearch(product.sku) === normalizedQuery) ||
       (plan.topics.every(topic => matchesSearchTopic(product, topic)) && patterns.every(pattern => pattern.test(product.searchText)) && doses.every(dose => dose.test(product.name))))
     .map((product) => {
       const normalizedName = normalizeProductSearch(product.name);
       let score = 0;
 
-      if (normalizedName === normalizedQuery) score = 500;
+      if (matchesGtin(product)) score = 1000;
+      else if (normalizedName === normalizedQuery) score = 500;
       else if (normalizedName.startsWith(normalizedQuery)) score = 350;
       else if (` ${normalizedName}`.includes(` ${normalizedQuery}`)) score = 250;
       else if (normalizedName.includes(normalizedQuery)) score = 180;

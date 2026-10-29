@@ -11,16 +11,21 @@ test("faixa contém somente ofertas e categorias internas, mesmo sem produtos ca
     { id: "vitamins", label: "Vitaminas e suplementos" },
     { id: "dermo", label: "Dermo" },
     { id: "beauty", label: "Perfumaria" },
+    { id: "hygiene", label: "Higiene bucal" },
+    { id: "hair", label: "Cabelos" },
   ]);
   assert.equal(shortcuts[0].href, "/ofertas");
   for (const item of shortcuts.slice(1)) {
     const url = new URL(item.href, "https://wimifarma.com.br");
     assert.equal(url.origin, "https://wimifarma.com.br");
     assert.equal(url.pathname, "/catalogo");
-    assert.equal(catalogGroup(url.searchParams.get("grupo")), item.id);
+    assert.equal(catalogGroup(url.searchParams.get("grupo")), ["hygiene", "hair"].includes(item.id) ? "beauty" : item.id);
     assert.equal(url.searchParams.get("ordem"), "preco-asc");
   }
   assert.doesNotMatch(JSON.stringify(shortcuts), /wa\.me|whatsapp|farmacia-popular|delivery|_blank/i);
+  assert.equal(new URL(shortcuts.find(item => item.id === "hair")!.href, "https://wimifarma.com.br").searchParams.get("assunto"), "hair");
+  assert.equal(shortcuts.find(item => item.id === "hygiene")!.href, "/catalogo?grupo=beauty&assunto=oral&ordem=preco-asc");
+  assert.equal(new Set(shortcuts.map(item => item.href)).size, 8);
 });
 
 test("categorias relacionadas usam o grupo correto e categoria vazia permanece vazia", () => {
@@ -72,7 +77,7 @@ test("foto ausente, privada, sem estoque, Rx e Popular mantêm ícone sem invent
   ];
   const photos = new Set(products.filter(product => product.id !== "missing").map(product => product.imageUrl));
   const shortcuts = buildHomeShortcuts(products, photos);
-  assert.equal(shortcuts.length, 6);
+  assert.equal(shortcuts.length, 8);
   assert.ok(shortcuts.every(item => !item.imageUrl));
   assert.ok(shortcuts.every(item => item.href.startsWith("/")));
 });

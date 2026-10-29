@@ -1,5 +1,13 @@
 # 10 - Layout e Experiencia
 
+## Home compacta — 29/10/2026
+
+A faixa inicial usa oito atalhos com ícones dentro de círculos, sem fotografias ou caixa externa: Ofertas, Infantil, Medicamentos, Vitaminas e suplementos, Dermo, Perfumaria, Higiene bucal e Cabelos. Os dois últimos usam os filtros existentes `assunto=oral` e `assunto=hair`, dentro de `grupo=beauty`. Oito destinos distintos, sem criar categorias persistentes. Círculos de 60 px no celular e 72 px a partir de 640 px; os oito cabem a partir de 1024 px e a faixa pode ser arrastada horizontalmente no celular. Os ícones têm movimentos independentes de até 3 px e 4 graus, suspensos fora da tela, na aba oculta e com movimento reduzido.
+
+O banner principal ocupa 250 px no celular, 280 px no tablet e 300 px no desktop. As três campanhas preservam a logo completa, cenas e embalagens originais, com recorte responsivo e até duas embalagens visíveis na composição compacta. As chamadas levam ao catálogo correspondente. Foram retirados os seletores com nomes, setas e controle de pausa da faixa inferior, conforme solicitação do titular. A troca automática ocorre a cada 6,5 segundos com transição de opacidade de 340 ms; toque horizontal, arraste com mouse e setas do teclado continuam disponíveis. Arrastar não abre o link, e o gesto vertical continua rolando a página. Foco, ponteiro em interação, aba oculta, saída da tela e movimento reduzido suspendem a rotação; painéis inativos ficam `inert` e fora da leitura assistiva. Ao trocar pelo teclado dentro de um link, o foco volta ao contêiner antes de ocultar o painel.
+
+Não há mudança no cabeçalho, sua animação/compactação, no atalho administrativo, nas vitrines comerciais, no rodapé ou nas condições de compra. `HeroProductStage` usa o modo compacto apenas no banner principal; outras campanhas conservam sua composição.
+
 ## Custo das animações visíveis e do cabeçalho — 27/10/2026
 
 O diagnóstico em Chromium isolado identificou dois custos distintos: as bolhas visíveis animavam `width`, `height` e `bottom`, provocando layout contínuo; a transição do cabeçalho publicava `--site-header-offset` na raiz a cada altura intermediária observada, invalidando os consumidores de uma propriedade herdada.

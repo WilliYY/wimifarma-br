@@ -4,7 +4,7 @@ import { classificationIsConsistent, readClassification } from "./catalog-operat
 import { brasiliaDay, commercialPrice, dailyRank } from "./home-collections";
 
 export type HomeShortcutItem = {
-  id: "offers" | CatalogGroup;
+  id: "offers" | "hygiene" | "hair" | CatalogGroup;
   label: string;
   href: string;
   imageUrl?: string | null;
@@ -44,11 +44,11 @@ export function buildHomeShortcuts(products: readonly RelatedProductCardItem[] =
     && (!product.prescriptionType || product.prescriptionType === "UNREVIEWED"))
     .slice().sort((a, b) => dailyRank(day, a.id) - dailyRank(day, b.id) || a.id.localeCompare(b.id));
   const categories = [...new Set(eligible.flatMap(product => product.category ? [product.category] : []))].map(name => ({ name }));
-  const shortcuts: HomeShortcutItem[] = [
+  const shortcuts: (HomeShortcutItem & { id: "offers" | CatalogGroup })[] = [
     { id: "offers", label: "Ofertas", href: "/ofertas" },
     ...categoryShortcuts.map(({ id, label }) => ({ id, label, href: `/catalogo?grupo=${id}&ordem=preco-asc` })),
   ];
-  return shortcuts.map(item => {
+  return [...shortcuts.map(item => {
     const names = item.id === "offers" ? [] : groupCategoryNames(categories, item.id);
     const product = eligible.find(product => {
       if (item.id === "offers") return isDiscountedOffer(product);
@@ -58,5 +58,8 @@ export function buildHomeShortcuts(products: readonly RelatedProductCardItem[] =
       return classification.kind === "MEDICINE" && classification.otc && classificationIsConsistent(classification, product);
     });
     return { ...item, imageUrl: product?.imageUrl ?? null };
-  });
+  }),
+    { id: "hygiene", label: "Higiene bucal", href: "/catalogo?grupo=beauty&assunto=oral&ordem=preco-asc" },
+    { id: "hair", label: "Cabelos", href: "/catalogo?grupo=beauty&assunto=hair&ordem=preco-asc" },
+  ];
 }

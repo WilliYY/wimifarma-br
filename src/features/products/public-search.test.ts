@@ -115,6 +115,26 @@ test("EAN pode ser encontrado sem exigir código no nome público", () => {
   assert.deepEqual(rankProductsForQuery([p], "7896181915638"), [p]);
 });
 
+test("código cadastrado tem prioridade sem depender do índice textual e aceita zeros equivalentes", () => {
+  for (const ean of ["78923454", "036000291452", "7896004724577", "17896004724574"]) {
+    const exact = { id: "exact", name: "Z Produto cadastrado", ean, searchText: "indice antigo" };
+    const normalized = ean.padStart(14, "0");
+    const indexed = { id: "indexed", name: ean, searchText: ean };
+    for (const query of [ean, ` ${normalized} `]) {
+      const results = rankProductsForQuery([indexed, exact], query);
+      assert.equal(results[0]?.id, "exact", query);
+    }
+    assert.equal(rankProductsForQuery([{ ...exact, ean: null, eanNormalized: normalized }], ean)[0]?.id, "exact");
+  }
+});
+
+test("EAN não confunde embalagem, dígito verificador ou fragmentos do código", () => {
+  const product = { id: "ean", name: "Produto cadastrado", ean: "7896004724577", searchText: "produto cadastrado" };
+  for (const query of ["17896004724574", "7896004724578", "78960047", "abc7896004724577", "7896004724577 mg"]) {
+    assert.deepEqual(rankProductsForQuery([product], query), [], query);
+  }
+});
+
 test("SKU hifenizado ou alfanumérico não vira requisito de dosagem no nome", () => {
   for (const sku of ["FAR-123", "FAR123", "FAR/123"]) {
     const p = { id: "sku", name: "Losartana 50mg", searchText: buildProductSearchText({ name: "Losartana 50mg", sku, activeIngredients: [], searchTerms: [] }) };

@@ -4,6 +4,7 @@ import styles from "./hero-product-stage.module.css";
 type HeroProductStageProps = {
   variant: "care" | "beauty" | "baby" | "dove" | "rexona" | "nivea";
   priority?: boolean;
+  compact?: boolean;
 };
 
 const careProducts = [
@@ -36,13 +37,13 @@ const scenesByVariant = {
   nivea: { src: "/banners/nivea-people-v3.webp", alt: "Cena ilustrativa de cuidado corporal com a linha NIVEA" },
 };
 
-export function HeroProductStage({ variant, priority = false }: HeroProductStageProps) {
+export function HeroProductStage({ variant, priority = false, compact = false }: HeroProductStageProps) {
   const products = productsByVariant[variant];
   const scene = scenesByVariant[variant];
 
   return (
-    <figure className={styles.stage} data-variant={variant}>
-      <Image alt={scene.alt} className={styles.person} fill loading={priority ? undefined : "eager"} priority={priority} quality={84} sizes="(max-width: 1359px) 100vw, 1280px" src={scene.src} />
+    <figure className={styles.stage} data-layout={compact ? "compact" : undefined} data-variant={variant}>
+      <Image alt={scene.alt} className={styles.person} fill loading={priority ? undefined : compact ? "lazy" : "eager"} priority={priority} quality={84} sizes="(max-width: 1359px) 100vw, 1280px" src={scene.src} />
       <div className={styles.products} data-count={products.length}>
         {products.map((product) => (
           <div className={`${styles.product} ${styles[product.position]}`} key={product.src}>

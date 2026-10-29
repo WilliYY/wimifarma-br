@@ -11,9 +11,7 @@ import {
   Baby,
   HeartHandshake,
   MessageCircle,
-  Pause,
   Pill,
-  Play,
   Quote,
   ShieldCheck,
   Star,
@@ -65,23 +63,19 @@ const heroSlides = [
   },
   {
     background: "#fff7f5",
-    cta: "Consultar perfumaria",
+    cta: "Ver perfumaria",
     description: "Perfumaria e cuidados pessoais.",
     eyebrow: "Perfumaria e autocuidado",
-    href: `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent(
-      "Ola, gostaria de consultar os produtos de perfumaria e autocuidado da Wimifarma.",
-    )}`,
+    href: "/catalogo?grupo=beauty",
     art: "beauty",
     title: "Beleza no seu momento.",
   },
   {
     background: "#f2f7f3",
-    cta: "Consultar linha infantil",
+    cta: "Ver infantil",
     description: "Fraldas e higiene para os pequenos.",
     eyebrow: "Mãe e bebê",
-    href: `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent(
-      "Ola, gostaria de consultar os produtos para mae e bebe da Wimifarma.",
-    )}`,
+    href: "/catalogo?grupo=baby",
     art: "baby",
     title: "Carinho em cada cuidado.",
   },
@@ -137,11 +131,14 @@ function HeroCarousel() {
   const [isInteracting, setIsInteracting] = useState(false);
   const [hasFocus, setHasFocus] = useState(false);
   const [isInView, setIsInView] = useState(false);
-  const [isManuallyPaused, setIsManuallyPaused] = useState(false);
+  const [isPointerActive, setIsPointerActive] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isPageVisible, setIsPageVisible] = useState(true);
   const [shouldReduceMotion, setShouldReduceMotion] = useState(true);
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const pointer = useRef<{ id: number; x: number; y: number; moved: boolean } | null>(null);
+  const suppressClick = useRef(false);
   const carouselRef = useRef<HTMLDivElement>(null);
-  const slide = heroSlides[activeSlide];
+  const canAutoRotate = isInView && isPageVisible && !isInteracting && !isPointerActive && !hasFocus && !shouldReduceMotion;
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -149,6 +146,13 @@ function HeroCarousel() {
     updateMotion();
     media.addEventListener("change", updateMotion);
     return () => media.removeEventListener("change", updateMotion);
+  }, []);
+
+  useEffect(() => {
+    const updateVisibility = () => setIsPageVisible(document.visibilityState === "visible");
+    updateVisibility();
+    document.addEventListener("visibilitychange", updateVisibility);
+    return () => document.removeEventListener("visibilitychange", updateVisibility);
   }, []);
 
   useEffect(() => {
@@ -164,36 +168,59 @@ function HeroCarousel() {
   }, []);
 
   useEffect(() => {
-    if (!isInView || isInteracting || hasFocus || isManuallyPaused || shouldReduceMotion) return;
+    if (!canAutoRotate) return;
+    const timer = window.setTimeout(() => changeSlide(1), 6500);
+    return () => window.clearTimeout(timer);
+  }, [activeSlide, canAutoRotate, changeSlide]);
 
-    const interval = window.setInterval(() => {
-      if (document.visibilityState === "visible") changeSlide(1);
-    }, 6500);
-    return () => window.clearInterval(interval);
-  }, [activeSlide, changeSlide, hasFocus, isInView, isInteracting, isManuallyPaused, shouldReduceMotion]);
+  useEffect(() => {
+    if (!isPointerActive) return;
+    const release = (event: PointerEvent | FocusEvent) => {
+      const start = pointer.current;
+      if (!start || ("pointerId" in event && event.pointerId !== start.id)) return;
+      pointer.current = null;
+      suppressClick.current = start.moved;
+      setIsPointerActive(false);
+      setIsDragging(false);
+      const carousel = carouselRef.current;
+      if (carousel?.hasPointerCapture(start.id)) carousel.releasePointerCapture(start.id);
+    };
+    window.addEventListener("pointerup", release);
+    window.addEventListener("pointercancel", release);
+    window.addEventListener("blur", release);
+    return () => {
+      window.removeEventListener("pointerup", release);
+      window.removeEventListener("pointercancel", release);
+      window.removeEventListener("blur", release);
+    };
+  }, [isPointerActive]);
 
-  function finishTouch(event: React.TouchEvent<HTMLDivElement>) {
-    const start = touchStart.current;
-    const end = event.changedTouches[0];
-
-    if (start && end) {
-      const distance = start.x - end.clientX;
-      if (Math.abs(distance) >= 40 && Math.abs(distance) > Math.abs(start.y - end.clientY) * 1.25) {
+  function finishPointer(event: React.PointerEvent<HTMLDivElement>, cancelled = false) {
+    const start = pointer.current;
+    if (!start || start.id !== event.pointerId) return;
+    pointer.current = null;
+    suppressClick.current = start.moved;
+    setIsPointerActive(false);
+    setIsDragging(false);
+    if (!cancelled && start.moved) {
+      const distance = start.x - event.clientX;
+      if (Math.abs(distance) >= 40 && Math.abs(distance) > Math.abs(start.y - event.clientY) * 1.25) {
         changeSlide(distance > 0 ? 1 : -1);
       }
     }
-
-    touchStart.current = null;
-    setIsInteracting(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   }
 
   return (
     <div
       aria-label="Campanhas da Wimifarma"
       aria-roledescription="carrossel"
+      aria-live={hasFocus || isPointerActive || shouldReduceMotion ? "polite" : "off"}
       className={campaignStyles.campaign}
-      style={{ "--campaign-tint": slide.background } as CSSProperties}
+      data-dragging={isDragging || undefined}
+      data-auto-rotate={canAutoRotate}
       ref={carouselRef}
+      tabIndex={0}
       onBlurCapture={(event) => {
         const nextTarget = event.relatedTarget;
         if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
@@ -203,105 +230,74 @@ function HeroCarousel() {
       onFocusCapture={() => setHasFocus(true)}
       onMouseEnter={() => setIsInteracting(true)}
       onMouseLeave={() => setIsInteracting(false)}
-      onTouchCancel={() => {
-        touchStart.current = null;
-        setIsInteracting(false);
+      onKeyDown={(event) => {
+        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+        event.preventDefault();
+        if (event.target !== event.currentTarget) event.currentTarget.focus({ preventScroll: true });
+        changeSlide(event.key === "ArrowRight" ? 1 : -1);
       }}
-      onTouchEnd={finishTouch}
-      onTouchStart={(event) => {
-        const touch = event.touches[0];
-        touchStart.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
-        setIsInteracting(true);
+      onPointerDown={(event) => {
+        if (!event.isPrimary || event.button !== 0) return;
+        suppressClick.current = false;
+        pointer.current = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
+        setIsPointerActive(true);
+      }}
+      onPointerMove={(event) => {
+        const start = pointer.current;
+        if (!start || start.id !== event.pointerId) return;
+        const distance = Math.abs(event.clientX - start.x);
+        if (!start.moved && distance > 8 && distance > Math.abs(event.clientY - start.y) * 1.25) {
+          start.moved = true;
+          setIsDragging(true);
+          event.currentTarget.setPointerCapture(event.pointerId);
+        }
+        if (start.moved) event.preventDefault();
+      }}
+      onPointerUp={(event) => finishPointer(event)}
+      onPointerCancel={(event) => finishPointer(event, true)}
+      onLostPointerCapture={(event) => {
+        if (event.target === event.currentTarget) finishPointer(event, true);
+      }}
+      onDragStart={(event) => event.preventDefault()}
+      onClickCapture={(event) => {
+        if (!suppressClick.current || event.detail === 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        suppressClick.current = false;
       }}
       role="region"
     >
       <div className={campaignStyles.surface}>
-        <div
-          aria-label={`${activeSlide + 1} de ${heroSlides.length}: ${slide.eyebrow}`}
-          aria-roledescription="slide"
-          aria-live={hasFocus || isInteracting || isManuallyPaused || shouldReduceMotion ? "polite" : "off"}
-          className={campaignStyles.copy}
-          role="group"
-        >
-          <motion.div
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full"
-            initial={false}
-            key={activeSlide}
-            transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: easeOut }}
+        {heroSlides.map((slide, index) => (
+          <div
+            aria-hidden={index !== activeSlide}
+            aria-label={`${index + 1} de ${heroSlides.length}: ${slide.eyebrow}`}
+            aria-roledescription="slide"
+            className={campaignStyles.panel}
+            data-active={index === activeSlide}
+            inert={index !== activeSlide}
+            key={slide.art}
+            role="group"
+            style={{ "--campaign-tint": slide.background } as CSSProperties}
           >
-            <div className={campaignStyles.signature}><BrandSignature /></div>
-            <p className={campaignStyles.eyebrow}>{slide.eyebrow}</p>
-            <h2 className={campaignStyles.title}>{slide.title}</h2>
-            <p className={campaignStyles.description}>{slide.description}</p>
-            <div className={campaignStyles.actions}>
-              <a
-                className={campaignStyles.cta}
-                href={slide.href}
-                rel={slide.href.startsWith("http") ? "noreferrer" : undefined}
-                target={slide.href.startsWith("http") ? "_blank" : undefined}
-              >
-                {slide.cta}
-                <ChevronRight aria-hidden="true" className="h-4 w-4" />
-              </a>
+            <div className={campaignStyles.copy}>
+              <div>
+                <div className={campaignStyles.signature}><BrandSignature /></div>
+                <p className={campaignStyles.eyebrow}>{slide.eyebrow}</p>
+                <h2 className={campaignStyles.title}>{slide.title}</h2>
+                <p className={campaignStyles.description}>{slide.description}</p>
+                <div className={campaignStyles.actions}>
+                  <a className={campaignStyles.cta} href={slide.href}>
+                    {slide.cta}<ChevronRight aria-hidden="true" className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
             </div>
-          </motion.div>
-        </div>
-        <div className={campaignStyles.visual}>
-          <HeroProductStage priority={activeSlide === 0} variant={slide.art} />
-        </div>
-      </div>
-
-      <div className={campaignStyles.footer}>
-        <div className={campaignStyles.selectors}>
-          {heroSlides.map((item, index) => (
-            <button
-              aria-label={`Mostrar campanha ${index + 1}: ${item.eyebrow}`}
-              aria-pressed={activeSlide === index}
-              className={campaignStyles.selector}
-              key={item.art}
-              onClick={() => setActiveSlide(index)}
-              type="button"
-            >
-              <span aria-hidden="true">0{index + 1}</span>
-              <span>{["Cuidados", "Beleza", "Mãe e bebê"][index]}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className={campaignStyles.controls}>
-          <button
-            aria-label="Campanha anterior"
-            className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-ink transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-            onClick={() => changeSlide(-1)}
-            type="button"
-          >
-            <ChevronLeft aria-hidden="true" className="h-5 w-5" />
-          </button>
-
-          <button
-            aria-label={isManuallyPaused ? "Retomar campanhas" : "Pausar campanhas"}
-            className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-ink transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-not-allowed disabled:opacity-45"
-            disabled={Boolean(shouldReduceMotion)}
-            onClick={() => setIsManuallyPaused((current) => !current)}
-            type="button"
-          >
-            {isManuallyPaused ? (
-              <Play aria-hidden="true" className="h-4 w-4 fill-current" />
-            ) : (
-              <Pause aria-hidden="true" className="h-4 w-4" />
-            )}
-          </button>
-
-          <button
-            aria-label="Proxima campanha"
-            className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-ink transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-            onClick={() => changeSlide(1)}
-            type="button"
-          >
-            <ChevronRight aria-hidden="true" className="h-5 w-5" />
-          </button>
-        </div>
+            <div className={campaignStyles.visual}>
+              <HeroProductStage compact priority={index === 0} variant={slide.art} />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -486,7 +482,7 @@ export function HomePage({
 }) {
   return (
     <>
-      <section className="pharma-clouds bg-white pb-8 pt-36 sm:pt-40 lg:pt-56">
+      <section className="pharma-clouds bg-white pb-5 pt-36 sm:pt-40 lg:pt-56">
         <h1 className="sr-only">Wimifarma</h1>
         <HomeShortcuts items={shortcuts} />
         <div className="px-4 sm:px-6 lg:px-8">

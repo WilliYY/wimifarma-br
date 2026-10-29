@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
-import { ArrowRight, ArrowUpRight, Baby, BadgePercent, ChevronLeft, ChevronRight, Droplets, Leaf, Pill, SprayCan } from "lucide-react";
+import { ArrowRight, Baby, BadgePercent, ChevronLeft, ChevronRight, Droplets, Leaf, Pill, Scissors, Smile, SprayCan } from "lucide-react";
 import type { HomeShortcutItem } from "@/features/products/home-shortcuts";
 import styles from "./home-shortcuts.module.css";
 
@@ -13,6 +13,8 @@ const shortcutIcons = {
   vitamins: Leaf,
   dermo: Droplets,
   beauty: SprayCan,
+  hygiene: Smile,
+  hair: Scissors,
 };
 
 export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
@@ -32,10 +34,20 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
       });
     };
     const observer = new ResizeObserver(update);
+    let inView = false;
+    const updateVisibility = () => {
+      list.dataset.motion = inView && !document.hidden ? "active" : "paused";
+    };
+    const visibility = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      updateVisibility();
+    });
     observer.observe(list);
+    visibility.observe(list);
+    document.addEventListener("visibilitychange", updateVisibility);
     list.addEventListener("scroll", update, { passive: true });
     update();
-    return () => { observer.disconnect(); list.removeEventListener("scroll", update); cancelAnimationFrame(frame); };
+    return () => { observer.disconnect(); visibility.disconnect(); document.removeEventListener("visibilitychange", updateVisibility); list.removeEventListener("scroll", update); cancelAnimationFrame(frame); };
   }, [items.length]);
 
   const scroll = (direction: number) => {
@@ -53,9 +65,15 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
     <nav aria-label="Categorias de produtos" className={styles.panel}>
       <div className={styles.heading}>
         <p className={styles.title}>Encontre seu cuidado</p>
+        <div className={styles.navigation}>
         <Link className={styles.catalog} href="/catalogo">
           Ver catálogo <ArrowRight aria-hidden="true" size={15} />
         </Link>
+        <div className={styles.controls} data-static={edges.start && edges.end}>
+          <button aria-controls="home-shortcuts" aria-label="Ver categorias anteriores" className={styles.arrow} disabled={edges.start} onClick={() => scroll(-1)} type="button"><ChevronLeft aria-hidden="true" size={18} /></button>
+          <button aria-controls="home-shortcuts" aria-label="Ver próximas categorias" className={styles.arrow} disabled={edges.end} onClick={() => scroll(1)} type="button"><ChevronRight aria-hidden="true" size={18} /></button>
+        </div>
+        </div>
       </div>
 
       <ul
@@ -104,21 +122,13 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
                 href={item.href}
                 prefetch={false}
               >
-                <span aria-hidden="true" className={styles.symbol}><Icon size={64} strokeWidth={1.5} /></span>
+                <span aria-hidden="true" className={styles.symbol}><Icon size={32} strokeWidth={1.6} /></span>
                 <span className={styles.label}>{item.label}</span>
-                <span aria-hidden="true" className={styles.open}><ArrowUpRight size={14} /></span>
               </Link>
             </li>
           );
         })}
       </ul>
-      <div className={styles.footer}>
-        <span className={styles.hint}>{edges.start && edges.end ? "Escolha por onde começar" : "Arraste ou deslize para explorar"}</span>
-        <div className={styles.controls} data-static={edges.start && edges.end}>
-          <button aria-controls="home-shortcuts" aria-label="Ver categorias anteriores" className={styles.arrow} disabled={edges.start} onClick={() => scroll(-1)} type="button"><ChevronLeft aria-hidden="true" size={18} /></button>
-          <button aria-controls="home-shortcuts" aria-label="Ver próximas categorias" className={styles.arrow} disabled={edges.end} onClick={() => scroll(1)} type="button"><ChevronRight aria-hidden="true" size={18} /></button>
-        </div>
-      </div>
     </nav>
   );
 }

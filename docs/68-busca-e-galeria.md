@@ -94,6 +94,12 @@ Publicada a ilustração em `701e8b4` e reconstruído o runner com a correção 
 
 ## Verificação e operação
 
+### EAN/GTIN na busca pública — 29/10/2026
+
+A busca do cabeçalho e sua versão móvel aceitam o código registrado no produto. GTIN válido de 8, 12, 13 ou 14 dígitos é normalizado pela função já usada no catálogo; zeros à esquerda equivalentes são aceitos, preservando o indicador de embalagem. A consulta SQL usa parâmetros em `eanNormalized` ou nas variantes de `ean`, independentemente do texto indexado. Correspondência exata tem prioridade sobre resultados textuais. Produtos inativos continuam excluídos; paginação, correção ortográfica, marcas, apresentações, doses, privacidade das imagens e regras comerciais permanecem. Não há inferência de outro produto quando um código não existe, nem conversão de nome em EAN. O placeholder passa a `Produto, EAN ou princípio ativo`.
+
+As regressões incluem código ausente do índice textual, equivalência de zeros, embalagem diferente, consulta parametrizada, filtro de status e navegação por Enter em 390 e 1280 px. A fixture não consulta dados privados nem cria pedidos.
+
 - Regressões: consulta com dose/marca/decimal, URL de Enter, identidade de componentes, parametrização/paginação, ranking lateral e privacidade; CRUD/galeria/exclusão e proteções comerciais existentes.
 - `scripts/catalog-search-audit.ts`: leitura do catálogo e sondas PostgreSQL com dados sintéticos, sem pedidos ou mutações.
 - Aplicar a migração antes de subir a nova aplicação. Não há alteração de preços, ofertas, cotas, estoques, saldos ou pedidos.
