@@ -1,0 +1,65 @@
+# 129 — Hipóteses por tipo de embalagem, somente para perfis nulos
+
+## Autorização e escopo — 29/10/2026
+
+O lojista pediu continuidade dos 611 produtos anteriormente sem perfil, agrupando por embalagem e usando estimativas com margem de segurança. O snapshot renovado às 11h29 UTC encontrou **647 ativos sem perfil**, pois houve 36 inclusões posteriores; 2.904 produtos estavam ativos. O lote considera o conjunto atual e não reaplica rodadas encerradas.
+
+Foi criada uma via separada `owner-packaging-hypothesis-v1`, sem relaxar v4, cenários de medicamentos, fontes documentais ou aprovação de transporte. `apply-product-packaging-hypotheses.ts` opera em modo **`NULL_ONLY`**: qualquer perfil não nulo, inclusive JSON parcial, manual, protegido ou fora de schema, é preservado antes dos estimadores. Não refina pesos nem preenche perfis anteriores.
+
+## Manifesto e identidade
+
+O manifesto estrito contém grupos com identificador, rótulo, recipiente presumido, membros explícitos por GTIN válido e nome exato, lados hipotéticos ordenados, folga, caixa externa, bruto completo estipulado, margem de peso, carga e justificativas. Há limites de 200 grupos, 500 membros por grupo e 5 MB; GTINs e IDs não podem se repetir. O input separado permite até 5.000 GTINs únicos e 1 MB. Não há descoberta automática de novos membros durante a escrita.
+
+O nome esperado preserva os bytes do catálogo; renomeação, revisão ou alteração do conjunto de ativos invalida o plano. O hash inclui todos os ativos, mesmo os sem GTIN válido, o manifesto integral, os planos e o modo `NULL_ONLY`. Ator ADMIN ativo, lock de catálogo, CAS, auditoria e transação de 180 segundos são obrigatórios. A aplicação exige o SHA-256 do dry-run revisado.
+
+```text
+node --import tsx scripts/apply-product-packaging-hypotheses.ts --input <GTINs.json> --hypotheses <hipoteses.json> --actor-id <ADMIN>
+node --import tsx scripts/apply-product-packaging-hypotheses.ts --input <GTINs.json> --hypotheses <hipoteses.json> --actor-id <ADMIN> --apply --expect-plan <SHA-256>
+```
+
+## Peso e geometria
+
+O agrupamento separa cartuchos, frascos, bisnagas, pacotes flexíveis, blisters, dispositivos, kits e possíveis aerossóis. Referências próprias válidas e a política individual v4 mantêm prioridade quando elegíveis. Se não há conteúdo inequívoco, o bruto operacional é explicitamente estipulado para o grupo, com `weightBasis:OWNER_PACKAGE_GROSS_HYPOTHESIS`; conteúdo, unidade e cálculo v4 permanecem nulos. Não se fabrica quantidade física, peso líquido, densidade ou conversão de mg/mcg de dose em massa de comprimido.
+
+A hipótese bruta já inclui recipiente comercial e pacote externo. Não somar novamente a reserva externa de 100 g. A margem configurável de 10–30% é aplicada **uma vez**, seguida de arredondamento em 10 g; esta rodada usa **20%**. A margem é uma escolha de preparação, sem garantia estatística ou de massa máxima real.
+
+No modo padrão `OWNER_HYPOTHESIS`, os lados comerciais são hipóteses, com zero amostras geométricas. A folga inteira configurável de 1–3 cm é total por eixo e aplicada uma vez; esta rodada usa **3 cm**. Cada lado operacional deve ficar estritamente abaixo do lado correspondente da caixa. A caixa de **24 × 15 × 10 cm** é a única declarada pelo lojista. Caixas alternativas são `PLANNED_NOT_CONFIRMED`, com `largerBoxRequired:true`, sem afirmar que foram compradas, que estão disponíveis ou que o encaixe foi conferido. Geometria comercial, pacote planejado e receita calibrada continuam separados.
+
+Material, fechamento, tara e medidas internas ficam nulos; `packingFitConfirmed:false` e `protectionCalibrated:false`. No modo padrão, a fonte geométrica é `OWNER_AUTHORIZED_HYPOTHESIS`, sem GTINs/amostras observados, e `geometryReference:null`. Não criar `Product.logisticsEvidence`, observações ou `PackagingRecipe` a partir dessas estipulações.
+
+O modo explícito `OWN_DOCUMENTARY_REFERENCE` exige grupo com um único GTIN/nome e `geometryObservationId`. A observação deve estar ativa, sem conflito, do próprio GTIN, unidade comercial única, três lados válidos e base `labeled_axes` ou `carton_die`. Os lados em mm são convertidos para cm, ordenados e comparados exatamente aos lados declarados no manifesto; ausência ou divergência retorna pendência, sem fallback silencioso. O modo padrão continua deferindo geometrias próprias.
+
+Nesse modo, `geometrySource:OWN_DOCUMENTARY_REFERENCE` e `geometryReference` preservam GTIN, identificador, hash, base original, lados originais em mm e lados ordenados em cm. `physicalMeasurementConfirmed:false` e zero amostras físicas impedem chamar a referência documental de medição atual. A base de cartonagem histórica permanece identificada; não comprova embalagem montada nem encaixe. Fontes de peso ficam separadas: **227 g do Nivea e 36 g do Nenfy classificados como `unspecified` não são promovidos a peso bruto**. O peso continua v4 elegível ou hipótese completa, com margem única.
+
+## Riscos e bloqueios
+
+Todo novo rascunho permanece `enabled:false`, `transportReviewed:false`, `measurementBasis:estimated`, `reference:null`, sem serviços aprovados. A carga do manifesto é preservada; medicamento recebe também `medication`. Carga desconhecida usa `unspecified`; não se atribui `general` por exclusão. Aerossol, líquido, perfume, dispositivo com bateria e possível inflamabilidade continuam sujeitos à aceitação e revisão próprias. Título “sem acetona” não comprova ausência de inflamabilidade; “jato seco” não comprova pressão. Não liberar serviços por presença de peso e medidas.
+
+Controlados, antimicrobianos, Popular e receita exigida sem `ORDINARY` continuam pendentes antes de qualquer estimador, inclusive da rota documental. Referência inválida, identidade divergente ou conflito não é ignorado para forçar hipótese. Dimensões próprias ativas adiam o modo padrão; seu aproveitamento exige o modo documental explícito e as verificações acima.
+
+Kits, acessórios e promoções exigem considerar a unidade comercial inteira: 60 + 30 comprimidos são 90; 24 comprimidos + quatro placebos são 28; L3P2 são três unidades. Modelos, idade e doses não são contagens. Símbolo “+” em marca/composição não cria kit sem um segundo conteúdo explícito. Contagem colada a código, como `COMPLET2UN`, não pode virar uma unidade por falha de fronteira textual.
+
+## Prévia e pendências separadas
+
+O gerador privado triou os 647 sem perfil: 646 membros foram distribuídos por **91 grupos explícitos** e um medicamento com receita ainda não classificada foi separado. A prévia final encontrou **642 propostas aplicáveis**, sendo **639 com geometria hipotética e três com geometria documental explícita**, e quatro membros deferidos por conflito. **285** propostas usam caixas alternativas ainda não confirmadas. A contagem é de preparação; não comprova aplicação produtiva.
+
+Os cinco cadastros separados são:
+
+| Situação | Produtos |
+| --- | --- |
+| Receita exigida sem classificação concluída | Imosec 2 mg 12 comprimidos |
+| Referências com conflito de identidade | Clopidogrel 75 mg 30 comprimidos; Albendazol suspensão 10 ml; Beneum 300 mg 30 comprimidos; Colgate Plax Melancia 500 ml |
+
+Nivea Leite + Tônico 200 ml, Nivea Aero Men Deep Original 150 ml e Nenfy 100 mg de ferro 30 comprimidos são os três grupos documentais individuais. As referências e flags são preservadas; não forçar aprovação ou apagá-las para diminuir a fila. A arte de cartucho (`carton_die`) não é tratada como medição física atual nem prova de dimensões externas montadas. Pendência de receita não é resolvida por estimativa logística.
+
+## Verificação e operação
+
+Passaram 230 testes de frete/importadores, 491 de segurança, ESLint completo e typecheck sem cache incremental. Auditorias completa e de produção registraram três alertas low e um moderate, zero high/critical, em `@react-email/render`, `deepmerge`, `fast-uri` e `html-to-text`; nenhuma dependência foi alterada.
+
+QA em PostgreSQL 17 isolado passou 15 verificações: dry-run e repetição sem alterações em todas as tabelas, proteção de nove formas de perfil existente, cargas especiais e conteúdo desconhecido, ADMIN, hash, falha real na segunda auditoria e CAS, prova de escrita anterior à reversão por sequência não transacional, preservação comercial/evidências/receitas e modos documentais sem promover peso de base indefinida. Setecentos perfis sintéticos foram aplicados em uma única transação em 2.674 ms, dentro de 180 segundos. Recursos exclusivos de QA foram removidos.
+
+A primeira execução dos novos casos documentais encontrou uma fixture que já era elegível à rota documental prioritária anterior; ela não exercitava a nova variante. Foi corrigida a apresentação sintética para representar conteúdo não identificado, como nos três casos reais. Não foi relaxada a prioridade nem alterado código produtivo para satisfazer o teste. O resultado final passou com os bloqueios preservados.
+
+Antes de produção, exigir backup customizado/TOC/checksum, janela sem grant ou aplicação incerta, código e arquivos congelados, baseline coerente, dry-run integralmente igual à prévia e recibo exclusivo de preparação. Revalidar o recibo antes de criar o marcador atômico de início. Se houver início sem verificação, inspecionar somente de leitura; não repetir a escrita.
+
+Artefatos privados: `outputs/pendentes-logistica-2026-10-29/`. Esta versão registra a lógica e as verificações; a aplicação produtiva ainda precisa de confirmação e prova de preservação/idempotência.

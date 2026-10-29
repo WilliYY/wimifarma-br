@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-29 — Hipóteses por embalagem para perfis nulos
+
+- O pedido de continuar os 611 pendentes foi renovado sobre snapshot de 647, após novas inclusões. `owner-packaging-hypothesis-v1` separa recipiente presumido, bruto completo estipulado e caixa planejada; usa peso individual quando elegível, margem percentual e folga uma única vez. A aplicação `NULL_ONLY` protege qualquer perfil anterior, vincula identidade exata/manifesto/todos os ativos ao plano e conserva ADMIN, lock, CAS e auditoria. Não libera transporte nem contorna receita/referências conflitantes. Contrato, prévia e limites em [129](129-hipoteses-por-tipo-de-embalagem.md).
+
 ## 2026-10-29 — Hipóteses de embalagem para medicamentos
 
 - Aplicação produtiva confirmada de 305 medicamentos: 202 sólidos, 95 líquidos orais e oito tópicos; 280 pesos existentes preservados e 25 perfis novos. Backup, plano integral, revisão, proveniência, auditoria, idempotência e preservação dos demais dados passaram. Total de 1.221 ativos com peso e dimensões preenchidos; dois habilitados anteriores mantidos, sem habilitação automática. Serviços saudáveis e sem reinício/migration; resultados e limitações em [128](128-hipoteses-de-embalagem-para-medicamentos.md).
