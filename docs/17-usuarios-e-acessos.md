@@ -4,6 +4,16 @@ Auditoria de 23/10/2026: a troca de senha considera a credencial local do User e
 
 Navegação de 22/10/2026: menu diário reduzido, Fretes/Pagamentos em configurações recolhidas e cofre sem atalho. Rotas e permissões permanecem; cofre continua exclusivo ADMIN, cifrado e sem cache. Contrato em [97](97-operacao-admin-e-etapas-whatsapp.md).
 
+## Conferência do botão Sair — 29/10/2026
+
+Não foi encontrado defeito funcional: os formulários mobile e desktop de `site-header.tsx` usam a ação de servidor `signOut({ redirectTo: "/" })`. Não houve alteração de autenticação, cookies, permissões ou política do carrinho.
+
+Nova regressão `site-header-logout.test.ts`: dez cenários do cabeçalho real, clique em 320 px e Enter em 1536 px, CUSTOMER/ADMIN/MANAGER/STAFF com ou sem cliente vinculado, inclusive cabeçalho compacto. Verifica alvo de pelo menos 44 px, chamada com destino `/`, retorno visual a visitante, remoção de nome/saldos/atalho administrativo e descarte de consultas de cashback/Club com seus componentes reais. Relógio controlado avança 61 segundos após sair, além de disparar eventos de foco/benefícios, para detectar polling residual. A ação de autenticação é simulada nesta fixture de navegador.
+
+Dois testes separados exercitam Auth.js instalado com JWT e segredo exclusivamente sintéticos: sessão existente antes, recusa sem CSRF, redirecionamento e expiração do cookie com HttpOnly/Secure/SameSite. Não comprovam expiração natural do JWT nem integração completa de Next Server Actions com o proxy. Os 12 testes novos passaram; 13 testes existentes de sessão/rota também passaram antes do reforço do relógio. ESLint e typecheck aprovados, sem dependência nova.
+
+Conferência pública em jar anônimo independente: sessão null antes/depois, POST sem CSRF recusado e POST com CSRF válido redirecionando para `/` com HTTP 302. Não há cookie de sessão a expirar nesse contexto; Auth.js retorna antecipadamente quando não existe token. Não foi encerrada sessão real nem criado cliente/pedido. A verificação do formulário com conta autenticada de produção permanece fora desta rodada; evidências em `outputs/busca-campanhas-botoes-2026-10-29/`.
+
 ## Ranking e histórico — 04/10/2026
 
 Pessoas e acessos oferece filtro de mês e ordenação por gasto ou quantidade, preservando os controles de acesso. Somente pedidos `COMPLETED` + `PAID`, vinculados legitimamente ao cliente e sem OnlinePayment de ambiente teste, entram no ranking. Mês considera a criação do pedido em `America/Sao_Paulo`, início inclusivo/fim exclusivo. Sem mês, usa todo histórico. Não é relatório fiscal, nem saldo a receber.
