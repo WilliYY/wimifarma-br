@@ -21,6 +21,7 @@ export const siteConfig = {
   phone: whatsappPhone,
   displayPhone: "(44) 98413-4971",
   address: "Avenida Minas Gerais, 2263 - Ivate, Parana",
+  postalCode: "87525-000",
   instagramUrl: "https://instagram.com/",
   mapsUrl: "https://maps.app.goo.gl/DFZLnV3ps3Br84PXA",
   reclameAquiUrl: "https://www.reclameaqui.com.br/empresa/w-y-yoshiura-willian-produtos-farmaceuticos-e-perfumaria/",
@@ -28,6 +29,24 @@ export const siteConfig = {
   whatsappUrl: `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(
     whatsappMessage,
   )}`,
+};
+
+export type PharmacyLegalDetails = {
+  openingHours: string | null;
+  responsiblePharmacist: { name: string; crf: string; state: string } | null;
+  sanitaryLicense: { number: string; issuer: string; validUntil?: string } | null;
+  afe: string | null;
+  ae: string | null;
+};
+
+// Publish only fields checked against the establishment's documents.
+// An old AFE publication is not proof of the current registration status.
+export const pharmacyLegalDetails: PharmacyLegalDetails = {
+  openingHours: "Segunda a sábado, das 8h às 18h30. Domingos e plantões: consulte a equipe.",
+  responsiblePharmacist: { name: "Willian Yuji Yoshiura", crf: "35373", state: "PR" },
+  sanitaryLicense: { number: "029/2026", issuer: "Vigilância Sanitária de Ivaté/PR", validUntil: "15/10/2027" },
+  afe: null,
+  ae: null,
 };
 
 export const publicNavItems = [

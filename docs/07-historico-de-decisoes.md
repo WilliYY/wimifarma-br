@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-29 — Rodapé com identificação legal e orientação de compra
+
+- Identificação empresarial centralizada em texto pequeno e legível, com RT/CRF e licença sanitária conferidos nos documentos do titular. Endereço público Avenida Minas Gerais, 2263 confirmado pelo lojista; a divergência dos documentos permanece para conferência cadastral. AFE atual ainda não comprovada, sem reutilizar número histórico ou apresentar certificação da Anvisa.
+- Página `/informacoes-legais` com links diretos para atendimento farmacêutico, receitas, trocas/cancelamentos e privacidade, incluída no sitemap. Reutiliza os canais existentes, preservando contratos de checkout/dispensação, permissões e dados comerciais. Logo, bandeiras e animação original de 128 bolhas do rodapé preservadas.
+- Pesquisa e limites de RDC 44, CDC/Decreto 7.962, LGPD e acessibilidade registrados em [130](130-rodape-identificacao-legal.md). Conferência documental e melhoria visual não equivalem a certificação da conformidade integral; cadastro AFE, publicidade de medicamentos e operação do atendimento seguem pontos próprios de revisão.
+
 ## 2026-10-29 — Busca unificada, apresentação de preços e revisão de botões
 
 - Retirar da home as três campanhas Genérico/Idoso/Bebê e o código de animação exclusivo dessa seção. Ocultar a referência neutra `PMC CMED`, mantendo somente valor riscado/percentual em comparações elegíveis e o preço real de venda. A referência oficial continua interna; não há alteração de cadastro, preço, estoque ou benefícios. Contratos em [10](10-layout-e-experiencia.md) e [102](102-referencia-pmc-cmed.md).

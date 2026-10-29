@@ -13,7 +13,16 @@ const captureRoot = process.env.FOOTER_CAPTURE_ROOT;
 const bundle = build({
   stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';
     import {SiteFooter} from './src/components/site/site-footer';
-    createRoot(document.getElementById('root')).render(<SiteFooter/>);`, resolveDir: process.cwd(), loader: "tsx" },
+    import LegalInformationPage from './src/app/(site)/informacoes-legais/page';
+    import {pharmacyLegalDetails} from './src/lib/site';
+    if(location.pathname==='/without-registration')Object.assign(pharmacyLegalDetails,{openingHours:null,responsiblePharmacist:null,sanitaryLicense:null,afe:null,ae:null});
+    if(location.pathname==='/registered')Object.assign(pharmacyLegalDetails,{
+      openingHours:'Segunda a sexta, das 8h às 18h',
+      responsiblePharmacist:{name:'Profissional sintético',crf:'TESTE-123',state:'PR'},
+      sanitaryLicense:{number:'LIC-SINTETICA-2026',issuer:'Vigilância Sanitária de Teste'},
+      afe:'AFE-SINTETICA',ae:null,
+    });
+    createRoot(document.getElementById('root')).render(<>{location.pathname==='/informacoes-legais'?<LegalInformationPage/>:null}<SiteFooter/></>);`, resolveDir: process.cwd(), loader: "tsx" },
   bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic",
   define: { "process.env.NODE_ENV": '"production"', "process.env": "{}" },
   plugins: [{ name: "footer-fixture", setup(builder) {
@@ -42,7 +51,7 @@ async function fixture(path: string, run: (page: Page) => Promise<void>) {
       const url = new URL(route.request().url());
       if (url.href === "https://www.mercadopago.com/org-img/MP3/API/logos/synthetic.svg") return route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 32"><text x="4" y="24" fill="#152137" font-size="22">SYN</text></svg>' });
       if (url.origin !== origin) return route.abort();
-      if (["/brands", "/fallback"].includes(url.pathname)) return route.fulfill({ contentType: "text/html", headers: { "Content-Security-Policy": await policy }, body: '<!doctype html><html lang="pt-BR"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script></html>' });
+      if (["/brands", "/fallback", "/registered", "/without-registration", "/informacoes-legais"].includes(url.pathname)) return route.fulfill({ contentType: "text/html; charset=utf-8", headers: { "Content-Security-Policy": await policy }, body: '<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script></html>' });
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: (await bundle).outputFiles[0].text });
       if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: await css });
       if (url.pathname === "/brand/logo-wimifarma-compact.webp") return route.fulfill({ contentType: "image/webp", body: await readFile("public/brand/logo-wimifarma-compact.webp") });
@@ -74,7 +83,10 @@ test("rodapé mantém identidade, links oficiais e novas bandeiras em telas pequ
     for (const width of [320, 390, 768, 1440]) {
       await page.setViewportSize({ width, height: 950 });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `overflow em ${width}px`);
-      if (captureRoot && [390, 1440].includes(width)) await page.screenshot({ path: join(captureRoot, `footer-synthetic-${width}.png`), fullPage: true });
+      if (captureRoot && [390, 1440].includes(width)) {
+        await page.screenshot({ path: join(captureRoot, `footer-synthetic-${width}.png`), fullPage: true });
+        await footer.getByRole("region", { name: "Dados legais da farmácia", exact: true }).screenshot({ path: join(captureRoot, `legal-current-${width}.png`) });
+      }
     }
   });
 });
@@ -86,6 +98,53 @@ test("indisponibilidade do catálogo mantém Pix e cartão sem inventar bandeira
     await expect(footer.getByText("Cartão", { exact: true })).toBeVisible();
     await expect(footer.getByRole("list", { name: "Bandeiras disponibilizadas pelo Mercado Pago" })).toHaveCount(0);
     await expect(footer.getByText("Confira as opções e as condições disponíveis ao finalizar sua compra.")).toBeVisible();
+  });
+});
+
+test("identificação legal fica centralizada e legível sem inventar dados documentais", async () => {
+  await fixture("/without-registration", async page => {
+    const legal = page.getByRole("region", { name: "Dados legais da farmácia", exact: true });
+    await expect(legal).toBeVisible();
+    await expect(legal).toContainText("07.676.534/0001-81");
+    await expect(legal).toContainText("2263");
+    await expect(legal.getByRole("link", { name: "Atendimento farmacêutico", exact: true })).toHaveAttribute("href", "/informacoes-legais#atendimento-farmaceutico");
+    await expect(legal.getByRole("link", { name: "Receitas e dispensação", exact: true })).toHaveAttribute("href", "/informacoes-legais#receitas");
+    await expect(legal.getByRole("link", { name: "Trocas e cancelamentos", exact: true })).toHaveAttribute("href", "/informacoes-legais#trocas-e-cancelamentos");
+    assert.doesNotMatch(await legal.innerText(), /CRF|AFE\s*[:\d]|Alvará\s*:|em atualização|certificada pela Anvisa/i);
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 950 });
+      const style = await legal.locator("p").first().evaluate(el => ({ align: getComputedStyle(el).textAlign, size: Number.parseFloat(getComputedStyle(el).fontSize), line: Number.parseFloat(getComputedStyle(el).lineHeight) }));
+      assert.equal(style.align, "center");
+      assert.ok(style.size >= 12 && style.line >= 20);
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+      if (captureRoot && [390, 1440].includes(width)) await legal.screenshot({ path: join(captureRoot, `legal-default-${width}.png`) });
+    }
+  });
+});
+
+test("dados legais conferidos exibem responsável e autorizações sem presumir AE", async () => {
+  await fixture("/registered", async page => {
+    const legal = page.getByRole("region", { name: "Dados legais da farmácia", exact: true });
+    await expect(legal).toContainText("Profissional sintético");
+    await expect(legal).toContainText("CRF/PR TESTE-123");
+    await expect(legal).toContainText("LIC-SINTETICA-2026");
+    await expect(legal).toContainText("Vigilância Sanitária de Teste");
+    await expect(legal).toContainText("AFE-SINTETICA");
+    await expect(legal).toContainText("Segunda a sexta, das 8h às 18h");
+    assert.doesNotMatch(await legal.innerText(), /\bAE:/);
+    if (captureRoot) await legal.screenshot({ path: join(captureRoot, "legal-registered-390.png") });
+  });
+});
+
+test("links legais abrem as orientações e seus canais de atendimento", async () => {
+  await fixture("/fallback", async page => {
+    for (const [name, hash] of [["Atendimento farmacêutico", "atendimento-farmaceutico"], ["Receitas e dispensação", "receitas"], ["Trocas e cancelamentos", "trocas-e-cancelamentos"]]) {
+      await page.getByRole("navigation", { name: "Orientações legais e sanitárias" }).getByRole("link", { name, exact: true }).click();
+      await expect(page).toHaveURL(`${origin}/informacoes-legais#${hash}`);
+      await expect(page.getByRole("heading", { name, exact: true })).toBeInViewport();
+    }
+    await expect(page.getByRole("link", { name: "Solicitar troca ou cancelamento", exact: true })).toHaveAttribute("href", /^https:\/\/wa\.me\/5544984134971\?/);
+    await expect(page.getByRole("heading", { name: "Informações para sua compra", exact: true })).toHaveCount(1);
   });
 });
 

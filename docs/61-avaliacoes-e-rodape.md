@@ -1,5 +1,11 @@
 # 61 — Avaliações e rodapé
 
+## Identificação legal centralizada — 29/10/2026
+
+A base do rodapé usa texto centralizado de 12 px, entrelinha de 20 px e contraste preservado, com identificação empresarial, responsável técnico e licença sanitária conferidos. Mantém logo, navegação, pagamentos e animação original de 128 bolhas. AFE/AE só são exibidas quando houver valor documental conferido; a referência histórica de AFE não foi tratada como vigente. Não há selo ou logomarca da Anvisa.
+
+Links diretos conduzem a atendimento farmacêutico, receitas/dispensação, trocas/cancelamentos, privacidade e orientação oficial. A página `/informacoes-legais` reutiliza os canais de atendimento existentes; não muda checkout, dispensação, dados pessoais ou regras financeiras. Fonte documental, legislação, divergências e limites em [130](130-rodape-identificacao-legal.md).
+
 ## Controle de atividade das bolhas — 26/10/2026
 
 `FooterBubbles` controla exclusivamente a atividade da camada decorativa. O efeito original conserva 128 elementos, gerador, tempos, trajetórias, keyframes e filtro `wimifarma-footer-blob`. `IntersectionObserver` retoma o efeito 200 px antes da entrada; distância maior e aba oculta pausam as animações sem reiniciar sua fase. `contain: layout style` limita o escopo do trabalho geométrico sem contenção de pintura ou recorte. A preferência global de movimento reduzido permanece intacta.

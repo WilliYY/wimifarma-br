@@ -15,6 +15,7 @@ const publicRoutes = [
   "/catalogo",
   "/ofertas",
   "/privacidade",
+  "/informacoes-legais",
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Suspense, type CSSProperties } from "react";
 import {
-  ArrowUpRight, Landmark, LockKeyhole, MapPin, MessageCircle,
+  ArrowUpRight, LockKeyhole, MapPin, MessageCircle,
   PackageCheck, Phone, ShieldCheck, Store, Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { publicNavItems, siteConfig } from "@/lib/site";
 import { FooterPaymentMethods } from "./footer-payment-methods";
 import { FooterPaymentMethodsContent } from "./footer-payment-methods-content";
 import { FooterBubbles } from "./footer-bubbles";
+import { FooterLegalInformation } from "./footer-legal-information";
 
 type BubbleStyle = CSSProperties & Record<`--${string}`, string>;
 
@@ -127,31 +128,7 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <div className="border-t border-line bg-surface-subtle">
-        <section className="border-b border-line bg-pharma-green/5" aria-labelledby="footer-anvisa-title">
-          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:px-6 lg:px-8">
-            <div className="min-w-0">
-              <h2 id="footer-anvisa-title" className="text-sm font-bold text-ink">Compromisso com as normas sanitárias</h2>
-              <p className="mt-1 max-w-2xl text-xs leading-5 text-ink/75">A Wimifarma tem o compromisso de seguir as normas e orientações da Anvisa.</p>
-            </div>
-            <a
-              aria-label="Consultar no portal da Anvisa"
-              className="inline-flex min-h-11 w-fit max-w-full items-center gap-3 rounded-lg border border-pharma-green/20 bg-white px-4 py-3 text-pharma-green transition-colors hover:bg-pharma-green/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4"
-              href="https://consultas.anvisa.gov.br/#/"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <Landmark aria-hidden="true" className="h-6 w-6 shrink-0" strokeWidth={1.5} />
-              <span className="min-w-0 text-sm font-bold leading-5">Anvisa<span className="block text-xs font-normal leading-4">Agência Nacional de Vigilância Sanitária</span></span>
-              <ArrowUpRight aria-hidden="true" className="h-4 w-4 shrink-0" />
-            </a>
-          </div>
-        </section>
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-6 text-xs leading-5 text-ink/75 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:gap-8 lg:px-8">
-          <div className="min-w-0"><p className="font-semibold text-ink">{siteConfig.legalName}</p><p>CNPJ {siteConfig.cnpj} · Ivaté-PR</p></div>
-          <p>© {new Date().getFullYear()} Wimifarma. Todos os direitos reservados.</p>
-        </div>
-      </div>
+      <FooterLegalInformation />
       </div>
       <svg aria-hidden="true" className="pointer-events-none fixed left-0 top-0 h-0 w-0 overflow-hidden" focusable="false">
         <defs>
