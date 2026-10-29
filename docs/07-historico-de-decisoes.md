@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-29 — Banner Pix entre autocuidado e Farmacinha
+
+- Banner movido para o intervalo solicitado entre as duas vitrines, com desconto em destaque, logo completa e símbolo Pix existentes, composição responsiva e CTA preservado. Nenhum produto, preço, regra de Pix ou gateway foi alterado.
+- Movimento decorativo em CSS transform, pausado por visibilidade da seção/aba e hover/foco, desativado com movimento reduzido. Observador/listener locais seguem o padrão da faixa de categorias, sem renderização por frame ou nova dependência. Direção, referências e limites em [83](83-desconto-pix.md).
+
 ## 2026-10-29 — AFE confirmada na extração oficial da Anvisa
 
 - CNPJ e AFE `0998041` correspondem na base nacional DATAVISA publicada pela Anvisa: `ATIVO=SIM`, cancelamento vazio e carga de 12/10/2026, arquivo modificado em 13/10. Número preenchido como string no rodapé, sem logomarca nem promessa de verificação em tempo real. Origem/dicionário/evidência em [130](130-rodape-identificacao-legal.md#conferência-oficial-por-dados-abertos--29102026).

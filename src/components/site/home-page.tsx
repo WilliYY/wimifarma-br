@@ -23,7 +23,6 @@ import type { HomeShortcutItem } from "@/features/products/home-shortcuts";
 import campaignStyles from "./home-campaign.module.css";
 import { BrandSignature } from "@/components/site/brand-signature";
 import type { HomeCollections } from "@/features/products/home-collections";
-import { siteConfig } from "@/lib/site";
 import { whatsappTestimonials, type WhatsAppTestimonial } from "@/features/reviews/whatsapp-testimonials";
 
 export type HomeReview = {
@@ -457,9 +456,10 @@ export function HomePage({
 
       <BrandCarousel brands={brands} />
 
+      <HomeProductCarousel products={collections.care} id="home-care" title="Cuidados para o seu dia a dia" eyebrow="Beleza, higiene e bem-estar" href="/catalogo?grupo=beauty&ordem=preco-asc" />
+
       <PixDiscountBanner />
 
-      <HomeProductCarousel products={collections.care} id="home-care" title="Cuidados para o seu dia a dia" eyebrow="Beleza, higiene e bem-estar" href="/catalogo?grupo=beauty&ordem=preco-asc" />
       <HomeProductCarousel products={collections.otc} id="home-otc" title="Farmacinha" eyebrow="Cuidado em casa" href="/catalogo" />
 
       <ClubBanner />

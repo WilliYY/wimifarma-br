@@ -48,6 +48,8 @@ A página individual não exibe a faixa “Cuidado de perto, também online.”,
 
 ## Banner Pix com foco na oferta — 26/10/2026
 
+Atualização de 29/10/2026: banner movido para o intervalo entre “Cuidados para o seu dia a dia” e “Farmacinha”, com composição compacta, botão destacado, símbolo Pix em movimento curto e brilho espaçado. A versão atual pausa fora da tela, em aba oculta e durante hover/foco, removendo animações com movimento reduzido. Não altera preços ou escolha de pagamento; direção anterior abaixo mantida como histórico. Contrato atualizado em [83](83-desconto-pix.md).
+
 Faixa em verde profundo, percentual amplo em verde claro e chamada “3% OFF no Pix”, com logo completa sobre branco, condição curta e CTA “Aproveitar”. Retira o texto promocional secundário e o QR decorativo; preserva percentual, destino e condição de escolha Pix no checkout. CSS local, uma coluna no celular e três a partir de 768 px, sem novos assets ou scripts. Contrato em [83](83-desconto-pix.md).
 
 ## Marcas em largura total com movimento contínuo — 26/10/2026

@@ -1,5 +1,17 @@
 # 83 — Desconto de 3% no Pix
 
+## Banner entre as vitrines, com movimento discreto — 29/10/2026
+
+O banner fica depois de “Cuidados para o seu dia a dia” e antes de “Farmacinha”, conforme a indicação do titular. A posição não altera seleção, quantidade ou disponibilidade dos produtos. A composição usa verde profundo, percentual em verde claro, botão de alto contraste e logo oficial completa. O símbolo Pix existente aparece em uma geometria de losangos; não foram criados novos assets nem substituídas marcas.
+
+No celular e até 767 px, oferta e condição ocupam a primeira área; assinatura e botão compartilham a linha inferior. A partir de 768 px, há três colunas. Largura máxima de 1280 px, botão com pelo menos 48 px de altura e condição legível: “Escolha Pix no checkout. Frete à parte.”. Tipografia Barlow existente, com fallback sem serifa. O percentual continua vindo de `PIX_DISCOUNT_PERCENT` e o CTA continua em `/catalogo?ordem=preco-asc`; o banner não seleciona pagamento nem antecipa desconto.
+
+Há somente dois movimentos decorativos: oscilação curta do símbolo (5,5 segundos) e passagem espaçada de luz (9 segundos). Ambos usam `transform`, sem animar dimensões/filtros. `IntersectionObserver` e `visibilitychange` atualizam um atributo, sem estado React ou leitura de layout por frame. O movimento pausa fora da tela, na aba oculta e durante hover/foco; a preferência de movimento reduzido remove as animações. Observador e listener são descartados ao desmontar. Conteúdo e CTA permanecem utilizáveis sem animação.
+
+Direção: cupom gráfico compacto, com prioridade no desconto e respiro entre as vitrines. UI/UX Pro Max orientou limite de elementos animados, contraste, área de toque e movimento reduzido. [Motion Primitives](https://github.com/ibelick/motion-primitives) e [React Bits](https://github.com/DavidHDev/react-bits) foram consultados como referências; implementação própria com React/CSS existentes, sem copiar componentes, instalar bibliotecas ou introduzir dependências.
+
+Validação local: três cenários dirigidos aprovados — banner em 320/390/640/700/768/1024/1440 px, movimento/pausas/preferência reduzida e ordem real da home via marcador do banner. A verificação geométrica reproduziu colisão em 320 px antes do ajuste do CTA; depois, confirmou elementos dentro do card e sem colisão entre marca, percentual, texto e botão. Capturas com CSS real inspecionadas. ESLint, TypeScript e 491 testes de segurança aprovados; revisão independente sem achados. Auditorias completa/produção mantêm 3 low/1 moderate, zero high/critical. Não foram executados cenários funcionais de checkout. Build Linux, publicação e QA pública serão registrados após a implantação na janela exclusiva alinhada com o operador do catálogo.
+
 ## Banner com oferta direta — 26/10/2026
 
 A home passa a destacar “3% OFF no Pix”, logo oficial completa sobre branco e ação curta “Aproveitar”. A condição fica em uma linha curta: “Escolha Pix no checkout. Frete à parte.”. O percentual continua vindo de `PIX_DISCOUNT_PERCENT`, e o link permanece `/catalogo?ordem=preco-asc`. Esta apresentação substitui a faixa verde clara descrita no histórico; nenhuma regra financeira, valor, gateway ou seleção de pagamento foi alterada.

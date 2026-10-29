@@ -1,42 +1,62 @@
 .section {
-  --pix-background: #06463e;
-  --pix-highlight: #d6f493;
+  --pix-background: #073e37;
+  --pix-deep: #032c29;
+  --pix-highlight: #dcff8f;
   --pix-text: #ffffff;
-  --pix-muted: #d3e7e0;
+  --pix-muted: #d7eee7;
   --pix-action-text: #063d34;
-  padding: 0 16px 32px;
-  background: var(--surface);
+  --pix-line: #8bd3b52b;
+  --pix-glow: #9be8a91c;
+  padding: 4px 16px;
+  background: var(--surface-subtle);
 }
-.card { display: grid; max-width: 1280px; align-items: center; gap: 24px; margin-inline: auto; border-radius: 24px; padding: 24px; background: var(--pix-background); color: var(--pix-text); }
-.brand { display: inline-flex; width: fit-content; align-items: center; border-radius: 999px; padding: 8px 12px; background: var(--pix-text); }
-.logo { display: block; width: 128px; height: auto; }
-.offer { min-width: 0; }
+.card { position: relative; isolation: isolate; display: grid; grid-template-areas: "offer offer" "brand action"; grid-template-columns: minmax(0, 1fr) auto; max-width: 1280px; align-items: center; gap: 22px 12px; overflow: hidden; margin-inline: auto; border: 1px solid var(--pix-line); border-radius: 24px; padding: 24px 20px; background: radial-gradient(ellipse at 75% 15%, var(--pix-glow), transparent 65%), linear-gradient(115deg, var(--pix-background), var(--pix-deep)); color: var(--pix-text); font-family: var(--font-barlow, Arial), Helvetica, sans-serif; }
+.brand { grid-area: brand; z-index: 1; display: inline-flex; width: fit-content; align-items: center; border-radius: 999px; padding: 6px 9px; background: var(--pix-text); }
+.logo { display: block; width: 96px; height: auto; }
+.offer { grid-area: offer; z-index: 1; min-width: 0; }
 .title { display: flex; align-items: center; gap: 16px; margin: 0; font-weight: 800; }
-.amount { flex-shrink: 0; color: var(--pix-highlight); font-size: 96px; line-height: 0.85; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; }
+.amount { flex-shrink: 0; color: var(--pix-highlight); font-size: 104px; line-height: 0.85; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; }
 .amount > span { margin-left: 3px; font-size: 0.5em; letter-spacing: -0.04em; }
 .message { display: flex; flex-direction: column; gap: 3px; }
-.off { font-size: 18px; font-weight: 600; letter-spacing: 0.16em; line-height: 1; }
-.method { white-space: nowrap; font-size: 32px; line-height: 1.1; letter-spacing: -0.03em; }
-.conditions { margin: 12px 0 0; color: var(--pix-muted); font-size: 13px; line-height: 1.5; }
-.action { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 20px; border-radius: 999px; padding: 14px 24px; background: var(--pix-text); color: var(--pix-action-text); font-size: 14px; font-weight: 700; text-decoration: none; transition: background 180ms ease; }
+.off { font-size: 17px; font-weight: 600; letter-spacing: 0.18em; line-height: 1; }
+.method { white-space: nowrap; font-size: 34px; line-height: 1.1; letter-spacing: -0.04em; }
+.period { color: var(--pix-highlight); }
+.conditions { margin: 14px 0 0; color: var(--pix-muted); font-size: 12px; line-height: 1.5; }
+.action { grid-area: action; z-index: 1; display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 10px; border-radius: 999px; padding: 12px 14px; background: var(--pix-highlight); color: var(--pix-action-text); font-size: 13px; font-weight: 700; text-decoration: none; transition: background 180ms ease; }
 .action > svg { flex-shrink: 0; transition: transform 220ms ease; }
-.action:hover { background: var(--pix-highlight); }
+.action:hover { background: var(--pix-text); }
 .action:hover > svg { transform: translateX(3px); }
-.action:focus-visible { outline: 2px solid var(--pix-highlight); outline-offset: 4px; }
+.action:focus-visible { outline: 2px solid var(--pix-text); outline-offset: 4px; }
+.art { position: absolute; z-index: 0; top: -116px; right: -114px; width: 300px; height: 300px; pointer-events: none; }
+.diamond, .diamondSmall { position: absolute; top: 60px; left: 60px; width: 180px; height: 180px; border: 1px solid var(--pix-line); border-radius: 36px; transform: rotate(45deg); }
+.diamondSmall { top: 90px; left: 90px; width: 120px; height: 120px; border-radius: 25px; background: var(--pix-glow); }
+.pixMark { position: absolute; top: 126px; left: 126px; width: 48px; height: 48px; animation: pix-float 5.5s ease-in-out infinite; animation-play-state: paused; }
+.pixMark img { display: block; width: 100%; height: auto; }
+.sheen { position: absolute; z-index: 0; inset: 0; overflow: hidden; pointer-events: none; }
+.sheen::after { position: absolute; top: -50%; left: -50%; width: 35%; height: 200%; background: linear-gradient(90deg, transparent, var(--pix-glow), transparent); content: ""; transform: translateX(-100%) rotate(18deg); animation: pix-sheen 9s ease-in-out infinite; animation-play-state: paused; }
+.card[data-motion="active"]:not(:hover):not(:focus-within) .pixMark,
+.card[data-motion="active"]:not(:hover):not(:focus-within) .sheen::after { animation-play-state: running; }
+@keyframes pix-float { 0%, 100% { transform: translateY(3px) rotate(-6deg); } 50% { transform: translateY(-5px) rotate(5deg); } }
+@keyframes pix-sheen { 0%, 18% { transform: translateX(-100%) rotate(18deg); } 58%, 100% { transform: translateX(600%) rotate(18deg); } }
 @media (min-width: 640px) {
   .section { padding-inline: 24px; }
 }
 @media (min-width: 768px) {
-  .card { grid-template-columns: auto minmax(0, 1fr) auto; gap: 32px; padding: 32px; }
+  .card { grid-template-areas: "brand offer action"; grid-template-columns: auto minmax(0, 1fr) auto; gap: 32px; padding: 32px; }
   .offer { justify-self: center; }
-  .amount { font-size: 112px; }
-  .logo { width: 144px; }
+  .amount { font-size: 116px; }
+  .logo { width: 128px; }
+  .action { gap: 12px; padding-inline: 24px; font-size: 14px; }
 }
 @media (min-width: 1024px) {
   .section { padding-inline: 32px; }
-  .card { padding-inline: 40px; }
+  .card { padding: 32px 40px; }
+  .logo { width: 144px; }
+  .art { top: -70px; right: calc(25% - 120px); }
 }
 @media (prefers-reduced-motion: reduce) {
+  .pixMark, .sheen::after { animation: none; }
+  .sheen { display: none; }
   .action, .action > svg { transition: none; }
   .action:hover > svg { transform: none; }
 }

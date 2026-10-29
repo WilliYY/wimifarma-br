@@ -15,7 +15,7 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
     "next/navigation": "export const useRouter=()=>({push:()=>{}});",
     "@/hooks/use-club-summary": "export const useClubSummary=()=>({guest:true,loading:false,joining:false,error:null,summary:null});",
     "@/components/site/brand-carousel": "export const BrandCarousel=()=>null;",
-    "@/components/site/pix-discount-banner": "export const PixDiscountBanner=()=>null;",
+    "@/components/site/pix-discount-banner": "import React from 'react';export const PixDiscountBanner=()=> <section data-pix-fixture/>;",
     "@/components/site/hero-product-stage": "export const HeroProductStage=()=>null;",
     "./home-campaign.module.css": "export default {};",
     "./home-shortcuts.module.css": "export default {};",
@@ -62,9 +62,9 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
         await page.setViewportSize({ width, height: 1000 });
         const order = await page.locator("#root>section").evaluateAll(sections => sections.flatMap(section => {
           const carousel = section.querySelector("#home-care,#home-otc,#home-affordable");
-          return carousel ? [carousel.id] : section.querySelector("#club-banner-title") ? ["club"] : [];
+          return section.hasAttribute("data-pix-fixture") ? ["pix"] : carousel ? [carousel.id] : section.querySelector("#club-banner-title") ? ["club"] : [];
         }));
-        assert.deepEqual(order, ["home-care", "home-otc", "club", "home-affordable"]);
+        assert.deepEqual(order, ["home-care", "pix", "home-otc", "club", "home-affordable"]);
         await expect(page.getByRole("heading", { name: "Farmacinha", exact: true })).toBeVisible();
         await expect(page.locator("#home-otc [data-home-product-card]")).toHaveCount(15);
         const products = await page.locator("[data-home-product-card] a[href^='/produto/']").evaluateAll(links => links.map(link => link.getAttribute("href")));

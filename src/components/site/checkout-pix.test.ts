@@ -60,6 +60,7 @@ async function fixture(width: number, run: (page: Page, orders: Record<string, u
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: (await bundle).outputFiles[0].text });
       if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: await css });
       if (url.pathname === "/brand/logo-wimifarma.svg") return route.fulfill({ contentType: "image/svg+xml", body: await readFile("public/brand/logo-wimifarma.svg") });
+      if (url.pathname === "/payments/pix-symbol.svg") return route.fulfill({ contentType: "image/svg+xml", body: await readFile("public/payments/pix-symbol.svg") });
       if (url.pathname === "/api/health") return json({ timestamp: "2026-10-19T12:00:00.000Z" });
       if (url.pathname === "/api/minha-conta/cashback") return json({ data: { balance: "10.00" } });
       if (url.pathname === "/api/minha-conta/club") return json({ data: { member: true, joinedAt: null, balancePoints: 2000, pendingPoints: 0, lifetimeEarnedPoints: 2000, lifetimeRedeemedPoints: 0, transactions: [] } });
@@ -176,7 +177,7 @@ test("Pix combina resgates e preserva o valor na resposta de pagamento", async (
 });
 
 test("banner Pix mantém marca, oferta e link em telas pequenas e grandes", async () => {
-  for (const width of [320, 390, 768, 1440]) await fixture(width, async page => {
+  for (const width of [320, 390, 640, 700, 768, 1024, 1440]) await fixture(width, async page => {
     await expect(page.getByRole("heading", { name: "3% de desconto no Pix", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Aproveitar", exact: true })).toHaveAttribute("href", "/catalogo?ordem=preco-asc");
     await expect(page.getByText("Escolha Pix no checkout. Frete à parte.", { exact: true })).toBeVisible();
@@ -184,9 +185,44 @@ test("banner Pix mantém marca, oferta e link em telas pequenas e grandes", asyn
     await expect(page.getByRole("img", { name: "Wimifarma" })).toBeVisible();
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await expect.poll(() => page.getByRole("img", { name: "Wimifarma" }).evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+    const card = page.locator('[data-motion]');
+    const bounds = await card.boundingBox();
+    assert.ok(bounds && bounds.height <= (width < 768 ? 270 : 210));
+    assert.ok((await page.getByRole("link", { name: "Aproveitar", exact: true }).boundingBox())!.height >= 44);
+    const pieces = await card.locator('.brand, .amount, .message, .action').evaluateAll(elements => elements.map(element => { const box = element.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
+    for (const piece of pieces) assert.ok(piece.left >= bounds.x && piece.right <= bounds.x + bounds.width, `conteúdo cortado em ${width}px`);
+    for (let i = 0; i < pieces.length; i++) for (let j = i + 1; j < pieces.length; j++) {
+      const a = pieces[i], b = pieces[j];
+      assert.ok(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top, `colisão entre elementos em ${width}px`);
+    }
+    assert.equal(await card.evaluate(element => element.getAnimations({ subtree: true }).length), 0);
     if (captureRoot) {
       await mkdir(captureRoot, { recursive: true });
-      await page.screenshot({ path: join(captureRoot, `pix-banner-${width}.png`), fullPage: true });
+      await card.screenshot({ path: join(captureRoot, `pix-banner-${width}.png`) });
     }
+  }, "/banner");
+});
+
+test("banner Pix pausa movimento fora da tela, durante foco e em aba oculta", async () => {
+  await fixture(1280, async page => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    const card = page.locator('[data-motion]');
+    const states = () => card.evaluate(element => element.getAnimations({ subtree: true }).map(animation => animation.playState));
+    await expect(card).toHaveAttribute("data-motion", "active");
+    await expect.poll(states).toEqual(["running", "running"]);
+    await page.getByRole("link", { name: "Aproveitar", exact: true }).focus();
+    await expect.poll(states).toEqual(["paused", "paused"]);
+    await page.evaluate(() => (document.activeElement as HTMLElement).blur());
+    await expect.poll(states).toEqual(["running", "running"]);
+    await page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: true }); document.dispatchEvent(new Event("visibilitychange")); });
+    await expect(card).toHaveAttribute("data-motion", "paused");
+    await expect.poll(states).toEqual(["paused", "paused"]);
+    await page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: false }); document.dispatchEvent(new Event("visibilitychange")); const spacer = document.createElement("div"); spacer.style.height = "150vh"; document.body.prepend(spacer); window.scrollTo(0, 0); });
+    await expect(card).toHaveAttribute("data-motion", "paused");
+    await card.scrollIntoViewIfNeeded();
+    await expect(card).toHaveAttribute("data-motion", "active");
+    await expect.poll(states).toEqual(["running", "running"]);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect.poll(() => card.evaluate(element => element.getAnimations({ subtree: true }).length)).toBe(0);
   }, "/banner");
 });
