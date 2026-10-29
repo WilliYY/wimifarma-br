@@ -40,12 +40,12 @@ export type PharmacyLegalDetails = {
 };
 
 // Publish only fields checked against the establishment's documents.
-// An old AFE publication is not proof of the current registration status.
+// AFE verified in Anvisa's official extract dated 2026-10-12; see docs/130.
 export const pharmacyLegalDetails: PharmacyLegalDetails = {
   openingHours: "Segunda a sábado, das 8h às 18h30. Domingos e plantões: consulte a equipe.",
   responsiblePharmacist: { name: "Willian Yuji Yoshiura", crf: "35373", state: "PR" },
   sanitaryLicense: { number: "029/2026", issuer: "Vigilância Sanitária de Ivaté/PR", validUntil: "15/10/2027" },
-  afe: null,
+  afe: "0998041",
   ae: null,
 };
 
