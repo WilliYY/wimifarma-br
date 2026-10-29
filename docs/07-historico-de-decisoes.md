@@ -4,7 +4,7 @@
 
 - CNPJ e AFE `0998041` correspondem na base nacional DATAVISA publicada pela Anvisa: `ATIVO=SIM`, cancelamento vazio e carga de 12/10/2026, arquivo modificado em 13/10. Número preenchido como string no rodapé, sem logomarca nem promessa de verificação em tempo real. Origem/dicionário/evidência em [130](130-rodape-identificacao-legal.md#conferência-oficial-por-dados-abertos--29102026).
 - A mesma extração mostra endereço Rua Maringá, 2263 e site vazio. Conferência/regularização cadastral continua pendente; o endereço público confirmado pelo titular não foi trocado. Não houve peticionamento, alteração externa, banco ou consulta por visita.
-- Inclusão preparada localmente: sete regressões do rodapé, lint, revisão independente e 491 testes de segurança aprovados. Publicação aguarda release da janela do lote seguinte de catálogo; nenhum pull/build/restart no VPS foi feito para esta inclusão. Evidências e limites no documento 130.
+- Inclusão publicada após o release do lote seguinte de 50 produtos: fonte `a4d992d`, imagem Linux `afe-ready-a4d992d` (`bfa8bd0`), QA pública em 390/1440 px aprovada, saúde 200. Sete regressões do rodapé, lint, revisão independente e 491 testes de segurança aprovados; auditorias full/prod com 3 low/1 moderate, zero high/critical. Backup validado e imagem anterior preservados; somente app recriado. Comparação integral dos quatro conjuntos comerciais (incluindo os novos 50), PostgreSQL e canonical `352e286` preservados. Evidências e limites no documento 130.
 
 ## 2026-10-29 — Rodapé legal publicado e AFE identificada
 
