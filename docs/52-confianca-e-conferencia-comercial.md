@@ -10,6 +10,8 @@ Se faltar a AFE, seguir o [procedimento oficial](https://www.gov.br/anvisa/pt-br
 
 Nenhum cadastro, petição, contato externo, certificação ou selo foi criado nesta consulta. A informação institucional do rodapé permanece, sem a logomarca da Anvisa ou alegação de endosso.
 
+Conferência adicional pelo CNPJ exato `07.676.534/0001-81`: o [anexo oficial da RE 4.663/2011](https://bvsms.saude.gov.br/bvs/saudelegis/anvisa/2011/anexo/anexo_res4663_14_10_2011.pdf) e o [DOU de 23/11/2010, cópia oficial do MME](https://www.gov.br/mme/pt-br/arquivos/do-23-11-2010-s1.pdf) relacionam o número `AUTORIZ/MS 0.47301.4` e processo `25351.069930/2006-22` a Domingos & Soares Ltda., Rua Maringá, 2263, Ivaté/PR. São referências históricas, não prova de concessão original nem de situação vigente em 2026. A razão social e o endereço antigos precisam ser confrontados com os documentos atuais antes de qualquer divulgação de regularidade. O número não foi incluído no rodapé nem apresentado como selo.
+
 ## Verificação em 08/10/2026
 
 Consulta somente leitura em produção, sem criar pedidos, cobrar, comprar etiquetas, alterar produtos ou enviar mensagens comerciais.
