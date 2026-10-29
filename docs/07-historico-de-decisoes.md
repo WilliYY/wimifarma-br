@@ -1511,3 +1511,8 @@ Este arquivo registra decisoes tecnicas importantes. Sempre que uma decisao for 
 - Sair sem defeito funcional confirmado. Doze regressões novas cobrem controles do cabeçalho, descarte de benefícios/polling e Auth.js com JWT sintético. Conferência pública anônima confirma CSRF e redirecionamento; não prova logout de sessão autenticada de produção. Contrato e limites em [17](17-usuarios-e-acessos.md). Sem alteração de autenticação, carrinho ou permissões.
 - Para a logomarca da Anvisa, confirmado canal Fale Conosco com pedido de orientação/análise da Ascom e Manual de Uso da Marca. AFE não concede selo ou direito de uso; admissibilidade comercial depende da política oficial. Rascunho preparado, não enviado. Fontes e distinção entre autorização histórica e situação atual em [52](52-confianca-e-conferencia-comercial.md).
 - Evidências em `outputs/busca-campanhas-botoes-2026-10-29/RESULTADO.md`; janela devolvida ao operador do catálogo após smoke. Commits documentais/testes posteriores não autorizam novo pull ou troca de APP durante seu hold.
+
+## 2026-10-29 — Catálogo com lotes de 50 aprovados
+
+- O lojista definiu 50 itens conferidos como preferência dos próximos lotes, substituindo a espera por volumes acima de 1.000. O limite técnico de 50 e os controles de publicação continuam preservados.
+- A fila de 1.452 candidatos restantes da coorte original foi particionada para conferência em 29 grupos de 50 e um saldo de 2, sem declarar aprovação coletiva nem criar concessão produtiva. A formação dos lotes executáveis depende da elegibilidade individual e de perfis compatíveis. Contrato e evidências em [116](116-catalogo-coorte1491.md#preferência-atual-próximos-lotes-com-50-produtos-aprovados).
