@@ -1,7 +1,7 @@
 import { productImageAlt } from "@/features/products/image-placeholder";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Loader2, Pill, SearchX, Sparkles } from "lucide-react";
+import { ArrowRight, Loader2, SearchX, Sparkles } from "lucide-react";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import { isPrescriptionSearchProduct, productSearchHref, productSearchPlan, type PublicProductSearchItem } from "@/features/products/public-search";
 import { PrescriptionSearchDetails } from "./prescription-search-details";
@@ -170,11 +170,7 @@ export function ProductSearchResults({
         </div>
       ) : (
         <div className="grid gap-2">
-          <div aria-label="Produtos encontrados" role="group">
-            <div className="flex items-center gap-2 px-2 pb-1 pt-1 font-body text-[0.68rem] font-black uppercase tracking-[0.12em] text-brand">
-              <Pill className="h-3.5 w-3.5" />
-              Produtos encontrados
-            </div>
+          <div>
             <div className="grid gap-1">
               {products.map((item) => (
                 <ResultItem

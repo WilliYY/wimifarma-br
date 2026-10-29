@@ -5,6 +5,7 @@ import { productImageAlt } from "@/features/products/image-placeholder";
 import Image from "next/image";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   ArrowRight,
   Check,
@@ -60,7 +61,7 @@ function QuantitySelector({
 
 export function ProductPurchasePanel({ product }: { product: CartProduct }) {
   const router = useRouter();
-  const { addProduct } = useCart();
+  const { addProduct, hydrated, items } = useCart();
   const [localQuantity, setLocalQuantity] = useState(1);
   const sharedQuantity = useContext(ProductQuantityContext);
   const { quantity, setQuantity } = sharedQuantity ?? { quantity: localQuantity, setQuantity: setLocalQuantity };
@@ -134,6 +135,11 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
   }
 
   function continuePurchase(destination: "/carrinho" | "/checkout") {
+    if (!hydrated) return;
+    if (items.length >= 30 && !items.some(item => item.id === product.id)) {
+      toast.error("Seu carrinho ja tem 30 produtos diferentes.");
+      return;
+    }
     addProduct(product, quantity);
     router.push(destination);
   }
@@ -163,6 +169,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
           <button
             className="group inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-brand/30 bg-white px-4 py-2 text-sm font-bold text-brand transition-colors hover:border-brand hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:min-h-12 sm:px-5"
             onClick={() => continuePurchase("/carrinho")}
+            disabled={!hydrated}
             type="button"
           >
             <ShoppingCart className="h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:scale-105" aria-hidden="true" />
@@ -171,6 +178,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
           <button
             className="group inline-flex min-h-13 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-4 text-base font-bold text-white shadow-[0_8px_20px_rgba(200,16,46,0.16)] transition-colors hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:min-h-14 sm:px-5"
             onClick={() => continuePurchase("/checkout")}
+            disabled={!hydrated}
             type="button"
           >
             <ShoppingBag className="h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:scale-105" aria-hidden="true" />
@@ -223,6 +231,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
             <button
               className="group inline-flex min-h-12 min-w-36 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-bold text-white transition-colors hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:flex-none"
               onClick={() => continuePurchase("/checkout")}
+              disabled={!hydrated}
               type="button"
             >
               <ShoppingBag className="h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5" aria-hidden="true" />

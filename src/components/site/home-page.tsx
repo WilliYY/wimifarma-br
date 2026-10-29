@@ -4,14 +4,10 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
-  Baby,
-  HeartHandshake,
   MessageCircle,
-  Pill,
   Quote,
   ShieldCheck,
   Star,
@@ -29,17 +25,6 @@ import { BrandSignature } from "@/components/site/brand-signature";
 import type { HomeCollections } from "@/features/products/home-collections";
 import { siteConfig } from "@/lib/site";
 import { whatsappTestimonials, type WhatsAppTestimonial } from "@/features/reviews/whatsapp-testimonials";
-
-const easeOut = [0.16, 1, 0.3, 1] as const;
-
-const entrance = {
-  hidden: { opacity: 0, y: 18 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, ease: easeOut },
-  },
-};
 
 export type HomeReview = {
   comment: string;
@@ -101,28 +86,6 @@ function RatingStars({ rating, size = "h-4 w-4" }: { rating: number; size?: stri
         />
       ))}
     </span>
-  );
-}
-
-function MotionBlock({
-  children,
-  className,
-  delay = 0,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
-}) {
-  return (
-    <motion.div
-      animate="show"
-      className={className}
-      initial="hidden"
-      transition={{ delay }}
-      variants={entrance}
-    >
-      {children}
-    </motion.div>
   );
 }
 
@@ -505,30 +468,6 @@ export function HomePage({
 
       <CustomerReviews reviews={customerReviews} />
 
-      <section className="pharma-clouds bg-white px-4 pb-20 pt-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <MotionBlock>
-            <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-              <div><p className="text-xs font-bold uppercase tracking-wider text-brand">Perto de você</p><h2 className="mt-2 text-3xl font-bold tracking-tight text-ink">Cuidado para cada fase.</h2></div>
-              <p className="max-w-sm text-sm leading-6 text-muted">Consulte as campanhas e as condições com a nossa equipe.</p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              {[
-                { title: "Dia do Genérico Barato", description: "Consulte as opções de genéricos com a orientação da nossa equipe.", icon: Pill, color: "bg-[#edf7ef] text-emerald-800" },
-                { title: "Dia do Idoso", description: "Respeito, atenção e cuidado para quem já cuidou tanto de nós.", icon: HeartHandshake, color: "bg-[#f3f0fa] text-violet-800" },
-                { title: "Dia do Bebê", description: "Fraldas, higiene e carinho para acompanhar cada descoberta.", icon: Baby, color: "bg-[#fff1ee] text-rose-800" },
-              ].map((campaign) => (
-                <a className={`group rounded-2xl border border-black/5 p-6 transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${campaign.color}`} href={siteConfig.whatsappUrl} key={campaign.title} rel="noreferrer" target="_blank">
-                  <campaign.icon className="h-7 w-7" aria-hidden="true" />
-                  <h3 className="mt-5 text-xl font-bold text-ink">{campaign.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted">{campaign.description}</p>
-                  <span className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-bold">Consultar campanha<ChevronRight className="h-4 w-4" aria-hidden="true" /></span>
-                </a>
-              ))}
-            </div>
-          </MotionBlock>
-        </div>
-      </section>
     </>
   );
 }

@@ -89,16 +89,16 @@ export async function getSearchCatalog(query: string, { page = 1, pageSize = SEA
   const prisma = getPrisma();
   const safePage = Number.isInteger(page) && page >= 1 && page <= 10_000 ? page : 1;
   const safeSize = Math.min(SEARCH_PAGE_SIZE, Math.max(1, pageSize));
-  const findMatches = (value: string, size = safeSize, pageNumber = safePage) => prisma.$queryRaw<{ id: string; total: number }[]>(Prisma.sql`
+  const findMatches = (value: string) => prisma.$queryRaw<{ id: string; total: number }[]>(Prisma.sql`
     SELECT p."id", (count(*) OVER())::int AS total FROM "Product" p
     WHERE p."status" = 'ACTIVE' AND ${queryCondition(value)}
-    ORDER BY ${searchOrder(value)} LIMIT ${size} OFFSET ${(pageNumber - 1) * size}
+    ORDER BY ${searchOrder(value)}
   `);
   let matches = await findMatches(cleanQuery);
   let correctedQuery: string | null = null;
   if (!matches.length && /[a-z]{4}/.test(normalizeProductSearch(cleanQuery))) {
     const suggestion = correctProductSearchQuery(cleanQuery, await spellingVocabulary(prisma));
-    if (suggestion && (safePage === 1 || !(await findMatches(cleanQuery, 1, 1)).length)) {
+    if (suggestion) {
       const correctedPlan = productSearchPlan(suggestion);
       if (!correctedPlan.blocked) {
         matches = await findMatches(suggestion);
@@ -114,10 +114,15 @@ export async function getSearchCatalog(query: string, { page = 1, pageSize = SEA
     where: { status: "ACTIVE", id: { in: matches.map(row => row.id) } }, select: searchSelect,
   }) : [];
   const positions = new Map(matches.map((row, index) => [row.id, index]));
-  const products = rows.sort((a, b) => positions.get(a.id)! - positions.get(b.id)!).map(row => toSaleProduct(row));
+  // Resolve the same sellable quantity as checkout before partitioning the full
+  // result set. Distributor physical stock alone cannot establish availability.
+  const now = Date.now();
+  const rankedProducts = rows.sort((a, b) => positions.get(a.id)! - positions.get(b.id)!).map(row => toSaleProduct(row, now));
+  const orderedProducts = [...rankedProducts].sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0));
+  const products = orderedProducts.slice((safePage - 1) * safeSize, safePage * safeSize);
 
   // Medical relationships come from registered ingredients, never category alone.
-  const identities = ingredientSearchIdentities(products.slice(0, 4).flatMap(product => product.activeIngredients));
+  const identities = ingredientSearchIdentities(rankedProducts.slice(0, 4).flatMap(product => product.activeIngredients));
   const aliases = identities.slice(0, 8).flatMap(identity => identity === "losartana" ? ["losartana", "losartana potassica"] : [identity]);
   const relatedIds = !plan.topics.length && aliases.length && relatedLimit > 0
     ? await prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
@@ -132,7 +137,7 @@ export async function getSearchCatalog(query: string, { page = 1, pageSize = SEA
   const relatedRows = relatedIds.length ? await prisma.product.findMany({
     where: { status: "ACTIVE", id: { in: relatedIds.map(row => row.id) } }, select: searchSelect, orderBy: [{ name: "asc" }, { id: "asc" }],
   }) : [];
-  return { products, relatedProducts: relatedRows.map(row => toSaleProduct(row)), count: matches[0]?.total ?? 0, correctedQuery };
+  return { products, relatedProducts: relatedRows.map(row => toSaleProduct(row, now)).sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0)), count: orderedProducts.length, correctedQuery };
 }
 
 export type SearchCatalogProduct = Awaited<ReturnType<typeof getSearchCatalog>>["products"][number];

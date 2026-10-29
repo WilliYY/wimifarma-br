@@ -26,21 +26,67 @@ async function fixture(db: object) {
   return loaded.exports;
 }
 
-test("busca pagina no banco, preserva ordem e não expõe foto privada/ofertas", async () => {
+test("disponibilidade vendável ordena simples e associações globalmente antes da paginação", async () => {
+  const rows = [
+    product("single-unavailable", { stock: 0 }),
+    product("association-unavailable", { name: "Losartana + hidroclorotiazida 50mg", activeIngredients: ["losartana", "hidroclorotiazida"], inventorySource: "DISTRIBUTOR", stock: 99, supplierOffers: [] }),
+    ...Array.from({ length: 24 }, (_, index) => product(`available-${index}`)),
+    product("association-available", { name: "Losartana + hidroclorotiazida 50mg", activeIngredients: ["losartana", "hidroclorotiazida"] }),
+  ];
+  let rawQueries = 0;
+  let productReads = 0;
+  const service = await fixture({
+    $queryRaw: async () => { rawQueries++; return rows.map(row => ({ id: row.id, total: rows.length })); },
+    product: { findMany: async () => { productReads++; return [...rows].reverse(); } },
+  });
+  const first = await service.getSearchCatalog("losartana", { relatedLimit: 0 });
+  const second = await service.getSearchCatalog("losartana", { page: 2, relatedLimit: 0 });
+  assert.equal(first.count, 27);
+  assert.deepEqual(Array.from(first.products, row => row.id), rows.slice(2, 26).map(row => row.id));
+  assert.deepEqual(Array.from(second.products, row => row.id), ["association-available", "single-unavailable", "association-unavailable"]);
+  assert.equal(second.products[2].stock, 0, "estoque bruto do distribuidor não comprova disponibilidade");
+  assert.equal(first.products[0].price, "10.00");
+  assert.equal(rawQueries, 2, "cada página usa uma consulta de candidatos, sem consulta por produto");
+  assert.equal(productReads, 2, "cada página carrega produtos/ofertas em uma consulta, sem N+1");
+  assert.doesNotMatch(JSON.stringify([first, second]), /supplierOffers|unitCostCents|allocationQuantity/);
+});
+
+test("oferta elegível disponibiliza distribuidor com estoque físico zero e mantém ofertas inválidas no final", async () => {
+  const now = Date.now();
+  const offer = { id: "offer", supplier: "ANB", eanNormalized: "01234567890128", unitCostCents: 1000,
+    retailCeilingCents: 2000, available: true, stockQuantity: 10, allocationQuantity: 5,
+    reservedQuantity: 0, committedQuantity: 0, observedAt: new Date(now - 1000), validUntil: new Date(now + 60_000) };
+  const rows = [
+    product("offer-unavailable", { inventorySource: "DISTRIBUTOR", ean: "1234567890128", stock: 99, supplierOffers: [{ ...offer, available: false }] }),
+    product("offer-available", { inventorySource: "DISTRIBUTOR", ean: "1234567890128", stock: 0, supplierOffers: [offer] }),
+    product("physical-available"),
+  ];
+  const before = JSON.stringify(rows);
+  const service = await fixture({
+    $queryRaw: async () => rows.map(row => ({ id: row.id, total: rows.length })),
+    product: { findMany: async () => rows },
+  });
+  const result = await service.getSearchCatalog("losartana", { relatedLimit: 0 });
+  assert.deepEqual(Array.from(result.products, row => row.id), ["offer-available", "physical-available", "offer-unavailable"]);
+  assert.ok(result.products[0].stock > 0);
+  assert.equal(result.products[2].stock, 0);
+  assert.equal(JSON.stringify(rows), before, "ordenação não altera dados comerciais de origem");
+});
+
+test("busca preserva relevância dentro da disponibilidade e não expõe foto privada/ofertas", async () => {
   const queries: Prisma.Sql[] = [];
   const service = await fixture({
     $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return queries.length === 1 ? [{ id: "b", total: 30 }, { id: "a", total: 30 }] : []; },
     product: { findMany: async () => [product("a"), product("b", { inventorySource: "DISTRIBUTOR", supplierOffers: [], imageUrl: "/api/admin/fornecedores/imagens/private.webp" })] },
   });
-  const result = await service.getSearchCatalog("losartana 50 mg (Corus)", { page: 2 });
-  assert.equal(result.count, 30);
-  assert.deepEqual(Array.from(result.products, row => row.id), ["b", "a"]);
+  const result = await service.getSearchCatalog("losartana 50 mg (Corus)");
+  assert.equal(result.count, 2);
+  assert.deepEqual(Array.from(result.products, row => row.id), ["a", "b"]);
   assert.equal(result.products[0].imageUrl, "/brand/medicamento-ilustrativo.webp");
   assert.equal(result.products[1].imageUrl, "/brand/medicamento-ilustrativo.webp");
   assert.doesNotMatch(JSON.stringify(result.products), /\/public\.webp|\/api\/admin\/fornecedores\/imagens\//);
   assert.equal("supplierOffers" in result.products[0], false);
-  assert.match(queries[0].text, /LIMIT \$\d+ OFFSET \$\d+/);
-  assert.deepEqual(queries[0].values.slice(-2), [24, 24]);
+  assert.doesNotMatch(queries[0].text, /LIMIT|OFFSET/, "limites somente após disponibilidade vendável global");
   assert.ok(queries[0].values.includes("(^| )50 ?mg($| )"));
   assert.ok(queries[0].values.includes("(^| )corus"));
 });
@@ -71,7 +117,7 @@ test("busca GTIN usa identidade cadastrada parametrizada, prioriza exatos e pres
     ["07896004724577", "07896004724577", "7896004724577"],
     ["17896004724574", "17896004724574", "17896004724574"],
   ]) {
-    const result = await service.getSearchCatalog(query, { page: 2, pageSize: 100, relatedLimit: 0 });
+    const result = await service.getSearchCatalog(query, { pageSize: 100, relatedLimit: 0 });
     const sql = queries.at(-1)!;
     assert.match(sql.text, /p\."status" = 'ACTIVE' AND/);
     assert.match(sql.text, /p\."eanNormalized" = \$\d+/);
@@ -80,7 +126,7 @@ test("busca GTIN usa identidade cadastrada parametrizada, prioriza exatos e pres
     assert.ok(sql.values.includes(canonical));
     assert.ok(sql.values.includes(variant));
     assert.doesNotMatch(sql.text, new RegExp(query));
-    assert.deepEqual(sql.values.slice(-2), [24, 24]);
+    assert.equal(result.products.length, 1);
     assert.equal(result.correctedQuery, null);
     assert.doesNotMatch(JSON.stringify(result.products), /\/api\/admin\/fornecedores\/imagens\//);
   }
@@ -88,7 +134,7 @@ test("busca GTIN usa identidade cadastrada parametrizada, prioriza exatos e pres
   assert.equal(packaging.values.includes("7896004724577"), false);
 });
 
-test("correção usa vocabulário ativo em cache e mantém paginação/dose no SQL parametrizado", async () => {
+test("correção usa vocabulário ativo em cache e mantém dose no SQL parametrizado", async () => {
   const queries: Prisma.Sql[] = [];
   let vocabularyReads = 0;
   const service = await fixture({
@@ -102,11 +148,10 @@ test("correção usa vocabulário ativo em cache e mantém paginação/dose no S
       return [product("match")];
     } },
   });
-  const result = await service.getSearchCatalog("losartna 50mg", { page: 2, relatedLimit: 0 });
+  const result = await service.getSearchCatalog("losartna 50mg", { relatedLimit: 0 });
   assert.equal(result.correctedQuery, "losartana 50mg");
-  assert.equal(result.count, 48);
+  assert.equal(result.count, 1);
   assert.equal(result.products[0].id, "match");
-  assert.deepEqual(queries.at(-1)!.values.slice(-2), [24, 24]);
   assert.ok(queries.at(-1)!.values.includes("(^|[^0-9.,])50\\s*mg($|[^a-z0-9])"));
   await service.getSearchCatalog("losartnaa 50mg", { relatedLimit: 0 });
   assert.equal(vocabularyReads, 1, "consultas próximas compartilham somente o vocabulário, não preços ou estoque");
@@ -115,8 +160,8 @@ test("correção usa vocabulário ativo em cache e mantém paginação/dose no S
 test("página fora da faixa não troca um literal existente por outro nome aproximado", async () => {
   const queries: Prisma.Sql[] = [];
   const service = await fixture({
-    $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return sql.values.at(-1) === 0 ? [{ id: "literal", total: 1 }] : []; },
-    product: { findMany: async () => [product("dipirona", { name: "Dipirona 500mg" })] },
+    $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return [{ id: "literal", total: 1 }]; },
+    product: { findMany: async () => [product("literal", { name: "Diperona 500mg" })] },
   });
   const result = await service.getSearchCatalog("diperona", { page: 2, relatedLimit: 0 });
   assert.equal(result.products.length, 0);

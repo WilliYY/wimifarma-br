@@ -2,16 +2,16 @@ import type { PublicPmcReference } from "@/features/products/cmed-reference";
 import { formatCurrency } from "@/lib/utils";
 
 export function ProductPmcPrice({ reference, strike = false }: { reference: PublicPmcReference; strike?: boolean }) {
-  const edition = reference.publishedOn.split("-").reverse().join("/");
+  if (!strike) return null;
   return (
-    <span title={`Referência comparativa: ${reference.column}, CMED ${edition}. Não é preço anterior da loja.`}>
-      PMC CMED {strike ? <s>{formatCurrency(reference.amountCents / 100)}</s> : formatCurrency(reference.amountCents / 100)}
+    <span title="Preço máximo de referência. Não é preço anterior da loja.">
+      <s>{formatCurrency(reference.amountCents / 100)}</s>
     </span>
   );
 }
 
 export function ProductPmcBadge({ percent, className = "" }: { percent: number; className?: string }) {
-  return <span title={`${percent}% abaixo do PMC`} className={`inline-block max-w-32 whitespace-nowrap rounded-lg bg-brand px-2 py-1.5 text-center text-[0.65rem] font-black leading-tight text-white shadow-sm ${className}`}>{percent}% OFF</span>;
+  return <span title={`${percent}% abaixo do preço máximo de referência`} className={`inline-block max-w-32 whitespace-nowrap rounded-lg bg-brand px-2 py-1.5 text-center text-[0.65rem] font-black leading-tight text-white shadow-sm ${className}`}>{percent}% OFF</span>;
 }
 
 export function ProductPmcDetails({ reference }: { reference: PublicPmcReference }) {

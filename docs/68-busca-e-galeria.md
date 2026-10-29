@@ -8,6 +8,16 @@ O carrossel permite arraste por mouse sobre imagem e link, com limiar de 6 px e 
 
 Validação local: quatro cenários Chromium com componentes e Tailwind reais, dados sintéticos e rede interceptada passaram em 320/390/1280/1440 px. A revisão encontrou estado pendente após sair/soltar fora; a regressão reproduziu RED antes da correção e passou depois, junto de clique/Enter/quantidade, gesto horizontal e rolagem vertical. O estado é limpo antes dos controles e ao sair sem iniciar arraste. Build local com lint/tipos, lint dirigido dos três arquivos e 485 testes de segurança aprovados; revisão final sem achados. Auditorias completa e de produção mantêm um moderado preexistente em `fast-uri`, zero high/critical. Comandos: `tsx --test src/components/site/related-products-carousel.test.ts`, `npm run build`, `eslint` dos arquivos envolvidos, `npm run test:security`, `npm audit --json` e `npm audit --omit=dev --audit-level=high --json`.
 
+## Lista unificada e disponibilidade — 29/10/2026
+
+A página de busca mantém o título `Você buscou “<termo>”` e reúne produtos simples e associações na mesma grade, sem os grupos `Produtos encontrados` e `Associações`. O autocomplete também dispensa o rótulo `Produtos encontrados`. Composição, apresentação, orientação profissional e as restrições de medicamentos encontrados por assunto permanecem.
+
+A consulta mantém filtros parametrizados e a ordem de relevância, dose, EAN/GTIN e correção ortográfica. Antes de paginar, todos os candidatos correspondentes passam por `toSaleProduct`: produtos com quantidade vendável positiva vêm primeiro; indisponíveis/Avise-me ficam no final global, incluindo associações. A ordem relativa de cada grupo permanece. Estoque físico bruto do distribuidor não é critério de disponibilidade: valem as ofertas elegíveis e o limite comercial já usado pelo carrinho. Não há alteração de dados, preços ou política de fornecimento.
+
+A paginação ocorre após resolver a disponibilidade em memória, evitando duplicar as regras comerciais em SQL. Isso exige carregar os candidatos da consulta; o vocabulário continua sendo o único cache do serviço. Alternativas fora dos filtros explícitos de dose/marca permanecem na área de outras apresentações, sem entrar na contagem da lista principal.
+
+Regressões sintéticas cobrem 27 resultados em duas páginas, simples e associações, distribuidor com estoque bruto positivo sem oferta elegível e oferta elegível com estoque físico zero. A renderização confirma grade única, título, ordem recebida e links de paginação.
+
 ## Correção de digitação — 23/10/2026
 
 A busca mantém resultados literais e prefixos como prioridade. Quando não encontra correspondência, tenta corrigir palavras usando somente nomes, marcas, princípios ativos e termos dos produtos ativos cadastrados. Não há chamada de IA por digitação nem criação de sinônimos clínicos.

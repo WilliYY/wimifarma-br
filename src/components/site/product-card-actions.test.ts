@@ -327,10 +327,10 @@ test("promoção cadastrada mantém somente referência real e preço atual do c
   }, "promotion");
 });
 
-test("PMC identificado destaca economia conservadora sem virar preço anterior ou desconto Pix", async () => {
+test("referência elegível destaca economia sem rótulo técnico, preço anterior fictício ou desconto Pix", async () => {
   await fixture(async page => {
     const prices = page.getByRole("group", { name: "Preço do produto", exact: true });
-    await expect(prices.getByText(/PMC CMED/)).toBeVisible();
+    await expect(prices.getByText(/PMC CMED/)).toHaveCount(0);
     await expect(prices.locator("s")).toHaveText(/10,00/);
     await expect(prices.locator("strong")).toHaveText(/6,87/);
     await expect(page.getByText("31% OFF", { exact: true })).toBeVisible();
@@ -351,10 +351,10 @@ test("PMC identificado destaca economia conservadora sem virar preço anterior o
   }, "pmc-mip");
 });
 
-test("PMC em medicamento com receita permanece informação sem selo promocional", async () => {
+test("medicamento com receita mostra só o preço atual sem referência neutra ou selo promocional", async () => {
   await fixture(async page => {
     const prices = page.getByRole("group", { name: "Preço do produto", exact: true });
-    await expect(prices.getByText(/PMC CMED/)).toBeVisible();
+    await expect(prices.getByText(/PMC CMED|10,00/)).toHaveCount(0);
     await expect(prices.locator("s")).toHaveCount(0);
     await expect(prices.locator("strong")).toHaveText(/6,87/);
     await expect(page.getByText(/abaixo do PMC|OFF|Pix/)).toHaveCount(0);
@@ -363,7 +363,7 @@ test("PMC em medicamento com receita permanece informação sem selo promocional
 
 test("PMC sem economia não empresta sua base ao percentual da promoção cadastrada", async () => {
   await fixture(async page => {
-    await expect(page.getByText(/PMC CMED/)).toHaveText(/70,00/);
+    await expect(page.getByText(/PMC CMED|70,00/)).toHaveCount(0);
     await expect(page.getByRole("group", { name: "Preço do produto", exact: true }).locator("strong")).toHaveText(/80,00/);
     await expect(page.getByText(/OFF|abaixo do PMC/)).toHaveCount(0);
     await page.getByRole("button", { name: "Adicionar", exact: true }).click();
@@ -378,7 +378,7 @@ test("PMC mantém cards mistos alinhados e detalhes oficiais legíveis no celula
   await fixture(async page => {
     const cards = page.getByRole("article");
     await expect(cards).toHaveCount(4);
-    await expect(page.getByTitle(/abaixo do PMC/)).toHaveCount(2);
+    await expect(page.getByTitle(/abaixo do preço máximo de referência/)).toHaveCount(2);
     for (const width of [320, 390, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));

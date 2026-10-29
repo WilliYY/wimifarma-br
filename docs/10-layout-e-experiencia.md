@@ -1,5 +1,11 @@
 # 10 - Layout e Experiencia
 
+## Campanhas e botões do produto — 29/10/2026
+
+Retirada da home a seção `Cuidado para cada fase`, com os cartões Dia do Genérico Barato, Dia do Idoso e Dia do Bebê, por solicitação do titular. Foram removidos também os ícones e o wrapper de animação usados exclusivamente por essa seção; os banners, vitrines, avaliações, Club e rodapé permanecem.
+
+A revisão de botões identificou que o detalhe do produto navegava para carrinho/checkout mesmo quando o limite de 30 produtos distintos impedia a inclusão. O painel agora mostra o mesmo aviso dos cards e mantém o cliente no produto. Um item já presente continua podendo ter sua quantidade acrescida dentro do limite vigente. Os botões do painel e do dock aguardam a hidratação do carrinho; as três regressões usam dados sintéticos e não criam pedidos. Valores e limites comerciais não mudaram.
+
 ## Home compacta — 29/10/2026
 
 A faixa inicial usa oito atalhos com ícones dentro de círculos, sem fotografias ou caixa externa: Ofertas, Infantil, Medicamentos, Vitaminas e suplementos, Dermo, Perfumaria, Higiene bucal e Cabelos. Os dois últimos usam os filtros existentes `assunto=oral` e `assunto=hair`, dentro de `grupo=beauty`. Oito destinos distintos, sem criar categorias persistentes. Círculos de 60 px no celular e 72 px a partir de 640 px; os oito cabem a partir de 1024 px e a faixa pode ser arrastada horizontalmente no celular. Os ícones têm movimentos independentes de até 3 px e 4 graus, suspensos fora da tela, na aba oculta e com movimento reduzido.

@@ -55,6 +55,9 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
     for (const withOtc of [false, true]) {
       await page.goto(`http://127.0.0.1:3195/${withOtc ? "?otc" : ""}`);
       await expect(page.locator("#home-care")).toBeVisible();
+      for (const title of ["Dia do Genérico Barato", "Dia do Idoso", "Dia do Bebê", "Cuidado para cada fase."]) {
+        await expect(page.getByText(title, { exact: true })).toHaveCount(0);
+      }
       for (const width of [390, 1280]) {
         await page.setViewportSize({ width, height: 1000 });
         const order = await page.locator("#root>section").evaluateAll(sections => sections.flatMap(section => {

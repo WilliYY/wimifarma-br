@@ -6,7 +6,7 @@ Acabamento de 22/10/2026: um único botão de limpar com área de toque de 44 px
 
 ## Comportamento
 
-Autocomplete e `/busca?q=...` compartilham consulta parametrizada e paginada no PostgreSQL. Além de nome, marca, EAN, SKU, composição e dose, reconhecem `grip`/`gripe`/`influenza`, dor, febre, cabeça/cefaleia, pressão/hipertensão, diabete/diabetes, colesterol e azia/refluxo. Sem IA externa, envio de buscas a terceiros, novos cadastros ou alteração de estoque/preços.
+Autocomplete e `/busca?q=...` compartilham consulta parametrizada no PostgreSQL. Desde 29/10/2026, a disponibilidade vendável é resolvida antes da paginação: simples e associações formam uma grade única, disponíveis primeiro e indisponíveis/Avise-me no final global, preservando a relevância dentro de cada grupo. Contrato em [68](68-busca-e-galeria.md). Além de nome, marca, EAN, SKU, composição e dose, reconhecem `grip`/`gripe`/`influenza`, dor, febre, cabeça/cefaleia, pressão/hipertensão, diabete/diabetes, colesterol e azia/refluxo. Sem IA externa, envio de buscas a terceiros, novos cadastros ou alteração de estoque/preços.
 
 O mapa revisado fica em `src/features/products/search-topics.ts`. As relações usam identidades completas dos princípios ativos cadastrados em medicamentos. Classificação explícita prevalece sobre categoria; Medicamento/Medicamentos é fallback quando não há classificação. Também encontra assuntos escritos no nome e termos de busca explícitos, com correspondência integral do termo cadastrado. Descrição, advertência ou contraindicação não produzem indicação por assunto. `grip` é um fragmento controlado de nome de medicamento para recuperar o Cimegrip existente; não pressupõe sua composição.
 

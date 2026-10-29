@@ -1,5 +1,15 @@
 # 52 — Confiança e conferência comercial
 
+## Marca Anvisa e prova de regularidade — consulta em 29/10/2026
+
+A AFE comprova autorização de funcionamento, mas não concede selo promocional nem direito de usar a logomarca da agência no site. A [Política de Comunicação da Anvisa, Portaria 830/2025](https://www.gov.br/anvisa/pt-br/centraisdeconteudo/publicacoes/gestao/comunicacao/politica-de-comunicacao-da-anvisa.pdf/@@download/file), arts. 15–16, restringe o uso para fins particulares/comerciais e exige análise e autorização formal da área de comunicação. A exigência de autorização não constitui exceção automática à restrição comercial. Não foi localizado programa oficial de concessão de selo promocional a drogarias.
+
+A rota prática é conferir o número da AFE e suas atividades, licença sanitária e regularidade técnica do CRF antes de publicar dados verificáveis da farmácia. A agência disponibiliza [consulta pública de empresas](https://consultas.anvisa.gov.br/#/empresas/empresas/) e [Certificado de AFE](https://www.gov.br/anvisa/pt-br/setorregulado/regularizacao/farmacias-e-drogarias/autorizacao-de-funcionamento-afe-ou-autorizacao-especial-ae/certificado-de-afe/certificado-de-afe). O certificado é documento de autorização, não selo publicitário. A consulta concreta da Wimifarma não foi concluída nesta rodada: o portal retornou 403 à ferramenta de pesquisa. Não se afirma autorização inexistente nem situação sanitária irregular.
+
+Se faltar a AFE, seguir o [procedimento oficial](https://www.gov.br/anvisa/pt-br/setorregulado/regularizacao/farmacias-e-drogarias/autorizacao-de-funcionamento-afe-ou-autorizacao-especial-ae/solicitacao-de-afe-ou-ae/solicitacao-de-afe-farmacias-e-drogarias): cadastro da empresa/porte, Solicita, assunto 733, checklist/documento Orientações e GRU. Conferir autorização existente antes de pedir nova concessão. AE não é exigida simplesmente por dispensar controlados industrializados: a orientação da agência a vincula à manipulação de substâncias sujeitas a controle especial. Dúvidas de uso da marca podem ser encaminhadas ao [Fale Conosco oficial](https://www.gov.br/anvisa/pt-br/canais_atendimento/formulario-eletronico), solicitando orientação da Ascom; não foi localizado serviço específico de concessão de selo comercial.
+
+Nenhum cadastro, petição, contato externo, certificação ou selo foi criado nesta consulta. A informação institucional do rodapé permanece, sem a logomarca da Anvisa ou alegação de endosso.
+
 ## Verificação em 08/10/2026
 
 Consulta somente leitura em produção, sem criar pedidos, cobrar, comprar etiquetas, alterar produtos ou enviar mensagens comerciais.

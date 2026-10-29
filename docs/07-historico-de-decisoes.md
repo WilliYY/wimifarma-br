@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-29 — Busca unificada, apresentação de preços e revisão de botões
+
+- Retirar da home as três campanhas Genérico/Idoso/Bebê e o código de animação exclusivo dessa seção. Ocultar a referência neutra `PMC CMED`, mantendo somente valor riscado/percentual em comparações elegíveis e o preço real de venda. A referência oficial continua interna; não há alteração de cadastro, preço, estoque ou benefícios. Contratos em [10](10-layout-e-experiencia.md) e [102](102-referencia-pmc-cmed.md).
+- Reunir resultados simples e associações que satisfazem a consulta na mesma grade, sob `Você buscou`, sem as antigas seções/abas. A disponibilidade vendável resolvida por `toSaleProduct` determina a partição estável antes da paginação: itens com estoque vendável primeiro, indisponíveis ao final. Dose, marca, EAN, correção ortográfica e alternativas fora do filtro preservadas; nenhum N+1 de fornecedor. Limite operacional da resolução em memória documentado em [68](68-busca-e-galeria.md) e [93](93-busca-por-assuntos.md).
+- A revisão de controles públicos encontrou e reproduziu o avanço indevido do painel do produto com carrinho de 30 itens distintos. Corrigidos o bloqueio com aviso, a espera de hidratação e a continuidade para produto já presente. Regressões sintéticas verificam os dois destinos sem criar pedidos ou cobranças. Marca Anvisa: orientação oficial e distinção AFE/selo em [52](52-confianca-e-conferencia-comercial.md); nenhuma marca ou certificação foi publicada.
+
 ## 2026-10-29 — Hipóteses por embalagem para perfis nulos
 
 - Aplicação produtiva conferida de 642 perfis novos por embalagem, sobre os 647 pendentes atuais: 639 geometrias hipotéticas e três documentais, 20% de margem de peso e 3 cm de folga; 285 caixas maiores somente planejadas. Cinco produtos permaneceram sem perfil por conflito ou receita pendente. Backup, hashes, revisão UTC corrigida no auxiliar privado, recibo, aplicação única, auditoria, preservação global e idempotência passaram. Total de 1.863 ativos com peso/dimensões; nenhum perfil anterior ou transporte foi habilitado. Serviços saudáveis e sem reinício/migration; detalhes em [129](129-hipoteses-por-tipo-de-embalagem.md).

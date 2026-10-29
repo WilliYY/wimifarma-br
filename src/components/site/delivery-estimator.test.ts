@@ -21,9 +21,9 @@ async function fixture(run: (page: Page) => Promise<void>, cartOnly = false, fix
       contents: `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';
         import {CartProvider} from './src/components/site/cart-provider';
         import {DeliveryEstimator} from './src/components/site/delivery-estimator';
-        ${purchasePanel ? "import {ProductQuantityProvider} from './src/components/site/product-quantity';import {ProductPurchasePanel} from './src/components/site/product-purchase-panel';" : ""}
+        ${purchasePanel ? "import {Toaster} from 'sonner';import {ProductQuantityProvider} from './src/components/site/product-quantity';import {ProductPurchasePanel} from './src/components/site/product-purchase-panel';" : ""}
         function Fixture(){const [quantity,setQuantity]=useState(2);return <CartProvider>
-          ${purchasePanel ? `<ProductQuantityProvider><ProductPurchasePanel product={${JSON.stringify(fixtureProduct)}}/><DeliveryEstimator product={${JSON.stringify(fixtureProduct)}}/></ProductQuantityProvider>` : `
+          ${purchasePanel ? `<Toaster/><ProductQuantityProvider><ProductPurchasePanel product={${JSON.stringify(fixtureProduct)}}/><DeliveryEstimator product={${JSON.stringify(fixtureProduct)}}/></ProductQuantityProvider>` : `
           <label>Quantidade de teste<input type="number" value={quantity} onChange={event=>setQuantity(Number(event.target.value))}/></label>
           <DeliveryEstimator ${cartOnly ? "" : `product={${JSON.stringify(fixtureProduct)}} quantity={quantity}`}/>`}
         </CartProvider>};createRoot(document.getElementById('root')).render(<Fixture/>);`,
@@ -36,7 +36,7 @@ async function fixture(run: (page: Page) => Promise<void>, cartOnly = false, fix
       builder.onResolve({ filter: /^next\/image$/ }, () => ({ path: "image", namespace: "fixture" }));
       builder.onResolve({ filter: /^next\/navigation$/ }, () => ({ path: "navigation", namespace: "fixture" }));
       builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({
-        contents: args.path === "link" ? "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>}" : args.path === "image" ? "import React from 'react';export default function Image({fill,priority,unoptimized,...props}){return <img {...props}/>}" : "export const useRouter=()=>({push(){},refresh(){}});export const usePathname=()=>'/produto/produto-sintetico';",
+        contents: args.path === "link" ? "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>}" : args.path === "image" ? "import React from 'react';export default function Image({fill,priority,unoptimized,...props}){return <img {...props}/>}" : "export const useRouter=()=>({push(path){window.navigations.push(path)},refresh(){}});export const usePathname=()=>'/produto/produto-sintetico';",
         loader: "tsx", resolveDir: process.cwd(),
       }));
     } }],
@@ -49,7 +49,7 @@ async function fixture(run: (page: Page) => Promise<void>, cartOnly = false, fix
     await page.route("**/*", route => {
       const url = new URL(route.request().url());
       if (url.origin !== origin) return route.abort();
-      if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: '<div id="root"></div><script src="/fixture.js"></script>' });
+      if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: '<div id="root"></div><script>window.navigations=[];</script><script src="/fixture.js"></script>' });
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text });
       if (url.pathname === "/api/miauby/carrinho") return route.fulfill({ json: { ok: true } });
       return route.abort();
@@ -201,6 +201,31 @@ test("seletor real do produto compartilha quantidade com a simulação de frete"
     await expect.poll(() => requests.length).toBe(1);
     assert.equal(requests[0].items[0].quantity, 2);
     await expect(page.getByRole("status")).toContainText(/18,75/);
+  }, false, product, true);
+});
+
+test("botões do detalhe não navegam sem o novo produto quando o carrinho já tem 30 itens distintos", async () => {
+  await fixture(async page => {
+    await page.addInitScript(item => localStorage.setItem("wimifarma-cart-v1", JSON.stringify(Array.from({ length: 30 }, (_, i) => ({ ...item, id: `filled-${i}`, quantity: 1 })))), product);
+    await page.goto(origin);
+    for (const name of ["Adicionar ao carrinho", "Comprar agora"]) {
+      await page.getByRole("button", { name, exact: true }).first().click();
+      assert.deepEqual(await page.evaluate("window.navigations"), []);
+      await expect(page.getByText("Seu carrinho ja tem 30 produtos diferentes.", { exact: true }).first()).toBeVisible();
+    }
+    const items = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!) as { id: string }[]);
+    assert.equal(items.length, 30);
+    assert.equal(items.some(item => item.id === product.id), false);
+  }, false, product, true);
+});
+
+for (const count of [29, 30]) test(`detalhe permite comprar com ${count} itens quando há espaço ou o produto já está no carrinho`, async () => {
+  await fixture(async page => {
+    await page.addInitScript(({ item, count }) => localStorage.setItem("wimifarma-cart-v1", JSON.stringify(Array.from({ length: count }, (_, i) => ({ ...item, id: count === 30 && i === 0 ? item.id : `filled-${i}`, quantity: 1 })))), { item: product, count });
+    await page.goto(origin);
+    await page.getByRole("button", { name: "Comprar agora", exact: true }).first().click();
+    assert.deepEqual(await page.evaluate("window.navigations"), ["/checkout"]);
+    await expect.poll(() => page.evaluate(id => (JSON.parse(localStorage.getItem("wimifarma-cart-v1")!) as { id: string; quantity: number }[]).find(item => item.id === id)?.quantity, product.id)).toBe(count === 30 ? 2 : 1);
   }, false, product, true);
 });
 

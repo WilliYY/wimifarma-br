@@ -31,13 +31,10 @@ export default async function SearchPage({ searchParams }: Props) {
   const result = await getSearchCatalog(query, { page });
   const topicSearch = productSearchPlan(result.correctedQuery ?? query).topics.length > 0;
   if (page > 1 && !result.products.length) notFound();
-  const singles = result.products.filter(product => !isProductAssociation(product));
-  const associations = result.products.filter(isProductAssociation);
   const sidebar = await getSearchSidebar([...result.products, ...result.relatedProducts], { topicSearch });
   const pages = Math.max(1, Math.ceil(result.count / SEARCH_PAGE_SIZE));
   const sections = [
-    { id: "resultados", title: "Produtos encontrados", products: singles, description: null },
-    { id: "associacoes", title: "Associações", products: associations, description: "Produtos com mais de um princípio ativo. Confira a composição e a dosagem." },
+    { id: "resultados", title: null, products: result.products, description: null },
     { id: "relacionados", title: "Outras marcas e apresentações", products: result.relatedProducts, description: "Relacionados pelo princípio ativo cadastrado. Podem ter dosagens e composições diferentes." },
   ].filter(section => section.products.length);
 
@@ -48,27 +45,25 @@ export default async function SearchPage({ searchParams }: Props) {
           <Link className="hover:text-brand" href="/">Início</Link><ChevronRight aria-hidden="true" className="h-3 w-3" /><span>Busca</span>
         </nav>
         <header className="border-b border-line pb-7">
-          <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand"><span className="h-1.5 w-6 rounded-full bg-brand" /> Catálogo Wimifarma</p>
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div className="min-w-0">
               <h1 className="max-w-3xl break-words text-3xl font-black tracking-tight text-ink sm:text-4xl">{query ? <>Você buscou <span className="text-brand">“{query}”</span></> : "Encontre o que você procura"}</h1>
-              <p className="mt-3 text-sm text-muted">{query.length >= 2 ? `${result.count} ${result.count === 1 ? "produto encontrado" : "produtos encontrados"}` : "Busque pelo nome, pela marca ou pelo princípio ativo."}</p>
+              {query.length < 2 ? <p className="mt-3 text-sm text-muted">Busque pelo nome, pela marca, pelo EAN ou pelo princípio ativo.</p> : null}
               {result.correctedQuery && result.products.length > 0 ? <p className="mt-2 text-sm text-muted">Resultados aproximados para “{result.correctedQuery}”.</p> : null}
             </div>
             <form action="/busca" className="flex min-h-12 w-full items-center gap-2 rounded-full border border-line bg-white p-1.5 pl-4 sm:max-w-sm" role="search">
               <Search aria-hidden="true" className="h-4 w-4 shrink-0 text-brand" />
-              <input aria-label="Pesquisar no catálogo" className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-brand" defaultValue={query} maxLength={80} name="q" placeholder="Nome, marca ou princípio ativo" type="search" />
+              <input aria-label="Pesquisar no catálogo" className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-brand" defaultValue={query} maxLength={80} name="q" placeholder="Nome, marca, EAN ou princípio ativo" type="search" />
               <button aria-label="Pesquisar" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-white hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2" type="submit"><ArrowRight className="h-4 w-4" /></button>
             </form>
           </div>
-          {sections.length > 1 ? <nav aria-label="Seções da busca" className="mt-6 flex flex-wrap gap-2">{sections.map(section => <a className="rounded-full border border-line bg-white px-4 py-2.5 text-sm font-semibold text-ink hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" href={`#${section.id}`} key={section.id}>{section.title} <span className="ml-1 text-muted">{section.products.length}</span></a>)}</nav> : null}
         </header>
 
         <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_17rem]">
           <div className="min-w-0 space-y-10">
             {sections.length ? sections.map(section => (
               <section className="scroll-mt-44" id={section.id} key={section.id}>
-                <h2 className="text-xl font-black text-ink">{section.title}</h2>
+                {section.title ? <h2 className="text-xl font-black text-ink">{section.title}</h2> : null}
                 {section.description ? <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">{section.description}</p> : null}
                 <div className="mt-5 grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 md:grid-cols-3">{section.products.map(product => <CatalogProductCard key={product.id} product={product} topicSearch={topicSearch} />)}</div>
               </section>
@@ -85,7 +80,7 @@ export default async function SearchPage({ searchParams }: Props) {
               <span className="text-sm text-muted">Página {page} de {pages}</span>
               {page < pages ? <Link className="inline-flex min-h-11 items-center gap-1 rounded-full border border-line bg-white px-4 text-sm font-semibold" href={productSearchHref(query, page + 1)}>Próxima <ChevronRight className="h-4 w-4" /></Link> : null}
             </nav> : null}
-            {topicSearch || sections.some(section => section.id !== "resultados") ? <p className="text-xs leading-6 text-muted">A escolha ou troca de medicamento deve seguir a orientação do profissional de saúde.</p> : null}
+            {topicSearch || result.products.some(isProductAssociation) || result.relatedProducts.length > 0 ? <p className="text-xs leading-6 text-muted">A escolha ou troca de medicamento deve seguir a orientação do profissional de saúde.</p> : null}
           </div>
 
           <aside aria-label={sidebar.title} className="min-w-0 rounded-2xl border border-line bg-white lg:sticky lg:top-[var(--site-header-offset,10rem)]">
