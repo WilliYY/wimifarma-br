@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-29 — Rodapé legal publicado e AFE identificada
+
+- Fonte `0f003bb` publicada em imagem Linux `legal-ready-0f003bb`, após liberação da janela do catálogo. Backup validado e reversão preservados; somente o app foi recriado, sem migration, reinício do banco ou alteração dos quatro conjuntos comerciais/canonical. QA pública em 390/1440 px confirmou dados, âncoras, legibilidade, ausência de overflow/erros e preservação das 128 bolhas. Contrato e limites em [130](130-rodape-identificacao-legal.md).
+- Prévia do titular identifica AFE `0998041`, mas traz “SEM VALIDADE”. A publicação no DOU é prova admitida pela Anvisa para concessão; não exigir nova certidão como única prova nem presumir vencimento pela data de 2013. Situação atual/endereço/site ainda não confirmados: portal bloqueou acesso automatizado e a aba aberta não pôde ser lida pelo conector. Campo público permanece omitido, sem alegação de inexistência, cancelamento ou certificação pela Anvisa.
+
 ## 2026-10-29 — Rodapé com identificação legal e orientação de compra
 
 - Identificação empresarial centralizada em texto pequeno e legível, com RT/CRF e licença sanitária conferidos nos documentos do titular. Endereço público Avenida Minas Gerais, 2263 confirmado pelo lojista; a divergência dos documentos permanece para conferência cadastral. AFE atual ainda não comprovada, sem reutilizar número histórico ou apresentar certificação da Anvisa.
