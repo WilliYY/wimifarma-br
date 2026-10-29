@@ -4,6 +4,7 @@
 
 - Adaptado somente o efeito visual dos três anéis do login do projeto COM para os oito atalhos da home BR. Ícones/destinos, faixa compacta e gestos preservados; nenhum código de autenticação ou configuração do sistema antigo foi incorporado.
 - Rotações CSS transform, halo por opacity, sem filtros/espessura animada. Observador existente passa a pausar individualmente os itens fora da faixa, além da visibilidade da seção/aba; toque/caneta recebe feedback temporário com limpeza nos eventos de término e perda de visibilidade. Movimento reduzido mantém versão estática. Contrato e limitações em [88](88-faixa-categorias-visual.md).
+- Publicado somente no app após liberação da janela do catálogo: fonte/OCI `2bb16db`, build Linux e conferência pública em 390/768/1440 px aprovados, com toque e navegação reais. Imagem anterior e backup preservados; identidade do PostgreSQL, canonical e comparação integral dos 3.031 produtos, ofertas de fornecedores e pedidos permaneceram iguais. Detalhes e limites em [88](88-faixa-categorias-visual.md).
 
 ## 2026-10-29 — Banner Pix entre autocuidado e Farmacinha
 
