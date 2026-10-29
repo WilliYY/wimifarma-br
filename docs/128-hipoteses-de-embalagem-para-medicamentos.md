@@ -56,4 +56,28 @@ PostgreSQL 17 isolado, sem portas públicas ou rede externa, passou 16 verifica�
 
 O preparador produtivo confere plano integral, revisão do produto e auditoria original antes de criar um recibo vinculado aos hashes do baseline, dry-run, aprovação e backup. O aplicador repete essas comparações antes do marcador atômico de início; execução incerta não autoriza repetir a escrita. Quatorze regressões sintéticas cobrem alterações de perfil/revisão/proveniência/backup, plano divergente, recibo ausente ou sobrescrito e amostragem fictícia. A prova usa snapshots coerentes em transações `RepeatableRead`. Scripts, override e módulos executados ficam congelados na aprovação.
 
-Artefatos privados da rodada: `outputs/medicamentos-cenarios-2026-10-29/`. A aplicação produtiva ainda depende de janela livre, snapshot renovado, backup, plano revisado e prova de preservação/idempotência. Não reutilizar markers, backups, grants ou aprovações de rodadas encerradas. A aplicação produtiva desta rodada ainda não está confirmada.
+Artefatos privados da rodada: `outputs/medicamentos-cenarios-2026-10-29/`. Não reutilizar markers, backups, grants ou aprovações de rodadas encerradas.
+
+## Aplicação produtiva confirmada — 29/10/2026
+
+A primeira tentativa de preparação foi interrompida antes do pull ou de escritas no banco porque a janela de catálogo mudou. A aprovação anterior foi arquivada. Um novo snapshot às 04h54 UTC encontrou 2.868 ativos e um DRAFT, após inclusões de outra frente. Os 300 planos anteriores permaneceram integralmente iguais; cinco apresentações novas e elegíveis de Runner Eze/Trezete passaram pelos mesmos critérios. A aprovação renovada vinculou os 305 planos, manifesto, scripts, baseline e módulos do commit `7326707` aos respectivos hashes, sem alterar a janela canônica de catálogo.
+
+Backup PostgreSQL em formato customizado, índice de restauração e checksum foram conferidos antes da aplicação. O dry-run coincidiu integralmente com as 305 propostas revisadas e suas revisões/auditorias originais. A aplicação única, sob ADMIN ativo, lock, CAS e auditoria transacional, foi confirmada:
+
+| Grupo | Produtos |
+| --- | ---: |
+| Sólidos orais de 1–30 unidades | 72 |
+| Sólidos orais de 31–60 unidades | 67 |
+| Sólidos orais de 61–120 unidades | 63 |
+| Líquidos orais até 60 ml | 41 |
+| Líquidos orais acima de 60 até 150 ml | 54 |
+| Tópicos em massa até 60 g | 8 |
+| **Total** | **305** |
+
+Foram preservados literalmente **280 pesos existentes** e criados **25 perfis novos**. A auditoria registrou exatamente 305 alterações de pacote; os contadores de estimativa/refinamento de peso e importação de evidências permaneceram iguais. Repetição somente de leitura confirmou idempotência. A prova integral preservou todos os campos comerciais, evidências, receitas de embalagem, perfis e timestamps de produtos fora do lote.
+
+Após a aplicação, os ativos totalizavam **2.257 com perfil**, **611 sem perfil** e **1.221 com peso e três dimensões preenchidos**. Os dois perfis anteriormente habilitados permaneceram os únicos habilitados. Esses totais são o retrato desta execução, não conferência física nem cobertura definitiva de transporte.
+
+Aplicação e PostgreSQL mantiveram os mesmos containers, imagens e horários de início, sem build, restart ou migration. Saúde local e HTTPS confirmadas; API administrativa recusou acesso anônimo com 401. Aprovação privada `3bacf0a4e87f7e9e4cd6d7729907996846353b371572f876a3445dbec08091c8`; markers de início e verificação e prova `PASS` preservados no job exclusivo. O backup de recuperação permanece no servidor, fora do repositório.
+
+Continuam pendentes a conferência física de caixa, tara, proteção, encaixe, apresentação e aceitação de carga pelos serviços. Nenhum dos 305 perfis foi habilitado automaticamente; todos permanecem estimados, desativados e sem revisão de transporte. As hipóteses de geometria não foram convertidas em fontes ou amostras documentais.

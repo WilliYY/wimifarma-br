@@ -2,6 +2,8 @@
 
 ## 2026-10-29 — Hipóteses de embalagem para medicamentos
 
+- Aplicação produtiva confirmada de 305 medicamentos: 202 sólidos, 95 líquidos orais e oito tópicos; 280 pesos existentes preservados e 25 perfis novos. Backup, plano integral, revisão, proveniência, auditoria, idempotência e preservação dos demais dados passaram. Total de 1.221 ativos com peso e dimensões preenchidos; dois habilitados anteriores mantidos, sem habilitação automática. Serviços saudáveis e sem reinício/migration; resultados e limitações em [128](128-hipoteses-de-embalagem-para-medicamentos.md).
+
 - O titular autorizou continuar as estimativas por seu exemplo aproximado de Losartana de 6 × 4 × 2 cm, sem contagem/GTIN conhecidos. A nova basis `OWNER_PACKAGE_HYPOTHESIS` mantém cenários explícitos para sólidos até 120 unidades, líquidos orais até 150 ml e tópicos em massa até 60 g, com folga de 1–3 cm e caixa nominal de 24 × 15 × 10 cm, sem inventar fontes ou amostras físicas. Reutiliza peso individual v4, prioriza referências próprias e exige auditoria original íntegra para preservar literalmente pesos de perfis existentes. Não altera coortes anteriores, dados comerciais, evidências ou receitas; sem transporte automático. Contrato em [128](128-hipoteses-de-embalagem-para-medicamentos.md).
 
 ## 2026-10-28 — Caixa planejada para grupos maiores
