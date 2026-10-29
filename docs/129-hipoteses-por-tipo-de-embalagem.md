@@ -62,4 +62,34 @@ A primeira execução dos novos casos documentais encontrou uma fixture que já 
 
 Antes de produção, exigir backup customizado/TOC/checksum, janela sem grant ou aplicação incerta, código e arquivos congelados, baseline coerente, dry-run integralmente igual à prévia e recibo exclusivo de preparação. Revalidar o recibo antes de criar o marcador atômico de início. Se houver início sem verificação, inspecionar somente de leitura; não repetir a escrita.
 
-Artefatos privados: `outputs/pendentes-logistica-2026-10-29/`. Esta versão registra a lógica e as verificações; a aplicação produtiva ainda precisa de confirmação e prova de preservação/idempotência.
+Artefatos privados: `outputs/pendentes-logistica-2026-10-29/`.
+
+## Aplicação produtiva confirmada — 29/10/2026
+
+O snapshot renovado às 12h07 UTC manteve 2.904 ativos e 647 perfis nulos. A revisão independente conferiu os grupos e os três modos documentais, executou 26 testes direcionados e revisou as guardas. Vinte e três regressões Python validaram hashes, revisão, backup, recibo, modo somente nulos, fontes documentais e a exigência estrita de janela encerrada, sem grant ou aplicação incerta. Não há aceite numérico de `0` como substituto dos booleanos `false`.
+
+A preparação inicialmente interrompeu a operação, antes do recibo e de qualquer escrita, por divergência nas revisões. O diagnóstico somente de leitura mostrou diferença exata de três horas em 646/646 revisões: `Product.updatedAt` é um timestamp UTC sem informação de fuso no JSON SQL, enquanto a prévia local o interpretava como horário de São Paulo. Foi corrigida somente a normalização do auxiliar privado, com regressão RED/GREEN em São Paulo, UTC e Tóquio. Nenhum timestamp do banco ou módulo produtivo foi alterado.
+
+A aprovação anterior foi arquivada integralmente. A prévia corrigida coincidiu com o dry-run em todos os campos dos 646 itens e com as revisões do baseline. A nova aprovação também congelou o script de retomada; backup, TOC, checksum, baseline e simulação originais foram preservados, sem nova execução de preparação ou exclusão de artefatos. O recibo foi criado somente após essa conferência integral. Aprovação final privada: `0eba9fc318ff381d5bc24547887db8b25ff553d7687b670ce4ea0662c77161c9`.
+
+A aplicação única foi confirmada com **642 perfis novos e 642 auditorias**, modo `NULL_ONLY`, ADMIN ativo, lock, CAS e transação. Quatro entradas conflitantes permaneceram pendentes; o medicamento com receita não classificada estava fora da entrada. Não houve alteração de nenhum perfil anterior.
+
+| Recipiente presumido para preparação | Produtos |
+| --- | ---: |
+| Cartuchos/caixas | 105 |
+| Frascos | 128 |
+| Pacotes flexíveis | 135 |
+| Aerossóis ou recipientes com pressão a confirmar | 129 |
+| Blisters/acessórios | 59 |
+| Kits | 48 |
+| Bisnagas/potes/pós, com forma física a conferir | 35 |
+| Dispositivos | 3 |
+| **Total** | **642** |
+
+Os 642 compreendem 639 geometrias hipotéticas e três referências documentais explícitas. **357** propostas usam a caixa nominal declarada de 24 × 15 × 10 cm; **285** usam caixas alternativas somente planejadas. Esses rótulos não comprovam a embalagem real ou disponibilidade de caixas maiores.
+
+A prova global preservou todos os demais campos de todos os produtos, evidências, receitas de embalagem, perfis e timestamps fora do lote; a auditoria cresceu exatamente em 642 registros de pacote. Repetição somente de leitura comprovou idempotência, sem reaplicação. O resultado era **2.899 ativos com perfil**, **cinco sem perfil** e **1.863 com peso e três dimensões preenchidos**, em 2.904 ativos. Os dois perfis anteriormente habilitados permaneceram os únicos habilitados.
+
+Aplicação e PostgreSQL mantiveram os mesmos containers, imagens e horários de início, sem build, reinício ou migration. Saúde local e HTTPS confirmadas; API administrativa recusou acesso anônimo com 401. Código `71539d1` foi enviado ao GitHub e atualizado no servidor; backup de recuperação e markers de início/verificação permanecem no job exclusivo.
+
+Os cinco produtos da tabela de pendências continuam separados por classificação ou conflito de identidade, sem apagamento de fontes. Toda nova preparação permanece estimada, desativada e sem serviços aprovados. A conferência física de embalagem/tara/proteção/encaixe e a aceitação pela transportadora continuam necessárias antes de habilitar envio.
