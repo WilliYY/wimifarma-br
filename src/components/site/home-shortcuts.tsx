@@ -36,19 +36,25 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
     const observer = new ResizeObserver(update);
     let inView = false;
     const updateVisibility = () => {
-      list.dataset.motion = inView && !document.hidden ? "active" : "paused";
+      const active = inView && !document.hidden;
+      list.dataset.motion = active ? "active" : "paused";
+      if (!active) for (const link of list.querySelectorAll<HTMLElement>("[data-pressed]")) delete link.dataset.pressed;
     };
-    const visibility = new IntersectionObserver(([entry]) => {
-      inView = entry.isIntersecting;
+    const visibility = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (entry.target === list) inView = entry.isIntersecting;
+        else (entry.target as HTMLElement).dataset.visible = entry.isIntersecting ? "true" : "false";
+      }
       updateVisibility();
     });
     observer.observe(list);
     visibility.observe(list);
+    for (const item of list.children) visibility.observe(item);
     document.addEventListener("visibilitychange", updateVisibility);
     list.addEventListener("scroll", update, { passive: true });
     update();
     return () => { observer.disconnect(); visibility.disconnect(); document.removeEventListener("visibilitychange", updateVisibility); list.removeEventListener("scroll", update); cancelAnimationFrame(frame); };
-  }, [items.length]);
+  }, [items]);
 
   const scroll = (direction: number) => {
     const list = listRef.current;
@@ -114,15 +120,26 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
         {items.map(item => {
           const Icon = shortcutIcons[item.id];
           return (
-            <li key={item.id}>
+            <li data-visible="false" key={item.id}>
               <Link
                 aria-label={item.label}
                 className={`${styles.link}${item.id === "offers" ? ` ${styles.offer}` : ""}`}
                 draggable={false}
                 href={item.href}
+                onPointerDown={event => {
+                  if (event.isPrimary && event.pointerType !== "mouse") event.currentTarget.dataset.pressed = "true";
+                }}
+                onPointerUp={event => { delete event.currentTarget.dataset.pressed; }}
+                onPointerCancel={event => { delete event.currentTarget.dataset.pressed; }}
+                onPointerLeave={event => { delete event.currentTarget.dataset.pressed; }}
                 prefetch={false}
               >
-                <span aria-hidden="true" className={styles.symbol}><Icon size={32} strokeWidth={1.6} /></span>
+                <span aria-hidden="true" className={styles.symbol}>
+                  <span className={styles.ring} data-category-ring />
+                  <span className={styles.ring} data-category-ring />
+                  <span className={styles.ring} data-category-ring />
+                  <Icon size={32} strokeWidth={1.6} />
+                </span>
                 <span className={styles.label}>{item.label}</span>
               </Link>
             </li>

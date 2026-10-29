@@ -1,5 +1,21 @@
 # 88 — Faixa de categorias da home
 
+## Anéis orgânicos nas categorias — 29/10/2026
+
+O titular pediu o efeito dos três anéis do login do projeto Wimifarma COM nos atalhos da home BR. A referência foi somente leitura de `wimifarma-com/site/home.php` (CSS 979–1016, keyframes 1534–1547, markup 1936–1940). Foram adaptados os três contornos e seus raios orgânicos, mantendo o sistema antigo separado: nenhum login, script de autenticação, dado, serviço ou configuração foi copiado ou executado.
+
+Cada ícone recebe três bordas coloridas finas, em vermelho, verde e dourado, com rotações de 12/16/20 segundos e fases por categoria. Os ícones ficam estáveis no centro. Ofertas conserva núcleo vermelho, enquanto os demais mantêm ícone vermelho sobre branco. Mouse, foco de teclado e pressão de toque/caneta aumentam a opacidade dos anéis e mostram um halo suave de gradientes. O retorno de toque é explícito por atributo temporário; pointerup/cancel/leave e perda de visibilidade o removem, sem impedir o gesto nativo ou a navegação.
+
+O efeito antigo de `drop-shadow(20px)` e transição de espessura não foi portado. As bordas mantêm 1,5 CSS px (o navegador pode arredondar por densidade), sem filtros ou sombras girando; animação contínua somente de `transform`, feedback por `opacity`. O observador de visibilidade existente também acompanha os itens: anéis de categorias fora da faixa horizontal, fora da tela ou em aba oculta ficam pausados. Movimento reduzido elimina as rotações/transições e mantém as cores e o feedback estático. Observadores/listeners são descartados ao desmontar ou trocar a lista.
+
+Dimensões de 60/72 px, faixa sem painel externo, nomes, oito destinos, arraste com mouse, toque horizontal/vertical, foco, teclado e setas foram preservados. Não houve nova dependência, asset, consulta ao banco, mudança comercial, cabeçalho ou rodapé. Essa direção substitui a borda circular única e a flutuação dos ícones descritas abaixo.
+
+Validação local: sete cenários de UI aprovados em 320/390/768/1280/1440/1920 px, com arraste sem navegação acidental, toque horizontal/vertical, teclado, destinos, preferência reduzida, pausa por item/viewport/aba e brilho sem mudar espessura. A interação foi reforçada depois da limpeza de pressão ao ocultar e da assertiva de rotação real da matriz, mantendo o SVG estável; repetições dirigidas passaram. Capturas estáticas e de hover/toque inspecionadas. ESLint e TypeScript aprovados, revisão independente sem achados. Auditorias completa/produção com 3 low/1 moderate, zero high/critical; não houve mudança de dependências.
+
+A amostra isolada em Chromium desktop com 24 anéis girando por 1,2 segundo registrou LayoutCount0, RecalcStyleCount0, TaskDuration3,029 ms e nenhuma long task. Isso descreve somente a fixture e a amostra; não é garantia de FPS ou ausência de travamentos em todo celular ou no site completo. Evidência em `outputs/categorias-aneis-2026-10-29/motion-performance.json`.
+
+Publicação ainda pendente: o operador do catálogo pediu manutenção do VPS/APP na versão atual enquanto conclui QA e publicação do bloco3. Nesta etapa, apenas preparação local, sem push, SSH, pull, build Linux ou restart. Depois do release, conferir a fonte/canonical reais e publicar somente o app com backup e prova de preservação; não reaplicar uma ativação anterior.
+
 ## Revisão atual — 29/10/2026
 
 Substitui a apresentação histórica descrita abaixo: oito ícones em círculos menores, sem fotos e sem painel externo, ocupam uma faixa de até 180 px nas larguras verificadas. Ofertas mantém destaque vermelho; os outros círculos usam os tokens suaves da marca. Higiene bucal e Cabelos complementam os seis acessos anteriores e usam filtros existentes, sem duplicar o destino de Perfumaria. Movimento independente curto em CSS, com suspensão por visibilidade e preferência do sistema; arraste, teclado, foco e alvos de toque preservados. Contrato do banner e das dimensões em [10](10-layout-e-experiencia.md#home-compacta--29102026).

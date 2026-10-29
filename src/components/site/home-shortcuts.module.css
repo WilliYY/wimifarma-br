@@ -1,5 +1,8 @@
 .panel {
   --shortcuts-gutter: clamp(16px, 4vw, 64px);
+  --ring-red: var(--brand);
+  --ring-green: #149b6c;
+  --ring-yellow: #d7a519;
   width: 100%;
   min-width: 0;
   margin-bottom: 16px;
@@ -34,29 +37,37 @@
 .link { display: flex; height: 100%; flex-direction: column; align-items: center; gap: 8px; padding: 3px; border-radius: 8px; color: var(--ink); text-align: center; user-select: none; -webkit-user-select: none; }
 
 .symbol {
+  position: relative;
+  isolation: isolate;
   display: grid;
   width: 60px;
   height: 60px;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--brand) 26%, var(--line));
+  border: 0;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--brand-soft) 45%, var(--surface));
   color: var(--brand);
   transition: transform 220ms ease;
 }
-.symbol > svg { width: 30px; height: 30px; animation: shortcutFloat var(--float-duration, 4.2s) ease-in-out var(--float-delay, -1s) infinite; animation-play-state: paused; }
-.list[data-motion="active"] .symbol > svg { animation-play-state: running; }
-.list > li:nth-child(2) { --float-duration: 4.8s; --float-delay: -2.4s; }
-.list > li:nth-child(3) { --float-duration: 5.3s; --float-delay: -0.8s; }
-.list > li:nth-child(4) { --float-duration: 4.6s; --float-delay: -3.3s; }
-.list > li:nth-child(5) { --float-duration: 5.6s; --float-delay: -1.8s; }
-.list > li:nth-child(6) { --float-duration: 4.4s; --float-delay: -3.8s; }
-.list > li:nth-child(7) { --float-duration: 5.1s; --float-delay: -2.8s; }
-.list > li:nth-child(8) { --float-duration: 4.9s; --float-delay: -0.4s; }
+.symbol::before { position: absolute; z-index: 1; inset: 7px; border-radius: 50%; background: var(--surface); content: ""; pointer-events: none; }
+.symbol::after { position: absolute; z-index: 0; inset: -9px; border-radius: 50%; background: radial-gradient(circle at 28% 35%, color-mix(in srgb, var(--ring-red) 24%, transparent), transparent 60%), radial-gradient(circle at 72% 40%, color-mix(in srgb, var(--ring-green) 24%, transparent), transparent 60%), radial-gradient(circle at 50% 75%, color-mix(in srgb, var(--ring-yellow) 26%, transparent), transparent 60%); content: ""; opacity: 0; pointer-events: none; transition: opacity 180ms ease; }
+.symbol > svg { position: relative; z-index: 3; width: 30px; height: 30px; pointer-events: none; }
+.ring { position: absolute; z-index: 2; inset: -1px; border: 1.5px solid currentColor; border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%; color: var(--ring-red); opacity: 0.64; pointer-events: none; transform: rotate(var(--ring-angle, 0deg)); animation: categoryOrbit 12s linear var(--ring-delay, -1.2s) infinite; animation-play-state: paused; transition: opacity 180ms ease; }
+.ring:nth-child(2) { --ring-angle: 45deg; border-radius: 41% 44% 56% 59% / 38% 62% 63% 37%; color: var(--ring-green); animation-duration: 16s; }
+.ring:nth-child(3) { --ring-angle: -25deg; border-radius: 41% 44% 56% 59% / 38% 62% 63% 37%; color: var(--ring-yellow); animation-duration: 20s; animation-direction: reverse; }
+.list[data-motion="active"] > li[data-visible="true"] .ring { animation-play-state: running; }
+.list > li:nth-child(2) { --ring-delay: -2.4s; }
+.list > li:nth-child(3) { --ring-delay: -0.8s; }
+.list > li:nth-child(4) { --ring-delay: -3.3s; }
+.list > li:nth-child(5) { --ring-delay: -1.8s; }
+.list > li:nth-child(6) { --ring-delay: -3.8s; }
+.list > li:nth-child(7) { --ring-delay: -2.8s; }
+.list > li:nth-child(8) { --ring-delay: -0.4s; }
 .label { max-width: 100%; min-height: 34px; font-size: 12px; font-weight: 600; line-height: 1.35; }
-.offer .symbol { border-color: var(--brand); background: var(--brand); color: #fff; }
+.offer .symbol { color: #fff; }
+.offer .symbol::before { background: var(--brand); }
 .offer .label { color: var(--brand-strong); font-weight: 800; }
 .link:active .symbol { transform: scale(0.96); }
+.link:is(:active, :focus-visible, [data-pressed="true"]) .ring, .link:is(:active, :focus-visible, [data-pressed="true"]) .symbol::after { opacity: 1; }
 
 .controls { display: flex; gap: 8px; }
 .controls[data-static="true"] { display: none; }
@@ -67,6 +78,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .link:hover .symbol { transform: translateY(-2px); }
+  .link:hover .ring, .link:hover .symbol::after { opacity: 1; }
 }
 @media (min-width: 640px) {
   .title { font-size: 18px; }
@@ -85,13 +97,13 @@
   .title { font-size: 14px; }
   .catalog { font-size: 12px; }
 }
-@keyframes shortcutFloat {
-  0%, 100% { transform: translateY(1px) rotate(-2deg); }
-  50% { transform: translateY(-2px) rotate(2deg); }
+@keyframes categoryOrbit {
+  from { transform: rotate(var(--ring-angle, 0deg)); }
+  to { transform: rotate(calc(var(--ring-angle, 0deg) + 360deg)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .list { scroll-behavior: auto; }
-  .symbol > svg { animation: none; }
-  .symbol { transition: none; }
+  .ring { animation: none; }
+  .symbol, .ring, .symbol::after { transition: none; }
   .link:hover .symbol, .link:active .symbol { transform: none; }
 }

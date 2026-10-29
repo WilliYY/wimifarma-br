@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Anéis coloridos nos atalhos — 29/10/2026
+
+Os círculos simples das categorias passam a usar três contornos orgânicos inspirados no efeito do login Wimifarma COM, com rotação leve e halo ao passar mouse, focar ou pressionar por toque. Dimensões, ícones, rótulos, navegação e rolagem permanecem. O componente pausa cada categoria que sai da faixa/viewport, suspende tudo em aba oculta e respeita movimento reduzido, sem filtros girando, alteração de espessura ou renderização React por frame. Contrato em [88](88-faixa-categorias-visual.md).
+
 ## Campanhas e botões do produto — 29/10/2026
 
 Retirada da home a seção `Cuidado para cada fase`, com os cartões Dia do Genérico Barato, Dia do Idoso e Dia do Bebê, por solicitação do titular. Foram removidos também os ícones e o wrapper de animação usados exclusivamente por essa seção; os banners, vitrines, avaliações, Club e rodapé permanecem.

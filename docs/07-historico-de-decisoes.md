@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-29 — Anéis orgânicos nas categorias
+
+- Adaptado somente o efeito visual dos três anéis do login do projeto COM para os oito atalhos da home BR. Ícones/destinos, faixa compacta e gestos preservados; nenhum código de autenticação ou configuração do sistema antigo foi incorporado.
+- Rotações CSS transform, halo por opacity, sem filtros/espessura animada. Observador existente passa a pausar individualmente os itens fora da faixa, além da visibilidade da seção/aba; toque/caneta recebe feedback temporário com limpeza nos eventos de término e perda de visibilidade. Movimento reduzido mantém versão estática. Contrato e limitações em [88](88-faixa-categorias-visual.md).
+
 ## 2026-10-29 — Banner Pix entre autocuidado e Farmacinha
 
 - Banner movido para o intervalo solicitado entre as duas vitrines, com desconto em destaque, logo completa e símbolo Pix existentes, composição responsiva e CTA preservado. Nenhum produto, preço, regra de Pix ou gateway foi alterado.

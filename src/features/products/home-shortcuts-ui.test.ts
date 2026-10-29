@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import test, { after } from "node:test";
 import { build } from "esbuild";
 import { chromium, expect, type BrowserContextOptions } from "@playwright/test";
 import { buildHomeShortcuts } from "./home-shortcuts";
 
 const items = buildHomeShortcuts().map(item => ({ ...item, imageUrl: `/uploads/products/${item.id}.webp` }));
+const captureRoot = process.env.SHORTCUTS_CAPTURE_ROOT;
 const browser = chromium.launch();
 after(async () => (await browser).close());
 const content = (async () => {
@@ -50,6 +52,7 @@ test("oito categorias circulares compactas ocupam a largura sem caixa ou overflo
       const list = page.locator("#home-shortcuts");
       await expect(list.getByRole("link")).toHaveCount(8);
       await expect(list.locator(".symbol > svg")).toHaveCount(8);
+      await expect(list.locator("[data-category-ring]")).toHaveCount(24);
       const panel = page.getByRole("navigation", { name: "Categorias de produtos" });
       const geometry = await panel.evaluate(element => ({ width: element.getBoundingClientRect().width, x: element.getBoundingClientRect().x, viewport: document.documentElement.clientWidth, border: getComputedStyle(element).borderTopWidth, background: getComputedStyle(element).backgroundColor, shadow: getComputedStyle(element).boxShadow }));
       assert.ok(Math.abs(geometry.width - geometry.viewport) <= 1);
@@ -63,9 +66,10 @@ test("oito categorias circulares compactas ocupam a largura sem caixa ou overflo
       const circle = await list.locator(".symbol").first().evaluate(element => ({ width: element.getBoundingClientRect().width, radius: getComputedStyle(element).borderRadius, border: getComputedStyle(element).borderTopWidth }));
       assert.ok(circle.width >= 52 && circle.width <= 76);
       assert.equal(circle.radius, "50%");
-      assert.equal(circle.border, "1px");
+      assert.equal(circle.border, "0px");
       await expect(list.locator("img")).toHaveCount(0);
       for (const item of items) assert.equal(await list.getByRole("link", { name: item.label, exact: true }).getAttribute("href"), item.href);
+      if (captureRoot) { await mkdir(captureRoot, { recursive: true }); await panel.screenshot({ path: join(captureRoot, `categories-${width}.png`), animations: "disabled" }); }
     }
   } finally { await context.close(); }
 });
@@ -135,25 +139,98 @@ test("ícones ignoram fotos recebidas e mantêm foco, destino e movimento reduzi
     assert.equal(await list.evaluate(element => getComputedStyle(element).scrollBehavior), "auto");
     assert.equal(await offers.locator(".symbol").evaluate(element => getComputedStyle(element).animationName), "none");
     assert.equal(await offers.locator(".symbol > svg").evaluate(element => getComputedStyle(element).animationName), "none");
+    assert.equal(await offers.locator(".symbol").evaluate(element => element.getAnimations({ subtree: true }).length), 0);
   } finally { await context.close(); }
 });
 
-test("movimentos independentes dos ícones pausam fora da tela", async () => {
-  const { page, context } = await fixture({ viewport: { width: 1280, height: 844 } });
+test("anéis giram apenas nas categorias visíveis e pausam fora da tela e em aba oculta", async () => {
+  const { page, context } = await fixture({ viewport: { width: 1280, height: 844 }, reducedMotion: "no-preference" });
   try {
     const list = page.locator("#home-shortcuts");
     await expect(list).toHaveAttribute("data-motion", "active");
-    const animations = await list.locator(".symbol > svg").evaluateAll(elements => elements.map(element => {
+    await expect(list.locator('li[data-visible="true"]')).toHaveCount(8);
+    const animations = await list.locator("[data-category-ring]").evaluateAll(elements => elements.map(element => {
       const style = getComputedStyle(element);
       return { duration: style.animationDuration, delay: style.animationDelay, state: style.animationPlayState };
     }));
-    assert.equal(new Set(animations.map(item => item.duration)).size, 8);
+    assert.equal(animations.length, 24);
+    assert.equal(new Set(animations.map(item => item.duration)).size, 3);
     assert.equal(new Set(animations.map(item => item.delay)).size, 8);
     assert.ok(animations.every(item => item.state === "running"));
+    const firstRing = list.locator("[data-category-ring]").first();
+    const initialTransform = await firstRing.evaluate(element => getComputedStyle(element).transform);
+    await expect.poll(() => firstRing.evaluate(element => getComputedStyle(element).transform)).not.toBe(initialTransform);
+    assert.equal(await list.locator(".symbol > svg").first().evaluate(element => getComputedStyle(element).transform), "none");
     await page.evaluate(() => window.scrollTo(0, 800));
     await expect(list).toHaveAttribute("data-motion", "paused");
-    assert.equal(await list.locator(".symbol > svg").first().evaluate(element => getComputedStyle(element).animationPlayState), "paused");
+    assert.equal(await list.locator("[data-category-ring]").first().evaluate(element => getComputedStyle(element).animationPlayState), "paused");
     await page.evaluate(() => window.scrollTo(0, 0));
     await expect(list).toHaveAttribute("data-motion", "active");
+    await page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: true }); document.dispatchEvent(new Event("visibilitychange")); });
+    await expect(list).toHaveAttribute("data-motion", "paused");
+    await page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: false }); document.dispatchEvent(new Event("visibilitychange")); });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(list).toHaveAttribute("data-motion", "active");
+    await expect.poll(() => list.locator('li[data-visible="true"]').count()).toBeLessThan(8);
+    await expect.poll(() => list.locator('li[data-visible="false"] [data-category-ring]').evaluateAll(elements => elements.every(element => getComputedStyle(element).animationPlayState === "paused"))).toBe(true);
+    const styles = await list.locator("[data-category-ring]").first().evaluate(element => ({ filter: getComputedStyle(element).filter, shadow: getComputedStyle(element).boxShadow, width: getComputedStyle(element).borderTopWidth }));
+    assert.equal(styles.filter, "none"); assert.equal(styles.shadow, "none"); assert.ok(Number.parseFloat(styles.width) >= 1 && Number.parseFloat(styles.width) <= 1.5);
+  } finally { await context.close(); }
+});
+
+test("anéis destacam mouse, foco e toque sem mudar a espessura", async () => {
+  const desktop = await fixture({ viewport: { width: 1280, height: 844 }, reducedMotion: "reduce" });
+  try {
+    const link = desktop.page.getByRole("link", { name: "Infantil", exact: true });
+    const ring = link.locator("[data-category-ring]").first();
+    const width = await ring.evaluate(element => getComputedStyle(element).borderTopWidth);
+    assert.equal(await ring.evaluate(element => getComputedStyle(element).opacity), "0.64");
+    await link.hover();
+    await expect.poll(() => ring.evaluate(element => getComputedStyle(element).opacity)).toBe("1");
+    assert.equal(await link.locator(".symbol").evaluate(element => getComputedStyle(element, "::after").opacity), "1");
+    assert.equal(await ring.evaluate(element => getComputedStyle(element).borderTopWidth), width);
+    if (captureRoot) await desktop.page.getByRole("navigation", { name: "Categorias de produtos" }).screenshot({ path: join(captureRoot, "categories-hover.png") });
+    await desktop.page.mouse.move(0, 500);
+    await link.focus();
+    await expect.poll(() => ring.evaluate(element => getComputedStyle(element).opacity)).toBe("1");
+  } finally { await desktop.context.close(); }
+
+  const mobile = await fixture({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: "reduce" });
+  try {
+    const link = mobile.page.getByRole("link", { name: "Infantil", exact: true });
+    const box = await link.locator(".symbol").boundingBox();
+    assert.ok(box);
+    const session = await mobile.context.newCDPSession(mobile.page);
+    await session.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height / 2 }] });
+    await expect.poll(() => link.locator("[data-category-ring]").first().evaluate(element => getComputedStyle(element).opacity)).toBe("1");
+    if (captureRoot) await mobile.page.getByRole("navigation", { name: "Categorias de produtos" }).screenshot({ path: join(captureRoot, "categories-touch.png") });
+    await mobile.page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: true }); document.dispatchEvent(new Event("visibilitychange")); });
+    assert.equal(await link.evaluate(element => element.hasAttribute("data-pressed")), false);
+    await mobile.page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: false }); document.dispatchEvent(new Event("visibilitychange")); });
+    await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await expect.poll(() => mobile.navigations).toEqual([items.find(item => item.id === "baby")!.href]);
+  } finally { await mobile.context.close(); }
+});
+
+test("rotação dos 24 anéis não provoca layout por frame na amostra isolada", async () => {
+  const { page, context } = await fixture({ viewport: { width: 1440, height: 844 }, reducedMotion: "no-preference" });
+  try {
+    await expect(page.locator('#home-shortcuts > li[data-visible="true"]')).toHaveCount(8);
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const session = await context.newCDPSession(page);
+    await session.send("Performance.enable");
+    const before = new Map<string, number>((await session.send("Performance.getMetrics")).metrics.map(metric => [metric.name, metric.value]));
+    const longTasks = await page.evaluate(async () => {
+      const tasks: number[] = [];
+      const observer = new PerformanceObserver(entries => tasks.push(...entries.getEntries().map(entry => entry.duration)));
+      observer.observe({ entryTypes: ["longtask"] });
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      observer.disconnect();
+      return tasks;
+    });
+    const after = new Map<string, number>((await session.send("Performance.getMetrics")).metrics.map(metric => [metric.name, metric.value]));
+    const evidence = { sampleMs: 1200, layoutCount: after.get("LayoutCount")! - before.get("LayoutCount")!, recalcStyleCount: after.get("RecalcStyleCount")! - before.get("RecalcStyleCount")!, taskDurationMs: (after.get("TaskDuration")! - before.get("TaskDuration")!) * 1000, longTasks };
+    assert.equal(evidence.layoutCount, 0);
+    if (captureRoot) await writeFile(join(captureRoot, "motion-performance.json"), JSON.stringify(evidence, null, 2));
   } finally { await context.close(); }
 });
