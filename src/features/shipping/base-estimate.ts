@@ -144,7 +144,7 @@ export function estimateWeightOnly(input: WeightOnlyIdentity): WeightOnlyEstimat
 }
 
 const unsafe = /\b(?:controlad\w*|farmacia popular|refriger\w*|congel\w*|geladeira|termolabil\w*|insulina\w*|vacina\w*|injet\w*|ampola\w*|seringa\w*|intraven\w*|intramuscular\w*|alcool\w*|etanol|perfumes?|aerosso\w*|aeroso\w*|sprays?|vidro\w*)\b/;
-const multipack = /\b(?:kits?|combos?|multipack|packs?|duopack|tripack|leve\s+\d+|pague\s+\d+)\b|\d\s*[x×]\s*\d|\b\d+\s*(?:caixas?|frascos?|unidades?|un|packs?)\b|\bc\s*\/\s*\d+|\+/;
+const multipack = /\b(?:kits?|combos?|multipack|packs?|duopack|tripack|leve\s+\d+|pague\s+\d+)\b|\d\s*[x×]\s*\d|\b\d+\s*(?:caixas?|frascos?|unidades?|un|packs?|saches?|sachets?|envelopes?)\b|\bc\s*\/\s*\d+|\+/;
 const hygieneFamily = /\b(?:shampoos?|condicionador(?:es)?|sabonetes?|cremes?|locoes|locao|geis|gel)\b/;
 
 /** Operational estimates only. No carrier approval, measured weight or verified fit is inferred. */

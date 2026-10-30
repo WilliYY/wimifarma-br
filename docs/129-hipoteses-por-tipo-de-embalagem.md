@@ -93,3 +93,38 @@ A prova global preservou todos os demais campos de todos os produtos, evidência
 Aplicação e PostgreSQL mantiveram os mesmos containers, imagens e horários de início, sem build, reinício ou migration. Saúde local e HTTPS confirmadas; API administrativa recusou acesso anônimo com 401. Código `71539d1` foi enviado ao GitHub e atualizado no servidor; backup de recuperação e markers de início/verificação permanecem no job exclusivo.
 
 Os cinco produtos da tabela de pendências continuam separados por classificação ou conflito de identidade, sem apagamento de fontes. Toda nova preparação permanece estimada, desativada e sem serviços aprovados. A conferência física de embalagem/tara/proteção/encaixe e a aceitação pela transportadora continuam necessárias antes de habilitar envio.
+
+## Complemento de campos ausentes — 30/10/2026
+
+O padrão do aplicador continua `NULL_ONLY`. Dois modos explícitos e mutuamente exclusivos permitem continuar o trabalho autorizado sem substituir dados existentes:
+
+- `--fill-estimated-dimensions-only`: exige peso positivo, três lados literalmente nulos, perfil estimado, desativado, sem revisão, referência ou serviços. A auditoria de geração (`PRODUCT_WEIGHT_DRAFT_ESTIMATED`) ou refinamento (`PRODUCT_WEIGHT_DRAFT_REFINED`) v1–v4 deve conter um `draft` integralmente igual ao JSON atual. A ação de origem também é conferida e registrada. Somente as três medidas são acrescentadas; peso e demais chaves, inclusive metadados desconhecidos, permanecem literais.
+- `--fill-empty-estimated-profile`: exige peso e três lados literalmente nulos, além das mesmas flags de proteção. Preenche somente esses quatro campos, preservando o restante do JSON. A origem é registrada como `EXISTING_EMPTY_ESTIMATED_PROFILE`; não se inventa uma auditoria anterior de peso que nunca existiu. Qualquer campo físico já presente impede esse modo.
+
+Os dois modos conferem GTIN e nome exatos do manifesto antes de qualquer estimador, inclusive da preferência documental. O enum estrito, o modo no hash, ADMIN ativo, lock, revisão `updatedAt`, transação e auditoria permanecem obrigatórios. Numericamente zero não substitui um booleano `false`. A auditoria registra perfil anterior, origem e `weightAppliedFrom`, distinguindo cálculo informativo de peso efetivamente preservado. Aprovações não são intercambiáveis entre modos.
+
+Uma regressão identificou que a rota individual de peso aceitava “28 sachês de 1 g” como apenas 1 g de conteúdo. A guarda já existente para múltiplas embalagens passou a reconhecer sachê/sachês, sachet(s) e envelope(s). O pacote deve seguir hipótese explícita do conjunto ou permanecer pendente. O bruto documental próprio continua prioritário; coeficientes e casos válidos da política v4 não foram recalculados.
+
+O snapshot renovado de 30/10 contém 3.061 ativos: 916 com peso e três lados nulos, 119 com os quatro campos nulos, 162 sem perfil e um perfil parcialmente dimensionado sem peso. Foram preparadas offline 915 propostas de geometria, 157 para novos perfis e 118 para vazios: **1.190 propostas, ainda não comprovação de aplicação produtiva**. Há uma geometria documental no primeiro grupo e duas no último; pesos de base `unspecified` não foram promovidos a brutos. As cinco pendências legadas, Bigfral com tamanho ambíguo e Huggies RN 48 parcialmente preenchido ficam separados. Daflon Flex 30 envelopes de 10 ml também foi separado: o peso anterior de 150 g não é uma base coerente para completar dimensões de um conjunto com 300 ml nominais. Seu perfil permanece intacto, pendente de revisão do peso.
+
+Regressões RED/GREEN, 85 testes direcionados, 491 testes de segurança e TypeScript/ESLint passaram. Auditorias completa e de produção apontaram três alertas baixos e um moderado, sem altos ou críticos; nenhuma dependência foi alterada. A homologação em PostgreSQL 17 isolado passou 44 verificações, incluindo seis falhas com reversão efetivamente testemunhada e 150 itens por modo; 50 das origens do lote de dimensões eram refinamentos auditados. Os recursos de QA foram removidos; app e PostgreSQL reais permaneceram iguais. Backup, baseline, simulação atual, revisão, aprovação congelada e provas produtivas são etapas separadas. Cada estágio precisa de um dry-run novo: o hash global do catálogo muda após o estágio anterior. Artefatos desta continuidade: `outputs/logistica-continuidade-2026-10-30/`.
+
+## Aplicação produtiva confirmada — continuidade de 30/10/2026
+
+A primeira simulação preservou três pesos porque a consulta buscava somente auditorias de geração. A leitura do banco confirmou refinamentos v3/v4 íntegros: Nivea Sun 200 ml (330 g), Q10 Vitamina C 400 ml (550 g) e sabonete íntimo Nivea 250 ml (390 g). A consulta passou a reconhecer geração e refinamento, exigindo ação, entidade, produto, política e JSON bruto exatamente iguais. Testes negativos e nova homologação PostgreSQL precederam qualquer aplicação. O staging anterior e seu backup foram preservados, sem reaplicar seu plano.
+
+O staging v4 congelou fontes homologadas, manifestos, código dos operadores e hashes privados do ambiente/base Compose. Novo backup customizado, TOC e checksum foram conferidos. Cada etapa teve hash concreto próprio, revisão, marcador atômico de início, transação, CAS e auditoria; a etapa seguinte só começou após a prova anterior. Foram confirmadas **1.190 atualizações e 1.190 auditorias**:
+
+| Etapa | Produtos | Resultado |
+| --- | ---: | --- |
+| Medidas de rascunhos auditados | 915 | Somente três medidas preenchidas; todos os pesos e demais campos literais preservados |
+| Novos perfis | 157 | Peso e medidas estimados; sem substituir perfil existente |
+| Perfis totalmente vazios | 118 | Somente os quatro campos físicos nulos preenchidos |
+
+Há **3.053 ativos com peso e três medidas preenchidos**, **3.056 com algum perfil** e **cinco sem perfil**, em **3.061 ativos**. Os oito incompletos são os cinco conflitos/classificação da seção anterior, Daflon Flex 30 envelopes de 10 ml, Bigfral Derma Plus Adulto J 10 unidades e **toalhas umedecidas Huggies Recém Nascido 48 unidades**. Estas últimas já têm três medidas, mas não peso; não são um pacote de fraldas. Esses perfis e suas fontes permanecem intactos.
+
+A preferência documental de Johnsons Cheirinho 400 ml foi revisada explicitamente: eixos comerciais declarados de 17,8 × 9,65 × 4,85 cm, com 2 cm de proteção hipotética, resultaram em rascunho de 20 × 12 × 7 cm; peso atual de 650 g preservado. Continua estimado e não comprova caixa externa real, tara ou encaixe. Nenhum outro draft diferiu da proposta offline permitida pelo respectivo modo.
+
+A prova global preservou todos os demais campos de todos os produtos, evidências, 16 tabelas protegidas e perfis/timestamps fora do lote. A repetição somente de leitura confirmou idempotência, sem nova gravação. Os dois envios anteriormente habilitados continuam os únicos habilitados. App e PostgreSQL conservaram IDs, imagens e horários de início durante as operações; o canônico permaneceu com SHA `4a7c31663dff0beff4fc6071b10756a36ed11ed0289cc0fce511d893460534b6`.
+
+Os recibos finais foram recuperados e conferidos pelo SHA `4e97b4feba1cd3838e87ae9ea11cf57999a137e2adccf259ffc555fce73c14db`. São estimativas para preparação e conferência; a revisão de tara, proteção, caixas efetivamente disponíveis, encaixe e aceitação dos serviços permanece necessária para habilitar transporte. O banco não foi reiniciado nem migrado. A reconstrução/publicação do código compartilhado com o admin é uma etapa separada dessa prova de dados.

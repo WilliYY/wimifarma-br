@@ -6,7 +6,10 @@ import { createRequire } from "node:module";
 
 const gtins = ["07890000000000", "07890000000017"];
 type Plan = { applied: boolean; operationMode: string; planSha256: string; cohortSha256: string; packagingHypothesesSha256: string;
-  products: Array<{ productId: string; gtin: string; revision: string; previousProfile: unknown; action: string; estimate: { basis: string; draft: Record<string, unknown> } | null }> };
+  products: Array<{ productId: string; gtin: string; revision: string; previousProfile: unknown; action: string;
+    profileSourceAudit?: { id: string; action: string; entity: string; entityId: string; metadata: Record<string, unknown> } | null;
+    estimate: { basis: string; draft: Record<string, unknown> } | null }> };
+type SourceAuditQuery = { where: { action: string | { in: string[] }; entity: string; entityId: { in: string[] } }; select: Record<string, boolean> };
 async function fixture() {
   const bundle = await build({ entryPoints: ["scripts/apply-product-packaging-hypotheses.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "packaging-fixture", setup(builder) {
     builder.onResolve({ filter: /lib\/prisma$|^dotenv\/config$|shipping\/average-estimate$/ }, args => ({ path: args.path, namespace: "fixture" }));
@@ -18,6 +21,8 @@ async function fixture() {
     outerBoxCm: [24, 15, 10], grossPackageHypothesisGrams: 500, weightMarginPercent: 20, cargoKinds: ["unspecified"], rationale: "Hipótese de preparação.", weightHypothesis: "Bruto completo hipotético.", packingHypothesis: "Conferência física pendente." }];
   let active = true, locked = false, writes = 0, casAt = 0, auditAttempts = 0, auditAt = 0, averageAvailable = false, estimatorCalls = 0;
   const audits: Array<{ userId: string; action: string; entity: string; entityId: string; metadata: Record<string, unknown> }> = [];
+  const sourceAudits: Array<{ id: string; action?: string; entity?: string; entityId: string; metadata: Record<string, unknown> }> = [];
+  const sourceAuditQueries: SourceAuditQuery[] = [];
   const tx = { $queryRaw: async () => { locked = true; return []; }, user: { findFirst: async ({ where }: { where: Record<string, unknown> }) => {
     assert.equal(locked, true); assert.equal(where.id, "admin"); assert.equal(where.role, "ADMIN"); assert.equal(where.isActive, true); return active ? { id: "admin" } : null;
   } }, product: {
@@ -27,9 +32,18 @@ async function fixture() {
     updateMany: async ({ data, where }: { data: { shippingProfile: unknown }; where: { id: string; updatedAt: Date; status: string; deletedAt: unknown } }) => {
       writes++; assert.deepEqual(Object.keys(data), ["shippingProfile"]); assert.equal(where.status, "ACTIVE"); assert.equal(where.deletedAt, null); assert.equal(where.updatedAt.toISOString(), new Date(0).toISOString());
       if (writes === casAt) return { count: 0 };
-      const product = products.find(row => row.id === where.id)!; assert.equal(product.shippingProfile, null); product.shippingProfile = structuredClone(data.shippingProfile); return { count: 1 };
+      const product = products.find(row => row.id === where.id)!; product.shippingProfile = structuredClone(data.shippingProfile); return { count: 1 };
     },
-  }, auditLog: { create: async ({ data }: { data: typeof audits[number] }) => { auditAttempts++; if (auditAttempts === auditAt) throw new Error("synthetic audit failure"); audits.push(data); } } };
+  }, auditLog: {
+    findMany: async ({ where, select }: SourceAuditQuery) => {
+      assert.equal(where.entity, "Product");
+      sourceAuditQueries.push(structuredClone({ where, select }));
+      const actions = typeof where.action === "string" ? [where.action] : where.action.in;
+      return structuredClone(sourceAudits.map(audit => ({ action: "PRODUCT_WEIGHT_DRAFT_ESTIMATED", entity: "Product", ...audit }))
+        .filter(audit => actions.includes(audit.action) && audit.entity === where.entity && where.entityId.in.includes(audit.entityId)));
+    },
+    create: async ({ data }: { data: typeof audits[number] }) => { auditAttempts++; if (auditAttempts === auditAt) throw new Error("synthetic audit failure"); audits.push(data); },
+  } };
   const db = { $transaction: async (callback: (value: typeof tx) => Promise<unknown>, options: { timeout: number }) => {
     assert.equal(options.timeout, 180000);
     const before = structuredClone(products), auditCount = audits.length;
@@ -39,7 +53,7 @@ async function fixture() {
   vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Buffer, console, process: { argv: ["node", "test.ts"], env: {} },
     averageFixture: () => { estimatorCalls++; return averageAvailable ? { policyVersion: "comparable-package-v1", basis: "EXACT_RETAIL_DIMENSIONS", sourceGtins: [gtins[0]], explanation: "Fonte própria sintética.",
       draft: { enabled: false, transportReviewed: false, measurementBasis: "estimated", weightGrams: 180, lengthCm: 12, widthCm: 8, heightCm: 5, reference: null } } : null; } });
-  const run = (apply = false, hash?: string, values: unknown = gtins, manifests: unknown = hypotheses) => loaded.exports.applyProductPackagingHypotheses(db, values, "admin", apply, hash, manifests);
+  const run = (apply = false, hash?: string, values: unknown = gtins, manifests: unknown = hypotheses, mode: unknown = "NULL_ONLY") => loaded.exports.applyProductPackagingHypotheses(db, values, "admin", apply, hash, manifests, mode === true ? "FILL_ESTIMATED_DIMENSIONS_ONLY" : mode === false ? "NULL_ONLY" : mode);
   const cli = async (args: string[], inputSize = 2, manifestSize = 2, inputContents = JSON.stringify(gtins), manifestContents = JSON.stringify(hypotheses)) => {
     const errors: string[] = [], cliProcess = { argv: ["node", "scripts/apply-product-packaging-hypotheses.ts", ...args], env: {}, exitCode: 0 };
     const require = createRequire(import.meta.url), cliModule = { exports: {} };
@@ -49,8 +63,154 @@ async function fixture() {
     });
     await new Promise(resolve => setImmediate(resolve)); return { errors, exitCode: cliProcess.exitCode };
   };
-  return { run, cli, products, hypotheses, audits, stats: () => ({ writes, auditAttempts, estimatorCalls }), admin: (value: boolean) => { active = value; }, average: (value: boolean) => { averageAvailable = value; }, cas: (value: number) => { casAt = value; }, failAudit: (value: number) => { auditAt = value; } };
+  return { run, cli, products, hypotheses, audits, sourceAudits, sourceAuditQueries, stats: () => ({ writes, auditAttempts, estimatorCalls }), admin: (value: boolean) => { active = value; }, average: (value: boolean) => { averageAvailable = value; }, cas: (value: number) => { casAt = value; }, failAudit: (value: number) => { auditAt = value; } };
 }
+
+const intactWeightDraft = (weightGrams: number) => ({ enabled: false, transportReviewed: false, measurementBasis: "estimated", reference: null, weightGrams,
+  lengthCm: null, widthCm: null, heightCm: null, cargoKinds: ["unspecified"], approvedServiceIds: [], legacyMetadata: { preserve: ["nested", "value"] } });
+
+test("modo de perfil vazio preenche só quatro null e preserva JSON e identidade do manifesto", async () => {
+  const f = await fixture();
+  f.products.forEach(product => { product.shippingProfile = { ...intactWeightDraft(181), weightGrams: null }; });
+  const before = structuredClone(f.products);
+  const mode = "FILL_EMPTY_ESTIMATED_PROFILE";
+  const defaultPlan = await f.run();
+  assert.ok(defaultPlan.products.every(product => product.action === "PRESERVE_EXISTING_PROFILE"));
+  const plan = await f.run(false, undefined, gtins, f.hypotheses, mode);
+  assert.equal(plan.operationMode, mode);
+  assert.ok(plan.products.every(product => product.action === mode));
+  assert.deepEqual(f.products, before);
+  await f.run(true, plan.planSha256, gtins, f.hypotheses, mode);
+  f.products.forEach((product, index) => {
+    assert.deepEqual(product.shippingProfile, { ...before[index].shippingProfile as Record<string, unknown>, weightGrams: 600, lengthCm: 24, widthCm: 15, heightCm: 10 });
+    assert.deepEqual(f.audits[index].metadata.previousProfile, before[index].shippingProfile);
+    assert.equal(f.audits[index].metadata.sourceProfileOrigin, "EXISTING_EMPTY_ESTIMATED_PROFILE");
+  });
+  const again = await f.run(false, undefined, gtins, f.hypotheses, mode);
+  assert.ok(again.products.every(product => product.action === "PRESERVE_EXISTING_PROFILE"));
+});
+
+test("perfil vazio exige null literais, flags falsas e nome exato antes da referência documental", async () => {
+  const f = await fixture(), empty = { ...intactWeightDraft(181), weightGrams: null };
+  const mode = "FILL_EMPTY_ESTIMATED_PROFILE";
+  for (const patch of [{ weightGrams: 1 }, { lengthCm: 1 }, { widthCm: 1 }, { heightCm: 1 }, { enabled: true }, { enabled: 0 },
+    { transportReviewed: true }, { transportReviewed: 0 }, { measurementBasis: "measured" }, { reference: {} }, { approvedServiceIds: [1] }]) {
+    f.products.forEach(product => { product.shippingProfile = { ...empty, ...patch }; });
+    const plan = await f.run(false, undefined, gtins, f.hypotheses, mode);
+    assert.ok(plan.products.every(product => product.action === "PRESERVE_EXISTING_PROFILE"));
+  }
+  f.products.forEach(product => { product.shippingProfile = structuredClone(empty); });
+  f.average(true);
+  const stale = structuredClone(f.hypotheses);
+  stale[0].members.forEach(member => { member.expectedName = "Outro produto"; });
+  const plan = await f.run(false, undefined, gtins, stale, mode);
+  assert.ok(plan.products.every(product => product.action === "PRESERVE_EXISTING_PROFILE"));
+  assert.equal(f.stats().writes, 0); assert.equal(f.stats().estimatorCalls, 0);
+  const cli = await f.cli(["--input", "input.json", "--hypotheses", "hypotheses.json", "--actor-id", "admin", "--fill-estimated-dimensions-only", "--fill-empty-estimated-profile"]);
+  assert.match(cli.errors[0], /mutuamente exclusiv/);
+});
+
+test("modo explícito completa só medidas com origem íntegra e preserva peso e demais chaves", async () => {
+  const f = await fixture();
+  f.products.forEach((product, index) => {
+    product.shippingProfile = intactWeightDraft(181 + index * 400);
+    f.sourceAudits.push({ id: `source-${index}`, entityId: product.id, metadata: { policyVersion: index ? "weight-only-v1" : "weight-only-v4", draft: structuredClone(product.shippingProfile) } });
+  });
+  const before = structuredClone(f.products);
+  const plan = await f.run(false, undefined, gtins, f.hypotheses, true);
+  assert.equal(plan.operationMode, "FILL_ESTIMATED_DIMENSIONS_ONLY");
+  assert.deepEqual(f.products, before); assert.equal(f.stats().writes, 0);
+  assert.ok(plan.products.every(product => product.action === "FILL_ESTIMATED_DIMENSIONS_ONLY"));
+  await f.run(true, plan.planSha256, gtins, f.hypotheses, true);
+  f.products.forEach((product, index) => {
+    const previous = before[index].shippingProfile as Record<string, unknown>;
+    assert.deepEqual(product.shippingProfile, { ...previous, lengthCm: 24, widthCm: 15, heightCm: 10 });
+  });
+  assert.equal(f.audits.length, 2);
+  f.audits.forEach((audit, index) => {
+    assert.deepEqual(audit.metadata.previousProfile, before[index].shippingProfile);
+    assert.equal(audit.metadata.operationMode, "FILL_ESTIMATED_DIMENSIONS_ONLY");
+    assert.equal(audit.metadata.weightAppliedFrom, "PRESERVED_EXISTING_PROFILE");
+  });
+  const again = await f.run(false, undefined, gtins, f.hypotheses, true);
+  assert.ok(again.products.every(product => product.action === "PRESERVE_EXISTING_PROFILE"));
+});
+
+test("refinamento auditado íntegro permite só medidas e registra a ação da origem", async () => {
+  const f = await fixture();
+  f.products.forEach((product, index) => {
+    product.shippingProfile = intactWeightDraft(330 + index * 220);
+    f.sourceAudits.push({ id: `refined-${index}`, action: "PRODUCT_WEIGHT_DRAFT_REFINED", entity: "Product", entityId: product.id,
+      metadata: { policyVersion: index ? "weight-only-v3" : "weight-only-v4", draft: structuredClone(product.shippingProfile) } });
+  });
+  const before = structuredClone(f.products);
+  const plan = await f.run(false, undefined, gtins, f.hypotheses, true);
+  assert.ok(plan.products.every(product => product.action === "FILL_ESTIMATED_DIMENSIONS_ONLY"));
+  assert.ok(plan.products.every(product => product.profileSourceAudit?.action === "PRODUCT_WEIGHT_DRAFT_REFINED"));
+  assert.deepEqual(f.sourceAuditQueries[0].where.action, { in: ["PRODUCT_WEIGHT_DRAFT_ESTIMATED", "PRODUCT_WEIGHT_DRAFT_REFINED"] });
+  assert.equal(f.sourceAuditQueries[0].select.action, true); assert.equal(f.sourceAuditQueries[0].select.entity, true);
+  await f.run(true, plan.planSha256, gtins, f.hypotheses, true);
+  f.products.forEach((product, index) => {
+    assert.deepEqual(product.shippingProfile, { ...before[index].shippingProfile as Record<string, unknown>, lengthCm: 24, widthCm: 15, heightCm: 10 });
+    const source = f.audits[index].metadata.profileSourceAudit as { action: string; entity: string; entityId: string };
+    assert.equal(source.action, "PRODUCT_WEIGHT_DRAFT_REFINED"); assert.equal(source.entity, "Product"); assert.equal(source.entityId, product.id);
+  });
+});
+
+test("refinamento alterado ou com ação, entidade ou política alheia não autoriza medidas", async () => {
+  for (const invalid of ["weight", "nested", "missing-key", "action", "entity", "policy"] as const) {
+    const f = await fixture(), profile = intactWeightDraft(330);
+    f.products.forEach(product => {
+      product.shippingProfile = structuredClone(profile);
+      const auditedDraft: Record<string, unknown> = structuredClone(profile);
+      if (invalid === "weight") auditedDraft.weightGrams = 331;
+      if (invalid === "nested") auditedDraft.legacyMetadata = { preserve: ["changed"] };
+      if (invalid === "missing-key") delete auditedDraft.approvedServiceIds;
+      f.sourceAudits.push({ id: product.id, action: invalid === "action" ? "OTHER_ACTION" : "PRODUCT_WEIGHT_DRAFT_REFINED",
+        entity: invalid === "entity" ? "Order" : "Product", entityId: product.id,
+        metadata: { policyVersion: invalid === "policy" ? "weight-only-v0" : "weight-only-v4", draft: auditedDraft } });
+    });
+    const before = structuredClone(f.products);
+    const plan = await f.run(false, undefined, gtins, f.hypotheses, true);
+    assert.ok(plan.products.every(product => product.action === "PRESERVE_EXISTING_PROFILE"), invalid);
+    assert.deepEqual(f.products, before); assert.equal(f.stats().writes, 0); assert.equal(f.audits.length, 0);
+  }
+});
+
+test("completar medidas exige todas as guardas e auditoria integral sem aprovar perfis manuais", async () => {
+  const f = await fixture();
+  const valid = intactWeightDraft(181);
+  for (const patch of [{ enabled: true }, { transportReviewed: true }, { measurementBasis: "measured" }, { reference: { note: "manual" } },
+    { approvedServiceIds: [1] }, { weightGrams: null }, { lengthCm: 4 }, { widthCm: 5 }, { heightCm: 6 }]) {
+    f.products.forEach(product => { product.shippingProfile = { ...valid, ...patch }; });
+    f.sourceAudits.splice(0, f.sourceAudits.length, ...f.products.map(product => ({ id: product.id, entityId: product.id, metadata: { policyVersion: "weight-only-v4", draft: structuredClone(product.shippingProfile) } })));
+    const plan = await f.run(false, undefined, gtins, f.hypotheses, true);
+    assert.ok(plan.products.every(product => product.action === "PRESERVE_EXISTING_PROFILE"));
+  }
+  f.products.forEach(product => { product.shippingProfile = structuredClone(valid); });
+  for (const source of [[], f.products.map(product => ({ id: product.id, entityId: product.id, metadata: { policyVersion: "weight-only-v0", draft: valid } })),
+    f.products.map(product => ({ id: product.id, entityId: product.id, metadata: { policyVersion: "weight-only-v4", draft: { ...valid, weightGrams: 182 } } }))]) {
+    f.sourceAudits.splice(0, f.sourceAudits.length, ...source);
+    const plan = await f.run(false, undefined, gtins, f.hypotheses, true);
+    assert.ok(plan.products.every(product => product.action === "PRESERVE_EXISTING_PROFILE"));
+  }
+  assert.equal(f.stats().writes, 0); assert.equal(f.audits.length, 0);
+});
+
+test("modos não compartilham aprovação e falha na auditoria reverte preenchimento de medidas", async () => {
+  const f = await fixture();
+  const normal = await f.run();
+  await assert.rejects(f.run(true, normal.planSha256, gtins, f.hypotheses, true), /Plano mudou/);
+  await assert.rejects(f.run(false, undefined, gtins, f.hypotheses, "false"));
+  f.products.forEach(product => {
+    product.shippingProfile = intactWeightDraft(181);
+    f.sourceAudits.push({ id: product.id, entityId: product.id, metadata: { policyVersion: "weight-only-v4", draft: structuredClone(product.shippingProfile) } });
+  });
+  const before = structuredClone(f.products), plan = await f.run(false, undefined, gtins, f.hypotheses, true);
+  f.failAudit(2);
+  await assert.rejects(f.run(true, plan.planSha256, gtins, f.hypotheses, true), /audit failure/);
+  assert.deepEqual(f.products, before); assert.equal(f.audits.length, 0); assert.equal(f.stats().writes, 2);
+});
 
 test("NULL_ONLY preserva literalmente qualquer perfil não nulo antes dos estimadores", async () => {
   const f = await fixture();

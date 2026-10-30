@@ -30,7 +30,7 @@ Cenários de caixa externa por apresentação, com folga operacional ajustável 
 
 Hipóteses autorizadas de embalagem para medicamentos, separadas de medidas documentais e mantendo o peso anterior por proveniência íntegra: [128](docs/128-hipoteses-de-embalagem-para-medicamentos.md).
 
-Estimativas por tipo de embalagem somente para perfis nulos, com margem explícita, caixas maiores planejadas e bloqueios de receita/referências preservados: [129](docs/129-hipoteses-por-tipo-de-embalagem.md).
+Estimativas por tipo de embalagem, por padrão somente em perfis nulos, com modos explícitos para completar campos ausentes de rascunhos protegidos, margens e caixas maiores apenas planejadas: [129](docs/129-hipoteses-por-tipo-de-embalagem.md).
 
 Novos medicamentos desta expansão: acréscimo autorizado de 50% para genéricos/similares e 10% para marcas éticas, preservando percentuais existentes, teto CMED e pesquisa nas quatro distribuidoras: [111](docs/111-expansao-medicamentos-e-politica-de-precos.md).
 
