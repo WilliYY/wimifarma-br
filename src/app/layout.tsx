@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Barlow } from "next/font/google";
 import { Toaster } from "sonner";
-import { AnimatedFavicon } from "@/components/motion/animated-favicon";
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
@@ -59,7 +58,6 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${barlow.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
-        <AnimatedFavicon />
         {children}
         <Toaster richColors position="top-right" />
       </body>
