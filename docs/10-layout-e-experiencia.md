@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Cabeçalho compacto da vitrine de cuidados — 29/10/2026
+
+Somente a vitrine `home-care` usa `compactHeader` em `HomeProductCarousel`: indicação “Beleza”, título “Cuidados para o dia a dia” e link “Ver catálogo” no canto direito da primeira linha, com alvo de toque de 44 px. A contagem visível e as duas setas foram removidas dessa vitrine; o título ocupa a linha inteira abaixo, e os espaços verticais foram reduzidos no celular. Arraste, toque, teclado, nomes acessíveis dos itens e destino do catálogo permanecem. Farmacinha e a vitrine de economia conservam seus cabeçalhos e controles anteriores. Seleção, rotação, preços, estoque e quantidade de itens não mudaram.
+
 ## Anéis coloridos nos atalhos — 29/10/2026
 
 Os círculos simples das categorias passam a usar três contornos orgânicos inspirados no efeito do login Wimifarma COM, com rotação leve e halo ao passar mouse, focar ou pressionar por toque. Dimensões, ícones, rótulos, navegação e rolagem permanecem. O componente pausa cada categoria que sai da faixa/viewport, suspende tudo em aba oculta e respeita movimento reduzido, sem filtros girando, alteração de espessura ou renderização React por frame. Contrato em [88](88-faixa-categorias-visual.md).

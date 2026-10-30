@@ -9,10 +9,11 @@ import {
 import Link from "next/link";
 
 export function HomeProductCarousel({
-  products, id, title, eyebrow, href,
+  products, id, title, eyebrow, href, compactHeader = false,
 }: {
   products: RelatedProductCardItem[];
   id: string; title: string; eyebrow: string; href: string;
+  compactHeader?: boolean;
 }) {
   const carouselRef = useRef<HTMLDivElement>(null);
   const dragState = useRef({
@@ -137,23 +138,24 @@ export function HomeProductCarousel({
   if (!products.length) return null;
 
   return (
-    <section className="bg-[#f6f8fb] px-4 py-12 sm:px-6 lg:px-8">
+    <section className={`bg-[#f6f8fb] px-4 sm:px-6 lg:px-8 ${compactHeader ? "py-8 sm:py-12" : "py-12"}`}>
       <div className="mx-auto max-w-7xl">
-        <div className="mb-5 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
+        <div className={compactHeader ? "mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1" : "mb-5 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between"}>
+          <div className={compactHeader ? "contents" : "min-w-0"}>
             <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-brand">
               <Pill aria-hidden="true" className="h-4 w-4" />
               {eyebrow}
             </span>
-            <h2 className="mt-2 text-2xl font-black leading-tight text-ink sm:text-3xl">
+            <h2 className={`${compactHeader ? "col-span-2 row-start-2" : "mt-2"} text-2xl font-black leading-tight text-ink sm:text-3xl`}>
               {title}
             </h2>
-            <p className="mt-2 max-w-[calc(100%-5rem)] text-sm leading-6 text-muted sm:max-w-2xl">
+            {!compactHeader && <p className="mt-2 max-w-[calc(100%-5rem)] text-sm leading-6 text-muted sm:max-w-2xl">
               {products.length} {products.length === 1 ? "produto selecionado" : "produtos selecionados"} · <Link className="font-bold text-brand underline underline-offset-4" href={href}>Ver catálogo</Link>
-            </p>
+            </p>}
           </div>
 
-          <div className="flex shrink-0 items-center gap-2 sm:self-auto">
+          {compactHeader && <Link className="col-start-2 row-start-1 -mr-2 inline-flex min-h-11 items-center justify-end whitespace-nowrap rounded-md px-2 text-sm font-bold text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" href={href}>Ver catálogo</Link>}
+          {!compactHeader && <div className="flex shrink-0 items-center gap-2 sm:self-auto">
             <button
               aria-controls={id}
               aria-label={`Ver produtos anteriores: ${title}`}
@@ -176,7 +178,7 @@ export function HomeProductCarousel({
             >
               <ChevronRight aria-hidden="true" className="h-5 w-5" />
             </button>
-          </div>
+          </div>}
         </div>
 
         <div

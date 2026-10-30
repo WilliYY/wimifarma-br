@@ -456,7 +456,7 @@ export function HomePage({
 
       <BrandCarousel brands={brands} />
 
-      <HomeProductCarousel products={collections.care} id="home-care" title="Cuidados para o seu dia a dia" eyebrow="Beleza, higiene e bem-estar" href="/catalogo?grupo=beauty&ordem=preco-asc" />
+      <HomeProductCarousel compactHeader products={collections.care} id="home-care" title="Cuidados para o dia a dia" eyebrow="Beleza" href="/catalogo?grupo=beauty&ordem=preco-asc" />
 
       <PixDiscountBanner />
 

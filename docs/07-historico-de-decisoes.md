@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-29 — Cabeçalho compacto na vitrine de cuidados
+
+- A pedido do titular, somente `home-care` mostra “Beleza” e “Cuidados para o dia a dia”, sem a contagem de produtos nem setas. “Ver catálogo” permanece no canto direito, com espaçamento menor e alvo de 44 px. Rolagem por mouse/toque/teclado, produtos e demais vitrines preservados; contrato em [10](10-layout-e-experiencia.md).
+
 ## 2026-10-29 — Neon nos contornos somente na interação
 
 - Removido o halo radial de fundo; mouse, toque/caneta e foco visível acendem um neon estreito que acompanha cada contorno orgânico. Em repouso, as três camadas de brilho ficam transparentes e as bordas permanecem discretas. Transição somente de opacidade, sem animar sombra/filtro/espessura, mantendo pausa por visibilidade e movimento reduzido. Refinamento visual e provas em [88](88-faixa-categorias-visual.md).
