@@ -3,6 +3,7 @@
 ## 2026-10-30 — Ajustes visuais da home e rodapé
 
 - Rodapé compacto com conteúdo integral; selos em fluxo separado da foto; marcas/categorias sem setas visíveis; neon somente na interação e emojis pontuais. Regras de OFF reutilizadas. A faixa de selos não publica gratuidade sem cotação validada nem ativa campanhas futuras. Contrato e validação em [131](131-ajustes-visuais-home-2026-10-30.md).
+- Fonte/OCI `47ca8c1` publicada somente no app, com build Linux, 44 testes dirigidos, 491 de segurança e QA pública 320/390/768/1440 px aprovados. Recuperação em job separado após falha da checagem sensível à ordem; configuração atual confrontada com a configuração congelada. PostgreSQL, canônico e dados comerciais preservados; limites e recibos no documento 131.
 
 ## 2026-10-30 — Estimativas logísticas aplicadas e código publicado
 
