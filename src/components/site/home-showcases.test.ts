@@ -62,6 +62,17 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
       await expect(care.getByText(/produtos? selecionados?/)).toHaveCount(0);
       await expect(care.getByRole("button", { name: /Ver produtos anteriores:|Ver próximos produtos:/ })).toHaveCount(0);
       await expect(care.getByRole("link", { name: "Ver catálogo", exact: true })).toHaveAttribute("href", "/catalogo?grupo=beauty&ordem=preco-asc");
+      for (const [id, title, eyebrow, href] of [
+        ["home-otc", "Farmacinha", "Em casa", "/catalogo"],
+        ["home-affordable", "Menores preços", "Economia", "/catalogo?ordem=preco-asc"],
+      ]) {
+        const section = page.locator(`#${id}`).locator("xpath=ancestor::section[1]");
+        await expect(section.getByRole("heading", { name: title, exact: true })).toBeVisible();
+        await expect(section.getByText(eyebrow, { exact: true })).toBeVisible();
+        await expect(section.getByText(/produtos? selecionados?/)).toHaveCount(0);
+        await expect(section.getByRole("button", { name: /Ver produtos anteriores:|Ver próximos produtos:/ })).toHaveCount(0);
+        await expect(section.getByRole("link", { name: "Ver catálogo", exact: true })).toHaveAttribute("href", href);
+      }
       for (const title of ["Dia do Genérico Barato", "Dia do Idoso", "Dia do Bebê", "Cuidado para cada fase."]) {
         await expect(page.getByText(title, { exact: true })).toHaveCount(0);
       }
@@ -74,6 +85,13 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
         assert.deepEqual(order, ["home-care", "pix", "home-otc", "club", "home-affordable"]);
         await expect(page.getByRole("heading", { name: "Farmacinha", exact: true })).toBeVisible();
         await expect(page.locator("#home-otc [data-home-product-card]")).toHaveCount(15);
+        for (const id of ["home-care", "home-otc", "home-affordable"]) {
+          const section = page.locator(`#${id}`).locator("xpath=ancestor::section[1]");
+          const heading = (await section.getByRole("heading").boundingBox())!;
+          const link = (await section.getByRole("link", { name: "Ver catálogo", exact: true }).boundingBox())!;
+          assert.ok(link.x + link.width > heading.x + heading.width - 2, "Ver catálogo fica no canto direito");
+          assert.ok(link.height >= 44, "Atalho mantém área de toque acessível");
+        }
         const products = await page.locator("[data-home-product-card] a[href^='/produto/']").evaluateAll(links => links.map(link => link.getAttribute("href")));
         assert.equal(new Set(products).size, products.length);
         if (width < 640) {

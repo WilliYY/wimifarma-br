@@ -349,6 +349,14 @@ Documenta a experiencia visual atual do site publico e os cuidados ao alterar la
 
 ## Evolucao
 
+### Vitrines compactas e canto de compra livre — 30/10/2026
+
+As vitrines da home compartilham o cabeçalho compacto aprovado em Beleza: rótulo curto, título e “Ver catálogo” no canto direito, com área de toque de 44 px. Farmacinha usa “Em casa”; a vitrine econômica usa “Economia” e “Menores preços”. Não exibem contagem de produtos selecionados nem setas; a navegação por dedo, arraste e teclado permanece no carrossel existente. Quantidade, seleção e rotação dos produtos não mudam.
+
+Além da proteção do balão, o grupo fechado de atendimento fica temporariamente invisível quando preço, controles de produto ou barra de compra ocupam seu canto, com folga de 8 px. `visibility` preserva sua geometria para evitar alternância; `IntersectionObserver` acompanha a região, sem cálculo por quadro de rolagem. Redimensionamento e conteúdo tardio reconectam a observação. O chat aberto permanece disponível, e a regra anterior do painel de compra móvel é preservada. Observadores, agendamento e listener são descartados na troca de rota/desmontagem.
+
+Validação local: regressão de sobreposição reproduzida antes do ajuste e aprovada depois, incluindo conteúdo tardio, retorno do atalho, clique no canto do botão e chat manual em 320/390/768/1280 px. Vitrines verificadas em 320/390/1280 px com títulos, links, ausência de contagem/setas, dois cartões móveis e seleção preservada. Lint, TypeScript e 491 testes de segurança aprovados; auditorias completa/produção com três alertas baixos (`@react-email/render`, `deepmerge`, `html-to-text`) e um moderado (`fast-uri`), sem high/critical. Publicação e conferência pública ficam registradas separadamente em `outputs/miauby-continuacao-2026-10-30/`.
+
 ### Minha conta
 
 Painel privado renovado com identidade oficial, menu lateral no desktop e navegação horizontal no celular. Visão geral reúne cashback, pedidos em andamento e atalhos. Histórico mostra os itens e valores da compra, detalhes expansíveis e etapas reais de entrega/retirada. Contrato, API e validação em `docs/24-minha-conta-pedidos.md`.

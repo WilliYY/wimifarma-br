@@ -460,11 +460,11 @@ export function HomePage({
 
       <PixDiscountBanner />
 
-      <HomeProductCarousel products={collections.otc} id="home-otc" title="Farmacinha" eyebrow="Cuidado em casa" href="/catalogo" />
+      <HomeProductCarousel compactHeader products={collections.otc} id="home-otc" title="Farmacinha" eyebrow="Em casa" href="/catalogo" />
 
       <ClubBanner />
 
-      <HomeProductCarousel products={collections.affordable} id="home-affordable" title="Menores preços para aproveitar" eyebrow="Economia no seu cuidado" href="/catalogo?ordem=preco-asc" />
+      <HomeProductCarousel compactHeader products={collections.affordable} id="home-affordable" title="Menores preços" eyebrow="Economia" href="/catalogo?ordem=preco-asc" />
 
       <CustomerReviews reviews={customerReviews} />
 

@@ -232,6 +232,42 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
       await collisionPage.screenshot({ path: `${evidenceDirectory}/initial-collision-${protectedArea}-${width}.png` });
       await collisionPage.close();
     }
+    for (const width of [320, 390, 768, 1280]) {
+      const launcherPage = await context.newPage();
+      await launcherPage.setViewportSize({ width, height: 800 });
+      await launcherPage.goto("http://127.0.0.1:3213/catalogo");
+      const launcher = launcherPage.getByRole("button", { name: "Conversar com a Miauby", exact: true });
+      await expect(launcher).toBeVisible();
+      await launcherPage.evaluate(() => {
+        const area = document.createElement("div");
+        area.id = "late-card-controls";
+        area.dataset.productControls = "";
+        area.style.cssText = "position:fixed;right:12px;bottom:12px;width:120px;height:44px;z-index:40";
+        const buy = document.createElement("button");
+        buy.textContent = "Comprar sem sobreposição";
+        buy.style.cssText = "width:100%;height:100%;background:#0b5369;color:white";
+        buy.onclick = () => { buy.dataset.clicked = "true"; };
+        area.append(buy);
+        document.querySelector("main")!.append(area);
+      });
+      await expect(launcher).toBeHidden();
+      const unobstructedBuy = launcherPage.getByRole("button", { name: "Comprar sem sobreposição", exact: true });
+      await unobstructedBuy.click({ position: { x: 110, y: 22 } });
+      await expect(unobstructedBuy).toHaveAttribute("data-clicked", "true");
+      await launcherPage.locator("#late-card-controls").evaluate(element => { element.style.bottom = "300px"; });
+      await expect(launcher).toBeVisible();
+      await launcher.click();
+      const openedChat = launcherPage.getByRole("dialog", { name: "Conversa com a Miauby", exact: true });
+      await expect(openedChat).toBeVisible();
+      await launcherPage.locator("#late-card-controls").evaluate(element => { element.style.bottom = "12px"; });
+      await expect(openedChat).toBeVisible();
+      await openedChat.getByRole("button", { name: "Fechar conversa", exact: true }).click();
+      await expect(launcher).toBeHidden();
+      await launcherPage.locator("#late-card-controls").evaluate(element => element.remove());
+      await expect(launcher).toBeVisible();
+      await launcherPage.screenshot({ path: `${evidenceDirectory}/launcher-unobstructed-${width}.png` });
+      await launcherPage.close();
+    }
     for (const width of [320, 390, 1280]) {
       const welcomePage = await context.newPage();
       await welcomePage.setViewportSize({ width, height: 800 });
