@@ -6,6 +6,8 @@ O aviso passivo usa cantos arredondados, gradiente claro, identificação da Mia
 
 Antes de pintar o aviso, a proteção de colisão confere sua região contra preço, controles e barras de compra. Se houver interseção, o aviso é suprimido; redimensionamentos são acompanhados somente enquanto ele existe, com cleanup, sem polling ou leitura de layout por frame de rolagem. A proteção anterior da página de produto, que oculta/reposiciona o launcher junto ao painel/barra de compra, permanece. Testes sintéticos cobrem também o caso inicial sem scroll, timer atrasado, dispensa por gesto/teclado/fechar, troca de sessão e CTA clicável. Não há nova chamada de IA, uso de tokens, endpoint ou persistência de dados pessoais. Capturas e logs em `outputs/miauby-cards-2026-10-29/`.
 
+Correção publicada na fonte/OCI `e85676e`. A revisão independente reproduziu o risco inicial e aprovou sua correção. A conferência pública em 320/390/768/1440 px confirmou balão arredondado com emoji e dentro da viewport, sem interseção com compra/preço; ao rolar, o aviso foi removido. Home, catálogo e detalhe conferidos, incluindo quantidade local e alvo de compra acessível, com chamadas de escrita bloqueadas. Isso complementa as fixtures sintéticas; não representa teste de pagamento ou de aparelho físico.
+
 ## Contrato aprovado em 23/10/2026
 
 O chat público da Miauby ajuda a encontrar produtos e consultar preços reais sem chamadas a modelos de IA. Saudações, dicas de navegação, entrega, pagamento, Farmácia Popular, saldo e acompanhamento de pedidos usam textos locais. As sugestões administrativas de catálogo com Gemini continuam independentes; suas credenciais não foram removidas nem alteradas.
