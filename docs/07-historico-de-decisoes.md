@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-29 — Neon nos contornos somente na interação
+
+- Removido o halo radial de fundo; mouse, toque/caneta e foco visível acendem um neon estreito que acompanha cada contorno orgânico. Em repouso, as três camadas de brilho ficam transparentes e as bordas permanecem discretas. Transição somente de opacidade, sem animar sombra/filtro/espessura, mantendo pausa por visibilidade e movimento reduzido. Refinamento visual e provas em [88](88-faixa-categorias-visual.md).
+
 ## 2026-10-29 — Anéis orgânicos nas categorias
 
 - Adaptado somente o efeito visual dos três anéis do login do projeto COM para os oito atalhos da home BR. Ícones/destinos, faixa compacta e gestos preservados; nenhum código de autenticação ou configuração do sistema antigo foi incorporado.

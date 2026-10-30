@@ -178,31 +178,40 @@ test("anéis giram apenas nas categorias visíveis e pausam fora da tela e em ab
   } finally { await context.close(); }
 });
 
-test("anéis destacam mouse, foco e toque sem mudar a espessura", async () => {
+test("neon acompanha os contornos somente no mouse, foco ou toque", async () => {
   const desktop = await fixture({ viewport: { width: 1280, height: 844 }, reducedMotion: "reduce" });
   try {
     const link = desktop.page.getByRole("link", { name: "Infantil", exact: true });
     const ring = link.locator("[data-category-ring]").first();
     const width = await ring.evaluate(element => getComputedStyle(element).borderTopWidth);
     assert.equal(await ring.evaluate(element => getComputedStyle(element).opacity), "0.64");
+    assert.equal(await ring.evaluate(element => getComputedStyle(element, "::after").opacity), "0");
+    assert.equal(await link.locator(".symbol").evaluate(element => getComputedStyle(element, "::after").backgroundImage), "none");
     await link.hover();
     await expect.poll(() => ring.evaluate(element => getComputedStyle(element).opacity)).toBe("1");
-    assert.equal(await link.locator(".symbol").evaluate(element => getComputedStyle(element, "::after").opacity), "1");
+    assert.equal(await ring.evaluate(element => getComputedStyle(element, "::after").opacity), "1");
+    assert.notEqual(await ring.evaluate(element => getComputedStyle(element, "::after").boxShadow), "none");
+    assert.equal(await desktop.page.getByRole("link", { name: "Medicamentos", exact: true }).locator("[data-category-ring]").first().evaluate(element => getComputedStyle(element, "::after").opacity), "0");
     assert.equal(await ring.evaluate(element => getComputedStyle(element).borderTopWidth), width);
     if (captureRoot) await desktop.page.getByRole("navigation", { name: "Categorias de produtos" }).screenshot({ path: join(captureRoot, "categories-hover.png") });
     await desktop.page.mouse.move(0, 500);
+    assert.equal(await ring.evaluate(element => getComputedStyle(element, "::after").opacity), "0");
     await link.focus();
     await expect.poll(() => ring.evaluate(element => getComputedStyle(element).opacity)).toBe("1");
+    assert.equal(await ring.evaluate(element => getComputedStyle(element, "::after").opacity), "1");
   } finally { await desktop.context.close(); }
 
   const mobile = await fixture({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: "reduce" });
   try {
     const link = mobile.page.getByRole("link", { name: "Infantil", exact: true });
+    const ring = link.locator("[data-category-ring]").first();
+    assert.equal(await ring.evaluate(element => getComputedStyle(element, "::after").opacity), "0");
     const box = await link.locator(".symbol").boundingBox();
     assert.ok(box);
     const session = await mobile.context.newCDPSession(mobile.page);
     await session.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height / 2 }] });
     await expect.poll(() => link.locator("[data-category-ring]").first().evaluate(element => getComputedStyle(element).opacity)).toBe("1");
+    assert.equal(await ring.evaluate(element => getComputedStyle(element, "::after").opacity), "1");
     if (captureRoot) await mobile.page.getByRole("navigation", { name: "Categorias de produtos" }).screenshot({ path: join(captureRoot, "categories-touch.png") });
     await mobile.page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: true }); document.dispatchEvent(new Event("visibilitychange")); });
     assert.equal(await link.evaluate(element => element.hasAttribute("data-pressed")), false);
@@ -216,6 +225,9 @@ test("rotação dos 24 anéis não provoca layout por frame na amostra isolada",
   const { page, context } = await fixture({ viewport: { width: 1440, height: 844 }, reducedMotion: "no-preference" });
   try {
     await expect(page.locator('#home-shortcuts > li[data-visible="true"]')).toHaveCount(8);
+    const neon = page.getByRole("link", { name: "Infantil", exact: true }).locator("[data-category-ring]").first();
+    await page.getByRole("link", { name: "Infantil", exact: true }).hover();
+    await expect.poll(() => neon.evaluate(element => getComputedStyle(element, "::after").opacity)).toBe("1");
     await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     const session = await context.newCDPSession(page);
     await session.send("Performance.enable");
@@ -229,7 +241,7 @@ test("rotação dos 24 anéis não provoca layout por frame na amostra isolada",
       return tasks;
     });
     const after = new Map<string, number>((await session.send("Performance.getMetrics")).metrics.map(metric => [metric.name, metric.value]));
-    const evidence = { sampleMs: 1200, layoutCount: after.get("LayoutCount")! - before.get("LayoutCount")!, recalcStyleCount: after.get("RecalcStyleCount")! - before.get("RecalcStyleCount")!, taskDurationMs: (after.get("TaskDuration")! - before.get("TaskDuration")!) * 1000, longTasks };
+    const evidence = { sampleMs: 1200, glowingRings: 3, layoutCount: after.get("LayoutCount")! - before.get("LayoutCount")!, recalcStyleCount: after.get("RecalcStyleCount")! - before.get("RecalcStyleCount")!, taskDurationMs: (after.get("TaskDuration")! - before.get("TaskDuration")!) * 1000, longTasks };
     assert.equal(evidence.layoutCount, 0);
     if (captureRoot) await writeFile(join(captureRoot, "motion-performance.json"), JSON.stringify(evidence, null, 2));
   } finally { await context.close(); }

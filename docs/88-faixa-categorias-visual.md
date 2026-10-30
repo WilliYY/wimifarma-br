@@ -1,5 +1,11 @@
 # 88 — Faixa de categorias da home
 
+## Neon somente na interação — 29/10/2026
+
+O titular refinou o pedido: os anéis continuam discretos em repouso e acendem como neon somente sob mouse, pressão de toque/caneta ou foco visível de teclado. O halo radial amplo da implementação anterior foi removido. Cada contorno tem uma camada própria, com o mesmo raio orgânico e brilho estreito em vermelho, verde ou amarelo; ela acompanha o anel e fica completamente transparente sem interação. Sombras pequenas têm valores estáticos; somente a opacidade transita por 180 ms. Não há filtro de blur, mudança de espessura, pulsação, novo listener ou alteração dos destinos. Movimento reduzido continua eliminando rotações e transições.
+
+O ajuste fica restrito ao CSS do componente e à regressão de UI existente. Sete cenários passaram, incluindo neon apagado em repouso e nas outras categorias, ativação por mouse/foco/toque, retorno após sair, dimensões e navegação preservadas. A amostra de desempenho inclui três contornos com neon aceso durante a rotação dos 24 anéis: zero layouts/recalculos de estilo e nenhuma long task em 1,2 s; capturas e métricas em `outputs/categorias-neon-2026-10-29/`. A medição em Chromium desktop emulado não garante desempenho em aparelhos físicos.
+
 ## Anéis orgânicos nas categorias — 29/10/2026
 
 O titular pediu o efeito dos três anéis do login do projeto Wimifarma COM nos atalhos da home BR. A referência foi somente leitura de `wimifarma-com/site/home.php` (CSS 979–1016, keyframes 1534–1547, markup 1936–1940). Foram adaptados os três contornos e seus raios orgânicos, mantendo o sistema antigo separado: nenhum login, script de autenticação, dado, serviço ou configuração foi copiado ou executado.
