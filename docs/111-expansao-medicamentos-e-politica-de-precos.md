@@ -65,3 +65,42 @@ As duas apresentações receberam classificação individual `MEDICINE/REFERENCE
 A QA isolada criou dois produtos e duas auditorias; passaram 491 testes de segurança, 111 de fornecedores e 55 controles de predecessores. A auditoria de dependências registrou três alertas baixos e um moderado, sem altos ou críticos. A revisão independente, backup, baseline, dry-run, concessão exclusiva e prova pública foram concluídos. A prova produtiva confirma duas inclusões, duas auditorias e preservação dos produtos anteriores e das nove tabelas protegidas. A janela `chat10-meclin-jet2-integrado-v1-20261029-154429` foi liberada às 15:46:15 UTC, sem concessão ativa ou aplicação incerta; a QA própria foi removida sem FORCE após conferir marcador e ausência de conexões.
 
 As apresentações convencionais Meclin 25 mg e 50 mg com 15 comprimidos continuam retidas para comprovação do teto fiscal aplicável ou custo elegível menor, preservando o acréscimo autorizado. Meclin Move permanece em revisão de apresentação e enquadramento individual. Esta publicação não significa conclusão das demais famílias. Provas privadas ficam em `D:/Codex-outputs/wimifarma-br/marcas-chat10-2026-10-23/expansao49-20261025/preparacao/retomada-publicacao-20261028-v1/retomada-publicacao-20261029-v1/meclin-jet2-runtime-proofs-20261029`.
+
+## Vinte apresentações publicadas em 30/10/2026
+
+O pedido “Inclua o que tiver” substituiu a espera por 50 itens. Foram criados 20 produtos novos, com 18 ofertas ANB e duas DM, após conferir apresentação, classificação, custo final, imposto exibido e estoque observado. A prova posterior à aplicação foi registrada às 13:05:43 UTC (10:05:43 de Brasília). Nenhum cadastro anterior foi reaplicado.
+
+| Apresentação | Fonte | Preço |
+|---|---|---|
+| Mesalazina Legrand 800 mg 30 comprimidos de liberação retardada | ANB | R$ 103,56 |
+| Allovita 50 mg/ml solução capilar 50 ml | ANB | R$ 60,36 |
+| Dexclorfeniramina + Betametasona Nova Química 2 mg + 0,25 mg 20 comprimidos | ANB | R$ 18,53 |
+| Celerg 0,25 mg + 2 mg 20 comprimidos | ANB | R$ 18,68 |
+| Celerg 0,25 mg/5 ml + 2 mg/5 ml xarope 120 ml | ANB | R$ 29,13 |
+| Mesalazina EMS 800 mg 30 comprimidos de liberação retardada | ANB | R$ 105,60 |
+| Travoprosta EMS 0,04 mg/ml solução oftálmica 2,5 ml | ANB | R$ 47,64 |
+| Orlistate EMS 120 mg 42 cápsulas | ANB | R$ 130,40 |
+| Orlistate EMS 120 mg 84 cápsulas | ANB | R$ 200,06 |
+| Ácido Ursodesoxicólico EMS 300 mg 30 comprimidos | ANB | R$ 152,42 |
+| Lestalgyn 0,4 mg/ml + 0,05 mg/ml xarope 120 ml | ANB | R$ 14,96 |
+| Dexclorfeniramina + Betametasona Teuto 0,4 mg/ml + 0,05 mg/ml xarope 120 ml | ANB | R$ 11,88 |
+| Besilato de Anlodipino Sandoz 5 mg 30 comprimidos | ANB | R$ 6,81 |
+| Besilato de Anlodipino Sandoz 10 mg 30 comprimidos | ANB | R$ 12,17 |
+| Dexclorfeniramina + Betametasona Globo 0,4 mg/ml + 0,05 mg/ml xarope 120 ml | ANB | R$ 12,05 |
+| Lergidrin 0,4 mg/ml + 0,05 mg/ml xarope 120 ml | ANB | R$ 13,47 |
+| Celetil 0,4 mg/ml + 0,05 mg/ml xarope 120 ml | ANB | R$ 19,67 |
+| Furosemida Geolab 40 mg 30 comprimidos | DM | R$ 6,95 |
+| Dexclorfeniramina + Betametasona Geolab 0,4 mg/ml + 0,05 mg/ml xarope 120 ml | ANB | R$ 18,65 |
+| Furosemida Geolab 40 mg 20 comprimidos | DM | R$ 5,01 |
+
+As 20 apresentações são genéricos ou similares, com acréscimo de 50% sobre o custo final e cashback de compra de 1%, conforme a regra autorizada. O ST exibido já integra o custo final e não foi somado novamente. Os preços ficaram abaixo do menor teto positivo comprovado entre as 26 colunas CMED de cada apresentação, sem presumir uma alíquota fiscal aplicável. A classificação individual é `ORDINARY`, com conferência da receita antes da dispensação, imagem institucional, galeria de embalagens vazia e WimiCoins desativado.
+
+Furosemida Geolab 40 mg com 30 comprimidos conserva o estoque observado exato de duas unidades e alocação de duas; a apresentação de 20 comprimidos conserva a alocação de cinco. Os produtos usam estoque de distribuidora, mantendo o estoque físico da farmácia separado. Não foram fabricados preços anteriores, promoções ou disponibilidade.
+
+A QA isolada criou 20 produtos e 20 auditorias. Passaram 485 testes de segurança e 111 de fornecedores na base imutável de importação `cb2b395`, além da revisão independente e dos controles de autorização. A auditoria operacional, de produção e completa, registrou um alerta moderado e nenhum alto ou crítico. Os checks fundamentais históricos da mesma base foram reutilizados por hash e com as datas originais; não houve novo build ou reinício do APP nesta publicação.
+
+Backup, baseline, dry-run de 20 operações CREATE, concessão exclusiva, aplicação única e verificação das 20 páginas públicas foram concluídos. As provas confirmam preservação dos produtos anteriores e das nove tabelas protegidas. A conferência SQL independente confirmou preços, acréscimo, cashback, fonte, receita e limites de estoque dos 20. A janela `chat5-ordinary21-publication-v1-20261030-130423` foi liberada às 13:06:02 UTC, sem aplicação incerta; a QA própria foi removida após conferir proprietário, marcador e ausência de conexões, sem FORCE.
+
+Cordarex continua retido por falta de comprovação do segmento comercial que define o acréscimo de 50% ou 10%. Outros candidatos sem cotação/estoque válidos, acima do teto ou com pendência documental/fiscal continuam separados. O acumulado verificado deste chat passa de 115 para 135 inclusões; publicações de outras frentes não entram nessa soma.
+
+Relatório privado: `outputs/catalogo-lotes200-2026-10-26/lotes1000-v1-20261027/fila-lotes50-20261029-v1/RESULTADO-PUBLICACAO20-20261030.md`. Originais das provas: `publication21-root-control-v1/publication20-physical-and-sql-proof.json`, no mesmo diretório de continuidade. O namespace histórico `ordinary21-publication-v1-20261030` contém efetivamente 20 itens e está encerrado; não deve ser reaplicado.
