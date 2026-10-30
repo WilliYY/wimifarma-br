@@ -6,12 +6,12 @@ import postcss from "postcss";
 import tailwind from "@tailwindcss/postcss";
 import { chromium, expect } from "@playwright/test";
 
-const evidenceDirectory = "outputs/miauby-sem-tokens-2026-10-23";
+const evidenceDirectory = "outputs/miauby-cards-2026-10-29";
 
 test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém chat e desktop acessíveis", async () => {
   const bundle = await build({ stdin: { contents: `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';import {FloatingWhatsApp} from './src/components/site/floating-whatsapp';function Fixture(){const[ready,setReady]=useState(false);const[viewer,setViewer]=useState({key:"opaque-ana",name:"Ana"});return <><main><button onClick={()=>setViewer({key:"opaque-bia",name:"Bia"})}>Trocar conta</button><button onClick={()=>setViewer(null)}>Sair da conta</button><button onClick={()=>setReady(true)}>Montar compra fictícia</button><div style={{height:200}}/>{ready&&<section data-product-purchase-panel style={{height:240}}>Compra fictícia</section>}<div style={{height:1600}}/></main><FloatingWhatsApp viewer={viewer}/></>}createRoot(document.getElementById('root')).render(<Fixture/>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"', "process.env.NEXTAUTH_URL": '""', "process.env.NEXTAUTH_URL_INTERNAL": '""', "process.env.VERCEL_URL": '""' }, plugins: [{ name: "floating-fixture", setup(builder) {
     builder.onResolve({ filter: /^next\/(navigation|image|link)$/ }, args => ({ path: args.path, namespace: "fixture" }));
-    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ resolveDir: process.cwd(), loader: "tsx", contents: args.path === "next/navigation" ? "export const usePathname=()=>'/produto/sintetico';" : args.path === "next/link" ? "import React from 'react';export default function Link(props){return <a {...props}/>;}" : "import React from 'react';export default function Image({priority,unoptimized,...props}){return <img {...props}/>;}" }));
+    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ resolveDir: process.cwd(), loader: "tsx", contents: args.path === "next/navigation" ? "export const usePathname=()=>window.location.pathname;" : args.path === "next/link" ? "import React from 'react';export default function Link(props){return <a {...props}/>;}" : "import React from 'react';export default function Image({priority,unoptimized,...props}){return <img {...props}/>;}" }));
   } }] });
   const css = (await postcss([tailwind()]).process(await fs.readFile("src/app/globals.css", "utf8"), { from: "src/app/globals.css" })).css;
   const browser = await chromium.launch();
@@ -21,7 +21,7 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
     const errors: string[] = [];
     await page.addInitScript({ content: `window.miaubyRequests=[];window.miaubyPending=[];window.sessionReads=0;window.currentSession={user:{id:"ana-test",name:"Ana Maria"},expires:new Date(Date.now()+60000).toISOString()};window.fetch=(url,options)=>{if(url==="/api/auth/session"){window.sessionReads++;if(window.sessionUnavailable)throw new Error("Synthetic offline");return Promise.resolve(new Response(JSON.stringify(window.currentSession),{status:200}));}if(url!=="/api/miauby")throw new Error("Unexpected fetch");window.miaubyRequests.push(options);return new Promise(resolve=>window.miaubyPending.push(()=>resolve(new Response(JSON.stringify({message:"Resposta privada antiga",products:[]}),{status:200}))));};` });
     page.on("pageerror", error => errors.push(error.message));
-    await page.route("**/*", async route => {
+    await context.route("**/*", async route => {
       const request = route.request(); const url = new URL(request.url());
       if (url.hostname !== "127.0.0.1" || request.method() !== "GET") { errors.push("Unexpected external request or write"); return route.abort(); }
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text });
@@ -37,8 +37,10 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
     await expect(notice).toContainText("Bem-vindo, Ana!");
     await fs.mkdir(evidenceDirectory, { recursive: true });
     await page.screenshot({ path: `${evidenceDirectory}/welcome-390.png` });
-    await page.getByRole("button", { name: "Ocultar dica da Miauby", exact: true }).click();
+    await page.evaluate(() => window.scrollTo(0, 80));
     await expect(notice).toHaveCount(0);
+    await expect(trigger).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, 0));
     assert.equal(await page.evaluate("window.miaubyRequests.length"), 0, "Saudações não consultam o assistente");
     await page.getByRole("button", { name: "Montar compra fictícia", exact: true }).click();
     await expect(trigger).toBeHidden();
@@ -52,6 +54,20 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
     await page.evaluate(() => window.scrollTo(0, 900));
     await expect(trigger).toBeVisible();
     await expect(whatsapp).toBeHidden();
+    await page.evaluate(() => {
+      const purchase = document.createElement("button");
+      purchase.textContent = "Comprar sintético";
+      purchase.id = "synthetic-sticky-purchase";
+      purchase.style.cssText = "position:fixed;bottom:0;left:0;width:100%;height:76px;background:#0b5369;color:white;z-index:40";
+      purchase.onclick = () => { purchase.dataset.clicked = "true"; };
+      document.body.append(purchase);
+    });
+    const purchase = page.getByRole("button", { name: "Comprar sintético", exact: true });
+    assert.ok((await trigger.boundingBox())!.y + (await trigger.boundingBox())!.height <= (await purchase.boundingBox())!.y, "Launcher fica acima da compra fixa");
+    await page.screenshot({ path: `${evidenceDirectory}/sticky-purchase-390.png` });
+    await purchase.click();
+    await expect(purchase).toHaveAttribute("data-clicked", "true");
+    await purchase.evaluate(element => element.remove());
     await trigger.click();
     const chat = page.getByRole("dialog", { name: "Conversa com a Miauby", exact: true });
     await expect(chat).toBeVisible();
@@ -81,6 +97,7 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
     await expect(humanHelp).toBeHidden();
     await expect(whatsapp).toBeVisible();
     await page.setViewportSize({ width: 1280, height: 800 });
+    await page.evaluate(() => window.scrollTo(0, 0));
     await expect(whatsapp).toBeVisible();
     await expect(chat.getByRole("button", { name: "Consultar preço de um produto", exact: true })).toBeVisible();
     await page.screenshot({ path: `${evidenceDirectory}/chat-1280.png` });
@@ -189,6 +206,59 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
     await page.waitForTimeout(1200);
     assert.equal(await page.evaluate("window.sessionReads"), reads + 1, "Não há polling constante de sessão");
     await otherTab.close();
+    for (const [width, protectedArea] of [[320, "controls"], [390, "price"], [1280, "dock"]] as const) {
+      const collisionPage = await context.newPage();
+      await collisionPage.setViewportSize({ width, height: 800 });
+      await collisionPage.goto("http://127.0.0.1:3213/catalogo");
+      await expect(collisionPage.getByRole("button", { name: "Conversar com a Miauby", exact: true })).toBeVisible();
+      await collisionPage.evaluate(({ width, protectedArea }) => {
+        const area = document.createElement("div");
+        if (protectedArea === "controls") area.dataset.productControls = "";
+        else if (protectedArea === "price") { area.setAttribute("role", "group"); area.setAttribute("aria-label", "Preço do produto"); }
+        else area.setAttribute("aria-label", "Compra rapida do produto");
+        area.style.cssText = `position:fixed;right:${width >= 640 ? 100 : 12}px;bottom:${width >= 640 ? 145 : 70}px;width:280px;height:100px;background:#fff8e8;z-index:40`;
+        const buy = document.createElement("button");
+        buy.textContent = "Comprar na área inicial do balão";
+        buy.style.cssText = "width:100%;height:100%;background:#0b5369;color:white";
+        buy.onclick = () => { buy.dataset.clicked = "true"; };
+        area.append(buy);
+        document.body.append(area);
+      }, { width, protectedArea });
+      await collisionPage.waitForTimeout(1_500);
+      await expect(collisionPage.getByRole("complementary", { name: "Dica da Miauby", exact: true })).toHaveCount(0);
+      const initialBuy = collisionPage.getByRole("button", { name: "Comprar na área inicial do balão", exact: true });
+      await initialBuy.click();
+      await expect(initialBuy).toHaveAttribute("data-clicked", "true");
+      await collisionPage.screenshot({ path: `${evidenceDirectory}/initial-collision-${protectedArea}-${width}.png` });
+      await collisionPage.close();
+    }
+    for (const width of [320, 390, 1280]) {
+      const welcomePage = await context.newPage();
+      await welcomePage.setViewportSize({ width, height: 800 });
+      await welcomePage.goto(`http://127.0.0.1:3213${width === 390 ? "/catalogo" : "/"}`);
+      const welcomeNotice = welcomePage.getByRole("complementary", { name: "Dica da Miauby", exact: true });
+      await expect(welcomeNotice).toBeVisible();
+      await welcomePage.screenshot({ path: `${evidenceDirectory}/rounded-welcome-${width}.png` });
+      if (width === 390) await welcomePage.getByRole("button", { name: "Montar compra fictícia", exact: true }).click();
+      else if (width === 1280) await welcomePage.keyboard.press("Tab");
+      else await welcomePage.getByRole("button", { name: "Ocultar dica da Miauby", exact: true }).click();
+      await expect(welcomeNotice).toHaveCount(0);
+      await welcomePage.close();
+      const navigatingPage = await context.newPage();
+      await navigatingPage.setViewportSize({ width, height: 800 });
+      await navigatingPage.goto(`http://127.0.0.1:3213${width === 390 ? "/catalogo" : "/"}`);
+      const navigatingTrigger = navigatingPage.getByRole("button", { name: "Conversar com a Miauby", exact: true });
+      await expect(navigatingTrigger).toBeVisible();
+      await navigatingPage.evaluate(() => window.scrollTo(0, 650));
+      await navigatingPage.waitForTimeout(1_500);
+      await expect(navigatingPage.getByRole("complementary", { name: "Dica da Miauby", exact: true })).toHaveCount(0);
+      await navigatingTrigger.click();
+      await expect(navigatingPage.getByRole("dialog", { name: "Conversa com a Miauby", exact: true })).toBeVisible();
+      await navigatingPage.keyboard.press("Escape");
+      await navigatingPage.waitForTimeout(1_500);
+      await expect(navigatingPage.getByRole("complementary", { name: "Dica da Miauby", exact: true })).toHaveCount(0);
+      await navigatingPage.close();
+    }
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

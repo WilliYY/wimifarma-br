@@ -1,5 +1,15 @@
 # 86 — Preços e desconto real nos cards
 
+## Compactação e enquadramento — 29/10/2026
+
+Os cartões compartilhados de home, catálogo, busca e correlatos passam a usar foto de 128 px no celular e 144 px a partir de 640 px, com margem interna menor e `object-contain`, sem cortar a embalagem, deformar a imagem ou alterar os arquivos originais. Retirados o bloco genérico de frete e a frase “Consulte os detalhes” quando não há composição. O componente de selo de frete, que ficou sem uso, foi removido; condições e consulta por CEP continuam nas áreas de entrega, sem alteração das regras de gratuidade.
+
+Nome, dose, apresentação, marca curta e nome completo acessível continuam; composição real aparece quando cadastrada. Slots menores e estáveis de composição/referência/preço/condição unitária preservam o alinhamento entre produtos com ou sem promoção, benefícios e receita. A reserva da referência pode ficar vazia, sem inventar preço riscado. Preço do carrinho, desconto real, cashback elegível, estoque, limites de quantidade e compra assistida seguem os helpers anteriores.
+
+Home e correlatos mostram dois cartões completos por vez em 320/390 px, preservando rolagem por dedo, mouse e teclado; desktop mantém três ou cinco conforme o breakpoint anterior. Adicionar/Comprar e os controles de quantidade passam a ter altura de 44 px. O campo de quantidade usa fonte/padding compatíveis com a coluna estreita, sem alterar a validação ou o limite de 999. A ordem e seleção dos produtos não mudam.
+
+Regressões de cartões mistos verificam altura uniforme, marca legível, alinhamento de preço/ações, valores altos/centavos, quantidade, disponibilidade e itens assistidos. Nova fixture com foto sintética valida `object-contain`, enquadramento e alvo de 44 px em 320/390/1280 px. A fixture de vitrines compila o CSS real com o PostCSS/Tailwind já instalado; deixou de depender de CSS potencialmente antigo de `.next` para a geometria. Evidências em `outputs/miauby-cards-2026-10-29/`, fora do Git.
+
 ## Marca no título — 23/10/2026
 
 Os cards compartilhados de home, catálogo, busca e relacionados mostram primeiro nome, dose e apresentação, com a marca curta ao final do próprio título em peso destacado, sem uma linha de marca antes do nome. O conjunto ocupa até três linhas na mesma altura reservada, preservando o alinhamento. Somente no título visível do card, `comprimido(s)` é abreviado para `comp.` e `revestido(s)` para `rev.`, sem abreviar ou remover dose, quantidade, liberação ou outras formulações. Exemplos: `Loratadina 10 mg 12 comp. BIOLAB` e `Tadalafila 20 mg 4 comp. rev. EUROFARMA`. Nome original completo permanece no atributo `title`, no nome acessível e no carrinho.

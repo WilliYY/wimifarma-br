@@ -183,7 +183,7 @@ export function RelatedProductsCarousel({
           <div
             aria-label={`Produto correlato ${index + 1} de ${products.length}`}
             aria-roledescription="slide"
-            className="min-w-0 shrink-0 basis-[84%] snap-start sm:basis-[calc((100%_-_1rem)/2)] lg:basis-[calc((100%_-_2rem)/3)] xl:basis-[calc((100%_-_4rem)/5)]"
+            className="min-w-0 shrink-0 basis-[calc((100%_-_1rem)/2)] snap-start lg:basis-[calc((100%_-_2rem)/3)] xl:basis-[calc((100%_-_4rem)/5)]"
             data-related-product-card
             key={product.id}
             role="group"

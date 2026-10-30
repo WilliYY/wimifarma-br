@@ -209,7 +209,7 @@ export function HomeProductCarousel({
             <div
               aria-label={`Produto ${index + 1} de ${products.length}`}
               aria-roledescription="slide"
-              className="min-w-0 shrink-0 basis-[86%] snap-start sm:basis-[calc((100%_-_1rem)/2)] lg:basis-[calc((100%_-_2rem)/3)] xl:basis-[calc((100%_-_4rem)/5)]"
+              className="min-w-0 shrink-0 basis-[calc((100%_-_1rem)/2)] snap-start lg:basis-[calc((100%_-_2rem)/3)] xl:basis-[calc((100%_-_4rem)/5)]"
               data-home-product-card
               key={product.id}
               role="group"

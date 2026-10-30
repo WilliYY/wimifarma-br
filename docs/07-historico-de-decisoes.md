@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-29 — Cartões compactos e Miauby sem sobrepor compra
+
+- Dois cartões por vez no mobile da home/correlatos, fotos proporcionais com menos margem e dados comerciais preservados. Removida a chamada genérica de frete e o texto de detalhes sem composição; preço/referência/ações continuam alinhados e alvos têm 44 px. Balão da Miauby arredondado com emoji, recolhimento ao navegar e proteção de colisão com compra, sem novo consumo de IA. Contratos em [86](86-precos-e-desconto-real-nos-cards.md) e [100](100-miauby-atendimento-local.md).
+
 ## 2026-10-29 — Cabeçalho compacto na vitrine de cuidados
 
 - A pedido do titular, somente `home-care` mostra “Beleza” e “Cuidados para o dia a dia”, sem a contagem de produtos nem setas. “Ver catálogo” permanece no canto direito, com espaçamento menor e alvo de 44 px. Rolagem por mouse/toque/teclado, produtos e demais vitrines preservados; contrato em [10](10-layout-e-experiencia.md).

@@ -3,13 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import { ProductCardActions } from "@/components/site/product-card-actions";
-import { ProductShippingBadge } from "@/components/site/product-shipping-badge";
 import { ProductCashback } from "@/components/site/product-cashback";
 import type { CartProduct } from "@/components/site/cart-provider";
 import type { PublicProductSearchItem } from "@/features/products/public-search";
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName, productTitleBrand } from "@/features/products/display-name";
-import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 import { productOfferDiscount } from "@/features/offers/daily-rotation";
 import { ProductPmcBadge, ProductPmcPrice } from "./product-pmc";
 
@@ -49,17 +47,13 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
     stock: product.stock,
     unitPriceCents: Math.round(currentPrice * 100),
   } satisfies CartProduct;
-  const canOrder = product.stock > 0 && !requiresPurchaseAssistance(cartProduct);
 
   return (
     <article
-      className="group relative flex h-full min-h-[22rem] min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_18px_40px_rgba(17,24,39,0.11)] motion-reduce:transform-none"
+      className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_18px_40px_rgba(17,24,39,0.11)] motion-reduce:transform-none"
     >
-      <div className="h-[4.25rem] shrink-0 px-3 pb-1 pt-3 sm:h-14">
-        {canOrder && <ProductShippingBadge />}
-      </div>
       <div
-        className="relative flex h-40 shrink-0 items-center justify-center overflow-hidden bg-white px-3 pb-7 pt-8"
+        className="relative flex h-32 shrink-0 items-center justify-center overflow-hidden bg-white p-2 sm:h-36 sm:p-3"
       >
         {product.imageUrl ? (
           <Image
@@ -82,25 +76,25 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col border-t border-line px-4 pb-4 pt-3">
+      <div className="flex flex-1 flex-col border-t border-line px-3 pb-3 pt-2">
         <span className="h-4 shrink-0 truncate text-[0.68rem] font-black uppercase text-brand">
           {product.category || product.brand || "Produto"}
         </span>
         <Link
           aria-label={`Ver ${fullTitle}`}
-          className="mt-1 h-16 min-w-0 shrink-0 text-sm font-bold leading-5 text-ink after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand"
+          className="mt-1 h-14 min-w-0 shrink-0 text-[0.8125rem] font-bold leading-[1.125rem] text-ink after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand sm:h-16 sm:text-sm sm:leading-5"
           href={`/produto/${product.slug}`}
           title={fullTitle}
         >
           <span className="line-clamp-3">{displayName}{titleBrand ? <> <span className="font-black">{titleBrand}</span></> : null}</span>
         </Link>
-        <span className="mt-2 h-4 shrink-0 truncate text-xs font-semibold leading-4 text-muted" title={product.activeIngredients.join(" + ") || undefined}>
-          {product.activeIngredients.join(" + ") || "Consulte os detalhes"}
+        <span className="mt-1 h-4 shrink-0 truncate text-[0.68rem] font-semibold leading-4 text-muted" title={product.activeIngredients.join(" + ") || undefined}>
+          {product.activeIngredients.join(" + ")}
         </span>
 
-        <div className="mt-auto pt-3">
-          <div role="group" aria-label="Preço do produto" className="grid grid-rows-[1rem_1.75rem_1rem] gap-y-1 border-t border-line pt-3">
-            <span className="block min-w-0 text-[0.68rem] font-semibold text-muted">
+        <div className="mt-auto pt-2">
+          <div role="group" aria-label="Preço do produto" className="grid grid-rows-[0.75rem_1.5rem_1rem] gap-y-0.5 border-t border-line pt-2">
+            <span className="block min-w-0 text-[0.68rem] font-semibold leading-3 text-muted">
               {pmc ? <ProductPmcPrice reference={pmc} strike={pmcSavings !== null} /> : hasPromotion ? <>De <s>{formatCurrency(normalPrice)}</s></> : null}
             </span>
             <div className="flex min-w-0 flex-wrap content-start items-baseline gap-x-1 gap-y-1">

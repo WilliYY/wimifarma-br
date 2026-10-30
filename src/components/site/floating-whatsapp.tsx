@@ -13,7 +13,7 @@ import {
   Send,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { siteConfig } from "@/lib/site";
 import type { Session } from "next-auth";
@@ -190,6 +190,9 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
   const [notice, setNotice] = useState<string | null>(null);
   const [isTabVisible, setIsTabVisible] = useState(false);
   const attemptedNotices = useRef(new Set<string>());
+  const dismissedNoticePath = useRef<string | null>(null);
+  const floatingRef = useRef<HTMLDivElement>(null);
+  const noticeRef = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<AbortController | null>(null);
@@ -219,6 +222,7 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
   useEffect(() => {
     setNotice(null);
     if (!active || isOpen || isHiddenRoute || !isTabVisible) return;
+    if (window.scrollY > 0 || dismissedNoticePath.current === pathname) return;
     const identity = viewer?.key ?? "anonymous";
     const name = safeMiaubyFirstName(viewer?.name);
     const welcome = { key: "welcome", text: name ? `Bem-vindo, ${name}! Sou a Miauby. Posso ajudar?` : "Bem-vindo! Sou a Miauby. Posso ajudar?" };
@@ -236,8 +240,57 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
         break;
       }
     }, 1_200);
-    return () => { window.clearTimeout(showTimer); window.clearTimeout(hideTimer); };
+    const dismissNotice = () => {
+      dismissedNoticePath.current = pathname;
+      window.clearTimeout(showTimer);
+      window.clearTimeout(hideTimer);
+      setNotice(null);
+    };
+    const dismissOutside = (event: Event) => {
+      if (event.target instanceof Node && floatingRef.current?.contains(event.target)) return;
+      dismissNotice();
+    };
+    window.addEventListener("scroll", dismissNotice, { passive: true, once: true });
+    document.addEventListener("pointerdown", dismissOutside);
+    document.addEventListener("keydown", dismissOutside);
+    return () => {
+      window.clearTimeout(showTimer);
+      window.clearTimeout(hideTimer);
+      window.removeEventListener("scroll", dismissNotice);
+      document.removeEventListener("pointerdown", dismissOutside);
+      document.removeEventListener("keydown", dismissOutside);
+    };
   }, [active, isHiddenRoute, isOpen, isTabVisible, pathname, viewer?.key, viewer?.name]);
+
+  useLayoutEffect(() => {
+    if (!notice || isOpen) return;
+    const bubble = noticeRef.current;
+    if (!bubble) return;
+    const protectedSelector = '[data-product-controls], [role="group"][aria-label="Preço do produto"], [data-product-purchase-panel], [aria-label="Compra rapida do produto"]';
+    const checkPurchaseOverlap = () => {
+      const bounds = bubble.getBoundingClientRect();
+      if (!bounds.width || !bounds.height) return;
+      for (const target of document.querySelectorAll(protectedSelector)) {
+        const area = target.getBoundingClientRect();
+        if (area.width && area.height && bounds.left < area.right && bounds.right > area.left && bounds.top < area.bottom && bounds.bottom > area.top) {
+          dismissedNoticePath.current = pathname;
+          setNotice(null);
+          return;
+        }
+      }
+    };
+    // Layout effects run before paint, so a conflicting tip never covers a purchase action.
+    checkPurchaseOverlap();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(checkPurchaseOverlap);
+    observer?.observe(bubble);
+    observer?.observe(document.body);
+    for (const target of document.querySelectorAll(protectedSelector)) observer?.observe(target);
+    window.addEventListener("resize", checkPurchaseOverlap);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", checkPurchaseOverlap);
+    };
+  }, [isOpen, notice, pathname, purchasePosition]);
 
   useEffect(() => {
     setIsOpen(false);
@@ -359,14 +412,19 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
 
   return (
     <div
+      ref={floatingRef}
       className={`fixed right-3 z-50 flex-row items-end gap-2 sm:right-5 sm:flex-col sm:gap-3 ${isProductPage && purchasePosition === "visible" && !isOpen ? "hidden sm:flex" : "flex"} ${
         isProductPage && purchasePosition === "after" && !isOpen ? "bottom-[calc(6rem+env(safe-area-inset-bottom))] sm:bottom-24" : isProductPage ? "bottom-[calc(0.75rem+env(safe-area-inset-bottom))] sm:bottom-24" : "bottom-[calc(0.75rem+env(safe-area-inset-bottom))] sm:bottom-5"
       }`}
     >
       {notice && !isOpen ? (
-        <aside aria-label="Dica da Miauby" className="absolute bottom-[calc(100%+0.75rem)] right-0 flex w-[min(18rem,calc(100vw-1.5rem))] items-start gap-1 rounded-lg border border-[#f2c14e]/60 bg-[#fff8e8] p-3 text-sm text-ink shadow-lg sm:right-20 sm:bottom-auto sm:top-0">
-          <p aria-live="polite" className="min-w-0 flex-1 py-1">{notice}</p>
-          <button aria-label="Ocultar dica da Miauby" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" onClick={() => setNotice(null)} type="button"><X className="h-4 w-4" /></button>
+        <aside ref={noticeRef} aria-label="Dica da Miauby" className="absolute bottom-[calc(100%+0.875rem)] right-0 flex w-[min(19rem,calc(100vw-1.5rem))] items-start gap-2 rounded-[1.75rem] rounded-br-lg border border-[#f2c14e]/45 bg-gradient-to-br from-white to-[#fff8e8] p-3 text-sm text-ink shadow-[0_12px_36px_rgba(61,47,15,0.14)] sm:right-20 sm:bottom-auto sm:top-0">
+          <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f2c14e]/20 text-lg">👋</span>
+          <div className="min-w-0 flex-1 py-1">
+            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.12em] text-brand">Miauby</p>
+            <p aria-live="polite" className="text-[13px] leading-5">{notice}</p>
+          </div>
+          <button aria-label="Ocultar dica da Miauby" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" onClick={() => { dismissedNoticePath.current = pathname; setNotice(null); }} type="button"><X className="h-4 w-4" /></button>
         </aside>
       ) : null}
       {isOpen ? (

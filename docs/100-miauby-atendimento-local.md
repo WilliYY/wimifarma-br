@@ -1,5 +1,11 @@
 # Miauby: atendimento local e consulta de preços
 
+## Balão e proteção da compra — 29/10/2026
+
+O aviso passivo usa cantos arredondados, gradiente claro, identificação da Miauby, emoji decorativo 👋 e botão de fechar com alvo de 44 px. Ao rolar ou interagir fora do widget, ele recolhe e cancela o timer pendente; não agenda dica quando a rota já inicia rolada e não reabre na mesma rota apenas por abrir/fechar o painel. O chat manual e o WhatsApp integrado continuam acessíveis.
+
+Antes de pintar o aviso, a proteção de colisão confere sua região contra preço, controles e barras de compra. Se houver interseção, o aviso é suprimido; redimensionamentos são acompanhados somente enquanto ele existe, com cleanup, sem polling ou leitura de layout por frame de rolagem. A proteção anterior da página de produto, que oculta/reposiciona o launcher junto ao painel/barra de compra, permanece. Testes sintéticos cobrem também o caso inicial sem scroll, timer atrasado, dispensa por gesto/teclado/fechar, troca de sessão e CTA clicável. Não há nova chamada de IA, uso de tokens, endpoint ou persistência de dados pessoais. Capturas e logs em `outputs/miauby-cards-2026-10-29/`.
+
 ## Contrato aprovado em 23/10/2026
 
 O chat público da Miauby ajuda a encontrar produtos e consultar preços reais sem chamadas a modelos de IA. Saudações, dicas de navegação, entrega, pagamento, Farmácia Popular, saldo e acompanhamento de pedidos usam textos locais. As sugestões administrativas de catálogo com Gemini continuam independentes; suas credenciais não foram removidas nem alteradas.

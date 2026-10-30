@@ -17,7 +17,7 @@ export function ProductCardActions({ product }: { product: CartProduct }) {
   const quantity = items.find((item) => item.id === product.id)?.quantity ?? 0;
   const limit = orderQuantityLimit(product);
   const restricted = requiresPurchaseAssistance(product);
-  const button = "inline-flex h-10 min-w-0 cursor-pointer items-center justify-center gap-2 rounded-md px-3 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+  const button = "inline-flex h-11 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-md px-2 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
   function add(buy = false) {
     if (!hydrated || restricted || limit < 1) return;
@@ -26,14 +26,14 @@ export function ProductCardActions({ product }: { product: CartProduct }) {
     if (buy) router.push("/checkout");
   }
 
-  return <div className="relative z-20 mt-3 grid min-h-[5.5rem] gap-2" data-product-controls>
-    {restricted ? <a className={`${button} h-auto min-h-[5.5rem] border border-pharma-green/30 text-pharma-green hover:bg-emerald-50`} href={buildWhatsAppUrl(`Ola, gostaria de consultar ${product.name}.`)} rel="noreferrer" target="_blank"><MessageCircle className="h-4 w-4 shrink-0" />Consultar no WhatsApp</a> : product.stock < 1 ? <><span className="flex items-center justify-center text-xs font-semibold text-muted">Indisponível no momento</span><RestockButton compact product={product} /></> : <>
-      {quantity > 0 ? <div aria-label={`Quantidade de ${product.name}`} className="grid h-10 grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center rounded-md border border-line bg-white" role="group">
+  return <div className="relative z-20 -mx-1 mt-2 grid min-h-24 gap-2 sm:mx-0" data-product-controls>
+    {restricted ? <a className={`${button} h-auto min-h-24 border border-pharma-green/30 text-pharma-green hover:bg-emerald-50`} href={buildWhatsAppUrl(`Ola, gostaria de consultar ${product.name}.`)} rel="noreferrer" target="_blank"><MessageCircle className="h-4 w-4 shrink-0" />Consultar no WhatsApp</a> : product.stock < 1 ? <><span className="flex items-center justify-center text-xs font-semibold text-muted">Indisponível no momento</span><RestockButton compact product={product} /></> : <>
+      {quantity > 0 ? <div aria-label={`Quantidade de ${product.name}`} className="grid h-11 grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center rounded-md border border-line bg-white" role="group">
         <button aria-label={`Diminuir ${product.name}`} className={`${button} px-0 text-brand hover:bg-brand-soft`} onClick={() => updateQuantity(product.id, quantity - 1)} type="button"><Minus className="h-4 w-4" /></button>
         <input
           aria-label={`Quantidade de caixas de ${product.name}`}
           autoComplete="off"
-          className="h-full min-w-0 rounded-sm bg-transparent px-1 text-center text-sm font-black text-ink outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
+          className="h-full min-w-0 rounded-sm bg-transparent px-0 text-center text-xs font-black text-ink outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
           inputMode="numeric"
           onBlur={() => setQuantityEmpty(false)}
           onChange={event => {

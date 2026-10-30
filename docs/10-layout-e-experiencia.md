@@ -1,5 +1,11 @@
 # 10 - Layout e Experiencia
 
+## Cartões mobile e balão da Miauby — 29/10/2026
+
+As vitrines e os correlatos passam a mostrar dois cartões completos no celular, com foto proporcional melhor aproveitada, menos margens e sem o bloco genérico de frete. Mantidos nome/marca/dose, composição cadastrada, preço real, descontos elegíveis, condição unitária e compra/quantidade. Os alvos de compra têm 44 px; slots compactos preservam o alinhamento e os controles de rolagem continuam. Contrato detalhado em [86](86-precos-e-desconto-real-nos-cards.md).
+
+O balão passivo da Miauby fica arredondado, com emoji, e recolhe durante a navegação; avisos atrasados e colisões com compra são suprimidos. O launcher e o painel manual permanecem. Contrato e segurança em [100](100-miauby-atendimento-local.md).
+
 ## Cabeçalho compacto da vitrine de cuidados — 29/10/2026
 
 Somente a vitrine `home-care` usa `compactHeader` em `HomeProductCarousel`: indicação “Beleza”, título “Cuidados para o dia a dia” e link “Ver catálogo” no canto direito da primeira linha, com alvo de toque de 44 px. A contagem visível e as duas setas foram removidas dessa vitrine; o título ocupa a linha inteira abaixo, e os espaços verticais foram reduzidos no celular. Arraste, toque, teclado, nomes acessíveis dos itens e destino do catálogo permanecem. Farmacinha e a vitrine de economia conservam seus cabeçalhos e controles anteriores. Seleção, rotação, preços, estoque e quantidade de itens não mudaram.

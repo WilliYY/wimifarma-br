@@ -19,14 +19,14 @@ const bundle = build({
       import {ProductPmcDetails} from './src/components/site/product-pmc';
       const kind=new URLSearchParams(location.search).get('kind');
       const product={id:'synthetic-product',slug:'produto-sintetico',name:'Produto sintético',
-        imageUrl:null,category:'Produto',brand:'Marca sintética',activeIngredients:[],searchTerms:[],
+        imageUrl:kind==='photo-grid'?'/fixture-product.svg':null,category:'Produto',brand:'Marca sintética',activeIngredients:[],searchTerms:[],
         price:kind==='soap'?'3.44':kind==='promotion'||kind==='pmc-above'?'100.00':kind==='tiny'?'0.17':kind==='penny'?'0.01':'6.87',
         promotionalPrice:kind==='promotion'||kind==='pmc-above'?'80.00':null,isPopularPharmacy:false,requiresPrescription:kind==='restricted',
         prescriptionType:kind==='restricted'?'CONTROLLED':kind.startsWith('pmc')&&kind!=='pmc-rx'?'UNREVIEWED':'ORDINARY',stock:kind==='unavailable'?0:kind==='demand'?1:15,
         ...(kind.startsWith('pmc')?{requiresPrescription:kind==='pmc-rx',catalogClassification:{kind:'MEDICINE',medicineClass:'GENERIC',ethical:false,otc:kind!=='pmc-rx'},
           pmcReference:{amountCents:kind==='pmc-above'?7000:1000,column:'PMC 0 %',publishedOn:'2026-10-09',sourceUrl:'https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos/arquivos/lista_pmc__20261009_115232671.xlsx/@@download/file',presentation:'10 MG COM X 10',laboratory:'Laboratório sintético',registration:'1234567890123',rates:[{label:'PMC 0 %',cents:1000},{label:'PMC 19,5 %',cents:1250},{label:'PMC 19,5 %  ALC',cents:1200}]}}:{}),
         inventorySource:kind==='demand'?'DISTRIBUTOR':'PHARMACY',supplierDemandAllowed:kind==='demand'};
-      const cards=(kind==='grid'||kind==='large-grid'||kind==='pmc-grid')?[
+      const cards=(kind==='grid'||kind==='large-grid'||kind==='pmc-grid'||kind==='photo-grid')?[
         {...product,prescriptionType:'UNREVIEWED',price:kind==='large-grid'?'1299.90':'6.90',promotionalPrice:kind==='large-grid'?'999.99':'4.99',cashbackEnabled:true,cashbackRateBps:200},
         {...product,id:'synthetic-demand',slug:'sob-demanda',name:'Tadalafila 20 mg 4 comprimidos revestidos',price:kind==='large-grid'?'0.01':'4.85',inventorySource:'DISTRIBUTOR',supplierDemandAllowed:true,
           brand:'EUROFARMA LABORATÓRIOS S.A',activeIngredients:['Composição sintética longa para conferir a linha de detalhes']},
@@ -77,6 +77,7 @@ async function fixture(run: (page: Page) => Promise<void>, kind = "physical") {
       if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: `<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><style>${kind.endsWith("grid") ? '#root{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:960px;margin:16px auto;padding:0 12px}@media(min-width:900px){#root{grid-template-columns:repeat(3,minmax(0,1fr))}}' : '#root{width:min(280px,calc(50vw - 24px));margin:24px}'}${kind === "large-grid" ? '#root{max-width:648px}' : ''}</style><div id="root"></div><script type="module" src="/fixture.js"></script>` });
       if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: styles });
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: script });
+      if (url.pathname === "/fixture-product.svg") return route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="200"><rect x="3" y="3" width="114" height="194" rx="8" fill="#f1f5f9" stroke="#b70c32" stroke-width="4"/><text x="60" y="95" text-anchor="middle" font-size="12">Produto</text><text x="60" y="112" text-anchor="middle" font-size="12">sintético</text></svg>' });
       if (url.pathname === "/api/miauby/carrinho") return route.fulfill({ json: {} });
       return route.abort();
     });
@@ -126,7 +127,8 @@ test("cards compactos mantêm benefícios fora do preço e altura uniforme sem e
         mkdirSync(process.env.PRODUCT_CARD_CAPTURE_ROOT, { recursive: true });
         await page.screenshot({ path: join(process.env.PRODUCT_CARD_CAPTURE_ROOT, `cards-compactos-${width}.png`), fullPage: true });
       }
-      assert.ok(Math.max(...sizes) <= 600, `cards ainda longos em ${width}px: ${sizes.join(", ")}`);
+      assert.ok(Math.max(...sizes) <= 520, `cards ainda longos em ${width}px: ${sizes.join(", ")}`);
+      await expect(cards.getByText(/Consulte seu CEP para frete grátis|Consulte os detalhes|^Frete grátis$/)).toHaveCount(0);
       assert.ok(Math.max(...sizes) - Math.min(...sizes) < 1, `benefícios alteraram altura em ${width}px`);
       const first = cards.nth(0);
       const off = await first.getByText("28% OFF", { exact: true }).boundingBox();
@@ -143,6 +145,27 @@ test("cards compactos mantêm benefícios fora do preço e altura uniforme sem e
       await expect(first.getByText(/R\$\s*0,10/)).toBeVisible();
     }
   }, "grid");
+});
+
+test("foto usa a área útil compacta sem recortar ou deformar a embalagem", async () => {
+  await fixture(async page => {
+    const first = page.getByRole("article").first();
+    const image = first.getByRole("img");
+    for (const width of [320, 390, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect.poll(() => image.evaluate(element => (element as HTMLImageElement).naturalWidth)).toBe(120);
+      assert.equal(await image.evaluate(element => getComputedStyle(element).objectFit), "contain");
+      const bounds = await image.boundingBox();
+      const card = await first.boundingBox();
+      assert.ok(bounds && card && bounds.height >= 104 && bounds.height <= 144);
+      assert.ok(bounds.x >= card.x && bounds.x + bounds.width <= card.x + card.width);
+      const buy = first.getByRole("button", { name: "Comprar", exact: true });
+      assert.ok((await buy.boundingBox())!.height >= 44);
+      if (process.env.PRODUCT_CARD_CAPTURE_ROOT) {
+        await page.screenshot({ path: join(process.env.PRODUCT_CARD_CAPTURE_ROOT, `cards-fotos-${width}.png`), fullPage: true });
+      }
+    }
+  }, "photo-grid");
 });
 
 test("preço real maior não sobrepõe condição unitária ou ações em tela estreita", async () => {
@@ -186,11 +209,11 @@ test("cards alinham preços e ações com promoção, cashback, fornecedor e gen
       assert.ok(firstBuy && secondBuy);
       assert.ok(Math.abs(firstBuy.y - secondBuy.y) < 1, `botões desalinhados em ${width}px`);
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-      await expect(cards.nth(1).getByText("Frete grátis", { exact: true })).toBeVisible();
+      await expect(cards.nth(1).getByText("Frete grátis", { exact: true })).toHaveCount(0);
       for (const index of [2, 3]) {
-        await expect(cards.nth(index).getByText("Frete grátis", { exact: true })).toBeVisible();
+        await expect(cards.nth(index).getByText("Frete grátis", { exact: true })).toHaveCount(0);
         await expect(cards.nth(index).getByText(/cashback/)).toHaveCount(0);
-        await expect(cards.nth(index).getByText(/Consulte seu CEP para frete grátis/)).toBeVisible();
+        await expect(cards.nth(index).getByText(/Consulte seu CEP para frete grátis/)).toHaveCount(0);
       }
     }
     assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1") ?? "[]")), []);

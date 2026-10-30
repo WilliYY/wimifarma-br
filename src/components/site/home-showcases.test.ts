@@ -1,14 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
+import postcss from "postcss";
+import tailwind from "@tailwindcss/postcss";
 
 test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem repetição", async () => {
   const captureRoot = process.env.HOME_SHOWCASES_CAPTURE_ROOT;
-  const cssDirectory = join(process.cwd(), ".next/static/css");
-  const css = captureRoot && existsSync(cssDirectory) ? readdirSync(cssDirectory).filter(file => file.endsWith(".css")).map(file => readFileSync(join(cssDirectory, file), "utf8")).join("\n") : "";
+  const css = (await postcss([tailwind()]).process(readFileSync("src/app/globals.css", "utf8"), { from: "src/app/globals.css" })).css;
   const mocks: Record<string, string> = {
     "next/link": "import React from 'react';export default ({children,...props})=><a {...props}>{children}</a>;",
     "next/image": "import React from 'react';export default ({alt,priority,fill,sizes,...props})=><img alt={alt} {...props}/>;",
@@ -64,7 +65,7 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
       for (const title of ["Dia do Genérico Barato", "Dia do Idoso", "Dia do Bebê", "Cuidado para cada fase."]) {
         await expect(page.getByText(title, { exact: true })).toHaveCount(0);
       }
-      for (const width of [390, 1280]) {
+      for (const width of [320, 390, 1280]) {
         await page.setViewportSize({ width, height: 1000 });
         const order = await page.locator("#root>section").evaluateAll(sections => sections.flatMap(section => {
           const carousel = section.querySelector("#home-care,#home-otc,#home-affordable");
@@ -75,6 +76,11 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
         await expect(page.locator("#home-otc [data-home-product-card]")).toHaveCount(15);
         const products = await page.locator("[data-home-product-card] a[href^='/produto/']").evaluateAll(links => links.map(link => link.getAttribute("href")));
         assert.equal(new Set(products).size, products.length);
+        if (width < 640) {
+          const rail = await page.locator("#home-care").boundingBox();
+          const second = await page.locator("#home-care [data-home-product-card]").nth(1).boundingBox();
+          assert.ok(rail && second && second.x + second.width <= rail.x + rail.width + 1, "dois cartões completos devem caber no mobile");
+        }
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         if (captureRoot && !withOtc) {
           mkdirSync(captureRoot, { recursive: true });
