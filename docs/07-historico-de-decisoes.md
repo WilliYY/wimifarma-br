@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-30 — Estimativas logísticas aplicadas e código publicado
+
+- Confirmadas 1.190 atualizações/auditorias: 915 complementos de medidas com pesos literais preservados, 157 novos perfis e 118 perfis vazios preenchidos. São 3.053 de 3.061 ativos com peso e três medidas; oito pendências preservadas. Estimativas não habilitam serviços: continuam somente os dois envios anteriormente habilitados. Preços, estoque, evidências e 16 tabelas protegidas permaneceram iguais. Contrato e exceções em [129](129-hipoteses-por-tipo-de-embalagem.md).
+- Passaram 85 testes direcionados, 491 de segurança, TypeScript/ESLint, 44 verificações em PostgreSQL 17 isolado e build Linux. Auditorias completa/produção: três alertas baixos e um moderado, sem altos/críticos, com dependências preservadas.
+- Fonte/OCI `97be321` publicada somente no app por recuperação revisada, após restauração motivada por smoke com URL incorreta. A rota real `/api/produtos` retornou 401 anônimo; home/saúde, 200. PostgreSQL e canônico preservados; backup, imagem anterior e jobs mantidos. Não houve migration, novo apply dos dados ou teste de compra. Evidências e limites em [129](129-hipoteses-por-tipo-de-embalagem.md#publicação-do-código-e-verificação-operacional--30102026).
+
 ## 2026-10-29 — Cartões compactos e Miauby sem sobrepor compra
 
 - Dois cartões por vez no mobile da home/correlatos, fotos proporcionais com menos margem e dados comerciais preservados. Removida a chamada genérica de frete e o texto de detalhes sem composição; preço/referência/ações continuam alinhados e alvos têm 44 px. Balão da Miauby arredondado com emoji, recolhimento ao navegar e proteção de colisão com compra, sem novo consumo de IA. Contratos em [86](86-precos-e-desconto-real-nos-cards.md) e [100](100-miauby-atendimento-local.md).
