@@ -357,6 +357,8 @@ Além da proteção do balão, o grupo fechado de atendimento fica temporariamen
 
 Validação local: regressão de sobreposição reproduzida antes do ajuste e aprovada depois, incluindo conteúdo tardio, retorno do atalho, clique no canto do botão e chat manual em 320/390/768/1280 px. Vitrines verificadas em 320/390/1280 px com títulos, links, ausência de contagem/setas, dois cartões móveis e seleção preservada. Lint, TypeScript e 491 testes de segurança aprovados; auditorias completa/produção com três alertas baixos (`@react-email/render`, `deepmerge`, `html-to-text`) e um moderado (`fast-uri`), sem high/critical. Publicação e conferência pública ficam registradas separadamente em `outputs/miauby-continuacao-2026-10-30/`.
 
+Publicado em 30/10/2026, 00h57 em Brasília, após a liberação do lote RT5. Build Linux oficial aprovado; somente o app foi recriado, com imagem anterior e backup privado preservados. PostgreSQL e canonical permaneceram intactos; os hashes integrais de Product (3.041), SupplierCatalogOffer (3.432), Offer (1) e Order (15) coincidiram antes/depois. Oito cenários públicos em 320/390/768/1440 px confirmaram os três cabeçalhos, links, ausência de contagem/setas, ausência de overflow e proteção dos controles visíveis; zero erros JavaScript. A conferência considera o recorte real dos carrosséis, excluindo os cartões fora da área visível. Nenhuma compra ou mensagem real foi criada.
+
 ### Minha conta
 
 Painel privado renovado com identidade oficial, menu lateral no desktop e navegação horizontal no celular. Visão geral reúne cashback, pedidos em andamento e atalhos. Histórico mostra os itens e valores da compra, detalhes expansíveis e etapas reais de entrega/retirada. Contrato, API e validação em `docs/24-minha-conta-pedidos.md`.
