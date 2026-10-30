@@ -1,5 +1,9 @@
 # 82 — Marcas do catálogo na home
 
+## Retirada das setas visíveis — 30/10/2026
+
+Os dois botões sobrepostos e seu estado/CSS exclusivo foram retirados. Arraste, swipe, teclas direcionais, avanço lento de 24 px/s, looping, pausas e movimento reduzido permanecem, com marcas/logos e destinos preservados. Esta atualização substitui as menções históricas aos botões abaixo. Validação e publicação em [131](131-ajustes-visuais-home-2026-10-30.md).
+
 ## Movimento fracionário e retirada do botão de pausa — 26/10/2026
 
 A pedido do lojista, o botão Pausar/Retomar deixa a faixa. O avanço automático permanece em 24 pixels CSS por segundo, agora por `transform` fracionário em uma única trilha, evitando escrever `scrollLeft` e disparar eventos de rolagem a cada quadro. A posição visual volta à rolagem nativa somente nas transições de interação; mouse, toque, teclado, setas, foco, hover, emendas do loop e redimensionamento continuam disponíveis. Apenas a trilha em movimento recebe `will-change`; movimento reduzido, aba oculta e faixa fora da tela suspendem o avanço.

@@ -1,5 +1,9 @@
 # 130 — Identificação legal da farmácia no rodapé
 
+## Compactação visual — 30/10/2026
+
+Texto integral, dados e links preservados. O conteúdo passa a 12 px/16 px no celular e 11 px/16 px a partir de 640 px, com menos margens/padding. Links mantêm foco e alvos de 44 px no celular e 32 px nas telas maiores. Sem alteração da configuração documental, logo, pagamentos, bolhas, filtro ou tempos. Esta atualização substitui apenas os tamanhos de apresentação históricos abaixo. Validação e publicação em [131](131-ajustes-visuais-home-2026-10-30.md).
+
 ## Escopo autorizado em 29/10/2026
 
 O titular pediu informações legais no rodapé em texto pequeno, centralizado e organizado, além de pesquisa de exigências adicionais. Confirmou ser o responsável técnico e autorizou localizar os documentos. Não foi autorizada alteração dos documentos sanitários nem criada declaração de regularidade integral da operação.

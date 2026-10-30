@@ -54,6 +54,9 @@ test("oito categorias circulares compactas ocupam a largura sem caixa ou overflo
       await expect(list.locator(".symbol > svg")).toHaveCount(8);
       await expect(list.locator("[data-category-ring]")).toHaveCount(24);
       const panel = page.getByRole("navigation", { name: "Categorias de produtos" });
+      await expect(panel.getByText("Encontre seu cuidado")).toHaveCount(0);
+      await expect(panel.getByRole("link", { name: "Ver catálogo" })).toHaveCount(0);
+      await expect(panel.getByRole("button")).toHaveCount(0);
       const geometry = await panel.evaluate(element => ({ width: element.getBoundingClientRect().width, x: element.getBoundingClientRect().x, viewport: document.documentElement.clientWidth, border: getComputedStyle(element).borderTopWidth, background: getComputedStyle(element).backgroundColor, shadow: getComputedStyle(element).boxShadow }));
       assert.ok(Math.abs(geometry.width - geometry.viewport) <= 1);
       assert.ok(Math.abs(geometry.x) <= 1);
@@ -74,7 +77,7 @@ test("oito categorias circulares compactas ocupam a largura sem caixa ou overflo
   } finally { await context.close(); }
 });
 
-test("arraste não navega; setas, teclado e clique abrem a categoria correta", async () => {
+test("arraste não navega; teclado e clique abrem a categoria correta sem setas visíveis", async () => {
   const { page, context, navigations } = await fixture({ viewport: { width: 780, height: 844 }, reducedMotion: "reduce" });
   try {
     const list = page.locator("#home-shortcuts");
@@ -88,9 +91,9 @@ test("arraste não navega; setas, teclado e clique abrem a categoria correta", a
     assert.deepEqual(navigations, []);
     assert.equal(await list.getAttribute("data-dragging"), null);
     const before = await list.evaluate(element => element.scrollLeft);
-    await page.getByRole("button", { name: "Ver próximas categorias" }).click();
-    await expect.poll(() => list.evaluate(element => element.scrollLeft)).toBeGreaterThan(before + 100);
     await list.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect.poll(() => list.evaluate(element => element.scrollLeft)).toBeGreaterThan(before + 100);
     await page.keyboard.press("ArrowLeft");
     await expect.poll(() => list.evaluate(element => element.scrollLeft)).toBeLessThan(before + 100);
     await list.getByRole("link", { name: "Infantil", exact: true }).click();

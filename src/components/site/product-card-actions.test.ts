@@ -132,10 +132,14 @@ test("cards compactos mantêm benefícios fora do preço e altura uniforme sem e
       assert.ok(Math.max(...sizes) - Math.min(...sizes) < 1, `benefícios alteraram altura em ${width}px`);
       const first = cards.nth(0);
       const off = await first.getByText("28% OFF", { exact: true }).boundingBox();
+      const badgeRow = await first.locator("[data-product-badges]").boundingBox();
+      const photo = await first.locator("[data-product-photo]").boundingBox();
       const cashback = await first.getByText(/cashback/).boundingBox();
       const price = await first.getByRole("group", { name: "Preço do produto", exact: true }).boundingBox();
       const controls = await first.locator("[data-product-controls]").boundingBox();
-      assert.ok(off && cashback && price && controls);
+      assert.ok(off && badgeRow && photo && cashback && price && controls);
+      assert.ok(off.y >= badgeRow.y && off.y + off.height <= photo.y, `OFF sobrepôs a foto em ${width}px`);
+      assert.ok(photo.y + photo.height <= cashback.y, `cashback sobrepôs a foto em ${width}px`);
       await expect(first.getByText(/Pix/)).toHaveCount(0);
       assert.ok(cashback.y + cashback.height <= price.y, `cashback alongou a área de preço em ${width}px`);
       assert.ok(price.height <= 120 && controls.y - (price.y + price.height) <= 16, `espaço excessivo antes das ações em ${width}px`);

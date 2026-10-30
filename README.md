@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Home, cartões e rodapé mais compactos, selos fora da foto, marcas sem setas e neon apenas na interação: [131](docs/131-ajustes-visuais-home-2026-10-30.md). Frete e campanhas mantêm suas regras existentes.
+
 Modelos React Email com marca oficial integrados à prévia Miauby ADMIN, sem disparos; comparação atual de Resend/Brevo/SES e pendências operacionais em [112](docs/112-react-email-modelos.md).
 
 Elegibilidade Resend/Brevo em consulta escrita e condições verificadas de Correios, Frenet e Rodonaves: [114](docs/114-elegibilidade-email-e-condicoes-transportadoras.md).

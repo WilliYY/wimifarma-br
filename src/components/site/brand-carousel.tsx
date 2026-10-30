@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { PublicBrand } from "@/features/products/brands";
 import { brandLogo, featuredBrandNames } from "@/features/products/brand-logos";
@@ -13,7 +12,6 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
   const listRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLUListElement>(null);
   const dragState = useRef({ moved: false, pointerId: null as number | null, scrollLeft: 0, startX: 0 });
-  const [controls, setControls] = useState({ previous: false, next: false });
   const [failedImages, setFailedImages] = useState<Set<string>>(() => new Set());
   const [looping, setLooping] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -63,13 +61,6 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
     settleTimer.current = setTimeout(normalizeLoop, 180);
   }
 
-  const updateControls = useCallback(() => {
-    const list = listRef.current;
-    if (!list) return;
-    const maximum = Math.max(0, list.scrollWidth - list.clientWidth);
-    setControls({ previous: looping || list.scrollLeft > 2, next: looping || list.scrollLeft < maximum - 2 });
-  }, [looping]);
-
   useLayoutEffect(() => {
     const list = listRef.current;
     if (!list) return;
@@ -94,13 +85,12 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
         list.scrollLeft = nextCycle + Math.min(phase, nextCycle - 1);
         position.current = scrollAnchor.current = list.scrollLeft;
       }
-      updateControls();
     }
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(list);
     return () => observer.disconnect();
-  }, [orderedBrands, looping, updateControls, settleMotion]);
+  }, [orderedBrands, looping, settleMotion]);
 
   useEffect(() => {
     const list = listRef.current;
@@ -156,7 +146,7 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
   function handleScroll() {
     const list = listRef.current;
     if (!list) return;
-    if (!looping) { updateControls(); return; }
+    if (!looping) return;
     if (touchActive.current || dragState.current.pointerId !== null || performance.now() < manualUntil.current) {
       position.current = scrollAnchor.current = list.scrollLeft;
       manualUntil.current = performance.now() + 1200;
@@ -240,16 +230,6 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
             if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
           }}
         >
-          <button
-            aria-controls="home-brands-list"
-            aria-label="Ver marcas anteriores"
-            className={`${styles.arrow} ${styles.previous}`}
-            disabled={!controls.previous}
-            onClick={() => scrollBrands(-1)}
-            type="button"
-          >
-            <ChevronLeft aria-hidden="true" className="h-5 w-5" />
-          </button>
           <div
             aria-label="Escolha uma marca para ver seus produtos"
             className={styles.viewport}
@@ -310,16 +290,6 @@ export function BrandCarousel({ brands }: { brands: PublicBrand[] }) {
             }))}
             </ul>
           </div>
-          <button
-            aria-controls="home-brands-list"
-            aria-label="Ver próximas marcas"
-            className={`${styles.arrow} ${styles.next}`}
-            disabled={!controls.next}
-            onClick={() => scrollBrands(1)}
-            type="button"
-          >
-            <ChevronRight aria-hidden="true" className="h-5 w-5" />
-          </button>
         </nav>
     </section>
   );

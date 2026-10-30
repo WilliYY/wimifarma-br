@@ -43,7 +43,7 @@ const heroSlides = [
     eyebrow: "Para o seu dia a dia",
     href: "/catalogo",
     art: "care",
-    title: "Seu cuidado, todo dia.",
+    title: "Seu cuidado, todo dia. 🌸",
   },
   {
     background: "#fff7f5",
@@ -52,7 +52,7 @@ const heroSlides = [
     eyebrow: "Perfumaria e autocuidado",
     href: "/catalogo?grupo=beauty",
     art: "beauty",
-    title: "Beleza no seu momento.",
+    title: "Beleza no seu momento. ✨",
   },
   {
     background: "#f2f7f3",
@@ -61,7 +61,7 @@ const heroSlides = [
     eyebrow: "Mãe e bebê",
     href: "/catalogo?grupo=baby",
     art: "baby",
-    title: "Carinho em cada cuidado.",
+    title: "Carinho em cada cuidado. 👶",
   },
 ] as const;
 
@@ -456,7 +456,7 @@ export function HomePage({
 
       <BrandCarousel brands={brands} />
 
-      <HomeProductCarousel compactHeader products={collections.care} id="home-care" title="Cuidados para o dia a dia" eyebrow="Beleza" href="/catalogo?grupo=beauty&ordem=preco-asc" />
+      <HomeProductCarousel compactHeader products={collections.care} id="home-care" title="Cuidados para o dia a dia 🌸" eyebrow="Beleza" href="/catalogo?grupo=beauty&ordem=preco-asc" />
 
       <PixDiscountBanner />
 
@@ -464,7 +464,7 @@ export function HomePage({
 
       <ClubBanner />
 
-      <HomeProductCarousel compactHeader products={collections.affordable} id="home-affordable" title="Menores preços" eyebrow="Economia" href="/catalogo?ordem=preco-asc" />
+      <HomeProductCarousel compactHeader products={collections.affordable} id="home-affordable" title="Menores preços 💛" eyebrow="Economia" href="/catalogo?ordem=preco-asc" />
 
       <CustomerReviews reviews={customerReviews} />
 

@@ -57,14 +57,14 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
       await page.goto(`http://127.0.0.1:3195/${withOtc ? "?otc" : ""}`);
       await expect(page.locator("#home-care")).toBeVisible();
       const care = page.locator("#home-care").locator("xpath=ancestor::section[1]");
-      await expect(care.getByRole("heading", { name: "Cuidados para o dia a dia", exact: true })).toBeVisible();
+      await expect(care.getByRole("heading", { name: "Cuidados para o dia a dia 🌸", exact: true })).toBeVisible();
       await expect(care.getByText("Beleza", { exact: true })).toBeVisible();
       await expect(care.getByText(/produtos? selecionados?/)).toHaveCount(0);
       await expect(care.getByRole("button", { name: /Ver produtos anteriores:|Ver próximos produtos:/ })).toHaveCount(0);
       await expect(care.getByRole("link", { name: "Ver catálogo", exact: true })).toHaveAttribute("href", "/catalogo?grupo=beauty&ordem=preco-asc");
       for (const [id, title, eyebrow, href] of [
         ["home-otc", "Farmacinha", "Em casa", "/catalogo"],
-        ["home-affordable", "Menores preços", "Economia", "/catalogo?ordem=preco-asc"],
+        ["home-affordable", "Menores preços 💛", "Economia", "/catalogo?ordem=preco-asc"],
       ]) {
         const section = page.locator(`#${id}`).locator("xpath=ancestor::section[1]");
         await expect(section.getByRole("heading", { name: title, exact: true })).toBeVisible();

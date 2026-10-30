@@ -1,5 +1,9 @@
 # 10 - Layout e Experiencia
 
+## Compactação da home, cartões e rodapé — 30/10/2026
+
+Contrato atual em [131](131-ajustes-visuais-home-2026-10-30.md): rodapé integral com menos altura; OFF acima da foto e cashback abaixo; marcas e faixa de categorias sem setas visíveis; categorias sem cabeçalho textual e com neon reforçado somente ao interagir. Emojis pontuais no marketing, preservando os cabeçalhos compactos das três vitrines. Esta atualização substitui as descrições históricas de setas/tamanhos abaixo, sem alterar regras comerciais.
+
 ## Cartões mobile e balão da Miauby — 29/10/2026
 
 As vitrines e os correlatos passam a mostrar dois cartões completos no celular, com foto proporcional melhor aproveitada, menos margens e sem o bloco genérico de frete. Mantidos nome/marca/dose, composição cadastrada, preço real, descontos elegíveis, condição unitária e compra/quantidade. Os alvos de compra têm 44 px; slots compactos preservam o alinhamento e os controles de rolagem continuam. Contrato detalhado em [86](86-precos-e-desconto-real-nos-cards.md).

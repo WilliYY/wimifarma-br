@@ -8,18 +8,12 @@
   margin-bottom: 16px;
 }
 
-.heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-inline: var(--shortcuts-gutter); }
-.title { margin: 0; color: var(--ink); font-size: 16px; font-weight: 700; line-height: 1.25; }
-.navigation { display: flex; align-items: center; gap: 8px; }
-.catalog { display: inline-flex; min-height: 44px; flex-shrink: 0; align-items: center; gap: 6px; border-radius: 8px; color: var(--brand-strong); font-size: 13px; font-weight: 600; }
-.catalog:hover { text-decoration: underline; text-underline-offset: 4px; }
-
 .list {
   display: flex;
   justify-content: space-between;
   gap: 12px;
   margin: 0;
-  padding: 6px var(--shortcuts-gutter) 4px;
+  padding: 10px var(--shortcuts-gutter) 6px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
@@ -51,7 +45,7 @@
 .symbol::before { position: absolute; z-index: 1; inset: 7px; border-radius: 50%; background: var(--surface); content: ""; pointer-events: none; }
 .symbol > svg { position: relative; z-index: 3; width: 30px; height: 30px; pointer-events: none; }
 .ring { position: absolute; z-index: 2; inset: -1px; border: 1.5px solid currentColor; border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%; color: var(--ring-red); opacity: 0.64; pointer-events: none; transform: rotate(var(--ring-angle, 0deg)); animation: categoryOrbit 12s linear var(--ring-delay, -1.2s) infinite; animation-play-state: paused; transition: opacity 180ms ease; }
-.ring::after { position: absolute; inset: -1.5px; border: 1px solid var(--ring-neon, #ff2255); border-radius: inherit; box-shadow: 0 0 3px var(--ring-neon, #ff2255), 0 0 7px color-mix(in srgb, var(--ring-neon, #ff2255) 45%, transparent), inset 0 0 2px var(--ring-neon, #ff2255); content: ""; opacity: 0; pointer-events: none; transition: opacity 180ms ease; }
+.ring::after { position: absolute; inset: -1.5px; border: 1px solid var(--ring-neon, #ff2255); border-radius: inherit; box-shadow: 0 0 4px var(--ring-neon, #ff2255), 0 0 10px color-mix(in srgb, var(--ring-neon, #ff2255) 60%, transparent), inset 0 0 3px var(--ring-neon, #ff2255); content: ""; opacity: 0; pointer-events: none; transition: opacity 180ms ease; }
 .ring:nth-child(2) { --ring-angle: 45deg; --ring-neon: #08d993; border-radius: 41% 44% 56% 59% / 38% 62% 63% 37%; color: var(--ring-green); animation-duration: 16s; }
 .ring:nth-child(3) { --ring-angle: -25deg; --ring-neon: #f5cf2e; border-radius: 41% 44% 56% 59% / 38% 62% 63% 37%; color: var(--ring-yellow); animation-duration: 20s; animation-direction: reverse; }
 .list[data-motion="active"] > li[data-visible="true"] .ring { animation-play-state: running; }
@@ -69,19 +63,13 @@
 .link:active .symbol { transform: scale(0.96); }
 .link:is(:active, :focus-visible, [data-pressed="true"]) .ring, .link:is(:active, :focus-visible, [data-pressed="true"]) .ring::after { opacity: 1; }
 
-.controls { display: flex; gap: 8px; }
-.controls[data-static="true"] { display: none; }
-.arrow { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--ink); cursor: pointer; }
-.arrow:disabled { opacity: 0.35; cursor: default; }
-.arrow:not(:disabled):hover { border-color: var(--brand); color: var(--brand); }
-.link:focus-visible, .catalog:focus-visible, .list:focus-visible, .arrow:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.link:focus-visible, .list:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 
 @media (hover: hover) and (pointer: fine) {
   .link:hover .symbol { transform: translateY(-2px); }
   .link:hover .ring, .link:hover .ring::after { opacity: 1; }
 }
 @media (min-width: 640px) {
-  .title { font-size: 18px; }
   .label { min-height: 38px; font-size: 14px; }
   .symbol { width: 72px; height: 72px; }
   .symbol > svg { width: 34px; height: 34px; }
@@ -89,13 +77,6 @@
 }
 @media (min-width: 1024px) {
   .list > li { flex: 1 0 0; }
-}
-@media (max-width: 639px) {
-  .controls { display: none; }
-}
-@media (max-width: 359px) {
-  .title { font-size: 14px; }
-  .catalog { font-size: 12px; }
 }
 @keyframes categoryOrbit {
   from { transform: rotate(var(--ring-angle, 0deg)); }

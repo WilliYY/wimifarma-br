@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type PointerEvent } from "react";
-import { ArrowRight, Baby, BadgePercent, ChevronLeft, ChevronRight, Droplets, Leaf, Pill, Scissors, Smile, SprayCan } from "lucide-react";
+import { useEffect, useRef, type PointerEvent } from "react";
+import { Baby, BadgePercent, Droplets, Leaf, Pill, Scissors, Smile, SprayCan } from "lucide-react";
 import type { HomeShortcutItem } from "@/features/products/home-shortcuts";
 import styles from "./home-shortcuts.module.css";
 
@@ -20,20 +20,10 @@ const shortcutIcons = {
 export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
   const listRef = useRef<HTMLUListElement>(null);
   const drag = useRef({ moved: false, pointerId: null as number | null, startX: 0, scrollLeft: 0 });
-  const [edges, setEdges] = useState({ start: true, end: true });
 
   useEffect(() => {
     const list = listRef.current;
     if (!list) return;
-    let frame = 0;
-    const update = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const next = { start: list.scrollLeft <= 1, end: list.scrollLeft + list.clientWidth >= list.scrollWidth - 1 };
-        setEdges(previous => previous.start === next.start && previous.end === next.end ? previous : next);
-      });
-    };
-    const observer = new ResizeObserver(update);
     let inView = false;
     const updateVisibility = () => {
       const active = inView && !document.hidden;
@@ -47,13 +37,10 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
       }
       updateVisibility();
     });
-    observer.observe(list);
     visibility.observe(list);
     for (const item of list.children) visibility.observe(item);
     document.addEventListener("visibilitychange", updateVisibility);
-    list.addEventListener("scroll", update, { passive: true });
-    update();
-    return () => { observer.disconnect(); visibility.disconnect(); document.removeEventListener("visibilitychange", updateVisibility); list.removeEventListener("scroll", update); cancelAnimationFrame(frame); };
+    return () => { visibility.disconnect(); document.removeEventListener("visibilitychange", updateVisibility); };
   }, [items]);
 
   const scroll = (direction: number) => {
@@ -69,19 +56,6 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
 
   return (
     <nav aria-label="Categorias de produtos" className={styles.panel}>
-      <div className={styles.heading}>
-        <p className={styles.title}>Encontre seu cuidado</p>
-        <div className={styles.navigation}>
-        <Link className={styles.catalog} href="/catalogo">
-          Ver catálogo <ArrowRight aria-hidden="true" size={15} />
-        </Link>
-        <div className={styles.controls} data-static={edges.start && edges.end}>
-          <button aria-controls="home-shortcuts" aria-label="Ver categorias anteriores" className={styles.arrow} disabled={edges.start} onClick={() => scroll(-1)} type="button"><ChevronLeft aria-hidden="true" size={18} /></button>
-          <button aria-controls="home-shortcuts" aria-label="Ver próximas categorias" className={styles.arrow} disabled={edges.end} onClick={() => scroll(1)} type="button"><ChevronRight aria-hidden="true" size={18} /></button>
-        </div>
-        </div>
-      </div>
-
       <ul
         aria-label="Explorar categorias"
         className={styles.list}

@@ -115,7 +115,9 @@ test("identificação legal fica centralizada e legível sem inventar dados docu
       await page.setViewportSize({ width, height: 950 });
       const style = await legal.locator("p").first().evaluate(el => ({ align: getComputedStyle(el).textAlign, size: Number.parseFloat(getComputedStyle(el).fontSize), line: Number.parseFloat(getComputedStyle(el).lineHeight) }));
       assert.equal(style.align, "center");
-      assert.ok(style.size >= 12 && style.line >= 20);
+      assert.ok(style.size >= (width < 640 ? 12 : 11) && style.line >= 16);
+      const links = await legal.getByRole("navigation").getByRole("link").evaluateAll(elements => elements.map(element => element.getBoundingClientRect().height));
+      assert.ok(links.every(height => height >= (width < 640 ? 44 : 32)), "links legais conservam área de toque");
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
       if (captureRoot && [390, 1440].includes(width)) await legal.screenshot({ path: join(captureRoot, `legal-default-${width}.png`) });
     }

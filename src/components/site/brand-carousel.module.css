@@ -12,12 +12,7 @@
 .brand[data-dark="true"] { background: var(--ink); color: white; }
 .logo { width: 100%; height: 72px; object-fit: contain; transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1); }
 .name { font-size: 17px; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
-.arrow { position: absolute; z-index: 1; top: 50%; display: grid; width: 44px; height: 44px; place-items: center; transform: translateY(-50%); border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--ink); box-shadow: 0 3px 12px #1018270d; cursor: pointer; transition: color 180ms ease, border-color 180ms ease; }
-.previous { left: 8px; }
-.next { right: 8px; }
-.arrow:disabled { visibility: hidden; }
-.arrow:not(:disabled):hover { border-color: var(--brand); color: var(--brand); }
-.brand:focus-visible, .viewport:focus-visible, .arrow:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.brand:focus-visible, .viewport:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .brand:focus-visible { outline-offset: -3px; }
 @media (hover: hover) and (pointer: fine) {
   .brand:hover { border-color: color-mix(in srgb, var(--brand) 22%, transparent); background: var(--brand-soft); }
@@ -30,10 +25,8 @@
   .brand { width: 160px; height: 144px; padding: 24px; }
   .logo { height: 96px; }
   .name { font-size: 20px; }
-  .previous { left: 16px; }
-  .next { right: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .brand, .logo, .arrow { transition: none; }
+  .brand, .logo { transition: none; }
   .brand:hover .logo { transform: none; }
 }

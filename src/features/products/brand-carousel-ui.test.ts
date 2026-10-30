@@ -15,7 +15,7 @@ async function fixture(brands: PublicBrand[] = Array.from({ length: 14 }, (_, i)
   return { html: `<meta name="viewport" content="width=device-width,initial-scale=1"><style>:root{--ink:#111827;--surface:#fff;--surface-subtle:#f5f6f8;--line:#e1e5eb;--brand:#cb0733;--brand-strong:#b9002b;--brand-soft:#fff1f4;--muted:#64748b}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif}button{font:inherit}${css}</style><div id="root"></div><script src="/fixture.js"></script>`, script: bundle.outputFiles[0].text };
 }
 
-test("brands drag from a logo without navigating and retain clicks, keyboard and arrows", async () => {
+test("brands drag from a logo without navigating and retain clicks and keyboard without arrow buttons", async () => {
   const content = await fixture();
   const browser = await chromium.launch();
   try {
@@ -39,9 +39,13 @@ test("brands drag from a logo without navigating and retain clicks, keyboard and
     await expect.poll(() => list.evaluate(element => element.scrollLeft)).toBeGreaterThan(60);
     assert.deepEqual(navigations, []);
     assert.equal(await list.getAttribute("data-dragging"), null);
-    const beforeArrow = await list.evaluate(element => element.scrollLeft);
-    await page.getByRole("button", { name: "Ver próximas marcas" }).click();
-    await expect.poll(() => list.evaluate(element => element.scrollLeft)).toBeGreaterThan(beforeArrow + 100);
+    await expect(page.getByRole("button")).toHaveCount(0);
+    await list.focus();
+    const beforeKeyboard = await list.evaluate(element => element.scrollLeft);
+    await page.keyboard.press("ArrowRight");
+    await expect.poll(() => list.evaluate(element => element.scrollLeft)).toBeGreaterThan(beforeKeyboard + 100);
+    await page.keyboard.press("ArrowLeft");
+    await expect.poll(() => list.evaluate(element => element.scrollLeft)).toBeLessThan(beforeKeyboard + 20);
     await page.getByRole("link", { name: "Ver produtos de Nivea", exact: true }).click();
     await expect.poll(() => navigations.length).toBe(1);
     assert.equal(navigations[0], "?marca=Nivea");

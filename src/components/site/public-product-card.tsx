@@ -52,7 +52,15 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
     <article
       className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_18px_40px_rgba(17,24,39,0.11)] motion-reduce:transform-none"
     >
+      <div data-product-badges className="flex min-h-9 shrink-0 flex-wrap items-start gap-1 px-2 pb-0.5 pt-1.5">
+        {pmcSavings !== null ? <ProductPmcBadge percent={pmcSavings} /> : discount !== null && !pmc ? (
+          <span className="rounded-lg bg-brand px-2 py-1.5 text-[0.65rem] font-black leading-tight text-white shadow-sm">
+            {discount}% OFF
+          </span>
+        ) : null}
+      </div>
       <div
+        data-product-photo
         className="relative flex h-32 shrink-0 items-center justify-center overflow-hidden bg-white p-2 sm:h-36 sm:p-3"
       >
         {product.imageUrl ? (
@@ -66,14 +74,9 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
         ) : (
           <ProductImagePlaceholder catalogClassification={product.catalogClassification} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" showLabel />
         )}
-        {pmcSavings !== null ? <ProductPmcBadge percent={pmcSavings} className="absolute right-2 top-2" /> : discount !== null && !pmc ? (
-          <span className="absolute left-2 top-2 rounded-sm bg-brand-soft px-1.5 py-1 text-[0.625rem] font-black text-brand">
-            {discount}% OFF
-          </span>
-        ) : null}
-        <div className="absolute inset-x-2 bottom-1 flex justify-end">
-          <ProductCashback compact product={product} unitPriceCents={cartProduct.unitPriceCents} />
-        </div>
+      </div>
+      <div className="flex h-6 shrink-0 items-start justify-end px-2">
+        <ProductCashback compact product={product} unitPriceCents={cartProduct.unitPriceCents} />
       </div>
 
       <div className="flex flex-1 flex-col border-t border-line px-3 pb-3 pt-2">

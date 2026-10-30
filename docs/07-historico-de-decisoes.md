@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-10-30 — Ajustes visuais da home e rodapé
+
+- Rodapé compacto com conteúdo integral; selos em fluxo separado da foto; marcas/categorias sem setas visíveis; neon somente na interação e emojis pontuais. Regras de OFF reutilizadas. A faixa de selos não publica gratuidade sem cotação validada nem ativa campanhas futuras. Contrato e validação em [131](131-ajustes-visuais-home-2026-10-30.md).
+
 ## 2026-10-30 — Estimativas logísticas aplicadas e código publicado
 
 - Confirmadas 1.190 atualizações/auditorias: 915 complementos de medidas com pesos literais preservados, 157 novos perfis e 118 perfis vazios preenchidos. São 3.053 de 3.061 ativos com peso e três medidas; oito pendências preservadas. Estimativas não habilitam serviços: continuam somente os dois envios anteriormente habilitados. Preços, estoque, evidências e 16 tabelas protegidas permaneceram iguais. Contrato e exceções em [129](129-hipoteses-por-tipo-de-embalagem.md).

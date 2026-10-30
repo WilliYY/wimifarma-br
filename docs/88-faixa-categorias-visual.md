@@ -1,5 +1,9 @@
 # 88 — Faixa de categorias da home
 
+## Atalhos sem cabeçalho e neon reforçado — 30/10/2026
+
+Retirados “Encontre seu cuidado”, “Ver catálogo” e setas visíveis. Os oito links, ícones, rótulos, arraste, swipe e teclado permanecem. O halo usa sombras estáticas ligeiramente maiores, com transição somente de opacidade durante hover/foco/toque; repouso, pausas por visibilidade e movimento reduzido permanecem. Esta atualização substitui as menções históricas ao cabeçalho e às setas abaixo. Detalhes em [131](131-ajustes-visuais-home-2026-10-30.md).
+
 ## Neon somente na interação — 29/10/2026
 
 O titular refinou o pedido: os anéis continuam discretos em repouso e acendem como neon somente sob mouse, pressão de toque/caneta ou foco visível de teclado. O halo radial amplo da implementação anterior foi removido. Cada contorno tem uma camada própria, com o mesmo raio orgânico e brilho estreito em vermelho, verde ou amarelo; ela acompanha o anel e fica completamente transparente sem interação. Sombras pequenas têm valores estáticos; somente a opacidade transita por 180 ms. Não há filtro de blur, mudança de espessura, pulsação, novo listener ou alteração dos destinos. Movimento reduzido continua eliminando rotações e transições.
