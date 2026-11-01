@@ -3,6 +3,7 @@ import { validateSupplierMarkupChange } from "./catalog-operations-service";
 import { bulkRequiresAdmin, type BulkProductUpdate } from "./catalog-bulk";
 import { lockProductCatalog, ProductMutationError } from "./mutations";
 import { validatePhotoPublication } from "./photo-publication-policy";
+import { validateShippingPublication } from "./shipping-publication-policy";
 import { cashbackProductIsEligible } from "@/features/cashback/rules";
 
 export async function updateCatalogBulk(tx: Prisma.TransactionClient, input: BulkProductUpdate, actorId: string) {
@@ -24,6 +25,7 @@ export async function updateCatalogBulk(tx: Prisma.TransactionClient, input: Bul
     if (changes.wimicoinsEnabled && (current.requiresPrescription || current.isPopularPharmacy)) throw new ProductMutationError("WimiCoins não podem ser ativados em produtos com receita ou Farmácia Popular.");
     await validateSupplierMarkupChange(tx, current, changes.supplierMarkupBps);
     await validatePhotoPublication(tx, current, { ...current, status: changes.status ?? current.status });
+    validateShippingPublication(current, { ...current, ...changes });
     validated.push(current);
   }
   const result = [];

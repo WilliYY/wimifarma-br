@@ -65,6 +65,8 @@ test("painel mostra totais completos, abre a maior origem e acompanha novo cadas
     await expect(page.getByRole("checkbox", { name: "Selecionar Distribuidor sintético 129", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Novo produto", exact: true }).click();
     const dialog = page.getByRole("dialog");
+    await expect(dialog.locator("select[name='status']")).toHaveValue("DRAFT");
+    await expect(dialog.getByText(/Salve como rascunho.*Fretes e entregas/)).toBeVisible();
     await dialog.locator("input[name='name']").fill("Novo produto físico sintético");
     await dialog.locator("input[name='category']").fill("Higiene");
     await dialog.locator("input[name='price']").fill("7.50");
@@ -78,6 +80,7 @@ test("painel mostra totais completos, abre a maior origem e acompanha novo cadas
     await expect(page.getByRole("checkbox", { name: "Selecionar Novo produto físico sintético", exact: true })).toBeVisible();
     assert.equal(writes.length, 1);
     assert.equal(writes[0].inventorySource, "PHARMACY");
+    assert.equal(writes[0].status, "DRAFT");
     assert.equal(writes[0].category, "Higiene");
     assert.deepEqual(writes[0].catalogClassification, { kind: "UNCLASSIFIED", medicineClass: "UNCLASSIFIED", ethical: false, otc: false });
   });

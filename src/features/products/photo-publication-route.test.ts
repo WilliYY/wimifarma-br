@@ -16,7 +16,7 @@ async function harness(existing: boolean, withPhoto = false, status = "ACTIVE", 
     inventorySource: identity.inventorySource ?? "DISTRIBUTOR", requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false,
     catalogClassification: { kind: "UNCLASSIFIED", medicineClass: "UNCLASSIFIED", ethical: false, otc: false },
     imageUrl: withPhoto ? "/uploads/products/photo.webp" : null, imageAssetId: withPhoto ? "asset" : null, imageUrls: [],
-    price: "10.00", promotionalPrice: null, supplierMarkupBps: 6000, supplierOffers: [], createdAt: new Date(version), updatedAt: new Date(version), shippingProfile: null };
+    price: "10.00", promotionalPrice: null, supplierMarkupBps: 6000, supplierOffers: [], createdAt: new Date(version), updatedAt: new Date(version), shippingProfile: null as unknown };
   const writes: Record<string, unknown>[] = [], audits: unknown[] = [];
   const save = ({ data }: { data: Record<string, unknown> }) => { writes.push(data); Object.assign(product, Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined))); return product; };
   const tx = { $queryRaw: async () => [],
@@ -41,11 +41,13 @@ async function harness(existing: boolean, withPhoto = false, status = "ACTIVE", 
   } };
 }
 
-test("product API creation rejects active distributor without a reviewed library photo", async () => {
+test("product API creation keeps distributor draft pending photo and shipping review", async () => {
   const f = await harness(false);
   assert.equal((await f.run({})).status, 422);
   assert.equal(f.writes.length, 0);
-  assert.equal((await f.run({ imageAssetId: "asset" })).status, 201);
+  assert.equal((await f.run({ imageAssetId: "asset" })).status, 422);
+  assert.equal(f.writes.length, 0);
+  assert.equal((await f.run({ imageAssetId: "asset", status: "DRAFT" })).status, 201);
   assert.equal(f.writes.length, 1);
   assert.match(JSON.stringify(f.audits), /imageAssetId/);
 });
@@ -61,7 +63,8 @@ test("incidental ADMIN price saves do not approve a photo and identity changes n
   assert.equal((await f.run({ imageAssetId: "asset", price: 12 })).status, 200);
   assert.equal(JSON.stringify(f.audits).includes('photoReview'), false);
   assert.equal((await f.run({ name: "Outra apresentação 30 ml", imageAssetId: "asset" })).status, 403);
-  assert.equal((await f.run({ name: "Outra apresentação 30 ml", imageAssetId: "asset", photoReviewConfirmed: true })).status, 200);
+  assert.equal((await f.run({ name: "Outra apresentação 30 ml", imageAssetId: "asset", photoReviewConfirmed: true })).status, 422);
+  assert.equal((await f.run({ name: "Outra apresentação 30 ml", imageAssetId: "asset", photoReviewConfirmed: true, status: "DRAFT" })).status, 200);
   assert.equal(JSON.stringify(f.audits).includes('photoReview'), true);
 });
 
@@ -80,6 +83,17 @@ test("product API keeps legacy active price edits and blocks draft activation wi
   assert.equal(draft.writes.length, 0);
 });
 
+test("PATCH sem status preserva ACTIVE ou DRAFT ao atualizar preço e estoque", async () => {
+  for (const status of ["ACTIVE", "DRAFT"]) {
+    const f = await harness(true, false, status, "ADMIN", { inventorySource: "PHARMACY" });
+    assert.equal((await f.run({ status: undefined, price: 12, stock: 5 })).status, 200);
+    assert.equal(f.product.status, status);
+    assert.equal(f.writes[0].status, status);
+    assert.equal(f.writes[0].price, 12);
+    assert.equal(f.writes[0].stock, 5);
+  }
+});
+
 test("novo produto físico aceita EAN válido ou ausente e recusa EAN inválido", async () => {
   for (const ean of ["12345", "00000000", "00000000000000"]) {
     const invalid = await harness(false, false, "ACTIVE", "ADMIN", { inventorySource: "PHARMACY" });
@@ -88,9 +102,55 @@ test("novo produto físico aceita EAN válido ou ausente e recusa EAN inválido"
   }
   for (const ean of [undefined, "", "7896181915638"]) {
     const valid = await harness(false, false, "ACTIVE", "ADMIN", { inventorySource: "PHARMACY" });
-    assert.equal((await valid.run({ ean })).status, 201);
+    assert.equal((await valid.run({ ean, status: "DRAFT" })).status, 201);
     assert.equal(valid.writes.length, 1);
   }
+});
+
+const reviewedShipping = { enabled: true, transportReviewed: true, measurementBasis: "measured", weightGrams: 250,
+  widthCm: 10, heightCm: 8, lengthCm: 15, cargoKinds: ["general"], approvedServiceIds: [1] };
+
+test("API blocks new ACTIVE and approval injection; saved DRAFT can activate after freight review", async () => {
+  const fresh = await harness(false, false, "DRAFT", "ADMIN", { inventorySource: "PHARMACY" });
+  assert.equal((await fresh.run({ status: "ACTIVE" })).status, 422);
+  assert.equal((await fresh.run({ status: "DRAFT", shippingProfile: reviewedShipping })).status, 422);
+  assert.equal(fresh.writes.length, 0);
+  assert.equal((await fresh.run({ status: undefined })).status, 201);
+  assert.equal(fresh.writes[0].status, "DRAFT");
+  const pending = await harness(true, true, "DRAFT");
+  assert.equal((await pending.run({ photoReviewConfirmed: true })).status, 422);
+  assert.equal(pending.writes.length, 0);
+  pending.product.shippingProfile = reviewedShipping;
+  assert.equal((await pending.run({ photoReviewConfirmed: true })).status, 200);
+  assert.equal(pending.writes[0].status, "ACTIVE");
+});
+
+test("API activation uses invalidated shipping profile after identity change", async () => {
+  const pending = await harness(true, true, "DRAFT");
+  pending.product.shippingProfile = reviewedShipping;
+  assert.equal((await pending.run({ name: "Outra apresentação 20 ml", photoReviewConfirmed: true })).status, 422);
+  assert.equal(pending.writes.length, 0);
+  const manager = await harness(true, true, "DRAFT", "MANAGER");
+  assert.equal((await manager.run({ shippingProfile: { ...reviewedShipping, enabled: false, transportReviewed: false } })).status, 403);
+  assert.equal(manager.writes.length, 0);
+});
+
+test("legacy ACTIVE identity replacement needs DRAFT and freight review; normalized text and price edits remain allowed", async () => {
+  for (const changes of [{ name: "Outra apresentação 20 ml" }, { ean: "7896004708539" }]) {
+    const legacy = await harness(true, true, "ACTIVE");
+    legacy.product.shippingProfile = reviewedShipping;
+    assert.equal((await legacy.run({ ...changes, photoReviewConfirmed: true })).status, 422);
+    assert.equal((await legacy.run({ ...changes, status: undefined, photoReviewConfirmed: true })).status, 422);
+    assert.equal(legacy.writes.length, 0);
+    assert.equal((await legacy.run({ ...changes, photoReviewConfirmed: true, status: "DRAFT" })).status, 200);
+    assert.equal(legacy.writes[0].status, "DRAFT");
+    const shipping = legacy.writes[0].shippingProfile as { enabled: boolean; transportReviewed: boolean };
+    assert.equal(shipping.enabled, false);
+    assert.equal(shipping.transportReviewed, false);
+  }
+  const legacy = await harness(true, true, "ACTIVE");
+  assert.equal((await legacy.run({ name: "PRODUTO SINTÉTICO", price: 12, stock: 4, description: "Texto corrigido sem trocar a apresentação." })).status, 200);
+  assert.equal(legacy.writes[0].status, "ACTIVE");
 });
 
 test("edição preserva EAN legado inalterado/omitido e recusa novo EAN inválido", async () => {
@@ -106,7 +166,9 @@ test("edição preserva EAN legado inalterado/omitido e recusa novo EAN inválid
     assert.equal(invalid.writes.length, 0);
   }
   const cleared = await harness(true, true, "ACTIVE", "ADMIN", { inventorySource: "PHARMACY", ean: "LEGADO" });
-  assert.equal((await cleared.run({ ean: "" })).status, 200);
+  assert.equal((await cleared.run({ ean: "" })).status, 422);
+  assert.equal(cleared.writes.length, 0);
+  assert.equal((await cleared.run({ ean: "", status: "DRAFT" })).status, 200);
   assert.equal(cleared.writes[0].ean, null);
 });
 

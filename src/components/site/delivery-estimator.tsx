@@ -106,9 +106,9 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
             value={postalCode}
           />
         </div>
-        <button className="inline-flex h-12 shrink-0 items-center gap-2 rounded-xl bg-ink px-3 text-sm font-bold text-white transition hover:bg-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-60 sm:px-4" disabled={result?.busy} type="submit">
-          {result?.busy && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
-          {result?.busy ? "Consultando..." : "Consultar"}
+        <button aria-label={result?.busy ? "Consultando..." : undefined} className="relative inline-flex h-12 shrink-0 items-center justify-center rounded-xl bg-ink px-3 text-sm font-bold text-white transition hover:bg-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-60 sm:px-4" disabled={result?.busy} type="submit">
+          <span className={result?.busy ? "invisible" : undefined}>Consultar</span>
+          {result?.busy && <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center"><Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" /></span>}
         </button>
       </form>
 
@@ -129,8 +129,10 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
               <ul className="mt-3 grid gap-2">
                 {result.options.map(option => {
                   const fee = shippingCustomerPrice(option);
+                  const hideRegularNote = compact && option.benefit?.status === "regular" && option.benefit.subsidyCents === 0
+                    && option.benefit.minimumOrderCents === null && option.benefit.remainingCents === null;
                   return <li className="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-white p-3 text-sm" key={option.serviceId}>
-                    <div className="min-w-0 flex-1"><strong className="block">{option.carrier} · {option.service}</strong><span className="mt-1 block text-xs text-muted">Até {option.deliveryDays} dias úteis estimados, incluindo preparação</span>{option.benefit ? <ShippingBenefitNote benefit={option.benefit} /> : null}</div>
+                    <div className="min-w-0 flex-1"><strong className="block">{option.carrier} · {option.service}</strong><span className="mt-1 block text-xs text-muted">Até {option.deliveryDays} dias úteis estimados, incluindo preparação</span>{option.benefit && !hideRegularNote ? <ShippingBenefitNote benefit={option.benefit} /> : null}</div>
                     <strong className="text-pharma-green">{fee === 0 ? "Grátis" : formatCurrency(fee / 100)}</strong>
                   </li>;
                 })}

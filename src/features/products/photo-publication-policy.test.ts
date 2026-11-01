@@ -9,9 +9,9 @@ const photo = { imageUrl: "/uploads/products/photo.webp", imageAssetId: "asset" 
 const tx = (reviewed = false) => ({ productImage: { findFirst: async () => ({ id: "asset" }) },
   auditLog: { findFirst: async () => reviewed ? { id: "audit" } : null } }) as unknown as Prisma.TransactionClient;
 
-test("new distributor non-Rx imports wait for photos even without classification", () => {
+test("new distributor imports, including Rx, remain drafts pending publication review", () => {
   assert.equal(importedProductStatus({ requiresPrescription: false }), "DRAFT");
-  assert.equal(importedProductStatus({ requiresPrescription: true }), "ACTIVE");
+  assert.equal(importedProductStatus({ requiresPrescription: true }), "DRAFT");
 });
 
 test("activation requires a public library cover and explicit ADMIN review", async () => {

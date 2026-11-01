@@ -10,6 +10,7 @@ import { gtinVariants, normalizeGtin, resolveSupplierOffer } from "@/features/su
 import { classificationIsConsistent } from "@/features/products/catalog-operations";
 import { privateSupplierImageAllowed } from "@/features/product-images/private-supplier-policy";
 import { validatePhotoPublication } from "@/features/products/photo-publication-policy";
+import { validateShippingPublication } from "@/features/products/shipping-publication-policy";
 import { isValidGtin } from "@/features/products/identity";
 
 export const dynamic = "force-dynamic";
@@ -187,6 +188,7 @@ export async function POST(request: Request) {
       const imageUrls = await resolveProductGallery(transaction, imageAsset?.url ?? fields.imageUrl, fields.imageUrls ?? []);
       const photoReview = await validatePhotoPublication(transaction, null, { ...fields, imageUrls, imageAssetId: imageAsset?.id,
         imageUrl: imageAsset?.url ?? fields.imageUrl }, guard.session?.user.role === "ADMIN" && Boolean(imageAsset));
+      validateShippingPublication(null, fields);
       const featuredPosition = await resolveFeaturedPosition(transaction, { featured, status: fields.status, imageUrl: imageAsset?.url ?? fields.imageUrl });
       const product = await transaction.product.create({
         data: {

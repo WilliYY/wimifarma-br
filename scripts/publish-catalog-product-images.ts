@@ -10,6 +10,7 @@ import { gtinVariants, normalizeGtin } from "../src/features/supplier-catalog/co
 import { importSourceSchema } from "../src/features/supplier-catalog/import-manifest";
 import { productUploadsDirectory } from "../src/features/product-images/storage";
 import { productPhotoReview } from "../src/features/products/photo-publication-policy";
+import { validateShippingPublication } from "../src/features/products/shipping-publication-policy";
 import { preparePilotImage } from "./publish-pilot-product-images";
 
 // Each presentation and reuse authorization is reviewed explicitly before publication.
@@ -83,6 +84,7 @@ export async function publishCatalogProductImages(db: Pick<PrismaClient, "$trans
         }
         const image = prepared.get(normalizeGtin(row.ean)!)!;
         const publish = product.status === "DRAFT" && row.publishOnApproval;
+        validateShippingPublication(product, { ...product, status: publish ? "ACTIVE" : product.status });
         plans.push({ ean: row.ean, action: "PUBLISH_IMAGE", publishOnApproval: row.publishOnApproval,
           statusAfter: publish ? "ACTIVE" : product.status, width: image.width, height: image.height, sizeBytes: image.sizeBytes });
         if (!apply) continue;

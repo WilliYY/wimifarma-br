@@ -11,6 +11,7 @@ import { preparePrivateSupplierImage, storePrivateSupplierImage } from "../src/f
 import { lockProductCatalog } from "../src/features/products/mutations";
 import { buildProductSearchText } from "../src/features/products/public-search";
 import { importedProductStatus } from "../src/features/products/photo-publication-policy";
+import { validateShippingPublication } from "../src/features/products/shipping-publication-policy";
 import { supplierImportManifestSchema, assertImportTarget, persistedPrescriptionType } from "../src/features/supplier-catalog/import-manifest";
 
 async function main() {
@@ -63,6 +64,7 @@ async function main() {
         if (!args.includes("--apply")) continue;
         const { offers: _offers, internalImage: _image, evidence: _evidence, ...identity } = row;
         void [_offers, _image, _evidence];
+        if (!current) validateShippingPublication(null, { ...identity, prescriptionType: persistedPrescriptionType(row), status: importedProductStatus(row) });
         const product = current ?? await tx.product.create({ data: { ...identity, prescriptionType: persistedPrescriptionType(row), eanNormalized, inventorySource: "DISTRIBUTOR", status: importedProductStatus(row), stock: 0,
           price: (best!.unitPriceCents / 100).toFixed(2), cashbackEnabled: false,
           ...medicineCashbackDefaults({ ...row, prescriptionType: persistedPrescriptionType(row) }),

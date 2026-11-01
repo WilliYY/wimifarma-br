@@ -21,7 +21,9 @@ async function fixture() {
     sourceEvidence: "EAN e apresentação conferidos na fonte autorizada.", presentationVerified: true, eanVerified: true, reuseAuthorized: true }] };
   const product = { id: "synthetic-product", ean: input.images[0].ean, eanNormalized: "07896004708539", name: input.images[0].name,
     brand: "Teste", catalogClassification, status: "ACTIVE", inventorySource: "DISTRIBUTOR", deletedAt: null,
-    requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false, imageUrl: null, imageUrls: [], imageAssetId: null } as unknown as Product;
+    requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false, imageUrl: null, imageUrls: [], imageAssetId: null,
+    shippingProfile: { enabled: true, transportReviewed: true, measurementBasis: "measured", weightGrams: 250,
+      widthCm: 10, heightCm: 8, lengthCm: 15, cargoKinds: ["general"], approvedServiceIds: [1] } } as unknown as Product;
   let active = true, fail = false, duplicate = false, change: Partial<Product> = {};
   const writes: { kind: string; data: Record<string, unknown> }[] = [];
   const audits: Record<string, unknown>[] = [];
@@ -78,6 +80,24 @@ test("image manifests default to no activation and reject non-boolean approval",
     Object.assign(f.input.images[0], { publishOnApproval: "true" });
     assert.equal(catalogImageManifestSchema.safeParse(f.input).success, false);
   } finally { await f.cleanup(); }
+});
+
+test("photo approval cannot activate a draft with missing or estimated shipping profile", async () => {
+  for (const shippingProfile of [null, { enabled: false, transportReviewed: false, measurementBasis: "estimated", weightGrams: 250,
+    widthCm: 10, heightCm: 8, lengthCm: 15 }]) {
+    const f = await fixture();
+    try {
+      f.change({ status: "DRAFT", shippingProfile });
+      Object.assign(f.input.images[0], { publishOnApproval: true });
+      for (const apply of [false, true]) await assert.rejects(f.run(apply), /peso|medidas/i);
+      assert.equal(f.writes.length, 0);
+      assert.equal(f.audits.length, 0);
+      assert.deepEqual(await readdir(f.root), ["original.png"]);
+      Object.assign(f.input.images[0], { publishOnApproval: false });
+      await f.run(true);
+      assert.equal(f.writes.find(write => write.kind === "product")?.data.status, undefined);
+    } finally { await f.cleanup(); }
+  }
 });
 
 test("publication preserves originals, creates bounded readable WebP and audits provenance", async () => {

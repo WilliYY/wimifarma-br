@@ -13,14 +13,14 @@ test("freight catalog pages beyond 500, searches globally and exposes only its a
   const queries: Record<string, unknown>[] = [];
   const counted: Record<string, unknown>[] = [];
   let configured = false;
-  const products = Array.from({ length: 805 }, (_, i) => ({ id: `synthetic-${i}`, name: `Produto ${String(i).padStart(4, "0")}` }));
+  const products = Array.from({ length: 805 }, (_, i) => ({ id: `synthetic-${i}`, name: `Produto ${String(i).padStart(4, "0")}`, status: i === 804 ? "DRAFT" : "ACTIVE" }));
   const fixture = { guard: { session: { user: { id: "synthetic-admin" } } }, integration: { settings: defaultShippingSettings, revision: 7, credentials: { accessToken: "synthetic-private-token", clientSecret: "synthetic-secret" } }, prisma: { product: {
     count: async (query: Record<string, unknown>) => { counted.push(query); const ids = (query.where as { id?: { in: string[] } })?.id?.in; return ids ? ids.length : products.length; },
     findMany: async (query: Record<string, unknown>) => {
       if (query.take === undefined) return products.map((product, index) => ({ id: product.id, category: "Higiene", shippingProfile: configured && index === 804 ? { enabled: true, transportReviewed: true, weightGrams: 300, widthCm: 10, heightCm: 10, lengthCm: 20 } : null }));
       queries.push(query);
       const ids = (query.where as { id?: { in: string[] } })?.id?.in;
-      const matching = ids ? products.filter(product => ids.includes(product.id)) : products;
+      const matching = (ids ? products.filter(product => ids.includes(product.id)) : products).filter(product => !(query.where as { status?: string })?.status || product.status === (query.where as { status: string }).status);
       return matching.slice(Number(query.skip ?? 0), Number(query.skip ?? 0) + Number(query.take));
     },
   } } };
@@ -52,6 +52,7 @@ test("freight catalog pages beyond 500, searches globally and exposes only its a
   const ready = await (await loaded.exports.GET(new Request("https://example.com/api/admin/fretes?readiness=CONFIGURED"))).json();
   assert.equal(ready.data.products.length, 1);
   assert.equal(ready.data.products[0].id, "synthetic-804", "global filter reaches a product beyond the first eight pages");
+  assert.equal(ready.data.products[0].status, "DRAFT", "drafts remain available for freight review before publication");
   assert.equal(ready.data.readinessSummary.configured, 1);
   const pending = await (await loaded.exports.GET(new Request("https://example.com/api/admin/fretes?readiness=PENDING&page=8"))).json();
   assert.equal(pending.data.pagination.total, 804);

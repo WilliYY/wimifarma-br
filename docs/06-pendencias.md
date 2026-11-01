@@ -2,6 +2,7 @@
 
 ## Conferência logística atualizada — 01/11/2026
 
+- Atualização posterior: 3.062 ativos, 3.056 completos/estimados, seis incompletos; Cordarex 5 mg 60 foi incluído após o retrato anterior. Dois envios anteriormente habilitados permanecem assim. Há 26 GTINs com referências de bruto e medidas da unidade comercial, sem receita de embalagem calibrada. A nova política de publicação e os fatos ainda necessários estão em [134](134-prontidao-logistica-publicacao.md).
 - São 3.056 de 3.061 ativos com peso e três medidas preenchidos; as três exceções completadas nesta rodada continuam estimadas e desabilitadas. Somente os dois perfis anteriormente habilitados permanecem assim.
 - Restam Imosec 2 mg 12 comprimidos (classificação de receita pendente), Clopidogrel/Albendazol/Beneum Teuto e Plax Melancia 500 mL (contradições nas referências físicas). Confirmar fontes ou embalagem antes de resolver; preservar histórico e classificação.
 - Caixas alternativas de Daflon e Bigfral são planejadas, não declaradas disponíveis. Tara, proteção, encaixe real e aceitação de cada serviço continuam pendentes antes da liberação de transporte. Resultado e provas em [129](129-hipoteses-por-tipo-de-embalagem.md#continuidade-das-exceções--01112026).

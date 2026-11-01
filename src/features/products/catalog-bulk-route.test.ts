@@ -9,16 +9,17 @@ const bundle = build({ entryPoints: ["src/app/api/admin/produtos/lote/route.ts"]
   builder.onResolve({ filter: /features\/auth\/auth$|lib\/prisma$/ }, args => ({ path: args.path, namespace: "fixture" }));
   builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("auth") ? "export const auth=fixture.auth;" : "export const getPrisma=()=>fixture.db;" }));
 } }] });
-type Options = { role?: string | null; revoked?: boolean; stale?: boolean; missing?: boolean; pending?: boolean; distributor?: boolean; prescription?: boolean; auditFails?: boolean; draft?: boolean; medicineClass?: string };
+type Options = { role?: string | null; revoked?: boolean; stale?: boolean; missing?: boolean; pending?: boolean; distributor?: boolean; prescription?: boolean; auditFails?: boolean; draft?: boolean; medicineClass?: string; shippingProfile?: unknown };
 async function harness(options: Options = {}) {
   const role = options.role === undefined ? "ADMIN" : options.role;
   const products = ["b", "a"].map(id => ({ id, name: "Synthetic", updatedAt: new Date(version), status: "ACTIVE", category: "Original", inventorySource: options.distributor ? "DISTRIBUTOR" : "PHARMACY", supplierMarkupBps: 6000, supplierOffers: [], requiresPrescription: options.prescription ?? false, prescriptionType: options.prescription ? "ORDINARY" : "UNREVIEWED", catalogClassification: options.medicineClass ? { kind: "MEDICINE", medicineClass: options.medicineClass, ethical: false, otc: false } : undefined, isPopularPharmacy: false, featuredPosition: 2, cashbackEnabled: false, cashbackRateBps: 200, wimicoinsEnabled: false, wimicoinsRateBps: 200 }));
   if (options.draft) for (const product of products) product.status = "DRAFT";
+  const shippingProducts = products.map(product => ({ ...product, shippingProfile: options.shippingProfile }));
   const writes: { id: string; data: Record<string, unknown> }[] = [], audits: unknown[] = [], locks: string[] = [];
   let dbReads = 0;
   const tx = { $queryRaw: async (parts: TemplateStringsArray, ...values: unknown[]) => { dbReads++; if (parts.join("").includes('"Product"')) locks.push(String(values[0])); return []; },
     user: { findFirst: async () => options.revoked ? null : { id: "synthetic-admin", role } },
-    product: { findUnique: async ({ where }: { where: { id: string } }) => options.missing && where.id === "b" ? null : { ...products.find(p => p.id === where.id), updatedAt: options.stale && where.id === "b" ? new Date(0) : new Date(version) },
+    product: { findUnique: async ({ where }: { where: { id: string } }) => options.missing && where.id === "b" ? null : { ...shippingProducts.find(p => p.id === where.id), updatedAt: options.stale && where.id === "b" ? new Date(0) : new Date(version) },
       update: async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => { writes.push({ id: where.id, data }); return { id: where.id, updatedAt: new Date(version) }; } },
     orderItem: { findFirst: async () => options.pending ? { id: "pending" } : null },
     auditLog: { create: async (data: unknown) => { if (options.auditFails) throw new Error("private SQL"); audits.push(data); } },
@@ -36,6 +37,19 @@ test("bulk: nega sessão, MANAGER financeiro e ADMIN revogado sem gravação", a
   assert.equal((await manager.run({ cashbackEnabled: true })).status, 403);
   assert.equal(manager.writes.length, 0);
   const revoked = await harness({ revoked: true }); assert.equal((await revoked.run({ status: "DRAFT" })).status, 403); assert.equal(revoked.writes.length, 0);
+});
+
+test("bulk: activation requires measured freight review without affecting legacy price edits", async () => {
+  const draft = await harness({ draft: true });
+  assert.equal((await draft.run({ status: "ACTIVE" })).status, 422);
+  assert.equal(draft.writes.length, 0);
+  const profile = { enabled: true, transportReviewed: true, measurementBasis: "measured", weightGrams: 250,
+    widthCm: 10, heightCm: 8, lengthCm: 15, cargoKinds: ["general"], approvedServiceIds: [1] };
+  const ready = await harness({ draft: true, shippingProfile: profile });
+  assert.equal((await ready.run({ status: "ACTIVE" })).status, 200);
+  const estimated = await harness({ draft: true, shippingProfile: { ...profile, measurementBasis: "estimated" } });
+  assert.equal((await estimated.run({ status: "ACTIVE" })).status, 422);
+  assert.equal(estimated.writes.length, 0);
 });
 test("bulk: schema estrito, ids únicos, máximo50 e origem/corpo limitados", async () => {
   const f = await harness();

@@ -17,6 +17,7 @@ import { privateSupplierImageAllowed } from "@/features/product-images/private-s
 import { classificationIsConsistent, emptyClassification, readClassification } from "@/features/products/catalog-operations";
 import { validateSupplierMarkupChange } from "@/features/products/catalog-operations-service";
 import { validatePhotoPublication } from "@/features/products/photo-publication-policy";
+import { validateShippingPublication } from "@/features/products/shipping-publication-policy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -169,6 +170,7 @@ export async function PATCH(
       if (imageAsset && !await transaction.productImage.findUnique({ where: { id: imageAsset.id }, select: { id: true } })) throw new ProductMutationError("A foto foi removida da biblioteca. Selecione outra foto.", 409);
       const current = await transaction.product.findUnique({ where: { id, deletedAt: null }, include: { supplierOffers: true } });
       if (!current) return null;
+      const status = productData.status ?? current.status;
       const incomingEan = parsed.data.ean?.trim() || null;
       const currentEan = current.ean?.trim() || null;
       const eanWasProvided = parsed.data.ean !== undefined;
@@ -202,13 +204,16 @@ export async function PATCH(
       const explicitlyReviewed = guard.session?.user.role === "ADMIN" &&
         (parsed.data.photoReviewConfirmed === true || Boolean(imageAsset && imageAsset.id !== current.imageAssetId) || galleryChanged);
       if (parsed.data.photoReviewConfirmed && guard.session?.user.role !== "ADMIN") throw new ProductMutationError("Somente ADMIN pode confirmar a revisão das fotos.", 403);
-      const photoReview = await validatePhotoPublication(transaction, current, { ...current, ...productData, catalogClassification, prescriptionType, imageUrl, imageUrls,
+      const photoReview = await validatePhotoPublication(transaction, current, { ...current, ...productData, status, catalogClassification, prescriptionType, imageUrl, imageUrls,
         inventorySource: productData.inventorySource ?? current.inventorySource,
         imageAssetId: nextImageAssetId }, explicitlyReviewed);
-      const featuredPosition = await resolveFeaturedPosition(transaction, { featured: parsed.data.featured, currentPosition: current.featuredPosition, status: productData.status, imageUrl });
+      validateShippingPublication(identityChanged ? null : current, { ...current, ...productData, status, catalogClassification, prescriptionType,
+        shippingProfile: shippingProfile ?? current.shippingProfile });
+      const featuredPosition = await resolveFeaturedPosition(transaction, { featured: parsed.data.featured, currentPosition: current.featuredPosition, status, imageUrl });
       const updated = await transaction.product.updateMany({
         data: {
           ...productData,
+          status,
           catalogClassification,
           prescriptionType,
           shippingProfile,

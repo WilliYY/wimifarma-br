@@ -15,6 +15,9 @@ const carriers: Record<number, Carrier> = {
   1: "correios", 2: "correios", 17: "correios", 3: "jadlog", 4: "jadlog", 27: "jadlog",
   12: "latam", 15: "azul", 16: "azul", 22: "buslog", 31: "loggi", 32: "loggi", 34: "loggi", 33: "jet", 35: "total",
 };
+export function isKnownShippingService(serviceId: number): boolean {
+  return Object.hasOwn(carriers, serviceId);
+}
 // Melhor Envio guide, updated 19/10/2026. Conflicting Jadlog text/table fails closed.
 // https://centraldeajuda.melhorenvio.com.br/hc/pt-br/articles/31220391789332
 function cargoStatus(carrier: Carrier, cargo: ShippingCargo): CargoStatus {

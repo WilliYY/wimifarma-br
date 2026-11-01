@@ -31,7 +31,7 @@ const productFieldsSchema = z.object({
   searchTerms: z.array(z.string().trim().min(2).max(80)).max(20).default([]),
   sku: z.string().max(80).optional(),
   slug: z.string().min(3).max(120).optional(),
-  status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).default("DRAFT"),
+  status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]),
   stock: z.coerce.number().int().min(0).default(0),
 });
 
@@ -44,7 +44,7 @@ const promotionalPriceError = {
 };
 const prescriptionClassificationError = { message: "Marque 'Exige receita' para classificar receita comum ou controle especial.", path: ["prescriptionType"] };
 
-export const productCreateSchema = productFieldsSchema.extend({ status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).default("ACTIVE") }).refine(
+export const productCreateSchema = productFieldsSchema.extend({ status: productFieldsSchema.shape.status.default("DRAFT") }).refine(
   validPromotionalPrice,
   promotionalPriceError,
 ).refine(prescriptionClassificationIsConsistent, prescriptionClassificationError);
@@ -52,6 +52,7 @@ export const productCreateSchema = productFieldsSchema.extend({ status: z.enum([
 export const productUpdateSchema = productFieldsSchema
   .omit({ slug: true })
   .extend({
+    status: productFieldsSchema.shape.status.optional(),
     brand: z.string().max(120).nullable().optional(),
     category: z.string().max(120).nullable().optional(),
     description: z.string().max(800).nullable().optional(),

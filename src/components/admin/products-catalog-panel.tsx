@@ -569,11 +569,12 @@ function ProductFormFields({
               </label>
               <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
                 Status
-                <select className="h-11 rounded-md border border-line bg-white px-3 text-sm text-ink shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15" defaultValue={product?.status ?? "ACTIVE"} name="status">
+                <select className="h-11 rounded-md border border-line bg-white px-3 text-sm text-ink shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15" defaultValue={product?.status ?? "DRAFT"} name="status">
                   <option value="DRAFT">Rascunho</option>
                   <option value="ACTIVE">Publicado</option>
                   <option value="ARCHIVED">Arquivado</option>
                 </select>
+                {!product && <span className="text-xs font-normal leading-5 text-muted">Salve como rascunho. Depois, ADMIN deve conferir peso, medidas e transporte em Fretes e entregas; volte a este cadastro para publicar.</span>}
               </label>
             </div>
             <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-brand/20 bg-brand-soft/40 px-3 py-3 text-sm font-bold text-ink"><input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={isShowcasePosition(product?.featuredPosition ?? null)} name="featured" type="checkbox" /><Star className="h-4 w-4 text-brand" />Destacar em Melhores ofertas</label>

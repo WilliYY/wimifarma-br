@@ -12,7 +12,8 @@ type PhotoProduct = {
 };
 
 export function importedProductStatus(product: { requiresPrescription: boolean }) {
-  return product.requiresPrescription ? "ACTIVE" : "DRAFT";
+  void product;
+  return "DRAFT" as const;
 }
 
 function requiresPublicPhoto(product: PhotoProduct) {
