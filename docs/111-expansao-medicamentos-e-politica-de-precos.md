@@ -119,3 +119,30 @@ Backup, baseline, dry-run de uma operação CREATE, concessão exclusiva, aplica
 O acumulado verificado deste chat passa de 135 para 136 inclusões: 60 pertencem à coorte original de 1.491 candidatos e 76 são adicionais. Permanecem 1.431 candidatos daquela coorte; essa contagem não significa que todos foram publicados nem inclui publicações de outras frentes. A pesquisa complementar consultou 52 candidatos na ANB, 51 na DM e 13 na GAM, sem encontrar outra oferta completa liberável. Divergências de EAN/MS, custo acima do teto, estoque zero, imposto não identificado e fontes ainda não acessíveis seguem separados, sem desativar produtos existentes.
 
 Relatório e provas privados: `outputs/catalogo-lotes200-2026-10-26/lotes1000-v1-20261027/fila-lotes50-20261029-v1/RESULTADO-PUBLICACAO1-CORDAREX-20261101.md` e `cordarex1-stage13-v1/preparation/revision2/publication1-physical-and-sql-proof-20261101.json`. O namespace histórico com data 20261030 contém uma única inclusão efetiva em 01/11, runtime revisão 2, e está encerrado; não deve ser reaplicado.
+
+## 01/11/2026 — Seis apresentações publicadas somente para Avise-me
+
+O lote final adicionou seis produtos ACTIVE, seis ofertas ANB indisponíveis e 12 auditorias, com aplicação única e encerramento da concessão. A conferência posterior confirmou EANs únicos em todos os estados, preços, estoque, classificação e perfil logístico. As seis páginas públicas e seus dados estruturados foram verificados; os produtos anteriores e nove tabelas protegidas foram preservados.
+
+| Apresentação | Preço cadastrado antes do desconto Pix |
+|---|---:|
+| Rosuvastatina Cálcica 20 mg 30 Comprimidos Revestidos Legrand | R$ 19,94 |
+| Rosuvastatina Cálcica 5 mg 30 Comprimidos Revestidos Legrand | R$ 19,16 |
+| Anastrozol 1 mg 30 Comprimidos Revestidos EMS | R$ 42,12 |
+| Rosuvastatina Cálcica 40 mg 30 Comprimidos Revestidos Legrand | R$ 209,24 |
+| Drospirenona + Etinilestradiol 3 mg + 0,03 mg 63 Comprimidos Revestidos Germed | R$ 50,39 |
+| Runner Eze 20 mg + 10 mg 30 Comprimidos Revestidos | R$ 154,50 |
+
+Os cinco genéricos e o similar Runner Eze usam acréscimo de 50% sobre o custo final e cashback de compra de 1%, com WimiCoins desativado. A regra específica do Runner Eze, R$ 154,50, foi escolhida pelo lojista. O ST já incluído no custo não foi somado novamente e os tetos comprovados foram respeitados. Os seis exigem receita comum, usam imagem institucional e têm galeria de embalagem vazia; nenhum ProductImage novo foi criado.
+
+O estoque físico, o estoque observado ANB e a alocação são zero. A exibição utiliza o modo persistente somente Avise-me descrito em [134](134-prontidao-logistica-publicacao.md): não há compra habilitada nem medidas presumidas. Nova oferta positiva não remove a trava logística.
+
+A entrega do modo no app passou em 501 testes de segurança, lint, typecheck, Prisma, build Linux e revisão independente. A preparação do lote corrigiu somente problemas do importador detectados em QA sintética: hash de linhas, resolução ESM e metadados reais do Prisma 7.10. Os 53 testes históricos do writer foram reutilizados com datas e logs originais, com regressões específicas das correções e seis testes de compatibilidade repetidos pelo revisor. A QA final real criou seis produtos/seis ofertas/12 auditorias e comprovou preservação, rejeição de ADMIN inativo, colisão GTIN e repetição CREATE-only. As tentativas isoladas anteriores foram preservadas; nenhuma escreveu no catálogo produtivo.
+
+Backup custom, TOC, baseline, dry-run, concessão exclusiva, aplicação única, prova pública e encerramento foram concluídos. A QA própria final foi removida após conferir proprietário e zero conexões, sem FORCE. A auditoria operacional registrou um moderado em produção e 15 no conjunto completo, sem alto ou crítico. A entrega do app havia registrado três baixos/quatro moderados em produção e três baixos/17 moderados no conjunto completo, sem alto ou crítico; não houve atualização de dependências fora do escopo.
+
+O acumulado verificado desta frente passa de 136 para **142 inclusões**: 66 da coorte original de 1.491 e 76 adicionais. Restam 1.425 candidatos daquela coorte; isso não comprova ausência no catálogo atual ou prontidão comercial. Demais pendências continuam separadas, sem desativar produtos existentes.
+
+O índice posterior consultou todos os estados e encontrou 3.071 produtos, 3.068 EANs válidos distintos, nenhum EAN válido duplicado e três registros antigos sem EAN válido. Para acelerar as próximas entradas, o usuário pode enviar somente nomes de princípios ativos; a pesquisa completa marcas éticas, genéricos, similares, associações e apresentações. Uma lista já pronta com EAN, nome, custo final e estoque permite começar pela comparação. Incluir somente os EANs ausentes elegíveis e completar dados/fotos permitidas dos existentes; atualizar o índice e reconferir colisões antes da escrita. Build e testes do aplicativo não precisam ser repetidos por cadastro quando o código não mudou.
+
+Relatório e provas privados: `outputs/catalogo-lotes200-2026-10-26/lotes1000-v1-20261027/fila-lotes50-20261029-v1/RESULTADO-NOTIFY6-20261101.md` e `notify6-v2-publication-20261101/proofs/`. A próxima conversa solicitada é o **chat 13**, preparada para aguardar nova ordem. A preparação do arquivo de continuidade ou do aviso ao chat 10 não comprova criação, envio ou leitura no aplicativo.
