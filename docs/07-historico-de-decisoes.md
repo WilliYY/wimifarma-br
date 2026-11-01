@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-01 — Frete durante a busca e preparação do Mercado Livre
+
+- Catálogo/ofertas/busca recebem Ver frete nos cartões comerciais, em diálogo único. CEP em memória por página, uma unidade do produto, consulta explícita, cancelamento e retorno de foco; API e regras preservadas. Triagem de ativação não confunde os 3.056 perfis estimados com revisão física: continuam dois habilitados, aguardando conferência dos novos grupos. Contrato e validação em [132](132-consulta-frete-no-catalogo.md).
+- Conta empresarial e rascunho Elmex observados no Mercado Livre, sem publicação. Política de medicamentos, emissor externo FAR e custo por categoria/logística pesquisados em fontes oficiais; tarifas efetivas exigem simulação por SKU. Limites em [133](133-mercado-livre-preparacao.md).
+
 ## 2026-11-01 — Continuidade auditada de pesos e medidas
 
 - Completados Huggies RN 48, Daflon Flex 30 envelopes e Bigfral Juvenil 10 com estimativas explícitas. Corrigida a consideração de apenas um envelope no cenário antigo do Daflon; Huggies conserva suas três medidas. Caixas maiores continuam apenas planejadas. São 3.056 de 3.061 ativos completos em campos físicos; cinco exceções e os dois envios habilitados anteriores preservados.

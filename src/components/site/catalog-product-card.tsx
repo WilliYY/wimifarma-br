@@ -4,7 +4,7 @@ import { PrescriptionSearchDetails } from "./prescription-search-details";
 import { PublicProductCard, type RelatedProductCardItem } from "./public-product-card";
 
 export function CatalogProductCard({ product, topicSearch = false }: { product: RelatedProductCardItem; topicSearch?: boolean }) {
-  if (!topicSearch || !isPrescriptionSearchProduct(product)) return <PublicProductCard product={product} />;
+  if (!topicSearch || !isPrescriptionSearchProduct(product)) return <PublicProductCard product={product} showShippingEstimate />;
 
   return (
     <article className="flex h-full min-h-64 min-w-0 overflow-hidden rounded-xl border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)]">

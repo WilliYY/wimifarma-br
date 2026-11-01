@@ -9,6 +9,7 @@ import { catalogFilterHref, catalogPagination, catalogSections, catalogSorts, ty
 import { productSearchPlan } from "@/features/products/public-search";
 import { breadcrumbData, SITE_URL } from "@/lib/seo";
 import { serializeProductStructuredData } from "@/features/products/product-detail";
+import { CatalogShippingProvider } from "./catalog-shipping-preview";
 
 export async function CatalogPage({ title, description, path, page, categoryNames, offers = false, group, sort = "relevantes", brand, section, query }: { title: string; description: string; path: string; page: number; categoryNames?: string[]; offers?: boolean; group?: CatalogGroup; sort?: CatalogSort; brand?: string; section?: string; query?: string }) {
   const [{ products, count }, categories, availableSections] = await Promise.all([
@@ -24,7 +25,7 @@ export async function CatalogPage({ title, description, path, page, categoryName
   const structured = [breadcrumbData(crumbs), { "@context": "https://schema.org", "@type": "CollectionPage", name: title, url: `${SITE_URL}${catalogPageHref(path, page)}`, mainEntity: { "@type": "ItemList", itemListElement: products.map((product, i) => ({ "@type": "ListItem", position: (page - 1) * PAGE_SIZE + i + 1, url: `${SITE_URL}/produto/${encodeURIComponent(product.slug)}`, name: product.name })) } }];
   const linkClass = "flex min-h-11 items-center rounded-lg px-3 py-2 text-sm text-muted hover:bg-surface-subtle hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand aria-[current=page]:bg-brand/5 aria-[current=page]:font-bold aria-[current=page]:text-brand";
 
-  return <section className="bg-surface-subtle pb-16 pt-36 sm:pt-40 lg:pt-56">
+  return <CatalogShippingProvider><section className="bg-surface-subtle pb-16 pt-36 sm:pt-40 lg:pt-56">
     <script dangerouslySetInnerHTML={{ __html: serializeProductStructuredData(structured) }} type="application/ld+json" />
     <div className="mx-auto max-w-[1680px] px-4 sm:px-6 lg:px-8">
       <nav aria-label="Navegação estrutural" className="mb-6 flex flex-wrap gap-2 text-xs text-muted">{crumbs.map((crumb, i) => <span key={`${crumb.path}-${i}`}>{i > 0 && <span aria-hidden="true" className="mr-2">/</span>}<Link className="underline" href={crumb.path}>{crumb.name}</Link></span>)}</nav>
@@ -61,5 +62,5 @@ export async function CatalogPage({ title, description, path, page, categoryName
         </div>
       </div>
     </div>
-  </section>;
+  </section></CatalogShippingProvider>;
 }

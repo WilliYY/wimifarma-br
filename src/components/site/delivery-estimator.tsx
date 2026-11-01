@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useContext, useLayoutEffect, useMemo, useState, type FormEvent } from "react";
+import { useContext, useId, useLayoutEffect, useMemo, useState, type FormEvent } from "react";
 import { CheckCircle2, Loader2, MapPin, MessageCircle, Store, Truck, XCircle } from "lucide-react";
 import {
   formatPostalCode,
@@ -18,12 +18,22 @@ import { ProductQuantityContext } from "./product-quantity";
 
 type DeliveryEstimate = CheckoutQuoteState & { key: string; title: string; local: boolean; invalid: boolean };
 
-export function DeliveryEstimator({ product, quantity }: { product?: CartProduct; quantity?: number }) {
+export function DeliveryEstimator({ product, quantity, initialPostalCode = "", onPostalCodeChange, compact = false }: {
+  product?: CartProduct;
+  quantity?: number;
+  initialPostalCode?: string;
+  onPostalCodeChange?: (value: string) => void;
+  compact?: boolean;
+}) {
   const { items: cartItems } = useCart();
   const sharedQuantity = useContext(ProductQuantityContext);
   const selectedQuantity = quantity ?? sharedQuantity?.quantity ?? 1;
   const items = useMemo(() => product ? [{ ...product, quantity: selectedQuantity }] : cartItems, [cartItems, product, selectedQuantity]);
-  const [postalCode, setPostalCode] = useState("");
+  const [postalCode, setPostalCode] = useState(() => formatPostalCode(initialPostalCode));
+  const instanceId = useId();
+  const titleId = `${instanceId}-delivery-title`;
+  const postalCodeId = `${instanceId}-postal-code`;
+  const resultId = `${instanceId}-delivery-result`;
   const [quoteRunner] = useState(createCheckoutQuote);
   const [estimate, setEstimate] = useState<DeliveryEstimate | null>(null);
   const normalizedPostalCode = postalCode.replace(/\D/g, "");
@@ -61,32 +71,34 @@ export function DeliveryEstimator({ product, quantity }: { product?: CartProduct
   }
 
   return (
-    <section aria-labelledby="delivery-estimator-title" className="rounded-2xl border border-line bg-white p-4 sm:rounded-3xl sm:p-6">
-      <div className="flex items-start gap-3">
+    <section aria-labelledby={titleId} className={compact ? "min-w-0" : "rounded-2xl border border-line bg-white p-4 sm:rounded-3xl sm:p-6"}>
+      {compact ? <h2 className="sr-only" id={titleId}>Consultar entrega deste produto</h2> : <div className="flex items-start gap-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand sm:h-11 sm:w-11">
           <Truck className="h-5 w-5" aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <h2 className="text-lg font-bold text-ink" id="delivery-estimator-title">Como você quer receber?</h2>
+          <h2 className="text-lg font-bold text-ink" id={titleId}>Como você quer receber?</h2>
           <p className="mt-1 text-sm leading-6 text-muted">Consulte o frete e o prazo ou retire na farmácia.</p>
           {items.length > 0 && <p className="mt-1 text-xs text-muted">Simulação para {itemCount} {itemCount === 1 ? "unidade" : "unidades"}{product ? " deste produto" : " do carrinho"}.</p>}
         </div>
-      </div>
+      </div>}
 
-      <form className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:mt-5" onSubmit={handleSubmit}>
-        <label className="sr-only" htmlFor="product-postal-code">CEP</label>
+      <form className={`grid grid-cols-[minmax(0,1fr)_auto] gap-2 ${compact ? "" : "mt-4 sm:mt-5"}`} onSubmit={handleSubmit}>
+        <label className="sr-only" htmlFor={postalCodeId}>CEP</label>
         <div className="relative min-w-0 flex-1">
           <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
           <input
             autoComplete="postal-code"
             className="h-12 w-full rounded-xl border border-line bg-surface-subtle pl-10 pr-3 text-base font-semibold text-ink outline-none transition placeholder:text-muted focus:border-brand focus:ring-2 focus:ring-brand/15"
-            id="product-postal-code"
+            id={postalCodeId}
             inputMode="numeric"
-            aria-describedby={result ? "delivery-result" : undefined}
+            aria-describedby={result ? resultId : undefined}
             aria-invalid={result?.invalid || undefined}
             maxLength={9}
             onChange={(event) => {
-              setPostalCode(formatPostalCode(event.target.value));
+              const nextPostalCode = formatPostalCode(event.target.value);
+              setPostalCode(nextPostalCode);
+              onPostalCodeChange?.(nextPostalCode);
               quoteRunner.cancel();
               setEstimate(null);
             }}
@@ -101,12 +113,12 @@ export function DeliveryEstimator({ product, quantity }: { product?: CartProduct
       </form>
 
       {result ? (
-        <div role="status" aria-live="polite" aria-busy={result.busy} id="delivery-result" className={`mt-4 flex items-start gap-3 rounded-xl border p-4 ${result.local || result.options.length ? "border-emerald-200 bg-emerald-50" : "border-line bg-surface-subtle"}`}>
-          {result.local || result.options.length ? (
+        <div role="status" aria-live="polite" aria-busy={result.busy} id={resultId} className={`mt-4 rounded-xl border ${compact ? "p-3" : "flex items-start gap-3 p-4"} ${result.local || result.options.length ? "border-emerald-200 bg-emerald-50" : "border-line bg-surface-subtle"}`}>
+          {!compact && (result.local || result.options.length ? (
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-pharma-green" aria-hidden="true" />
           ) : (
             <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
-          )}
+          ))}
           <div className="min-w-0 flex-1">
             <strong className="block text-sm font-black text-ink">{result.title}</strong>
             <p className="mt-1 text-xs font-semibold leading-5 text-muted">
@@ -118,7 +130,7 @@ export function DeliveryEstimator({ product, quantity }: { product?: CartProduct
                 {result.options.map(option => {
                   const fee = shippingCustomerPrice(option);
                   return <li className="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-white p-3 text-sm" key={option.serviceId}>
-                    <div className="min-w-0 flex-1"><strong className="block">{option.carrier} · {option.service}</strong><span className="mt-1 block text-xs text-muted">Até {option.deliveryDays} dias úteis estimados, incluindo preparação</span><ShippingBenefitNote benefit={option.benefit} /></div>
+                    <div className="min-w-0 flex-1"><strong className="block">{option.carrier} · {option.service}</strong><span className="mt-1 block text-xs text-muted">Até {option.deliveryDays} dias úteis estimados, incluindo preparação</span>{option.benefit ? <ShippingBenefitNote benefit={option.benefit} /> : null}</div>
                     <strong className="text-pharma-green">{fee === 0 ? "Grátis" : formatCurrency(fee / 100)}</strong>
                   </li>;
                 })}

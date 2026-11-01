@@ -11,6 +11,7 @@ import { isProductAssociation, productSearchHref, productSearchPlan } from "@/fe
 import { catalogPageNumber } from "@/features/products/storefront";
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
+import { CatalogShippingProvider } from "@/components/site/catalog-shipping-preview";
 
 export const dynamic = "force-dynamic";
 type Props = { searchParams: Promise<{ q?: string | string[]; pagina?: string | string[] }> };
@@ -39,7 +40,7 @@ export default async function SearchPage({ searchParams }: Props) {
   ].filter(section => section.products.length);
 
   return (
-    <section className="bg-surface-subtle pb-16 pt-36 sm:pt-40 lg:pt-56">
+    <CatalogShippingProvider><section className="bg-surface-subtle pb-16 pt-36 sm:pt-40 lg:pt-56">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <nav aria-label="Navegação estrutural" className="mb-7 flex items-center gap-2 text-xs font-semibold text-muted">
           <Link className="hover:text-brand" href="/">Início</Link><ChevronRight aria-hidden="true" className="h-3 w-3" /><span>Busca</span>
@@ -96,6 +97,6 @@ export default async function SearchPage({ searchParams }: Props) {
           </aside>
         </div>
       </div>
-    </section>
+    </section></CatalogShippingProvider>
   );
 }

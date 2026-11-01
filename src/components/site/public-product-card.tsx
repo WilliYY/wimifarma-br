@@ -10,6 +10,7 @@ import { formatCurrency } from "@/lib/utils";
 import { productDisplayName, productTitleBrand } from "@/features/products/display-name";
 import { productOfferDiscount } from "@/features/offers/daily-rotation";
 import { ProductPmcBadge, ProductPmcPrice } from "./product-pmc";
+import { CatalogShippingButton } from "./catalog-shipping-preview";
 
 export type RelatedProductCardItem = PublicProductSearchItem & {
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
@@ -17,7 +18,7 @@ export type RelatedProductCardItem = PublicProductSearchItem & {
   stock: number;
 };
 
-export function PublicProductCard({ product }: { product: RelatedProductCardItem }) {
+export function PublicProductCard({ product, showShippingEstimate = false }: { product: RelatedProductCardItem; showShippingEstimate?: boolean }) {
   const displayName = productDisplayName(product.name)
     .replace(/\bcomprimidos?\b/giu, "comp.")
     .replace(/\brevestidos?\b/giu, "rev.");
@@ -109,6 +110,7 @@ export function PublicProductCard({ product }: { product: RelatedProductCardItem
             </div>
           </div>
           <ProductCardActions product={cartProduct} />
+          {showShippingEstimate ? <CatalogShippingButton product={cartProduct} /> : null}
         </div>
       </div>
     </article>

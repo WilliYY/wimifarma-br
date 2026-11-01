@@ -15,7 +15,7 @@ const quote = {
   priceCents: 1875, deliveryDays: 4, token: "synthetic-quote-token",
 };
 
-async function fixture(run: (page: Page) => Promise<void>, cartOnly = false, fixtureProduct = product, purchasePanel = false) {
+async function fixture(run: (page: Page) => Promise<void>, cartOnly = false, fixtureProduct = product, purchasePanel = false, initialPostalCode = "") {
   const bundle = await build({
     stdin: {
       contents: `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';
@@ -25,7 +25,7 @@ async function fixture(run: (page: Page) => Promise<void>, cartOnly = false, fix
         function Fixture(){const [quantity,setQuantity]=useState(2);return <CartProvider>
           ${purchasePanel ? `<Toaster/><ProductQuantityProvider><ProductPurchasePanel product={${JSON.stringify(fixtureProduct)}}/><DeliveryEstimator product={${JSON.stringify(fixtureProduct)}}/></ProductQuantityProvider>` : `
           <label>Quantidade de teste<input type="number" value={quantity} onChange={event=>setQuantity(Number(event.target.value))}/></label>
-          <DeliveryEstimator ${cartOnly ? "" : `product={${JSON.stringify(fixtureProduct)}} quantity={quantity}`}/>`}
+          <DeliveryEstimator initialPostalCode={${JSON.stringify(initialPostalCode)}} ${cartOnly ? "" : `product={${JSON.stringify(fixtureProduct)}} quantity={quantity}`}/>`}
         </CartProvider>};createRoot(document.getElementById('root')).render(<Fixture/>);`,
       resolveDir: process.cwd(), loader: "tsx",
     },
@@ -66,6 +66,19 @@ async function consult(page: Page, postalCode: string) {
   await page.getByRole("textbox", { name: "CEP", exact: true }).fill(postalCode);
   await page.getByRole("button", { name: "Consultar", exact: true }).click();
 }
+
+test("CEP inicial compartilhado fica preenchido sem consultar automaticamente", async () => {
+  await fixture(async page => {
+    let requests = 0;
+    await page.route("**/api/fretes/cotacao", route => { requests++; return route.fulfill({ json: { data: [quote] } }); });
+    await page.goto(origin);
+    await expect(page.getByRole("textbox", { name: "CEP", exact: true })).toHaveValue("80010-000");
+    assert.equal(requests, 0);
+    await page.getByRole("button", { name: "Consultar", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("PAC");
+    assert.equal(requests, 1);
+  }, false, product, false, "80010000");
+});
 
 test("CEP nacional consulta frete do produto e quantidade atuais, sem misturar o carrinho", async () => {
   await fixture(async page => {

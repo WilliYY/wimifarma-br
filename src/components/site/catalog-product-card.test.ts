@@ -12,15 +12,16 @@ test("catalog cards preserve neutral prescription topics, photos, placeholders a
     stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';
       import {CartProvider} from './src/components/site/cart-provider';
       import {CatalogProductCard} from './src/components/site/catalog-product-card';
+      import {CatalogShippingProvider} from './src/components/site/catalog-shipping-preview';
       import {FooterPaymentMethodsContent} from './src/components/site/footer-payment-methods-content';
       const base={id:'synthetic',slug:'sintetico',name:'Produto sintético',brand:'Fabricante sintético',category:'Higiene',imageUrl:null,
         price:'10.00',promotionalPrice:null,activeIngredients:[],searchTerms:[],requiresPrescription:false,prescriptionType:'UNREVIEWED',isPopularPharmacy:false,stock:0};
       const rx={...base,id:'rx',name:'Medicamento sintético 5mg 30 comprimidos',category:'Medicamentos',requiresPrescription:true,prescriptionType:'ORDINARY',
         imageUrl:'/synthetic.svg',promotionalPrice:'8.00',cashbackEnabled:true,cashbackRateBps:200,activeIngredients:['Composição sintética']};
-      createRoot(document.getElementById('root')).render(<CartProvider><main className="grid grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-3 gap-4 items-stretch">
+      createRoot(document.getElementById('root')).render(<CartProvider><CatalogShippingProvider><main className="grid grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-3 gap-4 items-stretch">
         <CatalogProductCard product={rx} topicSearch/><CatalogProductCard product={{...base,id:'photo',name:'Produto com foto',imageUrl:'/synthetic.svg'}} topicSearch/>
         <CatalogProductCard product={{...base,id:'placeholder',name:'Produto sem foto'}} topicSearch/>
-      </main><FooterPaymentMethodsContent brands={[{id:'elo',name:'Elo',image:null},{id:'debelo',name:'Elo Débito',image:null},{id:'visa',name:'Visa',image:null}]} fromMercadoPago/></CartProvider>);`,
+      </main></CatalogShippingProvider><FooterPaymentMethodsContent brands={[{id:'elo',name:'Elo',image:null},{id:'debelo',name:'Elo Débito',image:null},{id:'visa',name:'Visa',image:null}]} fromMercadoPago/></CartProvider>);`,
       resolveDir: process.cwd(), loader: "tsx" },
     bundle: true, write: false, platform: "browser", format: "esm", jsx: "automatic",
     define: { "process.env.NODE_ENV": '"production"' },
@@ -50,6 +51,7 @@ test("catalog cards preserve neutral prescription topics, photos, placeholders a
       if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: css });
       if (url.pathname === "/synthetic.svg") return route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="25" y="10" width="50" height="80" fill="#b91c1c"/></svg>' });
       if (url.pathname === "/payments/pix-symbol.svg") return route.fulfill({ contentType: "image/svg+xml", body: await readFile("public/payments/pix-symbol.svg") });
+      if (url.pathname === "/api/fretes/cotacao") return route.fulfill({ json: { data: [{ provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC", priceCents: 1875, deliveryDays: 4, token: "synthetic-token" }] } });
       return route.abort();
     });
     await page.goto("http://127.0.0.1:3197/");
@@ -57,6 +59,7 @@ test("catalog cards preserve neutral prescription topics, photos, placeholders a
     await expect(rx.locator('[data-prescription-search="true"]')).toBeVisible();
     await expect(rx.locator("img,svg,button,s,[role=img]")).toHaveCount(0);
     assert.doesNotMatch(await rx.innerText(), /cashback|Pix|OFF|frete|comprar/i);
+    await expect(page.getByRole("button", { name: /^Ver frete de / })).toHaveCount(2);
     await expect(page.getByRole("img", { name: "Produto com foto", exact: true })).toBeVisible();
     await expect(page.getByRole("img", { name: "Foto indisponível", exact: true })).toBeVisible();
     await expect(page.getByRole("list", { name: "Bandeiras disponibilizadas pelo Mercado Pago" }).getByRole("listitem")).toHaveCount(2);
@@ -66,6 +69,20 @@ test("catalog cards preserve neutral prescription topics, photos, placeholders a
       const columns = await page.locator("main").evaluate(element => getComputedStyle(element).gridTemplateColumns.split(" ").length);
       assert.equal(columns, width === 320 ? 1 : width === 390 ? 2 : 3);
       if (captureRoot) await page.screenshot({ path: join(captureRoot, `catalogo-bandeiras-${width}.png`), fullPage: true });
+      const opener = page.getByRole("button", { name: "Ver frete de Produto com foto", exact: true });
+      await opener.click();
+      const dialog = page.getByRole("dialog", { name: "Frete e prazo", exact: true });
+      await expect(dialog).toBeVisible();
+      const bounds = await dialog.boundingBox();
+      assert.ok(bounds && bounds.x >= 0 && bounds.x + bounds.width <= width, `shipping dialog outside ${width}px viewport`);
+      assert.ok(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth), `shipping dialog overflow at ${width}px`);
+      await page.getByRole("textbox", { name: "CEP", exact: true }).fill("80010-000");
+      await page.getByRole("button", { name: "Consultar", exact: true }).click();
+      await expect(page.getByRole("status")).toContainText("PAC");
+      await expect(page.getByRole("status")).toContainText(/18,75/);
+      if (captureRoot) await page.screenshot({ path: join(captureRoot, `catalogo-frete-${width}.png`), fullPage: false });
+      await dialog.getByRole("button", { name: "Fechar", exact: true }).click();
+      await expect(opener).toBeFocused();
     }
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
