@@ -1,3 +1,4 @@
+import { isNotifyOnlyPendingLogistics } from "@/features/products/notify-only";
 import { publicProductImageUrl, publicProductImageUrls } from "@/features/product-images/private-supplier-policy";
 import { priceWithMarkup } from "@/features/supplier-planning/planning";
 import { MAX_ORDER_ITEM_QUANTITY } from "@/features/products/quantity";
@@ -8,7 +9,7 @@ import { resolveCmedReference, type PublicPmcReference } from "@/features/produc
 
 export { normalizeGtin, gtinVariants } from "@/features/products/gtin";
 
-export const supplierOfferInclude = { supplierOffers: true, supplierMarkupBps: true, catalogClassification: true } as const;
+export const supplierOfferInclude = { supplierOffers: true, supplierMarkupBps: true, catalogClassification: true, shippingProfile: true } as const;
 
 export type SupplierCommerceOffer = {
   id: string;
@@ -27,6 +28,7 @@ export type SupplierCommerceOffer = {
 };
 
 export type CommerceProduct = {
+  shippingProfile?: unknown;
   supplierDemandAllowed?: boolean;
   catalogClassification?: unknown;
   imageAssetId?: string | null;
@@ -46,7 +48,8 @@ export type CommerceProduct = {
   cmedReference?: unknown;
 };
 
-export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "eanNormalized" | "supplierOffers" | "requiresPrescription" | "supplierMarkupBps" | "supplierDemandAllowed" | "catalogClassification">, quantity = 1, now = Date.now()) {
+export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "eanNormalized" | "supplierOffers" | "requiresPrescription" | "supplierMarkupBps" | "supplierDemandAllowed" | "catalogClassification" | "shippingProfile">, quantity = 1, now = Date.now()) {
+  if (isNotifyOnlyPendingLogistics(product.shippingProfile)) return null;
   if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > MAX_ORDER_ITEM_QUANTITY || !Number.isFinite(now)) return null;
   const markup = product.supplierMarkupBps ?? 6000;
   if (!Number.isSafeInteger(markup) || markup < 0 || markup > 10000) return null;
@@ -79,19 +82,20 @@ export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "ean
     || a.unitCostCents - b.unitCostCents || a.supplier.localeCompare(b.supplier) || a.id.localeCompare(b.id))[0] ?? null;
 }
 
-export function withCommerceAvailability<T extends CommerceProduct>(product: T, now = Date.now()): Omit<T, "supplierMarkupBps" | "supplierOffers" | "price" | "promotionalPrice" | "inventorySource" | "imageUrl" | "imageUrls" | "imageAsset" | "imageAssetId" | "cmedReference"> & {
+export function withCommerceAvailability<T extends CommerceProduct>(product: T, now = Date.now()): Omit<T, "shippingProfile" | "supplierMarkupBps" | "supplierOffers" | "price" | "promotionalPrice" | "inventorySource" | "imageUrl" | "imageUrls" | "imageAsset" | "imageAssetId" | "cmedReference"> & {
   inventorySource: "PHARMACY" | "DISTRIBUTOR"; supplierDemandAllowed?: boolean; price: string; promotionalPrice: string | null;
   purchaseLimit: number; availableForPurchase: boolean; imageUrl: string | null; imageUrls: string[]; imageAsset?: unknown;
   pmcReference: PublicPmcReference | null;
 } {
-  const { supplierMarkupBps: _markup, supplierOffers: _privateOffers, price: _price, promotionalPrice: _promo, inventorySource: _source, imageUrl: _image, imageUrls: _images, imageAsset: _asset, imageAssetId: _assetId, cmedReference: _cmed, ...safe } = product;
-  void [_markup, _privateOffers, _price, _promo, _source, _image, _images, _asset, _assetId, _cmed];
+  const { shippingProfile: _shipping, supplierMarkupBps: _markup, supplierOffers: _privateOffers, price: _price, promotionalPrice: _promo, inventorySource: _source, imageUrl: _image, imageUrls: _images, imageAsset: _asset, imageAssetId: _assetId, cmedReference: _cmed, ...safe } = product;
+  void [_shipping, _markup, _privateOffers, _price, _promo, _source, _image, _images, _asset, _assetId, _cmed];
   const inventorySource = product.inventorySource ?? "PHARMACY";
   const imageUrl = publicProductImageUrl(product);
   const pmcReference = !product.isPopularPharmacy && readClassification(product.catalogClassification).kind === "MEDICINE"
     ? resolveCmedReference(product.cmedReference, product.eanNormalized ?? product.ean, now) : null;
+  const held = isNotifyOnlyPendingLogistics(product.shippingProfile);
   if (inventorySource === "PHARMACY") return {
-    ...safe, inventorySource, pmcReference, supplierDemandAllowed: false, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: imageUrl && !product.requiresPrescription ? product.imageAsset : null, purchaseLimit: Math.max(0, product.stock), availableForPurchase: product.stock > 0,
+    ...safe, inventorySource, pmcReference, supplierDemandAllowed: false, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: imageUrl && !product.requiresPrescription ? product.imageAsset : null, purchaseLimit: held ? 0 : Math.max(0, product.stock), availableForPurchase: !held && product.stock > 0,
     price: String(product.price), promotionalPrice: product.promotionalPrice == null ? null : String(product.promotionalPrice),
   };
   const offer = resolveSupplierOffer({ ...product, supplierDemandAllowed: true }, 1, now);

@@ -191,3 +191,15 @@ test("EAN omitido do distribuidor mantém identidade e a exclusão continua bloq
     assert.equal(sourceChanged.writes.length, 0);
   }
 });
+
+
+test("generic product edits preserve notify-only across omitted and replaced shipping drafts", async () => {
+  const hold = { notifyOnlyPendingLogistics: true, measurementBasis: "unknown", enabled: false, transportReviewed: false, weightGrams: null, widthCm: null, heightCm: null, lengthCm: null, reference: null };
+  for (const shippingProfile of [undefined, { ...hold, notifyOnlyPendingLogistics: undefined }, { ...hold, notifyOnlyPendingLogistics: false }, null, { ...hold, notifyOnlyPendingLogistics: "true" }]) {
+    const f = await harness(true, true, "ACTIVE"); f.product.shippingProfile = hold;
+    const response = await f.run({ shippingProfile });
+    assert.equal(response.status, shippingProfile === null || shippingProfile?.notifyOnlyPendingLogistics === false || shippingProfile?.notifyOnlyPendingLogistics === "true" ? 422 : 200);
+    if (response.status === 200) assert.equal((f.product.shippingProfile as typeof hold).notifyOnlyPendingLogistics, true);
+    else assert.equal(f.writes.length, 0);
+  }
+});

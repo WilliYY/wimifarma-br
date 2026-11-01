@@ -9,7 +9,7 @@ O fluxo passa a ser **rascunho → conferência ADMIN em Fretes e entregas → p
 ## Contrato de publicação
 
 - O cadastro geral e novos registros do importador iniciam em `DRAFT`. O cadastro geral continua aceitando somente um rascunho logístico, sem conceder aprovação de transporte.
-- A criação ou reativação para `ACTIVE` exige perfil completo, revisão explícita e base `measured` declarada no dado original. O default do parser não substitui essa declaração. Nenhuma estimativa existente é promovida automaticamente a medição.
+- A criação ou reativação comprável para `ACTIVE` exige perfil completo, revisão explícita e base `measured` declarada no dado original. O default do parser não substitui essa declaração. Nenhuma estimativa existente é promovida automaticamente a medição. A exceção informativa somente Avise-me, descrita abaixo, mantém uma trava persistente de compra.
 - Para produtos elegíveis ao envio automático, exigir perfil habilitado, carga informada sem `unspecified` e ao menos um serviço conhecido, aprovado explicitamente e compatível pela política existente.
 - Produtos com atendimento assistido continuam protegidos pela elegibilidade do checkout e do transporte. Seus dados físicos também precisam estar revisados para nova publicação, mas a publicação informativa não exige habilitar cotação automática nem transforma produto assistido em venda livre.
 - Edição de preço, estoque ou descrição dos ativos atuais permanece possível. Mudança de identidade que já invalida o perfil logístico exige salvar como rascunho antes de voltar a publicar; a normalização existente de identidade é preservada.
@@ -82,3 +82,17 @@ A importação documental teve recuperação explícita: o primeiro operador par
 Antes da aplicação v2, **14 verificações reais no PostgreSQL 17.9 isolado** passaram: reprodução da falha original, CAS com zero linhas e rollback, falhas após importação, commit de duas evidências/auditorias, repetição, revogação de ADMIN e contenção de locks. Os containers/rede descartáveis foram removidos por IDs e labels conferidos. O novo dry-run, backup e plano foram revisados; apply executado uma vez. A leitura independente confirmou duas fontes e duas auditorias novas, perfis/preços/estoque preservados e runtime do app/banco idêntico. Provas privadas em `evidence-operation-recovery-v2/`.
 
 O retrato posterior possui **3.062 ativos, 3.056 perfis físicos estimados completos, seis incompletos e dois envios habilitados**. Agora são **33 produtos com referência de bruto comercial, 48 com medidas comerciais e 28 com ambas**. Nenhum perfil passou a medido ou habilitado por essa importação. Tara, proteção, encaixe e serviços permitidos continuam exigindo conferência; os seis casos incompletos permanecem separados.
+
+## Somente Avise-me, sem liberação comercial — 01/11/2026
+
+Para concluir seis itens sem estoque confirmado e sem medidas físicas, o lojista delegou a escolha da melhor alternativa. Foi escolhido um modo informativo explícito, sem habilitar compras ou dispensar a conferência logística. Esta seção descreve a alteração em preparação; publicação do código e inclusão dos produtos exigem provas separadas.
+
+O modo persiste `shippingProfile.notifyOnlyPendingLogistics:true` num rascunho logístico: quatro medidas nulas, `measurementBasis:"unknown"`, transporte desabilitado e `transportReviewed:false`. A base desconhecida existe somente no schema de rascunho, não no perfil aprovado. Não se criam pesagens, dimensões, proteção, serviço ou aprovação fictícios.
+
+Um produto ACTIVE pode aparecer apenas para “Avise-me” nessa condição. O resolvedor comercial e o checkout impõem limite de compra zero, inclusive se houver estoque físico, nova cotação positiva ou recuperação de preço anterior. A flag é lida antes de interpretar o restante do JSON, evitando liberação por dado malformado. Produtos sem a flag preservam seu comportamento.
+
+Edições gerais, invalidação de identidade, reimportação e substituição do rascunho não podem retirar a trava silenciosamente. O JSON logístico continua privado; sua inclusão na seleção comercial não o expõe no DTO público.
+
+A liberação exige ação explícita `releaseNotifyOnly:true` na revisão ADMIN de Fretes, mantendo CAS e auditoria. É necessário declarar `measurementBasis:"measured"` na entrada original, preencher os dados físicos e habilitar carga e ao menos um serviço aprovado compatível. O mesmo gate da publicação normal deve ser aplicado para retirar a trava, mesmo quando o produto já estiver ACTIVE. Defaults do parser e disponibilidade da distribuidora não constituem essa aprovação.
+
+Receita, classificação, imagem institucional dos Rx, preços, cashback e elegibilidade de assinatura continuam sob seus contratos. Não há migração nem mudança global de disponibilidade dos produtos legados. Este modo não substitui a autorização de transporte nem a conferência farmacêutica antes da dispensação.

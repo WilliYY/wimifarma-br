@@ -322,3 +322,8 @@
 - Senhas de exemplo usadas no servidor.
 - Nginx Proxy Manager fora da rede `wimifarma-br-network`.
 - Dados reais em seed/testes.
+
+
+## Conferência física de itens somente Avise-me
+
+- Produtos com notifyOnlyPendingLogistics continuam sem compra até a revisão logística ADMIN completa e explícita. A conferência real de medidas, peso e transporte permanece pendente; a existência na vitrine não a substitui. Contrato em [134](134-prontidao-logistica-publicacao.md).

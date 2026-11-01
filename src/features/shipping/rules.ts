@@ -1,3 +1,4 @@
+import { isNotifyOnlyPendingLogistics } from "@/features/products/notify-only";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { shippingOptionSchema, shippingProfileSchema, shippingQuotePayloadSchema, ShippingError, type ShippingOption, type ShippingQuotePayload } from "./schema";
 import { requiresPharmacyShippingSupport } from "./eligibility";
@@ -58,6 +59,7 @@ export type ShippingProduct = {
   shippingProfile: unknown; updatedAt: Date;
 };
 export function validateShippingProduct(product: ShippingProduct) {
+  if (isNotifyOnlyPendingLogistics(product.shippingProfile)) throw new ShippingError(`${product.name}: a revisão logística está pendente; disponível somente para aviso de reposição.`);
   if (requiresPharmacyShippingSupport(product)) {
     throw new ShippingError(`${product.name}: o envio precisa de atendimento da farmácia.`);
   }

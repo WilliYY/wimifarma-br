@@ -1,3 +1,4 @@
+import { isNotifyOnlyPendingLogistics } from "@/features/products/notify-only";
 import { createHash, randomUUID } from "node:crypto";
 import type { Prisma } from "@/generated/prisma/client";
 import { productCashbackCents } from "@/features/cashback/rules";
@@ -70,6 +71,7 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   for (const id of productIds) await tx.$queryRaw`SELECT id FROM "Product" WHERE id = ${id} FOR UPDATE`;
   // Serializa identidade/origem com a edição ADMIN e relê ofertas após obter os locks.
   if (productIds.length) products = await loadProducts();
+  if (products.some(product => isNotifyOnlyPendingLogistics(product.shippingProfile))) throw new CashbackRuleError("Produto indisponível para compra até a revisão logística da farmácia.", 409);
   const needsPrescriptionUpload = products.some(p => p.prescriptionType === "ANTIMICROBIAL");
   if (needsPrescriptionUpload && (!customer || !input.prescriptionUploadId || !requestId)) throw new PrescriptionError("Entre na sua conta e envie a receita do antimicrobiano antes de concluir.");
   if (!needsPrescriptionUpload && input.prescriptionUploadId) throw new PrescriptionError("Este carrinho não recebe anexo de receita.");

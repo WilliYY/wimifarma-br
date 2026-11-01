@@ -80,3 +80,15 @@ test("update sem status não injeta default de publicação", () => {
   const parsed = productUpdateSchema.parse({ name: "Produto sintético", price: 12, stock: 5, expectedUpdatedAt: "2026-11-01T12:00:00.000Z" });
   assert.equal(Object.hasOwn(parsed, "status"), false);
 });
+
+
+const notifyProfile = { notifyOnlyPendingLogistics: true, enabled: false, transportReviewed: false, measurementBasis: "unknown", weightGrams: null, widthCm: null, heightCm: null, lengthCm: null, reference: null };
+test("notify-only publication requires explicit valid unapproved draft and cannot silently release ACTIVE hold", () => {
+  assert.doesNotThrow(() => validateShippingPublication(null, { ...product, shippingProfile: notifyProfile }));
+  assert.equal(productCreateSchema.safeParse({ name: "Produto sintético", price: 10, status: "ACTIVE", shippingProfile: notifyProfile }).success, true);
+  for (const changes of [{ notifyOnlyPendingLogistics: false }, { notifyOnlyPendingLogistics: "true" }, { enabled: true }, { measurementBasis: undefined }]) {
+    assert.throws(() => validateShippingPublication(null, { ...product, shippingProfile: { ...notifyProfile, ...changes } }));
+  }
+  assert.throws(() => validateShippingPublication({ status: "ACTIVE", shippingProfile: notifyProfile }, { ...product, shippingProfile: null }));
+  assert.doesNotThrow(() => validateShippingPublication({ status: "ACTIVE", shippingProfile: notifyProfile }, product));
+});

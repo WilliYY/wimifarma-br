@@ -20,9 +20,9 @@ const bundle = build({ entryPoints: ["src/features/payments/service.ts"], bundle
   }));
 } }] });
 
-async function harness(overrides: Record<string, unknown> = {}, options: { environment?: string; reservationCount?: number; ageMinutes?: number; providerFailure?: boolean; requiresPrescriptionReview?: boolean; prescriptionAttachment?: boolean; customerActive?: boolean; reclassifyAtLock?: boolean; deactivateAtLock?: boolean } = {}) {
+async function harness(overrides: Record<string, unknown> = {}, options: { holdAtLock?: boolean; environment?: string; reservationCount?: number; ageMinutes?: number; providerFailure?: boolean; requiresPrescriptionReview?: boolean; prescriptionAttachment?: boolean; customerActive?: boolean; reclassifyAtLock?: boolean; deactivateAtLock?: boolean } = {}) {
   const environment = options.environment ?? "production";
-  const product = { id: "synthetic-product", name: "Produto sintético", status: "ACTIVE", requiresPrescription: true,
+  const product = { shippingProfile: null as unknown, id: "synthetic-product", name: "Produto sintético", status: "ACTIVE", requiresPrescription: true,
     prescriptionType: "ORDINARY", isPopularPharmacy: false, stock: 5, price: "7.98", promotionalPrice: null, updatedAt: new Date(), ...overrides };
   const payment = { id: "synthetic-payment", orderId: "synthetic-order", provider: "mercado-pago", status: "NEW", environment, accountId: "synthetic-account", amountCents: 798,
     idempotencyKey: "synthetic-key", stockReserved: false, providerOrderId: null, providerUpdatedAt: null, createdAt: new Date(), lastCheckedAt: null,
@@ -38,6 +38,7 @@ async function harness(overrides: Record<string, unknown> = {}, options: { envir
     prescriptionUpload: { findFirst: async ({ where }: { where: { orderId: string; customerId: string } }) => options.prescriptionAttachment && where.orderId === payment.orderId && where.customerId === "customer-synthetic" ? { id: "synthetic-upload", expiresAt: new Date(0) } : null },
     $queryRaw: async (strings: TemplateStringsArray) => {
       calls.locks++;
+      if (strings.join("").includes('FROM "Product"') && options.holdAtLock) product.shippingProfile = { notifyOnlyPendingLogistics: true };
       if (strings.join("").includes('FROM "Product"') && options.reclassifyAtLock) product.prescriptionType = "ANTIMICROBIAL";
       if (strings.join("").includes('FROM "Customer"') && options.deactivateAtLock) options.customerActive = false;
     },
@@ -191,4 +192,21 @@ test("homologação de receita comum não consome estoque e produto isento segue
   const ordinary = await harness({ requiresPrescription: false, prescriptionType: "UNREVIEWED" }, { requiresPrescriptionReview: false });
   await ordinary.run();
   assert.equal(ordinary.calls.submitted.length, 1);
+});
+
+
+test("Mercado Pago blocks a notify-only hold discovered under product lock before reservation or provider submission", async () => {
+  const f = await harness({}, { holdAtLock: true });
+  await assert.rejects(f.run, /logística/i);
+  assert.equal(f.calls.reserved, 0); assert.equal(f.calls.submitted.length, 0);
+  assert.equal(f.payment.status, "NEW");
+});
+
+
+test("notify-only added after Mercado Pago creation does not repeat the charge or reservation", async () => {
+  const f = await harness(); await f.run();
+  f.product.shippingProfile = { notifyOnlyPendingLogistics: true };
+  await f.run();
+  assert.equal(f.calls.reserved, 1); assert.equal(f.calls.submitted.length, 1);
+  assert.equal(f.payment.status, "PENDING");
 });

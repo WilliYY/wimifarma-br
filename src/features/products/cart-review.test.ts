@@ -75,10 +75,10 @@ test("route reads only active non-deleted public products and sanitizes database
     builder.onLoad({ filter: /.*/, namespace: "fixture" }, () => ({ contents: "export const getPrisma=()=>globalThis.fixture.db;" }));
   } }] });
   const queries: Array<Record<string, unknown>> = [];
-  const fixture = { fail: false, db: { product: { findMany: async (query: Record<string, unknown>) => {
+  const fixture = { fail: false, held: false, db: { product: { findMany: async (query: Record<string, unknown>) => {
     queries.push(query);
     if (fixture.fail) throw new Error("private database connection secret");
-    return [{ ...product, price: { toString: () => "4.99" }, promotionalPrice: { toString: () => "3.99" } }];
+    return [{ ...product, shippingProfile: fixture.held ? { notifyOnlyPendingLogistics: true } : null, price: { toString: () => "4.99" }, promotionalPrice: { toString: () => "3.99" } }];
   } } } };
   const loaded = { exports: {} as { POST: (request: Request) => Promise<Response> } };
   vm.runInNewContext(result.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, Buffer, console, process: { env: { AUTH_URL: "https://example.com" } }, fixture });
@@ -100,6 +100,13 @@ test("route reads only active non-deleted public products and sanitizes database
   assert.equal((await loaded.exports.POST(request({ productIds: [product.id] }, { origin: "https://other.example.com" }))).status, 403);
   assert.equal((await loaded.exports.POST(request({ productIds: [product.id] }, { "content-type": "text/plain" }))).status, 415);
   assert.equal(queries.length, 1);
+  fixture.held = true;
+  const heldResponse = await loaded.exports.POST(request({ productIds: [product.id] }));
+  const heldData = await heldResponse.json();
+  assert.equal(heldData.data.products[0].stock, 0);
+  assert.equal("shippingProfile" in heldData.data.products[0], false);
+  assert.equal((queries[0].select as Record<string, unknown>).shippingProfile, true);
+  fixture.held = false;
   fixture.fail = true;
   const failed = await loaded.exports.POST(request({ productIds: [product.id] }));
   assert.equal(failed.status, 503);

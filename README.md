@@ -1,6 +1,6 @@
 # Wimifarma BR
 
-Novos produtos em rascunho até conferência de peso, medidas e transporte; gate compartilhado de publicação e situação física do catálogo: [134](docs/134-prontidao-logistica-publicacao.md).
+Novos produtos em rascunho até conferência logística, ou em modo explícito somente Avise-me com compra bloqueada até a revisão ADMIN: [134](docs/134-prontidao-logistica-publicacao.md).
 
 Consulta de frete nos cartões de catálogo e busca, com um diálogo compartilhado e CEP em memória, preservando revisão logística e cálculo no servidor: [132](docs/132-consulta-frete-no-catalogo.md). Preparação, regras de produtos e custos do Mercado Livre: [133](docs/133-mercado-livre-preparacao.md).
 

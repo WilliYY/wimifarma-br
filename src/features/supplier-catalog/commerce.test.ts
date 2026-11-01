@@ -164,3 +164,18 @@ test("classe ausente, incompleta ou inválida não comprova dispensa de ST", () 
     assert.equal(resolveSupplierOffer({ ...product, catalogClassification, supplierOffers: [pf] }, 1, now), null);
   }
 });
+
+
+test("notify-only blocks physical stock and current/expired supplier demand without leaking the profile", () => {
+  for (const inventorySource of ["PHARMACY", "DISTRIBUTOR"] as const) {
+    for (const validUntil of [new Date(now + 1000), new Date(now - 1)]) {
+      for (const flag of [true, null, "false", 0]) {
+        const sale = withCommerceAvailability({ ...product, inventorySource, supplierOffers: [{ ...offer, validUntil }], shippingProfile: { notifyOnlyPendingLogistics: flag } }, now);
+        assert.equal(sale.purchaseLimit, 0);
+        assert.equal(sale.availableForPurchase, false);
+        assert.equal(Object.hasOwn(sale, "shippingProfile"), false);
+      }
+    }
+  }
+  assert.equal(withCommerceAvailability({ ...product, inventorySource: "PHARMACY", shippingProfile: {} }, now).purchaseLimit, 17);
+});

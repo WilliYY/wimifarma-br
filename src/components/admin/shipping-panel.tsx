@@ -1,5 +1,6 @@
 "use client";
 
+import { isNotifyOnlyPendingLogistics } from "@/features/products/notify-only";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, CheckCircle2, Link2, Loader2, Package, Truck } from "lucide-react";
 import { postingLocationSchema, defaultShippingSettings, type ShippingOption, type ShippingSettings } from "@/features/shipping/schema";
@@ -156,11 +157,11 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
       {catalogLoading && <p className="mt-4 text-sm text-muted" role="status">Carregando produtos…</p>}
       {catalogError && <p className="mt-4 text-sm text-red-700" role="alert">{catalogError}</p>}
       {!catalogLoading && !catalogError && data?.products.length === 0 && <p className="mt-4 text-sm text-muted">Nenhum produto encontrado.</p>}
-      <div className="mt-5 grid gap-4">{!catalogLoading && !catalogError && data?.products.map((product) => <div key={`${product.id}:${product.updatedAt}`}><ProductShippingForm product={product} busy={busy} services={[...defaultServices, ...services, ...quotes]} configured={settings.serviceIds} onSave={(profile) => run(async () => { await request(`/api/admin/fretes/produtos/${product.id}`, "PUT", { profile, updatedAt: product.updatedAt }); await load(false); setMessage("Dados de transporte salvos."); })} /><ProductLogisticsEvidence productId={product.id} onSaved={() => { void load(false); }} /></div>)}</div></section>
+      <div className="mt-5 grid gap-4">{!catalogLoading && !catalogError && data?.products.map((product) => <div key={`${product.id}:${product.updatedAt}`}><ProductShippingForm product={product} busy={busy} services={[...defaultServices, ...services, ...quotes]} configured={settings.serviceIds} onSave={(profile, releaseNotifyOnly) => run(async () => { await request(`/api/admin/fretes/produtos/${product.id}`, "PUT", { profile, releaseNotifyOnly, updatedAt: product.updatedAt }); await load(false); setMessage("Dados de transporte salvos."); })} /><ProductLogisticsEvidence productId={product.id} onSaved={() => { void load(false); }} /></div>)}</div></section>
   </div>;
 }
 function Label({ text, children }: { text: string; children: React.ReactNode }) { return <label className="grid min-w-0 gap-2 text-xs font-bold text-muted"><span>{text}</span>{children}</label>; }
-function ProductShippingForm({ product, busy, services, configured, onSave }: { product: Product; busy: boolean; services: Service[]; configured: number[]; onSave: (profile: unknown) => void }) {
+function ProductShippingForm({ product, busy, services, configured, onSave }: { product: Product; busy: boolean; services: Service[]; configured: number[]; onSave: (profile: unknown, releaseNotifyOnly: boolean) => void }) {
   const parsed = shippingAdminProfileSchema.safeParse(product.shippingProfile); const profile = parsed.success ? parsed.data : null;
   const [measurements, setMeasurements] = useState(() => ({
     weightGrams: String(profile?.weightGrams ?? ""), widthCm: String(profile?.widthCm ?? ""),
@@ -168,7 +169,9 @@ function ProductShippingForm({ product, busy, services, configured, onSave }: { 
   }));
   const [reviewed, setReviewed] = useState(profile?.transportReviewed ?? false);
   const [enabled, setEnabled] = useState(profile?.enabled ?? false);
-  const [measurementBasis, setMeasurementBasis] = useState<"measured" | "estimated">(profile?.measurementBasis ?? "measured");
+  const held = isNotifyOnlyPendingLogistics(product.shippingProfile);
+  const [releaseNotifyOnly, setReleaseNotifyOnly] = useState(false);
+  const [measurementBasis, setMeasurementBasis] = useState<"measured" | "estimated" | "unknown">(profile?.measurementBasis ?? "measured");
   const [reference, setReference] = useState(profile?.reference ?? null);
   const [approvedServiceIds, setApprovedServiceIds] = useState(profile?.approvedServiceIds ?? [1, 2]);
   const [cargoKinds, setCargoKinds] = useState<ShippingCargo[]>(profile?.cargoKinds ?? []);
@@ -179,7 +182,7 @@ function ProductShippingForm({ product, busy, services, configured, onSave }: { 
   ].map(service => [service.serviceId, service])).values()];
   const [validationMessage, setValidationMessage] = useState("");
   const blocked = requiresPharmacyShippingSupport(product);
-  function invalidateReview() { setReviewed(false); setEnabled(false); setReference(null); setValidationMessage(""); }
+  function invalidateReview() { setReleaseNotifyOnly(false); setReviewed(false); setEnabled(false); setReference(null); setValidationMessage(""); }
   return <form className="rounded-xl border border-line p-4" onSubmit={(event) => {
     event.preventDefault();
     const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
@@ -192,7 +195,7 @@ function ProductShippingForm({ product, busy, services, configured, onSave }: { 
       setValidationMessage(draft ? "Confira os números informados. Campos sem medida podem ficar vazios no rascunho." : "Informe peso e todas as medidas válidas e confirme a revisão antes de aprovar.");
       return;
     }
-    setValidationMessage(""); onSave(result.data);
+    setValidationMessage(""); onSave(result.data, !draft && releaseNotifyOnly);
   }}>
     {!reviewed && <p className="mb-3 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-900">Rascunho: dados parciais podem ser salvos sem liberar o transporte. Confira o volume pronto para envio, com proteção e caixa, antes de aprovar. Referências da IA podem descrever apenas a embalagem comercial.</p>}
     <strong className="text-sm text-ink">{product.name}</strong>{blocked && <p className="mt-2 text-xs text-muted">Você pode preparar peso e medidas deste produto. A venda e o envio exigem atendimento farmacêutico; o rascunho não libera cotação ou cobrança automática.</p>}<>
@@ -201,11 +204,12 @@ function ProductShippingForm({ product, busy, services, configured, onSave }: { 
         <p>Caixa informada pelo responsável: C24 × L15 × A10 cm. Medidas externas e peso da caixa vazia ainda precisam de confirmação. Aplica somente as dimensões neste rascunho e preserva o peso informado; não comprova encaixe nem libera o envio. Confira proteção, medidas externas e peso do volume final antes de aprovar. Caixas maiores ainda não estão definidas.</p>
       </div>
       <div className="mt-3 grid gap-3 sm:grid-cols-4">{([["weightGrams", "Peso embalado (g)"], ["widthCm", "Largura (cm)"], ["heightCm", "Altura (cm)"], ["lengthCm", "Comprimento (cm)"]] as const).map(([name, label]) => <Label key={name} text={label}><input className={field} disabled={busy} max={name === "weightGrams" ? 30000 : 200} min={name === "weightGrams" ? 1 : 0.01} name={name} onChange={(event) => { setMeasurements({ ...measurements, [name]: event.target.value }); invalidateReview(); }} step={name === "weightGrams" ? 1 : "any"} type="number" value={measurements[name]} /></Label>)}</div>
-      <div className="mt-3"><Label text="Origem do peso e das medidas"><select className={field} disabled={busy} onChange={(event) => { setMeasurementBasis(event.target.value as "measured" | "estimated"); invalidateReview(); }} value={measurementBasis}><option value="measured">Medidos no volume pronto para envio</option><option value="estimated">Estimativa operacional autorizada</option></select></Label></div>
+      <div className="mt-3"><Label text="Origem do peso e das medidas"><select className={field} disabled={busy} onChange={(event) => { setMeasurementBasis(event.target.value as "measured" | "estimated"); invalidateReview(); }} value={measurementBasis}><option value="unknown">Ainda não informado</option><option value="measured">Medidos no volume pronto para envio</option><option value="estimated">Estimativa operacional autorizada</option></select></Label></div>
       <fieldset className="mt-3 rounded-lg border border-line p-3" disabled={busy}><legend className="px-1 text-xs font-bold">Características para transporte</legend><p className="mb-3 text-xs leading-5 text-muted">Marque as características desta mercadoria. Elas restringem os serviços; não substituem as regras de medicamentos nem liberam transporte proibido. “Não informado” mantém a aceitação pendente até ser removido e a carga classificada. Alterações exigem nova revisão.</p><div className="grid gap-3 sm:grid-cols-2">{(["unspecified", ...cargoOptions] as ShippingCargo[]).map(kind => <label className="flex gap-2 text-xs" key={kind}><input checked={cargoKinds.includes(kind)} type="checkbox" onChange={event => { setCargoKinds(event.target.checked ? [...cargoKinds, kind] : cargoKinds.filter(value => value !== kind)); invalidateReview(); }} />{SHIPPING_CARGO_LABELS[kind]}</label>)}</div></fieldset>
       {measurementBasis === "estimated" && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-900">Estimativa operacional autorizada. Confira peso/dimensões reais antes da postagem; a transportadora pode ajustar o frete.</p>}
       <fieldset className="mt-3 rounded-lg border border-line p-3"><legend className="px-1 text-xs font-bold">Serviços aprovados para este produto</legend><p className="mb-3 text-xs leading-5 text-muted">Confirme a aceitação desta mercadoria e embalagem em cada serviço. A seleção global também precisa permitir o serviço. Sem marcações, este produto não recebe cotação. Faça uma simulação para carregar os nomes das transportadoras.</p><div className="grid gap-3 sm:grid-cols-2">{options.map(service => <label className="flex items-start gap-2 text-xs" key={service.serviceId}><input type="checkbox" disabled={busy} checked={approvedServiceIds.includes(service.serviceId)} onChange={event => { setApprovedServiceIds(event.target.checked ? [...approvedServiceIds, service.serviceId] : approvedServiceIds.filter(id => id !== service.serviceId)); invalidateReview(); }} /><span>{service.carrier} · {service.service}</span></label>)}</div></fieldset>
       <label className="mt-3 flex items-start gap-2 text-xs text-muted"><input checked={reviewed} disabled={busy} name="reviewed" onChange={(event) => { setReviewed(event.target.checked); setEnabled(event.target.checked && !blocked); }} type="checkbox" />Revisei as medidas/peso informados e a adequação da embalagem, conservação e aceitação nos serviços selecionados.</label>
+      {held && <label className="mt-3 flex items-start gap-2 text-xs text-amber-900"><input type="checkbox" checked={releaseNotifyOnly} disabled={busy || !reviewed || !enabled || measurementBasis !== "measured"} onChange={event => setReleaseNotifyOnly(event.target.checked)} />Liberar compra deste produto Avise-me após conferir peso e medidas reais, embalagem e serviços de transporte. Salvar sem esta confirmação mantém a compra bloqueada.</label>}
       {validationMessage && <p className="mt-3 text-xs text-red-700" role="alert">{validationMessage}</p>}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3"><label className="flex items-center gap-2 text-sm"><input checked={enabled} disabled={busy || !reviewed || blocked} name="enabled" onChange={(event) => setEnabled(event.target.checked)} type="checkbox" />Liberar para transportadora</label><div className="flex flex-wrap gap-2"><button className={`${button} bg-ink`} disabled={busy} name="intent" type="submit" value="draft">Salvar rascunho</button><button className={button} disabled={busy || blocked} name="intent" type="submit" value="approve">Aprovar dados completos</button></div></div>
     </>

@@ -1,3 +1,4 @@
+import { isNotifyOnlyPendingLogistics } from "@/features/products/notify-only";
 import { cookies } from "next/headers";
 import QRCode from "qrcode";
 import { auth } from "@/features/auth/auth";
@@ -57,6 +58,7 @@ export async function startPayment(orderId: string, input: PaymentInput) {
     for (const item of [...order.items].sort(comparePaymentInventoryItems)) {
       if (!item.productId) throw new PaymentError("Um produto não está mais disponível.");
       const product = await tx.product.findUnique({ where: { id: item.productId } });
+      if (isNotifyOnlyPendingLogistics(product?.shippingProfile)) throw new PaymentError("Produto indisponível para compra até a revisão logística da farmácia.", 409);
       if (product?.prescriptionType === "ANTIMICROBIAL" && (!order.customerId || !await tx.customer.findFirst({ where: { id: order.customerId, status: "ACTIVE" }, select: { id: true } }) || !await tx.prescriptionUpload.findFirst({ where: { orderId: order.id, customerId: order.customerId }, select: { id: true } }))) throw new PaymentError("A receita do antimicrobiano deve ser enviada no checkout por uma conta ativa. Refaça o pedido.", 409);
       if ((product?.inventorySource ?? "PHARMACY") !== (item.inventorySource ?? "PHARMACY")) throw new PaymentError("A origem do produto mudou. Revise o pedido.", 409);
       if (item.inventorySource === "DISTRIBUTOR") {

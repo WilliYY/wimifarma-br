@@ -17,10 +17,10 @@ const bundle = build({ entryPoints: ["src/features/payments/asaas-commerce-servi
           : "export const queueCommerceOrder=async()=>fixture.effects.messages++;" }));
   } }] });
 
-async function harness(options: { prescriptionAttachment?: boolean; customerActive?: boolean; reclassifyAtLock?: boolean; deactivateAtLock?: boolean; customerAlerts?: boolean; commerceEnabled?: boolean } = {}) {
+async function harness(options: { holdAtLock?: boolean; prescriptionAttachment?: boolean; customerActive?: boolean; reclassifyAtLock?: boolean; deactivateAtLock?: boolean; customerAlerts?: boolean; commerceEnabled?: boolean } = {}) {
   const connection = { id: "asaas", accountId: "synthetic-wallet", environment: "production", enabled: true, revision: 2,
     secrets: { accessToken: "$aact_prod_synthetic", webhookId: "synthetic-hook", methods: ["pix", "card"], pixAddressKey: "123e4567-e89b-42d3-a456-426614174000" } };
-  const product = { id: "synthetic-product", price: "5.00", promotionalPrice: null, stock: 2, updatedAt: new Date(),
+  const product = { shippingProfile: null as unknown, id: "synthetic-product", price: "5.00", promotionalPrice: null, stock: 2, updatedAt: new Date(),
     status: "ACTIVE", requiresPrescription: false, isPopularPharmacy: false, prescriptionType: "UNREVIEWED" };
   const order: Data = { id: "synthetic-order", customerId: options.prescriptionAttachment === undefined ? null : "customer-synthetic", number: "SYNTHETIC", customerPhone: "(11) 99999-0000", fulfillmentMethod: "PICKUP", status: "PENDING", paymentStatus: "PENDING", createdAt: new Date(),
     requiresPrescriptionReview: false, customerEmail: "synthetic@example.invalid", items: [{ productId: product.id, productName: "Fictício", unitPriceCents: 500, quantity: 1, totalCents: 500 }] };
@@ -45,6 +45,7 @@ async function harness(options: { prescriptionAttachment?: boolean; customerActi
     prescriptionUpload: { findFirst: async ({ where }: { where: { orderId: string; customerId: string } }) => options.prescriptionAttachment && where.orderId === order.id && where.customerId === "customer-synthetic" ? { id: "synthetic-upload", expiresAt: new Date(0) } : null },
     $queryRaw: async (strings: TemplateStringsArray) => {
       calls.locks++;
+      if (strings.join("").includes('FROM "Product"') && options.holdAtLock) product.shippingProfile = { notifyOnlyPendingLogistics: true };
       if (strings.join("").includes('FROM "Product"') && options.reclassifyAtLock) product.prescriptionType = "ANTIMICROBIAL";
       if (strings.join("").includes('FROM "Customer"') && options.deactivateAtLock) options.customerActive = false;
     }, paymentIntegration: { findUnique: async () => connection },
@@ -295,4 +296,22 @@ test("Asaas rereads prescription identity and active customer after concurrent r
   const blocked = await harness({ prescriptionAttachment: true, deactivateAtLock: true });
   blocked.product.prescriptionType = "ANTIMICROBIAL"; blocked.order.requiresPrescriptionReview = true;
   await assert.rejects(blocked.startAsaasCommercePayment(blocked.order.id, blocked.input), /conta ativa/); assert.equal(blocked.calls.posts, 0); assert.equal(blocked.product.stock, 2);
+});
+
+
+test("Asaas blocks notify-only discovered under product lock without stock reservation or external POST", async () => {
+  const f = await harness({ holdAtLock: true });
+  await assert.rejects(() => f.startAsaasCommercePayment(f.order.id, f.input), /logística/i);
+  assert.equal(f.product.stock, 2); assert.equal(f.calls.posts, 0);
+  assert.equal(f.payment.status, "NEW");
+});
+
+
+test("notify-only added after charge creation preserves canonical paid and refund reconciliation", async () => {
+  const f = await harness(); await f.startAsaasCommercePayment(f.order.id, f.input);
+  f.product.shippingProfile = { notifyOnlyPendingLogistics: true };
+  f.controls.status = "RECEIVED"; await f.refreshAsaasCommercePayment(f.order.id);
+  assert.equal(f.order.paymentStatus, "PAID"); assert.equal(f.calls.posts, 1);
+  f.controls.status = "REFUNDED"; await f.refreshAsaasCommercePayment(f.order.id);
+  assert.equal(f.order.paymentStatus, "REFUNDED"); assert.equal(f.calls.posts, 1);
 });

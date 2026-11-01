@@ -73,3 +73,38 @@ test("catalog endpoints reject non-admin shipping writes and self-approved draft
     }
   }
 });
+
+
+test("only explicit Freight ADMIN release removes notify-only after measured cargo/service validation and CAS", async () => {
+  const bundle = await build({ entryPoints: ["src/app/api/admin/fretes/produtos/[id]/route.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "notify-freight", setup(builder) {
+    builder.onResolve({ filter: /features\/auth\/permissions$|lib\/prisma$/ }, args => ({ path: args.path, namespace: "fixture" }));
+    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("permissions") ? "export const requireAdminOnlyApi=async()=>fixture.guard;" : "export const getPrisma=()=>fixture.db;" }));
+  } }] });
+  const before = { notifyOnlyPendingLogistics: true, measurementBasis: "unknown", enabled: false, transportReviewed: false, weightGrams: null, widthCm: null, heightCm: null, lengthCm: null, reference: null };
+  const measured = { measurementBasis: "measured", enabled: true, transportReviewed: true, weightGrams: 250, widthCm: 10, heightCm: 8, lengthCm: 15, cargoKinds: ["general"], approvedServiceIds: [1] };
+  for (const scenario of ["release", "preserve", "draft", "estimated", "default", "unknown-service", "cargo", "disabled", "stale", "unauthorized", "false-flag", "malformed-flag"] as const) {
+    const writes: { data: { shippingProfile: Record<string, unknown> }; where: Record<string, unknown> }[] = [];
+    const audits: { data: { metadata: unknown } }[] = [];
+    const tx = { product: { findFirst: async () => ({ id: "synthetic", name: "Produto sintético", requiresPrescription: false, isPopularPharmacy: false, shippingProfile: before }), updateMany: async (input: typeof writes[number]) => { writes.push(input); return { count: scenario === "stale" ? 0 : 1 }; } }, auditLog: { create: async (input: typeof audits[number]) => { audits.push(input); } } };
+    const loaded = { exports: {} as { PUT(request: Request, context: unknown): Promise<Response> } };
+    vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), Request, Response, URL, TextDecoder, Uint8Array, setTimeout, clearTimeout, console, process: { env: { AUTH_URL: "https://example.com" } }, Buffer, fixture: { guard: scenario === "unauthorized" ? { response: new Response(null, { status: 403 }) } : { session: { user: { id: "admin" } } }, db: { $transaction: (run: (tx: unknown) => unknown) => run(tx) } } });
+    const profile = scenario === "draft" ? before : { ...measured,
+      ...(scenario === "estimated" ? { measurementBasis: "estimated" } : {}),
+      ...(scenario === "default" ? { measurementBasis: undefined } : {}),
+      ...(scenario === "unknown-service" ? { approvedServiceIds: [999] } : {}),
+      ...(scenario === "cargo" ? { cargoKinds: ["unspecified"] } : {}),
+      ...(scenario === "disabled" ? { enabled: false } : {}),
+      ...(scenario === "false-flag" ? { notifyOnlyPendingLogistics: false } : {}),
+      ...(scenario === "malformed-flag" ? { notifyOnlyPendingLogistics: "true" } : {}),
+    };
+    const response = await loaded.exports.PUT(new Request("https://example.com/api/admin/fretes/produtos/synthetic", { method: "PUT", headers: { "content-type": "application/json", origin: "https://example.com" }, body: JSON.stringify({ profile, releaseNotifyOnly: !["preserve", "draft"].includes(scenario), updatedAt: "2026-10-01T00:00:00.000Z" }) }), { params: Promise.resolve({ id: "synthetic" }) });
+    assert.equal(response.status, scenario === "unauthorized" ? 403 : scenario === "stale" ? 409 : ["release", "preserve", "draft"].includes(scenario) ? 200 : 422, scenario);
+    if (["release", "preserve", "draft", "stale"].includes(scenario)) {
+      assert.equal(writes.length, 1, scenario);
+      assert.equal(writes[0].data.shippingProfile.notifyOnlyPendingLogistics, ["release", "stale"].includes(scenario) ? undefined : true, scenario);
+      assert.equal((writes[0].where.updatedAt as Date).toISOString(), "2026-10-01T00:00:00.000Z");
+      assert.equal(audits.length, scenario === "stale" ? 0 : 1);
+      if (scenario === "release") assert.deepEqual(JSON.parse(JSON.stringify(audits[0].data.metadata)), { before, after: measured, releaseNotifyOnly: true });
+    } else { assert.equal(writes.length, 0, scenario); assert.equal(audits.length, 0, scenario); }
+  }
+});

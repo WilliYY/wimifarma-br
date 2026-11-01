@@ -18,14 +18,15 @@ const bundle = build({ entryPoints: ["src/features/orders/create-checkout.ts"], 
   }));
 } }] });
 
-async function createFixture(prescriptionType: "ORDINARY" | "CONTROLLED" | "UNREVIEWED", requiresPrescription = true) {
+async function createFixture(prescriptionType: "ORDINARY" | "CONTROLLED" | "UNREVIEWED", requiresPrescription = true, shippingProfile?: unknown) {
+  let locked = false;
   let selected: Record<string, unknown> | undefined;
   let saved: Record<string, unknown> | undefined;
   const product = { id: "product-test", name: "Produto sintético", slug: "produto-sintetico", imageUrl: null, price: "10.00", promotionalPrice: null,
-    status: "ACTIVE", stock: 5, requiresPrescription, prescriptionType, isPopularPharmacy: false, cashbackEnabled: false, cashbackRateBps: 0 };
+    shippingProfile, status: "ACTIVE", stock: 5, requiresPrescription, prescriptionType, isPopularPharmacy: false, cashbackEnabled: false, cashbackRateBps: 0 };
   const tx = {
-    $queryRaw: async () => [],
-    product: { findMany: async ({ select }: { select: Record<string, unknown> }) => { selected = select; return [product]; } },
+    $queryRaw: async () => { locked = true; return []; },
+    product: { findMany: async ({ select }: { select: Record<string, unknown> }) => { selected = select; return [{ ...product, shippingProfile: locked ? shippingProfile : undefined }]; } },
     order: { create: async ({ data }: { data: Record<string, unknown> }) => { saved = { ...data, id: "order-test" }; return saved; }, findUniqueOrThrow: async () => saved },
   };
   const loaded = { exports: {} as { createCheckout: (tx: unknown, input: unknown) => Promise<unknown> } };
@@ -278,4 +279,12 @@ test("saldo cobre produtos sem desconto Pix ou auditoria e repetição preserva 
   assert.equal(old.productReads, 0);
   assert.equal(old.state.routed, undefined);
   assert.equal(old.audits.length, 0);
+});
+
+
+test("checkout re-reads notify-only hold after product lock and never creates an order", async () => {
+  const fixture = await createFixture("ORDINARY", true, { notifyOnlyPendingLogistics: true });
+  await assert.rejects(fixture.run, /logística|indisponível/i);
+  assert.equal(fixture.selected()?.shippingProfile, true);
+  assert.equal(fixture.saved(), undefined);
 });

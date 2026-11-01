@@ -4,8 +4,8 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import Link from "next/link";
 import { ExternalLink, Package, Ruler, Scale } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { shippingDraftSchema, type ShippingDraft } from "@/features/shipping/product-draft";
-import { shippingProfileSchema } from "@/features/shipping/schema";
+import { shippingAdminProfileSchema, type ShippingDraft } from "@/features/shipping/product-draft";
+import { isNotifyOnlyPendingLogistics } from "@/features/products/notify-only";
 import type { ShippingReference } from "@/features/shipping/product-reference";
 import { estimateBaseShipping } from "@/features/shipping/base-estimate";
 
@@ -21,7 +21,7 @@ export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
   canEdit: boolean; medicine: boolean; integrated?: boolean;
   productIdentity?: Parameters<typeof estimateBaseShipping>[0];
 }>(function ProductShippingFields({ initialProfile, identityKey, suggestion, researched, canEdit, medicine, integrated = false, productIdentity }, ref) {
-  const parsed = shippingProfileSchema.or(shippingDraftSchema).safeParse(initialProfile);
+  const parsed = shippingAdminProfileSchema.safeParse(initialProfile);
   const initial = parsed.success ? parsed.data : null;
   const [draft, setDraft] = useState(() => ({
     identityKey, dirty: false, copiedKeys: [] as (keyof Measures)[], reference: initial?.reference ?? null,
@@ -37,7 +37,7 @@ export const ProductShippingFields = forwardRef<ProductShippingFieldsHandle, {
   const payload: ShippingDraft = {
     ...(initial?.cargoKinds !== undefined ? { cargoKinds: initial.cargoKinds } : {}),
     ...(initial?.approvedServiceIds !== undefined ? { approvedServiceIds: initial.approvedServiceIds } : {}),
-    enabled: false, transportReviewed: false,
+    enabled: false, transportReviewed: false, ...(isNotifyOnlyPendingLogistics(initialProfile) ? { notifyOnlyPendingLogistics: true } : {}),
     measurementBasis: draft.measurementBasis,
     ...Object.fromEntries(fields.map(([key]) => [key, draft.values[key] === "" ? null : Number(draft.values[key])])) as Pick<ShippingDraft, keyof Measures>,
     reference: draft.reference,

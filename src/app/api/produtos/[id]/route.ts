@@ -1,3 +1,4 @@
+import { preserveNotifyOnlyPendingLogistics } from "@/features/products/notify-only";
 import { NextResponse } from "next/server";
 import { cashbackProductIsEligible } from "@/features/cashback/rules";
 import { gtinVariants, normalizeGtin } from "@/features/supplier-catalog/commerce";
@@ -193,7 +194,7 @@ export async function PATCH(
       await validateSupplierMarkupChange(transaction, current, parsed.data.supplierMarkupBps);
       if (current.requiresPrescription && !productData.requiresPrescription && guard.session?.user.role !== "ADMIN") throw new ProductMutationError("Somente o administrador pode retirar a exigência de receita.", 403);
       if (!prescriptionClassificationIsConsistent({ requiresPrescription: productData.requiresPrescription, prescriptionType })) throw new ProductMutationError("Atualize o tipo de receita antes de retirar a exigência de receita.", 422);
-      const shippingProfile = productData.shippingProfile ?? (identityChanged ? invalidateShippingProfile(current.shippingProfile) : undefined);
+      const shippingProfile = preserveNotifyOnlyPendingLogistics(current.shippingProfile, productData.shippingProfile ?? (identityChanged ? invalidateShippingProfile(current.shippingProfile) : undefined)) as typeof productData.shippingProfile;
       const imageUrl = imageAsset?.url ?? (clearImage ? null : normalizedImageUrl ?? current.imageUrl);
       if (!privateSupplierImageAllowed(imageUrl, parsed.data.inventorySource ?? current.inventorySource, productData.requiresPrescription)) {
         throw new ProductMutationError("Fotos internas exigem produto de distribuidor com receita. Selecione uma foto pública para outra origem.", 422);

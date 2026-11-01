@@ -12,6 +12,7 @@ test("freight product selectors default to PAC/SEDEX, preserve explicit empty ap
     const origin = "http://127.0.0.1:3198";
     const profile = { enabled: true, transportReviewed: true, weightGrams: 500, widthCm: 20, heightCm: 20, lengthCm: 20 };
     const base = { category: "Higiene", requiresPrescription: false, isPopularPharmacy: false, updatedAt: new Date(0).toISOString() };
+    const releaseRequests: boolean[] = [];
     const saved: { approvedServiceIds: number[]; cargoKinds: string[]; enabled: boolean; transportReviewed: boolean; weightGrams: number }[] = [];
     await page.route("**/*", async route => {
       const url = new URL(route.request().url());
@@ -20,6 +21,7 @@ test("freight product selectors default to PAC/SEDEX, preserve explicit empty ap
       if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: '<div id="root"></div><script src="/fixture.js"></script>' });
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text });
       if (url.pathname === "/api/admin/fretes") return json({ data: { settings: { ...defaultShippingSettings, serviceIds: [1, 2, 12] }, connected: true, products: [
+        { ...base, id: "notify", name: "Produto Avise-me", shippingProfile: { notifyOnlyPendingLogistics: true, measurementBasis: "unknown", enabled: false, transportReviewed: false, weightGrams: null, widthCm: null, heightCm: null, lengthCm: null, cargoKinds: ["general"], approvedServiceIds: [1] } },
         { ...base, id: "legacy", name: "Produto legado", shippingProfile: { ...profile, cargoKinds: ["unspecified"] } },
         { ...base, id: "empty", name: "Produto sem aprovação", shippingProfile: { ...profile, approvedServiceIds: [] } },
         { ...base, id: "paused", name: "Produto desabilitado manualmente", shippingProfile: { ...profile, enabled: false, approvedServiceIds: [1, 2], cargoKinds: ["general"] } },
@@ -27,7 +29,7 @@ test("freight product selectors default to PAC/SEDEX, preserve explicit empty ap
         { ...base, id: "assisted", name: "Produto com atendimento assistido", requiresPrescription: true, prescriptionType: "CONTROLLED", shippingProfile: { ...profile, enabled: false, transportReviewed: false, approvedServiceIds: [1, 2], cargoKinds: ["medication"] } },
       ] } });
       if (url.pathname === "/api/admin/fretes/simular") return json({ data: [], services: [{ serviceId: 12, service: "Cargo", carrier: "LATAM" }] });
-      if (url.pathname.startsWith("/api/admin/fretes/produtos/")) { saved.push(route.request().postDataJSON().profile); return json({}); }
+      if (url.pathname.startsWith("/api/admin/fretes/produtos/")) { saved.push(route.request().postDataJSON().profile); releaseRequests.push(route.request().postDataJSON().releaseNotifyOnly); return json({}); }
       return route.abort();
     });
     await page.goto(origin);
@@ -80,6 +82,22 @@ test("freight product selectors default to PAC/SEDEX, preserve explicit empty ap
     assert.equal(saved[2].weightGrams, 500);
     assert.deepEqual(saved[2].approvedServiceIds, [1, 2, 12]);
     assert.deepEqual(saved[2].cargoKinds, ["liquid"]);
+    const notify = page.locator("form").filter({ has: page.getByText("Produto Avise-me", { exact: true }) });
+    const release = notify.getByRole("checkbox", { name: /Liberar compra deste produto Avise-me/ });
+    await expect(release).toBeDisabled();
+    assert.equal(await legacy.getByRole("checkbox", { name: /Liberar compra deste produto Avise-me/ }).count(), 0);
+    for (const [name, value] of [["weightGrams", "250"], ["widthCm", "10"], ["heightCm", "8"], ["lengthCm", "15"]]) await notify.locator(`input[name="${name}"]`).fill(value);
+    await notify.locator("select").selectOption("measured");
+    await notify.locator('input[name="reviewed"]').check();
+    await expect(release).toBeEnabled();
+    await notify.getByRole("button", { name: "Aprovar dados completos", exact: true }).click();
+    await expect.poll(() => saved.length).toBe(4);
+    assert.equal(releaseRequests[3], false);
+    await release.check();
+    await notify.getByRole("button", { name: "Aprovar dados completos", exact: true }).click();
+    await expect.poll(() => saved.length).toBe(5);
+    assert.equal(releaseRequests[4], true);
+    assert.equal(saved[4].enabled, true);
   } finally { await browser.close(); }
 });
 

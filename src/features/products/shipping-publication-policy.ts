@@ -1,3 +1,5 @@
+import { isNotifyOnlyPendingLogistics } from "./notify-only";
+import { shippingAdminProfileSchema, shippingDraftSchema } from "@/features/shipping/product-draft";
 import { permittedShippingServices, requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
 import { shippingProfileSchema } from "@/features/shipping/schema";
 import { isKnownShippingService } from "@/features/shipping/cargo-policy";
@@ -11,8 +13,20 @@ type PublicationProduct = {
 };
 
 /** Caller validates the effective product under the existing catalog/product locks. */
-export function validateShippingPublication(current: { status: string } | null, next: PublicationProduct) {
-  if (next.status !== "ACTIVE" || current?.status === "ACTIVE") return;
+export function validateShippingPublication(current: { status: string; shippingProfile?: unknown } | null, next: PublicationProduct) {
+  if (next.status !== "ACTIVE") return;
+  const held = isNotifyOnlyPendingLogistics(next.shippingProfile);
+  const wasHeld = isNotifyOnlyPendingLogistics(current?.shippingProfile);
+  if (held) {
+    const draft = (wasHeld ? shippingAdminProfileSchema : shippingDraftSchema).safeParse(next.shippingProfile);
+    if (!draft.success || draft.data.notifyOnlyPendingLogistics !== true ||
+      (!wasHeld && (draft.data.measurementBasis !== "unknown" ||
+        [draft.data.weightGrams, draft.data.widthCm, draft.data.heightCm, draft.data.lengthCm].some(value => value !== null)))) {
+      throw new ProductMutationError("Avise-me exige rascunho logístico explícito, sem aprovação ou medidas presumidas.");
+    }
+    return;
+  }
+  if (current?.status === "ACTIVE" && !wasHeld) return;
   const profile = shippingProfileSchema.safeParse(next.shippingProfile);
   const raw = next.shippingProfile;
   if (!profile.success || !raw || typeof raw !== "object" || !("measurementBasis" in raw) || raw.measurementBasis !== "measured") {
