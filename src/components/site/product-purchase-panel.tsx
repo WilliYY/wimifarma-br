@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowRight,
-  Check,
   MessageCircle,
   Minus,
   Plus,
@@ -186,10 +185,6 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true" />
           </button>
         </div>
-        <p className="mt-3 flex items-start gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold leading-5 text-emerald-800 sm:min-h-10 sm:items-center sm:justify-center sm:bg-transparent sm:p-0">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><Check className="h-3.5 w-3.5" aria-hidden="true" /></span>
-          Em estoque, sujeito à confirmação da farmácia
-        </p>
       </div>
 
       {showPurchaseDock ? (

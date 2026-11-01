@@ -7,7 +7,8 @@ import {
   formatPostalCode,
   getDeliveryAvailability,
 } from "@/features/products/product-detail";
-import { createCheckoutQuote, type CheckoutQuoteState } from "@/features/shipping/checkout-quote";
+import { createCheckoutQuote } from "@/features/shipping/checkout-quote";
+import { createPublicShippingEstimate, type PublicEstimateState } from "@/features/shipping/public-estimate-quote";
 import { shippingCustomerPrice } from "@/features/shipping/benefit-policy";
 import { ShippingBenefitNote } from "./shipping-benefit-note";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
@@ -16,7 +17,7 @@ import { formatCurrency } from "@/lib/utils";
 import { useCart, type CartProduct } from "./cart-provider";
 import { ProductQuantityContext } from "./product-quantity";
 
-type DeliveryEstimate = CheckoutQuoteState & { key: string; title: string; local: boolean; invalid: boolean };
+type DeliveryEstimate = PublicEstimateState & { key: string; title: string; local: boolean; invalid: boolean };
 
 export function DeliveryEstimator({ product, quantity, initialPostalCode = "", onPostalCodeChange, compact = false }: {
   product?: CartProduct;
@@ -35,21 +36,24 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
   const postalCodeId = `${instanceId}-postal-code`;
   const resultId = `${instanceId}-delivery-result`;
   const [quoteRunner] = useState(createCheckoutQuote);
+  const [estimateRunner] = useState(createPublicShippingEstimate);
   const [estimate, setEstimate] = useState<DeliveryEstimate | null>(null);
   const normalizedPostalCode = postalCode.replace(/\D/g, "");
   const request = { postalCode: normalizedPostalCode, items: items.map(item => ({ productId: item.id, quantity: item.quantity, expectedUnitPriceCents: item.unitPriceCents })) };
-  const requestKey = JSON.stringify(request);
+  const estimateRequest = product ? { productId: product.id, quantity: selectedQuantity, postalCode: normalizedPostalCode } : null;
+  const requestKey = JSON.stringify(product ? estimateRequest : request);
   const result = estimate?.key === requestKey ? estimate : null;
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   useLayoutEffect(() => {
     setEstimate(null);
-    return () => quoteRunner.cancel();
-  }, [quoteRunner, requestKey]);
+    return () => { quoteRunner.cancel(); estimateRunner.cancel(); };
+  }, [quoteRunner, estimateRunner, requestKey]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     quoteRunner.cancel();
+    estimateRunner.cancel();
     const availability = getDeliveryAvailability(postalCode);
     const showMessage = (title: string, message: string, local = false, invalid = false) => {
       setEstimate({ key: requestKey, title, message, local, invalid, busy: false, options: [] });
@@ -63,10 +67,12 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
     } else if (items.some(requiresPharmacyShippingSupport)) {
       showMessage("Entrega com atendimento da farmácia", "Um dos itens precisa de atendimento da farmácia para confirmar o envio. Consulte a equipe ou escolha retirada.");
     } else {
-      quoteRunner.schedule(request, next => setEstimate({
+      const onState = (next: PublicEstimateState) => setEstimate({
         ...next, key: requestKey, local: false, invalid: false,
-        title: next.busy ? "Consultando o frete" : next.options.length ? "Opções de entrega" : "Confira as condições de entrega",
-      }), 0);
+        title: next.busy ? "Consultando o frete" : next.options.length ? next.mode === "estimate" ? "Estimativa de frete" : "Opções de entrega" : "Confira as condições de entrega",
+      });
+      if (estimateRequest) estimateRunner.schedule(estimateRequest, onState, 0);
+      else quoteRunner.schedule(request, onState, 0);
     }
   }
 
@@ -100,6 +106,7 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
               setPostalCode(nextPostalCode);
               onPostalCodeChange?.(nextPostalCode);
               quoteRunner.cancel();
+              estimateRunner.cancel();
               setEstimate(null);
             }}
             placeholder="00000-000"
@@ -113,8 +120,8 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
       </form>
 
       {result ? (
-        <div role="status" aria-live="polite" aria-busy={result.busy} id={resultId} className={`mt-4 rounded-xl border ${compact ? "p-3" : "flex items-start gap-3 p-4"} ${result.local || result.options.length ? "border-emerald-200 bg-emerald-50" : "border-line bg-surface-subtle"}`}>
-          {!compact && (result.local || result.options.length ? (
+        <div role="status" aria-live="polite" aria-busy={result.busy} id={resultId} className={`mt-4 rounded-xl border ${compact ? "p-3" : "flex items-start gap-3 p-4"} ${result.local || (result.options.length && result.mode !== "estimate") ? "border-emerald-200 bg-emerald-50" : "border-line bg-surface-subtle"}`}>
+          {!compact && (result.mode === "estimate" ? <Truck className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden="true" /> : result.local || result.options.length ? (
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-pharma-green" aria-hidden="true" />
           ) : (
             <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
@@ -122,14 +129,14 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
           <div className="min-w-0 flex-1">
             <strong className="block text-sm font-black text-ink">{result.title}</strong>
             <p className="mt-1 text-xs font-semibold leading-5 text-muted">
-              {result.message}
+              {result.mode === "estimate" && result.options.length ? "Envio ainda em preparação." : result.message}
             </p>
             {result.local && <strong className="mt-2 block text-sm text-pharma-green">Grátis</strong>}
             {result.options.length > 0 && <>
               <ul className="mt-3 grid gap-2">
                 {result.options.map(option => {
                   const fee = shippingCustomerPrice(option);
-                  const hideRegularNote = compact && option.benefit?.status === "regular" && option.benefit.subsidyCents === 0
+                  const hideRegularNote = option.benefit?.status === "regular" && option.benefit.subsidyCents === 0
                     && option.benefit.minimumOrderCents === null && option.benefit.remainingCents === null;
                   return <li className="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-white p-3 text-sm" key={option.serviceId}>
                     <div className="min-w-0 flex-1"><strong className="block">{option.carrier} · {option.service}</strong><span className="mt-1 block text-xs text-muted">Até {option.deliveryDays} dias úteis estimados, incluindo preparação</span>{option.benefit && !hideRegularNote ? <ShippingBenefitNote benefit={option.benefit} /> : null}</div>
@@ -137,7 +144,7 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
                   </li>;
                 })}
               </ul>
-              <p className="mt-3 text-xs leading-5 text-muted">Estimativa para os itens informados. Frete, descontos e disponibilidade são conferidos novamente no checkout.</p>
+              <p className="mt-3 text-xs leading-5 text-muted">{result.mode === "estimate" ? "Valores e prazos estimados. A farmácia precisa concluir a preparação do envio." : "Estimativa para os itens informados. Frete, descontos e disponibilidade são conferidos novamente no checkout."}</p>
             </>}
             {!result.busy && !result.local && !result.invalid && !result.options.length ? (
               <a className="mt-2 inline-flex items-center gap-2 text-xs font-black text-brand underline" href={buildWhatsAppUrl("Ola, gostaria de consultar entrega para o meu CEP.")} rel="noreferrer" target="_blank">

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { build } from "esbuild";
-import { chromium, expect, type Page } from "@playwright/test";
+import { chromium, expect, type Page, type Route } from "@playwright/test";
 import type { CartProduct } from "./cart-provider";
 
 const origin = "http://127.0.0.1:3198";
@@ -14,6 +14,12 @@ const quote = {
   provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC",
   priceCents: 1875, deliveryDays: 4, token: "synthetic-quote-token",
 };
+
+function quotePayload(route: Route, options: (typeof quote & { benefit?: unknown })[]) {
+  return route.request().url().endsWith('/estimativa')
+    ? { data: { mode: 'available', options: options.map(({ token: _token, ...option }) => { void _token; return option; }) } }
+    : { data: options };
+}
 
 async function fixture(run: (page: Page) => Promise<void>, cartOnly = false, fixtureProduct = product, purchasePanel = false, initialPostalCode = "") {
   const bundle = await build({
@@ -70,7 +76,7 @@ async function consult(page: Page, postalCode: string) {
 test("CEP inicial compartilhado fica preenchido sem consultar automaticamente", async () => {
   await fixture(async page => {
     let requests = 0;
-    await page.route("**/api/fretes/cotacao", route => { requests++; return route.fulfill({ json: { data: [quote] } }); });
+    await page.route("**/api/fretes/{cotacao,estimativa}", route => { requests++; return route.fulfill({ json: quotePayload(route, [quote]) }); });
     await page.goto(origin);
     await expect(page.getByRole("textbox", { name: "CEP", exact: true })).toHaveValue("80010-000");
     assert.equal(requests, 0);
@@ -84,15 +90,15 @@ test("CEP nacional consulta frete do produto e quantidade atuais, sem misturar o
   await fixture(async page => {
     const requests: unknown[] = [];
     await page.addInitScript(other => localStorage.setItem("wimifarma-cart-v1", JSON.stringify([{ ...other, id: "other-product", quantity: 7 }])), product);
-    await page.route("**/api/fretes/cotacao", route => {
+    await page.route("**/api/fretes/{cotacao,estimativa}", route => {
       assert.equal(route.request().method(), "POST");
       requests.push(route.request().postDataJSON());
-      return route.fulfill({ json: { data: [quote] } });
+      return route.fulfill({ json: quotePayload(route, [quote]) });
     });
     await page.goto(origin);
     await consult(page, "80010-000");
     await expect.poll(() => requests.length).toBe(1);
-    assert.deepEqual(requests[0], { postalCode: "80010000", items: [{ productId: product.id, quantity: 2, expectedUnitPriceCents: 2590 }] });
+    assert.deepEqual(requests[0], { postalCode: "80010000", productId: product.id, quantity: 2 });
     await expect(page.getByRole("status")).toContainText("PAC");
     await expect(page.getByRole("status")).toContainText(/18,75/);
     await expect(page.getByRole("status")).toContainText(/4 dias/);
@@ -102,7 +108,7 @@ test("CEP nacional consulta frete do produto e quantidade atuais, sem misturar o
 test("CEP inválido e entrega local não consultam transportadoras", async () => {
   await fixture(async page => {
     let requests = 0;
-    await page.route("**/api/fretes/cotacao", route => { requests++; return route.fulfill({ json: { data: [quote] } }); });
+    await page.route("**/api/fretes/{cotacao,estimativa}", route => { requests++; return route.fulfill({ json: quotePayload(route, [quote]) }); });
     await page.goto(origin);
     await consult(page, "12345");
     await expect(page.getByRole("status")).toContainText(/CEP/i);
@@ -121,7 +127,7 @@ for (const [status, error] of [
 ] as const) {
   test(`erro de cotação preserva o motivo (${status}), sem inventar preço ou falta de cobertura`, async () => {
     await fixture(async page => {
-      await page.route("**/api/fretes/cotacao", route => route.fulfill({ status, json: { error } }));
+      await page.route("**/api/fretes/{cotacao,estimativa}", route => route.fulfill({ status, json: { error } }));
       await page.goto(origin);
       await consult(page, "80010-000");
       await expect(page.getByRole("status")).toContainText(error);
@@ -133,20 +139,20 @@ for (const [status, error] of [
 for (const change of ["CEP", "quantidade"] as const) {
   test(`alteração de ${change} invalida cotação anterior e ignora resposta atrasada`, async () => {
     await fixture(async page => {
-      const requests: { postalCode: string; items: { quantity: number }[] }[] = [];
+      const requests: { postalCode: string; quantity: number }[] = [];
       let release: (() => void) | undefined;
       let finished: Promise<void> | undefined;
-      await page.route("**/api/fretes/cotacao", async route => {
+      await page.route("**/api/fretes/{cotacao,estimativa}", async route => {
         requests.push(route.request().postDataJSON());
         if (requests.length === 1) {
           const pending = new Promise<void>(resolve => { release = resolve; });
           finished = pending.then(async () => {
-            await route.fulfill({ json: { data: [{ ...quote, service: "Serviço antigo", priceCents: 9999 }] } }).catch(() => undefined);
+            await route.fulfill({ json: quotePayload(route, [{ ...quote, service: "Serviço antigo", priceCents: 9999 }]) }).catch(() => undefined);
           });
           await finished;
           return;
         }
-        return route.fulfill({ json: { data: [quote] } });
+        return route.fulfill({ json: quotePayload(route, [quote]) });
       });
       await page.goto(origin);
       await consult(page, "80010-000");
@@ -164,7 +170,7 @@ for (const change of ["CEP", "quantidade"] as const) {
       await page.getByRole("button", { name: "Consultar", exact: true }).click();
       await expect.poll(() => requests.length).toBe(2);
       assert.equal(requests[1].postalCode, change === "CEP" ? "01001000" : "80010000");
-      assert.equal(requests[1].items[0].quantity, change === "quantidade" ? 3 : 2);
+      assert.equal(requests[1].quantity, change === "quantidade" ? 3 : 2);
       await expect(page.getByRole("status")).toContainText("PAC");
       await expect(page.getByRole("status")).not.toContainText(/Serviço antigo|99,99/);
       if (change === "CEP") await page.getByRole("textbox", { name: "CEP", exact: true }).fill("01001");
@@ -177,7 +183,7 @@ for (const change of ["CEP", "quantidade"] as const) {
 test("simulador sem produto orienta adicionar itens quando o carrinho está vazio", async () => {
   await fixture(async page => {
     let requests = 0;
-    await page.route("**/api/fretes/cotacao", route => { requests++; return route.fulfill({ json: { data: [quote] } }); });
+    await page.route("**/api/fretes/{cotacao,estimativa}", route => { requests++; return route.fulfill({ json: quotePayload(route, [quote]) }); });
     await page.goto(origin);
     await consult(page, "80010-000");
     await expect(page.getByRole("status")).toContainText(/adicion.*produto|adicion.*ite/i);
@@ -189,9 +195,9 @@ test("simulador sem produto consulta os itens e preços do carrinho hidratado", 
   await fixture(async page => {
     const requests: unknown[] = [];
     await page.addInitScript(item => localStorage.setItem("wimifarma-cart-v1", JSON.stringify([{ ...item, quantity: 3 }])), product);
-    await page.route("**/api/fretes/cotacao", route => {
+    await page.route("**/api/fretes/{cotacao,estimativa}", route => {
       requests.push(route.request().postDataJSON());
-      return route.fulfill({ json: { data: [quote] } });
+      return route.fulfill({ json: quotePayload(route, [quote]) });
     });
     await page.goto(origin);
     await consult(page, "80010-000");
@@ -203,16 +209,16 @@ test("simulador sem produto consulta os itens e preços do carrinho hidratado", 
 
 test("seletor real do produto compartilha quantidade com a simulação de frete", async () => {
   await fixture(async page => {
-    const requests: { items: { quantity: number }[] }[] = [];
-    await page.route("**/api/fretes/cotacao", route => {
+    const requests: { quantity: number }[] = [];
+    await page.route("**/api/fretes/{cotacao,estimativa}", route => {
       requests.push(route.request().postDataJSON());
-      return route.fulfill({ json: { data: [quote] } });
+      return route.fulfill({ json: quotePayload(route, [quote]) });
     });
     await page.goto(origin);
     await page.getByRole("button", { name: "Aumentar quantidade", exact: true }).first().click();
     await consult(page, "80010-000");
     await expect.poll(() => requests.length).toBe(1);
-    assert.equal(requests[0].items[0].quantity, 2);
+    assert.equal(requests[0].quantity, 2);
     await expect(page.getByRole("status")).toContainText(/18,75/);
   }, false, product, true);
 });
@@ -246,7 +252,7 @@ for (const prescriptionType of ["CONTROLLED", "ANTIMICROBIAL"] as const) {
   test(`produto ${prescriptionType} preserva atendimento assistido sem cotar transportadora`, async () => {
     await fixture(async page => {
       let requests = 0;
-      await page.route("**/api/fretes/cotacao", route => { requests++; return route.fulfill({ json: { data: [quote] } }); });
+      await page.route("**/api/fretes/{cotacao,estimativa}", route => { requests++; return route.fulfill({ json: quotePayload(route, [quote]) }); });
       await page.goto(origin);
       await consult(page, "80010-000");
       await expect(page.getByRole("status")).toContainText(/atendimento.*farmácia/i);
@@ -260,9 +266,9 @@ for (const width of [320, 390, 1440]) {
     await fixture(async page => {
       await page.setViewportSize({ width, height: 900 });
       let requests = 0;
-      await page.route("**/api/fretes/cotacao", route => {
+      await page.route("**/api/fretes/{cotacao,estimativa}", route => {
         requests++;
-        return route.fulfill({ json: { data: [{ ...quote, benefit: { status: "discounted", customerPriceCents: 375, subsidyCents: 1500, minimumOrderCents: 15000, remainingCents: 5010 } }] } });
+        return route.fulfill({ json: quotePayload(route, [{ ...quote, benefit: { status: "discounted", customerPriceCents: 375, subsidyCents: 1500, minimumOrderCents: 15000, remainingCents: 5010 } }]) });
       });
       await page.goto(origin);
       await consult(page, "80010-000");
@@ -275,3 +281,20 @@ for (const width of [320, 390, 1440]) {
     }, false, { ...product, unitPriceCents: 4995 });
   });
 }
+
+
+test("rascunho mostra tarifas estimadas sem prometer envio habilitado ou gratuidade", async () => {
+  await fixture(async page => {
+    await page.route("**/api/fretes/estimativa", route => {
+      const { token: _token, ...option } = quote; void _token;
+      return route.fulfill({ json: { data: { mode: "estimate", options: [option, { ...option, serviceId: 2, service: "SEDEX" }] } } });
+    });
+    await page.goto(origin);
+    await consult(page, "80010-000");
+    await expect(page.getByRole("status")).toContainText("Estimativa de frete");
+    await expect(page.getByRole("status")).toContainText("Envio ainda em preparação.");
+    await expect(page.getByRole("status")).toContainText(/18,75/);
+    await expect(page.getByRole("status")).not.toContainText(/Opções de entrega|Grátis/);
+    assert.equal(await page.getByText("Envio ainda em preparação.", { exact: true }).count(), 1);
+  });
+});

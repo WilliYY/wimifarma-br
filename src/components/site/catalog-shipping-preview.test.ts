@@ -13,7 +13,7 @@ const product: CartProduct = {
 const otherProduct = { ...product, id: "synthetic-b", slug: "produto-b", name: "Produto B" };
 const quote = {
   provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC",
-  priceCents: 1875, deliveryDays: 4, token: "synthetic-token",
+  priceCents: 1875, deliveryDays: 4,
 };
 
 async function fixture(run: (page: Page) => Promise<void>) {
@@ -64,9 +64,9 @@ async function fixture(run: (page: Page) => Promise<void>) {
 test("frete do catálogo consulta apenas após envio, para uma unidade e sem alterar carrinho", async () => {
   await fixture(async page => {
     const requests: unknown[] = [];
-    await page.route("**/api/fretes/cotacao", route => {
+    await page.route("**/api/fretes/estimativa", route => {
       requests.push(route.request().postDataJSON());
-      return route.fulfill({ json: { data: [quote] } });
+      return route.fulfill({ json: { data: { mode: "available", options: [quote] } } });
     });
     await page.goto(origin);
     await page.getByLabel("Pesquisar produtos").fill("Produto");
@@ -79,7 +79,7 @@ test("frete do catálogo consulta apenas após envio, para uma unidade e sem alt
     assert.equal(requests.length, 0);
     await page.getByRole("button", { name: "Consultar", exact: true }).click();
     await expect.poll(() => requests.length).toBe(1);
-    assert.deepEqual(requests[0], { postalCode: "80010000", items: [{ productId: product.id, quantity: 1, expectedUnitPriceCents: 2590 }] });
+    assert.deepEqual(requests[0], { postalCode: "80010000", productId: product.id, quantity: 1 });
     await expect(page.getByRole("status")).toContainText(/18,75/);
     assert.equal(await page.evaluate("window.cardClicks"), 0);
     assert.deepEqual(await page.evaluate(() => (JSON.parse(localStorage.getItem("wimifarma-cart-v1")!) as { id: string; quantity: number }[]).map(({ id, quantity }) => ({ id, quantity }))), [{ id: "cart-only", quantity: 7 }]);
@@ -91,7 +91,7 @@ test("frete do catálogo consulta apenas após envio, para uma unidade e sem alt
 test("CEP permanece entre produtos apenas na página e resultado anterior não reaparece", async () => {
   await fixture(async page => {
     let requests = 0;
-    await page.route("**/api/fretes/cotacao", route => { requests++; return route.fulfill({ json: { data: [quote] } }); });
+    await page.route("**/api/fretes/estimativa", route => { requests++; return route.fulfill({ json: { data: { mode: "available", options: [quote] } } }); });
     await page.goto(origin);
     await page.getByRole("button", { name: "Ver frete de Produto A", exact: true }).click();
     await page.getByRole("textbox", { name: "CEP", exact: true }).fill("80010-000");
@@ -116,7 +116,7 @@ test("CEP permanece entre produtos apenas na página e resultado anterior não r
 test("perfil sem envio preserva motivo da API, sem preço inventado", async () => {
   await fixture(async page => {
     const error = "Produto ainda não liberado para envio por transportadora.";
-    await page.route("**/api/fretes/cotacao", route => route.fulfill({ status: 422, json: { error } }));
+    await page.route("**/api/fretes/estimativa", route => route.fulfill({ status: 422, json: { error } }));
     await page.goto(origin);
     await page.getByRole("button", { name: "Ver frete de Produto A", exact: true }).click();
     await page.getByRole("textbox", { name: "CEP", exact: true }).fill("80010-000");
@@ -131,10 +131,10 @@ test("fechar durante consulta ignora resposta atrasada ao abrir outro produto", 
     let release: (() => void) | undefined;
     let finished: Promise<void> | undefined;
     let requests = 0;
-    await page.route("**/api/fretes/cotacao", async route => {
+    await page.route("**/api/fretes/estimativa", async route => {
       requests++;
       const pending = new Promise<void>(resolve => { release = resolve; });
-      finished = pending.then(() => route.fulfill({ json: { data: [{ ...quote, service: "Serviço antigo", priceCents: 9999 }] } }).catch(() => undefined));
+      finished = pending.then(() => route.fulfill({ json: { data: { mode: "available", options: [{ ...quote, service: "Serviço antigo", priceCents: 9999 }] } } }).catch(() => undefined));
       await finished;
     });
     await page.goto(origin);

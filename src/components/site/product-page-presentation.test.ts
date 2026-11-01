@@ -37,7 +37,14 @@ test("product page keeps product, related cards and details without public revie
     category: "Higiene", description: "Descrição sintética para a apresentação.", ean: null, sku: null,
     price: "10.00", promotionalPrice: null, stock: 5, activeIngredients: [], searchTerms: [],
     imageUrl: null, imageUrls: [], requiresPrescription: false, prescriptionType: "UNREVIEWED",
-    inventorySource: "PHARMACY", isPopularPharmacy: false, pmcReference: null, cashbackEnabled: false,
+    inventorySource: "PHARMACY", isPopularPharmacy: false, cashbackEnabled: false,
+    catalogClassification: { kind: "MEDICINE", medicineClass: "GENERIC", ethical: false, otc: true },
+    pmcReference: {
+      amountCents: 2000, column: "PMC 0 %", publishedOn: "2026-11-01",
+      sourceUrl: "https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos/arquivos/synthetic.xlsx/@@download/file",
+      presentation: "Apresentação sintética", laboratory: "Laboratório sintético", registration: "sintético",
+      rates: [{ label: "PMC 0 %", cents: 2000 }],
+    },
   };
   const fixture = {
     authCalls: 0, reviewReads: 0,
@@ -55,6 +62,9 @@ test("product page keeps product, related cards and details without public revie
   assert.equal(fixture.reviewReads, 0, "hidden reviews must not add database queries");
   assert.doesNotMatch(html, /id="avaliacoes"|#avaliacoes|data-review-form|Sem avaliações|Opinioes de clientes/);
   assert.doesNotMatch(html, /Cuidado de perto|Retirada gratuita|Pedido acompanhado|Duvidas pelo WhatsApp/);
+  assert.doesNotMatch(html, /Sobre o PMC e a comparação de preços|Pedido confirmado pela equipe|O pagamento é combinado no atendimento/);
+  assert.match(html, /50% OFF/);
+  assert.match(html, /<s>R\$\s*20,00<\/s>/);
   for (const marker of ["data-gallery", "data-purchase-panel", "data-delivery", "data-related-cards", 'id="informacoes"']) assert.ok(html.includes(marker), marker);
   assert.ok(html.indexOf("data-purchase-panel") < html.indexOf('id="relacionados"'));
   assert.ok(html.indexOf('id="relacionados"') < html.indexOf("Explore este produto"));

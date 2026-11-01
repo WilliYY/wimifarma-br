@@ -42,7 +42,7 @@ export function ProductImageViewer({ imageUrl, imageUrls = [], name, ...identity
   if (identity.requiresPrescription || !currentImage) {
     return (
       <div className="flex aspect-[4/3] max-h-72 flex-col items-center justify-center gap-3 rounded-2xl border border-line bg-white text-muted sm:aspect-square sm:max-h-[32rem] sm:gap-4 sm:rounded-3xl">
-        <ProductImagePlaceholder {...identity} className="h-48 w-full max-w-xs sm:h-80" showLabel />
+        <ProductImagePlaceholder {...identity} className="h-48 w-full max-w-xs sm:h-80" />
         {!isMedicineImagePlaceholder(identity) ? <span className="text-sm font-semibold">Imagem indisponível</span> : null}
       </div>
     );

@@ -51,7 +51,7 @@ test("catalog cards preserve neutral prescription topics, photos, placeholders a
       if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: css });
       if (url.pathname === "/synthetic.svg") return route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="25" y="10" width="50" height="80" fill="#b91c1c"/></svg>' });
       if (url.pathname === "/payments/pix-symbol.svg") return route.fulfill({ contentType: "image/svg+xml", body: await readFile("public/payments/pix-symbol.svg") });
-      if (url.pathname === "/api/fretes/cotacao") return route.fulfill({ json: { data: [{ provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC", priceCents: 1875, deliveryDays: 4, token: "synthetic-token" }] } });
+      if (url.pathname === "/api/fretes/estimativa") return route.fulfill({ json: { data: { mode: "available", options: [{ provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC", priceCents: 1875, deliveryDays: 4 }] } } });
       return route.abort();
     });
     await page.goto("http://127.0.0.1:3197/");

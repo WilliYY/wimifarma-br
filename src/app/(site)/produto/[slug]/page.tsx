@@ -39,7 +39,7 @@ import { productDisplayName } from "@/features/products/display-name";
 import { buildPublicProductDescription } from "@/features/products/product-description";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 import { canDisplayPmcSavings, pmcSavingsPercent } from "@/features/products/cmed-reference";
-import { ProductPmcBadge, ProductPmcDetails, ProductPmcPrice } from "@/components/site/product-pmc";
+import { ProductPmcBadge, ProductPmcPrice } from "@/components/site/product-pmc";
 
 export const dynamic = "force-dynamic";
 
@@ -245,15 +245,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   {hasPromotion ? <p className="mt-2 text-xs font-semibold text-emerald-800">Você economiza {formatCurrency(saving)} por unidade</p> : null}
                 </div>
 
-                {pmc ? <ProductPmcDetails reference={pmc} /> : null}
-
                 <ProductCashback product={product} unitPriceCents={Math.round(currentPrice * 100)} details />
                 <ProductPurchasePanel key={product.id} product={cartProduct} />
-
-                <div className="mt-3 flex items-start gap-2 rounded-lg bg-surface-subtle p-3 text-xs leading-5 text-muted sm:mt-4 sm:bg-transparent sm:p-0">
-                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />
-                  <p>Pedido confirmado pela equipe. O pagamento é combinado no atendimento, sem informar dados de cartão no site.</p>
-                </div>
               </article>
 
               <div className="scroll-mt-56" id="entrega"><DeliveryEstimator product={cartProduct} /></div>

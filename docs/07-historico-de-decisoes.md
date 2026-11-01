@@ -1599,6 +1599,10 @@ Publicado somente no app `14721f2`: novos produtos/importações começam por pa
 
 Duas referências comerciais exatas (Dove Original 90 g e Colgate Tripla Ação Menta 90 g) foram incorporadas separadamente, com duas auditorias e sem alterar perfis, preços, estoque ou habilitação de transporte. A recuperação preservou tentativas interrompidas; o apply v2 ocorreu uma vez, após plano congelado, backup e 14 verificações PostgreSQL 17 isoladas. Retrato posterior: 3.062 ativos, 3.056 perfis estimados completos, seis incompletos, dois envios habilitados; 33 produtos com referência de bruto e 48 com dimensões. Referência comercial não comprova o pacote protegido. Contrato, QA pública e limitações em [134](134-prontidao-logistica-publicacao.md).
 
+## 01/11/2026 — Orçamento de frete no produto separado da liberação operacional
+
+A consulta de produto/catálogo passa a usar uma rota pública estrita que busca preço e dados físicos no servidor e solicita tarifas reais ao Melhor Envio sem emitir token de checkout. Rascunhos completos permanecem identificados como estimativas; isso não altera revisão de transporte, serviços aprovados, receitas, estoque ou a trava somente Avise-me. Benefício de frete depende das regras comerciais existentes, nunca de uma promessa em rascunho. Dados ausentes/conflitantes não são inventados. A área de compra remove os textos PMC explicativo, confirmação de estoque/pagamento por atendimento e a legenda visual da ilustração, preservando preços/OFF e identificação acessível. Contrato e limites em [135](135-produto-compra-e-frete.md).
+
 ## 01/11/2026 — Catálogo somente Avise-me com trava logística
 
 Foi preparado um modo opt-in persistente para itens sem conferência física. A publicação informativa não libera compra: peso e dimensões podem permanecer nulos com base unknown, e oferta positiva ou edição comum não retiram a trava. A liberação passa pela revisão ADMIN explícita de Fretes com base medida e transporte compatível, sob CAS e auditoria. O comportamento legado sem flag é preservado. Contrato e situação de publicação em [134](134-prontidao-logistica-publicacao.md). Nenhuma inclusão é presumida pela preparação do código.

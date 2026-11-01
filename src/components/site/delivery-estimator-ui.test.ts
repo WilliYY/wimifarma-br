@@ -7,13 +7,13 @@ import { chromium, expect, type Page } from "@playwright/test";
 import postcss from "postcss";
 import tailwind from "@tailwindcss/postcss";
 import type { CartProduct } from "./cart-provider";
-import type { ShippingSelection } from "@/features/shipping/schema";
+import type { ShippingOption } from "@/features/shipping/schema";
 
 const origin = "http://127.0.0.1:3196";
 const captureRoot = process.env.DELIVERY_ESTIMATOR_CAPTURE_ROOT;
 const product: CartProduct = { id: "synthetic-delivery", slug: "synthetic-delivery", name: "Produto sintético para consulta de entrega com nome composto", category: "Higiene", imageUrl: null, stock: 10, unitPriceCents: 2590, originalPriceCents: null, requiresPrescription: false, isPopularPharmacy: false };
 const regularBenefit = { status: "regular" as const, customerPriceCents: 1875, subsidyCents: 0, minimumOrderCents: null, remainingCents: null };
-const quote: ShippingSelection = { provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC", priceCents: 1875, deliveryDays: 4, token: "synthetic-ui-token", benefit: regularBenefit };
+const quote: ShippingOption = { provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC", priceCents: 1875, deliveryDays: 4, benefit: regularBenefit };
 const browser = chromium.launch();
 after(async () => (await browser).close());
 const styles = readFile("src/app/globals.css", "utf8").then(source => postcss([tailwind()]).process(source, { from: "src/app/globals.css" })).then(result => result.css);
@@ -63,10 +63,10 @@ for (const width of [320, 390, 1440]) {
     await fixture(width, async page => {
       let release: (() => void) | undefined;
       const requests: unknown[] = [];
-      await page.route("**/api/fretes/cotacao", async route => {
+      await page.route("**/api/fretes/estimativa", async route => {
         requests.push(route.request().postDataJSON());
         await new Promise<void>(resolve => { release = resolve; });
-        await route.fulfill({ json: { data: [quote, { ...quote, serviceId: 2, service: "SEDEX" }, { ...quote, serviceId: 3, service: "Entrega com prazo estendido" }] } }).catch(() => undefined);
+        await route.fulfill({ json: { data: { mode: "available", options: [quote, { ...quote, serviceId: 2, service: "SEDEX" }, { ...quote, serviceId: 3, service: "Entrega com prazo estendido" }] } } }).catch(() => undefined);
       });
       await page.goto(origin);
       const opener = page.getByRole("button", { name: /^Ver frete de / });
@@ -99,7 +99,7 @@ for (const width of [320, 390, 1440]) {
       await expect(dialog.getByText("Frete consultado para este pedido", { exact: true })).toHaveCount(0);
       await expect(dialog.getByText("Estimativa para os itens informados. Frete, descontos e disponibilidade são conferidos novamente no checkout.", { exact: true })).toHaveCount(1);
       await expect(dialog.getByText(/18,75/)).toHaveCount(3);
-      assert.deepEqual(requests, [{ postalCode: "80010000", items: [{ productId: product.id, quantity: 1, expectedUnitPriceCents: 2590 }] }]);
+      assert.deepEqual(requests, [{ postalCode: "80010000", productId: product.id, quantity: 1 }]);
       assert.ok(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth));
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       await capture(page, `regular-compacto-${width}`);
@@ -111,7 +111,7 @@ for (const width of [320, 390, 1440]) {
 
 test("frete compacto preserva desconto, gratuidade, subsídio e progresso reais", async () => {
   await fixture(390, async page => {
-    const options: ShippingSelection[] = [
+    const options: ShippingOption[] = [
       { ...quote, service: "Regular sem benefício" },
       { ...quote, serviceId: 2, service: "Regular com progresso", benefit: { ...regularBenefit, minimumOrderCents: 15000, remainingCents: 5010 } },
       { ...quote, serviceId: 3, service: "Regular com subsídio", benefit: { ...regularBenefit, customerPriceCents: 875, subsidyCents: 1000 } },
@@ -120,7 +120,7 @@ test("frete compacto preserva desconto, gratuidade, subsídio e progresso reais"
       { ...quote, serviceId: 6, service: "Regular com mínimo", benefit: { ...regularBenefit, minimumOrderCents: 15000 } },
       { ...quote, serviceId: 7, service: "Regular com restante", benefit: { ...regularBenefit, remainingCents: 5010 } },
     ];
-    await page.route("**/api/fretes/cotacao", route => route.fulfill({ json: { data: options } }));
+    await page.route("**/api/fretes/estimativa", route => route.fulfill({ json: { data: { mode: "available", options } } }));
     await page.goto(origin);
     await page.getByRole("button", { name: /^Ver frete de / }).click();
     const dialog = page.getByRole("dialog");
@@ -146,13 +146,13 @@ test("frete compacto preserva desconto, gratuidade, subsídio e progresso reais"
   });
 });
 
-test("frete fora do modo compacto conserva a nota regular existente", async () => {
+test("frete fora do modo compacto evita repetir a nota regular", async () => {
   await fixture(390, async page => {
-    await page.route("**/api/fretes/cotacao", route => route.fulfill({ json: { data: [quote] } }));
+    await page.route("**/api/fretes/estimativa", route => route.fulfill({ json: { data: { mode: "available", options: [quote] } } }));
     await page.goto(`${origin}/full`);
     await page.getByRole("textbox", { name: "CEP", exact: true }).fill("80010-000");
     await page.getByRole("button", { name: "Consultar", exact: true }).click();
-    await expect(page.getByRole("status")).toContainText("Frete consultado para este pedido");
+    await expect(page.getByRole("status").getByText("Frete consultado para este pedido", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("status")).toContainText(/18,75/);
   });
 });
