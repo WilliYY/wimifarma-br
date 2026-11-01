@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Conferência logística de 01/11: 3.056 de 3.061 ativos com peso e medidas preenchidos, três exceções completadas com estimativas auditadas e cinco pendências preservadas. Transporte não é habilitado pelo preenchimento: [129](docs/129-hipoteses-por-tipo-de-embalagem.md#continuidade-das-exceções--01112026).
+
 Home, cartões e rodapé mais compactos, selos fora da foto, marcas sem setas e neon apenas na interação: [131](docs/131-ajustes-visuais-home-2026-10-30.md). Frete e campanhas mantêm suas regras existentes.
 
 Modelos React Email com marca oficial integrados à prévia Miauby ADMIN, sem disparos; comparação atual de Resend/Brevo/SES e pendências operacionais em [112](docs/112-react-email-modelos.md).

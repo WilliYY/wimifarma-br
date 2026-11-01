@@ -1,5 +1,27 @@
 # 129 — Hipóteses por tipo de embalagem, somente para perfis nulos
 
+## Continuidade das exceções — 01/11/2026
+
+A leitura produtiva renovada encontrou os mesmos 3.061 ativos, 3.053 completos e oito pendentes. Uma operação privada separada completou três exceções, sem repetir o lote de 30/10. O resultado conferido é **3.056 ativos com peso e três medidas**, cinco sem perfil e os mesmos dois perfis habilitados. Preenchimento completo não significa medição física ou transporte aprovado.
+
+| Produto | Peso operacional estimado | Pacote externo C × L × A | Fundamento |
+| --- | ---: | --- | --- |
+| Huggies Recém Nascido, 48 lenços | 430 g | 24 × 13 × 7 cm, preservados | Maior bruto das duas referências da família já auditada: 330 g, mais 100 g hipotéticos de caixa/proteção, sem acrescentar outra margem/tara. |
+| Daflon Flex, 30 envelopes de 10 mL | 720 g | 30 × 20 × 15 cm, caixa planejada | Hipótese completa estipulada de 600 g, incluindo unidade comercial inteira e proteção, com margem de 20% aplicada uma vez. Substitui o cenário anterior de 150 g, que considerou apenas um envelope. |
+| Bigfral Derma Plus Juvenil, 10 unidades | 1.080 g | 40 × 30 × 25 cm, caixa planejada | Hipótese completa estipulada de 900 g, incluindo pacote e proteção, com margem de 20% aplicada uma vez. A identidade juvenil foi confirmada; o nome legado do catálogo foi preservado. |
+
+As duas caixas maiores são `PLANNED_NOT_CONFIRMED`: não foram declaradas como compradas ou com encaixe aferido. As hipóteses comerciais de 20 × 12 × 8 cm para Daflon e 28 × 20 × 16 cm para Bigfral, acrescidas de 3 cm totais por eixo, ficam abaixo das respectivas caixas planejadas. Essa verificação é geométrica sobre hipóteses, não medição ou garantia de proteção. As três alterações mantêm `enabled:false`, `transportReviewed:false`, `measurementBasis:estimated`, referência nula e nenhum serviço novo aprovado.
+
+O [catálogo oficial Bigfral](https://loja.bigfral.com.br/api/catalog_system/pub/products/search?fq=alternateIds_Ean:7896012880159) confirmou EAN, apresentação juvenil e dez unidades; não publicou bruto/dimensões. A [bula Servier](https://servier.com.br/bulas/bula-daflon-flex/) confirma a existência de apresentações com 10 ou 30 envelopes de 10 mL. O conjunto de 30 contém 300 mL nominais; isso não comprova massa ou densidade. As medidas e massas acima continuam hipóteses autorizadas. Números de uma ficha histórica Ontex encontrada somente no índice da busca não foram utilizados: os PDFs consultados responderam 404.
+
+Permanecem separados: Imosec 2 mg 12 comprimidos, com receita ainda `UNREVIEWED`; Clopidogrel, Albendazol e Beneum Teuto, cujas referências históricas têm contradições entre unidade e embarque; Plax Melancia 500 mL, cuja fonte física contém texto de 250 mL conflitante. Fontes adicionais confirmam identidades, mas não eliminam as contradições físicas. Não apagar fontes ou reclassificar receita para forçar preenchimento.
+
+A operação foi revisada independentemente e validada no schema de seis perfis antes/depois. Um ensaio transacional do mesmo SQL com `ROLLBACK` preservou produtos e não persistiu auditorias. A aplicação exigiu backup customizado com catálogo/checksum, plano e SQL congelados, ADMIN ativo, janela livre, bloqueio do catálogo, checksum integral de produtos sob bloqueio, CAS, três auditorias e marcador exclusivo. A verificação final e sua repetição somente de leitura confirmaram os três resultados e preservação integral dos demais campos, produtos, evidências, classificações, serviços e identidades/inícios do app e PostgreSQL. Não houve alteração de código da aplicação, migration, reinício, checkout, compra de frete ou disparo de mensagens.
+
+O rastreio adicional de massa declarada não encontrou peso de pacote abaixo de uma massa nominal inequívoca. A única sinalização automática foi Pampers RN “até 4 kg”: descartada manualmente porque os 4 kg indicam o peso corporal atendido, não conteúdo do produto. Esse rastreio é uma conferência de coerência limitada e não valida fisicamente os 3.056 perfis.
+
+Evidências privadas: `outputs/logistica-validacao-2026-11-01/`. Backup, plano congelado, diagnóstico e recibos de execução ficam em `/home/ubuntu/.codex-taskdata/logistics-exceptions-01a15b8f-20261101/`. Plano `089723b3e1f23044f28c7332ef2d2bf9d69d04efde7b8a929a8c171233bed9b5`; backup `c25a96f0a7aed2fb688b05a1d112a95e50eb51e50d021814a76bf1dc1c984b55`. Aplicação concluída e verificada; não repetir o operador de escrita.
+
 ## Autorização e escopo — 29/10/2026
 
 O lojista pediu continuidade dos 611 produtos anteriormente sem perfil, agrupando por embalagem e usando estimativas com margem de segurança. O snapshot renovado às 11h29 UTC encontrou **647 ativos sem perfil**, pois houve 36 inclusões posteriores; 2.904 produtos estavam ativos. O lote considera o conjunto atual e não reaplica rodadas encerradas.

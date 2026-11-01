@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-01 — Continuidade auditada de pesos e medidas
+
+- Completados Huggies RN 48, Daflon Flex 30 envelopes e Bigfral Juvenil 10 com estimativas explícitas. Corrigida a consideração de apenas um envelope no cenário antigo do Daflon; Huggies conserva suas três medidas. Caixas maiores continuam apenas planejadas. São 3.056 de 3.061 ativos completos em campos físicos; cinco exceções e os dois envios habilitados anteriores preservados.
+- Backup, revisão independente, schema, ensaio SQL com reversão, CAS, três auditorias e prova de preservação aprovados. Somente dados logísticos dos três alvos foram alterados; sem código de aplicação, reinício, migration ou teste de compra. Fontes, fórmulas, limites e recibos em [129](129-hipoteses-por-tipo-de-embalagem.md#continuidade-das-exceções--01112026).
+
 ## 2026-10-30 — Ajustes visuais da home e rodapé
 
 - Rodapé compacto com conteúdo integral; selos em fluxo separado da foto; marcas/categorias sem setas visíveis; neon somente na interação e emojis pontuais. Regras de OFF reutilizadas. A faixa de selos não publica gratuidade sem cotação validada nem ativa campanhas futuras. Contrato e validação em [131](131-ajustes-visuais-home-2026-10-30.md).

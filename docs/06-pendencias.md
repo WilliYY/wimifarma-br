@@ -1,5 +1,11 @@
 # 06 - Pendencias
 
+## Conferência logística atualizada — 01/11/2026
+
+- São 3.056 de 3.061 ativos com peso e três medidas preenchidos; as três exceções completadas nesta rodada continuam estimadas e desabilitadas. Somente os dois perfis anteriormente habilitados permanecem assim.
+- Restam Imosec 2 mg 12 comprimidos (classificação de receita pendente), Clopidogrel/Albendazol/Beneum Teuto e Plax Melancia 500 mL (contradições nas referências físicas). Confirmar fontes ou embalagem antes de resolver; preservar histórico e classificação.
+- Caixas alternativas de Daflon e Bigfral são planejadas, não declaradas disponíveis. Tara, proteção, encaixe real e aceitação de cada serviço continuam pendentes antes da liberação de transporte. Resultado e provas em [129](129-hipoteses-por-tipo-de-embalagem.md#continuidade-das-exceções--01112026).
+
 ## Preparação logística e parâmetros do benefício — 25/10/2026
 
 - Consulta produtiva somente de leitura encontrou 2.267 produtos ativos: 1.992 sem perfil logístico, 273 com rascunho desativado e sem revisão, e dois perfis habilitados, de base estimada já autorizada. A contagem é um retrato da data, não acompanha futuras inclusões.
