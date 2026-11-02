@@ -82,10 +82,17 @@ function cabinetCarePriority(product: RelatedProductCardItem) {
 }
 
 export function buildHomeCollections(products: RelatedProductCardItem[], verifiedPhotos: ReadonlySet<string>, date: Date): HomeCollections {
-  const eligible = [...new Map(products.filter(product => product.imageUrl && verifiedPhotos.has(product.imageUrl) &&
+  const eligible = [...new Map(products.filter(product => {
+    const classification = readClassification(product.catalogClassification);
+    if (!classificationIsConsistent(classification, product)) return false;
+    if (classification.kind === "MEDICINE" && !classification.otc) return false;
+    // An unreviewed medicine category cannot be promoted as a non-medicine.
+    if (classification.kind === "UNCLASSIFIED" && /\bmedicamentos?\b/.test(normalized(product.category ?? ""))) return false;
+    return product.imageUrl && verifiedPhotos.has(product.imageUrl) &&
     !product.imageUrl.startsWith("/brand/") && !product.requiresPrescription &&
     (!product.prescriptionType || product.prescriptionType === "UNREVIEWED") && !product.isPopularPharmacy &&
-    product.stock > 0 && Number.isFinite(commercialPrice(product)) && commercialPrice(product) > 0).map(product => [product.id, product])).values()];
+    product.stock > 0 && Number.isFinite(commercialPrice(product)) && commercialPrice(product) > 0;
+  }).map(product => [product.id, product])).values()];
   const day = brasiliaDay(date);
   const byPrice = [...eligible].sort((a, b) => commercialPrice(a) - commercialPrice(b) || dailyRank(day, a.id) - dailyRank(day, b.id) || a.id.localeCompare(b.id));
   // Reserve a rotating entry-price selection without emptying a small catalog.
@@ -113,10 +120,7 @@ export function buildHomeCollections(products: RelatedProductCardItem[], verifie
     .sort((a, b) => cabinetCarePriority(a) - cabinetCarePriority(b));
   const otc = [...diverseDailySelection(otcPool, otcPool.length, day), ...cabinetCare].filter(product => !selectedIds.has(product.id)).slice(0, HOME_COLLECTION_SIZE);
   otc.forEach(product => selectedIds.add(product.id));
-  // Only MIPs not already selected may join the mixed care collection.
-  const mixedOtc = diverseDailySelection(otcPool.filter(product => !selectedIds.has(product.id)), 5, day);
-  const careItems = diverseDailySelection(carePool.filter(product => !selectedIds.has(product.id)), HOME_COLLECTION_SIZE - mixedOtc.length, day);
-  const care = careItems.length ? [...careItems.slice(0, 5), ...diverseDailySelection([...careItems.slice(5), ...mixedOtc], HOME_COLLECTION_SIZE - Math.min(5, careItems.length), day)] : [];
+  const care = diverseDailySelection(carePool.filter(product => !selectedIds.has(product.id)), HOME_COLLECTION_SIZE, day);
   care.forEach(product => selectedIds.add(product.id));
   const cheapest = [...priorityPrices, ...byPrice.filter(product => !selectedIds.has(product.id))].slice(0, HOME_COLLECTION_SIZE);
   const affordable = [...priorityPrices, ...diverseDailySelection(cheapest.slice(priorityPrices.length), HOME_COLLECTION_SIZE - priorityPrices.length, day)];

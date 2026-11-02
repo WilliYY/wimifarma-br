@@ -71,11 +71,11 @@ test("acervo escasso não cria três faixas idênticas nem preenche vagas fictí
   assert.equal(result.affordable.length, 0);
 });
 
-test("MIP confirmado não se repete em cuidados e classe ausente não vira medicamento OTC", () => {
+test("MIP confirmado não se repete e medicamento sem classificação fica fora das vitrines", () => {
   const result = build([item("care"), item("cheap", { category: "Medicamentos", price: "2", catalogClassification: otc }), item("unknown", { category: "Medicamentos", price: "1" })]);
   assert.deepEqual(result.care.map(product => product.id), ["care"]);
-  assert.deepEqual(result.otc.map(product => product.id), ["cheap"]);
-  assert.deepEqual(result.affordable.map(product => product.id), ["unknown"]);
+  assert.deepEqual([...result.otc, ...result.affordable].map(product => product.id), ["cheap"]);
+  assert.equal(Object.values(result).flat().some(product => product.id === "unknown"), false);
 });
 
 test("todas as vitrines usam produtos exclusivos em dias e acervos diferentes", () => {
@@ -142,5 +142,37 @@ test("pacote infantil caro não toma a posição de entrada quando há lenços a
   for (let day = 1; day <= 14; day++) {
     const result = build(products, new Date(`2026-10-${String(day).padStart(2, "0")}T12:00:00Z`));
     assert.equal(result.care.slice(0, 5).some(product => product.id === "baby-expensive"), false);
+  }
+});
+
+test("Beleza nunca recebe MIPs, mesmo quando há espaço e medicamentos excedentes", () => {
+  const products = Array.from({ length: 35 }, (_, i) => item(`mip-${i}`, { name: i % 2 ? "Tylenol 750mg" : "Dorflex comprimidos", category: "Medicamentos", price: "20", catalogClassification: otc }));
+  products.push(...Array.from({ length: 35 }, (_, i) => item(`beauty-${i}`, { name: "Shampoo cuidado diário", price: "10", catalogClassification: hygiene })));
+  assert.ok(build(products).care.every(product => readClassification(product.catalogClassification).kind !== "MEDICINE"));
+});
+
+test("nenhuma vitrine aceita medicamento sem MIP confirmado, receita ou classificação inconsistente", () => {
+  const invalid = [
+    item("unknown-medicine", { category: "Medicamentos", price: "1" }),
+    item("non-otc", { category: "Medicamentos", price: "1", catalogClassification: { ...otc, otc: false } }),
+    item("controlled", { price: "1", prescriptionType: "CONTROLLED", catalogClassification: otc }),
+    item("ordinary", { price: "1", prescriptionType: "ORDINARY", catalogClassification: otc }),
+    item("antimicrobial", { price: "1", prescriptionType: "ANTIMICROBIAL", catalogClassification: otc }),
+    item("inconsistent", { price: "1", catalogClassification: { ...hygiene, medicineClass: "GENERIC" } }),
+  ];
+  assert.deepEqual(Object.values(build(invalid)).flat(), []);
+});
+
+test("as três vitrines alternam diariamente com variedade suficiente e conservam ordem no mesmo dia", () => {
+  const products = [
+    ...Array.from({ length: 60 }, (_, i) => item(`soap-${i}`, { name: "Sabonete cuidado", catalogClassification: hygiene, price: String(3 + i / 100) })),
+    ...Array.from({ length: 45 }, (_, i) => item(`medicine-${i}`, { name: "Simeticona", activeIngredients: ["simeticona"], category: "Medicamentos", catalogClassification: otc, price: "20" })),
+  ];
+  const first = build(products, new Date("2026-11-01T12:00:00Z"));
+  const next = build(products, new Date("2026-11-02T12:00:00Z"));
+  assert.deepEqual(first, build([...products].reverse(), new Date("2026-11-01T23:59:00Z")));
+  for (const key of ["care", "otc", "affordable"] as const) {
+    assert.equal(first[key].length, 15);
+    assert.notDeepEqual(first[key].map(product => product.id), next[key].map(product => product.id), key);
   }
 });

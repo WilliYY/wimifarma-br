@@ -121,12 +121,7 @@ export function buildPublicProductDescription(product: ProductDescriptionInput):
   const name = product.name.trim();
   const brand = product.brand?.trim();
   const identity = brand && !normalize(name).includes(normalize(brand)) ? `${name}, da ${brand}` : name;
-  const medicine = readClassification(product.catalogClassification).kind === "MEDICINE" ||
-    product.requiresPrescription || product.isPopularPharmacy ||
-    (product.prescriptionType && product.prescriptionType !== "UNREVIEWED") ||
-    /medicamento|farmacia popular|generico/.test(normalize(product.category ?? ""));
-
-  if (medicine) {
+  if (isMedicineProduct(product)) {
     return `${identity}.\n\nConfira a apresentação cadastrada e conte com o farmacêutico da Wimifarma para esclarecer dúvidas sobre o produto. Consulte a bula e as orientações do profissional responsável antes de utilizar.`;
   }
 
@@ -143,4 +138,11 @@ export function buildPublicProductDescription(product: ProductDescriptionInput):
     `${identity}. ${type?.detail ?? "Confira a apresentação e as características indicadas na embalagem para escolher o produto que combina com a sua rotina."}`,
     "Na dúvida sobre a escolha, conte com a equipe da Wimifarma. Estamos por perto para ajudar você a conhecer melhor o produto.",
   ].join("\n\n");
+}
+
+export function isMedicineProduct(product: Pick<ProductDescriptionInput, "catalogClassification" | "requiresPrescription" | "isPopularPharmacy" | "prescriptionType" | "category">): boolean {
+  return readClassification(product.catalogClassification).kind === "MEDICINE" ||
+    Boolean(product.requiresPrescription || product.isPopularPharmacy ||
+      (product.prescriptionType && product.prescriptionType !== "UNREVIEWED")) ||
+    /medicamento|farmacia popular|generico/.test(normalize(product.category ?? ""));
 }

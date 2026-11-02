@@ -21,7 +21,7 @@ test("product page keeps product, related cards and details without public revie
     "@/components/site/product-cashback": "export const ProductCashback=()=>null;",
     "@/components/site/delivery-estimator": "import React from 'react';export const DeliveryEstimator=()=>React.createElement('div',{'data-delivery':true});",
     "@/components/site/product-review-form": "import React from 'react';export const ProductReviewForm=()=>React.createElement('div',{'data-review-form':true});",
-    "@/components/site/related-products-carousel": "import React from 'react';export const RelatedProductsCarousel=()=>React.createElement('div',{'data-related-cards':true});",
+    "@/components/site/related-products-carousel": "import React from 'react';export const RelatedProductsCarousel=p=>React.createElement('div',{'data-related-cards':true},p.products.map(x=>React.createElement('span',{key:x.id},x.name)));",
   };
   const bundle = await build({
     entryPoints: ["src/app/(site)/produto/[slug]/page.tsx"], bundle: true, write: false,
@@ -75,4 +75,25 @@ test("product page keeps product, related cards and details without public revie
   const productData = data.find((item: { "@type": string }) => item["@type"] === "Product");
   assert.ok(productData);
   assert.equal(Object.hasOwn(productData, "aggregateRating"), false, "no hidden rating in product metadata");
+
+  Object.assign(product, { name: "Sabonete Rexona Multivitaminas 84g", brand: "Rexona", category: "Higiene pessoal", inventorySource: "DISTRIBUTOR", catalogClassification: { kind: "HYGIENE", medicineClass: "UNCLASSIFIED", ethical: false, otc: false }, pmcReference: null });
+  const queryCalls: unknown[] = [];
+  const kit = { ...product, id: "rexona-kit-six", slug: "rexona-kit-six", name: "Kit sabonete Rexona Multivitaminas 6x84g" };
+  fixture.db.product.findMany = async (...args: unknown[]) => {
+    queryCalls.push(args[0]);
+    return [kit, { ...product, id: "conditioner", slug: "conditioner", name: "Condicionador cabelos 200mL", brand: "Outra marca" }];
+  };
+  const soapHtml = renderToStaticMarkup(await loaded.exports.default({ params: Promise.resolve({ slug: product.slug }) }));
+  assert.match(soapHtml, /Kit sabonete Rexona Multivitaminas 6x84g/);
+  assert.doesNotMatch(soapHtml, /Condicionador cabelos|Leia a embalagem e a bula|Correlato não significa substituto/);
+  assert.match(soapHtml, /Conteúdo da embalagem/);
+  assert.match(soapHtml, /84 g/);
+  assert.match(soapHtml, /Cuidados com o produto/);
+  assert.match(soapHtml, /Identificação do produto/);
+  assert.match(soapHtml, /data-product-purchase-conditions/);
+  assert.match(soapHtml, /Preparação prevista até/);
+  assert.match(soapHtml, /Pix com 3% de desconto ao selecionar no checkout/);
+  assert.ok(soapHtml.indexOf("data-purchase-panel") < soapHtml.indexOf("data-product-purchase-conditions"));
+  assert.equal(queryCalls.length, 2, "same-line candidates are retrieved independently of the general candidate limit");
+  assert.match(JSON.stringify(queryCalls[0]), /"AND".*sabonete.*Rexona/);
 });

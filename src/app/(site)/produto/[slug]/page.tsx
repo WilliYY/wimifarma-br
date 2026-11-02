@@ -18,6 +18,7 @@ import { DeliveryEstimator } from "@/components/site/delivery-estimator";
 import { ProductImageViewer } from "@/components/site/product-image-viewer";
 import { ProductShareButton } from "@/components/site/product-share-button";
 import { ProductPurchasePanel } from "@/components/site/product-purchase-panel";
+import { ProductPurchaseConditions } from "@/components/site/product-purchase-conditions";
 import { ProductPaymentMethods } from "@/components/site/product-payment-methods";
 import { ProductQuantityProvider } from "@/components/site/product-quantity";
 import { ProductCashback } from "@/components/site/product-cashback";
@@ -32,11 +33,14 @@ import {
 import {
   normalizeProductSearch,
   rankRelatedProducts,
+  relatedProductFamilySearchTerms,
 } from "@/features/products/public-search";
 import { getPrisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
 import { buildPublicProductDescription } from "@/features/products/product-description";
+import { productCareInformation, productPackagePresentation } from "@/features/products/product-presentation";
+import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 import { canDisplayPmcSavings, pmcSavingsPercent } from "@/features/products/cmed-reference";
 import { ProductPmcBadge, ProductPmcPrice } from "@/components/site/product-pmc";
@@ -135,6 +139,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (!record) notFound();
   const product = toSaleProduct(record);
   const description = buildPublicProductDescription(product);
+  const care = productCareInformation(product);
+  const packagePresentation = productPackagePresentation(product);
 
   const relationFilters: Prisma.ProductWhereInput[] = [
     ...product.activeIngredients.map((ingredient) => ({ searchText: { contains: normalizeProductSearch(ingredient) } })),
@@ -142,6 +148,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   ];
   if (product.category) relationFilters.push({ category: { equals: product.category, mode: "insensitive" } });
 
+  const familyTerms = relatedProductFamilySearchTerms(product);
+  const sameLineCandidates = familyTerms.length && product.brand
+    ? await prisma.product.findMany({
+        orderBy: [{ name: "asc" }], select: productSelect, take: 30,
+        where: { id: { not: product.id }, status: "ACTIVE", AND: [
+          { OR: familyTerms.map(term => ({ name: { contains: term, mode: "insensitive" as const } })) },
+          { OR: [{ brand: { equals: product.brand, mode: "insensitive" } }, { name: { contains: product.brand, mode: "insensitive" } }] },
+        ] },
+      })
+    : [];
   const relatedCandidates = relationFilters.length
     ? await prisma.product.findMany({
         orderBy: [{ featuredPosition: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
@@ -151,7 +167,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       })
     : [];
 
-  const relatedProducts = rankRelatedProducts(product, relatedCandidates).slice(0, 10).map(serializeProduct);
+  const uniqueCandidates = [...new Map([...sameLineCandidates, ...relatedCandidates].map(candidate => [candidate.id, candidate])).values()];
+  const relatedProducts = rankRelatedProducts(product, uniqueCandidates).slice(0, 10).map(serializeProduct);
   const normalPrice = Number(product.price);
   const currentPrice = Number(product.promotionalPrice ?? product.price);
   const hasPromotion = Boolean(product.promotionalPrice && currentPrice < normalPrice);
@@ -247,6 +264,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
                 <ProductCashback product={product} unitPriceCents={Math.round(currentPrice * 100)} details />
                 <ProductPurchasePanel key={product.id} product={cartProduct} />
+                {!requiresPurchaseAssistance(cartProduct) && product.stock > 0 ? <ProductPurchaseConditions inventorySource={product.inventorySource} now={new Date()} /> : null}
               </article>
 
               <div className="scroll-mt-56" id="entrega"><DeliveryEstimator product={cartProduct} /></div>
@@ -263,9 +281,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <div>
               <p className="flex items-center gap-2 text-sm font-black uppercase text-brand"><BadgeCheck className="h-5 w-5" aria-hidden="true" />Voce pode gostar</p>
               <h2 className="mt-2 text-3xl font-black text-ink">Produtos correlatos</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Relacionados por principio ativo, termo de busca ou categoria cadastrada.</p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{care.medicine ? "Relacionados por princípio ativo ou apresentação." : "Mais opções da mesma linha e categoria."}</p>
             </div>
-            <p className="flex max-w-md items-start gap-2 text-xs font-semibold leading-5 text-muted"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-pharma-green" aria-hidden="true" />Correlato nao significa substituto. Confirme a opcao adequada com a equipe.</p>
+            {care.medicine ? <p className="flex max-w-md items-start gap-2 text-xs font-semibold leading-5 text-muted"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-pharma-green" aria-hidden="true" />Correlato não significa substituto. Confirme a opção adequada com a equipe.</p> : null}
           </div>
           {relatedProducts.length > 0 ? (
             <RelatedProductsCarousel products={relatedProducts} />
@@ -291,11 +309,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <details className="group py-5" open>
                   <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-base font-bold text-ink focus-visible:outline-brand">Descrição<ChevronRight className="h-5 w-5 text-brand transition-transform group-open:rotate-90 motion-reduce:transition-none" aria-hidden="true" /></summary>
                   <p className="mt-4 whitespace-pre-line text-sm leading-7 text-muted">{description}</p>
+                  <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-3 rounded-xl bg-surface-subtle p-4 text-sm">
+                    {packagePresentation.content ? <div><dt className="text-xs text-muted">Conteúdo da embalagem</dt><dd className="mt-1 font-semibold text-ink">{packagePresentation.content}</dd></div> : null}
+                    <div><dt className="text-xs text-muted">Apresentação</dt><dd className="mt-1 font-semibold text-ink">{packagePresentation.presentation}</dd></div>
+                  </dl>
                 </details>
                 <details className="group py-5">
-                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-base font-bold text-ink focus-visible:outline-brand">Princípios ativos e identificação<ChevronRight className="h-5 w-5 text-brand transition-transform group-open:rotate-90 motion-reduce:transition-none" aria-hidden="true" /></summary>
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-base font-bold text-ink focus-visible:outline-brand">{care.medicine ? "Princípios ativos e identificação" : "Identificação do produto"}<ChevronRight className="h-5 w-5 text-brand transition-transform group-open:rotate-90 motion-reduce:transition-none" aria-hidden="true" /></summary>
                   <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
-                    <div><dt className="font-bold text-muted">Principios ativos</dt><dd className="mt-1 font-black text-ink">{product.activeIngredients.join(", ") || "Nao informado"}</dd></div>
+                    {care.medicine ? <div><dt className="font-bold text-muted">Princípios ativos</dt><dd className="mt-1 font-black text-ink">{product.activeIngredients.join(", ") || "Não informado"}</dd></div> : null}
                     <div><dt className="font-bold text-muted">Marca</dt><dd className="mt-1 font-black text-ink">{product.brand ?? "Nao informada"}</dd></div>
                     <div><dt className="font-bold text-muted">Categoria</dt><dd className="mt-1 font-black text-ink">{product.category ?? "Nao informada"}</dd></div>
                     <div><dt className="font-bold text-muted">SKU</dt><dd className="mt-1 font-black text-ink">{product.sku ?? "Nao informado"}</dd></div>
@@ -311,8 +333,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             <aside className="h-fit rounded-2xl border border-emerald-100 bg-[#f2f8f5] p-5 sm:p-6">
               <Pill className="h-6 w-6 text-brand" aria-hidden="true" />
-              <h3 className="mt-3 text-lg font-bold text-ink">Cuidado em cada escolha</h3>
-              <p className="mt-3 text-sm leading-7 text-muted">Leia a embalagem e a bula. Em caso de duvida, fale com o farmaceutico. Nao use medicamentos sem orientacao adequada.</p>
+              <h3 className="mt-3 text-lg font-bold text-ink">{care.title}</h3>
+              <p className="mt-3 text-sm leading-7 text-muted">{care.description}</p>
               <p className="mt-3 text-xs font-semibold leading-5 text-muted">A imagem pode ter pequena variacao de embalagem conforme o lote do fabricante.</p>
             </aside>
           </div>

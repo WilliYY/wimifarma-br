@@ -50,6 +50,7 @@ export type SearchRankableProduct = {
 
 export type RelatedProduct = {
   activeIngredients: string[];
+  brand?: string | null;
   category: string | null;
   id: string;
   name: string;
@@ -292,6 +293,21 @@ function normalizedSet(values: string[]) {
   return new Set(values.map(normalizeProductSearch).filter(Boolean));
 }
 
+const relatedFamilies: Array<{ pattern: RegExp; searchTerms: string[] }> = [
+  { pattern: /\bsabonetes?\b/, searchTerms: ["sabonete"] },
+  { pattern: /\b(desodorante|antitranspirante)\b/, searchTerms: ["desodorante", "antitranspirante"] },
+  { pattern: /\b(shampoo|xampu)\b/, searchTerms: ["shampoo", "xampu"] },
+  { pattern: /\bcondicionador\b/, searchTerms: ["condicionador"] },
+  { pattern: /\bcreme dental\b/, searchTerms: ["creme dental"] },
+  { pattern: /\bprotetor solar\b/, searchTerms: ["protetor solar"] },
+  { pattern: /\bfraldas?\b/, searchTerms: ["fralda"] },
+];
+
+/** Candidate retrieval and ranking share the same editorial family; no therapeutic equivalence. */
+export function relatedProductFamilySearchTerms(product: RelatedProduct) {
+  return relatedFamilies.find(family => family.pattern.test(normalizeProductSearch(product.name)))?.searchTerms ?? [];
+}
+
 export function rankRelatedProducts<T extends RelatedProduct>(
   source: RelatedProduct,
   candidates: T[],
@@ -299,6 +315,9 @@ export function rankRelatedProducts<T extends RelatedProduct>(
   const sourceIngredients = normalizedSet(source.activeIngredients);
   const sourceTerms = normalizedSet(source.searchTerms);
   const sourceCategory = normalizeProductSearch(source.category ?? "");
+  const sourceFamily = relatedProductFamilySearchTerms(source)[0];
+  const sourceBrand = normalizeProductSearch(source.brand ?? "");
+  const sourceWords = normalizedSet(normalizeProductSearch(source.name).split(" ").filter(word => word.length > 2 && !/\d/.test(word) && !["kit", "com", "para", "unidades", "sabonete", "sabonetes"].includes(word)));
 
   return candidates
     .filter((candidate) => candidate.id !== source.id)
@@ -312,11 +331,18 @@ export function rankRelatedProducts<T extends RelatedProduct>(
       const categoryMatches =
         Boolean(sourceCategory) &&
         normalizeProductSearch(candidate.category ?? "") === sourceCategory;
-      const score = ingredientMatches * 100 + termMatches * 20 + (categoryMatches ? 5 : 0);
+      const familyMatches = Boolean(sourceFamily) && relatedProductFamilySearchTerms(candidate)[0] === sourceFamily;
+      const brandMatches = Boolean(sourceBrand) && (normalizeProductSearch(candidate.brand ?? "") === sourceBrand || ` ${normalizeProductSearch(candidate.name)} `.includes(` ${sourceBrand} `));
+      const lineMatches = familyMatches ? [...normalizedSet(normalizeProductSearch(candidate.name).split(" "))].filter(word => sourceWords.has(word) && word !== sourceBrand).length : 0;
+      const normalizedName = normalizeProductSearch(candidate.name);
+      const kitCount = /\bkit\b/.test(normalizedName) ? normalizedName.match(/\b(\d+)\s*(?:x(?=\s*\d)|un(?:id(?:ades?)?)?\b|sabonetes?\b)/) : null;
+      const sameLineKit = familyMatches && brandMatches && lineMatches > 0 && kitCount && Number(kitCount[1]) > 1;
+      const score = ingredientMatches * 100 + termMatches * 20 + (categoryMatches ? 5 : 0) +
+        (familyMatches ? 300 + (brandMatches ? 300 : 0) + lineMatches * 15 + (sameLineKit ? 10 : 0) : 0);
 
       return { product: candidate, score };
     })
-    .filter(({ score }) => score > 0)
+    .filter(({ product, score }) => score > 0 && (!sourceFamily || relatedProductFamilySearchTerms(product)[0] === sourceFamily))
     .sort(
       (left, right) =>
         right.score - left.score ||

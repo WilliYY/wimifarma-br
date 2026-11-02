@@ -5,6 +5,7 @@ import {
   parseProductTerms,
   rankProductsForQuery,
   rankRelatedProducts,
+  relatedProductFamilySearchTerms,
   productSearchHref,
   ingredientSearchIdentities,
   isProductAssociation,
@@ -184,4 +185,27 @@ test("correlaciona primeiro por principio ativo, depois por termo e categoria", 
     rankRelatedProducts(source, candidates).map((product) => product.id),
     ["ingredient", "term", "category"],
   );
+});
+
+test("sabonete prioriza mesma marca e linha, incluindo kit em categoria diferente", () => {
+  const source = { id: "source", name: "Sabonete Rexona Antibacterial Bamboo 84g", brand: "Rexona", category: "Higiene", activeIngredients: [], searchTerms: [] };
+  const candidate = (id: string, name: string, brand: string, category = "Higiene") => ({ ...source, id, name, brand, category });
+  const kit = candidate("kit-six", "Kit 6 Sabonetes Rexona Antibacterial Bamboo 84g", "Rexona", "Kits");
+  const sameBrand = candidate("rexona-soap", "Sabonete Rexona Antibacterial Limpeza Profunda 84g", "Rexona");
+  const otherBrand = candidate("other-soap", "Sabonete Dove Original 90g", "Dove");
+  const deodorant = candidate("deodorant", "Desodorante Rexona Bamboo", "Rexona");
+  assert.deepEqual(rankRelatedProducts(source, [deodorant, otherBrand, sameBrand, kit, source]).map(product => product.id), ["kit-six", "rexona-soap", "other-soap"]);
+  const sameLineSingle = candidate("single-same-line", "Sabonete Rexona Antibacterial Bamboo 90g", "Rexona");
+  assert.equal(rankRelatedProducts(source, [sameLineSingle, kit])[0].id, "kit-six", "kit da mesma linha em outra categoria precede outro avulso");
+});
+
+test("linhas Rexona disponíveis no catálogo levam o kit de seis antes de outras linhas", () => {
+  const lines = ["Multivitaminas", "Fresh", "Limpeza Profunda"];
+  const source = { id: "source", name: "", brand: "Rexona", category: "Higiene pessoal", activeIngredients: [], searchTerms: [] };
+  const kits = lines.map(line => ({ ...source, id: line, name: `Kit sabonete Rexona ${line} 6x84g` }));
+  for (const line of lines) {
+    const product = { ...source, name: `Sabonete Rexona ${line} 84g` };
+    assert.deepEqual(relatedProductFamilySearchTerms(product), ["sabonete"]);
+    assert.equal(rankRelatedProducts(product, kits)[0].id, line);
+  }
 });

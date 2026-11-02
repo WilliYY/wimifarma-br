@@ -40,11 +40,17 @@ Outras checagens não comprovaram vantagem da loja: a [Natus Farma](https://www.
 - Agrupar editorialmente variações de banho, desodorante, capilar, infantil, higiene oral, cuidados de pele/lábios e solar. Medicamentos elegíveis são agrupados por princípios ativos registrados; isso não afirma equivalência terapêutica nem concede classificação MIP. Bronzeadores/linhas solares com FPS abaixo de 30 não são priorizados como âncora solar; os itens continuam no catálogo.
 - Passar por famílias diferentes antes de repetir variantes. Entre as primeiras opções de cada família, considerar até três itens com preço até 1,5 vez o menor preço disponível da família; opções restantes ficam para rodadas posteriores. É um critério editorial de desembolso, não avaliação clínica ou comparação de preço por unidade.
 - Alternar essas opções pelo número do dia de Brasília, com ordem inicial estável por ID. Assim a rotação não depende apenas de um hash que pode manter a mesma ordem entre dias. Catálogo igual e mesmo dia produzem a mesma seleção, independentemente da ordem retornada pelo banco.
-- **Cuidados:** abrir com até cinco produtos de famílias não medicamentosas distintas, quando existirem. MIPs elegíveis que ainda não foram usados podem entrar depois desses espaços, mantendo o limite anterior de cinco.
+- **Cuidados / Beleza:** selecionar somente produtos não medicamentosos das categorias e classificações de cuidados existentes, alternando famílias antes de repetir variantes. Desde a revisão de 01/11/2026, MIPs excedentes não completam esta faixa, inclusive Tylenol e Dorflex.
 - **Farmacinha:** priorizar MIPs explicitamente consistentes e variar os princípios ativos antes de repetir marca/apresentação. Completar com os primeiros socorros e cuidados classificados já autorizados, quando necessário.
 - **Economia:** reservar até cinco opções rotativas entre o primeiro quarto dos candidatos ordenados por preço, limitado a 45 itens e a três vezes o preço do quinto menor candidato. Em acervo pequeno, a reserva continua limitada à metade dos elegíveis. Completar com os itens mais baratos ainda livres. Portanto, os cinco primeiros não são mais uma lista fixa dos cinco menores preços absolutos; isso substitui esse trecho do contrato anterior.
 
 Quando existe apenas uma opção elegível em uma família, ela pode reaparecer. Não se inventa variedade, disponibilidade ou vantagem comercial para forçar diferença diária. Alterações reais no catálogo, preço, foto ou disponibilidade podem mudar a seleção durante o dia. O mecanismo não requer cron, IA ou execução diária do Codex. A função `dailyRank` compartilhada com `/ofertas` permanece inalterada.
+
+### Conferência das categorias e relacionados em 01/11/2026
+
+A consulta da home inclui `catalogClassification`, para aplicar a classificação real registrada. Todas as vitrines excluem receita comum, antimicrobianos, controlados, Farmácia Popular, classificações inconsistentes e medicamentos sem MIP confirmado. Produtos ainda sem classificação na categoria Medicamentos também ficam fora da promoção editorial; isso não altera sua publicação no catálogo nem suas regras de compra. Fotos, preço comercial, estoque resolvido e exclusividade por ID continuam exigidos.
+
+Nos relacionados, famílias reconhecidas pelo nome (como sabonete) ganham prioridade sobre uma categoria ampla. Dentro da família, a mesma marca e os termos compartilhados da linha vêm primeiro, permitindo recomendar um kit cadastrado em outra categoria. A família é editorial e não concede equivalência terapêutica, disponibilidade ou autorização de compra. A consulta de candidatos deve reservar uma busca da mesma marca e família antes do limite geral, para que o ranking receba também os kits ativos.
 
 ## Limites e acompanhamento
 
