@@ -1,5 +1,7 @@
 # 112 — Modelos React Email e escolha do serviço
 
+**Atualização em 02/11/2026:** o lojista escolheu iniciar com Brevo sem assinatura paga. Foi preparada uma integração exclusivamente de homologação interna, desabilitada por padrão e sem disparadores de pedidos ou campanhas. Ela reutiliza o modelo sintético canônico, sem SDK adicional. Cadastro concluído, domínio/remetente autenticados, chave, ativação e entrega real ainda precisam de conferência; não confundir essa preparação com envios funcionando. Operação e limites em [141](141-brevo-homologacao-interna.md). As consultas e entregas abaixo mantêm suas datas históricas.
+
 ## Integração em 27/10/2026
 
 A pedido do lojista, `react-email` **6.11.3** foi fixado no manifesto e no lockfile. Licença MIT; Node >=20.19 e React 18/19. O pacote antigo `@react-email/components` 1.0.12 está marcado como descontinuado no npm, portanto não foi adotado. A versão atual concentra os componentes e reexporta a renderização; não foi instalada a API de nenhum provedor.

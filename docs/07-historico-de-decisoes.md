@@ -1660,3 +1660,11 @@ Comentários, nomes abreviados, estrelas e condições das avaliações reais fo
 Corrigida a preservação indevida do termo anterior nos campos de busca após navegação. A sincronização acompanha URL e histórico, com formulário SSR e GET nativo preservados. Tamanhos exatos nas consultas por fraldas passam a preceder alternativas, mantendo as regras de disponibilidade e a distinção entre tamanho e massa/dosagem.
 
 A ficha mostra preço por barra e economia de kits homogêneos somente com apresentação explícita e comparação comercial equivalente disponível. O primeiro banner conserva preload e recebe prioridade alta explícita na imagem principal; demais slides não competem com esse recurso. Não há mudança de preço, estoque, descontos, receita, frete ou banco. Contratos e limites de medição em [137](137-busca-tamanhos-kits-e-imagem-principal.md).
+
+## 02/11/2026 — Brevo para homologação interna, sem automações de clientes
+
+O lojista escolheu começar com Brevo sem assinatura paga e considerar outro serviço no futuro, se necessário. Foi preparado um transporte exclusivo de teste interno, desabilitado por padrão, que reutiliza o exemplo canônico fictício de pedido recebido e os modelos React Email. O destinatário único vem da configuração do servidor; a função não aceita pedidos ou endereços de clientes e não consulta o banco.
+
+A tentativa usa origem HTTPS fixa, prazo de dez segundos, ausência de redirecionamentos e de repetição automática. Somente resposta 201 com identificador esperado significa aceitação; entrega real permanece uma verificação separada. Respostas ambíguas ficam incertas e exigem conferência no histórico da Brevo antes de tentar novamente. Chave, destinatário, conteúdo e corpo arbitrário do fornecedor não aparecem no resultado do teste.
+
+Não foram criadas credenciais nem alterados DNS, dados comerciais, filas, cadastros ou eventos reais. O acesso pelo navegador chegou ao perfil de cadastro, mas a conclusão e a ativação da conta não foram confirmadas. Regressões sintéticas e revisão independente verificam a preparação; resultados de execução e publicação são registrados na evidência da tarefa. Configuração e etapas restantes em [141](141-brevo-homologacao-interna.md).

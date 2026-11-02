@@ -2,13 +2,13 @@
 
 ## Situação e proposta
 
-Atualização de 27/10/2026: modelos React Email integrados à prévia ADMIN, sem envio. Recomendação atual é Resend Free para transacionais na escala observada; Brevo permanece opção para campanhas. Comparação de custos, implementação, validação e pendências em [112](112-react-email-modelos.md). As recomendações anteriores abaixo são históricas, não uma conta contratada.
+Atualização de 02/11/2026: o lojista escolheu começar com Brevo, sem contratar plano pago, e reavaliar outro serviço no futuro se necessário. Os modelos React Email continuam; a primeira integração é uma homologação sintética restrita a um destinatário interno, desligada por padrão. A conta avançou manualmente até o perfil de cadastro, mas domínio, remetente, chave, ativação e recebimento ainda não foram confirmados. Contrato em [141](141-brevo-homologacao-interna.md). Resend foi recusado para a operação, conforme [112](112-react-email-modelos.md); comparações anteriores abaixo são históricas.
 
 Comparação de 04/10: `35-referencias-catalogo-e-emails.md`. Para começar sem mensalidade, Brevo Free e créditos pré-pagos; alternativa com cobrança por uso é SES, com listmonk para campanhas. Hospedagem/manutenção e autenticação de domínio continuam necessárias. Nenhum serviço novo foi contratado ou conectado.
 
 Pedido do lojista em 03/10/2026: confirmação de compra, recuperação de carrinho e novidades. **O site ainda não envia e-mails.** Não existe provedor de e-mail configurado, remetente autenticado, fila de e-mails ou consentimento específico de marketing persistido. A proposta abaixo não habilita disparos nem importa clientes para terceiros.
 
-Recomendação: Brevo, cuja API oficial reúne e-mails transacionais, contatos e campanhas. Usar a conta empresarial da Wimifarma, sem misturar com outros projetos. O lojista ainda precisa confirmar o serviço/conta; não contratar plano pago automaticamente. Modelos visuais com dados fictícios: `email-modelos.html`.
+Serviço inicial autorizado: Brevo, cuja API oficial reúne e-mails transacionais, contatos e campanhas. Usar a conta empresarial da Wimifarma, sem misturar com outros projetos. A escolha do serviço não confirma ativação ou elegibilidade da conta; não contratar plano pago automaticamente. Modelos visuais com dados fictícios: `email-modelos.html`.
 
 ## Mensagens e disparadores
 

@@ -2,7 +2,7 @@
 
 ## Escopo desta etapa
 
-Desde 27/10/2026, a prévia ADMIN de e-mail renderiza os seis exemplos com React Email no servidor e os mostra em iframe isolado. O gerador canônico e o texto WhatsApp permanecem. Entrega por provedor continua pendente; contrato em [112](112-react-email-modelos.md).
+Desde 27/10/2026, a prévia ADMIN de e-mail renderiza os seis exemplos com React Email no servidor e os mostra em iframe isolado. O gerador canônico e o texto WhatsApp permanecem. Em 02/11/2026 foi autorizada a preparação da homologação interna pela Brevo, sem conectar eventos reais; contrato em [141](141-brevo-homologacao-interna.md). A escolha e os modelos anteriores estão em [112](112-react-email-modelos.md).
 
 O painel Miauby ADMIN integra uma prévia de seis eventos, seleção WhatsApp/e-mail e cópia local. Cada exemplo é marcado como TESTE e fictício; não envia nada. Alertas já existentes ao proprietário também passam a incluir valores dos itens/subtotal/frete/descontos, preservando destinatário fixo e estados reais.
 
