@@ -1,6 +1,31 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { catalogCategoryGroups, catalogFilters, catalogFilterHref, catalogPagination, catalogSections, matchesCatalogSection, sortCatalogProducts } from "./catalog-navigation";
+import { catalogCategoryGroups, catalogCategoryNavigationContext, catalogFilters, catalogFilterHref, catalogPagination, catalogSections, matchesCatalogSection, sortCatalogProducts } from "./catalog-navigation";
+
+test("categoria aberta limita a árvore ao próprio grupo sem perder a categoria exata", () => {
+  const categories = ["Medicamentos", "Genéricos", "Higiene", "Infantil", "Nutrição"].map((name, i) => ({ name, names: [name], slug: String(i) }));
+  const context = catalogCategoryNavigationContext(categories, "/categorias/1?marca=Marca&q=pressao", undefined);
+  assert.deepEqual(context.groups.map(group => group.id), ["medicines"]);
+  assert.equal(context.selectedCategory?.name, "Genéricos");
+  assert.equal(context.activeGroup, "medicines");
+  assert.deepEqual(context.others, []);
+  assert.equal(context.contextual, true);
+});
+
+test("grupo e subcategoria focam a árvore; catálogo, busca e ofertas globais mantêm exploração", () => {
+  const categories = ["Medicamentos", "Higiene", "Infantil", "Nutrição"].map((name, i) => ({ name, names: [name], slug: String(i) }));
+  const medicine = catalogCategoryNavigationContext(categories, "/catalogo?grupo=medicines&assunto=diabetes", "medicines");
+  assert.deepEqual(medicine.groups.map(group => group.id), ["medicines"]);
+  for (const path of ["/catalogo", "/busca?q=pele", "/ofertas?marca=Marca"]) {
+    const context = catalogCategoryNavigationContext(categories, path);
+    assert.equal(context.contextual, false);
+    assert.equal(context.groups.length, 5);
+    assert.deepEqual(context.others.map(category => category.name), ["Nutrição"]);
+  }
+  const other = catalogCategoryNavigationContext(categories, "/categorias/3");
+  assert.deepEqual(other.groups, []);
+  assert.deepEqual(other.others.map(category => category.name), ["Nutrição"]);
+});
 
 test("normaliza parâmetros ambíguos e inválidos sem conservar página ao trocar filtro", () => {
   assert.deepEqual(catalogFilters({ pagina: ["2", "3"], ordem: "invalid", grupo: "invalid", marca: ["A"], assunto: "unknown" }), { page: 1, sort: "relevantes", group: undefined, brand: undefined, query: undefined, section: undefined, offers: false });

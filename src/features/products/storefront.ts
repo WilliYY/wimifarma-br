@@ -13,13 +13,15 @@ export const PAGE_SIZE = 24;
 const getPublicBrandRecords = cache(async () => getPrisma().product.findMany({ where: { status: "ACTIVE", brand: { not: null } }, select: { brand: true, name: true, category: true, requiresPrescription: true, isPopularPharmacy: true, catalogClassification: true }, orderBy: { brand: "asc" } }));
 export const getPublicBrands = cache(async (): Promise<PublicBrand[]> => buildPublicBrands(await getPublicBrandRecords()));
 const storefrontSelect = { ...supplierOfferInclude, cmedReference: true, sku: true, searchText: true, ean: true, inventorySource: true, id: true, name: true, slug: true, brand: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, activeIngredients: true, searchTerms: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, cashbackEnabled: true, cashbackRateBps: true } satisfies Prisma.ProductSelect;
-export const getPublicCatalogSections = cache(async () => {
-  const rows = await getPrisma().product.findMany({ where: { status: "ACTIVE" }, select: { id: true, name: true, category: true, activeIngredients: true, searchTerms: true, catalogClassification: true } });
-  const categories = await getPublicCategories();
+function availableCatalogSections(rows: Parameters<typeof matchesCatalogSection>[0][], categories: readonly { name: string; names?: string[] }[]) {
   return catalogSections.filter(section => {
     const names = catalogGroupNames(categories, section.group);
     return rows.some(row => (names.includes(row.category ?? "") || (section.group === "medicines" && (row.catalogClassification as { kind?: string } | null)?.kind === "MEDICINE")) && matchesCatalogSection(row, section));
   }).map(section => section.id);
+}
+export const getPublicCatalogSections = cache(async () => {
+  const rows = await getPrisma().product.findMany({ where: { status: "ACTIVE" }, select: { id: true, name: true, category: true, activeIngredients: true, searchTerms: true, catalogClassification: true } });
+  return availableCatalogSections(rows, await getPublicCategories());
 });
 export const getPublicCategories = cache(async () => {
   const products = await getPrisma().product.findMany({ where: { status: "ACTIVE", category: { not: null } }, distinct: ["category"], select: { category: true }, orderBy: { category: "asc" } });
@@ -59,5 +61,7 @@ export async function getStorefrontProducts({ page = 1, categories, offers = fal
     : query && (!sort || sort === "relevantes")
     ? resolved.sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0))
     : sortCatalogProducts(resolved, sort ?? (categories || group || brand !== undefined ? "preco-asc" : "relevantes"));
-  return { count: products.length, products: products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) };
+  return { count: products.length, products: products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    // These are the full category/brand rows, before subsection and pagination, never just the visible page.
+    categorySections: categories ? availableCatalogSections(rows, categories.map(name => ({ name }))) : undefined };
 }

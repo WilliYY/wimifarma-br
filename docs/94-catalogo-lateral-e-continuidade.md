@@ -1,5 +1,15 @@
 # Catálogo lateral e continuidade das ofertas — 22/10/2026
 
+## Filtros contextuais — 02/11/2026
+
+Ao abrir um grupo ou uma categoria, a lateral mostra somente esse contexto e suas subcategorias já disponíveis. Medicamentos, por exemplo, não lista também Infantil, Dermo ou Higiene e beleza. O atalho **Catálogo completo** permite voltar à exploração geral sem repetir a árvore inteira dentro da seleção. Catálogo, busca e ofertas sem categoria ou grupo selecionado conservam a navegação global.
+
+Rotas de categoria, como `/categorias/medicamentos`, mantêm a categoria exata ao escolher Diabetes ou outro assunto compatível. A rota valida o assunto contra o grupo da categoria e descarta assuntos de outros grupos; não amplia silenciosamente a seleção para todas as categorias do grupo. Marca, busca, ordenação e contexto de ofertas continuam nos links; trocar o filtro reinicia a paginação. A seleção atual mantém `aria-current="page"`, os grupos usam expansão nativa por teclado e o painel recolhível do celular permanece compacto.
+
+As subcategorias disponíveis de uma categoria exata são calculadas pelos produtos completos dessa categoria e da marca já filtrada, antes do assunto e da paginação, reutilizando a consulta existente. Cabelos, portanto, não recebe Banho ou Desodorantes apenas porque existem em Higiene. A categoria exata não consulta os assuntos globais, e a primeira página não oculta assuntos de produtos publicados em páginas posteriores. Sem categoria exata, a exploração global mantém o conjunto anterior de assuntos. Busca, ofertas e regras comerciais não são redefinidas por essa disponibilidade editorial.
+
+Regressões cobrem categoria, grupo, assuntos incompatíveis, marcas/busca/ordenação, exploração global e navegação em 320, 390 e 1.280 px. A reprodução anterior encontrou dois grupos expansíveis dentro de Diabetes; após o ajuste existe somente o grupo selecionado. As capturas desta revisão ficam em `outputs/catalogo-contextual-2026-11-02/`. Não há alteração em produtos, classificação clínica, preços, disponibilidade, receita ou checkout.
+
 ## Revisão dos grupos de categorias — 26/10/2026
 
 Fraldas adultas deixam de entrar no grupo Infantil pelo alias `fraldas`; a categoria legada exata `Fraldas` continua reconhecida. As subseções infantis exigem que a categoria já pertença ao grupo, sem puxar lenços genéricos ou adultos apenas pelo nome. Cabelos, Cuidados com os cabelos e Lenços e toalhas umedecidas passam a ser alcançáveis no grupo de perfumaria/higiene e beleza; Proteção solar e Cuidados com a pele, em Dermo. Nutrição permanece separada, sem converter FOOD em suplemento.

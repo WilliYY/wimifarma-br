@@ -222,6 +222,26 @@ test("lateral oferece somente subcategorias com produtos publicados compatíveis
   assert.deepEqual(Array.from(await service.getPublicCatalogSections()), ["diabetes", "hair"]);
 });
 
+test("Cabelos usa suas próprias subcategorias sem consulta global ou produtos de Higiene", async () => {
+  const row = (id: string, name: string, category: string) => ({ id, name, category, activeIngredients: [], searchTerms: [], price: "10", promotionalPrice: null, stock: 1, catalogClassification: { kind: "HYGIENE" } });
+  const { service, queries } = await fixture([row("hair", "Shampoo sintético", "Cabelos")]);
+  const selected = await service.getStorefrontProducts({ categories: ["Cabelos"] });
+  assert.deepEqual(Array.from(selected.categorySections ?? []), ["hair"]);
+  assert.equal(queries.length, 1);
+  assert.equal(JSON.stringify((queries[0].where as { category: unknown }).category), JSON.stringify({ in: ["Cabelos"] }));
+  const global = await fixture([row("hair", "Shampoo sintético", "Cabelos"), row("soap", "Sabonete sintético", "Higiene"), row("deodorant", "Desodorante sintético", "Higiene")]);
+  assert.deepEqual(Array.from(await global.service.getPublicCatalogSections()), ["hair", "bath", "deodorant"]);
+});
+
+test("subcategorias da categoria consideram todos os resultados antes de assunto e paginação", async () => {
+  const rows = Array.from({ length: 25 }, (_, i) => ({ id: String(i), name: "Shampoo sintético", category: "Higiene", activeIngredients: [], searchTerms: [], price: "10", promotionalPrice: null, stock: 1 }));
+  rows.push({ ...rows[0], id: "soap-late", name: "Sabonete sintético" });
+  const { service } = await fixture(rows);
+  const selected = await service.getStorefrontProducts({ categories: ["Higiene"], section: "hair", page: 1 });
+  assert.equal(selected.products.length, 24);
+  assert.deepEqual(Array.from(selected.categorySections ?? []), ["hair", "bath"]);
+});
+
 test("indisponíveis continuam visíveis e página fora do catálogo fica vazia", async () => {
   const { service } = await fixture([{ id: "a", name: "A", stock: 0, price: "1", promotionalPrice: null }, { id: "b", name: "B", stock: 0, price: "2", promotionalPrice: null }]);
   const result = await service.getStorefrontProducts();

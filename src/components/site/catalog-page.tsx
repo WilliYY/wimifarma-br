@@ -12,9 +12,10 @@ import { serializeProductStructuredData } from "@/features/products/product-deta
 import { CatalogShippingProvider } from "./catalog-shipping-preview";
 
 export async function CatalogPage({ title, description, path, page, categoryNames, offers = false, group, sort = "relevantes", brand, section, query }: { title: string; description: string; path: string; page: number; categoryNames?: string[]; offers?: boolean; group?: CatalogGroup; sort?: CatalogSort; brand?: string; section?: string; query?: string }) {
-  const [{ products, count }, categories, availableSections] = await Promise.all([
-    getStorefrontProducts({ page, categories: categoryNames, offers, group, sort, brand, section, query }), getPublicCategories(), getPublicCatalogSections(),
+  const [{ products, count, categorySections }, categories, globalSections] = await Promise.all([
+    getStorefrontProducts({ page, categories: categoryNames, offers, group, sort, brand, section, query }), getPublicCategories(), categoryNames ? Promise.resolve([]) : getPublicCatalogSections(),
   ]);
+  const availableSections = categoryNames ? categorySections ?? [] : globalSections;
   if (page > 1 && products.length === 0) notFound();
   const selectedSection = catalogSections.find(item => item.id === section);
   const topicSearch = Boolean(selectedSection?.topic || (query && productSearchPlan(query).topics.length));

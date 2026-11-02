@@ -6,9 +6,9 @@ import vm from "node:vm";
 import test from "node:test";
 import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
-import { catalogFilters, catalogFiltersPath } from "./catalog-navigation";
+import { catalogCategoryNavigationContext, catalogFilters, catalogFiltersPath } from "./catalog-navigation";
 
-const output = "outputs/catalogo-lateral-simples-2026-10-23";
+const output = "outputs/catalogo-contextual-2026-11-02";
 const base = "http://127.0.0.1:3197";
 const rows = Array.from({ length: 600 }, (_, index) => ({ id: `qa-${index}`, slug: `qa-${index}`, name: `Shampoo sintético ${String(index).padStart(3, "0")} 200ml`, brand: "Marca QA", category: "Higiene", activeIngredients: [], searchTerms: [], imageUrl: null, price: String(index + 1), promotionalPrice: null, stock: 3, requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false, cashbackEnabled: false, catalogClassification: { kind: "HYGIENE" } }));
 const medicine = { ...rows[0], id: "rx", slug: "rx", name: "Metformina sintética 500mg", category: "Medicamentos", activeIngredients: ["cloridrato de metformina"], requiresPrescription: true, prescriptionType: "COMMON", catalogClassification: { kind: "MEDICINE" } };
@@ -21,12 +21,13 @@ test("catálogo responsivo mantém filtros, paginação, teclado e Rx neutro", a
       const contents = args.path === "next/link" ? "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>}"
         : args.path === "next/image" ? "import React from 'react';export default function Image({priority,unoptimized,fill,...props}){return <img {...props}/>}"
         : args.path === "next/navigation" ? "export const useRouter=()=>({push(){}});export const notFound=()=>{throw Error('404')};"
-        : "export const PAGE_SIZE=24;export const getPublicCategories=async()=>[{name:'Higiene',slug:'higiene',names:['Higiene']},{name:'Higiene pessoal',slug:'higiene-pessoal',names:['Higiene pessoal']},{name:'Medicamentos',slug:'medicamentos',names:['Medicamentos']}];export const getPublicCatalogSections=async()=>['hair','diabetes'];export const getStorefrontProducts=async({page,section})=>({count:section==='diabetes'?1:600,products:section==='diabetes'?[fixture.medicine]:fixture.rows.slice((page-1)*24,page*24)});export function catalogPageHref(path,page){const url=new URL(path,'http://fixture');if(page>1)url.searchParams.set('pagina',String(page));else url.searchParams.delete('pagina');return url.pathname+url.search}";
+        : "export const PAGE_SIZE=24;export const getPublicCategories=async()=>[{name:'Higiene',slug:'higiene',names:['Higiene']},{name:'Higiene pessoal',slug:'higiene-pessoal',names:['Higiene pessoal']},{name:'Medicamentos',slug:'medicamentos',names:['Medicamentos']},{name:'Cabelos',slug:'cabelos',names:['Cabelos']}];export const getPublicCatalogSections=async()=>{fixture.sectionCalls++;return ['hair','bath','deodorant','diabetes']};export const getStorefrontProducts=async({page,section,categories})=>({count:section==='diabetes'?1:600,categorySections:categories?.includes('Cabelos')?['hair']:categories?['diabetes']:undefined,products:section==='diabetes'?[fixture.medicine]:fixture.rows.slice((page-1)*24,page*24)});export function catalogPageHref(path,page){const url=new URL(path,'http://fixture');if(page>1)url.searchParams.set('pagina',String(page));else url.searchParams.delete('pagina');return url.pathname+url.search}";
       return { contents, loader: "tsx", resolveDir: process.cwd() };
     });
   } }] });
   const loaded = { exports: {} as { render: (props: unknown) => Promise<string> } };
-  vm.runInNewContext(server.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), fixture: { rows, medicine }, URL, URLSearchParams, process, console });
+  const fixture = { rows, medicine, sectionCalls: 0 };
+  vm.runInNewContext(server.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), fixture, URL, URLSearchParams, process, console });
   const client = await build({ stdin: { contents: "import React from 'react';import {createRoot} from 'react-dom/client';import {CatalogFilterPanel} from './src/components/site/catalog-filter-panel';const aside=document.querySelector('aside');const children=aside.lastElementChild.innerHTML;const host=document.createElement('div');host.style.display='contents';aside.replaceWith(host);createRoot(host).render(<CatalogFilterPanel><div dangerouslySetInnerHTML={{__html:children}}/></CatalogFilterPanel>);", loader: "tsx", resolveDir: process.cwd() }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' } });
   const require = createRequire(import.meta.url);
   const { compile } = require("@tailwindcss/node");
@@ -48,7 +49,16 @@ test("catálogo responsivo mantém filtros, paginação, teclado e Rx neutro", a
         if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: css });
         if (url.pathname.startsWith("/brand/")) return route.fulfill({ body: readFileSync(path.join("public", url.pathname)), contentType: url.pathname.endsWith("svg") ? "image/svg+xml" : "image/webp" });
         const filters = catalogFilters(Object.fromEntries(url.searchParams));
-        const html = await loaded.exports.render({ ...filters, path: catalogFiltersPath("/catalogo", filters), title: filters.section === "diabetes" ? "Diabetes" : "Produtos", description: "Encontre o que você precisa." });
+        const category = url.pathname === "/categorias/medicamentos" ? { name: "Medicamentos", slug: "medicamentos", names: ["Medicamentos"] }
+          : url.pathname === "/categorias/cabelos" ? { name: "Cabelos", slug: "cabelos", names: ["Cabelos"] } : undefined;
+        if (category) {
+          const { activeGroup } = catalogCategoryNavigationContext([category], url.pathname);
+          if (activeGroup !== filters.group) filters.section = undefined;
+          filters.group = undefined;
+        }
+        const sectionCalls = fixture.sectionCalls;
+        const html = await loaded.exports.render({ ...filters, categoryNames: category?.names, path: catalogFiltersPath(category ? url.pathname : "/catalogo", filters), title: filters.section === "diabetes" ? "Diabetes" : "Produtos", description: "Encontre o que você precisa." });
+        if (category) assert.equal(fixture.sectionCalls, sectionCalls, "Categoria exata não consulta assuntos globais");
         return route.fulfill({ contentType: "text/html", body: `<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body>${html}<script src="/fixture.js"></script></body></html>` });
       });
       await page.goto(`${base}/catalogo?marca=Marca+QA&q=shampoo&ordem=preco-desc&pagina=2`);
@@ -67,6 +77,8 @@ test("catálogo responsivo mantém filtros, paginação, teclado e Rx neutro", a
       await beautyToggle.focus();
       await page.keyboard.press("Enter");
       await expect(categories.getByRole("link", { name: "Cabelos", exact: true })).toBeVisible();
+      await expect(categories.getByRole("link", { name: "Banho", exact: true })).toBeVisible();
+      await expect(categories.getByRole("link", { name: "Desodorantes", exact: true })).toBeVisible();
       await expect(categories.getByRole("link", { name: "Ver tudo em Higiene e beleza", exact: true })).toHaveCount(1);
       await categories.locator("summary").filter({ hasText: "Medicamentos" }).click();
       await expect(categories.getByRole("link", { name: "Cabelos", exact: true })).toBeHidden();
@@ -95,6 +107,9 @@ test("catálogo responsivo mantém filtros, paginação, teclado e Rx neutro", a
       if (width <= 390) await page.getByRole("button", { name: "Categorias e filtros" }).click();
       await expect(categories.getByRole("link", { name: "Diabetes", exact: true })).toBeVisible();
       await expect(categories.getByRole("link", { name: "Diabetes", exact: true })).toHaveAttribute("aria-current", "page");
+      await expect(categories.locator("summary")).toHaveCount(1);
+      await expect(categories.getByText("Higiene e beleza", { exact: true })).toHaveCount(0);
+      await expect(categories.getByRole("link", { name: "Catálogo completo", exact: true })).toBeVisible();
       await expect(categories.locator("details[open]")).toHaveCount(1);
       await expect(page.locator("[data-prescription-search]")).toHaveCount(1);
       const neutralCard = page.locator("article").filter({ has: page.locator("[data-prescription-search]") });
@@ -104,6 +119,20 @@ test("catálogo responsivo mantém filtros, paginação, teclado e Rx neutro", a
       await expect(neutralCard.locator("svg, button, [role=img]")).toHaveCount(0);
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
       await page.screenshot({ path: `${output}/diabetes-${width}.png`, fullPage: true });
+      await page.goto(`${base}/categorias/medicamentos?assunto=diabetes&marca=Marca+QA&q=metformina&ordem=preco-desc`);
+      if (width <= 390) await page.getByRole("button", { name: "Categorias e filtros" }).click();
+      await expect(categories.locator("summary")).toHaveCount(1);
+      await expect(categories.getByRole("link", { name: "Diabetes", exact: true })).toHaveAttribute("aria-current", "page");
+      await expect(categories.getByRole("link", { name: "Diabetes", exact: true })).toHaveAttribute("href", "/categorias/medicamentos?assunto=diabetes&marca=Marca+QA&q=metformina&ordem=preco-desc");
+      await expect(categories.getByRole("link", { name: "Ver tudo em Medicamentos", exact: true })).toHaveAttribute("href", "/categorias/medicamentos?marca=Marca+QA&q=metformina&ordem=preco-desc");
+      await expect(categories.getByRole("link", { name: "Catálogo completo", exact: true })).toHaveAttribute("href", "/catalogo?marca=Marca+QA&q=metformina&ordem=preco-desc");
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+      await page.goto(`${base}/categorias/cabelos?marca=Marca+QA&q=shampoo&ordem=preco-desc`);
+      if (width <= 390) await page.getByRole("button", { name: "Categorias e filtros" }).click();
+      await expect(categories.getByRole("link", { name: "Cabelos", exact: true })).toBeVisible();
+      await expect(categories.getByRole("link", { name: "Banho", exact: true })).toHaveCount(0);
+      await expect(categories.getByRole("link", { name: "Desodorantes", exact: true })).toHaveCount(0);
+      await expect(categories.getByRole("link", { name: "Cabelos", exact: true })).toHaveAttribute("href", "/categorias/cabelos?marca=Marca+QA&q=shampoo&ordem=preco-desc&assunto=hair");
       assert.deepEqual(errors, []);
       await page.close();
     }

@@ -118,6 +118,21 @@ export function catalogCategoryGroups(categories: readonly { name: string; slug:
   return { groups, others: categories.filter(category => !assigned.has(category.slug)) };
 }
 
+/** Keep the current category exact; the group only determines its editorial subsections. */
+export function catalogCategoryNavigationContext(categories: Parameters<typeof catalogCategoryGroups>[0], path: string, group?: CatalogGroup) {
+  const navigation = catalogCategoryGroups(categories);
+  const selectedCategory = categories.find(category => path.split("?")[0] === `/categorias/${category.slug}`);
+  const activeGroup = selectedCategory
+    ? navigation.groups.find(item => item.categories.some(category => category.slug === selectedCategory.slug))?.id
+    : group;
+  const contextual = Boolean(selectedCategory || activeGroup);
+  return {
+    contextual, selectedCategory, activeGroup,
+    groups: contextual ? navigation.groups.filter(item => item.id === activeGroup) : navigation.groups,
+    others: selectedCategory ? navigation.others.filter(category => category.slug === selectedCategory.slug) : contextual ? [] : navigation.others,
+  };
+}
+
 export function sortCatalogProducts<T extends { id: string; name: string; stock: number; price: string; promotionalPrice: string | null }>(products: T[], sort: CatalogSort = "relevantes") {
   return products.slice().sort((a, b) => {
     const availability = Number(b.stock > 0) - Number(a.stock > 0);
