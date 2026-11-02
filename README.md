@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Consulta de frete também nas vitrines da home e nos produtos relacionados, com o mesmo diálogo por CEP e bloqueios comerciais: [140](docs/140-frete-nas-vitrines-e-relacionados.md).
+
 Busca por Wimifarma sem correspondência no texto institucional, flexões de haste flexível, frete condicionado à disponibilidade, banner de higiene, filtros de ofertas e apresentações conferidas: [139](docs/139-busca-disponibilidade-e-apresentacao.md).
 
 Política atual do Club: inscrição gratuita automática no cadastro, WimiCoins selecionados e cashback de compra de 1% por seleção manual; correções de catálogo, carrinho e pós-venda: [138](docs/138-fidelidade-catalogo-e-reconferencia.md).

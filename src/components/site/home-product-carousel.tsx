@@ -214,7 +214,7 @@ export function HomeProductCarousel({
               key={product.id}
               role="group"
             >
-              <PublicProductCard product={product} />
+              <PublicProductCard product={product} showShippingEstimate />
             </div>
           ))}
         </div>

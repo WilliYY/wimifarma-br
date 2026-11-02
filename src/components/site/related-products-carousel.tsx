@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CatalogShippingProvider } from "@/components/site/catalog-shipping-preview";
 import {
   PublicProductCard,
   type RelatedProductCardItem,
@@ -128,6 +129,7 @@ export function RelatedProductsCarousel({
   }
 
   return (
+    <CatalogShippingProvider>
     <div className="mt-5">
       <div className="mb-3 flex justify-end gap-2">
         <button
@@ -188,10 +190,11 @@ export function RelatedProductsCarousel({
             key={product.id}
             role="group"
           >
-            <PublicProductCard product={product} />
+            <PublicProductCard product={product} showShippingEstimate />
           </div>
         ))}
       </div>
     </div>
+    </CatalogShippingProvider>
   );
 }

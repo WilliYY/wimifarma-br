@@ -89,6 +89,31 @@ function carousel(page: Page) {
   return page.getByRole("region", { name: "Produtos correlatos", exact: true });
 }
 
+test("correlato abre frete sem navegar ou alterar carrinho e consulta somente após enviar CEP", async () => {
+  await fixture(async page => {
+    const requests: unknown[] = [];
+    await page.route("**/api/fretes/estimativa", route => {
+      requests.push(route.request().postDataJSON());
+      return route.fulfill({ json: { data: { mode: "available", options: [{ provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC", priceCents: 1875, deliveryDays: 4 }] } } });
+    });
+    const cartBefore = await page.evaluate(() => localStorage.getItem("wimifarma-cart-v1"));
+    const opener = page.getByRole("article").first().getByRole("button", { name: "Ver frete de Correlato sintético 0", exact: true });
+    await expect(opener).toHaveCount(1);
+    await opener.click();
+    await expect(page.getByRole("dialog", { name: "Frete e prazo" })).toHaveCount(1);
+    await page.getByRole("textbox", { name: "CEP", exact: true }).fill("80010-000");
+    assert.equal(requests.length, 0);
+    await page.getByRole("button", { name: "Consultar", exact: true }).click();
+    await expect.poll(() => requests.length).toBe(1);
+    assert.deepEqual(requests[0], { postalCode: "80010000", productId: "synthetic-related-0", quantity: 1 });
+    await expect(page.getByRole("status")).toContainText("PAC");
+    await page.getByRole("button", { name: "Fechar", exact: true }).click();
+    await expect(opener).toBeFocused();
+    assert.deepEqual(await navigations(page), []);
+    assert.equal(await page.evaluate(() => localStorage.getItem("wimifarma-cart-v1")), cartBefore);
+  });
+});
+
 function scrollLeft(page: Page) {
   return carousel(page).evaluate(element => element.scrollLeft);
 }

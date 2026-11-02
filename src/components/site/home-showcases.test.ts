@@ -20,6 +20,7 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
     "@/components/site/hero-product-stage": "export const HeroProductStage=()=>null;",
     "./home-campaign.module.css": "export default {};",
     "./home-shortcuts.module.css": "export default {};",
+    "./customer-reviews.module.css": "export default {};",
   };
   const bundle = await build({ stdin: { contents: `import React from 'react';
     import {createRoot} from 'react-dom/client';
@@ -106,6 +107,33 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
         }
       }
     }
+    const requests: unknown[] = [];
+    await page.route("**/api/fretes/estimativa", route => {
+      requests.push(route.request().postDataJSON());
+      return route.fulfill({ json: { data: { mode: "available", options: [{ provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC", priceCents: 1875, deliveryDays: 4 }] } } });
+    });
+    const cartBefore = await page.evaluate(() => localStorage.getItem("wimifarma-cart-v1"));
+    for (const id of ["home-care", "home-otc", "home-affordable"]) {
+      const card = page.locator(`#${id} article`).first();
+      const productId = (await card.getByRole("link").getAttribute("href"))!.split("/").at(-1);
+      const opener = card.getByRole("button", { name: /^Ver frete de / });
+      await expect(opener).toHaveCount(1);
+      await opener.click();
+      await expect(page.getByRole("dialog", { name: "Frete e prazo" })).toHaveCount(1);
+      const cep = page.getByRole("textbox", { name: "CEP", exact: true });
+      await expect(cep).toHaveValue(id === "home-care" ? "" : "80010-000");
+      await cep.fill("80010-000");
+      assert.equal(requests.length, 0, "abrir ou preencher o diálogo não consulta a API");
+      if (id === "home-affordable") {
+        await page.getByRole("button", { name: "Consultar", exact: true }).click();
+        await expect.poll(() => requests.length).toBe(1);
+        assert.deepEqual(requests[0], { postalCode: "80010000", productId, quantity: 1 });
+        await expect(page.getByRole("status")).toContainText("PAC");
+      }
+      await page.getByRole("button", { name: "Fechar", exact: true }).click();
+      await expect(opener).toBeFocused();
+    }
+    assert.equal(await page.evaluate(() => localStorage.getItem("wimifarma-cart-v1")), cartBefore);
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();

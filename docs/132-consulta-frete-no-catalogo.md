@@ -1,5 +1,7 @@
 # 132 — Consulta de frete durante a pesquisa
 
+Ampliação de 02/11: a consulta também passa a cobrir as vitrines da home e os produtos relacionados, preservando API e elegibilidade. Contrato e verificação em [140](140-frete-nas-vitrines-e-relacionados.md).
+
 ## Comportamento — 01/11/2026
 
 Catálogo, ofertas e página de busca passam a oferecer **Ver frete** nos cartões comerciais. A ação abre uma janela compartilhada, sem navegar ao detalhe, adicionar ao carrinho ou alterar estoque. A simulação considera exatamente uma unidade do produto escolhido e reutiliza `DeliveryEstimator` e `/api/fretes/cotacao`.

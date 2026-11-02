@@ -88,7 +88,7 @@ test("mouse arrasta inclusive sobre CTA sem navegação acidental; clique e tecl
     await campaign.focus(); await page.keyboard.press("ArrowRight");
     await expect(campaign.getByRole("heading", { name: "Seu cuidado, todo dia." })).toBeVisible();
     await campaign.getByRole("link", { name: /Ver produtos/ }).click();
-    assert.deepEqual(await page.evaluate(() => (window as unknown as { clicked: string[] }).clicked), ["/catalogo"]);
+    assert.deepEqual(await page.evaluate(() => (window as unknown as { clicked: string[] }).clicked), ["/catalogo?grupo=beauty"]);
     await cta.focus(); await page.keyboard.press("ArrowRight");
     await expect(campaign).toBeFocused();
     await expect(campaign.getByRole("link", { name: /Ver perfumaria/ })).toBeVisible();

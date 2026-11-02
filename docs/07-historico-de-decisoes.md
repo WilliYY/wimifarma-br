@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-02 — Frete na home e nos relacionados
+
+- Conferência encontrou consulta no catálogo/busca/ficha, mas ausência nos cartões da home e de produtos relacionados. Essas superfícies passam a reutilizar o diálogo existente, com um provider compartilhado entre vitrines na home e outro nos relacionados. Nenhuma API, regra comercial ou aprovação logística foi alterada. Amostra de quatro famílias retornou tarifas nacionais reais; ruptura manteve a recusa. Contrato, evidências e estado de publicação em [140](140-frete-nas-vitrines-e-relacionados.md).
+
 ## 2026-11-02 — Busca por identidade, disponibilidade e apresentação
 
 - `Wimifarma` deixa de encontrar produtos apenas pela frase institucional da descrição; haste(s) flexível(eis) recebe equivalência explícita em memória e SQL. O simulador valida disponibilidade efetiva antes de entrega local ou transportadora. Banner de higiene, grupo Beleza e navegação de ofertas passam a respeitar a seleção correspondente, sem criar campanhas ou mudar preços/estoque.

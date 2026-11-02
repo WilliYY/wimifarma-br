@@ -7,6 +7,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { HomeProductCarousel } from "@/components/site/home-product-carousel";
+import { CatalogShippingProvider } from "@/components/site/catalog-shipping-preview";
 import { HeroProductStage } from "@/components/site/hero-product-stage";
 import { ClubBanner } from "@/components/site/club-banner";
 import { PixDiscountBanner } from "@/components/site/pix-discount-banner";
@@ -250,7 +251,7 @@ export function HomePage({
   shortcuts: HomeShortcutItem[];
 }) {
   return (
-    <>
+    <CatalogShippingProvider>
       <section className="pharma-clouds bg-white pb-5 pt-36 sm:pt-40 lg:pt-56">
         <h1 className="sr-only">Wimifarma</h1>
         <HomeShortcuts items={shortcuts} />
@@ -275,6 +276,6 @@ export function HomePage({
 
       <CustomerReviews reviews={customerReviews} />
 
-    </>
+    </CatalogShippingProvider>
   );
 }
