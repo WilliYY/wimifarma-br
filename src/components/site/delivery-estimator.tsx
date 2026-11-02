@@ -16,6 +16,8 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { formatCurrency } from "@/lib/utils";
 import { useCart, type CartProduct } from "./cart-provider";
 import { ProductQuantityContext } from "./product-quantity";
+import { RestockButton } from "./restock-button";
+import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 
 type DeliveryEstimate = PublicEstimateState & { key: string; title: string; local: boolean; invalid: boolean };
 
@@ -41,7 +43,7 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
   const normalizedPostalCode = postalCode.replace(/\D/g, "");
   const request = { postalCode: normalizedPostalCode, items: items.map(item => ({ productId: item.id, quantity: item.quantity, expectedUnitPriceCents: item.unitPriceCents })) };
   const estimateRequest = product ? { productId: product.id, quantity: selectedQuantity, postalCode: normalizedPostalCode } : null;
-  const requestKey = JSON.stringify(product ? estimateRequest : request);
+  const requestKey = JSON.stringify(product ? { ...estimateRequest, stock: product.stock } : request);
   const result = estimate?.key === requestKey ? estimate : null;
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -60,21 +62,30 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
     };
     if (normalizedPostalCode.length !== 8) {
       showMessage(availability.title, "Informe um CEP com 8 números.", false, true);
-    } else if (availability.available) {
-      showMessage(availability.title, "Entrega local grátis. Informe o endereço completo no checkout; a equipe confirma o atendimento.", true);
     } else if (!items.length) {
       showMessage("Escolha os produtos para calcular o frete", "Adicione os produtos ao carrinho e consulte novamente. O valor depende dos itens, da quantidade e do CEP.");
     } else if (items.some(requiresPharmacyShippingSupport)) {
       showMessage("Entrega com atendimento da farmácia", "Um dos itens precisa de atendimento da farmácia para confirmar o envio. Consulte a equipe ou escolha retirada.");
+    } else if (availability.available && !product) {
+      showMessage(availability.title, "Entrega local grátis. Informe o endereço completo no checkout; a equipe confirma o atendimento.", true);
     } else {
       const onState = (next: PublicEstimateState) => setEstimate({
-        ...next, key: requestKey, local: false, invalid: false,
-        title: next.busy ? "Consultando o frete" : next.options.length ? next.mode === "estimate" ? "Estimativa de frete" : "Opções de entrega" : "Confira as condições de entrega",
+        ...next, key: requestKey, local: next.mode === "local", invalid: false,
+        ...(next.mode === "local" ? { message: "Entrega local grátis. Informe o endereço completo no checkout; a equipe confirma o atendimento." } : {}),
+        title: next.mode === "local" ? availability.title : next.busy ? "Consultando o frete" : next.options.length ? next.mode === "estimate" ? "Estimativa de frete" : "Opções de entrega" : "Confira as condições de entrega",
       });
       if (estimateRequest) estimateRunner.schedule(estimateRequest, onState, 0);
       else quoteRunner.schedule(request, onState, 0);
     }
   }
+
+  if (product && (product.stock < selectedQuantity || result?.unavailable)) return (
+    <section aria-labelledby={titleId} className={compact ? "min-w-0" : "rounded-2xl border border-line bg-white p-4 sm:rounded-3xl sm:p-6"}>
+      <h2 className="text-sm font-bold text-ink" id={titleId}>Indisponível no momento</h2>
+      <p className="mt-2 text-sm leading-6 text-muted" role="status">{result?.message || "Este produto está sem disponibilidade para entrega ou retirada."}</p>
+      <div className="mt-3">{requiresPurchaseAssistance(product) ? <a className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand underline" href={buildWhatsAppUrl(`Ola, gostaria de consultar ${product.name}.`)} rel="noreferrer" target="_blank"><MessageCircle aria-hidden="true" className="h-4 w-4" />Consultar no WhatsApp</a> : <RestockButton product={product} compact={compact} />}</div>
+    </section>
+  );
 
   return (
     <section aria-labelledby={titleId} className={compact ? "min-w-0" : "rounded-2xl border border-line bg-white p-4 sm:rounded-3xl sm:p-6"}>

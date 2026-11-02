@@ -1,4 +1,6 @@
-/** Compact presentation only. Keep the registered name for identity, search and orders. */
+import { verifiedMedicinePresentation } from "./medicine-presentation";
+
+/** Compact presentation only. Keep the registered name for identity and orders. */
 export function productTitleBrand(name: string, brand?: string | null) {
   let label = brand?.trim().replace(/\s+/g, " ");
   if (!label) return null;
@@ -21,7 +23,8 @@ export function productTitleBrand(name: string, brand?: string | null) {
   return !key || ` ${normalize(name)} `.includes(` ${key} `) ? null : label;
 }
 
-export function productDisplayName(name: string) {
+export function productDisplayName(name: string, activeIngredients?: readonly string[]) {
+  if (verifiedMedicinePresentation({ name, activeIngredients })?.inhalation && !/p[oó] para inala[cç][aã]o/iu.test(name)) return `${name} · pó para inalação`;
   const match = /^(?:(Aradois|Corus)\s+)?Losartana(?:\s+Pot[aá]ssica)?\s+(\d+(?:[.,]\d+)?)\s*mg\s+(?:c\/\s*)?(\d+)\s+comprimidos?(?:\s+revestidos?)?(?:\s+(Biosint[eé]tica|Germed|Medley|Nova Qu[ií]mica|EMS|Geolab|Sandoz|Teuto))?$/iu.exec(name.trim());
   if (!match) return name;
   const [, reference, dose, quantity, brand] = match;

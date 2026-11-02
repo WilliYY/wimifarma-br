@@ -38,6 +38,7 @@ import {
 import { getPrisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
+import { productIngredientLabel } from "@/features/products/medicine-presentation";
 import { buildPublicProductDescription } from "@/features/products/product-description";
 import { productCareInformation, productPackagePresentation } from "@/features/products/product-presentation";
 import { productKitPricing } from "@/features/products/kit-pricing";
@@ -139,6 +140,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   });
   if (!record) notFound();
   const product = toSaleProduct(record);
+  const displayName = productDisplayName(product.name, product.activeIngredients);
   const description = buildPublicProductDescription(product);
   const care = productCareInformation(product);
   const packagePresentation = productPackagePresentation(product);
@@ -201,7 +203,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     imageUrl: product.imageUrl,
     catalogClassification: product.catalogClassification,
     isPopularPharmacy: product.isPopularPharmacy,
-    name: product.name,
+    name: displayName,
     originalPriceCents: hasPromotion ? Math.round(normalPrice * 100) : null,
     requiresPrescription: product.requiresPrescription,
     prescriptionType: product.prescriptionType,
@@ -227,7 +229,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
               </>
             ) : null}
-            <span aria-current="page" className="truncate text-ink">{productDisplayName(product.name)}</span>
+            <span aria-current="page" className="truncate text-ink">{displayName}</span>
           </nav>
 
           <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-start lg:gap-10">
@@ -243,7 +245,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   <ProductShareButton key={product.id} name={product.name} />
                 </div>
 
-                <h1 className="mt-3 break-words text-2xl font-bold leading-[1.15] tracking-tight text-ink sm:mt-4 sm:text-3xl lg:text-[2.15rem]">{productDisplayName(product.name)}</h1>
+                <h1 className="mt-3 break-words text-2xl font-bold leading-[1.15] tracking-tight text-ink sm:mt-4 sm:text-3xl lg:text-[2.15rem]">{displayName}</h1>
                 <p className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted"><BadgeCheck className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />Vendido e atendido por <strong className="font-bold text-ink">Wimifarma</strong></p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {product.category ? <span className="rounded-full bg-surface-subtle px-3 py-1.5 text-xs font-semibold text-muted">{product.category}</span> : null}
@@ -325,7 +327,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <details className="group py-5">
                   <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-base font-bold text-ink focus-visible:outline-brand">{care.medicine ? "Princípios ativos e identificação" : "Identificação do produto"}<ChevronRight className="h-5 w-5 text-brand transition-transform group-open:rotate-90 motion-reduce:transition-none" aria-hidden="true" /></summary>
                   <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
-                    {care.medicine ? <div><dt className="font-bold text-muted">Princípios ativos</dt><dd className="mt-1 font-black text-ink">{product.activeIngredients.join(", ") || "Não informado"}</dd></div> : null}
+                    {care.medicine ? <div><dt className="font-bold text-muted">Princípios ativos e concentrações</dt><dd className="mt-1 font-black text-ink">{productIngredientLabel(product) || "Não informado"}</dd></div> : null}
                     <div><dt className="font-bold text-muted">Marca</dt><dd className="mt-1 font-black text-ink">{product.brand ?? "Nao informada"}</dd></div>
                     <div><dt className="font-bold text-muted">Categoria</dt><dd className="mt-1 font-black text-ink">{product.category ?? "Nao informada"}</dd></div>
                     <div><dt className="font-bold text-muted">SKU</dt><dd className="mt-1 font-black text-ink">{product.sku ?? "Nao informado"}</dd></div>

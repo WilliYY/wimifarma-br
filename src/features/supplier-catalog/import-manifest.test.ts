@@ -21,6 +21,48 @@ const mixed = () => ({ manifestVersion: 1, products: [{ ...row, supplierMarkupBp
   catalogClassification: { kind: "MEDICINE", medicineClass: "GENERIC", ethical: false, otc: false },
   evidence: { identity: { ...evidence }, classification: { ...evidence } } }] });
 
+test("associações exigem pares explícitos e conferidos, sem associar doses pela ordem", () => {
+  const base = mixed();
+  const busco = { ...base.products[0], name: "Buscoduo 10 mg + 500 mg 20 comprimidos revestidos", activeIngredients: ["PARACETAMOL", "BUTILBROMETO DE ESCOPOLAMINA"] };
+  for (const description of [row.description, "Paracetamol 10 mg + Butilbrometo de escopolamina 500 mg. " + row.description,
+    "Paracetamol 500 mg + Butilbrometo de escopolamina 10 mg. Paracetamol 10 mg. " + row.description]) {
+    assert.equal(supplierImportManifestSchema.safeParse({ ...base, products: [{ ...busco, description }] }).success, false);
+  }
+  assert.equal(supplierImportManifestSchema.safeParse({ ...base, products: [{ ...busco, description: "Paracetamol 500 mg + Butilbrometo de escopolamina 10 mg. " + row.description }] }).success, true);
+  const unknown = { ...busco, name: "Associação sintética 10 mg + 500 mg 20 comprimidos", activeIngredients: ["Sintético A", "Sintético B"] };
+  assert.equal(supplierImportManifestSchema.safeParse({ ...base, products: [unknown] }).success, false);
+  assert.equal(supplierImportManifestSchema.safeParse({ ...base, products: [{ ...unknown, description: "Sintético A 10 mg + Sintético B 500 mg. " + row.description }] }).success, false);
+  assert.equal(supplierImportManifestSchema.safeParse({ ...base, products: [{ ...unknown, name: "Sintético A 10 mg + Sintético B 500 mg 20 comprimidos" }] }).success, true);
+});
+
+test("manifestos Rx e OTC recusam associação com ingredientes vazios, agrupados ou título sem pares", () => {
+  for (const otc of [false, true]) {
+    const base = mixed();
+    const medicine = { ...base.products[0], name: "Associação sintética 450 mg + 50 mg 12 comprimidos", requiresPrescription: !otc, prescriptionType: otc ? "NONE" : "ORDINARY", catalogClassification: { kind: "MEDICINE", medicineClass: "OTHER", ethical: false, otc }, description: "Paracetamol 450 mg + Cafeína 50 mg. " + row.description };
+    for (const activeIngredients of [[], ["PARACETAMOL + CAFEÍNA"], ["PARACETAMOL"], ["PARACETAMOL", "CAFEÍNA"]]) {
+      assert.equal(supplierImportManifestSchema.safeParse({ ...base, products: [{ ...medicine, activeIngredients }] }).success, false);
+      for (const strength of ["450 + 50 mg", "450/50 mg", "450mg+50", "450 + 50 + 35 mg"]) {
+        assert.equal(supplierImportManifestSchema.safeParse({ ...base, products: [{ ...medicine, name: `Associação sintética ${strength} 20 comprimidos`, activeIngredients }] }).success, false, strength);
+      }
+    }
+    for (const name of ["Associação sintética 450 mg 20 comprimidos", "Associação sintética 20 comprimidos"]) {
+      assert.equal(supplierImportManifestSchema.safeParse({ ...base, products: [{ ...medicine, name, activeIngredients: ["PARACETAMOL", "CAFEÍNA"] }] }).success, false, name);
+    }
+    assert.equal(supplierImportManifestSchema.safeParse({ ...base, products: [{ ...medicine, name: "Paracetamol 450 mg + Cafeína 50 mg 12 comprimidos", activeIngredients: ["CAFEÍNA", "PARACETAMOL"] }] }).success, true);
+    for (const name of ["Suspensão 125 mg/5 mL frasco 60 mL", "Creme 10 mg/g bisnaga 30 g", "Suspensão 125 mg/5 mL frasco 60 g"]) {
+      assert.equal(supplierImportManifestSchema.safeParse({ ...base, products: [{ ...medicine, name, activeIngredients: ["Sintético"] }] }).success, true, name);
+    }
+  }
+});
+
+test("importação do Alenia exige nome inalatório e não inventa acessório", () => {
+  const base = mixed();
+  const alenia = { ...base.products[0], name: "Alenia 6 mcg + 200 mcg 60 cápsulas dura", activeIngredients: ["BUDESONIDA", "FUMARATO DE FORMOTEROL DIIDRATADO"], description: "Budesonida 200 mcg + Fumarato de formoterol di-hidratado 6 mcg. " + row.description };
+  assert.equal(supplierImportManifestSchema.safeParse({ ...base, products: [alenia] }).success, false);
+  const result = supplierImportManifestSchema.parse({ ...base, products: [{ ...alenia, name: `${alenia.name} · pó para inalação` }] });
+  assert.doesNotMatch(result.products[0].name, /inalador|refil/i);
+});
+
 test("manifest preserves numeric ST and missing ST remains an explicit pending observation", () => {
   for (const substitutionTaxCents of [null, 0, 95]) {
     const input = mixed();

@@ -5,6 +5,35 @@ import test from "node:test";
 import { build } from "esbuild";
 import { Prisma } from "@/generated/prisma/client";
 
+test("alias inalatório exige Alenia 6/200, par de ingredientes e CMED sem remover os demais filtros", async () => {
+  const queries: Prisma.Sql[] = [];
+  const service = await fixture({ $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return []; }, product: { findMany: async () => [] } });
+  await service.getSearchCatalog("Alenia inalação 6/200 refil", { relatedLimit: 0 });
+  const sql = queries[0];
+  assert.match(sql.text, /cmedReference"->>'presentation'/);
+  assert.match(sql.text, /cardinality\(p\."activeIngredients"\) = 2/);
+  assert.ok(sql.values.includes("alenia 6 mcg 200 mcg 60 capsulas dura"));
+  assert.ok(sql.values.includes("(^| )refil"));
+  assert.ok(sql.values.includes("(^| )6[a-z]*($| )"));
+  assert.ok(sql.values.includes("(^| )200[a-z]*($| )"));
+  await service.getSearchCatalog("budesonida inalação", { relatedLimit: 0 });
+  assert.ok(!queries[1].text.includes("cmedReference"), "princípio ativo isolado não ganha alias de apresentação");
+});
+
+test("Wimifarma exige identidade estruturada e flexões editoriais usam os mesmos filtros SQL", async () => {
+  const queries: Prisma.Sql[] = [];
+  const service = await fixture({ $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return []; }, product: { findMany: async () => [] } });
+  await service.getSearchCatalog("wimifarma", { relatedLimit: 0 });
+  assert.match(queries[0].text, /concat_ws\([\s\S]*p\."name"[\s\S]*p\."brand"[\s\S]*p\."searchTerms"/);
+  assert.doesNotMatch(queries[0].text, /p\."description"/);
+  await service.getSearchCatalog("haste flexível", { relatedLimit: 0 });
+  await service.getSearchCatalog("hastes flexíveis", { relatedLimit: 0 });
+  for (const sql of queries.slice(1)) {
+    assert.ok(sql.values.includes("(^| )(haste|hastes)($| )"));
+    assert.ok(sql.values.includes("(^| )(flexivel|flexiveis)($| )"));
+  }
+});
+
 const product = (id: string, extra = {}) => ({
   id, name: `Losartana 50mg ${id}`, slug: id, stock: 3, price: "10.00", promotionalPrice: null,
   activeIngredients: ["losartana potássica"], inventorySource: "PHARMACY", imageUrl: "/public.webp",

@@ -152,4 +152,8 @@ test("route reads only active non-deleted public products and sanitizes database
   const countBeforeLimit = queries.length;
   assert.equal((await loaded.exports.POST(request({ productIds: [product.id] }, { "x-real-ip": "synthetic-rate-limit" }))).status, 429);
   assert.equal(queries.length, countBeforeLimit);
+  Object.assign(product, { name: "Alenia 6 mcg + 200 mcg 60 cápsulas dura", activeIngredients: ["BUDESONIDA", "FUMARATO DE FORMOTEROL DIIDRATADO"] });
+  const inhalation = await loaded.exports.POST(request({ productIds: [product.id] }));
+  assert.equal((await inhalation.json()).data.products[0].name, "Alenia 6 mcg + 200 mcg 60 cápsulas dura · pó para inalação");
+  assert.equal((queries.at(-1)!.select as Record<string, unknown>).activeIngredients, true);
 });

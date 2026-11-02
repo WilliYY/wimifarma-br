@@ -57,3 +57,12 @@ test("não simplifica associações, liberação especial ou produtos fora do fo
     assert.equal(productDisplayName(name), name);
   }
 });
+
+test("Alenia conferido explicita a via inalatória sem afirmar inalador ou refil", () => {
+  const name = "Alenia 6 mcg + 200 mcg 60 cápsulas dura";
+  const ingredients = ["BUDESONIDA", "FUMARATO DE FORMOTEROL DIIDRATADO"];
+  assert.equal(productDisplayName(name, ingredients), `${name} · pó para inalação`);
+  assert.equal(productDisplayName(productDisplayName(name, ingredients), ingredients), `${name} · pó para inalação`);
+  assert.equal(productDisplayName(name), name);
+  assert.equal(productDisplayName(name, ["OUTRO", "BUDESONIDA"]), name);
+});

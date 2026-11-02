@@ -1,6 +1,43 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+test("Alenia inalação recupera somente a apresentação CMED conferida sem remover doses ou outros termos", () => {
+  const verified = {
+    id: "verified", name: "Alenia 6 mcg + 200 mcg 60 cápsulas dura",
+    activeIngredients: ["BUDESONIDA", "FUMARATO DE FORMOTEROL DIIDRATADO"],
+    cmedReference: { presentation: "6 MCG + 200 MCG CAP DURA PO INAL CT FR PLAS OPC X 60" },
+    searchText: "alenia 6 mcg 200 mcg 60 capsulas dura budesonida fumarato de formoterol diidratado",
+  };
+  const products = [verified, { ...verified, id: "wrong-pair", activeIngredients: ["BUDESONIDA"] },
+    { ...verified, id: "wrong-cmed", cmedReference: { presentation: "OUTRA APRESENTACAO" } }];
+  assert.deepEqual(rankProductsForQuery(products, "Alenia inalação").map(p => p.id), ["verified"]);
+  assert.deepEqual(rankProductsForQuery([verified], "Alenia 6/200").map(p => p.id), ["verified"]);
+  for (const query of ["Alenia inalação 12/400", "Alenia inalação refil", "Alenia inalação inalador", "Alenia inalação xarope"]) {
+    assert.deepEqual(rankProductsForQuery([verified], query), [], query);
+  }
+});
+
+test("marca da loja no texto livre não torna losartana um resultado de Wimifarma", () => {
+  const products = [
+    { id: "irrelevant", name: "Losartana 50mg", brand: "Geolab", searchTerms: [], description: "Disponível na Wimifarma", searchText: "losartana 50mg geolab disponivel na wimifarma" },
+    { id: "brand", name: "Produto próprio", brand: "Wimifarma", searchText: "produto proprio wimifarma" },
+    { id: "term", name: "Produto institucional", searchTerms: ["Wimifarma"], searchText: "produto institucional wimifarma" },
+  ];
+  for (const query of ["wimi", "wimifarm", "wimifarma"]) {
+    assert.deepEqual(new Set(rankProductsForQuery(products, query).map(p => p.id)), new Set(["brand", "term"]), query);
+  }
+  assert.deepEqual(rankProductsForQuery(products, "losartana 50mg").map(p => p.id), ["irrelevant"]);
+});
+
+test("haste flexível e hastes flexíveis recuperam as mesmas apresentações sem correção ortográfica", () => {
+  const products = ["Hastes Flexíveis Cotonetes 75 unidades", "Hastes Flexíveis Topz 75 unidades", "Haste Flexível Cotonetes 150 unidades", "Losartana 50mg"]
+    .map((name, id) => ({ id: String(id), name, searchText: normalizeProductSearch(name) }));
+  for (const query of ["haste flexível", "hastes flexíveis", "hastes flexível", "haste flexíveis"]) {
+    assert.deepEqual(new Set(rankProductsForQuery(products, query).map(p => p.id)), new Set(["0", "1", "2"]), query);
+  }
+  assert.deepEqual(productSearchPlan("haste flexível").patterns, productSearchPlan("hastes flexíveis").patterns);
+});
+
 test("Extra G e ExtraG são XG, separados de G, sem sobrar extra na consulta", () => {
   const products = ["Fralda Bigfral Extra G 10un", "Fralda Bigfral G 10un", "Fralda Bigfral ExtraG 10un", "Fralda Bigfral XG 10un"].map((name, id) => ({ id: String(id), name, searchText: normalizeProductSearch(name) }));
   assert.equal(rankProductsForQuery(products, "fralda G")[0].id, "1");

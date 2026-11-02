@@ -105,19 +105,20 @@ test("CEP nacional consulta frete do produto e quantidade atuais, sem misturar o
   });
 });
 
-test("CEP inválido e entrega local não consultam transportadoras", async () => {
+test("CEP inválido não consulta e entrega local reconfere disponibilidade no servidor", async () => {
   await fixture(async page => {
     let requests = 0;
-    await page.route("**/api/fretes/{cotacao,estimativa}", route => { requests++; return route.fulfill({ json: quotePayload(route, [quote]) }); });
+    await page.route("**/api/fretes/{cotacao,estimativa}", route => { requests++; return route.fulfill({ json: { data: { mode: "local", options: [] } } }); });
     await page.goto(origin);
     await consult(page, "12345");
     await expect(page.getByRole("status")).toContainText(/CEP/i);
+    assert.equal(requests, 0);
     for (const [postalCode, city] of [["87525-000", "Ivaté"], ["87485-000", "Douradina"]]) {
       await consult(page, postalCode);
       await expect(page.getByRole("status")).toContainText(city);
       await expect(page.getByRole("status")).toContainText(/grátis|gratuita/i);
     }
-    assert.equal(requests, 0);
+    assert.equal(requests, 2);
   });
 });
 

@@ -249,3 +249,36 @@ test("indisponíveis continuam visíveis e página fora do catálogo fica vazia"
   assert.deepEqual(result.products.map(product => product.id), ["a", "b"]);
   assert.equal((await service.getStorefrontProducts({ page: 2 })).products.length, 0);
 });
+
+test("filtros de ofertas refletem a seleção disponível e atalhos abrem o catálogo da categoria", async () => {
+  const base = { activeIngredients: [], searchTerms: [], price: "20", promotionalPrice: "15", stock: 2, requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false, catalogClassification: { kind: "HYGIENE" } };
+  const { service } = await fixture([
+    { ...base, id: "soap", name: "Sabonete sintético", category: "Higiene" },
+    { ...base, id: "adult", name: "Fralda adulta sintética", category: "Fraldas adultas", promotionalPrice: null },
+    { ...base, id: "baby", name: "Fralda infantil sintética", category: "Infantil", promotionalPrice: null },
+    { ...base, id: "gone", name: "Shampoo sintético", category: "Cabelos", stock: 0 },
+    { ...base, id: "rx", name: "Medicamento sintético", category: "Medicamentos", requiresPrescription: true, prescriptionType: "ORDINARY", catalogClassification: { kind: "MEDICINE" } },
+  ]);
+  const result = await service.getStorefrontProducts({ offers: true });
+  assert.deepEqual(result.products.map(product => product.id), ["soap"]);
+  const navigation = (result as unknown as { offerNavigation: { categories: { name: string }[]; sections: string[]; browseLinks: { label: string; href: string }[] } }).offerNavigation;
+  assert.ok(navigation, "Ofertas precisa de filtros próprios, sem categorias globais vazias");
+  assert.deepEqual(Array.from(navigation.categories, category => category.name), ["Higiene"]);
+  assert.deepEqual(Array.from(navigation.sections), ["bath"]);
+  assert.ok(navigation.browseLinks.some(link => link.label === "Higiene e beleza" && link.href === "/catalogo?grupo=beauty"));
+  assert.ok(navigation.browseLinks.some(link => link.label === "Infantil" && link.href === "/catalogo?grupo=baby"));
+  assert.ok(navigation.browseLinks.some(link => link.label === "Fraldas adultas" && link.href === "/categorias/fraldas-adultas"));
+  assert.ok(navigation.browseLinks.every(link => !link.href.includes("ofertas") && !/medicamentos|cabelos/.test(link.href)));
+});
+
+test("grupo de beleza preserva a classificação explícita e não traz medicamento categorizado incorretamente", async () => {
+  const base = { category: "Higiene", activeIngredients: [], searchTerms: [], price: "10", promotionalPrice: null, stock: 2, requiresPrescription: false };
+  const { service } = await fixture([
+    { ...base, id: "soap", name: "Sabonete sintético", catalogClassification: { kind: "HYGIENE" } },
+    { ...base, id: "medicine", name: "Medicamento sintético", catalogClassification: { kind: "MEDICINE", medicineClass: "OTHER", otc: true } },
+    { ...base, id: "complete-medicine", name: "Outro medicamento sintético", catalogClassification: { kind: "MEDICINE", medicineClass: "OTHER", otc: true, ethical: false } },
+    { ...base, id: "rx", name: "Receita sintética", requiresPrescription: true, prescriptionType: "ORDINARY" },
+  ]);
+  const result = await service.getStorefrontProducts({ group: "beauty" });
+  assert.deepEqual(result.products.map(product => product.id), ["soap"]);
+});

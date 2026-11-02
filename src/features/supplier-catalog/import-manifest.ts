@@ -3,6 +3,7 @@ import { catalogClassificationSchema, classificationIsConsistent, supplierMarkup
 import { shippingDraftSchema } from "../shipping/product-draft";
 import { normalizeGtin } from "./commerce";
 import { SupplierCatalogOfferSchema } from "./schema";
+import { medicineCompositionImportIssue } from "../products/medicine-presentation";
 
 // References are retained in private audit records; credentials must never enter them.
 export const importSourceSchema = z.url().max(2000).refine(value => {
@@ -53,6 +54,10 @@ export const supplierImportManifestSchema = z.object({ manifestVersion: z.litera
       const gtin = normalizeGtin(row.ean)!;
       if (seen.has(gtin)) issue("Duplicate GTIN in import file.");
       seen.add(gtin);
+      if (row.requiresPrescription || row.catalogClassification?.kind === "MEDICINE") {
+        const compositionIssue = medicineCompositionImportIssue(row);
+        if (compositionIssue) issue(compositionIssue);
+      }
       if (row.requiresPrescription !== (row.prescriptionType !== "NONE")) issue("Explicit prescription flags must agree.");
       if (row.requiresPrescription && (row.activeIngredients.length === 0 || row.offers.some(offer => offer.retailCeilingCents === null))) issue("Prescription entries require active ingredients and verified retail ceilings.");
       if (new Set(row.offers.map(offer => offer.supplier)).size !== row.offers.length) issue("Duplicate supplier offer.");

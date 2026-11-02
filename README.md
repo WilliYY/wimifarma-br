@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Busca por Wimifarma sem correspondência no texto institucional, flexões de haste flexível, frete condicionado à disponibilidade, banner de higiene, filtros de ofertas e apresentações conferidas: [139](docs/139-busca-disponibilidade-e-apresentacao.md).
+
 Política atual do Club: inscrição gratuita automática no cadastro, WimiCoins selecionados e cashback de compra de 1% por seleção manual; correções de catálogo, carrinho e pós-venda: [138](docs/138-fidelidade-catalogo-e-reconferencia.md).
 
 Busca sincronizada, preferência pelo tamanho de fralda solicitado, conta por barra/economia dos kits e prioridade da imagem do primeiro banner: [137](docs/137-busca-tamanhos-kits-e-imagem-principal.md).

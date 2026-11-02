@@ -10,6 +10,7 @@ export function CatalogCategoryNavigation({ categories, availableSections, path,
   categories: Parameters<typeof catalogCategoryGroups>[0]; availableSections: string[]; path: string; group?: CatalogGroup; section?: string; offers?: boolean; categorySelected?: boolean;
 }) {
   const { groups, others, contextual, selectedCategory, activeGroup } = catalogCategoryNavigationContext(categories, path, group);
+  const visibleGroups = offers ? groups.filter(item => item.categories.length > 0) : groups;
   const basePath = path.split("?")[0];
   const changeGroup = (id: string, subsection?: string) => catalogFilterHref(path, { grupo: selectedCategory ? undefined : id, assunto: subsection, ...(offers ? { ofertas: "1" } : {}) }, selectedCategory ? basePath : "/catalogo");
 
@@ -21,7 +22,7 @@ export function CatalogCategoryNavigation({ categories, availableSections, path,
     </div>
     <div className="my-3 border-t border-line" />
     <div className="space-y-1">
-      {groups.map(item => {
+      {visibleGroups.map(item => {
         const children = catalogSections.filter(child => child.group === item.id && availableSections.includes(child.id));
         const Icon = groupIcons[item.id];
         const label = selectedCategory?.name ?? item.label;

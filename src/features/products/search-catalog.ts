@@ -2,7 +2,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 import { gtinVariants, normalizeGtin } from "./gtin";
-import { correctProductSearchQuery, ingredientSearchIdentities, isPrescriptionSearchProduct, normalizeProductSearch, productSearchPlan, productSizePattern, productSpellingVocabulary, topicNamePattern } from "./public-search";
+import { ALENIA_INHALATION_SEARCH_NAME, ALENIA_INHALATION_SEARCH_PRESENTATION, correctProductSearchQuery, ingredientSearchIdentities, isPrescriptionSearchProduct, normalizeProductSearch, productSearchPlan, productSizePattern, productSpellingVocabulary, topicNamePattern } from "./public-search";
 
 export const SEARCH_PAGE_SIZE = 24;
 
@@ -38,7 +38,19 @@ function queryCondition(query: string) {
   const plan = productSearchPlan(query);
   if (plan.blocked) return Prisma.sql`FALSE`;
   const clauses = [
-    ...plan.patterns.map(pattern => Prisma.sql`p."searchText" ~ ${pattern}`),
+    ...plan.patterns.map(pattern => pattern === plan.inhalationPattern
+      ? Prisma.sql`(p."searchText" ~ ${pattern} OR (
+        ${normalizedField(Prisma.sql`p."name"`)} = ${ALENIA_INHALATION_SEARCH_NAME}
+        AND cardinality(p."activeIngredients") = 2
+        AND EXISTS (SELECT 1 FROM unnest(p."activeIngredients") ingredient
+          WHERE ${normalizedField(Prisma.sql`ingredient`)} = 'budesonida')
+        AND EXISTS (SELECT 1 FROM unnest(p."activeIngredients") ingredient
+          WHERE ${normalizedField(Prisma.sql`ingredient`)} IN ('fumarato de formoterol diidratado', 'fumarato de formoterol di hidratado'))
+        AND ${normalizedField(Prisma.sql`p."cmedReference"->>'presentation'`)} = ${ALENIA_INHALATION_SEARCH_PRESENTATION}))`
+      : Prisma.sql`p."searchText" ~ ${pattern}`),
+    ...plan.identityPatterns.map(pattern => Prisma.sql`${normalizedField(Prisma.sql`concat_ws(' ',
+      p."name", p."brand", p."category", p."sku",
+      array_to_string(p."activeIngredients", ' '), array_to_string(p."searchTerms", ' '))`)} ~ ${pattern}`),
     ...plan.dosePatterns.map(pattern => Prisma.sql`p."name" ~* ${pattern}`),
     ...plan.topics.map(topic => {
       const ingredient = topic.ingredients.length ? Prisma.sql`EXISTS (

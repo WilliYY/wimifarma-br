@@ -12,6 +12,7 @@ import { permittedShippingServices, requiresPharmacyShippingSupport } from "./el
 import { assessCarrierCargo, isKnownShippingService, type ShippingCargo } from "./cargo-policy";
 import { calculatePackedQuotes } from "./calculate-packed-quotes";
 import { cartShippingBenefit } from "./benefit-service";
+import { localDeliveryCity } from "./delivery-policy";
 import { publicShippingEstimateRequestSchema, publicShippingEstimateSchema, type PublicShippingEstimateRequest } from "./public-estimate-contract";
 
 const physicalProfileSchema = shippingProfileSchema.pick({ weightGrams: true, widthCm: true, heightCm: true, lengthCm: true });
@@ -20,11 +21,14 @@ const normalized = (value: string | null) => (value ?? "").normalize("NFD").repl
 /** A price simulation is never proof of carrier acceptance or checkout eligibility. */
 export async function estimateProductShipping(input: PublicShippingEstimateRequest) {
   const request = publicShippingEstimateRequestSchema.parse(input);
+  const product = await getPrisma().product.findUnique({ where: { id: request.productId, status: "ACTIVE", deletedAt: null }, select: { ...shippingProductSelect, deletedAt: true } });
+  if (!product || product.status !== "ACTIVE" || product.deletedAt) throw new ShippingError("Produto indisponível para consulta de frete.", 404);
+  const sale = toSaleProduct(product);
+  if (!sale.availableForPurchase || sale.stock < request.quantity) throw new ShippingError("Produto indisponível no momento. Avise-me quando chegar.", 409);
+  if (requiresPharmacyShippingSupport(product)) throw new ShippingError("O envio deste produto precisa de atendimento da farmácia.");
+  if (localDeliveryCity(request.postalCode)) return publicShippingEstimateSchema.parse({ mode: "local", options: [] });
   const { settings } = await readShippingIntegration();
   if (!settings.enabled || settings.environment !== "production" || !settings.serviceIds.length) throw new ShippingError("O envio para outras cidades ainda está em preparação. Consulte a farmácia ou escolha retirada.", 503);
-  const product = await getPrisma().product.findUnique({ where: { id: request.productId, status: "ACTIVE" }, select: shippingProductSelect });
-  if (!product || product.status !== "ACTIVE") throw new ShippingError("Produto indisponível para consulta de frete.", 404);
-  if (requiresPharmacyShippingSupport(product)) throw new ShippingError("O envio deste produto precisa de atendimento da farmácia.");
   const parsed = shippingAdminProfileSchema.safeParse(product.shippingProfile);
   const physical = physicalProfileSchema.safeParse(product.shippingProfile);
   if (!parsed.success || !physical.success) throw new ShippingError("Peso ou medidas pendentes. Consulte a farmácia para preparar o envio.");
@@ -39,7 +43,6 @@ export async function estimateProductShipping(input: PublicShippingEstimateReque
     && (profile.approvedServiceIds === undefined || (!profile.transportReviewed && profile.approvedServiceIds.length === 0) || profile.approvedServiceIds.includes(service))
     && assessCarrierCargo(service, cargos).status !== "blocked");
   if (!serviceIds.length) throw new ShippingError("Este produto precisa de atendimento da farmácia para consultar o transporte.");
-  const sale = toSaleProduct(product);
   const unitPriceCents = Math.round(Number(sale.promotionalPrice ?? sale.price) * 100);
   if (!Number.isSafeInteger(unitPriceCents) || unitPriceCents <= 0 || unitPriceCents > 1_000_000) throw new ShippingError("Preço indisponível para consulta de frete.");
   const checkoutServices = permittedShippingServices(settings.serviceIds, [product]);

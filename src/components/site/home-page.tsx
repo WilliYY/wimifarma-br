@@ -35,7 +35,7 @@ const heroSlides = [
     cta: "Ver produtos",
     description: "Higiene, beleza e bem-estar.",
     eyebrow: "Para o seu dia a dia",
-    href: "/catalogo",
+    href: "/catalogo?grupo=beauty",
     art: "care",
     title: "Seu cuidado, todo dia. 🌸",
   },

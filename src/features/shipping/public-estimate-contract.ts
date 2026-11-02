@@ -9,7 +9,7 @@ export const publicShippingEstimateRequestSchema = z.object({
 
 // Estimates never carry a checkout authorization or private packing/product data.
 export const publicShippingEstimateSchema = z.object({
-  mode: z.enum(["estimate", "available"]),
+  mode: z.enum(["estimate", "available", "local"]),
   options: shippingOptionSchema.omit({ packaging: true }).strict().array(),
 }).strict();
 export type PublicShippingEstimateRequest = z.infer<typeof publicShippingEstimateRequestSchema>;

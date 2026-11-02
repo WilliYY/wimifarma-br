@@ -5,6 +5,7 @@ import { moneyToCents } from "@/features/orders/checkout";
 import { limitPaymentRequest, paymentHeaders, paymentJson } from "@/features/payments/http";
 import { PaymentError } from "@/features/payments/schema";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
+import { productDisplayName } from "@/features/products/display-name";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -16,11 +17,11 @@ export async function POST(request: Request) {
     if (!parsed.success) throw new PaymentError("Informe até 30 produtos diferentes para revisar o carrinho.", 422);
     const products = await getPrisma().product.findMany({
       where: { id: { in: parsed.data.productIds }, status: "ACTIVE", deletedAt: null },
-      select: { ...supplierOfferInclude, ean: true, inventorySource: true, id: true, name: true, slug: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true },
+      select: { ...supplierOfferInclude, ean: true, inventorySource: true, id: true, name: true, activeIngredients: true, slug: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true },
     });
     return NextResponse.json({ data: { products: products.map(p => toSaleProduct(p)).map(product => ({
       catalogClassification: product.catalogClassification,
-      id: product.id, name: product.name, slug: product.slug, category: product.category, imageUrl: product.imageUrl,
+      id: product.id, name: productDisplayName(product.name, product.activeIngredients), slug: product.slug, category: product.category, imageUrl: product.imageUrl,
       unitPriceCents: moneyToCents((product.promotionalPrice ?? product.price).toString()),
       originalPriceCents: product.promotionalPrice ? moneyToCents(product.price.toString()) : null,
       inventorySource: product.inventorySource, supplierDemandAllowed: product.supplierDemandAllowed, stock: product.stock, requiresPrescription: product.requiresPrescription,

@@ -47,8 +47,29 @@ test("public estimate calculates complete drafts without approving shipment or e
   assert.deepEqual(Array.from((await loaded.exports.estimateProductShipping(input)).options, option => option.serviceId), [3], "empty draft approvals never override blocked cargo");
   product = { ...base, catalogClassification: { kind: "MEDICINE" }, shippingProfile: { ...profile, approvedServiceIds: [] } };
   assert.deepEqual(Array.from((await loaded.exports.estimateProductShipping(input)).options, option => option.serviceId), [1, 2], "empty draft approvals preserve medication restrictions");
-  product = { ...base, shippingProfile: { ...profile, notifyOnlyPendingLogistics: true } };
-  assert.equal((await loaded.exports.estimateProductShipping(input)).mode, "estimate");
+  for (const patch of [{ stock: 0 }, { stock: 1 }, { deletedAt: new Date() }, { status: "DRAFT" }, { status: "ARCHIVED" }, { inventorySource: "DISTRIBUTOR", stock: 100, supplierOffers: [] }, { shippingProfile: { ...profile, notifyOnlyPendingLogistics: true } }]) {
+    product = { ...base, ...patch };
+    for (const postalCode of ["01001000", "87525000"]) {
+      const before = calls.length;
+      await assert.rejects(loaded.exports.estimateProductShipping({ ...input, postalCode }), /indisponível/);
+      assert.equal(calls.length, before, "unavailable inventory never reaches the provider, including local CEP");
+    }
+  }
+  product = { ...base };
+  const beforeLocal = calls.length;
+  const local = await loaded.exports.estimateProductShipping({ ...input, postalCode: "87525000" });
+  assert.equal(local.mode, "local");
+  assert.equal(local.options.length, 0);
+  assert.equal(calls.length, beforeLocal, "local delivery does not contact a carrier");
+  const supplierOffer = { id: "synthetic-offer", supplier: "SYNTHETIC", eanNormalized: "01234567890128", unitCostCents: 1000, available: true, stockQuantity: 5, allocationQuantity: 5, reservedQuantity: 0, committedQuantity: 0, observedAt: new Date(Date.now() - 1000), validUntil: new Date(Date.now() + 60000) };
+  for (const patch of [{ available: false }, { stockQuantity: 0 }]) {
+    product = { ...base, inventorySource: "DISTRIBUTOR", eanNormalized: supplierOffer.eanNormalized, stock: 100, supplierOffers: [{ ...supplierOffer, ...patch }] };
+    const before = calls.length;
+    await assert.rejects(loaded.exports.estimateProductShipping({ ...input, postalCode: "87525000" }), /indisponível/);
+    assert.equal(calls.length, before);
+  }
+  product = { ...base, inventorySource: "DISTRIBUTOR", eanNormalized: supplierOffer.eanNormalized, stock: 0, supplierOffers: [supplierOffer] };
+  assert.equal((await loaded.exports.estimateProductShipping({ ...input, postalCode: "87525000" })).mode, "local", "supplier effective availability takes precedence over physical stock");
   product = { ...base, shippingProfile: { ...profile, enabled: true, transportReviewed: true, cargoKinds: ["general"], approvedServiceIds: [1] } };
   const ready = await loaded.exports.estimateProductShipping(input);
   assert.equal(ready.mode, "available");
@@ -77,6 +98,12 @@ test("public estimate calculates complete drafts without approving shipment or e
     product = { ...base, ...patch }; const before = calls.length;
     await assert.rejects(loaded.exports.estimateProductShipping(input));
     assert.equal(calls.length, before, "invalid data or restricted cargo never reaches provider");
+  }
+  for (const patch of [{ isPopularPharmacy: true }, { requiresPrescription: true, prescriptionType: "CONTROLLED" }, { requiresPrescription: true, prescriptionType: "UNREVIEWED" }, { requiresPrescription: true, prescriptionType: "ANTIMICROBIAL" }]) {
+    product = { ...base, ...patch };
+    const before = calls.length;
+    await assert.rejects(loaded.exports.estimateProductShipping({ ...input, postalCode: "87525000" }), /atendimento/);
+    assert.equal(calls.length, before, "local CEP never bypasses legal restrictions");
   }
   product = { ...base }; failure = true;
   await assert.rejects(loaded.exports.estimateProductShipping(input), /synthetic provider failure/);

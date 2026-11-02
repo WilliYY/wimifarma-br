@@ -2,6 +2,10 @@ import type { PrescriptionType } from "./purchase-policy";
 import type { PublicPmcReference } from "./cmed-reference";
 import { searchTopics, type SearchTopic } from "./search-topics";
 import { normalizeGtin } from "./gtin";
+import { verifiedMedicinePresentation } from "./medicine-presentation";
+
+export const ALENIA_INHALATION_SEARCH_NAME = "alenia 6 mcg 200 mcg 60 capsulas dura";
+export const ALENIA_INHALATION_SEARCH_PRESENTATION = "6 mcg 200 mcg cap dura po inal ct fr plas opc x 60";
 
 export type ProductSearchSource = {
   activeIngredients: string[];
@@ -41,6 +45,7 @@ export type SearchRankableProduct = {
   eanNormalized?: string | null;
   brand?: string | null;
   searchText: string;
+  cmedReference?: unknown;
   activeIngredients?: string[];
   searchTerms?: string[];
   category?: string | null;
@@ -73,6 +78,9 @@ export function productSearchPatterns(query: string) {
     .split(" ")
     .filter(token => token && !["de", "da", "do", "das", "dos", "e"].includes(token));
   return [...new Set(tokens)].slice(0, 12).map(token => {
+    // Explicit editorial flexions only: never stem ingredients, brands or doses.
+    if (token === "haste" || token === "hastes") return "(^| )(haste|hastes)($| )";
+    if (token === "flexivel" || token === "flexiveis") return "(^| )(flexivel|flexiveis)($| )";
     const dose = /^(\d+)(mcg|mg|ml|g|kg|ui)$/.exec(token);
     if (dose) return `(^| )${dose[1]} ?${dose[2]}($| )`;
     if (/^\d+$/.test(token)) return `(^| )${token}[a-z]*($| )`;
@@ -126,7 +134,20 @@ export function productSearchPlan(query: string) {
     (topics.some(topic => topic.id === "high-pressure") && /\bbaixa\b/.test(normalized)) ||
     (topics.some(topic => topic.id === "cholesterol") && /\bbaixo\b/.test(normalized))
   );
-  return { topics, blocked, size, patterns: productSearchPatterns(remaining), dosePatterns: productDosePatterns(remaining) };
+  // Store boilerplate in descriptions/legacy indexes is not product identity.
+  const identityPatterns = normalized.split(" ")
+    .filter(token => token.length >= 4 && "wimifarma".startsWith(token))
+    .flatMap(productSearchPatterns);
+  const inhalationPattern = /\balenia\b/.test(normalized) && /\binalacao\b/.test(normalized) ? "(^| )inalacao" : null;
+  return { topics, blocked, size, identityPatterns, inhalationPattern, patterns: productSearchPatterns(remaining), dosePatterns: productDosePatterns(remaining) };
+}
+
+function matchesVerifiedInhalationSearch(product: SearchRankableProduct) {
+  const reference = product.cmedReference;
+  return normalizeProductSearch(product.name) === ALENIA_INHALATION_SEARCH_NAME &&
+    Boolean(verifiedMedicinePresentation(product)?.inhalation) &&
+    reference !== null && typeof reference === "object" && "presentation" in reference &&
+    typeof reference.presentation === "string" && normalizeProductSearch(reference.presentation) === ALENIA_INHALATION_SEARCH_PRESENTATION;
 }
 
 /** Size is a preference for diapers; numeric mass and medicine units stay literal. */
@@ -281,12 +302,19 @@ function rankExactProductsForQuery<T extends SearchRankableProduct>(
     (product.eanNormalized === gtin || normalizeGtin(product.ean) === gtin);
   const plan = productSearchPlan(query);
   const patterns = plan.patterns.map(pattern => new RegExp(pattern));
+  const identities = plan.identityPatterns.map(pattern => new RegExp(pattern));
   const doses = plan.dosePatterns.map(pattern => new RegExp(pattern, "i"));
   if (plan.blocked || (!patterns.length && !plan.topics.length)) return [];
 
   return products
     .filter((product) => matchesGtin(product) || (product.sku && normalizeProductSearch(product.sku) === normalizedQuery) ||
-      (plan.topics.every(topic => matchesSearchTopic(product, topic)) && patterns.every(pattern => pattern.test(product.searchText)) && doses.every(dose => dose.test(product.name))))
+      (plan.topics.every(topic => matchesSearchTopic(product, topic)) && patterns.every(pattern => pattern.test(product.searchText) ||
+        (pattern.source === plan.inhalationPattern && matchesVerifiedInhalationSearch(product))) &&
+        identities.every(pattern => pattern.test(buildProductSearchText({
+          name: product.name, brand: product.brand, category: product.category, sku: product.sku,
+          activeIngredients: product.activeIngredients ?? [], searchTerms: product.searchTerms ?? [],
+        }))) &&
+        doses.every(dose => dose.test(product.name))))
     .map((product) => {
       const normalizedName = normalizeProductSearch(product.name);
       let score = 0;

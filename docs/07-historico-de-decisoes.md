@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-02 — Busca por identidade, disponibilidade e apresentação
+
+- `Wimifarma` deixa de encontrar produtos apenas pela frase institucional da descrição; haste(s) flexível(eis) recebe equivalência explícita em memória e SQL. O simulador valida disponibilidade efetiva antes de entrega local ou transportadora. Banner de higiene, grupo Beleza e navegação de ofertas passam a respeitar a seleção correspondente, sem criar campanhas ou mudar preços/estoque.
+- Concentrações de Dorilax DT, Buscoduo e Alenia 6/200 são pareadas por apresentação conferida em fontes primárias. Alenia explicita pó para inalação, sem afirmar acessório não confirmado. A importação bloqueia associações ambíguas e preserva denominadores legítimos. Contrato, fontes e estado de publicação em [139](139-busca-disponibilidade-e-apresentacao.md).
+
 ## 2026-11-02 — Política de fidelidade e correções do catálogo
 
 - O lojista aprovou Club gratuito automático para clientes cadastrados, WimiCoins selecionados por produto e cashback de compra fixo de 1% em seleção manual por margem. Não foi definido limiar automático, bônus de entrada, consentimento de marketing ou crédito retroativo. Associações desativadas e identidades da equipe permanecem preservadas. Contratos e limites em [138](138-fidelidade-catalogo-e-reconferencia.md).

@@ -16,7 +16,7 @@ const quote = {
   priceCents: 1875, deliveryDays: 4,
 };
 
-async function fixture(run: (page: Page) => Promise<void>) {
+async function fixture(run: (page: Page) => Promise<void>, stock = 10, patch: Partial<CartProduct> = {}) {
   const bundle = await build({
     stdin: {
       contents: `import React from 'react';import {createRoot} from 'react-dom/client';
@@ -24,7 +24,7 @@ async function fixture(run: (page: Page) => Promise<void>) {
         import {CatalogShippingProvider,CatalogShippingButton} from './src/components/site/catalog-shipping-preview';
         createRoot(document.getElementById('root')).render(<CartProvider><CatalogShippingProvider>
           <label>Pesquisar produtos<input type="search"/></label>
-          <article onClick={()=>window.cardClicks++}><CatalogShippingButton product={${JSON.stringify(product)}}/></article>
+          <article onClick={()=>window.cardClicks++}><CatalogShippingButton product={${JSON.stringify({ ...product, stock, ...patch })}}/></article>
           <CatalogShippingButton product={${JSON.stringify(otherProduct)}}/>
         </CatalogShippingProvider></CartProvider>);`,
       resolveDir: process.cwd(), loader: "tsx",
@@ -123,6 +123,58 @@ test("perfil sem envio preserva motivo da API, sem preço inventado", async () =
     await page.getByRole("button", { name: "Consultar", exact: true }).click();
     await expect(page.getByRole("status")).toContainText(error);
     await expect(page.getByRole("status")).not.toContainText(/18,75|4 dias|fora de cobertura/i);
+  });
+});
+
+test("produto indisponível mostra aviso acessível sem prometer entrega local", async () => {
+  await fixture(async page => {
+    await page.goto(origin);
+    await page.getByRole("button", { name: "Ver frete de Produto A", exact: true }).click();
+    await expect(page.getByRole("dialog")).toContainText("Indisponível no momento");
+    await expect(page.getByRole("button", { name: "Avise-me quando chegar", exact: true })).toBeVisible();
+    await expect(page.getByRole("dialog")).not.toContainText(/Grátis|checkout/i);
+    await expect(page.getByRole("textbox", { name: "CEP", exact: true })).toHaveCount(0);
+    await page.route("**/api/minha-conta/avisos-estoque?*", route => route.fulfill({ status: 401, json: { error: "Não autorizado" } }));
+    await page.getByRole("button", { name: "Avise-me quando chegar", exact: true }).click();
+    await expect(page.getByRole("link", { name: "Entrar ou criar conta", exact: true })).toHaveAttribute("href", "/login?callbackUrl=%2Fproduto%2Fproduto-a");
+  }, 0);
+});
+
+test("entrega local depende da resposta atual de disponibilidade", async () => {
+  await fixture(async page => {
+    await page.route("**/api/fretes/estimativa", route => route.fulfill({ json: { data: { mode: "local", options: [] } } }));
+    await page.goto(origin);
+    await page.getByRole("button", { name: "Ver frete de Produto A", exact: true }).click();
+    await page.getByRole("textbox", { name: "CEP", exact: true }).fill("87525-000");
+    await page.getByRole("button", { name: "Consultar", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("Entrega local grátis");
+  });
+});
+
+test("controlado sem estoque preserva atendimento assistido", async () => {
+  await fixture(async page => {
+    await page.goto(origin);
+    await page.getByRole("button", { name: "Ver frete de Produto A", exact: true }).click();
+    await expect(page.getByRole("link", { name: "Consultar no WhatsApp", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Avise-me quando chegar", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("dialog")).not.toContainText(/Grátis|checkout/i);
+  }, 0, { requiresPrescription: true, prescriptionType: "CONTROLLED" });
+});
+
+test("ruptura após abrir diálogo é reconferida antes de anunciar entrega local", async () => {
+  await fixture(async page => {
+    let requests = 0;
+    await page.route("**/api/fretes/estimativa", route => {
+      requests++;
+      return route.fulfill({ status: 409, json: { error: "Produto indisponível no momento. Avise-me quando chegar." } });
+    });
+    await page.goto(origin);
+    await page.getByRole("button", { name: "Ver frete de Produto A", exact: true }).click();
+    await page.getByRole("textbox", { name: "CEP", exact: true }).fill("87525-000");
+    await page.getByRole("button", { name: "Consultar", exact: true }).click();
+    await expect.poll(() => requests).toBe(1);
+    await expect(page.getByRole("button", { name: "Avise-me quando chegar", exact: true })).toBeVisible();
+    await expect(page.getByRole("dialog")).not.toContainText(/Grátis|checkout/i);
   });
 });
 

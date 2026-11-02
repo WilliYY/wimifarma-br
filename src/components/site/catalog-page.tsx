@@ -12,10 +12,11 @@ import { serializeProductStructuredData } from "@/features/products/product-deta
 import { CatalogShippingProvider } from "./catalog-shipping-preview";
 
 export async function CatalogPage({ title, description, path, page, categoryNames, offers = false, group, sort = "relevantes", brand, section, query }: { title: string; description: string; path: string; page: number; categoryNames?: string[]; offers?: boolean; group?: CatalogGroup; sort?: CatalogSort; brand?: string; section?: string; query?: string }) {
-  const [{ products, count, categorySections }, categories, globalSections] = await Promise.all([
-    getStorefrontProducts({ page, categories: categoryNames, offers, group, sort, brand, section, query }), getPublicCategories(), categoryNames ? Promise.resolve([]) : getPublicCatalogSections(),
+  const [{ products, count, categorySections, offerNavigation }, publicCategories, globalSections] = await Promise.all([
+    getStorefrontProducts({ page, categories: categoryNames, offers, group, sort, brand, section, query }), offers ? Promise.resolve([]) : getPublicCategories(), categoryNames || offers ? Promise.resolve([]) : getPublicCatalogSections(),
   ]);
-  const availableSections = categoryNames ? categorySections ?? [] : globalSections;
+  const categories = offers ? offerNavigation?.categories ?? [] : publicCategories;
+  const availableSections = offers ? offerNavigation?.sections ?? [] : categoryNames ? categorySections ?? [] : globalSections;
   if (page > 1 && products.length === 0) notFound();
   const selectedSection = catalogSections.find(item => item.id === section);
   const topicSearch = Boolean(selectedSection?.topic || (query && productSearchPlan(query).topics.length));
@@ -31,6 +32,7 @@ export async function CatalogPage({ title, description, path, page, categoryName
     <div className="mx-auto max-w-[1680px] px-4 sm:px-6 lg:px-8">
       <nav aria-label="Navegação estrutural" className="mb-6 flex flex-wrap gap-2 text-xs text-muted">{crumbs.map((crumb, i) => <span key={`${crumb.path}-${i}`}>{i > 0 && <span aria-hidden="true" className="mr-2">/</span>}<Link className="underline" href={crumb.path}>{crumb.name}</Link></span>)}</nav>
       <header className="border-b border-line pb-6"><h1 className="text-3xl font-black tracking-tight text-ink sm:text-4xl">{title}</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{description}</p></header>
+      {offers && !group && !categoryNames && !brand && !query && !section && offerNavigation?.browseLinks.length ? <nav aria-label="Outras seleções disponíveis" className="mt-5 flex flex-wrap items-center gap-2"><span className="mr-1 text-xs font-semibold text-muted">Explore também</span>{offerNavigation.browseLinks.map(link => <Link className="inline-flex min-h-11 items-center rounded-full border border-line bg-white px-4 text-xs font-bold text-brand hover:border-brand/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" href={link.href} key={link.href}>{link.label}</Link>)}</nav> : null}
       <div className="mt-7 grid items-start gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
         <CatalogFilterPanel>
           <CatalogCategoryNavigation categories={categories} availableSections={availableSections} path={path} group={group} section={section} offers={offers} categorySelected={Boolean(categoryNames)} />

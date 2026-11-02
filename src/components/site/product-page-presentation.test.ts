@@ -14,7 +14,7 @@ test("product page keeps product, related cards and details without public revie
     "@/features/auth/auth": "export const auth=async()=>{fixture.authCalls++;return null;};",
     "@/features/supplier-catalog/commerce": "export const supplierOfferInclude={};export const toSaleProduct=p=>p;",
     "@/components/site/product-image-viewer": "import React from 'react';export const ProductImageViewer=()=>React.createElement('div',{'data-gallery':true});",
-    "@/components/site/product-purchase-panel": "import React from 'react';export const ProductPurchasePanel=()=>React.createElement('div',{'data-purchase-panel':true});",
+    "@/components/site/product-purchase-panel": "import React from 'react';export const ProductPurchasePanel=p=>React.createElement('div',{'data-purchase-panel':true,'data-cart-name':p.product.name});",
     "@/components/site/product-quantity": "export const ProductQuantityProvider=p=>p.children;",
     "@/components/site/product-share-button": "export const ProductShareButton=()=>null;",
     "@/components/site/product-payment-methods": "export const ProductPaymentMethods=()=>null;",
@@ -96,4 +96,13 @@ test("product page keeps product, related cards and details without public revie
   assert.ok(soapHtml.indexOf("data-purchase-panel") < soapHtml.indexOf("data-product-purchase-conditions"));
   assert.equal(queryCalls.length, 2, "same-line candidates are retrieved independently of the general candidate limit");
   assert.match(JSON.stringify(queryCalls[0]), /"AND".*sabonete.*Rexona/);
+  Object.assign(product, { name: "Alenia 6 mcg + 200 mcg 60 cápsulas dura", activeIngredients: ["BUDESONIDA", "FUMARATO DE FORMOTEROL DIIDRATADO"], category: "Medicamentos", requiresPrescription: true, prescriptionType: "ORDINARY" });
+  const inhalationHtml = renderToStaticMarkup(await loaded.exports.default({ params: Promise.resolve({ slug: product.slug }) }));
+  assert.match(inhalationHtml, /data-cart-name="Alenia 6 mcg \+ 200 mcg 60 cápsulas dura · pó para inalação"/);
+  assert.match(inhalationHtml, /<h1[^>]*>Alenia 6 mcg \+ 200 mcg 60 cápsulas dura · pó para inalação<\/h1>/);
+  assert.match(inhalationHtml, /Fumarato de formoterol di-hidratado 6 mcg \+ Budesonida 200 mcg/);
+  assert.doesNotMatch(inhalationHtml, /com inalador|refil/iu);
+  Object.assign(product, { name: "Dorilax DT 450 mg + 50 mg + 35 mg 12 comprimidos", activeIngredients: ["CITRATO DE ORFENADRINA", "CAFEÍNA ANIDRA", "PARACETAMOL"] });
+  const dorilaxHtml = renderToStaticMarkup(await loaded.exports.default({ params: Promise.resolve({ slug: product.slug }) }));
+  assert.match(dorilaxHtml, /Paracetamol 450 mg \+ Cafeína anidra 50 mg \+ Citrato de orfenadrina 35 mg/);
 });

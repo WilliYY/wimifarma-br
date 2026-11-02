@@ -8,6 +8,7 @@ import type { CartProduct } from "@/components/site/cart-provider";
 import type { PublicProductSearchItem } from "@/features/products/public-search";
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName, productTitleBrand } from "@/features/products/display-name";
+import { productIngredientLabel } from "@/features/products/medicine-presentation";
 import { productOfferDiscount } from "@/features/offers/daily-rotation";
 import { ProductPmcBadge, ProductPmcPrice } from "./product-pmc";
 import { CatalogShippingButton } from "./catalog-shipping-preview";
@@ -19,11 +20,13 @@ export type RelatedProductCardItem = PublicProductSearchItem & {
 };
 
 export function PublicProductCard({ product, showShippingEstimate = false }: { product: RelatedProductCardItem; showShippingEstimate?: boolean }) {
-  const displayName = productDisplayName(product.name)
+  const publicName = productDisplayName(product.name, product.activeIngredients);
+  const ingredientLabel = productIngredientLabel(product);
+  const displayName = publicName
     .replace(/\bcomprimidos?\b/giu, "comp.")
     .replace(/\brevestidos?\b/giu, "rev.");
   const titleBrand = productTitleBrand(product.name, product.brand);
-  const fullTitle = `${product.name}${titleBrand ? ` · ${product.brand?.trim()}` : ""}`;
+  const fullTitle = `${publicName}${titleBrand ? ` · ${product.brand?.trim()}` : ""}`;
   const normalPrice = Number(product.price);
   const currentPrice = Number(product.promotionalPrice ?? product.price);
   const hasPromotion = Boolean(
@@ -40,7 +43,7 @@ export function PublicProductCard({ product, showShippingEstimate = false }: { p
     imageUrl: product.imageUrl,
     catalogClassification: product.catalogClassification,
     isPopularPharmacy: product.isPopularPharmacy,
-    name: product.name,
+    name: publicName,
     originalPriceCents: hasPromotion ? Math.round(normalPrice * 100) : null,
     requiresPrescription: product.requiresPrescription,
     prescriptionType: product.prescriptionType,
@@ -92,8 +95,8 @@ export function PublicProductCard({ product, showShippingEstimate = false }: { p
         >
           <span className="line-clamp-3">{displayName}{titleBrand ? <> <span className="font-black">{titleBrand}</span></> : null}</span>
         </Link>
-        <span className="mt-1 h-4 shrink-0 truncate text-[0.68rem] font-semibold leading-4 text-muted" title={product.activeIngredients.join(" + ") || undefined}>
-          {product.activeIngredients.join(" + ")}
+        <span className="mt-1 min-h-4 shrink-0 text-[0.68rem] font-semibold leading-4 text-muted" title={ingredientLabel || undefined}>
+          {ingredientLabel}
         </span>
 
         <div className="mt-auto pt-2">
