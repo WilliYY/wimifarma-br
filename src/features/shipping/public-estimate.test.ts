@@ -35,6 +35,18 @@ test("public estimate calculates complete drafts without approving shipment or e
   assert.deepEqual(product.shippingProfile, profile);
   assert.throws(() => validateShippingProduct({ ...base, prescriptionType: undefined, status: "ACTIVE" } as Parameters<typeof validateShippingProduct>[0]), /pendentes/, "checkout continues rejecting drafts");
 
+  product = { ...base, shippingProfile: { ...profile, approvedServiceIds: [] } };
+  const unreviewed = await loaded.exports.estimateProductShipping(input);
+  assert.equal(unreviewed.mode, "estimate", "empty draft approvals mean not reviewed, never shipping authorization");
+  assert.deepEqual(Array.from(unreviewed.options, option => option.serviceId), [1, 2, 3]);
+  assert.equal(unreviewed.options[0].benefit, undefined);
+  assert.equal(JSON.stringify(unreviewed).includes("token"), false);
+  product = { ...base, shippingProfile: { ...profile, approvedServiceIds: [1] } };
+  assert.deepEqual(Array.from((await loaded.exports.estimateProductShipping(input)).options, option => option.serviceId), [1], "nonempty draft approvals still restrict the estimate");
+  product = { ...base, shippingProfile: { ...profile, approvedServiceIds: [], cargoKinds: ["aerosol"] } };
+  assert.deepEqual(Array.from((await loaded.exports.estimateProductShipping(input)).options, option => option.serviceId), [3], "empty draft approvals never override blocked cargo");
+  product = { ...base, catalogClassification: { kind: "MEDICINE" }, shippingProfile: { ...profile, approvedServiceIds: [] } };
+  assert.deepEqual(Array.from((await loaded.exports.estimateProductShipping(input)).options, option => option.serviceId), [1, 2], "empty draft approvals preserve medication restrictions");
   product = { ...base, shippingProfile: { ...profile, notifyOnlyPendingLogistics: true } };
   assert.equal((await loaded.exports.estimateProductShipping(input)).mode, "estimate");
   product = { ...base, shippingProfile: { ...profile, enabled: true, transportReviewed: true, cargoKinds: ["general"], approvedServiceIds: [1] } };
@@ -45,6 +57,8 @@ test("public estimate calculates complete drafts without approving shipment or e
   assert.equal((await loaded.exports.estimateProductShipping(input)).mode, "estimate");
   product = { ...base, shippingProfile: { ...profile, enabled: true, transportReviewed: true, cargoKinds: ["general"], approvedServiceIds: [] } };
   await assert.rejects(loaded.exports.estimateProductShipping(input), /atendimento/);
+  product = { ...base, shippingProfile: { ...profile, enabled: false, transportReviewed: true, cargoKinds: ["general"], approvedServiceIds: [] } };
+  await assert.rejects(loaded.exports.estimateProductShipping(input), /atendimento/, "reviewed empty approvals remain a refusal even when disabled");
   assert.deepEqual(Array.from(ready.options, p => p.serviceId), [1]);
   product = { ...base, shippingProfile: { ...profile, cargoKinds: ["unspecified"] } };
   assert.equal((await loaded.exports.estimateProductShipping(input)).mode, "estimate");

@@ -36,7 +36,7 @@ export async function estimateProductShipping(input: PublicShippingEstimateReque
   if (/\b(aerossol|aerosol)\b/.test(normalized(product.name))) cargos.push("aerosol");
   const serviceIds = settings.serviceIds.filter(service => isKnownShippingService(service)
     && (!cargos.includes("medication") || service === 1 || service === 2)
-    && (profile.approvedServiceIds === undefined || profile.approvedServiceIds.includes(service))
+    && (profile.approvedServiceIds === undefined || (!profile.transportReviewed && profile.approvedServiceIds.length === 0) || profile.approvedServiceIds.includes(service))
     && assessCarrierCargo(service, cargos).status !== "blocked");
   if (!serviceIds.length) throw new ShippingError("Este produto precisa de atendimento da farmácia para consultar o transporte.");
   const sale = toSaleProduct(product);
