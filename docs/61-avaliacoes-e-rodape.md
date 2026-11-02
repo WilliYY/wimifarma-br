@@ -1,5 +1,15 @@
 # 61 — Avaliações e rodapé
 
+## Avaliações compactas com movimento lateral — 02/11/2026
+
+Por solicitação do lojista, os cartões de avaliações passam a ocupar menos espaço, com cabeçalho, espaçamentos e avatares menores. Os comentários continuam completos, assim como nomes públicos abreviados, notas, selo de compra verificada, produto e eventual aviso de incentivo. O convite para avaliar compras permanece disponível.
+
+A faixa avança lentamente na horizontal, seguindo a interação das marcas, sem setas ou botão de pausa visíveis. Mouse e dedo permitem arrastar; o teclado conserva navegação horizontal e foco visível. O movimento automático pausa durante leitura com mouse/foco, interação manual, aba oculta e fora da tela. A preferência de movimento reduzido mantém somente a rolagem manual.
+
+O deslocamento usa transformação fracionária da trilha, sem atualizar estado React ou rolagem nativa a cada quadro. Cópias necessárias à continuidade ficam fora da árvore acessível e da sequência de Tab; os links originais permanecem acessíveis. Conteúdo que cabe na largura disponível não recebe duplicação ou movimento automático. Banco, autenticidade dos relatos, médias e cashback seguem os contratos existentes.
+
+Validação local: seis testes de navegador, incluindo 320/390/768/1440 px, emenda contínua, pausas, cliques, teclado, toque horizontal e rolagem vertical. A revisão independente identificou e revalidou a correção de um gesto que ficava preso ao soltar o mouse fora da faixa antes da captura. Lint completo, typecheck e 503 testes de segurança passaram. Auditoria de produção: três alertas baixos e quatro moderados; completa: três baixos e 17 moderados, sem altos/críticos. Dependências não foram alteradas. Capturas e auxiliares ficam em `outputs/reviews-compact-2026-11-02/`, fora do Git. Publicação e conferência pública são registradas após sua execução.
+
 ## Identificação legal centralizada — 29/10/2026
 
 A base do rodapé usa texto centralizado de 12 px, entrelinha de 20 px e contraste preservado, com identificação empresarial, responsável técnico e licença sanitária conferidos. Mantém logo, navegação, pagamentos e animação original de 128 bolhas. AFE/AE só são exibidas quando houver valor documental conferido; a referência histórica de AFE não foi tratada como vigente. Não há selo ou logomarca da Anvisa.

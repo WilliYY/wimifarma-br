@@ -1,16 +1,10 @@
 "use client";
 
 
-import Link from "next/link";
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ChevronLeft,
   ChevronRight,
-  MessageCircle,
-  Quote,
-  ShieldCheck,
-  Star,
 } from "lucide-react";
 import { HomeProductCarousel } from "@/components/site/home-product-carousel";
 import { HeroProductStage } from "@/components/site/hero-product-stage";
@@ -23,7 +17,7 @@ import type { HomeShortcutItem } from "@/features/products/home-shortcuts";
 import campaignStyles from "./home-campaign.module.css";
 import { BrandSignature } from "@/components/site/brand-signature";
 import type { HomeCollections } from "@/features/products/home-collections";
-import { whatsappTestimonials, type WhatsAppTestimonial } from "@/features/reviews/whatsapp-testimonials";
+import { CustomerReviews } from "./customer-reviews";
 
 export type HomeReview = {
   comment: string;
@@ -65,28 +59,6 @@ const heroSlides = [
   },
 ] as const;
 
-function RatingStars({ rating, size = "h-4 w-4" }: { rating: number; size?: string }) {
-  const roundedRating = Math.round(rating);
-
-  return (
-    <span
-      aria-label={`${rating.toFixed(1).replace(".", ",")} de 5 estrelas`}
-      className="inline-flex gap-0.5"
-    >
-      {[1, 2, 3, 4, 5].map((value) => (
-        <Star
-          aria-hidden="true"
-          className={`${size} ${
-            value <= roundedRating
-              ? "fill-amber-400 text-amber-400"
-              : "fill-transparent text-slate-300"
-          }`}
-          key={value}
-        />
-      ))}
-    </span>
-  );
-}
 
 function HeroCarousel() {
   const [activeSlide, setActiveSlide] = useState(0);
@@ -265,171 +237,6 @@ function HeroCarousel() {
   );
 }
 
-function reviewInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  return `${parts[0]?.[0] ?? "C"}${parts.length > 1 ? parts.at(-1)?.[0] ?? "" : ""}`.toLocaleUpperCase("pt-BR");
-}
-
-function CustomerReviews({ reviews }: { reviews: HomeReview[] }) {
-  const displayedReviews: ((HomeReview & { source: "purchase" }) | WhatsAppTestimonial)[] = [
-    ...reviews.map((review) => ({ ...review, source: "purchase" as const })),
-    ...whatsappTestimonials,
-  ];
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const [carouselControls, setCarouselControls] = useState({
-    next: false,
-    previous: false,
-  });
-
-  const updateCarouselControls = useCallback(() => {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-
-    const maximumScroll = Math.max(0, carousel.scrollWidth - carousel.clientWidth);
-    setCarouselControls({
-      next: carousel.scrollLeft < maximumScroll - 2,
-      previous: carousel.scrollLeft > 2,
-    });
-  }, []);
-
-  useEffect(() => {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-
-    const animationFrame = window.requestAnimationFrame(updateCarouselControls);
-    const resizeObserver = new ResizeObserver(updateCarouselControls);
-    resizeObserver.observe(carousel);
-
-    return () => {
-      window.cancelAnimationFrame(animationFrame);
-      resizeObserver.disconnect();
-    };
-  }, [updateCarouselControls]);
-
-  function scrollReviews(direction: -1 | 1) {
-    const carousel = carouselRef.current;
-    const firstCard = carousel?.querySelector<HTMLElement>("[data-review-card]");
-    if (!carousel || !firstCard) return;
-
-    const styles = window.getComputedStyle(carousel);
-    const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0;
-    const cardStep = firstCard.offsetWidth + gap;
-    const visibleCards = Math.max(
-      1,
-      Math.round((carousel.clientWidth + gap) / cardStep),
-    );
-
-    carousel.scrollBy({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      left: direction * visibleCards * cardStep,
-    });
-  }
-
-  return (
-    <section className="bg-surface-subtle px-4 py-14 sm:px-6 lg:px-8" aria-labelledby="customer-reviews-title">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-pharma-green/20 bg-white px-3 py-1.5 text-xs font-bold text-ink">
-              <MessageCircle aria-hidden="true" className="h-4 w-4 text-pharma-green" />
-              Experiências compartilhadas por clientes
-            </span>
-            <h2 className="mt-3 text-3xl font-black leading-tight text-ink sm:text-4xl" id="customer-reviews-title">
-              Avaliações de clientes
-            </h2>
-            <p className="mt-3 max-w-xl text-base leading-6 text-muted">Sua experiência ajuda outras pessoas a escolher com mais confiança.</p>
-          </div>
-
-          {displayedReviews.length > 0 ? (
-            <div className="flex shrink-0 items-center gap-2">
-              <button
-                aria-controls="customer-reviews-carousel"
-                aria-label="Ver avaliações anteriores"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35"
-                disabled={!carouselControls.previous}
-                onClick={() => scrollReviews(-1)}
-                title="Avaliações anteriores"
-                type="button"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button
-                aria-controls="customer-reviews-carousel"
-                aria-label="Ver próximas avaliações"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35"
-                disabled={!carouselControls.next}
-                onClick={() => scrollReviews(1)}
-                title="Próximas avaliações"
-                type="button"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
-          ) : null}
-        </div>
-
-        {displayedReviews.length > 0 ? (
-          <div
-            aria-label="Avaliações de clientes"
-            aria-roledescription="carrossel"
-            className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-3 motion-reduce:scroll-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            id="customer-reviews-carousel"
-            onScroll={updateCarouselControls}
-            ref={carouselRef}
-            role="region"
-          >
-            {displayedReviews.map((review, index) => (
-              <article
-                aria-label={`Avaliação ${index + 1} de ${displayedReviews.length}`}
-                aria-roledescription="slide"
-                className="relative flex min-h-72 min-w-0 shrink-0 basis-[88%] snap-start flex-col rounded-3xl border border-line bg-white p-6 shadow-sm transition-colors hover:border-brand/30 sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-2rem)/3)]"
-                data-review-card
-                key={review.id}
-                role="group"
-              >
-                <div className="mb-5 flex items-center gap-3">
-                  <span aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-brand/10 bg-brand-soft text-base font-black text-brand" data-review-avatar>
-                    {reviewInitials(review.reviewerName)}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <strong className="block truncate text-sm text-ink">{review.reviewerName}</strong>
-                    {review.source === "purchase" ? (
-                      <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-ink/75"><ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 text-pharma-green" />Compra verificada</span>
-                    ) : null}
-                  </div>
-                  <Quote aria-hidden="true" className="h-6 w-6 shrink-0 text-brand/20" />
-                </div>
-                <RatingStars rating={review.rating} size="h-4 w-4" />
-                <blockquote className="mb-6 mt-3 break-words text-base font-medium leading-7 text-ink">
-                  &ldquo;{review.comment}&rdquo;
-                </blockquote>
-                {review.source === "purchase" ? <div className="mt-auto min-w-0 border-t border-line pt-4">
-                  <span className="block text-xs text-muted">Sobre o produto</span>
-                  <Link
-                    className="mt-1 inline-flex min-h-11 max-w-full items-center gap-2 rounded-sm text-sm font-bold text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                    href={`/produto/${review.productSlug}`}
-                  >
-                    <span className="line-clamp-2 break-words">{review.productName}</span><ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0" />
-                  </Link>
-                </div> : <p className="mt-auto border-t border-line pt-4 text-xs leading-5 text-muted">Sobre o atendimento da Wimifarma.</p>}
-                {review.source === "purchase" && review.incentivized ? <p className="mt-3 text-xs leading-5 text-muted">Avaliação com incentivo de cashback, independente da nota.</p> : null}
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-start gap-5 rounded-3xl border border-line bg-white p-6 sm:flex-row sm:items-center sm:p-8">
-            <span aria-hidden="true" className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand"><Quote className="h-8 w-8" /></span>
-            <div className="max-w-xl">
-              <h3 className="text-xl font-bold text-ink">Sua experiência tem espaço aqui.</h3>
-              <p className="mt-2 text-sm leading-6 text-muted">Ainda não há avaliações verificadas publicadas. Depois de receber sua compra, conte como foi usar o produto.</p>
-            </div>
-          </div>
-        )}
-        <Link className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-brand/20 bg-white px-5 py-3 text-sm font-bold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2" href="/minha-conta/avaliacoes">Avaliar minhas compras<ChevronRight aria-hidden="true" className="h-4 w-4" /></Link>
-      </div>
-    </section>
-  );
-}
 
 export function HomePage({
   brands = [],
