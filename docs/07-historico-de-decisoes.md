@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-02 — Publicação da revisão comercial, filtros e endereço
+
+- Fonte/OCI `5738f30` publicada em Linux ARM64, somente no app, com imagem anterior preservada, configuração efetiva e PostgreSQL inalterados. QA pública passou no fluxo Rexona avulso/kit6/frete SP em 320/390/1.440 px e filtros Medicamentos/Cabelos em 390/1.440 px. O parser da verificação foi corrigido para comentários SSR sem enfraquecer suas asserções; jobs anteriores consumidos preservados. Recibos e cadeia Compose em [136](136-revisao-comercial-e-estimativas-finais.md).
+- O chat 15 entregou o endereço sem cidade padrão; a integração passou em 78 regressões, lint, tipos, Prisma e 503 testes de segurança. Não foi criada conta, pedido, pagamento ou etiqueta real. Os 11 rascunhos físicos foram aplicados em operação anterior separada; continuam estimados e sem aprovação de transporte. Imosec e a calibração física permanecem pendentes.
+
 ## 2026-11-01 — Revisão comercial e últimos rascunhos físicos
 
 - Vitrines usam rotação diária por Brasília, com Beleza sem medicamentos e exclusão de receita/classificação inconsistente em todas as coleções. Correlatos priorizam família, marca, linha e kits; ficha diferencia cuidados de higiene e medicamentos e apresenta conteúdo/previsão de retirada junto da compra. Pix, preços, estoque e contratos de pagamento preservados. Contrato e provas em [136](136-revisao-comercial-e-estimativas-finais.md).

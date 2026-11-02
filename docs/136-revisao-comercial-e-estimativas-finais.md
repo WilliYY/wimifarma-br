@@ -59,6 +59,23 @@ Resultado: **3.068 ativos, 3.067 com os quatro campos físicos preenchidos, um i
 
 ### Publicação do app
 
-O primeiro build parou com `exec format error`: o operador havia forçado AMD64 no servidor ARM64. A nova etapa congelou a plataforma da imagem existente, validada contra o host, e concluiu o build Linux ARM64. A primeira conferência pública dessa candidata restaurou a imagem anterior por falso negativo do parser: o SSR separa `3` e `%` por comentários React, e a extração de texto inseria um espaço artificial. A revisão independente reproduziu o defeito e aprovou a correção, preservando a asserção literal de 3% e a exclusão de scripts/rodapé. Jobs e provas anteriores permanecem preservados. A publicação final, incluindo filtros e endereço, será registrada após a nova verificação.
+O primeiro build parou com `exec format error`: o operador havia forçado AMD64 no servidor ARM64. A nova etapa congelou a plataforma da imagem existente, validada contra o host, e concluiu o build Linux ARM64. A primeira conferência pública dessa candidata restaurou a imagem anterior por falso negativo do parser: o SSR separa `3` e `%` por comentários React, e a extração de texto inseria um espaço artificial. A revisão independente reproduziu o defeito e aprovou a correção, preservando a asserção literal de 3% e a exclusão de scripts/rodapé. Jobs e provas anteriores permanecem preservados; nenhuma fase consumida foi repetida.
+
+### Publicação concluída e conferência pública — 02/11/2026
+
+O job novo `commerce-01a15b8f-20261102-app-v3` concluiu prepare/build/deploy/verify com **PASS**. Fonte e label OCI `5738f30cfca7b07c3e83e6d30188d81c82e343b4`; imagem `sha256:bc280d78ecc6f0e4d57357874540bff7e0421da55016fc67f2ba5a17ff48c06a`; app `2aa5483397ca744639aac5592e81edea912aea69868f6a369febbbaba2fd8571`, iniciado em 02/11 às 02h56 UTC, saudável. A imagem anterior foi preservada para recuperação. PostgreSQL manteve ID, imagem e início de 03/10. Configuração, ambiente, portas, redes, mounts, campos comerciais e canônico permaneceram preservados nessa publicação somente do app; não houve migration.
+
+A cadeia efetiva congelada é o Compose base mais `commerce-01a15b8f-20261102-app-v2/rollback.compose.yml` e `commerce-01a15b8f-20261102-app-v3/candidate.compose.yml`, sob `/home/ubuntu/.codex-taskdata/`. Futuras manutenções devem ler essa cadeia do runtime, sem assumir apenas o arquivo base. O canônico conserva SHA `cb9a0e8779f6ec4d571d0fdc36ad510926e0e957e2ed8432c9316024be06dfcc` e autorização comercial inalterada.
+
+Verificações reais no site público:
+
+- As fichas Rexona avulso e kit de seis responderam 200, com conteúdo/apresentação, condições de pagamento e preparo junto da compra; sem bloco PMC ou orientação de bula no conteúdo de higiene. O kit da mesma linha aparece nos correlatos do avulso.
+- Chromium executou busca “sabonete Rexona”, abriu o avulso, encontrou o kit de seis e consultou `01001-000` pela interface em **320/390/1.440 px**. Todos passaram, sem overflow horizontal da página. Sete opções de frete, incluindo Loggi R$ 13,41/5 dias, PAC R$ 16,27/10 dias e SEDEX R$ 19,84/6 dias, naquela consulta. Valores/prazos permanecem estimativas, incluindo preparação.
+- Filtros reais de Medicamentos e Cabelos passaram em **390/1.440 px**: somente contexto atual, escape Catálogo completo e ausência de categorias irmãs indevidas. Medicamentos mantém Diabetes/Colesterol; Cabelos não mostra Banho/Desodorantes. Capturas de condições de compra e filtros foram inspecionadas.
+- Perfil/endereço foi validado em fixtures de navegador e APIs sintéticas, incluindo Google/vínculos; não foi criada uma conta real em produção. Nenhum pedido, pagamento ou etiqueta foi criado pelos testes.
+
+Arquivos principais: `home-collections.ts` e `public-search.ts` para vitrines/correlatos; `produto/[slug]/page.tsx`, `product-presentation.ts` e `product-purchase-conditions.tsx` para a ficha; `catalog-navigation.ts`, `storefront.ts`, navegação e rota de categoria para os filtros; painel/schema/criações de Customer e respectivas regressões para endereço; CLI de rascunhos e seus testes para as hipóteses físicas. Documentos 24, 94, 104, 135 e este registro conservam contratos e limitações.
+
+Comandos executados incluem testes dirigidos via `node --import tsx --test`, ESLint dos arquivos alterados, `npm.cmd run typecheck`, `npm.cmd run prisma:validate`, `npm.cmd run test:security`, auditorias npm completa/produção, build Linux e `git diff --check`. Os recibos públicos e de dados foram recuperados e conferidos localmente. A documentação posterior pode avançar o Git sem alterar a revisão OCI da aplicação acima.
 
 Recibos privados ficam em `outputs/comercial-logistica-2026-11-02/`, fora do Git.
