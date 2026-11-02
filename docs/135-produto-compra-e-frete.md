@@ -18,7 +18,7 @@ Perfis prontos continuam respeitando os serviços aprovados e só recebem benef�
 
 A leitura produtiva de 01/11 encontrou 3.068 produtos ativos: 3.056 com os quatro campos físicos preenchidos, todos estimados, e 12 incompletos; dois perfis estavam habilitados/revisados. O Ablok do exemplo já possuía dados estimados completos, mas estava desativado e sem revisão. O bloqueio anterior acontecia antes da consulta ao provedor e não demonstrava falta de cobertura do CEP.
 
-Os 12 incompletos não foram preenchidos indiscriminadamente: há conflitos documentais de unidade/apresentação, classificação ainda pendente, um SKU sem EAN e seis publicações recentes somente Avise-me com físicos desconhecidos. As guardas documentadas em [129](129-hipoteses-por-tipo-de-embalagem.md) e [134](134-prontidao-logistica-publicacao.md) continuam preservadas. Uma simulação não comprova pesagem, encaixe físico ou aceitação de carga.
+Os 12 incompletos não foram preenchidos indiscriminadamente: há conflitos documentais de unidade/apresentação, classificação ainda pendente, um SKU sem referência física auditada e seis publicações recentes somente Avise-me com físicos desconhecidos. Cordarex possui EAN; a menção anterior de ausência desse código foi corrigida após a consulta detalhada. As guardas documentadas em [129](129-hipoteses-por-tipo-de-embalagem.md) e [134](134-prontidao-logistica-publicacao.md) continuam preservadas. Uma simulação não comprova pesagem, encaixe físico ou aceitação de carga. A continuidade explícita das hipóteses e a prova de 11 preenchimentos estão em [136](136-revisao-comercial-e-estimativas-finais.md).
 
 ## Verificação
 

@@ -1,6 +1,6 @@
 # Wimifarma BR
 
-Vitrines diárias por categoria, ficha com kits da mesma linha, previsão de retirada junto da compra e conclusão auditada de estimativas pendentes: [136](docs/136-revisao-comercial-e-estimativas-finais.md). Estimativa não substitui medição, conferência da embalagem ou aprovação de transporte.
+Vitrines diárias por categoria, ficha com kits da mesma linha, previsão de retirada junto da compra, filtros contextuais e perfil sem cidade padrão: [136](docs/136-revisao-comercial-e-estimativas-finais.md). Foram completados 11 rascunhos físicos; estimativa não substitui medição, conferência da embalagem ou aprovação de transporte.
 
 Detalhe do produto com compra simplificada e orçamento público de frete separado da aprovação operacional: [135](docs/135-produto-compra-e-frete.md). Perfis completos podem simular preço/prazo sem liberar transporte, enquanto checkout, carga e dados incompletos conservam suas validações.
 

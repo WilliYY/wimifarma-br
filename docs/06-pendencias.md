@@ -1,5 +1,10 @@
 # 06 - Pendencias
 
+## Continuidade dos rascunhos físicos — 01/11/2026
+
+- Aplicados 11 preenchimentos estimados com backup, dry-run, CAS e 11 auditorias, após teste em PostgreSQL descartável com reversão real. São 3.067 de 3.068 ativos com quatro campos físicos preenchidos; Imosec permanece incompleto por classificação de receita pendente. Os seis Avise-me conservam seu bloqueio e os dois envios anteriormente habilitados continuam os únicos habilitados.
+- Estimativas não comprovam pesagem, tara, proteção, encaixe ou aceitação de carga. Caixas maiores continuam planejadas, não disponíveis. Contratos, hipóteses e provas em [136](136-revisao-comercial-e-estimativas-finais.md).
+
 ## Conferência logística atualizada — 01/11/2026
 
 - Atualização posterior: 3.062 ativos, 3.056 completos/estimados, seis incompletos; Cordarex 5 mg 60 foi incluído após o retrato anterior. Dois envios anteriormente habilitados permanecem assim. Há 26 GTINs com referências de bruto e medidas da unidade comercial, sem receita de embalagem calibrada. A nova política de publicação e os fatos ainda necessários estão em [134](134-prontidao-logistica-publicacao.md).

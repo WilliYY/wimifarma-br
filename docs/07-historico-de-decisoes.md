@@ -4,6 +4,7 @@
 
 - Vitrines usam rotação diária por Brasília, com Beleza sem medicamentos e exclusão de receita/classificação inconsistente em todas as coleções. Correlatos priorizam família, marca, linha e kits; ficha diferencia cuidados de higiene e medicamentos e apresenta conteúdo/previsão de retirada junto da compra. Pix, preços, estoque e contratos de pagamento preservados. Contrato e provas em [136](136-revisao-comercial-e-estimativas-finais.md).
 - Caminho manual explícito e auditado para hipóteses físicas dos últimos rascunhos, sem modificar o aplicador documental nem aprovar transporte. Hashes, revisão, lock, ADMIN, CAS e auditoria obrigatórios; Avise-me e receita não classificada conservam bloqueios. Aplicação e publicação serão registradas após suas verificações.
+- Continuidade: 11 rascunhos estimados aplicados com 11 auditorias e prova de preservação; 3.067/3.068 ativos completos, um pendente e dois envios habilitados anteriores preservados. Filtros agora acompanham a categoria exata e perfil novo não escolhe Ivaté. O chat 15 preparou endereço/CEP com preservação de dados e sem migration; integração passou em 78 testes e revisão independente. Situação final de publicação no documento 136.
 
 ## 2026-11-01 — Prontidão logística dos próximos cadastros
 
