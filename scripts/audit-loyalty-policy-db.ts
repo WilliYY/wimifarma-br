@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { mkdir, lstat, open, realpath } from "node:fs/promises";
 import path from "node:path";
-import { inspect } from "node:util";
 import { getPrisma } from "../src/lib/prisma";
 import type { Prisma } from "../src/generated/prisma/client";
 import { ensureClubMembership } from "../src/features/club/membership";
@@ -65,7 +64,6 @@ async function privateQaDiagnostic(error: unknown) {
       error: {
         message: redact(error instanceof Error ? error.message : undefined),
         stack: redact(error instanceof Error ? error.stack : undefined),
-        details: redact(inspect(error, { depth: 8, customInspect: false, getters: false, maxArrayLength: 100, maxStringLength: 40_000 })),
       },
     };
     const handle = await open(path.join(directory, diagnosticFile), "wx", 0o600);
