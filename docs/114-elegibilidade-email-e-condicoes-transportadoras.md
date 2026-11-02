@@ -10,6 +10,16 @@ React Email permanece utilizável independentemente do transportador de e-mail; 
 
 Fontes: [Resend — Uso Aceitável](https://resend.com/legal/acceptable-use), [Brevo — política antispam](https://www.brevo.com/legal/antispampolicy/), [AWS — Uso Aceitável](https://aws.amazon.com/aup/), [termos AWS, seção 15](https://aws.amazon.com/service-terms/), [produção SES](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html).
 
+## E-mail — retorno conferido em 01/11/2026
+
+A thread do Gmail da Wimifarma contém uma resposta humana do Resend, recebida em **27/10/2026 às 14h51, horário de Brasília**. O serviço informou que não atende farmácias. Como a pergunta já descrevia avisos transacionais mínimos, não há autorização para tratar esses avisos como exceção. Resend foi descartado para esta operação; a biblioteca React Email pode continuar renderizando os modelos independentemente dele.
+
+Na Brevo, a thread contém somente a consulta enviada em **27/10 às 10h37**. A busca ampliada em todas as pastas, desde 26/10, incluindo Brevo, Sendinblue e elegibilidade, não localizou resposta. Isso mantém a situação como **aguardando avaliação**, sem presumir aprovação. O plano gratuito consultado continua com 300 envios por dia, sem acumular e com marca Brevo; a cota não resolve a pendência de elegibilidade.
+
+Resposta e consulta conferidas no Gmail da Wimifarma; a evidência permanece privada, fora do Git. Fontes públicas atuais: [Resend](https://resend.com/legal/acceptable-use), [Brevo](https://www.brevo.com/legal/antispampolicy/), [limites Brevo Free](https://help.brevo.com/hc/en-us/articles/208580669-FAQs-What-are-the-limits-of-the-Free-plan).
+
+Esta revisão foi somente leitura dos e-mails e das fontes públicas. Não houve resposta, reenvio, contratação, criação de conta, geração de credencial, configuração de DNS ou disparo de e-mail.
+
 ## Frete — condições confirmadas
 
 Melhor Envio continua sendo a integração existente. Correios direto, Frenet e Rodonaves são candidatos pesquisados; não estão cadastrados, homologados ou ativos por esta entrega. Plataforma de cotação adicional pode repetir transportadoras e não aumenta automaticamente a aceitação de cargas.
