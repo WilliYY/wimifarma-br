@@ -29,4 +29,22 @@ A revisão independente aprovou a apresentação e o novo contrato público, sem
 - Segurança: 503/503, zero falhas. ESLint completo, typecheck e Prisma validate passaram. A primeira sequência de checks foi interrompida durante typecheck; a retomada executou somente os checks pendentes, após confirmar que os processos anteriores haviam encerrado.
 - Auditoria de produção: três alertas baixos, quatro moderados, nenhum alto/crítico. Auditoria completa: três baixos, 17 moderados, nenhum alto/crítico. Logs completos preservados fora do Git; dependências não foram atualizadas nesta tarefa.
 
-O build final será validado na imagem Linux antes de qualquer troca do app. Publicação e consulta pública real serão registradas após sua conclusão.
+Uma rodada isolada adicional no código conjunto `5f06c2aaf5e4bf3cd970e479ab7cd97b5f59112f`, incluindo a alteração concorrente da apresentação do login, passou em lint dirigido, typecheck, Prisma validate e 503/503 testes de segurança. As revisões independentes aprovaram também a exceção da lista de serviços vazia somente para rascunhos não revisados e a preservação dos contratos de autenticação.
+
+## Verificação pública — 01/11/2026, 21h58 (Brasília)
+
+As alterações estão disponíveis no site público. A rodada inicial construiu a imagem Linux, mas o operador interrompeu antes da troca do app ao validar a ausência de labels no Compose. O operador corrigido detectou uma troca concorrente do app e encerrou por `PREFLIGHT_APP_CHANGED`, sem substituir o serviço de outra manutenção. Não se repetiram fases consumidas nem se alterou a autorização canônica de publicação. O app atualmente saudável já contém o comportamento solicitado, comprovado pelas consultas públicas abaixo.
+
+Para uma unidade de Ablok 100 mg 30 comprimidos, a rota pública retornou `mode: "estimate"`, sem token ou benefício de gratuidade:
+
+| CEP | PAC | SEDEX | Prazo PAC / SEDEX |
+| --- | --- | --- | --- |
+| 87501-070 — Umuarama | R$ 18,35 | R$ 20,84 | 9 / 5 dias |
+| 01001-000 — São Paulo | R$ 18,35 | R$ 20,84 | 10 / 6 dias |
+| 69005-070 — Manaus | R$ 58,96 | R$ 70,31 | 26 / 10 dias |
+
+Os prazos incluem o preparo configurado. São cotações daquele momento, calculadas pelo Melhor Envio com o perfil estimado cadastrado; não são tarifas fixas, pesagens confirmadas nem garantia de cobertura e aceitação para todo o catálogo. Um rascunho real de Sitagliptina + Metformina, com lista vazia de serviços aprovados, também retornou PAC e SEDEX somente como estimativa.
+
+O HTML público não contém os três textos de compra removidos nem a legenda visual da galeria, preservando título e preço. A API rejeitou peso enviado pelo cliente com HTTP 422, origem externa com HTTP 403 e o perfil incompleto de Clopidogrel com HTTP 422. As respostas mantiveram a política sem cache. Nenhum pedido, pagamento ou etiqueta foi criado, nem produto ou perfil logístico foi alterado pelos testes.
+
+O app permaneceu saudável e com a mesma identidade durante as verificações; o PostgreSQL preservou sua identidade e início de execução anteriores. O Git observado no servidor estava em `5f06c2aaf5e4bf3cd970e479ab7cd97b5f59112f`. A imagem ativa não possui label OCI de revisão: a evidência comprova o comportamento público, mas não estabelece sozinha uma correspondência exata entre o commit e o artefato em execução. O recibo e os logs privados estão em `outputs/product-shipping-2026-11-01/`, fora do Git.
