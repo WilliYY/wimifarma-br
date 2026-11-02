@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-01 — Revisão comercial e últimos rascunhos físicos
+
+- Vitrines usam rotação diária por Brasília, com Beleza sem medicamentos e exclusão de receita/classificação inconsistente em todas as coleções. Correlatos priorizam família, marca, linha e kits; ficha diferencia cuidados de higiene e medicamentos e apresenta conteúdo/previsão de retirada junto da compra. Pix, preços, estoque e contratos de pagamento preservados. Contrato e provas em [136](136-revisao-comercial-e-estimativas-finais.md).
+- Caminho manual explícito e auditado para hipóteses físicas dos últimos rascunhos, sem modificar o aplicador documental nem aprovar transporte. Hashes, revisão, lock, ADMIN, CAS e auditoria obrigatórios; Avise-me e receita não classificada conservam bloqueios. Aplicação e publicação serão registradas após suas verificações.
+
 ## 2026-11-01 — Prontidão logística dos próximos cadastros
 
 - Novo fluxo rascunho → conferência ADMIN de embalagem/transporte → publicação, com gate comum e preservação dos ativos legados. Medições explícitas não são inferidas de estimativas, parser ou dosagem. Alteração de identidade que invalida o perfil exige revisão antes de continuar publicada. Contrato e situação da base em [134](134-prontidao-logistica-publicacao.md).
