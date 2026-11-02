@@ -20,7 +20,7 @@ const nullablePhone = z
 
 export const customerCreateSchema = z.object({
   address: z.string().max(240).optional(),
-  city: z.string().max(80).default("Ivate"),
+  city: z.string().max(80).default(""),
   email: z.string().email().optional(),
   name: z.string().min(2).max(160),
   neighborhood: z.string().max(120).optional(),
@@ -43,7 +43,7 @@ export const customerPublicRegisterSchema = z
 
 export const customerProfileUpdateSchema = z.object({
   address: nullableText(240),
-  city: z.string().trim().min(2).max(80).default("Ivate"),
+  city: z.string().trim().max(80).refine((value) => value === "" || value.length >= 2, "Informe uma cidade valida.").optional(),
   name: z.string().trim().min(2).max(160),
   neighborhood: nullableText(120),
   notes: nullableText(800),

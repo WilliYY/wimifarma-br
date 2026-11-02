@@ -41,6 +41,8 @@ import { CustomerOrderCard, CustomerOrderHistoryPanel } from "@/components/site/
 import type { CustomerOrderHistory, OrderHistoryFilter } from "@/features/orders/customer-orders";
 import { siteConfig } from "@/lib/site";
 import { useClubSummary } from "@/hooks/use-club-summary";
+import { formatPostalCode, normalizePostalCode } from "@/features/products/product-detail";
+import { postalAddressSchema } from "@/features/orders/postal-code";
 
 type CustomerAccount = {
   address: string | null;
@@ -84,6 +86,8 @@ const tabs = [
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
+const postalFields = ["address", "neighborhood", "city", "state"] as const;
+type PostalField = (typeof postalFields)[number];
 
 function formatCurrency(value: string | number) {
   return new Intl.NumberFormat("pt-BR", {
@@ -167,12 +171,55 @@ export function CustomerAccountPanel({
   const [hasPassword, setHasPassword] = useState(customer.hasPassword);
   const [profile, setProfile] = useState({
     address: customer.address ?? "",
-    city: customer.city || "Ivate",
+    city: customer.city ?? "",
     name: customer.name,
     neighborhood: customer.neighborhood ?? "",
     notes: customer.notes ?? "",
     phone: customer.phone ?? "",
+    postalCode: "",
+    state: "",
   });
+  const profileRef = useRef(profile);
+  const postalRequest = useRef<AbortController | null>(null);
+  const manualAddressFields = useRef(new Set<PostalField>());
+  const automaticAddressFields = useRef<Partial<Record<PostalField, string>>>({});
+  const [postalStatus, setPostalStatus] = useState({ loading: false, failed: false, message: "" });
+  const [postalRetry, setPostalRetry] = useState(0);
+  const postalCode = normalizePostalCode(profile.postalCode);
+
+  useEffect(() => {
+    if (postalCode.length !== 8 || activeTab !== "perfil") return;
+    const controller = new AbortController();
+    postalRequest.current = controller;
+    const timer = window.setTimeout(async () => {
+      setPostalStatus({ loading: true, failed: false, message: "Consultando CEP..." });
+      try {
+        const response = await fetch(`/api/cep/${postalCode}`, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]) });
+        const payload = await response.json().catch(() => null);
+        if (controller.signal.aborted || normalizePostalCode(profileRef.current.postalCode) !== postalCode) return;
+        if (!response.ok) throw new Error(typeof payload?.error === "string" ? payload.error : "Consulta indisponível. Preencha o endereço manualmente.");
+        const parsed = postalAddressSchema.safeParse(payload?.data);
+        if (!parsed.success || parsed.data.postalCode !== postalCode) throw new Error("Resposta de CEP inválida. Preencha o endereço manualmente.");
+        const found = parsed.data;
+        const values = { address: found.street, neighborhood: found.neighborhood, city: found.city, state: found.state };
+        const next = { ...profileRef.current };
+        for (const field of postalFields) {
+          if (!next[field] && !manualAddressFields.current.has(field)) {
+            next[field] = values[field];
+            automaticAddressFields.current[field] = values[field];
+          }
+        }
+        profileRef.current = next;
+        setProfile(next);
+        setPostalStatus({ loading: false, failed: false, message: "CEP encontrado. Confira rua, número e complemento antes de salvar." });
+      } catch (error) {
+        if (!controller.signal.aborted && normalizePostalCode(profileRef.current.postalCode) === postalCode) {
+          setPostalStatus({ loading: false, failed: true, message: error instanceof Error ? error.message : "Consulta indisponível. Preencha o endereço manualmente." });
+        }
+      }
+    }, 350);
+    return () => { controller.abort(); window.clearTimeout(timer); };
+  }, [postalCode, activeTab, postalRetry]);
   const [password, setPassword] = useState({
     confirmPassword: "",
     currentPassword: "",
@@ -229,14 +276,28 @@ export function CustomerAccountPanel({
     field: keyof typeof profile,
     value: string,
   ) {
-    setProfile((current) => ({ ...current, [field]: value }));
+    const next = { ...profileRef.current, [field]: value };
+    if (field === "postalCode" && normalizePostalCode(value) !== normalizePostalCode(profileRef.current.postalCode)) {
+      postalRequest.current?.abort();
+      for (const key of postalFields) {
+        if (automaticAddressFields.current[key] !== undefined && next[key] === automaticAddressFields.current[key]) next[key] = "";
+      }
+      automaticAddressFields.current = {};
+      setPostalStatus({ loading: false, failed: false, message: "" });
+    } else if (postalFields.includes(field as PostalField)) {
+      manualAddressFields.current.add(field as PostalField);
+      delete automaticAddressFields.current[field as PostalField];
+    }
+    profileRef.current = next;
+    setProfile(next);
   }
 
   async function saveProfile() {
+    const submitted = { address: profile.address, city: profile.city, name: profile.name, neighborhood: profile.neighborhood, notes: profile.notes, phone: profile.phone };
     setIsSavingProfile(true);
     try {
     const response = await fetch("/api/minha-conta", {
-      body: JSON.stringify(profile),
+      body: JSON.stringify(submitted),
       headers: { "Content-Type": "application/json" },
       method: "PATCH",
     });
@@ -247,6 +308,9 @@ export function CustomerAccountPanel({
       return;
     }
 
+    for (const field of ["address", "neighborhood", "city"] as const) {
+      if (profileRef.current[field] === submitted[field]) delete automaticAddressFields.current[field];
+    }
     toast.success("Dados salvos.");
     router.refresh();
     } catch {
@@ -370,10 +434,11 @@ export function CustomerAccountPanel({
           <div className={cn(activeTab === "inicio" || activeTab === "pedidos" || activeTab === "avisos" ? "hidden" : "rounded-2xl border border-line bg-white p-5 sm:p-7")}>
           {activeTab !== "inicio" && activeTab !== "pedidos" && activeTab !== "avisos" && <div className="mb-6 border-b border-line pb-5"><h2 className="text-2xl font-black tracking-tight">{activeTab === "perfil" ? "Seus dados, sempre em dia" : activeTab === "seguranca" ? "Acesso e segurança" : "Seus benefícios"}</h2><p className="mt-2 text-sm leading-6 text-muted">{activeTab === "perfil" ? "Mantenha seu contato e endereço atualizados para facilitar o atendimento." : activeTab === "seguranca" ? "Cuide do acesso à sua conta com uma senha que só você conhece." : "Acompanhe seu saldo e os benefícios das suas compras."}</p></div>}
           {activeTab === "perfil" ? (
-            <form className="grid gap-5 sm:grid-cols-2 [&_input]:min-h-12 [&_input]:rounded-xl [&_textarea]:rounded-xl" onSubmit={(event) => { event.preventDefault(); void saveProfile(); }}>
+            <form autoComplete="on" className="grid gap-5 sm:grid-cols-2 [&_input]:min-h-12 [&_input]:rounded-xl [&_textarea]:rounded-xl" onSubmit={(event) => { event.preventDefault(); void saveProfile(); }}>
               <Field icon={<UserRound className="h-4 w-4" />} label="Nome">
                 <Input
                   autoComplete="name"
+                  name="name"
                   required
                   value={profile.name}
                   onChange={(event) =>
@@ -382,12 +447,13 @@ export function CustomerAccountPanel({
                 />
               </Field>
               <Field icon={<Mail className="h-4 w-4" />} label="Email da conta">
-                <Input readOnly type="email" className="bg-slate-50 text-muted" value={customer.email ?? ""} />
+                <Input autoComplete="email" name="email" readOnly type="email" className="bg-slate-50 text-muted" value={customer.email ?? ""} />
               </Field>
               <Field icon={<Phone className="h-4 w-4" />} label="Telefone">
                 <Input
                   inputMode="tel"
                   autoComplete="tel"
+                  name="phone"
                   type="tel"
                   placeholder="+55 44 99999-9999"
                   value={profile.phone}
@@ -396,10 +462,23 @@ export function CustomerAccountPanel({
                   }
                 />
               </Field>
+              <Field icon={<MapPin className="h-4 w-4" />} label="CEP">
+                <Input
+                  autoComplete="postal-code"
+                  inputMode="numeric"
+                  maxLength={9}
+                  name="postalCode"
+                  placeholder="00000-000"
+                  value={profile.postalCode}
+                  onChange={(event) => updateProfileField("postalCode", formatPostalCode(event.target.value))}
+                />
+              </Field>
               <Field icon={<Home className="h-4 w-4" />} label="Endereço">
                 <Input
                   placeholder="Rua, numero e complemento"
                   autoComplete="street-address"
+                  maxLength={240}
+                  name="address"
                   value={profile.address}
                   onChange={(event) =>
                     updateProfileField("address", event.target.value)
@@ -408,6 +487,9 @@ export function CustomerAccountPanel({
               </Field>
               <Field icon={<MapPin className="h-4 w-4" />} label="Bairro">
                 <Input
+                  autoComplete="address-level3"
+                  maxLength={120}
+                  name="neighborhood"
                   value={profile.neighborhood}
                   onChange={(event) =>
                     updateProfileField("neighborhood", event.target.value)
@@ -416,12 +498,29 @@ export function CustomerAccountPanel({
               </Field>
               <Field icon={<MapPin className="h-4 w-4" />} label="Cidade">
                 <Input
+                  autoComplete="address-level2"
+                  maxLength={80}
+                  name="city"
                   value={profile.city}
                   onChange={(event) =>
                     updateProfileField("city", event.target.value)
                   }
                 />
               </Field>
+              <Field icon={<MapPin className="h-4 w-4" />} label="UF">
+                <Input
+                  autoComplete="address-level1"
+                  maxLength={2}
+                  name="state"
+                  value={profile.state}
+                  onChange={(event) => updateProfileField("state", event.target.value.replace(/[^a-z]/gi, "").toUpperCase())}
+                />
+              </Field>
+              <div className="text-xs leading-5 text-muted sm:col-span-2">
+                <p>CEP e UF auxiliam a consulta. Salve o endereço completo, bairro e cidade nos campos acima.</p>
+                <div aria-live="polite" role="status">{postalStatus.message}</div>
+                {postalStatus.failed && <button className="mt-1 min-h-9 font-bold text-brand underline underline-offset-4" onClick={() => setPostalRetry((current) => current + 1)} type="button">Consultar CEP novamente</button>}
+              </div>
               <Field icon={<Home className="h-4 w-4" />} label="Observações de entrega">
                 <Textarea
                   className="min-h-24"

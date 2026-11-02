@@ -5,7 +5,7 @@ import vm from "node:vm";
 import { build } from "esbuild";
 
 type User = { id: string; passwordHash: string; isActive: boolean; customerId: string | null; name: string; email: string };
-type Customer = { id: string; passwordHash: string | null; status: string; createdAt: Date; passwordSetAt?: Date };
+type Customer = { id: string; passwordHash: string | null; status: string; createdAt: Date; passwordSetAt?: Date; city: string };
 type State = { customer: Customer | null; user: User | null };
 type Options = { customerHash?: string | null; userHash?: string | null; inactive?: boolean; customerInactive?: boolean; race?: (state: State) => void; failUserWrite?: boolean; failCommit?: boolean; failHash?: boolean; failPrisma?: boolean; unrelatedUser?: boolean; casFailure?: "customer" | "user" };
 const sources = new Map<string, Promise<string>>();
@@ -34,7 +34,7 @@ function source(path: string) {
 
 async function harness(options: Options = {}) {
   let state: State = {
-    customer: { id: customerId, passwordHash: options.customerHash ?? null, status: options.customerInactive ? "BLOCKED" : "ACTIVE", createdAt: new Date("2026-01-01") },
+    customer: { id: customerId, passwordHash: options.customerHash ?? null, status: options.customerInactive ? "BLOCKED" : "ACTIVE", createdAt: new Date("2026-01-01"), city: "Cidade Preservada" },
     user: options.userHash === null ? null : { id: "synthetic-user", passwordHash: options.userHash ?? originalHash, isActive: !options.inactive, customerId: options.unrelatedUser ? "synthetic-other-customer" : customerId, name: "Synthetic", email: "synthetic@example.test" },
   };
   let insideTransaction = false;
@@ -45,7 +45,7 @@ async function harness(options: Options = {}) {
     $queryRaw: async (sql: TemplateStringsArray) => { assert.ok(insideTransaction); events.push(sql.join("").includes('"User"') ? "lock-user" : "lock-customer"); return []; },
     customer: {
       findUnique: async () => current.customer ? { ...current.customer, staffAccess: linked(current) ? { ...linked(current)! } : null } : null,
-      create: async ({ data }: { data: Partial<Customer> }) => (current.customer = { id: customerId, passwordHash: null, status: "ACTIVE", createdAt: new Date(), ...data }),
+      create: async ({ data }: { data: Partial<Customer> }) => (current.customer = { id: customerId, passwordHash: null, status: "ACTIVE", createdAt: new Date(), city: "Ivate", ...data }),
       update: async ({ data }: { data: Partial<Customer> }) => { events.push("customer-write"); Object.assign(current.customer!, data); return current.customer; },
       updateMany: async ({ where, data }: { where: Partial<Customer>; data: Partial<Customer> }) => {
         if (options.casFailure === "customer") return { count: 0 };
@@ -188,11 +188,13 @@ test("Club copies local staff credential to new Customer", async () => {
   const h = await harness(); await h.join(originalHash);
   assert.equal(h.state().customer!.passwordHash, originalHash);
   assert.equal(h.state().user!.customerId, customerId);
+  assert.equal(h.state().customer!.city, "");
 });
 
 test("Club never copies the Google-only marker to Customer", async () => {
   const h = await harness(); await h.join("!GOOGLE_ONLY");
   assert.equal(h.state().customer!.passwordHash, null);
+  assert.equal(h.state().customer!.city, "");
 });
 
 test("account page exposes hasPassword for linked local staff without serializing a hash", async () => {

@@ -11,6 +11,18 @@
 
 ## Implementação
 
+### Endereço sem cidade padrão — 01/11/2026
+
+Perfis novos ou com cidade vazia não recebem Ivaté nem outra cidade na interface. Os cinco caminhos de criação de `Customer` no app informam cidade vazia explicitamente: cadastro público, Google, cadastro de clientes e criação por vínculo/Club. O schema e o padrão legado do banco permanecem preservados para a publicação somente do app; nenhuma migração ou correção em massa de registros existentes. Cidades e endereços já registrados, inclusive legados, continuam intactos. A atualização aceita cidade vazia e preserva a cidade se um cliente antigo omitir esse campo.
+
+Na aba **Meus dados**, a consulta opcional reutiliza `/api/cep/[cep]` e `postalAddressSchema`. CEP e UF auxiliam o preenchimento somente durante a edição; não são persistidos pelo contrato atual de `Customer`. Endereço completo, bairro e cidade permanecem nos campos já salvos pelo perfil. Os campos têm nomes e tokens de autocomplete do navegador; rua retornada pelo CEP exige conferir/acrescentar número e complemento.
+
+Somente CEP completo gera consulta, com espera de 350 ms e tempo limite de oito segundos. A resposta precisa corresponder ao CEP atual. Troca de CEP ou saída da aba cancela a consulta; respostas antigas são descartadas mesmo se o provedor ignorar o cancelamento. Só campos vazios e não editados recebem sugestões. Edição, autocomplete e limpeza manual são preservados. Trocar o CEP limpa apenas sugestões ainda não salvas da consulta anterior; sucesso no salvamento consolida somente os valores efetivamente enviados. Erros permitem preenchimento manual e nova tentativa. Frete, permissões e regras de autenticação mantêm os contratos existentes.
+
+Regressões usam o componente real em Chromium, com dados sintéticos e rede interceptada, sem consultar cadastros ou executar operações comerciais reais. Cobrem perfil vazio, endereço salvo, autocomplete, resposta atrasada/de outro CEP, edição e limpeza manual, troca de CEP, nova tentativa e salvamento durante consulta. As criações via cadastro, Google, Club e vínculo têm regressões isoladas; a API de clientes usa o schema de criação sem cidade padrão.
+
+Validação dirigida final: 57/57 testes aprovados em `customer-address-ui.test.ts`, `customers/schema.test.ts`, `customers/initial-address.test.ts`, `auth/google-linking.test.ts`, `auth/linked-password.test.ts`, `club/club.test.ts` e `orders/checkout-draft.test.ts`, via `node node_modules/tsx/dist/cli.mjs --test` com esses sete arquivos. Revisão independente sem achados pendentes, ESLint dirigido e `git diff --check` aprovados. As fixtures de API fornecem os temporizadores reais ao `vm`, preservando os limites de leitura do corpo; não simulam aprovação de payload inválido. Build, typecheck, gates completos de segurança/auditoria e publicação conjunta ficam com o integrador; esta validação não comprova produção.
+
 ### Benefícios com apresentação leve — 25/10/2026
 
 A aba Benefícios usa cartões brancos, bordas neutras, tipografia Barlow e acentos discretos de dourado para WimiCoins e verde para cashback. A quantidade disponível e sua equivalência em desconto ficam separadas dos totais acumulados, pendentes e utilizados. A conversão em reais continua restrita à apresentação completa dos WimiCoins; a visão geral compacta mantém somente os pontos e o acesso ao detalhe. Direção visual: carteira de benefícios clara, com hierarquia de saldos e extratos (DFII 14), sem nova animação, imagem ou dependência.

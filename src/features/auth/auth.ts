@@ -91,7 +91,7 @@ async function persistGoogleCustomer(input: {
   }
 
   return prisma.customer.create({
-    data: customerData,
+    data: { ...customerData, city: "" },
   });
 }
 

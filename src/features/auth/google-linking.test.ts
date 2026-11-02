@@ -8,6 +8,7 @@ import { hashSync } from "bcryptjs";
 type Customer = {
   id: string; email: string; name: string; status: string;
   googleSubject: string | null; passwordHash: string | null; staffAccess: null;
+  city: string; address: string | null; neighborhood: string | null;
 };
 type Config = {
   callbacks: { jwt: (input: Record<string, unknown>) => Promise<Record<string, unknown> | null> };
@@ -19,6 +20,7 @@ const password = "Synthetic-password-42!";
 const existing: Customer = {
   id: "synthetic-customer", email, name: "Synthetic", status: "ACTIVE",
   googleSubject: null, passwordHash: hashSync(password, 4), staffAccess: null,
+  city: "Ivaté", address: "Rua Preservada, 42", neighborhood: "Bairro Preservado",
 };
 
 async function harness(initial: Customer | null) {
@@ -75,6 +77,9 @@ test("existing authorized Google association keeps the same customer and local l
   assert.equal((await fixture.google())?.customerId, existing.id);
   const credentials = fixture.config.providers.find(provider => provider.id === "credentials")!;
   assert.equal((await credentials.authorize({ email, password }))?.id, existing.id);
+  assert.equal(fixture.row()?.city, existing.city);
+  assert.equal(fixture.row()?.address, existing.address);
+  assert.equal(fixture.row()?.neighborhood, existing.neighborhood);
 });
 
 test("Google rejects blocked customers and different subjects without writes", async () => {
@@ -94,6 +99,7 @@ test("new verified Google customer and passwordless record remain supported", as
     assert.equal((await fixture.google())?.customerId, existing.id);
     assert.equal(fixture.row()?.googleSubject, subject);
     assert.equal(fixture.row()?.passwordHash, null);
+    assert.equal(fixture.row()?.city, initial ? existing.city : "");
   }
 });
 

@@ -43,6 +43,7 @@ export async function POST(request: Request) {
   try {
     const customer = await prisma.customer.create({
       data: {
+        city: "",
         email: parsed.data.email,
         name: parsed.data.name,
         passwordHash,

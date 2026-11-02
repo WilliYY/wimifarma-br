@@ -20,6 +20,7 @@ export async function resolveClubCustomer(tx: Prisma.TransactionClient, session:
       if (conflict) throw new ClubRuleError("Não foi possível vincular esta conta. Contate a administração.", 409);
       const localPassword = user.passwordHash !== "!GOOGLE_ONLY" ? user.passwordHash : null;
       const customer = await tx.customer.create({ data: {
+        city: "",
         name: user.name, email: user.email,
         passwordHash: localPassword,
         passwordSetAt: localPassword ? new Date() : null,
