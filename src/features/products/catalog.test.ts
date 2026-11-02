@@ -34,9 +34,9 @@ const products: ProductCatalogItem[] = [
   },
 ];
 
-test("new products default to published and accept an explicit showcase choice", () => {
+test("new products remain draft until review and accept an explicit showcase choice", () => {
   const parsed = productCreateSchema.parse({ name: "Produto teste", price: 20, featured: true });
-  assert.equal(parsed.status, "ACTIVE");
+  assert.equal(parsed.status, "DRAFT");
   assert.equal(parsed.featured, true);
 });
 

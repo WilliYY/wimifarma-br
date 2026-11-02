@@ -23,6 +23,8 @@ As quantidades solicitadas são as originalmente pedidas. A recompra soma soment
 
 Validação dirigida: `npm run test:repurchase`, com fixtures sintéticas para núcleo, projeção privada, API autenticada e componente real em Chromium. Os testes cobrem preço/estoque atuais, assistência, itens excluídos, duplicatas, limites, carrinho existente, recompra individual, persistência, falhas e consulta concorrente. Evidências e estado de publicação são registrados após os gates de integração; teste local não comprova produção.
 
+A revisão geral corrigiu somente a expectativa desatualizada do teste de cadastro: produtos novos continuam em `DRAFT`, conforme o contrato de prontidão logística em [134](134-prontidao-logistica-publicacao.md). Nenhuma regra de publicação foi modificada. A suíte geral também é conferida com concorrência limitada para reduzir contenção nos ensaios de navegador.
+
 ### Endereço sem cidade padrão — 01/11/2026
 
 Perfis novos ou com cidade vazia não recebem Ivaté nem outra cidade na interface. Os cinco caminhos de criação de `Customer` no app informam cidade vazia explicitamente: cadastro público, Google, cadastro de clientes e criação por vínculo/Club. O schema e o padrão legado do banco permanecem preservados para a publicação somente do app; nenhuma migração ou correção em massa de registros existentes. Cidades e endereços já registrados, inclusive legados, continuam intactos. A atualização aceita cidade vazia e preserva a cidade se um cliente antigo omitir esse campo.
