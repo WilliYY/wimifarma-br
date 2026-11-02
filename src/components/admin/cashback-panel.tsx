@@ -10,9 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { BULK_PRODUCT_LIMIT, type BulkProductUpdate } from "@/features/products/catalog-bulk";
 import { CashbackProductCard } from "./cashback-product-card";
 import { CASHBACK_PAGE_SIZE, CashbackSessionError, cashbackListingSchema, cashbackSavedSchema, readCashbackResponse, selectCashbackProducts, createCashbackBulkUpdate, confirmCashbackBulkResponse, type CashbackListing, type CashbackListProduct } from "@/features/cashback/client";
-import { cashbackRateSchema } from "@/features/cashback/rules";
+import { manualCashbackRateSchema } from "@/features/cashback/rules";
 import { cashbackProductEligible } from "@/features/cashback/client";
-import { decimalToMinorUnits } from "@/features/supplier-planning/form";
 import { formatCurrency } from "@/lib/utils";
 
 export function CashbackPanel() {
@@ -26,7 +25,6 @@ export function CashbackPanel() {
   const [sessionExpired, setSessionExpired] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
-  const [bulkRate, setBulkRate] = useState("2");
   const [bulkSaving, setBulkSaving] = useState(false);
   const [preview, setPreview] = useState<{ body: BulkProductUpdate; names: string[] } | null>(null);
   const saveLock = useRef(false);
@@ -65,13 +63,8 @@ export function CashbackPanel() {
     if (saveLock.current || loading || error || sessionExpired) return;
     const ids = selectCashbackProducts(selected, listing?.data ?? []);
     const products = (listing?.data ?? []).filter(product => ids.includes(product.id));
-    let rate: number | null = null;
-    try { if (active) rate = decimalToMinorUnits(bulkRate); } catch { /* Show the same bounded input error below. */ }
-    if (!products.length || (active && !cashbackRateSchema.safeParse(rate).success)) {
-      toast.error("Selecione produtos e informe um percentual entre 0,01% e 100%, com ate duas casas decimais.");
-      return;
-    }
-    setPreview({ body: createCashbackBulkUpdate(products, active, rate ?? undefined), names: products.map(product => product.name) });
+    if (!products.length) { toast.error("Selecione produtos elegíveis."); return; }
+    setPreview({ body: createCashbackBulkUpdate(products, active, 100), names: products.map(product => product.name) });
   }
 
   async function applyBulk() {
@@ -100,8 +93,8 @@ export function CashbackPanel() {
 
   async function save(product: CashbackListProduct, cashbackEnabled: boolean, cashbackRateBps: number) {
     if (saveLock.current || loading || sessionExpired || error) return false;
-    if (!cashbackRateSchema.safeParse(cashbackRateBps).success) {
-      toast.error("Informe um percentual entre 0,01% e 100%.");
+    if (!manualCashbackRateSchema.safeParse(cashbackRateBps).success) {
+      toast.error("O cashback atual é de 1%.");
       return false;
     }
     saveLock.current = true;
@@ -145,7 +138,7 @@ export function CashbackPanel() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 border-b border-line pb-6 sm:grid-cols-3">
-        {[{ label: "Percentual inicial", value: "2%", icon: CircleDollarSign },
+        {[{ label: "Cashback selecionado", value: "1%", icon: CircleDollarSign },
           { label: "Produtos ativos com cashback", value: listing ? String(listing.active) : "...", icon: Wallet },
           { label: "Cashback pendente em pedidos", value: listing ? formatCurrency(listing.pendingCents / 100) : "...", icon: CircleDollarSign }].map((item) => (
           <div className="flex min-w-0 items-center gap-3" key={item.label}>
@@ -162,8 +155,7 @@ export function CashbackPanel() {
       <div className="grid min-w-0 gap-3 rounded-md border border-line bg-white p-3 sm:flex sm:flex-wrap sm:items-end" aria-label="Cashback em massa">
         <label className="flex min-h-11 items-center gap-2 text-sm font-semibold"><input type="checkbox" className="h-5 w-5 accent-emerald-700" disabled={busy || !eligibleIds.length} checked={eligibleIds.length > 0 && eligibleIds.every(id => selected.includes(id))} onChange={event => setSelected(event.target.checked ? eligibleIds : [])} />Selecionar visiveis (ate {BULK_PRODUCT_LIMIT})</label>
         <span className="text-xs text-muted" role="status">{selected.length} selecionados · {CASHBACK_PAGE_SIZE} por pagina</span>
-        <label className="grid min-w-0 gap-1 text-xs font-semibold sm:w-28">Percentual (%)<Input aria-label="Percentual em massa" inputMode="decimal" value={bulkRate} disabled={busy} onChange={event => setBulkRate(event.target.value)} /></label>
-        <Button disabled={busy || !selected.length} onClick={() => reviewBulk(true)} variant="success">Aplicar percentual</Button>
+        <Button disabled={busy || !selected.length} onClick={() => reviewBulk(true)} variant="success">Ativar 1% nos selecionados</Button>
         <Button disabled={busy || !selected.length} onClick={() => reviewBulk(false)} variant="secondary">Desativar selecionados</Button>
         <p className="w-full text-xs text-muted">Somente produtos elegiveis. Busca, filtros e troca de pagina limpam a selecao.</p>
       </div>

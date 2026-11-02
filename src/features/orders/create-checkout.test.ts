@@ -133,13 +133,15 @@ test("recompensas mantêm exclusões, adesão e compra sem desconto", async () =
 
 async function prescriptionCheckout(options: { type?: string; attachment?: Record<string, unknown>; uploadId?: boolean; signedOut?: boolean; mutateToAntimicrobial?: boolean } = {}) {
   let order: Record<string, unknown> | null = null; let reads = 0; let links = 0;
+  let membership: { active: boolean } | null = null; let enrollments = 0;
   const product = { id: "synthetic-antimicrobial", ean: "7890000000015", name: "Produto sintético", slug: "synthetic", imageUrl: null, price: "10.00", promotionalPrice: null, stock: 10, status: "ACTIVE", requiresPrescription: true, prescriptionType: options.type ?? "ANTIMICROBIAL", isPopularPharmacy: false, cashbackEnabled: false, cashbackRateBps: 0, wimicoinsEnabled: false, wimicoinsRateBps: 0 };
   const items = [{ productId: product.id, quantity: 1, expectedUnitPriceCents: 1000 }];
   const attachment = { customerId: "customer-test", orderId: null as string | null, expiresAt: new Date(Date.now() + 60_000), cartFingerprint: prescriptionCartFingerprint([product], items), submissionId: "synthetic-request", ...options.attachment };
   const tx = {
     $queryRaw: async () => [], $executeRaw: async () => 0,
     customer: { findFirst: async () => ({ id: "customer-test" }) },
-    clubMembership: { findUnique: async () => null },
+    clubMembership: { findUnique: async () => membership, create: async () => { enrollments++; membership = { active: true }; return membership; } },
+    auditLog: { create: async () => ({}) },
     product: { findMany: async () => { reads++; return [{ ...product, prescriptionType: options.mutateToAntimicrobial && reads > 1 ? "ANTIMICROBIAL" : product.prescriptionType }]; } },
     prescriptionUpload: { findUnique: async () => attachment, updateMany: async () => { links++; attachment.orderId = "synthetic-order"; return { count: 1 }; } },
     order: { findUnique: async () => order, create: async ({ data }: { data: Record<string, unknown> }) => (order = { ...data, id: "synthetic-order" }), findUniqueOrThrow: async () => order },
@@ -147,16 +149,17 @@ async function prescriptionCheckout(options: { type?: string; attachment?: Recor
   const loaded = { exports: {} as { createCheckout: (tx: unknown, input: unknown, customer?: string) => Promise<unknown> } };
   vm.runInNewContext((await rewardsBundle).outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), crypto: webcrypto, console });
   const input = { checkoutRequestId: "synthetic-request", prescriptionUploadId: options.uploadId === false ? undefined : "synthetic-upload", customer: { name: "Cliente sintético", email: "synthetic@example.com", phone: "44999999999" }, fulfillmentMethod: "PICKUP", paymentMethod: "CASH", cashbackRedeemCents: 0, privacyConsent: true, items };
-  return { attachment, order: () => order, links: () => links, run: () => loaded.exports.createCheckout(tx, input, options.signedOut ? undefined : "customer-test") };
+  return { attachment, order: () => order, links: () => links, enrollments: () => enrollments, run: () => loaded.exports.createCheckout(tx, input, options.signedOut ? undefined : "customer-test") };
 }
 
 test("antimicrobial checkout associates private attachment once and retry survives its TTL", async () => {
   const f = await prescriptionCheckout(); await f.run();
   assert.equal(f.order()?.requiresPrescriptionReview, true); assert.equal(f.links(), 1);
+  assert.equal(f.enrollments(), 1);
   assert.equal(f.order()?.prescriptionReviewedAt, undefined);
   assert.equal(JSON.stringify(f.order()).includes("ciphertext"), false);
   f.attachment.expiresAt = new Date(0);
-  await f.run(); assert.equal(f.links(), 1);
+  await f.run(); assert.equal(f.links(), 1); assert.equal(f.enrollments(), 1);
 });
 
 test("checkout rejects missing/foreign/expired/reused/cart-mismatched/submission-mismatched attachments", async () => {

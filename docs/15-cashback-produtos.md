@@ -1,5 +1,13 @@
 # 15 - Cashback por produto
 
+## Política atual de seleção e taxa — 02/11/2026
+
+O lojista definiu cashback de compra de **1%**, somente nos produtos escolhidos manualmente por comportarem o benefício na margem. Não foi informado um limiar numérico, e o sistema não presume margem suficiente pela classe do medicamento, pelo nome ou pelo preço. Novos produtos começam sem cashback; a seleção automática de genéricos/similares descrita no histórico de 23/10 foi encerrada.
+
+Habilitar cashback nas APIs de criação/edição, módulo Cashback ou lote grava 100 pontos-base, mesmo se o produto desabilitado ainda tiver taxa legada diferente. Taxa explícita incompatível é recusada. A validação de taxa específica de cashback é separada da validação genérica usada pelos WimiCoins; não se altera a fórmula histórica, a taxa dos pontos ou o bônus de avaliação.
+
+A seleção anteriormente habilitada é preservada; isso não comprova uma nova auditoria da margem. A normalização dos percentuais legados habilitados usa plano versionado, hash, ADMIN ativo, CAS, locks e auditoria, sem ativar outros itens. Preços, estoque, classificação, WimiCoins, pedidos e carteiras permanecem fora da operação. Estado de execução e evidências em [138](138-fidelidade-catalogo-e-reconferencia.md). Os contratos e exemplos anteriores abaixo permanecem como histórico, sem autorizar uma nova ativação automática por classe.
+
 ## Genéricos e similares, inclusive com receita — 23/10/2026
 
 O lojista aprovou cashback de compra de **1%** em medicamentos classificados explicitamente como `MEDICINE` + `GENERIC` ou `SIMILAR`, incluindo receita comum e antimicrobianos classificados. Essa decisão substitui a exclusão geral de medicamentos com receita descrita no histórico abaixo. Controlados, receita pendente e Farmácia Popular continuam excluídos; nomes, categorias e segmentos comerciais não substituem a classificação confirmada.

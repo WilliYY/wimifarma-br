@@ -103,3 +103,16 @@ test("bulk: não publica distribuidor sem foto e preserva edição do legado ati
   assert.equal((await legacy.run({ supplierMarkupBps: 6000 })).status, 200);
   assert.equal((await legacy.run({ status: "DRAFT" })).status, 200);
 });
+
+
+test("bulk: ativar legado 2% sem percentual persiste 1% e rejeita percentual explícito diferente", async () => {
+  const enabled = await harness();
+  assert.equal((await enabled.run({ cashbackEnabled: true })).status, 200);
+  for (const write of enabled.writes) assert.equal(write.data.cashbackRateBps, 100);
+  const invalid = await harness();
+  assert.equal((await invalid.run({ cashbackEnabled: true, cashbackRateBps: 200 })).status, 422);
+  assert.equal(invalid.writes.length, 0);
+  const coins = await harness();
+  assert.equal((await coins.run({ wimicoinsEnabled: true, wimicoinsRateBps: 200 })).status, 200);
+  for (const write of coins.writes) assert.equal(write.data.wimicoinsRateBps, 200);
+});

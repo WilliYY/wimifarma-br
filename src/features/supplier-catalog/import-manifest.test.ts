@@ -1,5 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
+test("importação rejeita instruções comerciais internas e apresentação duplicada", () => {
+  for (const patch of [
+    { description: "Fralda Bigfral para adultos. Dividir custos pelo número de unidades antes de cadastrar o produto na loja." },
+    { description: "Fralda Bigfral Derma Plus Juvenil 10 unidades. Unidade comercial identificada na fonte do distribuidor, sem fracionar caixa ou dividir custos. Confira o tamanho, a quantidade e as orientações na embalagem." },
+    { name: "Fralda Bigfral Adulto G 10un Adulto G 10un" },
+    { name: "Fralda Bigfral Derma Plus Adulto J 10Unadulto Bigfral Derma Plus J Pacote 10 unidades" },
+  ]) assert.equal(supplierImportManifestSchema.safeParse({ products: [{ ...row, ...patch }] }).success, false);
+});
 import { supplierImportManifestSchema, assertImportTarget, persistedPrescriptionType } from "./import-manifest";
 
 const evidence = { sourceUrl: "https://example.org/presentation", observedAt: "2026-10-01T10:00:00Z" };

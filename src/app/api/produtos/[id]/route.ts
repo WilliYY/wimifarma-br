@@ -1,6 +1,6 @@
 import { preserveNotifyOnlyPendingLogistics } from "@/features/products/notify-only";
 import { NextResponse } from "next/server";
-import { cashbackProductIsEligible } from "@/features/cashback/rules";
+import { cashbackProductIsEligible, DEFAULT_CASHBACK_RATE_BPS } from "@/features/cashback/rules";
 import { gtinVariants, normalizeGtin } from "@/features/supplier-catalog/commerce";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireAdminApi } from "@/features/auth/permissions";
@@ -144,7 +144,7 @@ export async function PATCH(
     wimicoinsRateBps: parsed.data.wimicoinsRateBps,
     shippingProfile: parsed.data.shippingProfile,
     cashbackEnabled: parsed.data.cashbackEnabled,
-    cashbackRateBps: parsed.data.cashbackRateBps,
+    cashbackRateBps: parsed.data.cashbackEnabled ? DEFAULT_CASHBACK_RATE_BPS : parsed.data.cashbackRateBps,
     activeIngredients: parsed.data.activeIngredients,
     brand: parsed.data.brand,
     category: parsed.data.category,

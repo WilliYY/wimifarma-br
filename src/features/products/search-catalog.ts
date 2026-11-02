@@ -73,7 +73,7 @@ function searchOrder(query: string) {
   const normalized = normalizeProductSearch(query);
   const barcode = barcodeCondition(query);
   const size = productSearchPlan(query).size;
-  const sizeOrder = size ? Prisma.sql`CASE WHEN regexp_replace(${normalizedField(Prisma.sql`p."name"`)}, '\\m[0-9]+[ ]*g\\M', ' ', 'g') ~ ${productSizePattern(size)} THEN 1 ELSE 0 END DESC, ` : Prisma.empty;
+  const sizeOrder = size ? Prisma.sql`CASE WHEN regexp_replace(regexp_replace(${normalizedField(Prisma.sql`p."name"`)}, '\\mextra[ ]*g\\M', 'xg', 'g'), '\\m[0-9]+[ ]*g\\M', ' ', 'g') ~ ${productSizePattern(size)} THEN 1 ELSE 0 END DESC, ` : Prisma.empty;
   return Prisma.sql`${sizeOrder}CASE
     ${barcode ? Prisma.sql`WHEN ${barcode} THEN 1000` : Prisma.empty}
     WHEN lower(p."name") = ${normalized} THEN 500

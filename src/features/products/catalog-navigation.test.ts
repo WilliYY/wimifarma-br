@@ -2,6 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { catalogCategoryGroups, catalogCategoryNavigationContext, catalogFilters, catalogFilterHref, catalogPagination, catalogSections, matchesCatalogSection, sortCatalogProducts } from "./catalog-navigation";
 
+test("perfume como característica de absorventes e fraldas não muda o tipo", () => {
+  const section = catalogSections.find(section => section.id === "perfume")!;
+  for (const name of ["Absorvente Intimus com perfume 8un", "Protetor diário com perfume", "Fralda com perfume", "Absorvente perfume suave", "Sabonete com colônia"]) {
+    assert.equal(matchesCatalogSection({ id: name, name, category: "Higiene" }, section), false, name);
+  }
+});
+
 test("categoria aberta limita a árvore ao próprio grupo sem perder a categoria exata", () => {
   const categories = ["Medicamentos", "Genéricos", "Higiene", "Infantil", "Nutrição"].map((name, i) => ({ name, names: [name], slug: String(i) }));
   const context = catalogCategoryNavigationContext(categories, "/categorias/1?marca=Marca&q=pressao", undefined);

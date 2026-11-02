@@ -21,20 +21,22 @@ export function ClubBanner() {
             Cuidar de você<br />rende mais.
           </h2>
           <p className="mt-5 max-w-md text-sm leading-6 text-white sm:text-base">
-            Acumule WimiCoins em produtos participantes e use junto com seu cashback nas próximas compras.
+            Sua conta participa grátis do Club. Acumule WimiCoins nos produtos selecionados e 1% de cashback nos itens participantes.
           </p>
+          <p className="mt-2 text-sm font-semibold text-white">100 WimiCoins = R$ 1 em desconto.</p>
           <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
             {summary?.member ? (
               <Link className={buttonClass} href="/minha-conta?tab=beneficios">Ver meus benefícios {arrow}</Link>
             ) : guest ? (
-              <Link className={buttonClass} href="/login?callbackUrl=%2Fminha-conta">Entrar para o Club {arrow}</Link>
+              <Link className={buttonClass} href="/login?callbackUrl=%2Fminha-conta">Entrar e ver benefícios {arrow}</Link>
             ) : (
               <button className={buttonClass} disabled={loading || joining || Boolean(error)} onClick={() => void join()} type="button">
-                {loading ? "Consultando Club…" : joining ? "Confirmando adesão…" : "Fazer parte grátis"} {arrow}
+                {loading ? "Consultando Club…" : joining ? "Confirmando adesão…" : "Ativar benefícios grátis"} {arrow}
               </button>
             )}
             <p className="text-xs font-medium text-white">Grátis, sem mensalidade.</p>
           </div>
+          <Link className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-white underline underline-offset-4" href="/cashback">Entenda os três benefícios</Link>
           {error && (
             <div className="mt-4 max-w-md text-sm text-white">
               <p role="alert">{error}</p>

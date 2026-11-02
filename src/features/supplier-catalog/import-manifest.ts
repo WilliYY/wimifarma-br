@@ -20,10 +20,21 @@ const offerSchema = z.object({ ...offerFields,
   const duration = Date.parse(offer.validUntil) - Date.parse(offer.observedAt);
   return duration > 0 && duration <= 86_400_000;
 }, "Offer validity must be positive and up to 24 hours.");
+
+function hasRepeatedPresentation(value: string) {
+  return /\d\s*unadult[oa]\b/i.test(value) ||
+    /\b(\d+\s*un(?:idades?)?)\s*(adult[oa]\s+[a-z]+\s*)?\1\b/i.test(value) ||
+    /\b(adult[oa]\s+[a-z]+\s+\d+\s*un)\s+\1\b/i.test(value);
+}
+
+function hasInternalCostInstructions(value: string) {
+  return /\b(divid(?:ir|a)|rate(?:ar|io)|repartir)\b[^.!?]{0,60}\bcustos?\b|\bcustos?\b[^.!?]{0,60}\b(divid(?:ir|a)|rate(?:ar|io)|repartir)\b/i.test(value);
+}
+
 const rowSchema = z.object({
   ean: gtinSchema,
-  name: z.string().trim().min(5).max(160), slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(120),
-  brand: z.string().trim().min(1).max(120), description: z.string().trim().min(80).max(800),
+  name: z.string().trim().min(5).max(160).refine(value => !hasRepeatedPresentation(value), "Repeated package presentation; review the source name."), slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(120),
+  brand: z.string().trim().min(1).max(120), description: z.string().trim().min(80).max(800).refine(value => !hasInternalCostInstructions(value), "Internal cost instructions are not a public product description."),
   category: z.string().trim().min(1).max(100), activeIngredients: z.array(z.string().trim().min(1).max(100)).max(10).default([]),
   prescriptionType: z.enum(["ORDINARY", "ANTIMICROBIAL", "NONE"]), requiresPrescription: z.boolean(),
   catalogClassification: catalogClassificationSchema.optional(), supplierMarkupBps: supplierMarkupSchema.optional(),

@@ -3,6 +3,7 @@ import { requireAdminApi } from "@/features/auth/permissions";
 import { customerCreateSchema } from "@/features/customers/schema";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
+import { auditClubAutoEnrollment } from "@/features/club/membership";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,11 @@ export async function POST(request: Request) {
   }
 
   const prisma = getPrisma();
-  const customer = await prisma.customer.create({ data: parsed.data, select: customerSelect });
+  const customer = await prisma.$transaction(async tx => {
+    const created = await tx.customer.create({ data: { ...parsed.data, clubMembership: { create: {} } }, select: customerSelect });
+    await auditClubAutoEnrollment(tx, created.id);
+    return created;
+  });
 
   return NextResponse.json({ data: customer }, { status: 201 });
 }

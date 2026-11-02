@@ -26,13 +26,18 @@ async function load(path: string, prisma: object) {
 
 test("cadastro público ignora o padrão legado do banco para a cidade de um novo cliente", async () => {
   let created: Record<string, unknown> = {};
-  const route = await load("src/app/api/minha-conta/register/route.ts", { customer: {
+  const audits: unknown[] = [];
+  const prisma = { customer: {
     findUnique: async () => null,
     create: async ({ data }: { data: Record<string, unknown> }) => { created = { city: "Ivate", ...data }; return { id: "synthetic-customer", ...created }; },
-  } });
+  }, auditLog: { create: async (data: unknown) => { audits.push(data); } } };
+  const route = await load("src/app/api/minha-conta/register/route.ts", { ...prisma, $transaction: async (callback: (tx: unknown) => Promise<unknown>) => callback(prisma) });
   const response = await route.POST(new Request("https://example.test/api/minha-conta/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "Cliente Sintético", email: "customer@example.invalid", phone: "44999990000", password: "Synthetic-42!", confirmPassword: "Synthetic-42!" }) })) as Response;
   assert.equal(response.status, 201);
   assert.equal(created.city, "");
+  assert.deepEqual(JSON.parse(JSON.stringify(created.clubMembership)), { create: {} });
+  assert.equal(audits.length, 1);
+  assert.match(JSON.stringify(audits), /CLUB_AUTO_ENROLLED/);
 });
 
 test("vínculo cria cliente sem cidade padrão e preserva endereço de cliente já vinculado", async () => {

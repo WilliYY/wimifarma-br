@@ -37,7 +37,6 @@ import { ProductBulkEditor } from "@/components/admin/product-bulk-editor";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import { BULK_PRODUCT_LIMIT, visibleBulkSelection } from "@/features/products/catalog-bulk";
 import { catalogKindLabels, classificationLabels, emptyClassification, medicineClassLabels, readClassification, type CatalogClassification } from "@/features/products/catalog-operations";
-import { medicineCashbackDefaults } from "@/features/cashback/rules";
 import { productDisplayName } from "@/features/products/display-name";
 import { ProductShippingFields, type ProductShippingFieldsHandle } from "@/components/admin/product-shipping-fields";
 import { ProductMarketingTools } from "@/components/admin/product-marketing-tools";
@@ -242,8 +241,6 @@ function ProductFormFields({
   const [automatic, setAutomatic] = useState(true);
   const [inventorySource, setInventorySource] = useState(product?.inventorySource ?? "PHARMACY");
   const [newClassification, setNewClassification] = useState<CatalogClassification>({ ...emptyClassification });
-  const [cashbackContext, setCashbackContext] = useState({ requiresPrescription: product?.requiresPrescription ?? false, isPopularPharmacy: product?.isPopularPharmacy ?? false, prescriptionType: product?.prescriptionType ?? "UNREVIEWED" });
-  const newCashbackDefaults = medicineCashbackDefaults({ ...cashbackContext, catalogClassification: newClassification });
   const privateSupplierPhoto = inventorySource === "DISTRIBUTOR" && Boolean(product?.requiresPrescription);
   const [seo, setSeo] = useState({ name: product?.name ?? "", brand: product?.brand ?? "", description: product?.description ?? "" });
   const [photoIdentity, setPhotoIdentity] = useState({ name: product?.name ?? "", brand: product?.brand ?? "", ean: product?.ean ?? "" });
@@ -283,7 +280,6 @@ function ProductFormFields({
     setSuggestion(null);
     if (!product) {
       setNewClassification({ ...emptyClassification });
-      setCashbackContext(current => ({ ...current, prescriptionType: "UNREVIEWED" }));
     }
     refreshSeo();
   }
@@ -413,11 +409,7 @@ function ProductFormFields({
   const nonMedicine = ["food", "beauty", "hygiene", "device", "other"].includes(typeHint);
 
   return (
-    <fieldset className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain bg-surface-subtle p-3 sm:p-5" disabled={disabled} onChange={event => {
-      const field = event.target;
-      if (field instanceof HTMLInputElement && (field.name === "requiresPrescription" || field.name === "isPopularPharmacy")) setCashbackContext(current => ({ ...current, [field.name]: field.checked }));
-      if (field instanceof HTMLSelectElement && field.name === "prescriptionType") setCashbackContext(current => ({ ...current, prescriptionType: field.value as typeof current.prescriptionType }));
-    }}>
+    <fieldset className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain bg-surface-subtle p-3 sm:p-5" disabled={disabled}>
       <div className="mb-5 overflow-hidden rounded-xl border border-brand/20 bg-brand-soft/40">
         <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
@@ -592,9 +584,9 @@ function ProductFormFields({
                 <label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={newClassification.ethical} onChange={event => setNewClassification(current => ({ ...current, ethical: event.target.checked }))} />Ético</label>
                 <label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={newClassification.otc} onChange={event => setNewClassification(current => ({ ...current, otc: event.target.checked }))} />MIP / OTC confirmado</label>
               </>}
-              <p className="text-xs text-muted">Classifique pela documentação do produto. Genéricos e similares elegíveis iniciam com 1% de cashback.</p>
+              <p className="text-xs text-muted">Classifique pela documentação do produto. Cashback de 1% somente após seleção manual de produtos com margem avaliada.</p>
             </fieldset>}
-            {canManageCashback ? <CashbackProductFields enabled={product ? product.cashbackEnabled : newCashbackDefaults.cashbackEnabled} rateBps={product ? product.cashbackRateBps : newCashbackDefaults.cashbackRateBps} /> : null}
+            {canManageCashback ? <CashbackProductFields enabled={product?.cashbackEnabled} /> : null}
             {canManageCashback ? <WimiCoinsProductFields enabled={product?.wimicoinsEnabled} rateBps={product?.wimicoinsRateBps} /> : null}
 
             <label className="flex items-center gap-3 rounded-md border border-line bg-surface-subtle px-3 py-3 text-sm font-bold text-ink">

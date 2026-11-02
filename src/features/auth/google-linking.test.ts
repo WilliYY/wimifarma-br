@@ -26,6 +26,12 @@ const existing: Customer = {
 async function harness(initial: Customer | null) {
   let row = initial ? { ...initial } : null;
   let writes = 0;
+  let creation: unknown = null;
+  const audits: unknown[] = [];
+  const createCustomer = async ({ data }: { data: Partial<Customer> }) => {
+    writes++; creation = JSON.parse(JSON.stringify(data)); row = { ...existing, passwordHash: null, ...data }; return row;
+  };
+  const transaction = { customer: { create: createCustomer }, auditLog: { create: async (data: unknown) => { audits.push(data); } } };
   const bundle = await build({
     entryPoints: ["src/features/auth/auth.ts"], bundle: true, write: false,
     platform: "node", format: "cjs", packages: "external",
@@ -43,13 +49,12 @@ async function harness(initial: Customer | null) {
     module: loaded, exports: loaded.exports, require: createRequire(import.meta.url),
     process: { env: { NODE_ENV: "test", GOOGLE_CLIENT_ID: "synthetic", GOOGLE_CLIENT_SECRET: "synthetic" } },
     Date, console, fixture: { prisma: {
+      $transaction: async (callback: (tx: unknown) => Promise<unknown>) => callback(transaction),
       customer: {
         findUnique: async ({ where }: { where: Record<string, unknown> }) => row &&
           (where.id === row.id || where.email === row.email || (where.googleSubject && where.googleSubject === row.googleSubject)) ? row : null,
         update: async ({ data }: { data: Partial<Customer> }) => { writes++; row = { ...row!, ...data }; return row; },
-        create: async ({ data }: { data: Partial<Customer> }) => {
-          writes++; row = { ...existing, passwordHash: null, ...data }; return row;
-        },
+        create: createCustomer,
       },
       user: { findUnique: async () => null },
       loginAttempt: { count: async () => 0, create: async () => undefined },
@@ -61,8 +66,18 @@ async function harness(initial: Customer | null) {
     account: { provider: "google", providerAccountId: subject },
     profile: { email, email_verified: true, sub: subject },
   });
-  return { google, config, writes: () => writes, row: () => row };
+  return { google, config, writes: () => writes, row: () => row, creation: () => creation, audits };
 }
+
+test("novo perfil Google recebe adesão gratuita atômica sem carteira ou marketing", async () => {
+  const fixture = await harness(null);
+  assert.ok(await fixture.google());
+  const data = fixture.creation() as { clubMembership: unknown };
+  assert.deepEqual(data.clubMembership, { create: {} });
+  assert.equal(fixture.audits.length, 1);
+  assert.match(JSON.stringify(fixture.audits), /CLUB_AUTO_ENROLLED/);
+  assert.doesNotMatch(JSON.stringify(data), /wimicoinAccount|cashbackAccount|marketing|consent/);
+});
 
 test("verified Google cannot inherit an unverified password registration", async () => {
   const fixture = await harness(existing);

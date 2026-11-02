@@ -1,7 +1,23 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
+test("Extra G e ExtraG são XG, separados de G, sem sobrar extra na consulta", () => {
+  const products = ["Fralda Bigfral Extra G 10un", "Fralda Bigfral G 10un", "Fralda Bigfral ExtraG 10un", "Fralda Bigfral XG 10un"].map((name, id) => ({ id: String(id), name, searchText: normalizeProductSearch(name) }));
+  assert.equal(rankProductsForQuery(products, "fralda G")[0].id, "1");
+  for (const query of ["fralda Extra G", "fralda ExtraG", "fralda XG"]) {
+    assert.deepEqual(new Set(rankProductsForQuery(products, query).slice(0, 3).map(p => p.id)), new Set(["0", "2", "3"]), query);
+  }
+});
+
+test("PediaSure recupera e recomenda a própria família em vez de Ensure", () => {
+  const source = { id: "source", name: "PediaSure Baunilha 400g", brand: "Abbott", category: "Nutrição", activeIngredients: [], searchTerms: ["baunilha"] };
+  const candidates = ["Ensure Baunilha 400g", "PediaSure Chocolate 850g", "PediaSure Morango 400g"].map((name, id) => ({ ...source, name, id: String(id) }));
+  assert.deepEqual(relatedProductFamilySearchTerms(source), ["pediasure"]);
+  assert.deepEqual(rankRelatedProducts(source, candidates).map(p => p.id), ["1", "2"]);
+});
 import {
   buildProductSearchText,
+  normalizeProductSearch,
   parseProductTerms,
   rankProductsForQuery,
   rankRelatedProducts,

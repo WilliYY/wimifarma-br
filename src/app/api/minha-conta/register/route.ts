@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { customerPublicRegisterSchema } from "@/features/customers/schema";
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
+import { auditClubAutoEnrollment } from "@/features/club/membership";
 
 export const dynamic = "force-dynamic";
 
@@ -41,9 +42,11 @@ export async function POST(request: Request) {
   const passwordHash = await hash(parsed.data.password, 12);
 
   try {
-    const customer = await prisma.customer.create({
+    const customer = await prisma.$transaction(async tx => {
+      const created = await tx.customer.create({
       data: {
         city: "",
+        clubMembership: { create: {} },
         email: parsed.data.email,
         name: parsed.data.name,
         passwordHash,
@@ -55,6 +58,9 @@ export async function POST(request: Request) {
         id: true,
         name: true,
       },
+      });
+      await auditClubAutoEnrollment(tx, created.id);
+      return created;
     });
 
     return NextResponse.json({ data: customer }, { status: 201 });

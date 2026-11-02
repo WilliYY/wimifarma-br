@@ -150,12 +150,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (product.category) relationFilters.push({ category: { equals: product.category, mode: "insensitive" } });
 
   const familyTerms = relatedProductFamilySearchTerms(product);
-  const sameLineCandidates = familyTerms.length && product.brand
+  const nutritionFamily = familyTerms.some(term => ["pediasure", "ensure", "glucerna", "nutren"].includes(term));
+  const sameLineCandidates = familyTerms.length
     ? await prisma.product.findMany({
         orderBy: [{ name: "asc" }], select: productSelect, take: 30,
         where: { id: { not: product.id }, status: "ACTIVE", AND: [
           { OR: familyTerms.map(term => ({ name: { contains: term, mode: "insensitive" as const } })) },
-          { OR: [{ brand: { equals: product.brand, mode: "insensitive" } }, { name: { contains: product.brand, mode: "insensitive" } }] },
+          // Nutrition line names identify the family even when brand fields differ (Abbott/PediaSure).
+          ...(product.brand && !nutritionFamily ? [{ OR: [{ brand: { equals: product.brand, mode: "insensitive" as const } }, { name: { contains: product.brand, mode: "insensitive" as const } }] }] : []),
         ] },
       })
     : [];

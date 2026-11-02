@@ -4,7 +4,7 @@ import { bulkRequiresAdmin, type BulkProductUpdate } from "./catalog-bulk";
 import { lockProductCatalog, ProductMutationError } from "./mutations";
 import { validatePhotoPublication } from "./photo-publication-policy";
 import { validateShippingPublication } from "./shipping-publication-policy";
-import { cashbackProductIsEligible } from "@/features/cashback/rules";
+import { cashbackProductIsEligible, DEFAULT_CASHBACK_RATE_BPS } from "@/features/cashback/rules";
 
 export async function updateCatalogBulk(tx: Prisma.TransactionClient, input: BulkProductUpdate, actorId: string) {
   await lockProductCatalog(tx);
@@ -31,6 +31,7 @@ export async function updateCatalogBulk(tx: Prisma.TransactionClient, input: Bul
   const result = [];
   for (const current of validated) {
     const data: Prisma.ProductUpdateInput = { ...input.changes };
+    if (input.changes.cashbackEnabled) data.cashbackRateBps = DEFAULT_CASHBACK_RATE_BPS;
     if (input.changes.status !== undefined && input.changes.status !== "ACTIVE") data.featuredPosition = null;
     const saved = await tx.product.update({ where: { id: current.id }, data, select: { id: true, updatedAt: true } });
     const before = Object.fromEntries(Object.keys(data).map(key => [key, current[key as keyof typeof current]])) as Prisma.InputJsonObject;

@@ -152,6 +152,7 @@ export function CustomerAuthPage({ callbackUrl = "/minha-conta" }: { callbackUrl
             </fieldset>
           </form>
           <form aria-label="Criar conta" hidden={mode !== "register"} onSubmit={handleRegisterSubmit}>
+            <p className="mb-4 rounded-xl bg-brand-soft px-4 py-3 text-sm leading-6 text-ink">Sua conta já participa grátis do Club Wimifarma. Acumule WimiCoins nos produtos participantes e acompanhe seus benefícios na conta.</p>
             <fieldset className="space-y-4" disabled={busy}>
               <Field autoComplete="name" icon={<UserRound className="h-4 w-4" />} label="Nome" name="name" placeholder="Como podemos chamar você?" />
               <div className="grid gap-4 sm:grid-cols-2">

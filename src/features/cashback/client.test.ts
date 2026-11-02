@@ -17,10 +17,10 @@ test("cashback lote seleciona somente visíveis elegíveis, sem duplicar e até 
 
 test("cashback lote usa revisões atuais e somente mudanças financeiras explícitas", () => {
   const products = [product("a"), product("b")];
-  assert.deepEqual(createCashbackBulkUpdate(products, true, 235), { items: products.map(p => ({ id: p.id, expectedUpdatedAt: p.updatedAt })), changes: { cashbackEnabled: true, cashbackRateBps: 235 } });
+  assert.deepEqual(createCashbackBulkUpdate(products, true), { items: products.map(p => ({ id: p.id, expectedUpdatedAt: p.updatedAt })), changes: { cashbackEnabled: true, cashbackRateBps: 100 } });
   assert.deepEqual(createCashbackBulkUpdate(products, false).changes, { cashbackEnabled: false });
   for (const items of [[], [product("a"), product("a")], [product("rx", { requiresPrescription: true })], [product("fp", { isPopularPharmacy: true })], Array.from({ length: 51 }, (_, i) => product(String(i)))]) assert.throws(() => createCashbackBulkUpdate(items, true, 200));
-  for (const rate of [0, 10001, NaN]) assert.throws(() => createCashbackBulkUpdate(products, true, rate));
+  for (const rate of [0, 200, 235, 10001, NaN]) assert.throws(() => createCashbackBulkUpdate(products, true, rate));
 });
 
 test("cashback lote exige resposta completa e os mesmos ids antes de confirmar", async () => {

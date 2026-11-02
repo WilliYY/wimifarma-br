@@ -41,6 +41,7 @@ export function CartPage() {
       const next = await requestCartReview(source);
       if (reviewRequest.current !== requestId) return;
       if (latestItems.current !== source) { setReviewMessage("O carrinho mudou durante a consulta. Consulte novamente."); return; }
+      if (!next.hasChanges) { setReviewMessage("Seu carrinho já está atualizado. Preços, quantidades e disponibilidade conferidos. A consulta não reserva estoque; o checkout confere os dados novamente."); return; }
       setProposal(next);
     } catch (error) {
       if (reviewRequest.current === requestId) setReviewMessage(error instanceof Error ? error.message : "Não foi possível revisar o carrinho. Tente novamente.");
@@ -115,11 +116,15 @@ export function CartPage() {
                 {proposal && proposal.source === items && <div className="mt-4 border-t border-line pt-4">
                   <p className="text-sm font-black text-ink">Proposta de atualização</p>
                   <ul className="mt-3 grid gap-3 text-xs leading-5 text-muted">
-                    {proposal.entries.map(entry => <li key={entry.before.id} className="break-words">
+                    {proposal.entries.filter(entry => entry.reason || entry.changes.length).map(entry => <li key={entry.before.id} className="break-words">
                       <strong className="block text-ink">{entry.before.name}</strong>
                       {entry.after ? <>
-                        <span className="block">Preço unitário: {currency.format(entry.before.unitPriceCents / 100)} → {currency.format(entry.after.unitPriceCents / 100)}</span>
-                        <span className="block">Quantidade: {entry.before.quantity} → {entry.after.quantity}</span>
+                        {entry.changes.includes("unitPriceCents") && <span className="block">Preço unitário: {currency.format(entry.before.unitPriceCents / 100)} → {currency.format(entry.after.unitPriceCents / 100)}</span>}
+                        {entry.changes.includes("quantity") && <span className="block">Quantidade: {entry.before.quantity} → {entry.after.quantity}</span>}
+                        {entry.changes.includes("stock") && <span className="block">Estoque disponível: {entry.before.stock} → {entry.after.stock}</span>}
+                        {entry.changes.some(field => ["requiresPrescription", "prescriptionType", "isPopularPharmacy", "catalogClassification"].includes(field)) && <span className="block">Classificação ou exigência de receita atualizada. Confira as orientações antes de finalizar.</span>}
+                        {entry.changes.some(field => ["inventorySource", "supplierDemandAllowed"].includes(field)) && <span className="block">Origem do estoque ou disponibilidade por distribuidor atualizada.</span>}
+                        {entry.changes.some(field => ["name", "slug", "imageUrl", "category", "originalPriceCents"].includes(field)) && <span className="block">Dados de apresentação ou preço de referência atualizados.</span>}
                         {entry.before.quantity > entry.after.quantity && <span className="block">Quantidade reduzida ao estoque disponível.</span>}
                       </> : <span className="block font-bold text-brand">Remover: {entry.reason === "ASSISTED" ? "este produto precisa de atendimento assistido." : entry.reason === "OUT_OF_STOCK" ? "produto sem estoque." : "produto indisponível."}</span>}
                     </li>)}

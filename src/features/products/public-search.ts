@@ -106,6 +106,7 @@ export function isPrescriptionSearchProduct(product: { requiresPrescription: boo
 export function productSearchPlan(query: string) {
   let remaining = query.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const size = productSearchSize(query);
+  if (size === "xg") remaining = remaining.replace(/\bextra\s*g\b/g, "xg");
   if (size) remaining = remaining.replace(new RegExp(`(^|[^a-z0-9])(\\d+\\s*g|${size})(?=$|[^a-z0-9])`, "g"), (match, separator: string, token: string) => token === size ? `${separator} ` : match);
   const topics: SearchTopic[] = [];
   // Longest phrase wins: "pressao baixa" and "diabetes tipo 1" cannot fall
@@ -132,12 +133,16 @@ export function productSearchPlan(query: string) {
 export function productSearchSize(query: string) {
   const normalized = normalizeProductSearch(query);
   if (!/\bfraldas?\b/.test(normalized)) return null;
-  const withoutMass = normalized.replace(/\b\d+\s*g\b/g, " ");
+  const withoutMass = normalizeProductSizeName(normalized);
   return /\b(rn|xxg|xg|gg|g|m|p)\b/.exec(withoutMass)?.[1] ?? null;
 }
 
 export function productSizePattern(size: string) {
   return `(^| )${size}($| )`;
+}
+
+export function normalizeProductSizeName(name: string) {
+  return normalizeProductSearch(name).replace(/\bextra\s*g\b/g, "xg").replace(/\b\d+\s*g\b/g, " ");
 }
 
 function isMedicineSearchProduct(product: SearchRankableProduct) {
@@ -293,7 +298,7 @@ function rankExactProductsForQuery<T extends SearchRankableProduct>(
       else if (normalizedName.includes(normalizedQuery)) score = 180;
       else if (product.searchText.startsWith(normalizedQuery)) score = 100;
 
-      if (plan.size && new RegExp(productSizePattern(plan.size)).test(normalizedName.replace(/\b\d+\s*g\b/g, " "))) score += 600;
+      if (plan.size && new RegExp(productSizePattern(plan.size)).test(normalizeProductSizeName(product.name))) score += 600;
 
       return { product, score };
     })
@@ -310,6 +315,8 @@ function normalizedSet(values: string[]) {
 }
 
 const relatedFamilies: Array<{ pattern: RegExp; searchTerms: string[] }> = [
+  // Product lines remain separate: shared flavor/category is not equivalence.
+  ...["pediasure", "ensure", "glucerna", "nutren"].map(line => ({ pattern: new RegExp(`\\b${line}\\b`), searchTerms: [line] })),
   { pattern: /\bsabonetes?\b/, searchTerms: ["sabonete"] },
   { pattern: /\b(desodorante|antitranspirante)\b/, searchTerms: ["desodorante", "antitranspirante"] },
   { pattern: /\b(shampoo|xampu)\b/, searchTerms: ["shampoo", "xampu"] },

@@ -12,7 +12,7 @@ function elements(value: unknown): Element[] {
   return [element, ...elements(element.props.children)];
 }
 
-test("cadastro acompanha padrao classificado de 1% e preserva desabilitacao ou percentual ADMIN", async () => {
+test("cadastro exige selecao manual com percentual oculto fixo de 1%", async () => {
   const state: unknown[] = [];
   let cursor = 0;
   const fixture = {
@@ -35,7 +35,8 @@ test("cadastro acompanha padrao classificado de 1% e preserva desabilitacao ou p
     const tree = elements(loaded.exports.CashbackProductFields({ enabled, rateBps }));
     return { checkbox: tree.find(element => element.props.name === "cashbackEnabled")!, percentage: tree.find(element => element.props.name === "cashbackPercent")! };
   }
-  assert.equal(render(false, 200).percentage.props.value, "2");
+  assert.equal(render(false, 200).percentage.props.value, "1");
+  assert.equal(render(false, 200).percentage.props.type, "hidden");
   let fields = render(true, 100);
   assert.equal(fields.checkbox.props.checked, true);
   assert.equal(fields.percentage.props.value, "1");
@@ -43,8 +44,5 @@ test("cadastro acompanha padrao classificado de 1% e preserva desabilitacao ou p
   fields = render(true, 500);
   assert.equal(fields.checkbox.props.checked, false);
   assert.equal(fields.percentage.props.value, "1");
-  (fields.percentage.props.onValueChange as (value: string) => void)("1.25");
-  fields = render(true, 100);
-  assert.equal(fields.checkbox.props.checked, false);
-  assert.equal(fields.percentage.props.value, "1.25");
+  assert.equal(fields.percentage.props.onValueChange, undefined);
 });

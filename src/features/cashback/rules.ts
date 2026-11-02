@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { readClassification } from "@/features/products/catalog-operations";
 
-export const DEFAULT_CASHBACK_RATE_BPS = 200;
+export const DEFAULT_CASHBACK_RATE_BPS = 100;
 export const GENERIC_SIMILAR_CASHBACK_RATE_BPS = 100;
 export const cashbackRateSchema = z.number().int().min(1).max(10_000);
+export const manualCashbackRateSchema = z.literal(DEFAULT_CASHBACK_RATE_BPS);
 export const cashbackProductUpdateSchema = z.object({
   cashbackEnabled: z.boolean(),
-  cashbackRateBps: cashbackRateSchema,
+  cashbackRateBps: manualCashbackRateSchema.default(DEFAULT_CASHBACK_RATE_BPS),
   expectedUpdatedAt: z.iso.datetime(),
 });
 
@@ -28,11 +29,10 @@ export function cashbackProductIsEligible(product: CashbackProduct) {
     (classification.medicineClass === "GENERIC" || classification.medicineClass === "SIMILAR");
 }
 
-export function medicineCashbackDefaults(product: CashbackProduct) {
-  const classification = readClassification(product.catalogClassification);
-  return cashbackProductIsEligible(product) && classification.kind === "MEDICINE" &&
-    (classification.medicineClass === "GENERIC" || classification.medicineClass === "SIMILAR")
-    ? { cashbackEnabled: true, cashbackRateBps: GENERIC_SIMILAR_CASHBACK_RATE_BPS } : {};
+export function medicineCashbackDefaults(_product: CashbackProduct) {
+  void _product;
+  // Classification does not establish margin or authorize selecting a product.
+  return {};
 }
 
 export type CashbackState = "NONE" | "PENDING" | "CREDITED" | "VOIDED" | "REVERSED";

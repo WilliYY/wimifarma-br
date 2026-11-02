@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Política atual do Club: inscrição gratuita automática no cadastro, WimiCoins selecionados e cashback de compra de 1% por seleção manual; correções de catálogo, carrinho e pós-venda: [138](docs/138-fidelidade-catalogo-e-reconferencia.md).
+
 Busca sincronizada, preferência pelo tamanho de fralda solicitado, conta por barra/economia dos kits e prioridade da imagem do primeiro banner: [137](docs/137-busca-tamanhos-kits-e-imagem-principal.md).
 
 Avaliações de clientes mais compactas, com movimento lateral suave, arraste por mouse/dedo e preferência de movimento reduzido: [61](docs/61-avaliacoes-e-rodape.md#avaliações-compactas-com-movimento-lateral--02112026).

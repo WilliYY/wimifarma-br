@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { cashbackRateSchema } from "@/features/cashback/rules";
+import { cashbackRateSchema, manualCashbackRateSchema } from "@/features/cashback/rules";
 import { supplierMarkupSchema } from "./catalog-operations";
 
 export const BULK_PRODUCT_LIMIT = 50;
@@ -8,7 +8,7 @@ export const bulkProductChangesSchema = z.object({
   category: z.string().trim().min(1).max(120).nullable().optional(),
   supplierMarkupBps: supplierMarkupSchema.optional(),
   cashbackEnabled: z.boolean().optional(),
-  cashbackRateBps: cashbackRateSchema.optional(),
+  cashbackRateBps: manualCashbackRateSchema.optional(),
   wimicoinsEnabled: z.boolean().optional(),
   wimicoinsRateBps: cashbackRateSchema.optional(),
 }).strict().refine(value => Object.keys(value).length > 0, "Selecione pelo menos uma alteração.");

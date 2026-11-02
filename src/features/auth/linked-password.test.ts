@@ -42,6 +42,13 @@ async function harness(options: Options = {}) {
   const diagnostics: unknown[][] = [];
   const linked = (current: State) => current.user?.customerId === current.customer?.id ? current.user : null;
   const models = (current: State) => ({
+    auditLog: { create: async ({ data }: { data: { action: string; entityId: string } }) => {
+      assert.ok(insideTransaction);
+      assert.equal(data.action, "CLUB_AUTO_ENROLLED");
+      assert.equal(data.entityId, customerId);
+      events.push("club-auto-enrolled");
+      return data;
+    } },
     $queryRaw: async (sql: TemplateStringsArray) => { assert.ok(insideTransaction); events.push(sql.join("").includes('"User"') ? "lock-user" : "lock-customer"); return []; },
     customer: {
       findUnique: async () => current.customer ? { ...current.customer, staffAccess: linked(current) ? { ...linked(current)! } : null } : null,
@@ -189,12 +196,14 @@ test("Club copies local staff credential to new Customer", async () => {
   assert.equal(h.state().customer!.passwordHash, originalHash);
   assert.equal(h.state().user!.customerId, customerId);
   assert.equal(h.state().customer!.city, "");
+  assert.equal(h.events.filter(event => event === "club-auto-enrolled").length, 1);
 });
 
 test("Club never copies the Google-only marker to Customer", async () => {
   const h = await harness(); await h.join("!GOOGLE_ONLY");
   assert.equal(h.state().customer!.passwordHash, null);
   assert.equal(h.state().customer!.city, "");
+  assert.equal(h.events.filter(event => event === "club-auto-enrolled").length, 1);
 });
 
 test("account page exposes hasPassword for linked local staff without serializing a hash", async () => {

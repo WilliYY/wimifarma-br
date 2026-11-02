@@ -10,7 +10,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const guard = await requireAdminOnlyApi();
     if (guard.response) return guard.response;
     const parsed = cashbackProductUpdateSchema.safeParse(await readJsonBody(request));
-    if (!parsed.success) return NextResponse.json({ error: "Informe um percentual entre 0,01% e 100%." }, { status: 422 });
+    if (!parsed.success) return NextResponse.json({ error: "O cashback atual é de 1% nos produtos selecionados." }, { status: 422 });
     const { id } = await params;
     const { expectedUpdatedAt, ...data } = parsed.data;
     const prisma = getPrisma();

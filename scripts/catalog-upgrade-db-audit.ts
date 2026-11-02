@@ -63,7 +63,7 @@ async function auditBehavior(tx: Prisma.TransactionClient) {
   const stale = await bulkInput(tx, [pharmacy.id, second.id], { category: "Synthetic stale category" });
   await tx.product.update({ where: { id: second.id }, data: { updatedAt: new Date(second.updatedAt.getTime() + 1000) } });
   await unchangedAfter(() => updateCatalogBulk(tx, stale, admin.id), 409);
-  const benefits = await bulkInput(tx, [pharmacy.id, second.id], { cashbackEnabled: true, cashbackRateBps: 300, wimicoinsEnabled: true, wimicoinsRateBps: 400 });
+  const benefits = await bulkInput(tx, [pharmacy.id, second.id], { cashbackEnabled: true, cashbackRateBps: 100, wimicoinsEnabled: true, wimicoinsRateBps: 400 });
   await unchangedAfter(() => updateCatalogBulk(tx, benefits, manager.id), 403);
   await unchangedAfter(() => updateCatalogBulk(tx, benefits, "catalog-qa-missing-actor"), 403);
   await tx.user.update({ where: { id: manager.id }, data: { isActive: false } });
@@ -81,7 +81,7 @@ async function auditBehavior(tx: Prisma.TransactionClient) {
   await updateCatalogBulk(tx, await bulkInput(tx, [pharmacy.id, second.id], benefits.changes), admin.id);
   for (const id of [pharmacy.id, second.id]) {
     const product = await tx.product.findUniqueOrThrow({ where: { id } });
-    assert.equal(product.cashbackEnabled, true); assert.equal(product.cashbackRateBps, 300);
+    assert.equal(product.cashbackEnabled, true); assert.equal(product.cashbackRateBps, 100);
     assert.equal(product.wimicoinsEnabled, true); assert.equal(product.wimicoinsRateBps, 400);
   }
   const rxBenefits = await bulkInput(tx, [pharmacy.id, supplier.id], { cashbackEnabled: true });

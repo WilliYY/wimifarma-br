@@ -33,7 +33,7 @@ const footerBubbles = Array.from({ length: 128 }, (_, index) => {
 const supportLinks = [
   { href: "/minha-conta", label: "Minha conta e pedidos" },
   { href: "/delivery", label: "Entrega e retirada" },
-  { href: "/cashback", label: "Como funciona o cashback" },
+  { href: "/cashback", label: "WimiCoins e cashback" },
   { href: "/privacidade", label: "Política de privacidade" },
   { href: "/contato", label: "Ajuda com sua compra" },
 ];

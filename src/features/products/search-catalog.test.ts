@@ -11,6 +11,15 @@ const product = (id: string, extra = {}) => ({
   requiresPrescription: true, ...extra,
 });
 
+test("Extra G normaliza como XG no SQL e não vira um filtro extra", async () => {
+  const queries: Prisma.Sql[] = [];
+  const service = await fixture({ $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return []; }, product: { findMany: async () => [] } });
+  await service.getSearchCatalog("fralda Extra G", { relatedLimit: 0 });
+  assert.ok(queries[0].text.includes("extra[ ]*g"));
+  assert.ok(queries[0].values.includes("(^| )xg($| )"));
+  assert.ok(!queries[0].values.includes("(^| )extra"));
+});
+
 async function fixture(db: object) {
   const bundle = await build({ entryPoints: ["src/features/products/search-catalog.ts"], bundle: true, write: false,
     platform: "node", format: "cjs", packages: "external", plugins: [{ name: "search-db", setup(builder) {

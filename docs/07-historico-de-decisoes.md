@@ -1,5 +1,14 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-02 — Política de fidelidade e correções do catálogo
+
+- O lojista aprovou Club gratuito automático para clientes cadastrados, WimiCoins selecionados por produto e cashback de compra fixo de 1% em seleção manual por margem. Não foi definido limiar automático, bônus de entrada, consentimento de marketing ou crédito retroativo. Associações desativadas e identidades da equipe permanecem preservadas. Contratos e limites em [138](138-fidelidade-catalogo-e-reconferencia.md).
+- Corrigidos perfume como tipo de produto, recuperação da família PediaSure, Extra G separado de G, rejeição de títulos duplicados/textos internos nas importações, reconferência sem proposta vazia e WhatsApp de troca/cancelamento. Nutren com EANs distintos permanece separado por falta de confirmação primária das embalagens. Planos de dados, QA isolada e publicação têm evidências próprias; validação local não comprova aplicação ou produção.
+
+## 2026-11-02 — Busca, tamanho, kit e primeira imagem publicados
+
+- Fonte `300bd38` publicada somente no app Linux ARM64, com PostgreSQL e configuração efetiva preservados. Busca sincronizada entre cabeçalho/rota/formulário, tamanho G literal priorizado, preço por barra/economia do kit Rexona e primeira arte com prioridade alta passaram em QA pública de 390 e 1.440 px. Nenhum novo índice PageSpeed foi medido. Evidências em [137](137-busca-tamanhos-kits-e-imagem-principal.md).
+
 ## 2026-11-02 — Publicação da revisão comercial, filtros e endereço
 
 - Fonte/OCI `5738f30` publicada em Linux ARM64, somente no app, com imagem anterior preservada, configuração efetiva e PostgreSQL inalterados. QA pública passou no fluxo Rexona avulso/kit6/frete SP em 320/390/1.440 px e filtros Medicamentos/Cabelos em 390/1.440 px. O parser da verificação foi corrigido para comentários SSR sem enfraquecer suas asserções; jobs anteriores consumidos preservados. Recibos e cadeia Compose em [136](136-revisao-comercial-e-estimativas-finais.md).

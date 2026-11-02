@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { siteConfig } from "@/lib/site";
 import { createPublicPageMetadata } from "@/lib/metadata";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export const metadata = createPublicPageMetadata({
   title: "Informações legais e atendimento farmacêutico",
@@ -34,7 +35,7 @@ export default function LegalInformationPage() {
             <h2 className="text-xl font-bold">Trocas e cancelamentos</h2>
             <p className="mt-3 leading-7 text-muted">Para solicitar cancelamento, devolução, troca ou informar um produto incorreto ou avariado, entre em contato com a farmácia e informe o número do pedido. Não envie dados de cartão, senhas ou receitas pelo canal de cancelamento.</p>
             <p className="mt-3 leading-7 text-muted">Nas compras realizadas fora do estabelecimento, o Código de Defesa do Consumidor prevê o direito de arrependimento em até 7 dias da assinatura do contrato ou do recebimento do produto ou serviço, sem ônus, com restituição dos valores pagos. A equipe orientará a devolução e os cuidados de transporte e conservação aplicáveis ao produto, preservando seus direitos legais.</p>
-            <a className={linkStyle} href={siteConfig.whatsappUrl} rel="noopener noreferrer" target="_blank">Solicitar troca ou cancelamento</a>
+            <a className={linkStyle} href={buildWhatsAppUrl("Olá! Gostaria de solicitar troca ou cancelamento de uma compra na Wimifarma. Vou informar o número do pedido para atendimento.")} rel="noopener noreferrer" target="_blank">Solicitar troca ou cancelamento</a>
           </section>
           <section className="scroll-mt-32 py-8" id="privacidade">
             <h2 className="text-xl font-bold">Privacidade e dados pessoais</h2>

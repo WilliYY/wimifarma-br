@@ -29,4 +29,8 @@ A comparação PageSpeed de 74/100 e 3,4 s para home, versus 95/100 e 2,9 s para
 
 Integração local: 80 testes dirigidos e 503 de segurança aprovados; lint completo, typecheck e diff check passaram. Revisão independente aprovada, sem achados pendentes. Auditoria npm de produção mantém três alertas baixos e quatro moderados; completa mantém três baixos e 17 moderados, sem altos/críticos. Dependências não foram alteradas.
 
-Build, publicação e QA pública serão registrados após execução. Auxiliares e capturas ficam em `outputs/search-kit-lcp-2026-11-02/`, fora do Git.
+Publicado `300bd3888185116556c537b5a4ea449848895d1d` após build Linux ARM64, push/pull e atualização exclusiva do app. Home, health, busca e as duas fichas retornaram 200; a assinatura dos 15 relatos e o estado canônico permaneceram iguais, com PostgreSQL intocado. Imagem `sha256:47a7731b39d31962243f7470cd88ffaff6bb57335789302a50b6eaa7718d2562`.
+
+QA pública em 390/1440 px passou: EAN → cabeçalho fralda G → envio interno e voltar/avançar preservaram o termo correto. Os itens com token G antecederam XG; o refinamento para nomes “Extra G” como XG segue a revisão em [138](138-fidelidade-catalogo-e-reconferencia.md). A imagem care foi encontrada acima da dobra em ambos os tamanhos, com preload e uma requisição de prioridade inicial High, sem promover outros slides. Não houve nova medição PageSpeed/Lighthouse.
+
+Os preços públicos da conferência já eram R$ 10,90 pelo kit e R$ 2,06 pelo avulso: a interface mostrou seis barras, R$ 1,82 por barra, seis avulsos por R$ 12,36 e economia de R$ 1,46. A conta usa preços atuais, preservando o exemplo estático apenas como regressão. Zero erros de página/overflow real; mutações de fundo foram bloqueadas. Auxiliares e capturas ficam em `outputs/search-kit-lcp-2026-11-02/`, fora do Git.

@@ -5,9 +5,45 @@ import vm from "node:vm";
 import { createRequire } from "node:module";
 import { cartReviewRequestSchema, createCartReviewProposal, reviewedCartItems, requestCartReview } from "./cart-review";
 import type { CartItem, CartProduct } from "@/components/site/cart-provider";
+import { publicProductImageUrl } from "@/features/product-images/private-supplier-policy";
 
 const product: CartProduct = { id: "synthetic-product", name: "Produto sintético", slug: "produto-sintetico", category: null, imageUrl: null, unitPriceCents: 499, originalPriceCents: null, stock: 10, requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false };
 const item: CartItem = { ...product, quantity: 4 };
+
+test("identical persisted cart has no update, including reordered classification and optional defaults", async () => {
+  const source = [{ ...item, quantity: 2, unitPriceCents: 208, catalogClassification: { kind: "MEDICINE", version: 1 } }];
+  const proposal = await requestCartReview(source, async () => Response.json({ data: { products: [{ ...source[0], inventorySource: "PHARMACY", supplierDemandAllowed: false, catalogClassification: { version: 1, kind: "MEDICINE" } }] } }));
+  assert.equal(proposal.hasChanges, false);
+  assert.deepEqual(proposal.entries[0].changes, []);
+  assert.equal(reviewedCartItems(source, proposal), source);
+  assert.equal(reviewedCartItems([{ ...source[0] }], proposal), null);
+  assert.equal(source[0].quantity * source[0].unitPriceCents, 416);
+});
+
+test("prescription image normalization does not invent a change after hydration", () => {
+  const current = { ...product, requiresPrescription: true, prescriptionType: "ORDINARY" as const, imageUrl: "/synthetic-legacy-photo.webp" };
+  const hydrated = [{ ...current, quantity: 2, imageUrl: publicProductImageUrl(current) }];
+  assert.notEqual(hydrated[0].imageUrl, current.imageUrl);
+  assert.equal(createCartReviewProposal(hydrated, [current]).hasChanges, false);
+});
+
+test("review detects price, quantity, stock and purchase policy differences independently", () => {
+  for (const [current, field] of [
+    [{ ...product, unitPriceCents: 599 }, "unitPriceCents"],
+    [{ ...product, stock: 2 }, "quantity"],
+    [{ ...product, stock: 8 }, "stock"],
+    [{ ...product, requiresPrescription: true, prescriptionType: "ORDINARY" }, "requiresPrescription"],
+    [{ ...product, catalogClassification: { kind: "MEDICINE" } }, "catalogClassification"],
+    [{ ...product, inventorySource: "DISTRIBUTOR", supplierDemandAllowed: true }, "supplierDemandAllowed"],
+  ] as const) {
+    const proposal = createCartReviewProposal([item], [current]);
+    assert.equal(proposal.hasChanges, true, field);
+    assert.ok(proposal.entries[0].changes.includes(field));
+  }
+  for (const products of [[], [{ ...product, stock: 0 }], [{ ...product, isPopularPharmacy: true }]]) {
+    assert.equal(createCartReviewProposal([item], products).hasChanges, true);
+  }
+});
 
 test("review proposes current price and reduced stock without silently changing the source cart", () => {
   const source = [{ ...item }];

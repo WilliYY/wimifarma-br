@@ -2,6 +2,7 @@ import { orderQuantityLimit } from "./quantity";
 import { z } from "zod";
 import type { CartItem, CartProduct } from "@/components/site/cart-provider";
 import { requiresPurchaseAssistance } from "./purchase-policy";
+import { publicProductImageUrl } from "@/features/product-images/private-supplier-policy";
 
 export const cartReviewRequestSchema = z.object({ productIds: z.array(z.string().trim().min(1).max(64)).min(1).max(30) }).strict().refine(input => new Set(input.productIds).size === input.productIds.length);
 const productSchema = z.object({
@@ -18,19 +19,37 @@ const responseSchema = z.object({ data: z.object({ products: z.array(productSche
 
 export type CartReviewProposal = {
   source: CartItem[];
-  entries: Array<{ before: CartItem; after: CartItem | null; reason: "UNAVAILABLE" | "ASSISTED" | "OUT_OF_STOCK" | null }>;
+  entries: Array<{ before: CartItem; after: CartItem | null; reason: "UNAVAILABLE" | "ASSISTED" | "OUT_OF_STOCK" | null; changes: Array<keyof CartItem> }>;
   items: CartItem[];
+  hasChanges: boolean;
 };
+
+// Classification is JSON from the catalog; object key order is not a change.
+function comparableValue(value: unknown): string | undefined {
+  return JSON.stringify(value, (_key, nested) => nested && typeof nested === "object" && !Array.isArray(nested)
+    ? Object.fromEntries(Object.entries(nested).sort(([left], [right]) => left.localeCompare(right)))
+    : nested);
+}
+
+function comparableItem(item: CartItem): CartItem {
+  return { ...item, imageUrl: publicProductImageUrl(item), inventorySource: item.inventorySource ?? "PHARMACY", supplierDemandAllowed: item.supplierDemandAllowed ?? false, prescriptionType: item.prescriptionType ?? "UNREVIEWED", catalogClassification: item.catalogClassification ?? null };
+}
 
 export function createCartReviewProposal(source: CartItem[], products: CartProduct[]): CartReviewProposal {
   const entries: CartReviewProposal["entries"] = source.map(before => {
     const product = products.find(current => current.id === before.id);
-    if (!product) return { before, after: null, reason: "UNAVAILABLE" };
-    if (requiresPurchaseAssistance(product)) return { before, after: null, reason: "ASSISTED" };
-    if (product.stock < 1) return { before, after: null, reason: "OUT_OF_STOCK" };
-    return { before, after: { ...product, quantity: Math.min(before.quantity, orderQuantityLimit(product)) }, reason: null };
+    if (!product) return { before, after: null, reason: "UNAVAILABLE", changes: [] };
+    if (requiresPurchaseAssistance(product)) return { before, after: null, reason: "ASSISTED", changes: [] };
+    if (product.stock < 1) return { before, after: null, reason: "OUT_OF_STOCK", changes: [] };
+    const after = { ...product, imageUrl: publicProductImageUrl(product), quantity: Math.min(before.quantity, orderQuantityLimit(product)) };
+    const previous = comparableItem(before);
+    const current = comparableItem(after);
+    const fields = Object.keys(current) as Array<keyof CartItem>;
+    const changes = fields.filter(field => comparableValue(previous[field]) !== comparableValue(current[field]));
+    return { before, after, reason: null, changes };
   });
-  return { source, entries, items: entries.flatMap(entry => entry.after ? [entry.after] : []) };
+  const hasChanges = entries.some(entry => entry.reason !== null || entry.changes.length > 0);
+  return { source, entries, hasChanges, items: hasChanges ? entries.flatMap(entry => entry.after ? [entry.after] : []) : source };
 }
 
 export function reviewedCartItems(current: CartItem[], proposal: CartReviewProposal): CartItem[] | null {

@@ -32,7 +32,7 @@ test("an inconsistent checkbox cannot remove an explicit prescription classifica
 
 test("product forms reject prescription classifications without the corresponding requirement", () => {
   for (const prescriptionType of ["ORDINARY", "CONTROLLED"] as const) {
-    const fields = { name: "Produto sintético", price: 10, prescriptionType, cashbackEnabled: true, cashbackRateBps: 200 };
+    const fields = { name: "Produto sintético", price: 10, prescriptionType, cashbackEnabled: true, cashbackRateBps: 100 };
     assert.equal(productCreateSchema.safeParse(fields).success, false);
     assert.equal(productUpdateSchema.safeParse({ ...fields, expectedUpdatedAt: new Date(0).toISOString() }).success, false);
     assert.equal(productCreateSchema.safeParse({ ...fields, requiresPrescription: true, cashbackEnabled: false }).success, true);

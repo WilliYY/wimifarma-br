@@ -29,13 +29,12 @@ export function ProductBulkEditor({ products, canManageFinancial, onSaved }: { p
   const [category, setCategory] = useState("");
   const [markup, setMarkup] = useState("");
   const [cashback, setCashback] = useState("");
-  const [cashbackRate, setCashbackRate] = useState("");
   const [coins, setCoins] = useState("");
   const [coinsRate, setCoinsRate] = useState("");
   const distributorOnly = products.every(product => product.inventorySource === "DISTRIBUTOR");
 
   function openEditor() {
-    setStatus(""); setCategoryAction(""); setCategory(""); setMarkup(""); setCashback(""); setCashbackRate(""); setCoins(""); setCoinsRate(""); setPreview(null); setOpen(true);
+    setStatus(""); setCategoryAction(""); setCategory(""); setMarkup(""); setCashback(""); setCoins(""); setCoinsRate(""); setPreview(null); setOpen(true);
   }
   function review(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -45,7 +44,7 @@ export function ProductBulkEditor({ products, canManageFinancial, onSaved }: { p
     if (canManageFinancial) {
       if (markup && distributorOnly) changes.supplierMarkupBps = decimalToMinorUnits(markup) ?? -1;
       if (cashback) changes.cashbackEnabled = cashback === "on";
-      if (cashbackRate) changes.cashbackRateBps = decimalToMinorUnits(cashbackRate) ?? -1;
+      if (cashback === "on") changes.cashbackRateBps = 100;
       if (coins) changes.wimicoinsEnabled = coins === "on";
       if (coinsRate) changes.wimicoinsRateBps = decimalToMinorUnits(coinsRate) ?? -1;
     }
@@ -86,8 +85,8 @@ export function ProductBulkEditor({ products, canManageFinancial, onSaved }: { p
           {categoryAction === "set" && <label className="grid gap-1.5 text-sm font-semibold">Nova categoria<Input value={category} maxLength={120} required onChange={event => setCategory(event.target.value)} /></label>}
           {canManageFinancial && <>
             {distributorOnly && <label className="grid gap-1.5 text-sm font-semibold">Acréscimo distribuidor (%)<Input inputMode="decimal" value={markup} onChange={event => setMarkup(event.target.value)} placeholder="Vazio mantém o percentual atual" /><span className="text-xs font-normal text-muted">0 a 100%. Pedidos em aberto impedem mudanças. Acréscimo não é margem líquida.</span></label>}
-            {([{ label: "Cashback", value: cashback, change: setCashback, rate: cashbackRate, changeRate: setCashbackRate }, { label: "WimiCoins", value: coins, change: setCoins, rate: coinsRate, changeRate: setCoinsRate }]).map(field => <div className="grid gap-3 rounded-lg border border-line p-3 sm:grid-cols-2" key={field.label}><label className="grid gap-1.5 text-sm font-semibold">{field.label}<select aria-label={field.label} className={fieldStyle} value={field.value} onChange={event => field.change(event.target.value)}><option value="">Manter benefício</option><option value="on">Ativar</option><option value="off">Desativar</option></select></label><label className="grid gap-1.5 text-sm font-semibold">Percentual (%)<Input inputMode="decimal" value={field.rate} onChange={event => field.changeRate(event.target.value)} placeholder="Manter percentual" /></label></div>)}
-            <p className="text-xs leading-5 text-muted">Produtos com receita ou Farmácia Popular não aceitam ativação de benefícios. Nenhum saldo já concedido será alterado.</p>
+            {([{ label: "Cashback", value: cashback, change: setCashback, rate: "1", changeRate: () => {} }, { label: "WimiCoins", value: coins, change: setCoins, rate: coinsRate, changeRate: setCoinsRate }]).map(field => <div className="grid gap-3 rounded-lg border border-line p-3 sm:grid-cols-2" key={field.label}><label className="grid gap-1.5 text-sm font-semibold">{field.label}<select aria-label={field.label} className={fieldStyle} value={field.value} onChange={event => field.change(event.target.value)}><option value="">Manter benefício</option><option value="on">Ativar</option><option value="off">Desativar</option></select></label><label className="grid gap-1.5 text-sm font-semibold">Percentual (%)<Input readOnly={field.label === "Cashback"} inputMode="decimal" value={field.rate} onChange={event => field.changeRate(event.target.value)} placeholder="Manter percentual" /></label></div>)}
+            <p className="text-xs leading-5 text-muted">Selecione cashback de 1% somente após avaliar a margem. As regras de elegibilidade de cada benefício continuam válidas. Nenhum saldo já concedido será alterado.</p>
           </>}
           <div className="flex justify-end gap-2 border-t border-line pt-4"><Button onClick={() => setOpen(false)} type="button" variant="secondary">Cancelar</Button><Button type="submit">Revisar alterações</Button></div>
         </form>}

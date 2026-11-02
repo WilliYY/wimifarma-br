@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { cashbackRateSchema } from "./rules";
+import { cashbackRateSchema, DEFAULT_CASHBACK_RATE_BPS, manualCashbackRateSchema } from "./rules";
 import { BULK_PRODUCT_LIMIT, bulkProductUpdateSchema, type BulkProductUpdate } from "@/features/products/catalog-bulk";
 
 export const CASHBACK_PAGE_SIZE = 100;
@@ -34,7 +34,7 @@ export function createCashbackBulkUpdate(products: readonly CashbackListProduct[
   if (products.some(product => !cashbackProductEligible(product))) throw new Error("Selecione somente produtos elegiveis ao cashback.");
   return bulkProductUpdateSchema.parse({
     items: products.map(product => ({ id: product.id, expectedUpdatedAt: product.updatedAt })),
-    changes: enabled ? { cashbackEnabled: true, cashbackRateBps: cashbackRateSchema.parse(rateBps) } : { cashbackEnabled: false },
+    changes: enabled ? { cashbackEnabled: true, cashbackRateBps: manualCashbackRateSchema.parse(rateBps ?? DEFAULT_CASHBACK_RATE_BPS) } : { cashbackEnabled: false },
   });
 }
 

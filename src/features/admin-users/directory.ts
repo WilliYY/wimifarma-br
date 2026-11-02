@@ -1,6 +1,7 @@
 import { Prisma } from "@/generated/prisma/client";
 import { z } from "zod";
 import { purchaseMonthSchema, purchasePeriod } from "./purchase-period";
+import { auditClubAutoEnrollment } from "@/features/club/membership";
 
 export const accessSchema = z.object({
   kind: z.enum(["customer", "staff"]),
@@ -49,7 +50,8 @@ export async function changeAccess(tx: Prisma.TransactionClient, actorId: string
   if (!customer && user?.customerId) customer = await tx.customer.findUnique({ where: { id: user.customerId } });
   if (user && !customer && input.role === "CUSTOMER") {
     if (await tx.customer.findUnique({ where: { email: user.email } })) throw new AccessError("Este email possui outro cadastro. Confira o vinculo antes de alterar.");
-    customer = await tx.customer.create({ data: { name: user.name, email: user.email, passwordHash: user.passwordHash, lastLoginAt: user.lastLoginAt, city: "" } });
+    customer = await tx.customer.create({ data: { name: user.name, email: user.email, passwordHash: user.passwordHash, lastLoginAt: user.lastLoginAt, city: "", clubMembership: { create: {} } } });
+    await auditClubAutoEnrollment(tx, customer.id);
   }
   if (!user && input.role !== "CUSTOMER") {
     if (!customer?.email || (!customer.googleSubject && !customer.passwordHash)) throw new AccessError("O cliente precisa ter um login cadastrado antes de receber permissoes.");

@@ -15,6 +15,7 @@ async function harness(existing: boolean, withPhoto = false, status = "ACTIVE", 
   const product = { id: "synthetic-product", name: "Produto sintético", brand: "Teste", ean: identity.ean ?? "7896181915638", status,
     inventorySource: identity.inventorySource ?? "DISTRIBUTOR", requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false,
     catalogClassification: { kind: "UNCLASSIFIED", medicineClass: "UNCLASSIFIED", ethical: false, otc: false },
+    cashbackEnabled: false, cashbackRateBps: 200,
     imageUrl: withPhoto ? "/uploads/products/photo.webp" : null, imageAssetId: withPhoto ? "asset" : null, imageUrls: [],
     price: "10.00", promotionalPrice: null, supplierMarkupBps: 6000, supplierOffers: [], createdAt: new Date(version), updatedAt: new Date(version), shippingProfile: null as unknown };
   const writes: Record<string, unknown>[] = [], audits: unknown[] = [];
@@ -202,4 +203,23 @@ test("generic product edits preserve notify-only across omitted and replaced shi
     if (response.status === 200) assert.equal((f.product.shippingProfile as typeof hold).notifyOnlyPendingLogistics, true);
     else assert.equal(f.writes.length, 0);
   }
+});
+
+
+test("product APIs: seleção manual força 1% sem taxa, rejeita 2% e mantém WimiCoins", async () => {
+  for (const existing of [false, true]) {
+    const f = await harness(existing, false, "DRAFT", "ADMIN", { inventorySource: "PHARMACY" });
+    assert.equal((await f.run({ status: "DRAFT", cashbackEnabled: true, wimicoinsEnabled: true, wimicoinsRateBps: 200 })).status, existing ? 200 : 201);
+    assert.equal(f.writes[0].cashbackRateBps, 100);
+    assert.equal(f.writes[0].wimicoinsRateBps, 200);
+    const invalid = await harness(existing, false, "DRAFT", "ADMIN", { inventorySource: "PHARMACY" });
+    assert.equal((await invalid.run({ status: "DRAFT", cashbackEnabled: true, cashbackRateBps: 200 })).status, 422);
+    assert.equal(invalid.writes.length, 0);
+  }
+});
+
+test("product create: classificação de genérico não ativa cashback sem seleção ADMIN", async () => {
+  const f = await harness(false, false, "DRAFT", "ADMIN", { inventorySource: "PHARMACY" });
+  assert.equal((await f.run({ status: "DRAFT", catalogClassification: { kind: "MEDICINE", medicineClass: "GENERIC", ethical: false, otc: true } })).status, 201);
+  assert.equal(f.writes[0].cashbackEnabled, undefined);
 });

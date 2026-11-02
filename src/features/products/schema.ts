@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { cashbackRateSchema } from "@/features/cashback/rules";
+import { cashbackRateSchema, manualCashbackRateSchema } from "@/features/cashback/rules";
 import { shippingDraftSchema } from "@/features/shipping/product-draft";
 import { prescriptionClassificationIsConsistent, prescriptionTypes } from "./purchase-policy";
 import { catalogClassificationSchema, supplierMarkupSchema } from "./catalog-operations";
@@ -11,7 +11,7 @@ const productFieldsSchema = z.object({
   shippingProfile: shippingDraftSchema.optional(),
   featured: z.boolean().optional(),
   cashbackEnabled: z.boolean().optional(),
-  cashbackRateBps: cashbackRateSchema.optional(),
+  cashbackRateBps: manualCashbackRateSchema.optional(),
   wimicoinsEnabled: z.boolean().optional(),
   wimicoinsRateBps: cashbackRateSchema.optional(),
   activeIngredients: z.array(z.string().trim().min(2).max(120)).max(20).default([]),

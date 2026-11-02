@@ -88,10 +88,10 @@ export function matchesCatalogSection(product: Omit<SearchRankableProduct, "sear
   if (classification?.kind === "MEDICINE" || /^medicamentos?$/.test(normalizeProductSearch(product.category ?? ""))) return false;
   let name = normalizeProductSearch(product.name);
   if (section.id === "perfume") {
-    name = name.replace(/\b(sem|livre de|isento de) (perfume|fragrancia)\b/g, "");
+    name = name.replace(/\b(com|sem|livre de|isento de) (perfume|fragrancia)\b/g, "");
     const fragrance = section.pattern?.exec(name);
     if (!fragrance) return false;
-    const care = /\b(antitranspirante|antiperspirante|sabonete|shampoo|condicionador|hidratante|creme|locao corporal|oleo de banho|lencos?|talco)\b/.exec(name);
+    const care = /\b(absorventes?|protetor diario|fraldas?|antitranspirante|antiperspirante|sabonete|shampoo|condicionador|hidratante|creme|locao corporal|oleo de banho|lencos?|talco)\b/.exec(name);
     if (care && care.index < fragrance.index) return false;
     // Desodorante colônia é uma fragrância; perfume no nome de um aerossol não muda seu tipo.
     const deodorant = /\bdesodorantes?\b/.exec(name);

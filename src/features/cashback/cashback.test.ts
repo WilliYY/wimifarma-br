@@ -60,14 +60,14 @@ test("nova elegibilidade nao libera receita sem classificacao, referencia, contr
   ]) assert.equal(productCashbackCents(restricted, 2000), 0);
 });
 
-test("padrao novo de 1% usa a classificacao confirmada e nao amplia WimiCoins", () => {
+test("produtos novos exigem selecao manual e nao ampliam WimiCoins", () => {
   for (const medicineClass of ["GENERIC", "SIMILAR"]) {
     for (const prescriptionType of ["ORDINARY", "ANTIMICROBIAL"]) {
       const product = { requiresPrescription: true, prescriptionType, isPopularPharmacy: false,
         catalogClassification: { kind: "MEDICINE", medicineClass, ethical: true, otc: false },
         wimicoinsEnabled: true, wimicoinsRateBps: 200 };
-      assert.deepEqual(medicineCashbackDefaults(product), { cashbackEnabled: true, cashbackRateBps: 100 });
-      assert.equal(productCashbackCents({ ...product, ...medicineCashbackDefaults(product) }, 2000), 20);
+      assert.deepEqual(medicineCashbackDefaults(product), {});
+      assert.equal(productCashbackCents({ ...product, ...medicineCashbackDefaults(product) }, 2000), 0);
       assert.equal(productWimicoinsPoints(product, 2000), 0);
       assert.deepEqual(medicineCashbackDefaults({ ...product, prescriptionType: "CONTROLLED" }), {});
       assert.deepEqual(medicineCashbackDefaults({ ...product, isPopularPharmacy: true }), {});

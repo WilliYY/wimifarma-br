@@ -11,6 +11,10 @@ export const metadata = createPublicPageMetadata({
 
 const sections = [
   {
+    title: "Club Wimifarma, WimiCoins e cashback",
+    text: "Contas de clientes participam gratuitamente do Club, com inscrição automática no cadastro. Registramos a adesão e os ganhos, usos e estornos dos benefícios para manter saldos e extratos corretos. WimiCoins e cashback são oferecidos nos produtos participantes. A inscrição não altera suas preferências de marketing nem autoriza mensagens comerciais. Você pode solicitar à equipe a suspensão da participação; registros de pedidos e movimentações anteriores seguem a retenção aplicável.",
+  },
+  {
     title: "Avisos de disponibilidade",
     text: "O Avise-me é opcional e exige sua autorização para cada produto e canal escolhido. Usamos o telefone e/ou e-mail da sua conta para a equipe avisar sobre disponibilidade, sem cadastrar você em campanhas. O aviso vale por 30 dias, não reserva estoque nem garante preço. Você pode cancelá-lo em Minha conta > Meus avisos. Os contatos guardados no aviso são removidos ao cancelar, expirar ou concluir todos os canais; registros operacionais mínimos permanecem restritos. O conteúdo da solicitação fica acessível somente a você e à equipe autorizada. WhatsApp e seu aplicativo de e-mail são abertos pela equipe para preparar o contato; não há disparo automático de clientes conectado.",
   },

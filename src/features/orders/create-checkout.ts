@@ -19,6 +19,7 @@ import { resolveSupplierOffer, supplierOfferInclude, toSaleProduct } from "@/fea
 import { reserveSupplierInventory } from "@/features/supplier-catalog/inventory";
 import { getSupplierPreparationEstimate } from "@/features/supplier-catalog/preparation";
 import { prescriptionCartFingerprint, validatePrescriptionAttachment, PrescriptionError } from "./prescription-upload";
+import { ensureClubMembership } from "@/features/club/membership";
 
 const orderResultSelect = {
   id: true,
@@ -54,7 +55,8 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
       return tx.order.findUniqueOrThrow({ where: { id: previous.id }, select: orderResultSelect });
     }
   }
-  const membership = customer ? await tx.clubMembership.findUnique({ where: { customerId: customer.id }, select: { active: true } }) : null;
+  let membership = customer ? await tx.clubMembership.findUnique({ where: { customerId: customer.id }, select: { active: true } }) : null;
+  if (customer && !membership) membership = await ensureClubMembership(tx, customer.id);
   if (coins > 0 && !membership?.active) throw new ClubRuleError("Entre no Club para usar WimiCoins.");
   if (credit > 0 && customer) {
     const creditAccount = await lockStoreCreditAccount(tx, customer.id);

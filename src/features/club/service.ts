@@ -3,6 +3,7 @@ import { nextCashbackState } from "@/features/cashback/rules";
 import { sessionCustomerId } from "@/features/auth/customer-session";
 import { emptyClubSummary, type ClubSummary } from "./contracts";
 import { ClubRuleError, lockWimicoinAccount } from "./wallet";
+import { auditClubAutoEnrollment } from "./membership";
 
 type ClubSession = { user?: { id?: string; role?: string; customerId?: string } } | null;
 
@@ -21,10 +22,12 @@ export async function resolveClubCustomer(tx: Prisma.TransactionClient, session:
       const localPassword = user.passwordHash !== "!GOOGLE_ONLY" ? user.passwordHash : null;
       const customer = await tx.customer.create({ data: {
         city: "",
+        clubMembership: { create: {} },
         name: user.name, email: user.email,
         passwordHash: localPassword,
         passwordSetAt: localPassword ? new Date() : null,
       }, select: { id: true } });
+      await auditClubAutoEnrollment(tx, customer.id);
       await tx.user.update({ where: { id: user.id }, data: { customerId: customer.id } });
       customerId = customer.id;
     }

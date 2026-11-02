@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { cashbackProductIsEligible, medicineCashbackDefaults } from "@/features/cashback/rules";
+import { cashbackProductIsEligible, DEFAULT_CASHBACK_RATE_BPS } from "@/features/cashback/rules";
 import { requireAdminApi } from "@/features/auth/permissions";
 import { productCreateSchema } from "@/features/products/schema";
 import { buildProductSearchText } from "@/features/products/public-search";
@@ -192,8 +192,8 @@ export async function POST(request: Request) {
       const featuredPosition = await resolveFeaturedPosition(transaction, { featured, status: fields.status, imageUrl: imageAsset?.url ?? fields.imageUrl });
       const product = await transaction.product.create({
         data: {
-          ...medicineCashbackDefaults(fields),
           ...fields,
+          cashbackRateBps: fields.cashbackEnabled ? DEFAULT_CASHBACK_RATE_BPS : fields.cashbackRateBps,
           featuredPosition,
           imageUrls,
           brand: normalizeOptional(parsed.data.brand),

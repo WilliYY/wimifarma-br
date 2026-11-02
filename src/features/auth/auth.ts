@@ -3,6 +3,7 @@ import NextAuth, { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { getPrisma } from "@/lib/prisma";
+import { auditClubAutoEnrollment } from "@/features/club/membership";
 import { loginSchema } from "@/lib/validations/auth";
 import { refreshStaffToken } from "@/features/auth/staff-session";
 import { isVerifiedGoogleProfile, refreshCustomerToken } from "@/features/auth/customer-session";
@@ -90,8 +91,10 @@ async function persistGoogleCustomer(input: {
     });
   }
 
-  return prisma.customer.create({
-    data: { ...customerData, city: "" },
+  return prisma.$transaction(async tx => {
+    const customer = await tx.customer.create({ data: { ...customerData, city: "", clubMembership: { create: {} } } });
+    await auditClubAutoEnrollment(tx, customer.id);
+    return customer;
   });
 }
 

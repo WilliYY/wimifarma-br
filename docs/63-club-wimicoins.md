@@ -1,5 +1,13 @@
 # Club Wimifarma e WimiCoins
 
+## Política atual — 02/11/2026
+
+O lojista substituiu a adesão opt-in anterior por inscrição automática e gratuita dos clientes cadastrados. As cinco criações de Customer incluem a associação na mesma transação, com evento `CLUB_AUTO_ENROLLED`. O checkout cobre adesão ausente de cliente ativo somente depois de validar identidade e repetição do pedido. GET do Club permanece leitura, e o hook não faz inscrições por POST em segundo plano.
+
+Clientes antigos ativos sem associação são tratados por plano separado e auditado. Uma associação já desativada é preservada. Não se fundem contas por e-mail nem se cria vínculo pessoal de equipe sem a ação explícita já existente. Não são criadas carteiras, pontos iniciais, créditos retroativos ou autorizações de marketing pela inscrição.
+
+WimiCoins continuam restritos aos produtos selecionados e ao percentual indicado no item; o padrão de pontos permanece 2%, com 100 WimiCoins = R$ 1. O cashback de compra atual é 1% em produtos selecionados manualmente, e o bônus de avaliação de 1% é separado. Aritmética de pontos, pedidos históricos, liquidação, resgates e estornos mantêm os contratos anteriores. Texto público apresenta os três benefícios e um exemplo condicional em reais. A execução dos dados e a situação de publicação constam em [138](138-fidelidade-catalogo-e-reconferencia.md); os registros de 13/10 abaixo são históricos.
+
 Atualização de 23/10/2026: ao criar o vínculo para um User local, o novo Customer recebe a mesma credencial, sem criar senha distinta. O marcador `!GOOGLE_ONLY` nunca é copiado como senha nem substituído por uma senha de cliente. Vínculos antigos sem hash são tratados pela validação da senha local vinculada e pelo painel; não houve migração ou backfill de credenciais. Auditoria em [101](101-auditoria-funcional-e-acessos.md).
 
 Atualização de 20/10/2026: faltas aceitas como crédito devolvem os WimiCoins usados à carteira original e anulam ganhos das unidades não entregues. Cancelamento posterior devolve somente o saldo ainda não restituído. O crédito novo é separado dos pontos e pode ser usado no checkout; locks passam por Customer, cashback, crédito de compra e WimiCoins. Contrato em [92](92-creditos-por-itens-faltantes.md).
