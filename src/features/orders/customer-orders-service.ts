@@ -14,7 +14,7 @@ const customerOrderSelect = {
     version: true, createdAt: true, decidedAt: true, orderItem: { select: { productName: true } },
   } },
   items: { orderBy: { createdAt: "asc" }, select: {
-    id: true, productName: true, productImageUrl: true, quantity: true, shortageQuantity: true, unitPriceCents: true, totalCents: true,
+    id: true, productId: true, productName: true, productImageUrl: true, quantity: true, shortageQuantity: true, unitPriceCents: true, totalCents: true,
   } },
 } satisfies Prisma.OrderSelect;
 type SelectedOrder = Prisma.OrderGetPayload<{ select: typeof customerOrderSelect }>;

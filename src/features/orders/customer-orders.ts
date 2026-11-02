@@ -29,7 +29,7 @@ export type CustomerOrder = {
   state: string | null;
   createdAt: string;
   updatedAt: string;
-  items: Array<{ id: string; productName: string; productImageUrl: string | null; quantity: number; shortageQuantity?: number; unitPriceCents: number; totalCents: number }>;
+  items: Array<{ id: string; productId: string | null; productName: string; productImageUrl: string | null; quantity: number; shortageQuantity?: number; unitPriceCents: number; totalCents: number }>;
 };
 export type CustomerOrderHistory = OrderHistoryQuery & {
   pageSize: number;

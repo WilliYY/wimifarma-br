@@ -45,6 +45,8 @@ test("all order reads are scoped to session customer and exclude private notes",
   assert.equal((list.select as Record<string, unknown>).customerEmail, undefined);
   assert.equal((list.select as Record<string, unknown>).requiresPrescriptionReview, true);
   assert.equal((list.select as Record<string, unknown>).prescriptionReviewedById, undefined);
+  const itemSelect = ((list.select as Record<string, unknown>).items as { select: Record<string, unknown> }).select;
+  assert.equal(itemSelect.productId, true, "recompra deve usar o vínculo exato do produto");
   const shortageSelect = ((list.select as Record<string, unknown>).itemShortages as { select: Record<string, unknown> }).select;
   assert.equal(shortageSelect.createdById, undefined);
   assert.equal(shortageSelect.consentVersion, undefined);

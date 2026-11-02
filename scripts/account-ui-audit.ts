@@ -32,6 +32,7 @@ async function main() {
         if (url.pathname === "/qa-account") return route.fulfill({ contentType: "text/html", body: `<!doctype html><html lang="pt-BR" class="${classes.html}"><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/qa.css"></head><body class="${classes.body}">${header}<main id="root"></main><script src="/qa.js"></script></body></html>` });
         if (url.pathname === "/qa.js") return route.fulfill({ contentType: "text/javascript", body: Buffer.from(bundle.outputFiles[0].contents) });
         if (url.pathname === "/qa.css") return route.fulfill({ contentType: "text/css", body: css });
+        if (url.pathname === "/api/miauby/carrinho") return json({});
         if (url.pathname === "/api/minha-conta/pedidos") {
           if (failOrders) return json({ message: "Não foi possível consultar os pedidos. Tente novamente." }, 503);
           const data = accountHistory(Number(url.searchParams.get("page")), url.searchParams.get("filter") as OrderHistoryFilter);

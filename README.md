@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Histórico com **Comprar novamente** por pedido ou produto, conferência de preço/disponibilidade atuais e preservação do carrinho: [24](docs/24-minha-conta-pedidos.md#recompra-pelo-histórico--02112026).
+
 Consulta de frete também nas vitrines da home e nos produtos relacionados, com o mesmo diálogo por CEP e bloqueios comerciais: [140](docs/140-frete-nas-vitrines-e-relacionados.md).
 
 Busca por Wimifarma sem correspondência no texto institucional, flexões de haste flexível, frete condicionado à disponibilidade, banner de higiene, filtros de ofertas e apresentações conferidas: [139](docs/139-busca-disponibilidade-e-apresentacao.md).

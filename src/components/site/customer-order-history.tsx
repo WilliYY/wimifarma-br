@@ -8,6 +8,7 @@ import { getOrderTracking, orderPaymentLabels, type CustomerOrder, type Customer
 import { siteConfig } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { orderPixDiscountCents } from "@/features/payments/pix-discount";
+import { useOrderRepurchase } from "./use-order-repurchase";
 
 export const accountMoney = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 const orderDate = (value: string, time = false) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", ...(time ? { timeStyle: "short" as const } : {}), timeZone: "America/Sao_Paulo" }).format(new Date(value));
@@ -40,6 +41,7 @@ export function OrderTracking({ order }: { order: CustomerOrder }) {
 }
 
 export function CustomerOrderCard({ order, featured = false, onShortageChanged }: { order: CustomerOrder; featured?: boolean; onShortageChanged?: () => void }) {
+  const reorder = useOrderRepurchase();
   const pixDiscount = orderPixDiscountCents(order);
   const tracking = getOrderTracking(order.status, order.fulfillmentMethod);
   const quantity = order.items.reduce((total, item) => total + item.quantity, 0);
@@ -71,6 +73,16 @@ export function CustomerOrderCard({ order, featured = false, onShortageChanged }
         </div>
         <div className="flex items-center justify-between gap-3 border-t border-line pt-3 sm:block sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0 sm:text-right"><p className="text-xs font-medium text-muted">Total do pedido</p><p className="text-xl font-black tabular-nums text-ink sm:mt-1">{accountMoney(order.totalCents)}</p></div>
       </div>
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line pt-4">
+        <button aria-label="Comprar novamente" aria-busy={reorder.pending} className={cn(actionClass, "bg-brand text-white hover:bg-brand-dark disabled:opacity-50")} disabled={!reorder.ready || reorder.pending || !order.items.length} onClick={() => void reorder.repurchase(order.items)} type="button"><RefreshCw aria-hidden="true" className={cn("h-4 w-4", reorder.pending && "animate-spin motion-reduce:animate-none")} />{reorder.pending ? "Conferindo produtos…" : "Comprar novamente"}</button>
+        <p className="text-xs leading-5 text-muted">Com preço e disponibilidade atuais.</p>
+      </div>
+      {reorder.error && <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{reorder.error}</p>}
+      {reorder.result && <div className="mt-3 rounded-xl border border-line bg-slate-50 p-3 text-sm">
+        <p role="status" className="font-bold text-ink">{reorder.result.additions.length ? "Produtos disponíveis adicionados ao carrinho." : "Nenhum produto foi adicionado ao carrinho."}</p>
+        {reorder.result.notices.length > 0 && <ul className="mt-2 space-y-1 text-xs leading-5 text-muted">{reorder.result.notices.map((notice, index) => <li key={index}><strong>{notice.productName}:</strong> {notice.message}</li>)}</ul>}
+        <Link className="mt-2 inline-flex min-h-11 items-center gap-2 font-bold text-brand underline underline-offset-4" href="/carrinho">Ver carrinho <ArrowRight aria-hidden="true" className="h-4 w-4" /></Link>
+      </div>}
     </div>
     <details className="group border-t border-line">
       <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 bg-brand-soft/40 px-4 py-3 text-sm font-bold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-brand sm:px-5 [&::-webkit-details-marker]:hidden">
@@ -84,6 +96,7 @@ export function CustomerOrderCard({ order, featured = false, onShortageChanged }
             <span className="row-span-2 self-start sm:self-center"><ProductThumbnail name={item.productName} src={item.productImageUrl} /></span>
             <div className="min-w-0 flex-1"><p className="break-words text-sm font-bold text-ink">{item.productName}</p><p className="mt-1 text-xs text-muted">{item.quantity} × {accountMoney(item.unitPriceCents)}</p>{(item.shortageQuantity ?? 0) > 0 && <p className="mt-1 text-xs font-bold text-amber-900">Quantidade original: {item.quantity} · Para entrega: {Math.max(0, item.quantity - (item.shortageQuantity ?? 0))}</p>}</div>
             <span className="col-start-2 shrink-0 whitespace-nowrap text-sm font-bold tabular-nums">{accountMoney(item.totalCents)}</span>
+            <button aria-label={`Comprar novamente ${item.productName}`} className={cn(actionClass, "col-span-2 w-full border border-line text-brand disabled:opacity-50 sm:ml-2 sm:w-auto")} disabled={!reorder.ready || reorder.pending || !item.productId} onClick={() => void reorder.repurchase([item])} type="button">Comprar novamente</button>
           </li>)}
         </ul></section>
         <div className="grid gap-3 sm:grid-cols-2">

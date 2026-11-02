@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-02 — Recompra no histórico do cliente
+
+- O histórico mantém os snapshots e sua restrição ao cliente ativo, expondo apenas o vínculo exato `productId` necessário à recompra. Os cartões permitem repetir o pedido ou um produto usando a API pública já existente de revisão do carrinho, sem criar endpoint, tabela ou pedido automático. Preço, disponibilidade, quantidade e regras de receita são os atuais; itens não elegíveis são explicados, sem substituição por similaridade.
+- A recompra preserva o carrinho e não reaproveita pagamento, receita, frete ou benefícios antigos. Contrato e validação em [24](24-minha-conta-pedidos.md#recompra-pelo-histórico--02112026). A publicação requer os gates e a confirmação do ambiente efetivo; não é inferida dos testes locais.
+
 ## 2026-11-02 — Frete na home e nos relacionados
 
 - Conferência encontrou consulta no catálogo/busca/ficha, mas ausência nos cartões da home e de produtos relacionados. Essas superfícies passam a reutilizar o diálogo existente, com um provider compartilhado entre vitrines na home e outro nos relacionados. Nenhuma API, regra comercial ou aprovação logística foi alterada. Amostra de quatro famílias retornou tarifas nacionais reais; ruptura manteve a recusa. Contrato, evidências e estado de publicação em [140](140-frete-nas-vitrines-e-relacionados.md).

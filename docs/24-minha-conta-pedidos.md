@@ -11,6 +11,18 @@
 
 ## Implementação
 
+### Recompra pelo histórico — 02/11/2026
+
+Cada cartão de pedido, inclusive no destaque da visão geral, oferece **Comprar novamente**. Nos detalhes, a mesma ação permite escolher um único produto. O cliente permanece no histórico, recebe o resultado e pode abrir **Ver carrinho**. A consulta tem estado de carregamento, bloqueio de repetição, cancelamento ao sair e limite de doze segundos, com erro recuperável.
+
+O histórico passa a projetar `OrderItem.productId`, mantendo todas as consultas limitadas ao `customerId` da sessão ativa. Vínculos nulos ou produtos removidos não são reconstruídos por nome, EAN ou similaridade. Não há migração nem associação retroativa de compras feitas sem login.
+
+A ação consulta `/api/carrinho/revisao`, reutilizando sua seleção de produtos ativos, preço comercial, disponibilidade por origem e política de compra atuais. Itens de atendimento assistido e sem estoque não entram; produtos sem vínculo, indisponíveis, limites e reduções de quantidade são informados individualmente. IDs repetidos são agrupados, até 30 produtos diferentes e o limite canônico de `orderQuantityLimit` (atualmente 999 unidades, limitado pelo estoque da farmácia; demanda de distribuidor mantém sua regra própria).
+
+As quantidades solicitadas são as originalmente pedidas. A recompra soma somente o espaço disponível ao carrinho atual, sem apagá-lo, e reconsulta os dados mesmo se o cliente já tiver o item. Alterações feitas no carrinho enquanto a consulta está em andamento são preservadas. O pedido anterior e seus valores permanecem históricos. Não são copiados pagamento, receita, frete, cashback, WimiCoins ou descontos antigos; a finalização confere novamente os produtos e solicita as condições atuais normalmente. Clicar em recompra não cria pedido nem cobrança.
+
+Validação dirigida: `npm run test:repurchase`, com fixtures sintéticas para núcleo, projeção privada, API autenticada e componente real em Chromium. Os testes cobrem preço/estoque atuais, assistência, itens excluídos, duplicatas, limites, carrinho existente, recompra individual, persistência, falhas e consulta concorrente. Evidências e estado de publicação são registrados após os gates de integração; teste local não comprova produção.
+
 ### Endereço sem cidade padrão — 01/11/2026
 
 Perfis novos ou com cidade vazia não recebem Ivaté nem outra cidade na interface. Os cinco caminhos de criação de `Customer` no app informam cidade vazia explicitamente: cadastro público, Google, cadastro de clientes e criação por vínculo/Club. O schema e o padrão legado do banco permanecem preservados para a publicação somente do app; nenhuma migração ou correção em massa de registros existentes. Cidades e endereços já registrados, inclusive legados, continuam intactos. A atualização aceita cidade vazia e preserva a cidade se um cliente antigo omitir esse campo.

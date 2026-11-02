@@ -9,7 +9,7 @@ export const accountOrders: CustomerOrder[] = Array.from({ length: 9 }, (_, inde
   subtotalCents: 2580, deliveryFeeCents: index === 1 ? 0 : 500, totalCents: index === 1 ? 2480 : 2980, cashbackRedeemedCents: 100,
   street: "Rua de Teste", addressNumber: "123", complement: null, neighborhood: "Bairro Exemplo", city: "Ivaté", state: "PR",
   createdAt: "2026-09-20T12:00:00.000Z", updatedAt: "2026-09-21T14:30:00.000Z",
-  items: [{ id: `item-${index}`, productName: "Dove Original · produto de demonstração", productImageUrl: "/banners/products/dove-original.webp", quantity: 2, unitPriceCents: 1290, totalCents: 2580 }],
+  items: [{ id: `item-${index}`, productId: `qa-product-${index}`, productName: "Dove Original · produto de demonstração", productImageUrl: "/banners/products/dove-original.webp", quantity: 2, unitPriceCents: 1290, totalCents: 2580 }],
 }));
 
 export function accountHistory(page = 1, filter: OrderHistoryFilter = "all", empty = false): CustomerOrderHistory {

@@ -57,16 +57,20 @@ export function reviewedCartItems(current: CartItem[], proposal: CartReviewPropo
   return proposal.items;
 }
 
-export async function requestCartReview(source: CartItem[], fetcher: (input: string, init?: RequestInit) => Promise<Response> = fetch): Promise<CartReviewProposal> {
+export async function requestCartProducts(productIds: string[], fetcher: (input: string, init?: RequestInit) => Promise<Response> = fetch, signal?: AbortSignal): Promise<CartProduct[]> {
   const errorMessage = "Não foi possível revisar o carrinho. Tente novamente.";
   let response: Response;
-  try { response = await fetcher("/api/carrinho/revisao", { method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store", body: JSON.stringify({ productIds: source.map(item => item.id) }) }); }
+  try { response = await fetcher("/api/carrinho/revisao", { method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store", body: JSON.stringify({ productIds }), ...(signal ? { signal } : {}) }); }
   catch { throw new Error(errorMessage); }
   let payload;
   try { payload = await response.json(); }
   catch { throw new Error(errorMessage); }
   if (!response.ok) throw new Error(typeof payload?.error === "string" ? payload.error : errorMessage);
   const parsed = responseSchema.safeParse(payload);
-  if (!parsed.success || new Set(parsed.data.data.products.map(product => product.id)).size !== parsed.data.data.products.length || parsed.data.data.products.some(product => !source.some(item => item.id === product.id))) throw new Error(errorMessage);
-  return createCartReviewProposal(source, parsed.data.data.products);
+  if (!parsed.success || new Set(parsed.data.data.products.map(product => product.id)).size !== parsed.data.data.products.length || parsed.data.data.products.some(product => !productIds.includes(product.id))) throw new Error(errorMessage);
+  return parsed.data.data.products;
+}
+
+export async function requestCartReview(source: CartItem[], fetcher: (input: string, init?: RequestInit) => Promise<Response> = fetch): Promise<CartReviewProposal> {
+  return createCartReviewProposal(source, await requestCartProducts(source.map(item => item.id), fetcher));
 }
