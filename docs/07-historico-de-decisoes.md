@@ -3,6 +3,7 @@
 ## 2026-11-02 — Frete na home e nos relacionados
 
 - Conferência encontrou consulta no catálogo/busca/ficha, mas ausência nos cartões da home e de produtos relacionados. Essas superfícies passam a reutilizar o diálogo existente, com um provider compartilhado entre vitrines na home e outro nos relacionados. Nenhuma API, regra comercial ou aprovação logística foi alterada. Amostra de quatro famílias retornou tarifas nacionais reais; ruptura manteve a recusa. Contrato, evidências e estado de publicação em [140](140-frete-nas-vitrines-e-relacionados.md).
+- Fonte/OCI `5f24f7e` publicada somente no app ARM64 após revisão, 19 testes dirigidos, 525 de segurança, lint/tipos/Prisma/build e auditorias sem high/critical. QA pública em 320/390/1.440 px passou com 45 botões na home, oito nos relacionados, CEP compartilhado, carrinho intacto e tarifas reais. Ambiente, configuração, PostgreSQL, avaliações, rodapé e canônico preservados. Estimativa não libera transporte; pendências físicas continuam no fluxo próprio.
 
 ## 2026-11-02 — Busca por identidade, disponibilidade e apresentação
 
