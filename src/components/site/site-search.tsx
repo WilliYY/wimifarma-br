@@ -8,9 +8,10 @@ import {
   useMemo,
   useRef,
   useState,
+  Suspense,
 } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Loader2, Search, X } from "lucide-react";
 import { ProductSearchResults } from "@/components/site/product-search-results";
 import { productSearchHref, type PublicProductSearchItem } from "@/features/products/public-search";
@@ -29,6 +30,14 @@ const emptyResults = {
   relatedProducts: [] as PublicProductSearchItem[],
   correctedQuery: null as string | null,
 };
+
+function SearchRouteSync({ onQueryChange }: { onQueryChange: (query: string) => void }) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const routeQuery = searchParams.get("q")?.trim().slice(0, 80) ?? "";
+  useEffect(() => { onQueryChange(routeQuery); }, [pathname, routeQuery, onQueryChange]);
+  return null;
+}
 
 export function SiteSearch() {
   const router = useRouter();
@@ -225,7 +234,9 @@ export function SiteSearch() {
 
   return (
     <>
+      <Suspense fallback={null}><SearchRouteSync onQueryChange={setQuery} /></Suspense>
       <form
+        action="/busca"
         data-header-search
         className="group/search relative z-20 mx-auto hidden min-w-0 h-14 w-full max-w-[42rem] flex-1 items-center gap-2 rounded-full border border-white/80 bg-white/98 py-1.5 pl-2 pr-1.5 shadow-[0_14px_36px_rgba(0,0,0,0.16),inset_0_1px_0_rgba(255,255,255,0.95)] transition duration-300 focus-within:border-brand/60 focus-within:shadow-[0_18px_44px_rgba(200,16,46,0.18),inset_0_1px_0_rgba(255,255,255,0.95)] focus-within:ring-4 focus-within:ring-brand/15 md:flex"
         onBlur={handleDesktopBlur}
@@ -246,6 +257,7 @@ export function SiteSearch() {
           autoComplete="off"
           className="h-full min-w-0 flex-1 appearance-none bg-transparent font-body text-[0.95rem] font-medium text-ink outline-none placeholder:text-[#6e7e95] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
           maxLength={80}
+          name="q"
           onChange={(event) => {
             setQuery(event.target.value);
             setIsDesktopOpen(true);
@@ -329,7 +341,7 @@ export function SiteSearch() {
               </button>
             </div>
 
-            <form className="flex h-14 items-center gap-2 rounded-full bg-white p-1.5 pl-3 shadow-xl" onSubmit={handleSubmit} role="search">
+            <form action="/busca" className="flex h-14 items-center gap-2 rounded-full bg-white p-1.5 pl-3 shadow-xl" onSubmit={handleSubmit} role="search">
               {isLoading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-brand" /> : <Search className="h-5 w-5 shrink-0 text-brand" />}
               <input
                 aria-activedescendant={mobileActiveOptionId}
@@ -341,6 +353,7 @@ export function SiteSearch() {
                 autoComplete="off"
                 className="h-full min-w-0 flex-1 appearance-none bg-transparent text-base font-semibold text-ink outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
                 maxLength={80}
+                name="q"
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Produto, EAN ou princípio ativo"

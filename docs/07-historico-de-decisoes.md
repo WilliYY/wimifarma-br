@@ -1627,3 +1627,9 @@ Para as próximas entradas, o lojista pode enviar somente a lista de princípios
 Os cartões da home passam a ter dimensões e espaçamentos menores, com avanço horizontal contínuo a 24 px/s e arraste por mouse ou dedo, seguindo a interação das marcas. Setas visíveis foram retiradas; foco e teclado continuam disponíveis. Hover, foco, gestos, aba oculta, ausência da tela e movimento reduzido suspendem a animação. A trilha usa transformação fracionária, sem renderização React a cada quadro, e réplicas decorativas não duplicam avaliações na árvore acessível.
 
 Comentários, nomes abreviados, estrelas e condições das avaliações reais foram preservados. Não há mudança de banco, médias, benefícios ou elegibilidade para avaliar. O componente foi separado da home para validar os estados e a interação no navegador com dados sintéticos. Contrato e evidências em [61](61-avaliacoes-e-rodape.md#avaliações-compactas-com-movimento-lateral--02112026).
+
+## 02/11/2026 — Continuidade da busca, tamanhos e conta dos kits
+
+Corrigida a preservação indevida do termo anterior nos campos de busca após navegação. A sincronização acompanha URL e histórico, com formulário SSR e GET nativo preservados. Tamanhos exatos nas consultas por fraldas passam a preceder alternativas, mantendo as regras de disponibilidade e a distinção entre tamanho e massa/dosagem.
+
+A ficha mostra preço por barra e economia de kits homogêneos somente com apresentação explícita e comparação comercial equivalente disponível. O primeiro banner conserva preload e recebe prioridade alta explícita na imagem principal; demais slides não competem com esse recurso. Não há mudança de preço, estoque, descontos, receita, frete ou banco. Contratos e limites de medição em [137](137-busca-tamanhos-kits-e-imagem-principal.md).

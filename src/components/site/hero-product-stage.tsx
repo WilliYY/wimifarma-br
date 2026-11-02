@@ -43,7 +43,7 @@ export function HeroProductStage({ variant, priority = false, compact = false }:
 
   return (
     <figure className={styles.stage} data-layout={compact ? "compact" : undefined} data-variant={variant}>
-      <Image alt={scene.alt} className={styles.person} fill loading={priority ? undefined : compact ? "lazy" : "eager"} priority={priority} quality={84} sizes="(max-width: 1359px) 100vw, 1280px" src={scene.src} />
+      <Image alt={scene.alt} className={styles.person} fetchPriority={priority ? "high" : undefined} fill loading={priority ? undefined : compact ? "lazy" : "eager"} priority={priority} quality={84} sizes="(max-width: 1359px) 100vw, 1280px" src={scene.src} />
       <div className={styles.products} data-count={products.length}>
         {products.map((product) => (
           <div className={`${styles.product} ${styles[product.position]}`} key={product.src}>

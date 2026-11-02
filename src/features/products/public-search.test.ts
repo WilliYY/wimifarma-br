@@ -11,6 +11,8 @@ import {
   isProductAssociation,
   correctProductSearchQuery,
   productSpellingVocabulary,
+  productSearchPlan,
+  productSearchSize,
 } from "./public-search";
 
 test("corrige erros próximos de nomes e marcas sem alterar doses, EAN ou SKU", () => {
@@ -73,6 +75,25 @@ test("prioriza nome exato e inicio do nome antes de outras ocorrencias", () => {
     rankProductsForQuery(products, "cimégrípe").map((product) => product.id),
     ["exact", "prefix", "description"],
   );
+});
+
+test("fralda prioriza tamanho G exato e preserva alternativas sem confundir massa ou palavras", () => {
+  const products = ["Fralda geriátrica A XG", "Fralda geriátrica B M", "Fralda geriátrica C G", "Fralda geriátrica D 90 g", "Fralda geriátrica E 5mg", "Fralda geriátrica F Grande"].map((name, index) => ({
+    id: String(index), name, searchText: buildProductSearchText({ name, activeIngredients: [], searchTerms: [] }),
+  }));
+  const ranked = rankProductsForQuery(products, "fralda geriátrica G");
+  assert.equal(ranked[0].id, "2");
+  assert.equal(ranked.length, products.length, "tamanho prioriza sem eliminar alternativas");
+  for (const size of ["P", "M", "G", "GG", "XG", "XXG", "RN"]) {
+    const alternatives = [`Fralda geriátrica A X${size}`, `Fralda geriátrica B ${size}`].map((name, index) => ({ id: String(index), name, searchText: buildProductSearchText({ name, activeIngredients: [], searchTerms: [] }) }));
+    assert.equal(rankProductsForQuery(alternatives, `fralda geriátrica ${size}`)[0].id, "1", size);
+  }
+  assert.deepEqual(rankProductsForQuery(products, "fralda geriátrica 90 g").map(p => p.id), ["3"], "gramas continuam sendo unidade");
+  assert.equal(productSearchSize("sabonete 90 g"), null);
+  assert.equal(productSearchSize("fralda geriátrica 90 g"), null);
+  assert.equal(productSearchSize("fralda geriátrica 5mg"), null);
+  assert.equal(productSearchSize("fralda geriátrica gramas"), null);
+  assert.deepEqual(productSearchPlan("fralda geriátrica 90 g tamanho G").dosePatterns, productSearchPlan("fralda geriátrica 90 g").dosePatterns);
 });
 
 test("busca dose e marca em qualquer posição sem confundir doses", () => {

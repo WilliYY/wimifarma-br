@@ -15,7 +15,7 @@ const css = fs.readFile(cssPath, "utf8").then(source => postcss([tailwindcss()])
 const mocks: Record<string, string> = {
   "next/link": "import React from 'react';export default ({children,...props})=><a {...props}>{children}</a>;",
   "next/image": "import React from 'react';export default ({fill,unoptimized,priority,fetchPriority,...props})=><img {...props} style={fill?{position:'absolute',inset:0,width:'100%',height:'100%'}:undefined}/>;",
-  "next/navigation": "export const useRouter=()=>({push:()=>{}});export const usePathname=()=>'/';export const redirect=()=>{throw Error('Unexpected redirect')};",
+  "next/navigation": "export const useSearchParams=()=>new URLSearchParams();export const useRouter=()=>({push:()=>{}});export const usePathname=()=>'/';export const redirect=()=>{throw Error('Unexpected redirect')};",
   "next/server": "export const NextResponse={json:()=>{throw Error('Unexpected server response')}};",
   "@/features/auth/auth": "export const auth=async()=>window.session;export const signOut=async()=>{};",
   "@/components/site/announcement-bar": "import React from 'react';export const AnnouncementBar=()=> <div className='h-13 sm:h-10'><a href='/ofertas'>Campanha de teste</a></div>;",

@@ -54,7 +54,7 @@ export default async function SearchPage({ searchParams }: Props) {
             </div>
             <form action="/busca" className="flex min-h-12 w-full items-center gap-2 rounded-full border border-line bg-white p-1.5 pl-4 sm:max-w-sm" role="search">
               <Search aria-hidden="true" className="h-4 w-4 shrink-0 text-brand" />
-              <input aria-label="Pesquisar no catálogo" className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-brand" defaultValue={query} maxLength={80} name="q" placeholder="Nome, marca, EAN ou princípio ativo" type="search" />
+              <input aria-label="Pesquisar no catálogo" className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-brand" defaultValue={query} key={query} maxLength={80} name="q" placeholder="Nome, marca, EAN ou princípio ativo" type="search" />
               <button aria-label="Pesquisar" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-white hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2" type="submit"><ArrowRight className="h-4 w-4" /></button>
             </form>
           </div>

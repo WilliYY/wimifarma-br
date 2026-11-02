@@ -2,7 +2,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 import { gtinVariants, normalizeGtin } from "./gtin";
-import { correctProductSearchQuery, ingredientSearchIdentities, isPrescriptionSearchProduct, normalizeProductSearch, productSearchPlan, productSpellingVocabulary, topicNamePattern } from "./public-search";
+import { correctProductSearchQuery, ingredientSearchIdentities, isPrescriptionSearchProduct, normalizeProductSearch, productSearchPlan, productSizePattern, productSpellingVocabulary, topicNamePattern } from "./public-search";
 
 export const SEARCH_PAGE_SIZE = 24;
 
@@ -72,7 +72,9 @@ function normalizedField(field: Prisma.Sql) {
 function searchOrder(query: string) {
   const normalized = normalizeProductSearch(query);
   const barcode = barcodeCondition(query);
-  return Prisma.sql`CASE
+  const size = productSearchPlan(query).size;
+  const sizeOrder = size ? Prisma.sql`CASE WHEN regexp_replace(${normalizedField(Prisma.sql`p."name"`)}, '\\m[0-9]+[ ]*g\\M', ' ', 'g') ~ ${productSizePattern(size)} THEN 1 ELSE 0 END DESC, ` : Prisma.empty;
+  return Prisma.sql`${sizeOrder}CASE
     ${barcode ? Prisma.sql`WHEN ${barcode} THEN 1000` : Prisma.empty}
     WHEN lower(p."name") = ${normalized} THEN 500
     WHEN p."searchText" LIKE ${`${normalized}%`} THEN 350

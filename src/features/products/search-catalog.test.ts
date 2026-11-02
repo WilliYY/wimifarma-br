@@ -26,6 +26,28 @@ async function fixture(db: object) {
   return loaded.exports;
 }
 
+test("tamanho de fralda ordena antes da relevância no SQL sem filtrar alternativas ou antecipar indisponíveis", async () => {
+  const queries: Prisma.Sql[] = [];
+  const rows = [
+    product("g-unavailable", { name: "Fralda geriátrica G", stock: 0, activeIngredients: [] }),
+    product("g", { name: "Fralda geriátrica B G", activeIngredients: [] }),
+    product("xg", { name: "Fralda geriátrica A XG", activeIngredients: [] }),
+    product("m", { name: "Fralda geriátrica M", activeIngredients: [] }),
+  ];
+  const service = await fixture({
+    $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return rows.map(row => ({ id: row.id, total: rows.length })); },
+    product: { findMany: async () => [...rows].reverse() },
+  });
+  const result = await service.getSearchCatalog("fralda geriátrica G", { relatedLimit: 0 });
+  assert.deepEqual(Array.from(result.products, row => row.id), ["g", "xg", "m", "g-unavailable"]);
+  const query = queries[0];
+  assert.match(query.text, /ORDER BY CASE WHEN regexp_replace[\s\S]+THEN 1 ELSE 0 END DESC, CASE/);
+  assert.ok(query.text.includes("\\m[0-9]+[ ]*g\\M"), "massa em gramas é excluída da preferência de tamanho");
+  assert.equal(query.values.filter(value => value === "(^| )g($| )").length, 1, "limites de palavra são usados somente na ordenação");
+  assert.ok(!query.values.includes("(^| )g"), "G não filtra os demais tamanhos");
+  assert.equal(result.count, 4);
+});
+
 test("disponibilidade vendável ordena simples e associações globalmente antes da paginação", async () => {
   const rows = [
     product("single-unavailable", { stock: 0 }),

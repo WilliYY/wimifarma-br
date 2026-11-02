@@ -38,7 +38,7 @@ export async function CatalogPage({ title, description, path, page, categoryName
             {parameters.filter(([key]) => key !== "q").map(([key, value]) => <input key={key} name={key} type="hidden" value={value} />)}
             {sort !== "relevantes" ? <input name="ordem" type="hidden" value={sort} /> : null}
             <label className="text-xs font-bold text-ink" htmlFor="catalog-search">Buscar nesta seleção</label>
-            <input className="mt-2 min-h-11 w-full min-w-0 rounded-lg border border-line px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" defaultValue={query} id="catalog-search" maxLength={80} name="q" placeholder="Nome ou marca" type="search" />
+            <input className="mt-2 min-h-11 w-full min-w-0 rounded-lg border border-line px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" defaultValue={query} key={query ?? ""} id="catalog-search" maxLength={80} name="q" placeholder="Nome ou marca" type="search" />
             <button className="mt-2 min-h-11 w-full rounded-lg bg-brand px-3 text-sm font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2" type="submit">Buscar</button>
           </form>
         </CatalogFilterPanel>

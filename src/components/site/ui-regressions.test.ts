@@ -7,7 +7,7 @@ async function fixture(kind: "search" | "checkout" | "header", run: (page: Page)
   const mocks: Record<string, string> = {
     "next/link": "import React from 'react';export default ({children,...props}) => <a {...props}>{children}</a>",
     "next/image": "import React from 'react';export default ({fill,unoptimized,priority,...props}) => <img {...props}/>",
-    "next/navigation": "export const useRouter=()=>({push:path=>window.navigations.push(path)});export const redirect=()=>{throw new Error('Unexpected fixture redirect');};",
+    "next/navigation": "export const useSearchParams=()=>new URLSearchParams();export const usePathname=()=>\"/\";export const useRouter=()=>({push:path=>window.navigations.push(path)});export const redirect=()=>{throw new Error('Unexpected fixture redirect');};",
     "next/server": "export const NextResponse={json:()=>{throw new Error('Unexpected server response');}};",
     "@/features/auth/auth": "export const auth=async()=>window.session;export const signOut=async()=>{};",
     "@/components/site/site-nav": "export const SiteNav=()=>null;",

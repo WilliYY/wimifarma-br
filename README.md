@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Busca sincronizada, preferência pelo tamanho de fralda solicitado, conta por barra/economia dos kits e prioridade da imagem do primeiro banner: [137](docs/137-busca-tamanhos-kits-e-imagem-principal.md).
+
 Avaliações de clientes mais compactas, com movimento lateral suave, arraste por mouse/dedo e preferência de movimento reduzido: [61](docs/61-avaliacoes-e-rodape.md#avaliações-compactas-com-movimento-lateral--02112026).
 
 Vitrines diárias por categoria, ficha com kits da mesma linha, previsão de retirada junto da compra, filtros contextuais e perfil sem cidade padrão: [136](docs/136-revisao-comercial-e-estimativas-finais.md). Foram completados 11 rascunhos físicos; estimativa não substitui medição, conferência da embalagem ou aprovação de transporte.

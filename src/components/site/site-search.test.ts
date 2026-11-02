@@ -22,7 +22,7 @@ const bundle = build({
     const mocks: Record<string, string> = {
       "next/link": "import React from 'react';export default ({children,...props})=><a {...props}>{children}</a>;",
       "next/image": "import React from 'react';export default ({unoptimized,priority,fill,...props})=><img {...props}/>;",
-      "next/navigation": "export const useRouter=()=>({push:path=>window.navigations.push(path)});",
+      "next/navigation": "export const useSearchParams=()=>new URLSearchParams();export const usePathname=()=>\"/\";export const useRouter=()=>({push:path=>window.navigations.push(path)});",
     };
     builder.onResolve({ filter: /^next\/(link|image|navigation)$/ }, args => ({ path: args.path, namespace: "fixture" }));
     builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: mocks[args.path], loader: "tsx", resolveDir: process.cwd() }));

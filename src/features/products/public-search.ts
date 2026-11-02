@@ -105,6 +105,8 @@ export function isPrescriptionSearchProduct(product: { requiresPrescription: boo
 
 export function productSearchPlan(query: string) {
   let remaining = query.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const size = productSearchSize(query);
+  if (size) remaining = remaining.replace(new RegExp(`(^|[^a-z0-9])(\\d+\\s*g|${size})(?=$|[^a-z0-9])`, "g"), (match, separator: string, token: string) => token === size ? `${separator} ` : match);
   const topics: SearchTopic[] = [];
   // Longest phrase wins: "pressao baixa" and "diabetes tipo 1" cannot fall
   // through to the generic topic. Preserve original punctuation for doses.
@@ -123,7 +125,19 @@ export function productSearchPlan(query: string) {
     (topics.some(topic => topic.id === "high-pressure") && /\bbaixa\b/.test(normalized)) ||
     (topics.some(topic => topic.id === "cholesterol") && /\bbaixo\b/.test(normalized))
   );
-  return { topics, blocked, patterns: productSearchPatterns(remaining), dosePatterns: productDosePatterns(remaining) };
+  return { topics, blocked, size, patterns: productSearchPatterns(remaining), dosePatterns: productDosePatterns(remaining) };
+}
+
+/** Size is a preference for diapers; numeric mass and medicine units stay literal. */
+export function productSearchSize(query: string) {
+  const normalized = normalizeProductSearch(query);
+  if (!/\bfraldas?\b/.test(normalized)) return null;
+  const withoutMass = normalized.replace(/\b\d+\s*g\b/g, " ");
+  return /\b(rn|xxg|xg|gg|g|m|p)\b/.exec(withoutMass)?.[1] ?? null;
+}
+
+export function productSizePattern(size: string) {
+  return `(^| )${size}($| )`;
 }
 
 function isMedicineSearchProduct(product: SearchRankableProduct) {
@@ -278,6 +292,8 @@ function rankExactProductsForQuery<T extends SearchRankableProduct>(
       else if (` ${normalizedName}`.includes(` ${normalizedQuery}`)) score = 250;
       else if (normalizedName.includes(normalizedQuery)) score = 180;
       else if (product.searchText.startsWith(normalizedQuery)) score = 100;
+
+      if (plan.size && new RegExp(productSizePattern(plan.size)).test(normalizedName.replace(/\b\d+\s*g\b/g, " "))) score += 600;
 
       return { product, score };
     })
