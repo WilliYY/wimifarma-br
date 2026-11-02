@@ -1,5 +1,9 @@
 import "dotenv/config";
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { mkdir, lstat, open, realpath } from "node:fs/promises";
+import path from "node:path";
+import { inspect } from "node:util";
 import { getPrisma } from "../src/lib/prisma";
 import type { Prisma } from "../src/generated/prisma/client";
 import { ensureClubMembership } from "../src/features/club/membership";
@@ -15,6 +19,7 @@ const QA_DATABASE = "wimifarma_loyalty_qa_20261102";
 const actorId = "qa-admin";
 let stage = "DESTINATION_GUARD";
 let assertionsPassed = 0;
+let authorizedQaSource: string | undefined;
 
 function guardDestination() {
   assert.equal(process.env.LOYALTY_DB_QA_ONLY, "synthetic-only");
@@ -28,11 +33,53 @@ function guardDestination() {
   const sourceSha = process.env.QA_SOURCE_SHA;
   assert.match(sourceSha ?? "", /^[a-f0-9]{40}$/);
   assert.equal(sourceSha, currentLoyaltyPolicySourceSha(), "QA source must match the executable revision");
+  authorizedQaSource = sourceSha;
   return sourceSha!;
 }
 
+async function privateQaDiagnostic(error: unknown) {
+  if (!authorizedQaSource) return { diagnosticSaved: false };
+  const diagnosticId = randomUUID();
+  const diagnosticFile = `loyalty-db-qa-${diagnosticId}.json`;
+  try {
+    const home = await realpath(process.env.HOME ?? "");
+    const app = await realpath(process.cwd());
+    const directory = path.join(home, "loyalty-db-qa-diagnostics");
+    const relative = path.relative(app, directory);
+    assert.ok(relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative), "QA diagnostics must remain outside the app");
+    await mkdir(directory, { recursive: true, mode: 0o700 });
+    const stat = await lstat(directory);
+    assert.ok(stat.isDirectory() && !stat.isSymbolicLink());
+    if (process.platform !== "win32") {
+      assert.equal(stat.mode & 0o077, 0);
+      if (typeof process.getuid === "function") assert.equal(stat.uid, process.getuid());
+    }
+    // Redact connection strings before JSON escaping, including credentials with quotes/backslashes.
+    const redact = (text: string | undefined) => text
+      ?.replaceAll(process.env.DATABASE_URL!, "[REDACTED_DATABASE_URL]")
+      .replace(/postgres(?:ql)?:\/\/[^\s"'<>]+/gi, "[REDACTED_DATABASE_URL]");
+    // Full details are allowed only in this private synthetic-QA artifact, never on stdout/stderr.
+    const diagnostic = {
+      qaOnly: true, diagnosticId, recordedAt: new Date().toISOString(), sourceSha: authorizedQaSource,
+      ...sanitizeLoyaltyPolicyFailure(error), stage, assertionsPassed,
+      error: {
+        message: redact(error instanceof Error ? error.message : undefined),
+        stack: redact(error instanceof Error ? error.stack : undefined),
+        details: redact(inspect(error, { depth: 8, customInspect: false, getters: false, maxArrayLength: 100, maxStringLength: 40_000 })),
+      },
+    };
+    const handle = await open(path.join(directory, diagnosticFile), "wx", 0o600);
+    try { await handle.writeFile(JSON.stringify(diagnostic, null, 2) + "\n", "utf8"); await handle.sync(); } finally { await handle.close(); }
+    return { diagnosticSaved: true, diagnosticId, diagnosticFile };
+  } catch (writeError) {
+    return { diagnosticSaved: false, diagnosticWriteCode: sanitizeLoyaltyPolicyFailure(writeError).errorCode };
+  }
+}
+
 async function seed(tx: Prisma.TransactionClient) {
+  stage = "SEED_QA_ADVISORY_LOCK";
   await tx.$queryRaw`SELECT pg_advisory_xact_lock(87164323)::text`;
+  stage = "SEED_ALL_PUBLIC_TABLES_EMPTY";
   await tx.$executeRaw`DO $qa$
     DECLARE item record; row_count bigint;
     BEGIN
@@ -44,6 +91,7 @@ async function seed(tx: Prisma.TransactionClient) {
         IF row_count <> 0 THEN RAISE EXCEPTION 'QA database must be completely empty'; END IF;
       END LOOP;
     END $qa$`;
+  stage = "SEED_SNAPSHOT_FUNCTION_DDL";
   await tx.$executeRaw`CREATE FUNCTION public.qa_loyalty_snapshot() RETURNS jsonb LANGUAGE plpgsql AS $qa$
     DECLARE item record; table_data jsonb; result jsonb := '{}'::jsonb;
     BEGIN
@@ -57,38 +105,50 @@ async function seed(tx: Prisma.TransactionClient) {
       END LOOP;
       RETURN result;
     END $qa$`;
+  stage = "SEED_CUSTOMERS";
   for (const [id, status] of [["qa-customer-missing-a", "ACTIVE"], ["qa-customer-missing-b", "ACTIVE"], ["qa-customer-inactive", "INACTIVE"], ["qa-customer-optout", "ACTIVE"], ["qa-customer-wallet", "ACTIVE"]] as const) {
     await tx.customer.create({ data: { id, status, name: "Synthetic QA Customer", city: "", email: `${id}@example.invalid`, passwordHash: "qa-not-a-valid-password-hash", notes: "Synthetic fixture only" } });
   }
+  stage = "SEED_USERS";
   await tx.user.createMany({ data: [
     { id: actorId, name: "Synthetic QA Admin", email: "qa-admin@example.invalid", passwordHash: "qa-not-a-valid-password-hash", role: "ADMIN", isActive: true },
     { id: "qa-manager", name: "Synthetic QA Manager", email: "qa-manager@example.invalid", passwordHash: "qa-not-a-valid-password-hash", role: "MANAGER", isActive: true },
     { id: "qa-inactive-user", name: "Synthetic QA Inactive", email: "qa-inactive@example.invalid", passwordHash: "qa-not-a-valid-password-hash", role: "CUSTOMER", isActive: false, customerId: "qa-customer-missing-b" },
   ] });
+  stage = "SEED_EXISTING_MEMBERSHIPS";
   await tx.clubMembership.createMany({ data: [
     { id: "qa-club-optout", customerId: "qa-customer-optout", active: false, joinedAt: new Date("2026-01-01T00:00:00.000Z") },
     { id: "qa-club-wallet", customerId: "qa-customer-wallet", active: true, joinedAt: new Date("2026-02-01T00:00:00.000Z") },
   ] });
+  stage = "SEED_WIMICOIN_ACCOUNT";
   const wallet = await tx.wimicoinAccount.create({ data: { id: "qa-wimi-wallet", customerId: "qa-customer-wallet", balancePoints: 1234, lifetimeEarnedPoints: 1434, lifetimeRedeemedPoints: 200 } });
+  stage = "SEED_WIMICOIN_TRANSACTIONS";
   await tx.wimicoinTransaction.createMany({ data: [
     { id: "qa-wimi-credit", accountId: wallet.id, eventKey: "qa-credit", type: "CREDIT", amountPoints: 1434, description: "Synthetic fixture" },
     { id: "qa-wimi-debit", accountId: wallet.id, eventKey: "qa-debit", type: "DEBIT", amountPoints: 200, description: "Synthetic fixture" },
   ] });
+  stage = "SEED_CASHBACK_ACCOUNT";
   const cashback = await tx.cashbackAccount.create({ data: { id: "qa-cashback-wallet", customerId: "qa-customer-wallet", balance: "12.34", lifetimeEarned: "14.34", lifetimeRedeemed: "2.00" } });
+  stage = "SEED_CASHBACK_TRANSACTIONS";
   await tx.cashbackTransaction.createMany({ data: [
     { id: "qa-cashback-credit", accountId: cashback.id, eventKey: "qa-cashback-credit", type: "CREDIT", amount: "14.34", description: "Synthetic fixture" },
     { id: "qa-cashback-debit", accountId: cashback.id, eventKey: "qa-cashback-debit", type: "DEBIT", amount: "2.00", description: "Synthetic fixture" },
   ] });
+  stage = "SEED_PRODUCTS";
   for (const [id, status, cashbackEnabled, cashbackRateBps] of [
     ["qa-product-active", "ACTIVE", true, 200], ["qa-product-draft", "DRAFT", true, 200],
     ["qa-product-fixed", "ACTIVE", true, 100], ["qa-product-disabled", "ACTIVE", false, 200],
     ["qa-product-deleted", "ARCHIVED", true, 200],
   ] as const) {
+    stage = id === "qa-product-deleted" ? "SEED_PRODUCT_SOFT_DELETED" : "SEED_PRODUCTS";
     await tx.product.create({ data: { id, name: "Synthetic QA Product", slug: id, ean: id === "qa-product-active" ? "7890000000001" : null,
       status, cashbackEnabled, cashbackRateBps, wimicoinsEnabled: true, wimicoinsRateBps: 200, price: "42.50", stock: 7,
-      deletedAt: id === "qa-product-deleted" ? new Date("2026-01-01T00:00:00.000Z") : null, prescriptionType: "UNREVIEWED" } });
+      deletedAt: id === "qa-product-deleted" ? new Date("2026-01-01T00:00:00.000Z") : null,
+      purgeAt: id === "qa-product-deleted" ? new Date("2026-01-31T00:00:00.000Z") : null, prescriptionType: "UNREVIEWED" } });
   }
+  stage = "SEED_MARKETING_CONSENT";
   await tx.restockInterest.create({ data: { id: "qa-marketing-consent", customerId: "qa-customer-missing-a", productId: "qa-product-active", whatsapp: false, emailEnabled: true, email: "qa-consent@example.invalid", consentAt: new Date("2026-01-01T00:00:00.000Z"), expiresAt: new Date("2027-01-01T00:00:00.000Z") } });
+  stage = "SEED_HISTORICAL_ORDER_AND_ITEM";
   await tx.order.create({ data: { id: "qa-historical-order", number: "QA-SYNTHETIC-1", customerId: "qa-customer-wallet", customerName: "Synthetic QA Customer", customerPhone: "00000000000", fulfillmentMethod: "PICKUP", paymentMethod: "CASH", paymentStatus: "PAID", status: "COMPLETED", subtotalCents: 4250, totalCents: 4250, privacyConsentAt: new Date("2026-01-01T00:00:00.000Z"), cashbackEarnedCents: 85, wimicoinsEarnedPoints: 85,
     items: { create: { id: "qa-historical-item", productId: "qa-product-active", productName: "Synthetic Historical Snapshot", productSlug: "qa-product-active", unitPriceCents: 4250, quantity: 1, totalCents: 4250, cashbackRateBps: 200, cashbackEarnedCents: 85, wimicoinsRateBps: 200, wimicoinsEarnedPoints: 85 } } } });
 }
@@ -97,12 +157,14 @@ type Snapshot = Record<string, Record<string, unknown>[]>;
 
 async function main() {
   const sourceSha = guardDestination();
+  stage = "QA_DATABASE_CLIENT";
   const db = getPrisma();
   try {
-    stage = "POSTGRES17_AND_EMPTY_DATABASE";
+    stage = "QA_DATABASE_IDENTITY_AND_POSTGRES17";
     const [identity] = await db.$queryRaw<{ database: string; version: number }[]>`SELECT current_database() AS database, current_setting('server_version_num')::integer AS version`;
     assert.equal(identity.database, QA_DATABASE);
     assert.ok(identity.version >= 170000 && identity.version < 180000);
+    stage = "SEED_TRANSACTION_BEGIN";
     await db.$transaction(seed, { timeout: 30_000 });
     assertionsPassed++;
     const context = { actorId, sourceSha };
@@ -243,7 +305,8 @@ async function main() {
   } finally { await db.$disconnect(); }
 }
 
-main().catch(error => {
-  console.error(JSON.stringify({ ok: false, ...sanitizeLoyaltyPolicyFailure(error), stage, assertionsPassed }));
+main().catch(async error => {
+  const diagnostic = await privateQaDiagnostic(error);
+  console.error(JSON.stringify({ ok: false, ...sanitizeLoyaltyPolicyFailure(error), stage, assertionsPassed, ...diagnostic }));
   process.exitCode = 1;
 });
