@@ -178,6 +178,33 @@ test("ruptura após abrir diálogo é reconferida antes de anunciar entrega loca
   });
 });
 
+test("produto arquivado após abrir diálogo remove CEP e retirada sem criar aviso de reposição", async () => {
+  await fixture(async page => {
+    let requests = 0;
+    await page.route("**/api/fretes/estimativa", route => {
+      requests++;
+      return route.fulfill({ status: 404, json: { error: "Produto não encontrado." } });
+    });
+    await page.goto(origin);
+    await page.getByRole("button", { name: "Ver frete de Produto A", exact: true }).click();
+    await page.getByRole("textbox", { name: "CEP", exact: true }).fill("87525-000");
+    await page.getByRole("button", { name: "Consultar", exact: true }).click();
+    await expect.poll(() => requests).toBe(1);
+    const dialog = page.getByRole("dialog", { name: "Frete e prazo" });
+    await expect(dialog.getByRole("heading", { name: "Indisponível no momento", exact: true })).toBeVisible();
+    await expect(dialog.getByRole("status")).toContainText("não está mais disponível no catálogo");
+    await expect(dialog.locator("form")).toHaveCount(0);
+    await expect(dialog.getByRole("textbox", { name: "CEP", exact: true })).toHaveCount(0);
+    await expect(dialog).not.toContainText(/Retirada|Grátis|checkout/i);
+    await expect(dialog.getByRole("button", { name: /Avise-me/i })).toHaveCount(0);
+    const contact = dialog.getByRole("link", { name: "Consultar no WhatsApp", exact: true });
+    await expect(contact).toBeVisible();
+    await expect(contact).toHaveAttribute("href", /^https:\/\/wa\.me\//);
+    assert.equal(requests, 1);
+    assert.deepEqual(await page.evaluate(() => (JSON.parse(localStorage.getItem("wimifarma-cart-v1")!) as { id: string; quantity: number }[]).map(({ id, quantity }) => ({ id, quantity }))), [{ id: "cart-only", quantity: 7 }]);
+  });
+});
+
 test("fechar durante consulta ignora resposta atrasada ao abrir outro produto", async () => {
   await fixture(async page => {
     let release: (() => void) | undefined;

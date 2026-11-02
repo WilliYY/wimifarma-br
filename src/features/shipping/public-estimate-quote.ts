@@ -1,6 +1,6 @@
 import { publicShippingEstimateRequestSchema, publicShippingEstimateSchema, type PublicShippingEstimateRequest, type PublicShippingEstimate } from "./public-estimate-contract";
 
-export type PublicEstimateState = { options: PublicShippingEstimate["options"]; busy: boolean; message: string; mode?: PublicShippingEstimate["mode"]; unavailable?: boolean };
+export type PublicEstimateState = { options: PublicShippingEstimate["options"]; busy: boolean; message: string; mode?: PublicShippingEstimate["mode"]; unavailable?: boolean; notFound?: boolean };
 
 export function createPublicShippingEstimate() {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -35,6 +35,10 @@ export function createPublicShippingEstimate() {
         });
         const payload = await response.json().catch(() => null);
         if (!isCurrent()) return;
+        if (response.status === 404) {
+          onState({ options: [], busy: false, unavailable: true, notFound: true, message: "Este produto não está mais disponível no catálogo. Consulte a farmácia para mais informações." });
+          return;
+        }
         if (response.status === 409) {
           onState({ options: [], busy: false, unavailable: true, message: typeof payload?.error === "string" ? payload.error : "Produto indisponível no momento. Avise-me quando chegar." });
           return;

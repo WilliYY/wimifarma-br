@@ -83,7 +83,7 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
     <section aria-labelledby={titleId} className={compact ? "min-w-0" : "rounded-2xl border border-line bg-white p-4 sm:rounded-3xl sm:p-6"}>
       <h2 className="text-sm font-bold text-ink" id={titleId}>Indisponível no momento</h2>
       <p className="mt-2 text-sm leading-6 text-muted" role="status">{result?.message || "Este produto está sem disponibilidade para entrega ou retirada."}</p>
-      <div className="mt-3">{requiresPurchaseAssistance(product) ? <a className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand underline" href={buildWhatsAppUrl(`Ola, gostaria de consultar ${product.name}.`)} rel="noreferrer" target="_blank"><MessageCircle aria-hidden="true" className="h-4 w-4" />Consultar no WhatsApp</a> : <RestockButton product={product} compact={compact} />}</div>
+      <div className="mt-3">{result?.notFound || requiresPurchaseAssistance(product) ? <a className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand underline" href={buildWhatsAppUrl(`Ola, gostaria de consultar ${product.name}.`)} rel="noreferrer" target="_blank"><MessageCircle aria-hidden="true" className="h-4 w-4" />Consultar no WhatsApp</a> : <RestockButton product={product} compact={compact} />}</div>
     </section>
   );
 
