@@ -4,6 +4,7 @@
 
 - `Wimifarma` deixa de encontrar produtos apenas pela frase institucional da descrição; haste(s) flexível(eis) recebe equivalência explícita em memória e SQL. O simulador valida disponibilidade efetiva antes de entrega local ou transportadora. Banner de higiene, grupo Beleza e navegação de ofertas passam a respeitar a seleção correspondente, sem criar campanhas ou mudar preços/estoque.
 - Concentrações de Dorilax DT, Buscoduo e Alenia 6/200 são pareadas por apresentação conferida em fontes primárias. Alenia explicita pó para inalação, sem afirmar acessório não confirmado. A importação bloqueia associações ambíguas e preserva denominadores legítimos. Contrato, fontes e estado de publicação em [139](139-busca-disponibilidade-e-apresentacao.md).
+- Fonte/OCI `ad0107f` publicada somente no app ARM64 após revisão independente, testes dirigidos, 525 testes de segurança, lint/tipos/Prisma, auditorias sem high/critical e build. QA PostgreSQL real somente leitura e QA pública em 390/1.440 px passaram. Caso 404 durante consulta também corrigido; quatro simulações reais confirmaram recusa da ruptura e retorno de tarifas para item disponível. PostgreSQL, ambiente, configuração, avaliações e canônico preservados. Evidências, limites e pendências no documento 139.
 
 ## 2026-11-02 — Política de fidelidade e correções do catálogo
 
