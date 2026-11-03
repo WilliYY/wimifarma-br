@@ -19,3 +19,9 @@ O mesmo plano de busca reconhece `L6P5`, `L 6 P 5`, `leve6pague5` e `Leve 6 Pagu
 Somente os números pertencentes ao alias são consumidos. Doses e quantidades adicionais continuam obrigatórias; por exemplo, `Protex leve6pague5 90g` não encontra o kit de 85 g. O alias existe apenas na pesquisa, compartilhado pelo ranking em memória e pelo SQL parametrizado. Não modifica SKU, preço, quantidade comercial, nome persistido ou apresentação pública. A regressão anterior à correção reproduziu a ausência das grafias equivalentes e a correspondência indevida de `L6P50`.
 
 Nomes e consultas compactos também são reconhecidos quando a promoção segue uma massa explícita, como `Sabonete Protex BALANCE SAUDAVEL85gL6P5` e `protex85gL6P5`. O limite entre `85g` e `L6P5` é interpretado somente durante a busca, sem reindexação ou alteração do cadastro. A dose permanece obrigatória e o limite final da promoção continua recusando `L6P50` para uma consulta `L6P5`.
+
+## Unidades entre as contagens — ajuste de 03/11/2026
+
+O alias aceita `un`, `unidade` e `unidades` após cada contagem, com ou sem espaços. Assim, `Intimus L16P15`, `Intimus leve16pague15` e `Intimus leve16unidadespague15unidades` reconhecem o mesmo grupo, inclusive o título `Absorvente Intimus Mini Leve16unidadesPague15unidades`. A palavra de unidade é opcional tanto na consulta quanto no produto. A regra é compartilhada pelos parâmetros SQL e pelo ranking em memória, incluindo a promoção colada à massa.
+
+A regressão anterior ao ajuste confirmou que `L16P15` omitia o título com unidades intermediárias. A nova matriz recusa contagens diferentes, palavras adicionais dentro do alias e sufixos inválidos. Dose e quantidade digitadas depois da promoção continuam obrigatórias. O ajuste não modifica o índice persistido, dados, nomes, preços, quantidades comerciais ou regras logísticas.

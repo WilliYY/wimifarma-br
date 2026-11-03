@@ -229,6 +229,21 @@ test("busca separa massa e promoção compactas sem alterar o índice persistido
   }
 });
 
+test("busca preserva equivalência Intimus com unidades entre leve e pague", () => {
+  const products = ["Absorvente Intimus Mini Leve16unidadesPague15unidades", "Intimus Mini L16P15", "Intimus Mini Leve 16 un Pague 15 un", "Intimus Mini Leve16unidadePague15unidade", "Intimus Mini L16P150", "Intimus Mini Leve16unidadesExtrasPague15unidades"]
+    .map((name, id) => ({ id: String(id), name, searchText: normalizeProductSearch(name) }));
+  for (const query of ["intimus L16P15", "intimus leve16pague15", "intimus leve16unidadespague15unidades", "intimus leve 16 un pague 15 un", "intimus L16unP15un", "intimus leve16unidadepague15unidade"]) {
+    assert.deepEqual(new Set(rankProductsForQuery(products, query).map(p => p.id)), new Set(["0", "1", "2", "3"]), query);
+    assert.deepEqual(productSearchPlan(query).dosePatterns, [], query);
+  }
+  for (const query of ["intimus L16P15 100mg", "intimus leve16unidadespague15unidades 20", "intimus leve16mgpague15unidades", "intimus L16P15x"]) {
+    assert.deepEqual(rankProductsForQuery(products.slice(0, 4), query), [], query);
+  }
+  const compact = { id: "mass", name: "Intimus 85gLeve16unidadesPague15unidades", searchText: "intimus 85gleve16unidadespague15unidades" };
+  assert.deepEqual(rankProductsForQuery([compact], "intimus 85gL16P15"), [compact]);
+  assert.deepEqual(rankProductsForQuery([compact], "intimus 90gL16P15"), []);
+});
+
 test("EAN pode ser encontrado sem exigir código no nome público", () => {
   const p = { id: "ean", name: "Losartana 50mg", searchText: "losartana 50mg 7896181915638" };
   assert.deepEqual(rankProductsForQuery([p], "7896181915638"), [p]);

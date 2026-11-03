@@ -78,14 +78,14 @@ export function normalizeProductSearch(value: string) {
 }
 
 const searchStrength = /(\d+(?:[.,]\d+)?)\s*(mcg|mg|ml|kg|g|ui)\b(?:\s*\/\s*(\d+(?:[.,]\d+)?)?\s*(ml|l|g)\b)?/g;
-const retailOffer = /(^|[^a-z0-9]|[0-9](?:mcg|mg|ml|kg|g|ui))(?:l\s*([1-9]\d*)\s*p\s*([1-9]\d*)|leve\s*([1-9]\d*)\s*pague\s*([1-9]\d*))(?:\s*(?:unidades?|un))?(?=$|[^a-z0-9])/g;
-const retailOfferAfterStrength = "(?:l\\s*[1-9]\\d*\\s*p\\s*[1-9]\\d*|leve\\s*[1-9]\\d*\\s*pague\\s*[1-9]\\d*)(?:\\s*(?:unidades?|un))?(?=$|[^a-z0-9])";
+const retailOffer = /(^|[^a-z0-9]|[0-9](?:mcg|mg|ml|kg|g|ui))(?:l\s*([1-9]\d*)(?:\s*(?:unidades?|un))?\s*p\s*([1-9]\d*)|leve\s*([1-9]\d*)(?:\s*(?:unidades?|un))?\s*pague\s*([1-9]\d*))(?:\s*(?:unidades?|un))?(?=$|[^a-z0-9])/g;
+const retailOfferAfterStrength = "(?:l\\s*[1-9]\\d*(?:\\s*(?:unidades?|un))?\\s*p\\s*[1-9]\\d*|leve\\s*[1-9]\\d*(?:\\s*(?:unidades?|un))?\\s*pague\\s*[1-9]\\d*)(?:\\s*(?:unidades?|un))?(?=$|[^a-z0-9])";
 
 export function productSearchPatterns(query: string) {
   const offerPatterns: string[] = [];
   const withoutOffers = query.toLowerCase().replace(retailOffer, (_match, separator: string, shortTake: string, shortPay: string, take: string, pay: string) => {
     const counts = [shortTake || take, shortPay || pay];
-    offerPatterns.push(`(^| |[0-9](mcg|mg|ml|kg|g|ui))(l *${counts[0]} *p *${counts[1]}|leve *${counts[0]} *pague *${counts[1]})( *(un|unidade|unidades))?($| )`);
+    offerPatterns.push(`(^| |[0-9](mcg|mg|ml|kg|g|ui))(l *${counts[0]}( *(un|unidade|unidades))? *p *${counts[1]}|leve *${counts[0]}( *(un|unidade|unidades))? *pague *${counts[1]})( *(un|unidade|unidades))?($| )`);
     return `${separator} `;
   });
   // Strengths are checked against the original name, not the lossy text index.

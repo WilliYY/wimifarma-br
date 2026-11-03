@@ -57,6 +57,29 @@ test("SQL usa os mesmos aliases leve/pague sem interpretar contagens como doses"
   }
 });
 
+test("SQL reconhece unidades entre as contagens Intimus e mantém filtros posteriores", async () => {
+  const queries: Prisma.Sql[] = [];
+  const service = await fixture({ $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return []; }, product: { findMany: async () => [] } });
+  for (const query of ["intimus L16P15", "intimus leve16pague15", "intimus leve16unidadespague15unidades", "intimus leve16unpague15un", "intimus leve16unidadepague15unidade"]) {
+    await service.getSearchCatalog(query, { relatedLimit: 0 });
+    const sql = queries.at(-1)!;
+    const offer = sql.values.find(value => typeof value === "string" && value.startsWith("(^| ") && value.includes("pague"));
+    assert.equal(typeof offer, "string");
+    const pattern = new RegExp(offer as string);
+    assert.ok(pattern.test("absorvente intimus mini leve16unidadespague15unidades"));
+    assert.ok(pattern.test("intimus l16p15"));
+    assert.equal(pattern.test("intimus l16p150"), false);
+    assert.equal(pattern.test("intimus leve16unidadesextraspague15unidades"), false);
+    assert.equal(sql.text.includes('p."name" ~*'), false);
+  }
+  await service.getSearchCatalog("intimus 85gLeve16unidadesPague15unidades", { relatedLimit: 0 });
+  assert.ok(hasDosePattern(queries.at(-1)!, "Intimus 85gLeve16unidadesPague15unidades"));
+  assert.equal(hasDosePattern(queries.at(-1)!, "Intimus 90gLeve16unidadesPague15unidades"), false);
+  await service.getSearchCatalog("intimus leve16unidadespague15unidades 100mg", { relatedLimit: 0 });
+  assert.ok(hasDosePattern(queries.at(-1)!, "Intimus L16P15 100mg"));
+  assert.equal(hasDosePattern(queries.at(-1)!, "Intimus L16P15 50mg"), false);
+});
+
 test("alias inalatório exige Alenia 6/200, par de ingredientes e CMED sem remover os demais filtros", async () => {
   const queries: Prisma.Sql[] = [];
   const service = await fixture({ $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return []; }, product: { findMany: async () => [] } });
