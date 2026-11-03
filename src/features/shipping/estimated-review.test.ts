@@ -66,3 +66,23 @@ test("DRAFT_ONLY aceita receita pendente somente com perfil nulo e nunca habilit
   assert.throws(() => createEstimatedDraftOnly(product(), value));
   assert.throws(() => reviewEstimatedShipping(row, entry(), [1, 3]));
 });
+
+test("revisor genérico recusa escovas elétricas e refis ambíguos, preservando escova manual", () => {
+  const cases = [
+    ["Escova dental elétrica Oral-B INF CARS 3+ANO 1UN", "04210201334774"],
+    ["Escova dental elétrica Oral-B INF PRINCESS 3+ANO 1UN", "04210201334712"],
+    ["Escova dental elétrica Oral-B REF INF PRINCESS 2UN", "04210201338444"],
+    ["Escova dental eletrica sem acento", "7890000000000"],
+    ["Escova dental electric", "7890000000000"],
+    ["Escova dental com bateria", "7890000000000"],
+    ["Escova dental a pilha", "7890000000000"],
+    ["Escova dental recarregável", "7890000000000"],
+  ];
+  for (const [name, ean] of cases) {
+    const row = { ...product(), name, ean, eanNormalized: ean.padStart(14, "0") }, before = structuredClone(row);
+    assert.throws(() => reviewEstimatedShipping(row, entry(row), [1, 3]), /elétric|bateria|pilha|recarreg/);
+    assert.deepEqual(row, before);
+  }
+  const manual = { ...product(), name: "Escova dental manual Oral-B infantil Cars 1un" };
+  assert.equal(reviewEstimatedShipping(manual, entry(manual), [1, 3]).enabled, true);
+});

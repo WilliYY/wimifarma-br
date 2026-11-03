@@ -2,9 +2,11 @@
 
 ## Estado desta etapa
 
-O lojista autorizou expressamente a opção de usar custo de aquisição elegível observado há até 30 dias e reservar pelo menos metade da margem disponível para despesas e eventual lucro. O código e os controles descritos aqui estão preparados para revisão. A configuração produtiva, a aplicação dos perfis e a publicação desta etapa permanecem pendentes de confirmação e prova pelo responsável pela integração. Este documento não comprova execução em produção.
+O lojista autorizou expressamente a opção de usar custo de aquisição elegível observado há até 30 dias e reservar pelo menos metade da margem disponível para despesas e eventual lucro. A revisão independente, os testes, a aplicação dos perfis e a publicação do aplicativo foram concluídos. A política comercial está ativa na revisão 8, com `HISTORICAL_MARGIN_SHARE`, `marginShareBps:5000` e `historicalCostMaxAgeHours:720`.
 
-O plano logístico contempla 319 produtos sólidos: 44 sabonetes, 97 fraldas, 112 absorventes, 58 escovas/fios e oito itens de algodão/hastes. Inclui o kit Rexona Multivitaminas 6×84 g em manifesto próprio, com sua identidade e embalagem estimada preservadas. A revisão dos 319 perfis e o rascunho de Imosec são operações planejadas, separadas da alteração da política comercial. Os seis produtos somente Avise-me, sem estoque, permanecem indisponíveis e com a trava logística preservada.
+O lote inicial revisou 319 produtos, incluindo o kit Rexona Multivitaminas 6×84 g em manifesto próprio. Na conferência final, três itens da linha elétrica Oral-B, incluindo um refil com descrição ambígua, foram devolvidos aos perfis originais desativados para identificação específica de conteúdo/bateria e aceitação por transportadora. A restauração teve revisão independente, lock, ADMIN vigente, CAS completo e três auditorias próprias. O revisor genérico ganhou regressão para recusar elétricos, baterias, pilhas e recarregáveis, preservando o caso manual permitido; os 12 testes de revisor/CLI e o lint focal passaram.
+
+O resultado líquido é de 316 novos perfis habilitados: 44 sabonetes, 97 fraldas, 112 absorventes, 55 escovas/fios e oito itens de algodão/hastes. Com os dois perfis antigos da loja física, são 318 habilitados no total. Os 319 reviews iniciais, o rascunho desativado de Imosec e as três restaurações estão auditados. A comparação dos 320 produtos comprovou preservação de todos os campos fora de perfil logístico e atualização temporal; ofertas permaneceram iguais. Todos os perfis desta etapa continuam estimados, sem declaração de medição física. Os seis produtos somente Avise-me, sem estoque, permanecem indisponíveis e com a trava logística preservada.
 
 ## Política opcional e compatibilidade
 
@@ -77,7 +79,7 @@ Dry-run é o padrão. Aplicação exige o hash do plano revisado, ADMIN ativo, l
 
 O plano separado para Imosec 2 mg com 12 comprimidos, GTIN `07891010256364`, usa exclusivamente `DRAFT_ONLY`, permitido apenas quando o perfil anterior é literalmente nulo. A hipótese operacional autorizada é de 300 g e 24 × 15 × 10 cm, conforme a origem estipulada em [136](136-revisao-comercial-e-estimativas-finais.md). Não é peso ou medição atribuída ao fabricante.
 
-O rascunho grava `measurementBasis:estimated`, `enabled:false`, `transportReviewed:false`, `cargoKinds:["medication"]`, `approvedServiceIds:[]` e `reference:null`. Não habilita transporte nem altera receita, status, preço, estoque ou oferta. A classificação de receita `UNREVIEWED` permanece pendente; a hipótese não libera venda, postagem ou aceitação de medicamento pela transportadora. A operação também permanece planejada, sem prova de aplicação produtiva nesta etapa.
+O rascunho gravado conserva `measurementBasis:estimated`, `enabled:false`, `transportReviewed:false`, `cargoKinds:["medication"]`, `approvedServiceIds:[]` e `reference:null`. Não habilita transporte nem altera receita, status, preço, estoque ou oferta. A classificação de receita `UNREVIEWED` permanece pendente; a hipótese não libera venda, postagem ou aceitação de medicamento pela transportadora. Sua aplicação produtiva foi verificada com o restante do lote, preservando os demais campos.
 
 ## Origem, pontos de postagem e limites
 
@@ -88,6 +90,31 @@ Segundo o [guia oficial de volumes do Melhor Envio](https://centraldeajuda.melho
 O [guia oficial de mercadorias do Melhor Envio](https://centraldeajuda.melhorenvio.com.br/hc/pt-br/articles/31220391789332-Guia-de-produtos-que-podem-ou-n%C3%A3o-ser-enviados-pelo-Melhor-Envio) impõe restrições distintas para medicamentos, perfumes e aerossóis. A mercadoria precisa ser identificada corretamente, e uma cotação não comprova sua aceitação no ponto de postagem. A revisão conservadora desta etapa abrange somente cargas gerais sólidas explicitamente permitidas; não libera essas outras categorias por presumir ausência de fiscalização.
 
 Farmácia Popular não possui entrega. A página pública foi corrigida nos dois trechos que prometiam combinar “retirada ou entrega”, passando a informar atendimento presencial e ausência de entrega. Os bloqueios existentes de compra assistida e frete para produtos do programa permanecem preservados; o lote de revisão não inclui esses produtos.
+
+## Publicação e confirmação dos Rexona
+
+Commit de código `e2528006a18e7178a3f2d18c2ee418d7f4346096`, enviado ao GitHub e sincronizado no servidor por pull com SHA fixo. O build Linux/arm64, prepare, deploy e verify passaram no job exclusivo `national-shipping-8fcaf492ecf409d3-app`. APP confirmado: `d58d0fac5a16b7631d99889706162db79a3aca70c225e71c6903169bebd0e26e`, imagem `sha256:19dea6b82aef604abca849e98ed21b6e31aece4ff3f4271cb95ab7bae011ad5b`. Ambiente, rede, volumes, PostgreSQL e estado canônico foram preservados pela publicação do aplicativo.
+
+Após a revisão e antes da ativação do benefício, o endpoint real do checkout retornou HTTP 200 e sete opções para os dois itens no CEP `01001000`: Rexona Multivitaminas 84 g, menor etiqueta Loggi de R$ 13,41; kit Multivitaminas 6×84 g, menor etiqueta de R$ 20,05. São cotações daquele momento usando cada apresentação e sua embalagem estimada, sem criação de pedido, pagamento ou etiqueta. Não houve remoção dos gates de elegibilidade. A gratuidade e a meta ainda não estavam ativas nessa conferência.
+
+## Política ativa e conferência nacional
+
+A configuração foi ativada por dry-run com hash e aplicação CAS pelo helper oficial, sob lock compatível do ADMIN. A revisão mudou de 7 para 8; OAuth não foi redefinido (`credentialsChanged:false`) e o fingerprint dos demais settings permaneceu `d1fb442467e1179c3f691658c87b9313`. Origem, locais de postagem, serviços e custos desconhecidos foram preservados literalmente. O canônico vigente `569f9dea7e7a0baa3b0befdb127c527933097f7d5800325b9f12d51511d9931a` não foi alterado por esta configuração.
+
+Seis cotações reais nas cinco regiões retornaram HTTP 200, modo `available`, sete opções pagas e meta/valor faltante. Exemplo com **uma unidade do Rexona Multivitaminas 84 g de R$ 2,06**, sem resgates:
+
+| Destino | Etiqueta econômica | Frete a pagar com benefício | Meta estimada | Falta |
+| --- | ---: | ---: | ---: | ---: |
+| São Paulo/SP | R$ 13,41 | R$ 13,27 | R$ 200,00 | R$ 197,94 |
+| Porto Alegre/RS | R$ 14,45 | R$ 14,31 | R$ 220,00 | R$ 217,94 |
+| Brasília/DF | R$ 14,96 | R$ 14,82 | R$ 230,00 | R$ 227,94 |
+| Manaus/AM | R$ 28,48 | R$ 28,34 | R$ 420,00 | R$ 417,94 |
+| Recife/PE | R$ 19,11 | R$ 18,97 | R$ 290,00 | R$ 287,94 |
+| Salvador/BA | R$ 25,74 | R$ 25,60 | R$ 380,00 | R$ 377,94 |
+
+Esses números pertencem à cotação e à composição testadas, não são mínimos fixos por estado. O carrinho real é recalculado ao mudar produtos, quantidade, benefícios ou CEP. Uma simulação de checkout com 20 itens elegíveis, total de R$ 564,68, retornou frete Total Express de R$ 43,24 integralmente subsidiado, cliente R$ 0,00, e seis modalidades alternativas ainda pagas. Não foi criado pedido, pagamento ou etiqueta.
+
+A interface da produção passou em 390 e 1440 pixels: sete opções pagas e uma nota de meta/valor faltante, sem erros ou overflow. A inspeção visual independente confirmou texto e valores legíveis; retirada grátis é apresentada separadamente. Evidências e screenshots estão no diretório D: indicado abaixo.
 
 ## Verificação e limites
 
@@ -101,4 +128,4 @@ A auditoria completa (`npm audit --audit-level=moderate`) terminou com código 1
 
 O primeiro build compilou, checou tipos e gerou as páginas, mas falhou na gravação dos traces com `ENOSPC`. A remoção recursiva de cache foi rejeitada pela revisão automática; o cache foi preservado e compactado com NTFS. Após a recuperação de espaço, `npm run build` passou integralmente, com código 0. Comandos globais executados: `npm run lint`, `npm run typecheck`, `npm run prisma:validate`, `npm run test:security`, `npm run build`, auditoria completa e auditoria de produção citadas acima.
 
-Aplicação real, publicação e conferência pública devem ser registradas após sua execução. Teste sintético, plano local e este registro não comprovam produção. Novas evidências desta finalização ficam em `D:/Codex-outputs/wimifarma-br/envio-nacional-01a19a02-2026-11-02`; arquivos e escopos anteriores em uso foram preservados.
+Aplicação real, publicação e conferência pública estão registradas nos recibos de perfis, auditoria, ativação da política, publicação APP, cotações, carrinho gratuito e interface em `D:/Codex-outputs/wimifarma-br/envio-nacional-01a19a02-2026-11-02`. O texto final e a guarda adicional do revisor genérico serão integrados pelo chat 9 com os commits locais já validados dele; não se fez push/pull de um HEAD que incluísse código concorrente ainda não publicado. Arquivos e escopos anteriores em uso foram preservados.
