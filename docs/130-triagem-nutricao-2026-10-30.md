@@ -335,3 +335,11 @@ O Aptamil Premium 1 800 g conserva alerta documental sobre os lotes **2026.09.07
 - `npm run test:security` passou na imagem imutável do executor, sem rede ou credenciais de banco. A auditoria dessa imagem registrou **15 alertas moderados, zero altos e zero críticos**; os alertas completos e a prova da suíte estão em `D:\Codex-outputs\wimifarma-br\nutricao-lotes-2026-11-02\SEGURANCA-INCLUSAO-NUTRICAO20-v2.json`. Isso não representa auditoria de uma nova versão da aplicação pública: não houve deploy de código nesta inclusão.
 
 Não houve alteração de código versionado da aplicação, schema ou regras comerciais. As próximas inclusões continuam em lotes, com identidade exata, deduplicação e provas próprias; itens sem cotação autenticada suficiente permanecem pendentes.
+
+### Consulta dos 40 EANs restantes
+
+A Profarma concluiu as 40 buscas: sete apresentações com EAN observado exato, preço positivo e rótulo “Preço Final” confirmado, e 33 `not_found`. As sete ficaram pendentes de esclarecimento fiscal, sem novos cadastros ou ofertas aprovadas. O parser pode produzir `SEM_ST` tanto para zero quanto para coluna ausente ou ilegível; o relatório não conserva a coluna bruta. Portanto, esse status não comprova imposto zero nem custo fiscal completo. A pendência individual está em `PROFARMA-NUTRICAO7-PENDENCIA-FISCAL-v1.json`, na pasta de relatórios em D: citada acima.
+
+A consulta DM parou na primeira apresentação por mudança de layout e deixou 39 pendentes. O motor Electron informou `SEARCH_ACTION_UNAVAILABLE`; uma tentativa pelo motor Playwright já suportado também parou, com `DM_SEARCH_DISAPPEARED`. Cada motor parou na primeira falha. A tentativa de conferir a tela fiscal pelo controle de navegador falhou com `os error 3`, sem comprovar qualquer informação tributária.
+
+A releitura final confirmou os mesmos 20 DRAFT, estoque físico zero, 20 auditorias da operação e nenhuma das duas bases de teste próprias restante. O conjunto de 60 identidades documentais não equivale a 60 inclusões: são 20 incluídas, sete com pendência fiscal e 33 sem cotação utilizável nessa consulta. As demais famílias solicitadas, inclusive as identidades Nestlé ainda não comprovadas, continuam pendentes. Resumo durável: `D:\Codex-outputs\wimifarma-br\nutricao-lotes-2026-11-02\RESUMO-LOTES-NUTRICAO-20261102-v1.json`.
