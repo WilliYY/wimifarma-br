@@ -1,6 +1,6 @@
 # Habilitação global de envio por rotas — 03/11/2026
 
-## Pedido, inventário e limites
+## Preparação inicial: pedido, inventário e limites
 
 O lojista pediu continuar a revisão dos 2.708 perfis pendentes, buscando a melhor rota. O snapshot de estudo contém 3.068 produtos ativos, 360 habilitados e quatro campos físicos positivos estimados em todos os ativos. A autorização de estimativas não converte peso/dimensões em medições, não comprova composição e não cria contrato ou aceite de transportadora.
 
@@ -35,3 +35,27 @@ Perfumes/aerossóis e os três Oral-B continuam sujeitos às informações e con
 O falso positivo do pó foi reproduzido antes do ajuste. As regressões incluem o SKU real, apresentação estimada/revisada, serviço do provedor, formas cremosas/pastosas/oleosas e restrições explícitas. Passaram 30 testes focais, revisão independente sem achados, typecheck global com geração Prisma, lint global e `git diff --check`. A suíte de segurança passou com 559/559, sem falhas, cancelamentos ou casos ignorados. A publicação APP e aplicação de dados serão comprovadas em recibos próprios; esses testes locais não as antecipam.
 
 Planos, inventário, manifestos e fontes de estudo ficam em `D:/Codex-outputs/wimifarma-br/habilitacao-global-envio-2026-11-03-01a19a02/`. O fechamento anterior de 360 perfis e do hotfix está em [revisão anterior](revisao-envio-sabonetes-2026-11-03.md); a sincronização documental final foi o commit `76db8dcab7cc8bbd59fb5202cc0a0316dc0d24f2`. A nova frente não o trata como concessão produtiva.
+
+## Encerramento comprovado: APP e 78 perfis
+
+As seções anteriores registram a preparação e seus gates. A publicação APP foi concluída pelo chat 9 na fonte `c39e3a60418cb4243b8b305c769cd744f4f45fc8`, container `d0a5bbb3495395efedec28dc27622c4e6d2eb23525b822fdab10cd767eda1d77`, imagem `sha256:80f7e8673768a73a4b63080f039ceaaec02dfe56690c2c60cf12c0a23ba0f4c3`, iniciado em `2026-11-03T14:50:09.334511086Z`. O build Linux/ARM64 e as verificações de publicação passaram. O recibo está em `D:/Codex-outputs/wimifarma-br/shipping-dry-powder-api-2026-11-03/release-proof.json` (SHA256 `4c834a104b296699bf4c8470982eb33ab0d29c7561a27e9999baa0b1f7126b8e`).
+
+Os manifestos de 50 e 28 foram renovados, revisados independentemente e simulados em produção. A janela coordenada foi `03/11/2026 15:34–15:50 UTC`, com relógio do servidor, pins, CAS, locks, ADMIN e auditoria. Ambos foram aplicados uma única vez. A consulta posterior de `15:41:58.013071 UTC` confirmou **438 habilitados/revisados, 2.630 pendentes e 3.068 ativos**, com 78 auditorias correspondentes aos planos.
+
+Foram preservados todos os campos de Product exceto `shippingProfile`/`updatedAt`, todos os campos dos produtos fora da coorte, ofertas e integração de frete (revisão 8, MD5 de settings `bb6c3d9e22ab9059b0405866616d5399`). Os quatro campos físicos foram preservados: `measurementBasis:estimated`, `physicalMeasurementConfirmed:false`. Estoque, preços, receitas, classes e Popular mantiveram seus valores.
+
+O operador e o job `national-shipping-600a294366ea29ee-data` estão **consumidos**. O cleanup físico de `15:45:47 UTC` comprovou a ausência do runtime próprio no APP e do bundle remoto, mantendo quatro recibos: dois dry-runs e duas aplicações. APP/PG, seus StartedAt, checkout de código e canônico `9bd8c753e56d1e553d2923cdac7abb5910b38a20cfa0a7c3031989d2ca885ea7` foram preservados, saudáveis/limpos. Não repetir essas fases. Prova: `application-proof-78.json` na pasta desta tarefa em D:.
+
+### Cotações públicas verificadas após a aplicação
+
+Para uma unidade, HTTP 200 e modo `available`:
+
+| Produto | CEP | Frete normal | Frete a pagar | Faltam para a meta estimada | Meta estimada |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Tenys Pé Baruel Sem Perfume em pó 100 g | 01001000 | R$ 13,52 | R$ 12,76 | R$ 188,78 | R$ 200,00 |
+| Centrum Adulto 30 comprimidos | 01001000 | R$ 16,44 | R$ 11,54 | R$ 107,26 | R$ 150,00 |
+| Gillette Mach3 Carbono 1 unidade | 69005010 | R$ 28,82 | R$ 26,64 | R$ 398,09 | R$ 430,00 |
+
+São valores daquele momento, com subsídio parcial e metas estimadas específicas do produto/carrinho/CEP/modalidade, recalculadas quando o carrinho muda. O Centrum retornou somente Correios 1/2, conforme a revisão dos alimentos/suplementos; os dois exemplos gerais retornaram sete opções. O CEP `40020000` permaneceu sem cotação confirmada em três consultas, incluindo dois produtos: HTTP 502 público e HTTP 422 do provedor. A validade desse CEP e o retorno do provedor continuam em análise; esse resultado não comprova indisponibilidade de todo um estado.
+
+As tentativas completas, inclusive falhas, estão em `commercial-proof-78.json`. O ticket técnico ao Melhor Envio foi autorizado, mas não enviado: o Computer Use encerrou o controle por não conseguir confirmar a URL atual. Rascunho e situação estão preservados em `consulta-melhor-envio-rascunho.md` e `consulta-melhor-envio-status.md`. As demais rotas permanecem nas pendências específicas descritas acima.
