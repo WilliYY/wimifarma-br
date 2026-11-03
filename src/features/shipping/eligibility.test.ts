@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { permittedShippingServices, requiresPharmacyShippingSupport } from "./eligibility";
+import { hasPerfumeShippingCargo, permittedShippingServices, requiresPharmacyShippingSupport } from "./eligibility";
 import { validateShippingProduct } from "./rules";
 
 const profile = { enabled: true, transportReviewed: true, weightGrams: 200, widthCm: 15, heightCm: 10, lengthCm: 20 };
@@ -123,4 +123,23 @@ test("structured medicine closes free-category bypass while generic perfumery st
   assert.deepEqual(permittedShippingServices([1, 2, 3, 12, 22], [{ ...product, category: "Outros", catalogClassification: { kind: "MEDICINE" } }]), [1, 2]);
   assert.deepEqual(permittedShippingServices([1, 3, 31], [{ ...product, name: "Spray nasal sintético", category: "Perfumaria" }]), [1, 3, 31]);
   assert.deepEqual(permittedShippingServices([1, 3, 31], [{ ...product, name: "Desodorante aerossol sintético" }]), [3]);
+});
+
+test("explicit dry cosmetic powder scent qualifiers preserve services and existing cargo restrictions", () => {
+  for (const name of ["Desodorante para pés Tenys Pé Baruel Sem Perfume em pó 100g", "Talco cosmético com perfume 100 g", "Talco cosmético sem perfume 1 kg"]) {
+    assert.equal(hasPerfumeShippingCargo(name), false, name);
+    const row = { ...product, name }, before = structuredClone(row);
+    assert.deepEqual(permittedShippingServices([1, 2, 3, 31], [row]), [1, 2, 3, 31], name);
+    assert.deepEqual(row, before);
+    assert.deepEqual(permittedShippingServices([1, 3], [{ ...row, shippingProfile: { ...profile, cargoKinds: ["perfume"] } }]), [3]);
+    assert.deepEqual(permittedShippingServices([1, 3], [{ ...row, shippingProfile: { ...profile, approvedServiceIds: [3] } }]), [3]);
+  }
+  for (const name of ["Talco com perfume", "Desodorante para pés sem perfume 100g", "Pó sem perfume 100g", "Talco perfume 100g", "Talco com perfume + perfume 100g", "Kit talco com perfume 100g"]) {
+    assert.equal(hasPerfumeShippingCargo(name), true, name);
+  }
+  for (const marker of ["líquido", "creme", "cremoso", "cremosa", "em pasta", "pastoso", "pastosa", "oleoso", "oleosa", "oleosos", "oleosas", "óleo", "spray", "aerossol", "álcool", "solvente", "elétrico", "bateria", "pilha", "recarregável", "umedecido", "100ml", "eau de toilette", "body splash"]) {
+    const name = `Talco com perfume ${marker} 100g`;
+    assert.equal(hasPerfumeShippingCargo(name), true, name);
+    assert.deepEqual(permittedShippingServices([1, 3], [{ ...product, name }]), [3], name);
+  }
 });

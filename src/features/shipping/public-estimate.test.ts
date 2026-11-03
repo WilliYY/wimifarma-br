@@ -113,6 +113,19 @@ test("public estimate calculates complete drafts without approving shipment or e
   product = { ...base, name: "Absorvente sem perfume 40 unidades", shippingProfile: { ...profile, cargoKinds: ["general"], approvedServiceIds: [3] } };
   assert.deepEqual(Array.from((await loaded.exports.estimateProductShipping(input)).options, option => option.serviceId), [3], "existing service approval is preserved");
   integration.settings.serviceIds = [1, 2, 3];
+  for (const reviewed of [false, true]) {
+    product = { ...base, id: "cmvoizyv700000rqrkh1d38dh", name: "Desodorante para pés Tenys Pé Baruel Sem Perfume em pó 100g", catalogClassification: { kind: "PERFUMERY" }, shippingProfile: { ...profile, enabled: reviewed, transportReviewed: reviewed, cargoKinds: ["general"], approvedServiceIds: reviewed ? [1, 2, 3] : [] } };
+    const snapshot = structuredClone(product);
+    const result = await loaded.exports.estimateProductShipping({ ...input, productId: String(product.id) });
+    assert.deepEqual(Array.from(result.options, option => option.serviceId), [1, 2, 3]);
+    assert.equal(calls.at(-1)?.services, "1,2,3");
+    assert.equal(result.mode, reviewed ? "available" : "estimate");
+    assert.deepEqual(product, snapshot);
+  }
+  for (const marker of ["spray", "líquido", "creme", "cremoso", "cremosa", "em pasta", "pastoso", "pastosa", "oleoso", "oleosa", "oleosos", "oleosas", "óleo", "álcool", "solvente", "elétrico"]) {
+    product = { ...base, name: `Talco sem perfume ${marker} 100g` };
+    assert.deepEqual(Array.from((await loaded.exports.estimateProductShipping(input)).options, option => option.serviceId), [3]);
+  }
   product = { ...base, shippingProfile: { ...profile, cargoKinds: ["temperature_sensitive"] } };
   assert.equal((await loaded.exports.estimateProductShipping(input)).mode, "estimate", "unknown conservation does not authorize shipment");
   product = { ...base, catalogClassification: { kind: "MEDICINE" } };

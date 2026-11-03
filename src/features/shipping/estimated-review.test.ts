@@ -13,6 +13,17 @@ test("revisão conserva estimativa, medidas, proveniência e objeto original", (
   assert.deepEqual(result, { ...row.shippingProfile, enabled: true, transportReviewed: true, cargoKinds: ["general"], approvedServiceIds: [1, 3] });
 });
 
+test("desodorante para pés em pó sem perfume conserva estimativa e não exige carga perfume", () => {
+  const row = { ...product({ kind: "PERFUMERY" }), id: "cmvoizyv700000rqrkh1d38dh", name: "Desodorante para pés Tenys Pé Baruel Sem Perfume em pó 100g" }, before = structuredClone(row);
+  const result = reviewEstimatedShipping(row, entry(row), [1, 3]);
+  assert.deepEqual(result, { ...row.shippingProfile, enabled: true, transportReviewed: true, cargoKinds: ["general"], approvedServiceIds: [1, 3] });
+  assert.deepEqual(row, before);
+  for (const marker of ["spray", "creme", "cremoso", "cremosa", "em pasta", "pastoso", "pastosa", "oleoso", "oleosa", "oleosos", "oleosas", "álcool", "solvente", "elétrico"]) {
+    const ambiguous = { ...row, name: `Desodorante para pés sem perfume em pó ${marker} 100g` };
+    assert.throws(() => reviewEstimatedShipping(ambiguous, entry(ambiguous), [1, 3]), /explicitamente|elétric/);
+  }
+});
+
 test("recusa identidade, timestamp e perfil divergentes", () => {
   for (const patch of [{ id: "other" }, { ean: "7890000000017" }, { name: "Outro" }, { updatedAt: new Date(1) }, { shippingProfile: { ...profile(), weightGrams: 301 } }]) {
     assert.throws(() => reviewEstimatedShipping({ ...product(), ...patch }, entry(), [1, 3]));
