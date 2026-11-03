@@ -3,24 +3,30 @@ import { CatalogPage } from "@/components/site/catalog-page";
 import { catalogPageNumber, getPublicCategories } from "@/features/products/storefront";
 import { createPublicPageMetadata } from "@/lib/metadata";
 import { catalogCategoryNavigationContext, catalogFilters, catalogFiltersPath, catalogSections, type CatalogParams } from "@/features/products/catalog-navigation";
+import { medicineCatalogMetadata } from "@/features/products/catalog-metadata";
 export const dynamic = "force-dynamic";
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<CatalogParams> };
 async function categoryFor(props: Props) {
   const { slug } = await props.params;
   const category = (await getPublicCategories()).find(item => item.slug === slug);
+  const departmentName = slug === "medicamentos" ? "Medicamentos" : slug === "infantil" ? "Infantil" : null;
+  if (!category && departmentName) return { slug, name: departmentName, names: [] as string[] };
   if (!category) notFound();
   return category;
 }
 export async function generateMetadata(props: Props) {
   const category = await categoryFor(props);
+  if (category.slug === "medicamentos") return medicineCatalogMetadata(await props.searchParams);
   const page = catalogPageNumber((await props.searchParams).pagina);
   return createPublicPageMetadata({ title: `${category.name} em Ivaté-PR${page > 1 ? ` - Página ${page}` : ""}`, description: `Explore ${category.name.toLocaleLowerCase("pt-BR")} na Wimifarma. Confira marcas, apresentações, preços e disponibilidade para entrega local ou retirada em Ivaté-PR.`, path: `/categorias/${category.slug}${page > 1 ? `?pagina=${page}` : ""}` });
 }
 export default async function Page(props: Props) {
   const category = await categoryFor(props);
-  const filters = catalogFilters(await props.searchParams);
+  const params = await props.searchParams;
+  const department = category.slug === "medicamentos" ? "medicines" : category.slug === "infantil" ? "baby" : undefined;
+  const filters = catalogFilters(department ? { ...params, grupo: department } : params);
   const { activeGroup } = catalogCategoryNavigationContext([category], `/categorias/${category.slug}`);
-  filters.group = undefined;
-  if (!catalogSections.some(section => section.id === filters.section && section.group === activeGroup)) filters.section = undefined;
-  return <CatalogPage title={category.name} description={`Confira os produtos de ${category.name.toLocaleLowerCase("pt-BR")} disponíveis no catálogo.`} path={catalogFiltersPath(`/categorias/${category.slug}`, filters)} {...filters} categoryNames={category.names} />;
+  filters.group = department;
+  if (!catalogSections.some(section => section.id === filters.section && section.group === (department ?? activeGroup))) filters.section = undefined;
+  return <CatalogPage title={category.name} description={`Confira os produtos de ${category.name.toLocaleLowerCase("pt-BR")} disponíveis no catálogo.`} path={catalogFiltersPath(`/categorias/${category.slug}`, filters)} {...filters} categoryNames={department ? undefined : category.names} />;
 }

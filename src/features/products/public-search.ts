@@ -77,12 +77,23 @@ export function normalizeProductSearch(value: string) {
     .replace(/\s+/g, " ");
 }
 
+const searchStrength = /(\d+(?:[.,]\d+)?)\s*(mcg|mg|ml|kg|g|ui)\b(?:\s*\/\s*(\d+(?:[.,]\d+)?)?\s*(ml|l|g)\b)?/g;
+const retailOffer = /(^|[^a-z0-9]|[0-9](?:mcg|mg|ml|kg|g|ui))(?:l\s*([1-9]\d*)\s*p\s*([1-9]\d*)|leve\s*([1-9]\d*)\s*pague\s*([1-9]\d*))(?:\s*(?:unidades?|un))?(?=$|[^a-z0-9])/g;
+const retailOfferAfterStrength = "(?:l\\s*[1-9]\\d*\\s*p\\s*[1-9]\\d*|leve\\s*[1-9]\\d*\\s*pague\\s*[1-9]\\d*)(?:\\s*(?:unidades?|un))?(?=$|[^a-z0-9])";
+
 export function productSearchPatterns(query: string) {
-  const tokens = normalizeProductSearch(query)
+  const offerPatterns: string[] = [];
+  const withoutOffers = query.toLowerCase().replace(retailOffer, (_match, separator: string, shortTake: string, shortPay: string, take: string, pay: string) => {
+    const counts = [shortTake || take, shortPay || pay];
+    offerPatterns.push(`(^| |[0-9](mcg|mg|ml|kg|g|ui))(l *${counts[0]} *p *${counts[1]}|leve *${counts[0]} *pague *${counts[1]})( *(un|unidade|unidades))?($| )`);
+    return `${separator} `;
+  });
+  // Strengths are checked against the original name, not the lossy text index.
+  const tokens = normalizeProductSearch(withoutOffers.replace(searchStrength, " "))
     .replace(/(\d+)\s+(mcg|mg|ml|g|kg|ui)\b/g, "$1$2")
     .split(" ")
     .filter(token => token && !["de", "da", "do", "das", "dos", "e"].includes(token));
-  return [...new Set(tokens)].slice(0, 12).map(token => {
+  const patterns = [...new Set(tokens)].slice(0, 12).map(token => {
     // Explicit editorial flexions only: never stem ingredients, brands or doses.
     if (token === "haste" || token === "hastes") return "(^| )(haste|hastes)($| )";
     if (token === "flexivel" || token === "flexiveis") return "(^| )(flexivel|flexiveis)($| )";
@@ -91,19 +102,40 @@ export function productSearchPatterns(query: string) {
     if (/^\d+$/.test(token)) return `(^| )${token}[a-z]*($| )`;
     return `(^| )${token}`;
   });
+  return [...new Set([...offerPatterns, ...patterns])].slice(0, 12);
 }
 
 // Match explicit strengths against the original name: the search index replaces
 // punctuation with spaces and cannot distinguish 2,5mg from a fragment of 5mg.
 export function productDosePatterns(query: string) {
-  const strength = /(\d+(?:[.,]\d+)?)\s*(mcg|mg|ml|kg|g|ui)\b/g;
-  const patterns = [...query.toLowerCase().matchAll(strength)].map(match =>
-    `(^|[^0-9.,])${match[1].replace(/[.,]/g, "[.,]")}\\s*${match[2]}($|[^a-z0-9])`,
-  );
-  const bareNumbers = query.toLowerCase().replace(strength, " ").split(/\s+/)
+  const withoutOffers = query.toLowerCase().replace(retailOffer, "$1 ");
+  const patterns = [...withoutOffers.matchAll(searchStrength)].map(match => {
+    const units = ["g", "mg", "mcg"];
+    const sourceUnit = units.indexOf(match[2]);
+    const numerators = sourceUnit < 0 ? `${decimalStrengthPattern(match[1], 0)}\\s*${match[2]}`
+      : `(${units.map((unit, index) => `${decimalStrengthPattern(match[1], (index - sourceUnit) * 3)}\\s*${unit}`).join("|")})`;
+    // Keep the explicit denominator; never turn a tablet strength into mg/mL.
+    const denominator = match[4] ? `\\s*/\\s*${match[3] ? `${decimalStrengthPattern(match[3], 0)}\\s*` : ""}${match[4]}` : "";
+    return `(^\\s*|[^0-9.,/\\s]\\s*|[0-9]\\s+)${numerators}${denominator}(?!\\s*/)(?=$|[^a-z0-9]|${retailOfferAfterStrength})`;
+  });
+  const bareNumbers = withoutOffers.replace(searchStrength, " ").split(/\s+/)
     .map(token => token.replace(/^[([]+|[)\]]+$/g, ""))
     .filter(token => /^\d+(?:[.,]\d+)?$/.test(token) && token.replace(/[.,]/g, "").length < 8);
   return [...patterns, ...bareNumbers.map(number => `(^|[^0-9.,])${number.replace(/[.,]/g, "[.,]")}($|[^0-9.,])`)];
+}
+
+// Shift decimal digits as strings: no floating-point rounding or exponent output.
+function decimalStrengthPattern(value: string, shift: number) {
+  const [integer, fraction = ""] = value.replace(",", ".").split(".");
+  const digits = integer + fraction;
+  const point = integer.length + shift;
+  const decimal = point <= 0 ? `0.${"0".repeat(-point)}${digits}`
+    : point >= digits.length ? digits + "0".repeat(point - digits.length)
+      : `${digits.slice(0, point)}.${digits.slice(point)}`;
+  const [whole, tail = ""] = decimal.split(".");
+  const normalizedWhole = whole.replace(/^0+(?=\d)/, "");
+  const normalizedTail = tail.replace(/0+$/, "");
+  return normalizedTail ? `${normalizedWhole}[.,]${normalizedTail}0*` : `${normalizedWhole}([.,]0+)?`;
 }
 
 export function productSearchHref(query: string, page = 1) {
@@ -309,7 +341,7 @@ function rankExactProductsForQuery<T extends SearchRankableProduct>(
   const patterns = plan.patterns.map(pattern => new RegExp(pattern));
   const identities = plan.identityPatterns.map(pattern => new RegExp(pattern));
   const doses = plan.dosePatterns.map(pattern => new RegExp(pattern, "i"));
-  if (plan.blocked || (!patterns.length && !plan.topics.length)) return [];
+  if (plan.blocked || (!patterns.length && !doses.length && !plan.topics.length)) return [];
 
   return products
     .filter((product) => matchesGtin(product) || (product.sku && normalizeProductSearch(product.sku) === normalizedQuery) ||

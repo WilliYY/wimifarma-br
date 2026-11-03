@@ -22,6 +22,17 @@ function normalizeName(name: string) {
   return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
+/** Additional audience membership for explicitly infant hygiene, without recategorizing its SKU. */
+export function isExplicitInfantCare(product: { name: string; brand?: string | null; category?: string | null; requiresPrescription?: boolean; prescriptionType?: string; isPopularPharmacy?: boolean; catalogClassification?: unknown }) {
+  if (product.requiresPrescription || product.isPopularPharmacy || (product.prescriptionType && product.prescriptionType !== "UNREVIEWED")
+    || (product.category && groupCategoryNames([{ name: product.category }], "medicines").length)
+    || (product.catalogClassification as { kind?: string } | null)?.kind === "MEDICINE") return false;
+  const name = normalizeName(product.name);
+  return /\b(baby|bebes?|infantil|infantis)\b/.test(`${name} ${normalizeName(product.brand ?? "")}`)
+    && /\b(lencos?|toalhas?|toalhinhas|wipes|creme|pomada|sabonete|shampoo|locao|oleo)\b/.test(name)
+    && !/\b(adult[oa]s?|geriatric[oa]s?)\b/.test(`${name} ${normalizeName(product.category ?? "")}`);
+}
+
 export type CatalogGroup = typeof categoryShortcuts[number]["id"];
 export function catalogGroup(value: unknown): CatalogGroup | undefined {
   return categoryShortcuts.find(shortcut => shortcut.id === value)?.id;
@@ -46,7 +57,7 @@ export function buildHomeShortcuts(products: readonly RelatedProductCardItem[] =
   const categories = [...new Set(eligible.flatMap(product => product.category ? [product.category] : []))].map(name => ({ name }));
   const shortcuts: (HomeShortcutItem & { id: "offers" | CatalogGroup })[] = [
     { id: "offers", label: "Ofertas", href: "/ofertas" },
-    ...categoryShortcuts.map(({ id, label }) => ({ id, label, href: `/catalogo?grupo=${id}&ordem=preco-asc` })),
+    ...categoryShortcuts.map(({ id, label }) => ({ id, label, href: id === "medicines" ? "/categorias/medicamentos?ordem=preco-asc" : `/catalogo?grupo=${id}&ordem=preco-asc` })),
   ];
   return [...shortcuts.map(item => {
     const names = item.id === "offers" ? [] : groupCategoryNames(categories, item.id);

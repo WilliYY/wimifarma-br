@@ -5,11 +5,24 @@ import test from "node:test";
 import { build } from "esbuild";
 import { groupCategoryNames, catalogGroup } from "./home-shortcuts";
 
-async function fixture(rows: object[], brands: Parameters<typeof import("./brands").buildPublicBrands>[0] = [], validPhotos: string[] = [], respectSelect = false) {
+function matchesWhere(row: Record<string, unknown>, where: Record<string, unknown>): boolean {
+  return Object.entries(where).every(([key, value]) => {
+    if (key === "OR") return (value as Record<string, unknown>[]).some(clause => matchesWhere(row, clause));
+    if (key === "AND") return (value as Record<string, unknown>[]).every(clause => matchesWhere(row, clause));
+    if (typeof value !== "object" || value === null) return row[key] === value;
+    const filter = value as { in?: unknown[]; contains?: string; equals?: unknown; path?: string[] };
+    if (filter.in) return filter.in.includes(row[key]);
+    if (filter.contains !== undefined) return String(row[key] ?? "").toLowerCase().includes(filter.contains.toLowerCase());
+    if (filter.path) return filter.path.reduce<unknown>((current, part) => (current as Record<string, unknown> | null)?.[part], row[key]) === filter.equals;
+    return true;
+  });
+}
+
+async function fixture(rows: object[], brands: Parameters<typeof import("./brands").buildPublicBrands>[0] = [], validPhotos: string[] = [], respectSelect = false, respectWhere = false) {
   let query: Record<string, unknown> = {};
   const queries: Record<string, unknown>[] = [];
   const photoChecks: (string | null)[][] = [];
-  const db = { product: { fields: { price: "fixture-price" }, count: async () => rows.length, findMany: async (input: Record<string, unknown>) => { queries.push(input); if ((input.select as { brand?: boolean; id?: boolean }).brand && !(input.select as { id?: boolean }).id) return brands; query = input; const selected = input.take ? rows.slice(Number(input.skip ?? 0), Number(input.skip ?? 0) + Number(input.take)) : rows; return respectSelect ? selected.map(row => Object.fromEntries(Object.entries(row).filter(([key]) => (input.select as Record<string, unknown>)[key] === true))) : selected; } } };
+  const db = { product: { fields: { price: "fixture-price" }, count: async () => rows.length, findMany: async (input: Record<string, unknown>) => { queries.push(input); if ((input.select as { brand?: boolean; id?: boolean }).brand && !(input.select as { id?: boolean }).id) return brands; query = input; const matching = respectWhere ? rows.filter(row => matchesWhere(row as Record<string, unknown>, input.where as Record<string, unknown>)) : rows; const selected = input.take ? matching.slice(Number(input.skip ?? 0), Number(input.skip ?? 0) + Number(input.take)) : matching; return respectSelect ? selected.map(row => Object.fromEntries(Object.entries(row).filter(([key]) => (input.select as Record<string, unknown>)[key] === true))) : selected; } } };
   const bundle = await build({ entryPoints: ["src/features/products/storefront.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "storefront-db", setup(builder) {
     builder.onResolve({ filter: /lib\/prisma$|home-photos$/ }, args => ({ path: args.path, namespace: "fixture" }));
     builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("home-photos") ? "export const validatedHomePhotos=async urls=>{fixture.photoChecks.push(urls);return new Set(urls.filter(url=>fixture.validPhotos.includes(url)))};" : "export const getPrisma=()=>fixture.db;" }));
@@ -18,6 +31,43 @@ async function fixture(rows: object[], brands: Parameters<typeof import("./brand
   vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), fixture: { db, validPhotos, photoChecks }, URL });
   return { service: loaded.exports, query: () => query, queries, photoChecks };
 }
+
+test("mesmo SKU Bepantol Baby permanece na marca, Infantil e Cuidados infantis com SQL filtrando candidatos", async () => {
+  const base = { status: "ACTIVE", stock: 5, price: "10", promotionalPrice: null, requiresPrescription: false, isPopularPharmacy: false, prescriptionType: "UNREVIEWED", catalogClassification: { kind: "HYGIENE" }, activeIngredients: [], searchTerms: [] };
+  const rows = [
+    { ...base, id: "wipes", brand: "Bepantol", name: "Lenços Umedecidos Bepantol Baby Leve 96 Pague 80 unidades", category: "Lenços e toalhas umedecidas" },
+    { ...base, id: "cream", brand: "Bepantol Baby", name: "Creme Bepantol Baby 30 g", category: "Infantil" },
+    { ...base, id: "derma", brand: "Bepantol Derma", name: "Creme Bepantol Derma 20 g", category: "Dermo" },
+    { ...base, id: "adult", brand: "Bepantol", name: "Lenços Umedecidos Bepantol Adulto 48 unidades", category: "Lenços e toalhas umedecidas" },
+    { ...base, id: "adult-baby", brand: "Outra", name: "Lenços Baby para adultos 48 unidades", category: "Lenços e toalhas umedecidas" },
+    { ...base, id: "medicine", brand: "Outra", name: "Creme Baby medicamento", category: "Medicamentos", requiresPrescription: true },
+  ];
+  const { service } = await fixture(rows, rows, [], true, true);
+  for (const filters of [{ brand: "Bepantol Baby" }, { brand: "Bepantol", group: "baby" as const }, { brand: "Bepantol Baby", group: "baby" as const, section: "baby-care" }, { group: "baby" as const }]) {
+    const result = await service.getStorefrontProducts(filters);
+    assert.deepEqual(Array.from(result.products, row => row.id).sort(), ["cream", "wipes"], JSON.stringify(filters));
+    assert.equal(result.count, 2);
+    assert.equal(new Set(result.products.map(row => row.id)).size, 2);
+  }
+});
+
+test("seção Cuidados infantis considera lenços Baby mesmo quando não existe categoria Infantil", async () => {
+  const row = { id: "wipes-only", status: "ACTIVE", name: "Lenços Umedecidos", brand: "Bepantol Baby", category: "Lenços e toalhas umedecidas", stock: 1, price: "10", promotionalPrice: null, activeIngredients: [], searchTerms: [], catalogClassification: { kind: "HYGIENE" }, requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false };
+  const { service } = await fixture([row], [row], [], true, true);
+  assert.ok((await service.getPublicCatalogSections()).includes("baby-care"));
+  const result = await service.getStorefrontProducts({ group: "baby", section: "baby-care" });
+  assert.equal(result.count, 1);
+  assert.equal(result.products[0].id, "wipes-only");
+});
+
+test("recuperação SQL e seção preservam as flexões infantis e bebês aceitas no público infantil", async () => {
+  for (const name of ["Lenços umedecidos infantis", "Sabonete para bebês", "Óleo infantil", "Creme hidratante"]) {
+    const row = { id: "infant-care", status: "ACTIVE", name, brand: name === "Creme hidratante" ? "Bepantol Baby" : "Marca sintética", category: "Higiene", stock: 1, price: "10", promotionalPrice: null, activeIngredients: [], searchTerms: [], catalogClassification: { kind: "HYGIENE" }, requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false };
+    const { service } = await fixture([row], [row], [], true, true);
+    assert.ok((await service.getPublicCatalogSections()).includes("baby-care"), name);
+    assert.equal((await service.getStorefrontProducts({ group: "baby", section: "baby-care" })).count, 1, name);
+  }
+});
 
 test("Vitaminas aplica a identidade antes da contagem e paginação sem absorver whey e creatina", async () => {
   const base = { category: "Suplementos", brand: "Marca sintética", inventorySource: "PHARMACY", catalogClassification: { kind: "SUPPLEMENT" }, stock: 10, price: "10.00", promotionalPrice: null, activeIngredients: [], searchTerms: [], searchText: "", requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false };
@@ -188,8 +238,8 @@ test("disponibilidade comercial usa cotação preservada por demanda antes de or
     { id: "expired", name: "A oferta vencida", inventorySource: "DISTRIBUTOR", ean: "1234567890128", stock: 100, price: "0.50", promotionalPrice: null, supplierOffers: [{ ...offer, validUntil: new Date(now - 1) }] },
     { id: "fresh", name: "Z oferta válida", inventorySource: "DISTRIBUTOR", ean: "1234567890128", stock: 0, price: "99.00", promotionalPrice: null, supplierOffers: [offer] },
     { id: "physical", name: "B estoque físico", inventorySource: "PHARMACY", stock: 2, price: "40.00", promotionalPrice: "20.00" },
-  ];
-  const { service, query } = await fixture(rows, [{ brand: "Marca sintética" }]);
+  ].map(row => ({ ...row, status: "ACTIVE", brand: "Marca sintética", category: "Perfumaria" }));
+  const { service, query } = await fixture(rows, [{ brand: "Marca sintética" }], [], false, true);
   for (const options of [{ sort: "preco-asc" as const }, { categories: ["Perfumaria"] }, { group: "beauty" as const }, { brand: "Marca sintética" }]) {
     const result = await service.getStorefrontProducts(options);
     assert.deepEqual(result.products.map(product => product.id), ["expired", "fresh", "physical"]);

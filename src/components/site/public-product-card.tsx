@@ -13,6 +13,7 @@ import { productOfferDiscount } from "@/features/offers/daily-rotation";
 import { ProductPmcBadge, ProductPmcPrice } from "./product-pmc";
 import { CatalogShippingButton } from "./catalog-shipping-preview";
 import { diaperPackageUnitPrice } from "@/features/products/diaper-unit-price";
+import { productSaleUnitLabel } from "@/features/products/product-presentation";
 
 export type RelatedProductCardItem = PublicProductSearchItem & {
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
@@ -53,6 +54,7 @@ export function PublicProductCard({ product, showShippingEstimate = false }: { p
     unitPriceCents: Math.round(currentPrice * 100),
   } satisfies CartProduct;
   const diaperPrice = diaperPackageUnitPrice(product, cartProduct.unitPriceCents);
+  const saleUnit = productSaleUnitLabel(product);
 
   return (
     <article
@@ -111,7 +113,7 @@ export function PublicProductCard({ product, showShippingEstimate = false }: { p
               <strong className="text-lg font-black leading-none text-brand sm:text-xl">{formatCurrency(cartProduct.unitPriceCents / 100)}</strong>
             </div>
             <div className="min-w-0">
-              <p className="text-[0.68rem] leading-4 text-muted">{diaperPrice ? `${formatCurrency(diaperPrice.perDiaperCents / 100)} por fralda` : "Para 1 unidade."}</p>
+              <p className="text-[0.68rem] leading-4 text-muted">{diaperPrice ? `${formatCurrency(diaperPrice.perDiaperCents / 100)} por fralda` : saleUnit ? `Para ${saleUnit.toLowerCase()}.` : "Para 1 unidade."}</p>
             </div>
           </div>
           <ProductCardActions product={cartProduct} />

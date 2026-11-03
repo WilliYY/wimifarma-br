@@ -5,6 +5,7 @@ export type PublicBrand = { key: string; name: string; href: string; imageUrl?: 
 type BrandRecord = { brand: string | null; name?: string; category?: string | null; requiresPrescription?: boolean; isPopularPharmacy?: boolean; catalogClassification?: unknown; imageUrl?: string | null; imageAsset?: { url: string } | null };
 
 const johnsonsKeys = new Set(["johnson s", "johnson s baby", "johnsons", "johnsons baby"]);
+const bepantolFamily = new Set(["bepantol", "bepantol baby", "bepantol derma"]);
 function brandIdentity(name: string) {
   const key = normalizeProductSearch(name);
   if (key === "natural baby wipes mae e filho") return "natural baby";
@@ -47,7 +48,17 @@ export function buildPublicBrands(records: BrandRecord[]): PublicBrand[] {
 }
 
 export function matchingBrandNames(records: BrandRecord[], brand: string): string[] {
-  const key = brandIdentity(brand);
-  if (!key) return [];
-  return [...new Set(records.flatMap(record => record.brand && brandIdentity(record.brand) === key ? [record.brand] : []))];
+  return [...new Set(records.flatMap(record => record.brand && matchesPublicBrand(record, brand) ? [record.brand] : []))];
+}
+
+/** Editorial family/line matching never changes the registered brand or product identity. */
+export function matchesPublicBrand(record: BrandRecord, brand: string): boolean {
+  const selected = brandIdentity(brand);
+  const registered = brandIdentity(record.brand ?? "");
+  if (!selected || !registered) return false;
+  if (selected === "bepantol") return bepantolFamily.has(registered);
+  if ((selected === "bepantol baby" || selected === "bepantol derma") && registered === "bepantol") {
+    return new RegExp(`\\b${selected}\\b`).test(normalizeProductSearch(record.name ?? ""));
+  }
+  return registered === selected;
 }

@@ -5,6 +5,19 @@ import { brandLogo } from "./brand-logos";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
+test("Bepantol reúne a família e Bepantol Baby inclui a linha infantil sem misturar Derma", () => {
+  const records = [
+    { brand: "Bepantol", name: "Lenços Umedecidos Bepantol Baby Leve 96 Pague 80 unidades" },
+    { brand: "Bepantol Baby", name: "Creme Bepantol Baby 30 g" },
+    { brand: "Bepantol Derma", name: "Bepantol Derma hidratante 20 g" },
+    { brand: "Bepantol", name: "Bepantol solução hidratante" },
+    { brand: "Outra marca", name: "Produto com Bepantol Baby na descrição" },
+  ];
+  assert.deepEqual(matchingBrandNames(records, "Bepantol"), ["Bepantol", "Bepantol Baby", "Bepantol Derma"]);
+  assert.deepEqual(matchingBrandNames(records, "Bepantol Baby"), ["Bepantol", "Bepantol Baby"]);
+  assert.deepEqual(matchingBrandNames(records, "Bepantol Baby Extra"), []);
+});
+
 test("marcas públicas removem vazios, agrupam grafias equivalentes e ordenam por nome", () => {
   const brands = buildPublicBrands([{ brand: " Zeta " }, { brand: null }, { brand: " " }, { brand: "Água & Sol" }, { brand: "agua sol" }, { brand: "Beta" }]);
   assert.deepEqual(brands, [

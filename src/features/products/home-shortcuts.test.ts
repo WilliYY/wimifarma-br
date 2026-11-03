@@ -1,6 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildHomeShortcuts, catalogGroup, groupCategoryNames } from "./home-shortcuts";
+import { buildHomeShortcuts, catalogGroup, groupCategoryNames, isExplicitInfantCare } from "./home-shortcuts";
+
+test("público infantil exige cuidado explicitamente infantil sem ampliar lenços genéricos, adultos ou medicamentos", () => {
+  assert.equal(isExplicitInfantCare({ name: "Lenços Umedecidos Bepantol Baby 96 unidades", category: "Lenços e toalhas umedecidas" }), true);
+  assert.equal(isExplicitInfantCare({ name: "Lenços Umedecidos", brand: "Bepantol Baby", category: "Lenços e toalhas umedecidas" }), true);
+  assert.equal(isExplicitInfantCare({ name: "Sabonete para bebês", category: "Higiene" }), true);
+  for (const product of [
+    { name: "Lenços Umedecidos", category: "Lenços e toalhas umedecidas" },
+    { name: "Lenços Baby", category: "Fraldas adultas" },
+    { name: "Baby cuidados infantis", category: "Perfumaria" },
+    { name: "Creme Baby", category: "Medicamentos" },
+    { name: "Creme Baby", category: "Higiene", requiresPrescription: true },
+    { name: "Creme Baby", category: "Higiene", prescriptionType: "ORDINARY" },
+  ]) assert.equal(isExplicitInfantCare(product), false, JSON.stringify(product));
+});
 
 test("faixa contém somente ofertas e categorias internas, mesmo sem produtos cadastrados", () => {
   const shortcuts = buildHomeShortcuts();
@@ -18,8 +32,8 @@ test("faixa contém somente ofertas e categorias internas, mesmo sem produtos ca
   for (const item of shortcuts.slice(1)) {
     const url = new URL(item.href, "https://wimifarma.com.br");
     assert.equal(url.origin, "https://wimifarma.com.br");
-    assert.equal(url.pathname, "/catalogo");
-    assert.equal(catalogGroup(url.searchParams.get("grupo")), ["hygiene", "hair"].includes(item.id) ? "beauty" : item.id);
+    assert.equal(url.pathname, item.id === "medicines" ? "/categorias/medicamentos" : "/catalogo");
+    assert.equal(catalogGroup(url.searchParams.get("grupo")), item.id === "medicines" ? undefined : ["hygiene", "hair"].includes(item.id) ? "beauty" : item.id);
     assert.equal(url.searchParams.get("ordem"), "preco-asc");
   }
   assert.doesNotMatch(JSON.stringify(shortcuts), /wa\.me|whatsapp|farmacia-popular|delivery|_blank/i);
@@ -63,7 +77,7 @@ test("círculos usam fotos reais da mesma categoria e oferta com desconto efetiv
   assert.equal(shortcuts[0].imageUrl, "/uploads/products/offer.webp");
   assert.match(shortcuts.find(item => item.id === "beauty")!.imageUrl!, /\/(beauty|offer)\.webp$/);
   assert.equal(shortcuts[0].href, "/ofertas");
-  assert.equal(shortcuts.find(item => item.id === "medicines")!.href, "/catalogo?grupo=medicines&ordem=preco-asc");
+  assert.equal(shortcuts.find(item => item.id === "medicines")!.href, "/categorias/medicamentos?ordem=preco-asc");
 });
 
 test("foto ausente, privada, sem estoque, Rx e Popular mantêm ícone sem inventar cobertura", () => {

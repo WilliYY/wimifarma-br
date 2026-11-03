@@ -40,7 +40,7 @@ import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
 import { normalizeVerifiedMedicineProduct, productIngredientLabel } from "@/features/products/medicine-presentation";
 import { buildPublicProductDescription, isMedicineProduct } from "@/features/products/product-description";
-import { productCareInformation, productPackagePresentation } from "@/features/products/product-presentation";
+import { productCareInformation, productPackagePresentation, productSaleUnitLabel } from "@/features/products/product-presentation";
 import { productKitPricing } from "@/features/products/kit-pricing";
 import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
@@ -144,6 +144,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const description = buildPublicProductDescription(product);
   const care = productCareInformation(product);
   const packagePresentation = productPackagePresentation(product);
+  const saleUnit = productSaleUnitLabel(product);
 
   const medicine = isMedicineProduct(product) || product.activeIngredients.length > 0;
   const relationFilters: Prisma.ProductWhereInput[] = medicine ? (product.activeIngredients.length ? [{ AND:
@@ -266,13 +267,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   ) : null}
                   <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
                     <strong className="text-4xl font-bold tracking-tight text-brand tabular-nums sm:text-5xl">{formatCurrency(currentPrice)}</strong>
-                    <span className="text-xs text-muted">{kitPricing ? `o kit com ${kitPricing.quantity} barras` : "por unidade"}</span>
+                    <span className="text-xs text-muted">{kitPricing ? `o kit com ${kitPricing.quantity} barras` : saleUnit ? `por ${saleUnit.toLowerCase()}` : "por unidade"}</span>
                   </div>
                   {kitPricing ? <div className="mt-2 space-y-1 text-sm" data-kit-pricing>
                     <p className="font-semibold text-ink">{kitPricing.quantity} barras por {formatCurrency(kitPricing.totalCents / 100)} · {formatCurrency(kitPricing.perItemCents / 100)} por barra</p>
                     {kitPricing.savingCents !== null && kitPricing.individualTotalCents !== null ? <p className="font-semibold text-emerald-800">Economize {formatCurrency(kitPricing.savingCents / 100)} em relação a {kitPricing.quantity} avulsos ({formatCurrency(kitPricing.individualTotalCents / 100)}).</p> : null}
                   </div> : null}
-                  {hasPromotion ? <p className="mt-2 text-xs font-semibold text-emerald-800">Você economiza {formatCurrency(saving)} {kitPricing ? "por kit" : "por unidade"}</p> : null}
+                  {hasPromotion ? <p className="mt-2 text-xs font-semibold text-emerald-800">Você economiza {formatCurrency(saving)} {kitPricing ? "por kit" : saleUnit ? "por embalagem" : "por unidade"}</p> : null}
                 </div>
 
                 <ProductCashback product={product} unitPriceCents={Math.round(currentPrice * 100)} details />

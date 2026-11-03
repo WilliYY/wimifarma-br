@@ -97,7 +97,7 @@ function searchOrder(query: string) {
 export async function getSearchCatalog(query: string, { page = 1, pageSize = SEARCH_PAGE_SIZE, relatedLimit = 8 } = {}) {
   const cleanQuery = query.trim();
   let plan = productSearchPlan(cleanQuery);
-  if (cleanQuery.length < 2 || cleanQuery.length > 80 || plan.blocked || (!plan.patterns.length && !plan.topics.length)) {
+  if (cleanQuery.length < 2 || cleanQuery.length > 80 || plan.blocked || (!plan.patterns.length && !plan.dosePatterns.length && !plan.topics.length)) {
     return { products: [], relatedProducts: [], count: 0, correctedQuery: null as string | null };
   }
   const prisma = getPrisma();

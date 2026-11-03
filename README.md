@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Busca por doses equivalentes e promoções compactas, conteúdo real dos multipacks, filtros Bepantol/Infantil e rota principal de Medicamentos: [correções de descoberta do catálogo](docs/descoberta-catalogo-e-departamentos-2026-11-03.md).
+
 Carrinho sincronizado entre abas, retorno à busca com filtros e posição e reconhecimento editorial das linhas Centrum conferidas: [carrinho](docs/carrinho-entre-abas-2026-11-03.md), [retorno às compras](docs/retorno-compras-contexto-2026-11-03.md) e [Vitaminas](docs/vitaminas-e-hint-2026-11-03.md).
 
 Cartões com preço do pacote e preço por fralda quando a contagem é explícita: [comparação de embalagens](docs/comparacao-preco-por-fralda-2026-11-02.md).

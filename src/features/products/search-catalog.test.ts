@@ -5,6 +5,58 @@ import test from "node:test";
 import { build } from "esbuild";
 import { Prisma } from "@/generated/prisma/client";
 
+function hasDosePattern(sql: Prisma.Sql, name: string) {
+  return sql.values.some(value => typeof value === "string" && value.includes("(?!\\s*/)") && new RegExp(value, "i").test(name));
+}
+
+test("SQL parametriza equivalência de massa com denominador exato antes da paginação", async () => {
+  const queries: Prisma.Sql[] = [];
+  const service = await fixture({ $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return []; }, product: { findMany: async () => [] } });
+  for (const query of ["dipirona 1000mg", "dipirona 1g", "dipirona 1000000mcg"]) {
+    await service.getSearchCatalog(query, { relatedLimit: 0 });
+    const sql = queries.at(-1)!;
+    assert.match(sql.text, /p\."name" ~\* \$\d+/);
+    assert.ok(hasDosePattern(sql, "Dipirona 1 g"));
+    assert.ok(hasDosePattern(sql, "Dipirona 1000mg"));
+    assert.equal(hasDosePattern(sql, "Dipirona 1g/mL"), false);
+    assert.equal(hasDosePattern(sql, "Dipirona 500mg"), false);
+    assert.doesNotMatch(sql.text, /LIMIT|OFFSET/);
+  }
+  await service.getSearchCatalog("dipirona 1g/5ml", { relatedLimit: 0 });
+  assert.ok(hasDosePattern(queries.at(-1)!, "Dipirona 1000mg/5mL"));
+  assert.equal(hasDosePattern(queries.at(-1)!, "Dipirona 1000mg/mL"), false);
+});
+
+test("SQL usa os mesmos aliases leve/pague sem interpretar contagens como doses", async () => {
+  const queries: Prisma.Sql[] = [];
+  const service = await fixture({ $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return []; }, product: { findMany: async () => [] } });
+  for (const query of ["protex l6p5", "protex leve6pague5", "protex leve 6 pague 5 unidades"]) {
+    await service.getSearchCatalog(query, { relatedLimit: 0 });
+    const sql = queries.at(-1)!;
+    const offer = sql.values.find(value => typeof value === "string" && value.includes("pague"));
+    assert.equal(typeof offer, "string");
+    const pattern = new RegExp(offer as string);
+    for (const name of ["protex l6p5", "protex leve6pague5", "protex leve 6 pague 5 unidades", "sabonete protex balance saudavel85gl6p5"]) assert.ok(pattern.test(name), name);
+    assert.equal(pattern.test("protex l6p50"), false);
+    assert.equal(pattern.test("protex85gl6p50"), false);
+    assert.equal(sql.text.includes("pague"), false, "alias é parâmetro, não trecho de SQL");
+    assert.equal(sql.text.includes('p."name" ~*'), false, "contagens da promoção não são doses");
+  }
+  await service.getSearchCatalog("protex leve6pague5 90g", { relatedLimit: 0 });
+  assert.ok(hasDosePattern(queries.at(-1)!, "Protex L6P5 90 g"));
+  assert.equal(hasDosePattern(queries.at(-1)!, "Protex L6P5 85 g"), false);
+  for (const query of ["protex85g L6P5", "protex85gL6P5"]) {
+    await service.getSearchCatalog(query, { relatedLimit: 0 });
+    const sql = queries.at(-1)!;
+    const name = "Sabonete Protex BALANCE SAUDAVEL85gL6P5";
+    assert.ok(hasDosePattern(sql, name));
+    const offer = sql.values.find(value => typeof value === "string" && value.includes("pague") && value.startsWith("(^| "));
+    assert.equal(typeof offer, "string");
+    assert.ok(new RegExp(offer as string).test(name.toLowerCase()));
+    assert.equal(hasDosePattern(sql, "Sabonete Protex 90gL6P5"), false);
+  }
+});
+
 test("alias inalatório exige Alenia 6/200, par de ingredientes e CMED sem remover os demais filtros", async () => {
   const queries: Prisma.Sql[] = [];
   const service = await fixture({ $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return []; }, product: { findMany: async () => [] } });
@@ -147,7 +199,7 @@ test("busca preserva relevância dentro da disponibilidade e não expõe foto pr
   assert.doesNotMatch(JSON.stringify(result.products), /\/public\.webp|\/api\/admin\/fornecedores\/imagens\//);
   assert.equal("supplierOffers" in result.products[0], false);
   assert.doesNotMatch(queries[0].text, /LIMIT|OFFSET/, "limites somente após disponibilidade vendável global");
-  assert.ok(queries[0].values.includes("(^| )50 ?mg($| )"));
+  assert.ok(hasDosePattern(queries[0], "Losartana 50 mg"));
   assert.ok(queries[0].values.includes("(^| )corus"));
 });
 
@@ -212,7 +264,7 @@ test("correção usa vocabulário ativo em cache e mantém dose no SQL parametri
   assert.equal(result.correctedQuery, "losartana 50mg");
   assert.equal(result.count, 1);
   assert.equal(result.products[0].id, "match");
-  assert.ok(queries.at(-1)!.values.includes("(^|[^0-9.,])50\\s*mg($|[^a-z0-9])"));
+  assert.ok(hasDosePattern(queries.at(-1)!, "Losartana 50 mg"));
   await service.getSearchCatalog("losartnaa 50mg", { relatedLimit: 0 });
   assert.equal(vocabularyReads, 1, "consultas próximas compartilham somente o vocabulário, não preços ou estoque");
 });
@@ -264,7 +316,7 @@ test("assuntos usam identidades completas parametrizadas e não trazem alternati
   assert.match(queries[0].text, /unnest\(p\."searchTerms"\)/);
   assert.ok(queries[0].values.includes("losartana potassica"));
   assert.ok(queries[0].values.includes("besilato de anlodipino"));
-  assert.ok(queries[0].values.includes("(^| )50 ?mg($| )"));
+  assert.ok(hasDosePattern(queries[0], "Losartana 50 mg"));
   assert.equal(queries[0].values.includes("(^| )pressao"), false);
   assert.doesNotMatch(queries[0].text, /losartana|pressao|anlodipino/);
   await service.getSearchCatalog("diabetes tipo 2");

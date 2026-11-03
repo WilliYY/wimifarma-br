@@ -185,6 +185,50 @@ test("dose decimal não corresponde ao fragmento de outra dose", () => {
   assert.deepEqual(rankProductsForQuery(products, "bisoprolol 2.5mg").map(p => p.id).sort(), ["1", "2"]);
 });
 
+test("busca converte apenas doses equivalentes e preserva concentração, ingredientes e via", () => {
+  const products = ["Dipirona 1g comprimidos", "Dipirona 1000 mg comprimidos", "Dipirona 1 g/mL gotas", "Dipirona 500mg comprimidos", "Paracetamol 750 mg comprimidos", "Paracetamol 0,75g comprimidos", "Levotiroxina 25mcg comprimidos", "Levotiroxina 0.025mg comprimidos"]
+    .map((name, id) => ({ id: String(id), name, searchText: normalizeProductSearch(name) }));
+  for (const query of ["dipirona 1g", "dipirona 1000 mg", "dipirona 1000000mcg"]) {
+    assert.deepEqual(new Set(rankProductsForQuery(products, query).map(p => p.id)), new Set(["0", "1"]), query);
+  }
+  for (const query of ["paracetamol 750mg", "paracetamol 0,75 g", "paracetamol 0.750g"]) {
+    assert.deepEqual(new Set(rankProductsForQuery(products, query).map(p => p.id)), new Set(["4", "5"]), query);
+  }
+  assert.deepEqual(new Set(rankProductsForQuery(products, "levotiroxina 0,025mg").map(p => p.id)), new Set(["6", "7"]));
+  assert.deepEqual(rankProductsForQuery(products, "dipirona 1000mg/ml").map(p => p.id), ["2"]);
+  const concentration = { id: "denominator", name: "Pomada 10 mg / 1 g", searchText: "pomada 10 mg 1 g" };
+  assert.deepEqual(rankProductsForQuery([concentration], "pomada 1g"), []);
+  assert.deepEqual(new Set(rankProductsForQuery(products, "1000mg").map(p => p.id)), new Set(["0", "1"]));
+  for (const query of ["dipirona 1000mg injetável", "dipirona cafeína 1000mg", "dipirona 1000mg/5ml"]) {
+    assert.deepEqual(rankProductsForQuery(products, query), [], query);
+  }
+});
+
+test("busca reconhece leve/pague e L/P sem absorver doses ou quantidades adicionais", () => {
+  const products = ["Sabonete Protex L6P5 90g", "Sabonete Protex Leve 6 Pague 5 unidades 90g", "Sabonete Protex Leve6Pague5 90g", "Sabonete Protex L6P5 85g", "Sabonete Protex L6P50 90g", "Fralda Leve 96 Pague 80 unidades", "Fralda L96P80"]
+    .map((name, id) => ({ id: String(id), name, searchText: normalizeProductSearch(name) }));
+  for (const query of ["protex L6P5 90g", "protex leve6pague5 90g", "protex leve 6 pague 5 unidades 90g", "protex L 6 P 5 90g"]) {
+    assert.deepEqual(new Set(rankProductsForQuery(products, query).map(p => p.id)), new Set(["0", "1", "2"]), query);
+  }
+  for (const query of ["fralda L96P80", "fralda leve 96 pague80 unidades"]) {
+    assert.deepEqual(new Set(rankProductsForQuery(products, query).map(p => p.id)), new Set(["5", "6"]), query);
+  }
+  assert.deepEqual(rankProductsForQuery(products, "protex leve6pague5 12"), []);
+  assert.deepEqual(rankProductsForQuery(products, "protex leve6pague5 100mg"), []);
+  assert.deepEqual(productSearchPlan("protex leve 6 pague 5").dosePatterns, []);
+});
+
+test("busca separa massa e promoção compactas sem alterar o índice persistido", () => {
+  const products = ["Sabonete Protex BALANCE SAUDAVEL85gL6P5", "Sabonete Protex 85g L6P5", "Sabonete Protex 90gL6P5", "Sabonete Protex 85gL6P50"]
+    .map((name, id) => ({ id: String(id), name, searchText: normalizeProductSearch(name) }));
+  for (const query of ["protex L6P5", "protex leve6pague5"]) {
+    assert.deepEqual(new Set(rankProductsForQuery(products, query).map(p => p.id)), new Set(["0", "1", "2"]), query);
+  }
+  for (const query of ["protex85g L6P5", "protex85gL6P5", "protex 85gLeve6Pague5"]) {
+    assert.deepEqual(new Set(rankProductsForQuery(products, query).map(p => p.id)), new Set(["0", "1"]), query);
+  }
+});
+
 test("EAN pode ser encontrado sem exigir código no nome público", () => {
   const p = { id: "ean", name: "Losartana 50mg", searchText: "losartana 50mg 7896181915638" };
   assert.deepEqual(rankProductsForQuery([p], "7896181915638"), [p]);

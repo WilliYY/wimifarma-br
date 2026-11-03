@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-03 — Doses equivalentes, multipacks, famílias de marca e departamento Medicamentos
+
+- A busca reconhece unidades de massa equivalentes preservando concentração e compartilha os padrões com SQL; aliases comerciais não usam os números da promoção como dose. Multipacks mostram a unidade comercial, contagem interna e totais explícitos, sem alterar SKU, estoque ou logística.
+- Bepantol reúne a família conhecida; Baby usa uma conferência por produto. Cuidados explicitamente infantis podem aparecer no público Infantil sem alterar a categoria cadastrada. Consultas, subcategorias e paginação aplicam o mesmo critério, mantendo medicamentos e itens adultos fora da associação adicional.
+- As duas entradas de Medicamentos usam o mesmo departamento semântico e metadados; links preferem `/categorias/medicamentos`, preservando filtros e página. Contratos, fontes e limites em [descoberta do catálogo](descoberta-catalogo-e-departamentos-2026-11-03.md). A publicação permanece sujeita à janela compartilhada e à verificação do ambiente efetivo.
+
 ## 2026-11-03 — Carrinho entre abas, retorno à lista e Vitaminas
 
 - O carrinho passa de snapshots concorrentes para operações persistidas individualmente, com migração da cesta legada, revisão protegida e barreira de limpeza. A alteração de um SKU preserva operações de outros SKUs; uma quantidade obsoleta não reintroduz um item removido. Contrato, privacidade, limitações e regressões em [carrinho entre abas](carrinho-entre-abas-2026-11-03.md).

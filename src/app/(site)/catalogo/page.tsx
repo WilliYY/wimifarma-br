@@ -3,11 +3,14 @@ import { catalogPageNumber } from "@/features/products/storefront";
 import { createPublicPageMetadata } from "@/lib/metadata";
 import { categoryShortcuts } from "@/features/products/home-shortcuts";
 import { catalogFilters, catalogFiltersPath, catalogSections, type CatalogParams } from "@/features/products/catalog-navigation";
+import { medicineCatalogMetadata } from "@/features/products/catalog-metadata";
 export const dynamic = "force-dynamic";
 type Props = { searchParams: Promise<CatalogParams> };
 const description = "Conheça os produtos da Wimifarma em Ivaté-PR. Explore medicamentos, higiene, beleza e cuidados por categoria, com preços e informações de cada produto.";
 export async function generateMetadata({ searchParams }: Props) {
-  const page = catalogPageNumber((await searchParams).pagina);
+  const params = await searchParams;
+  if (catalogFilters(params).group === "medicines") return medicineCatalogMetadata(params);
+  const page = catalogPageNumber(params.pagina);
   return createPublicPageMetadata({ title: `Catálogo de produtos${page > 1 ? ` - Página ${page}` : ""}`, description, path: `/catalogo${page > 1 ? `?pagina=${page}` : ""}` });
 }
 export default async function Page({ searchParams }: Props) {

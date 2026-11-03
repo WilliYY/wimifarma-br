@@ -3,10 +3,10 @@ import type { Prisma } from "@/generated/prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { categorySlug } from "@/lib/seo";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
-import { type CatalogGroup } from "./home-shortcuts";
+import { isExplicitInfantCare, type CatalogGroup } from "./home-shortcuts";
 import { catalogGroupNames, catalogSections, matchesCatalogSection, sortCatalogProducts, type CatalogSort } from "./catalog-navigation";
 import { buildProductSearchText, rankProductsForQuery } from "./public-search";
-import { buildPublicBrands, matchingBrandNames, type PublicBrand } from "./brands";
+import { buildPublicBrands, matchingBrandNames, matchesPublicBrand, type PublicBrand } from "./brands";
 import { isDiscountedOffer, rotateDailyOffers } from "@/features/offers/daily-rotation";
 
 export const PAGE_SIZE = 24;
@@ -16,11 +16,12 @@ const storefrontSelect = { ...supplierOfferInclude, cmedReference: true, sku: tr
 function availableCatalogSections(rows: Parameters<typeof matchesCatalogSection>[0][], categories: readonly { name: string; names?: string[] }[]) {
   return catalogSections.filter(section => {
     const names = catalogGroupNames(categories, section.group);
-    return rows.some(row => (names.includes(row.category ?? "") || (section.group === "medicines" && (row.catalogClassification as { kind?: string } | null)?.kind === "MEDICINE")) && matchesCatalogSection(row, section));
+    return rows.some(row => (names.includes(row.category ?? "") || (section.group === "medicines" && (row.catalogClassification as { kind?: string } | null)?.kind === "MEDICINE")
+      || (section.group === "baby" && isExplicitInfantCare(row))) && matchesCatalogSection(row, section));
   }).map(section => section.id);
 }
 export const getPublicCatalogSections = cache(async () => {
-  const rows = await getPrisma().product.findMany({ where: { status: "ACTIVE" }, select: { id: true, name: true, category: true, activeIngredients: true, searchTerms: true, catalogClassification: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true } });
+  const rows = await getPrisma().product.findMany({ where: { status: "ACTIVE" }, select: { id: true, name: true, brand: true, category: true, activeIngredients: true, searchTerms: true, catalogClassification: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true } });
   return availableCatalogSections(rows, await getPublicCategories());
 });
 function productCategories(products: readonly { category: string | null }[]) {
@@ -52,11 +53,16 @@ export async function getStorefrontProducts({ page = 1, categories, offers = fal
   const prisma = getPrisma();
   const groupedNames = group ? catalogGroupNames(await getPublicCategories(), group) : undefined;
   const brandNames = brand !== undefined ? matchingBrandNames(await getPublicBrandRecords(), brand) : undefined;
-  const where: Prisma.ProductWhereInput = { status: "ACTIVE", ...(categories ? { category: { in: categories } } : {}), ...(brandNames ? { brand: { in: brandNames } } : {}), ...(group ? { OR: [{ category: { in: groupedNames } }, ...(group === "medicines" ? [{ catalogClassification: { path: ["kind"], equals: "MEDICINE" } }] : [])] } : {}) };
+  const infantCandidates: Prisma.ProductWhereInput[] = group === "baby" ? ["baby", "bebe", "bebê", "infantil", "infantis"].flatMap(term => [
+    { name: { contains: term, mode: "insensitive" as const } }, { brand: { contains: term, mode: "insensitive" as const } },
+  ]) : [];
+  const where: Prisma.ProductWhereInput = { status: "ACTIVE", ...(categories ? { category: { in: categories } } : {}), ...(brandNames ? { brand: { in: brandNames } } : {}), ...(group ? { OR: [{ category: { in: groupedNames } }, ...(group === "medicines" ? [{ catalogClassification: { path: ["kind"], equals: "MEDICINE" } }] : []), ...infantCandidates] } : {}) };
   // Resolve supplier availability before sorting the full result and paginating.
   const rows = await prisma.product.findMany({ where, select: storefrontSelect });
-  const groupedRows = group === "beauty" ? rows.filter(item => (item.catalogClassification as { kind?: string } | null)?.kind !== "MEDICINE"
-    && !item.requiresPrescription && !item.isPopularPharmacy && (!item.prescriptionType || item.prescriptionType === "UNREVIEWED")) : rows;
+  const brandRows = brand !== undefined ? rows.filter(item => matchesPublicBrand(item, brand)) : rows;
+  const groupedRows = group === "beauty" ? brandRows.filter(item => (item.catalogClassification as { kind?: string } | null)?.kind !== "MEDICINE"
+    && !item.requiresPrescription && !item.isPopularPharmacy && (!item.prescriptionType || item.prescriptionType === "UNREVIEWED"))
+    : group === "baby" ? brandRows.filter(item => groupedNames?.includes(item.category ?? "") || isExplicitInfantCare(item)) : brandRows;
   const now = Date.now();
   const saleRows = groupedRows.map(item => toSaleProduct(item, now));
   const saleById = new Map(saleRows.map(item => [item.id, item]));

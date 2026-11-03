@@ -96,6 +96,17 @@ test("product page keeps product, related cards and details without public revie
   assert.ok(soapHtml.indexOf("data-purchase-panel") < soapHtml.indexOf("data-product-purchase-conditions"));
   assert.equal(queryCalls.length, 2, "same-line candidates are retrieved independently of the general candidate limit");
   assert.match(JSON.stringify(queryCalls[0]), /"AND".*sabonete.*Rexona/);
+  for (const [name, presentation, content] of [
+    ["Sabonete Protex BALANCE SAUDAVEL85gL6P5", "1 pacote com 6 barras", "6 barras de 85 g · 510 g líquidos"],
+    ["Esmalte Colorama Gabriele caixa com 6 frascos de 8 ml", "1 caixa com 6 frascos", "6 frascos de 8 mL · 48 mL no total"],
+    ["Absorvente Intimus Leve8Pague7", "1 pacote com 8 absorventes", "8 absorventes"],
+  ]) {
+    Object.assign(product, { name });
+    const packHtml = renderToStaticMarkup(await loaded.exports.default({ params: Promise.resolve({ slug: product.slug }) }));
+    assert.ok(packHtml.includes(presentation), presentation);
+    assert.ok(packHtml.includes(content), content);
+    assert.ok(packHtml.includes(`por ${presentation}`), "price describes the complete commercial package");
+  }
   Object.assign(product, { name: "Alenia 6 mcg + 200 mcg 60 cápsulas dura", activeIngredients: ["BUDESONIDA", "FUMARATO DE FORMOTEROL DIIDRATADO"], category: "Medicamentos", requiresPrescription: true, prescriptionType: "ORDINARY" });
   const inhalationHtml = renderToStaticMarkup(await loaded.exports.default({ params: Promise.resolve({ slug: product.slug }) }));
   const medicineQuery = JSON.stringify(queryCalls.at(-1));

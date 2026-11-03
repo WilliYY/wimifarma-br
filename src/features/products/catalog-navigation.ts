@@ -1,4 +1,4 @@
-import { catalogGroup, categoryShortcuts, groupCategoryNames, type CatalogGroup } from "./home-shortcuts";
+import { catalogGroup, categoryShortcuts, groupCategoryNames, isExplicitInfantCare, type CatalogGroup } from "./home-shortcuts";
 import { commercialPrice } from "./home-collections";
 import { matchesSearchTopic, normalizeProductSearch, type SearchRankableProduct } from "./public-search";
 import { searchTopics } from "./search-topics";
@@ -59,12 +59,18 @@ export function catalogFilterHref(path: string, changes: Record<string, string |
   for (const [key, value] of Object.entries(changes)) {
     if (value) url.searchParams.set(key, value); else url.searchParams.delete(key);
   }
+  if (url.pathname === "/catalogo" && url.searchParams.get("grupo") === "medicines") {
+    url.pathname = "/categorias/medicamentos";
+    url.searchParams.delete("grupo");
+  }
   return `${url.pathname}${url.search}`;
 }
 
 export function catalogFiltersPath(base: string, filters: ReturnType<typeof catalogFilters>) {
+  if (base === "/catalogo" && filters.group === "medicines") base = "/categorias/medicamentos";
   const query = new URLSearchParams();
-  if (filters.group) query.set("grupo", filters.group);
+  if (filters.group && !(base === "/categorias/medicamentos" && filters.group === "medicines")
+    && !(base === "/categorias/infantil" && filters.group === "baby")) query.set("grupo", filters.group);
   if (filters.section) query.set("assunto", filters.section);
   if (filters.brand) query.set("marca", filters.brand);
   if (filters.query) query.set("q", filters.query);
@@ -83,10 +89,11 @@ export function catalogPagination(page: number, pages: number): (number | string
 }
 
 export function matchesCatalogSection(product: Omit<SearchRankableProduct, "searchText"> & { requiresPrescription?: boolean; prescriptionType?: string; isPopularPharmacy?: boolean }, section: CatalogSection) {
-  if (section.group === "baby" && !groupCategoryNames([{ name: product.category ?? "" }], "baby").length) return false;
+  if (section.group === "baby" && !groupCategoryNames([{ name: product.category ?? "" }], "baby").length && !isExplicitInfantCare(product)) return false;
   if (section.topic) return matchesSearchTopic({ ...product, searchText: "" }, searchTopics.find(topic => topic.id === section.topic)!);
   const classification = product.catalogClassification as { kind?: string } | null;
   if (classification?.kind === "MEDICINE" || /^medicamentos?$/.test(normalizeProductSearch(product.category ?? ""))) return false;
+  if (section.id === "baby-care" && isExplicitInfantCare(product)) return true;
   if (section.id === "vitamins") return !["PERFUMERY", "HYGIENE", "FOOD"].includes(classification?.kind ?? "") &&
     !product.requiresPrescription && !product.isPopularPharmacy && (!product.prescriptionType || product.prescriptionType === "UNREVIEWED") &&
     !groupCategoryNames([{ name: product.category ?? "" }], "medicines").length && hasVitaminIdentity(product.name);
