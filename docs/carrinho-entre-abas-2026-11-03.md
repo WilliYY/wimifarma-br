@@ -37,4 +37,14 @@ A revisão independente exercitou a migração com escritor legado, coleta após
 
 A suíte padrão teve 301 aprovações e um timeout de interface; esse teste passou isoladamente, totalizando 302 casos aprovados entre as duas execuções. A auditoria de interface também reproduziu no HEAD anterior duas falhas existentes: expectativa antiga de “frete grátis aplicado” e sobreposição do banner Pix em 320 px. Esses comportamentos não foram alterados nesta correção; os recibos comparativos permanecem nos artefatos locais da tarefa.
 
-Esta entrega local não confirma publicação. O build Linux, push, pull e a troca do app aguardam a liberação coordenada da janela de catálogo. Nenhuma escrita em produtos, ofertas, clientes, pedidos, configurações logísticas ou no canônico foi realizada por esta tarefa.
+Esta entrega foi publicada após a liberação coordenada e a renovação das guardas, conforme recibo abaixo. Nenhuma escrita em produtos, ofertas, clientes, pedidos, configurações logísticas ou no canônico foi realizada por esta tarefa.
+
+## Publicação verificada — 03/11/2026
+
+Fonte APP `f9abb42ac9bb9d7171ca1499acceb5fe97ed018f`, imagem `sha256:d6ebd114354d2dc1609f6762c8cc87caf45b4bf89b8607163551cef39521684b` em Linux/ARM64. App e PostgreSQL saudáveis; ambiente, contratos de execução e avaliações preservados. A publicação alterou somente o app, sem migrations, SQL de catálogo, pedidos, estoque, preços, configurações ou aprovação logística.
+
+Passaram 131 testes dirigidos, 307 da suíte padrão, 557 de segurança, lint, tipos, Prisma e build Linux. Auditoria de produção: três alertas baixos e quatro moderados; auditoria completa: três baixos e 17 moderados, sem altos ou críticos. Nenhuma dependência foi alterada. As tentativas locais de build na cópia com junction entre C: e D: falharam por resolução de módulos; a compilação efetiva e a imagem publicada foram validadas no Linux.
+
+GETs públicos confirmaram os mesmos cinco resultados principais de dipirona 1 g/1000 mg, quatro de paracetamol 750 mg/0,75 g, dois Protex L6P5 e três Intimus L16P15/Leve 16 unidades Pague 15 unidades. Desloratadina mantém 15 xaropes nos principais com vírgula ou ponto, com os oito relacionados separados. Bepantol Baby mantém os mesmos quatro SKUs, inclusive os lenços, nos três caminhos testados. As fichas mostram Protex 6 × 85 g = 510 g líquidos e Colorama 6 × 8 mL = 48 mL, e as duas rotas Medicamentos divulgam o mesmo título, canonical, endereço social e seleção.
+
+Recebidos os encerramentos de catálogo e renovadas as guardas físicas, a implantação preservou o canônico `7782112b1705d8a3225edda23a2f39b34f54cf9d4aa79ad09bcc57f6fb35c6ae`. Os lotes de dados de outras frentes não foram repetidos. Recibos e logs ficam em `D:/Codex-outputs/wimifarma-br/catalog-dose-pack-brand-seo-2026-11-03/`, incluindo `public-feature-proof.json` e `hotfix/release-proof.json`.

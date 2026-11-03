@@ -57,3 +57,7 @@ Durante a última leitura de preservação, o canônico de outro lote mudou exte
 Evidências duráveis em `D:/Codex-outputs/wimifarma-br/revisao-sabonetes-2026-11-03-01a19a02/`: `before.json`, `plans.json`, `rollback-proof.json`, `manifest.json`, `apply-proof.json`, `public-checks.json`, `resumo-atualizado.json` e `conferencia-produtos-atualizada.csv` (3.068 identidades). O relatório inicial permanece em `D:/Codex-outputs/wimifarma-br/confirmacao-envio-2026-11-03-01a19a02/`; seus números de 318 habilitados são anteriores a esta aplicação.
 
 Hash do SQL das duas correções: `e6729291e1675d2f1bb004c413470dc3f3fe2369e10fd5def610b941d88844c2`. Hash do plano aplicado pelo revisor: `0bf88ab88349b6197cac5389539d7bf17b18795aa856ee2ff172d599147e70e8`. Os arquivos são recibos da operação concluída, não instruções para reaplicá-la.
+
+## Publicação do código — 03/11/2026
+
+Os helpers desta revisão foram publicados com a fonte APP `f9abb42ac9bb9d7171ca1499acceb5fe97ed018f` e imagem `sha256:d6ebd114354d2dc1609f6762c8cc87caf45b4bf89b8607163551cef39521684b`, após revisão independente, 557 testes de segurança na fonte consolidada, build Linux e verificação do app/ambiente/PostgreSQL. A publicação da fonte não aplicou os 23 planos adicionais nem validou novas medições, estoque ou serviços. Esses planos permanecem sem aplicação e exigem conferência própria com o novo baseline.

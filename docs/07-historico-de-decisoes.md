@@ -1,5 +1,10 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-03 — Publicação de descoberta do catálogo e pacote de correções
+
+- Publicada fonte `f9abb42ac9bb9d7171ca1499acceb5fe97ed018f`, imagem `sha256:d6ebd114354d2dc1609f6762c8cc87caf45b4bf89b8607163551cef39521684b`, com app/PostgreSQL saudáveis e ambiente, execução e avaliações preservados. Somente app; nenhum lote, migration, preço, estoque, pedido ou configuração foi aplicado. Canonical de coordenação preservado: `7782112b1705d8a3225edda23a2f39b34f54cf9d4aa79ad09bcc57f6fb35c6ae`.
+- 131 dirigidos, 307 padrão e 557 segurança aprovados, com lint/tipos/Prisma/build Linux e auditorias sem altos/críticos; os alertas baixos/moderados permanecem registrados. Conferência pública validou doses equivalentes, promoções com unidades entre as contagens, composição de pacotes, Bepantol/Infantil e canonical de Medicamentos. Recibo completo em [descoberta do catálogo](descoberta-catalogo-e-departamentos-2026-11-03.md#publicação-verificada--03112026). Os 23 planos logísticos adicionais continuam sem aplicação.
+
 ## 2026-11-03 — Doses equivalentes, multipacks, famílias de marca e departamento Medicamentos
 
 - A busca reconhece unidades de massa equivalentes preservando concentração e compartilha os padrões com SQL; aliases comerciais não usam os números da promoção como dose. Multipacks mostram a unidade comercial, contagem interna e totais explícitos, sem alterar SKU, estoque ou logística.
