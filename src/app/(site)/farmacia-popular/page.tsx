@@ -16,7 +16,7 @@ export const metadata = createPublicPageMetadata({
 const steps = [
   { icon: MessageCircle, title: "Converse com a gente", text: "Chame no WhatsApp e conte o que você precisa. A equipe orienta o próximo passo." },
   { icon: FileText, title: "Tenha os documentos em mãos", text: "Separe CPF, documento com foto e receita, quando aplicável. A equipe ajuda com as dúvidas." },
-  { icon: ClipboardCheck, title: "Receba a confirmação", text: "Conferimos os requisitos e a disponibilidade antes de combinar a retirada ou entrega." },
+  { icon: ClipboardCheck, title: "Receba a confirmação", text: "Conferimos os requisitos e a disponibilidade para o atendimento presencial. Farmácia Popular não possui entrega." },
 ];
 
 const checklist = ["CPF e documento com foto", "Receita, quando aplicável", "Nome do medicamento", "Como deseja retirar"];
@@ -86,7 +86,7 @@ export default function Page() {
           <div className={styles.checklistPanel}>
             <p className={styles.checklistTitle}>O que ter em mãos</p>
             <ul className={styles.checklist}>{checklist.map(item => <li key={item}><Check aria-hidden="true" size={18} /> {item}</li>)}</ul>
-            <p className={styles.confirmation}><ShieldCheck aria-hidden="true" size={18} /> Disponibilidade, requisitos e retirada ou entrega são confirmados pela equipe.</p>
+            <p className={styles.confirmation}><ShieldCheck aria-hidden="true" size={18} /> Disponibilidade e requisitos são confirmados pela equipe. Farmácia Popular tem atendimento presencial, sem entrega.</p>
           </div>
         </div>
         <Link className={styles.offersLink} href="/ofertas">Conheça também as ofertas da loja <ArrowRight aria-hidden="true" size={16} /></Link>

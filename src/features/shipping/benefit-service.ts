@@ -1,13 +1,13 @@
 import { productCashbackCents, type CashbackProduct } from "@/features/cashback/rules";
 import { productWimicoinsPoints, type WimicoinsProduct } from "@/features/club/rules";
 import { pixDiscountCents } from "@/features/payments/pix-discount";
-import { resolveSupplierOffer } from "@/features/supplier-catalog/commerce";
+import { resolveSupplierOffer, withCommerceAvailability } from "@/features/supplier-catalog/commerce";
 import { calculateShippingBenefit, shippingBenefitPolicySchema } from "./benefit-policy";
 import { estimateShippingOperationalCost } from "./operational-cost";
 import type { ShippingSettings } from "./schema";
 
 type MarginProduct = Parameters<typeof resolveSupplierOffer>[0] & CashbackProduct & WimicoinsProduct & {
-  id: string; inventorySource?: "PHARMACY" | "DISTRIBUTOR";
+  id: string; inventorySource?: "PHARMACY" | "DISTRIBUTOR"; stock?: number; price?: unknown;
 };
 type MarginItem = { productId: string; quantity: number; unitPriceCents: number };
 
@@ -18,6 +18,7 @@ export function cartShippingBenefit(input: {
 }) {
   const now = input.now ?? Date.now();
   const policy = shippingBenefitPolicySchema.safeParse(input.settings.freeShippingPolicy ?? {});
+  const historical = policy.success && policy.data.fundingMode === "HISTORICAL_MARGIN_SHARE";
   const packageCount = input.quote.packaging?.packages.length;
   let acquisitionCostCents: number | null = policy.success && policy.data.enabled ? 0 : null;
   let rewardsReserveCents = 0;
@@ -28,8 +29,18 @@ export function cartShippingBenefit(input: {
     rewardsReserveCents += productCashbackCents(product, item.unitPriceCents, item.quantity)
       + productWimicoinsPoints(product, item.unitPriceCents, item.quantity);
     if (acquisitionCostCents === null || !policy.success) continue;
-    const offer = product.inventorySource === "DISTRIBUTOR" ? resolveSupplierOffer({ ...product, supplierDemandAllowed: true }, item.quantity, now) : null;
-    if (!offer || new Date(offer.validUntil).getTime() <= now || new Date(offer.observedAt).getTime() < now - policy.data.costMaxAgeHours * 3_600_000) {
+    const maxAgeHours = historical ? policy.data.historicalCostMaxAgeHours! : policy.data.costMaxAgeHours;
+    const supplierOffers = historical ? product.supplierOffers?.filter(offer => {
+      const observed = new Date(offer.observedAt).getTime();
+      return observed >= now - maxAgeHours * 3_600_000 && observed <= now;
+    }) : product.supplierOffers;
+    // Derive only the canonical demand policy when the raw database product has no computed flag.
+    // The conservative stock fallback and actual quoted item price are used only in this copy.
+    const supplierDemandAllowed = historical
+      ? product.supplierDemandAllowed ?? withCommerceAvailability({ ...product, stock: product.stock ?? 0, price: product.price ?? (item.unitPriceCents / 100).toFixed(2) }, now).supplierDemandAllowed
+      : true;
+    const offer = product.inventorySource === "DISTRIBUTOR" ? resolveSupplierOffer({ ...product, supplierOffers, supplierDemandAllowed }, item.quantity, now) : null;
+    if (!offer || (!historical && new Date(offer.validUntil).getTime() <= now) || new Date(offer.observedAt).getTime() < now - maxAgeHours * 3_600_000) {
       acquisitionCostCents = null;
       continue;
     }
@@ -39,12 +50,13 @@ export function cartShippingBenefit(input: {
   const percentageBaseCents = Math.max(0, input.subtotalCents - input.discountCents);
   const operational = estimateShippingOperationalCost(input.quote, input.settings);
   return calculateShippingBenefit({
-    policy: policy.success && packageCount && policy.data.packagingCostCents !== null
-      ? { ...policy.data, packagingCostCents: policy.data.packagingCostCents * packageCount }
+    policy: policy.success && packageCount && (historical || policy.data.packagingCostCents !== null)
+      ? { ...policy.data, packagingCostCents: policy.data.packagingCostCents === null ? null : policy.data.packagingCostCents * packageCount }
       : undefined,
     carrierPriceCents: input.quote.priceCents, economicPriceCents: input.economicPriceCents,
     percentageBaseCents, netProductsCents: percentageBaseCents - pixDiscountCents(percentageBaseCents),
     acquisitionCostCents, rewardsReserveCents,
     operationalExtraCents: operational.totalCostCents === null ? null : operational.totalCostCents - input.quote.priceCents,
+    ...(historical ? { knownOperationalExtraCents: operational.knownSubtotalCents - input.quote.priceCents } : {}),
   });
 }

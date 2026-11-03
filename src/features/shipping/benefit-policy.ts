@@ -4,6 +4,9 @@ const confirmedCents = z.number().int().min(0).max(10_000_000).nullable().defaul
 const confirmedBps = z.number().int().min(0).max(9000).nullable().default(null);
 export const shippingBenefitPolicySchema = z.object({
   enabled: z.boolean().default(false),
+  fundingMode: z.enum(["CONFIRMED_COSTS", "HISTORICAL_MARGIN_SHARE"]).optional(),
+  marginShareBps: z.literal(5000).optional(),
+  historicalCostMaxAgeHours: z.number().int().min(1).max(720).optional(),
   maximumSubsidyCents: confirmedCents,
   minimumContributionBps: confirmedBps,
   variableCostReserveBps: confirmedBps,
@@ -11,6 +14,11 @@ export const shippingBenefitPolicySchema = z.object({
   costMaxAgeHours: z.number().int().min(1).max(168).default(24),
 }).superRefine((value, context) => {
   if (!value.enabled) return;
+  if (value.fundingMode === "HISTORICAL_MARGIN_SHARE") {
+    if (value.marginShareBps === undefined) context.addIssue({ code: "custom", path: ["marginShareBps"], message: "Confirme a reserva de 50% da margem antes de ativar." });
+    if (value.historicalCostMaxAgeHours === undefined) context.addIssue({ code: "custom", path: ["historicalCostMaxAgeHours"], message: "Informe a idade máxima do custo histórico, até 30 dias." });
+    return;
+  }
   for (const field of ["maximumSubsidyCents", "minimumContributionBps", "variableCostReserveBps", "packagingCostCents"] as const) {
     if (value[field] === null) context.addIssue({ code: "custom", path: [field], message: "Informe um valor confirmado antes de ativar o benefício." });
   }
@@ -37,6 +45,8 @@ type BenefitInput = {
   acquisitionCostCents: number | null;
   rewardsReserveCents: number;
   operationalExtraCents: number | null;
+  /** Known components only; an incomplete operational total remains null. */
+  knownOperationalExtraCents?: number;
 };
 const money = (value: number | null | undefined): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && value <= 100_000_000;
 const zero = BigInt(0), one = BigInt(1), thousand = BigInt(1000);
@@ -49,8 +59,33 @@ export function calculateShippingBenefit(input: BenefitInput): ShippingBenefit {
   const base = input.percentageBaseCents ?? input.netProductsCents;
   if (!parsed.success || !parsed.data.enabled || !money(input.carrierPriceCents) || !money(input.economicPriceCents)
     || !money(input.netProductsCents) || !money(base) || base < input.netProductsCents || base === 0
-    || !money(input.acquisitionCostCents) || !money(input.operationalExtraCents) || !money(input.rewardsReserveCents)) return normal;
+    || !money(input.acquisitionCostCents) || !money(input.rewardsReserveCents)) return normal;
   const policy = parsed.data;
+  if (policy.fundingMode === "HISTORICAL_MARGIN_SHARE") {
+    if ((input.operationalExtraCents !== null && !money(input.operationalExtraCents)) ||
+      (input.knownOperationalExtraCents !== undefined && !money(input.knownOperationalExtraCents))) return normal;
+    const d = BigInt(10_000), share = BigInt(policy.marginShareBps!), p = BigInt(base), q = BigInt(input.carrierPriceCents);
+    const margin = BigInt(input.netProductsCents) - BigInt(input.acquisitionCostCents) - BigInt(input.rewardsReserveCents);
+    const knownExtra = BigInt(input.operationalExtraCents ?? input.knownOperationalExtraCents ?? 0) + BigInt(policy.packagingCostCents ?? 0);
+    const available = margin - knownExtra;
+    const budget = available > zero ? available * share / d : zero;
+    const limits = [q, BigInt(input.economicPriceCents), budget];
+    if (policy.maximumSubsidyCents !== null) limits.push(BigInt(policy.maximumSubsidyCents));
+    const subsidy = limits.reduce((a, b) => a < b ? a : b), customer = q - subsidy;
+    let minimumOrderCents: number | null = null, remainingCents: number | null = null;
+    // Current mix scales; known route/packaging extras stay fixed. A new cart needs a new quote.
+    const slope = margin * share;
+    if (customer > zero && q <= BigInt(input.economicPriceCents) &&
+      (policy.maximumSubsidyCents === null || q <= BigInt(policy.maximumSubsidyCents)) && slope > zero) {
+      const projected = ceilDivide((q * d + knownExtra * share) * p, slope);
+      const rounded = ceilDivide(projected, thousand) * thousand;
+      const next = ceilDivide(p + one, thousand) * thousand;
+      const threshold = rounded > next ? rounded : next;
+      if (threshold <= BigInt(100_000_000)) { minimumOrderCents = Number(threshold); remainingCents = Number(threshold - p); }
+    }
+    return { status: customer === zero ? "free" : subsidy > zero ? "discounted" : "regular", customerPriceCents: Number(customer), subsidyCents: Number(subsidy), minimumOrderCents, remainingCents };
+  }
+  if (!money(input.operationalExtraCents)) return normal;
   if (policy.maximumSubsidyCents === null || policy.minimumContributionBps === null || policy.variableCostReserveBps === null || policy.packagingCostCents === null) return normal;
   const d = BigInt(10_000), p = BigInt(base), n = BigInt(input.netProductsCents), q = BigInt(input.carrierPriceCents);
   const cost = BigInt(input.acquisitionCostCents), rewards = BigInt(input.rewardsReserveCents);

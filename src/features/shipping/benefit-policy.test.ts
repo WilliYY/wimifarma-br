@@ -44,3 +44,59 @@ test("mínimo é estimativa apenas quando modalidade e teto permitem gratuidade 
   assert.equal(calculateShippingBenefit({ ...partial, carrierPriceCents: 4000 }).remainingCents, null);
   assert.equal(calculateShippingBenefit({ ...partial, policy: { ...policy, maximumSubsidyCents: 1000 } }).remainingCents, null);
 });
+
+const historicalPolicy = { enabled: true, fundingMode: "HISTORICAL_MARGIN_SHARE", marginShareBps: 5000, historicalCostMaxAgeHours: 720,
+  maximumSubsidyCents: null, minimumContributionBps: null, variableCostReserveBps: null, packagingCostCents: null, costMaxAgeHours: 24 };
+
+test("modo histórico é explícito; custos desconhecidos permanecem null e objetos antigos permanecem iguais", () => {
+  assert.deepEqual(shippingBenefitPolicySchema.parse(policy), policy);
+  const result = shippingBenefitPolicySchema.parse(historicalPolicy);
+  assert.deepEqual(result, historicalPolicy);
+  for (const patch of [{ marginShareBps: undefined }, { marginShareBps: 4999 }, { historicalCostMaxAgeHours: undefined }, { historicalCostMaxAgeHours: 721 }, { historicalCostMaxAgeHours: 0 }]) {
+    assert.equal(shippingBenefitPolicySchema.safeParse({ ...historicalPolicy, ...patch }).success, false);
+  }
+  assert.equal(shippingBenefitPolicySchema.safeParse({ enabled: false, fundingMode: "HISTORICAL_MARGIN_SHARE" }).success, true);
+  assert.equal(shippingBenefitPolicySchema.safeParse({ ...historicalPolicy, minimumContributionBps: 9000, variableCostReserveBps: 9000 }).success, true);
+  assert.equal(shippingBenefitPolicySchema.safeParse({ ...policy, fundingMode: "CONFIRMED_COSTS" }).success, true);
+});
+
+test("histórico reserva metade da margem após recompensas, deduz extras conhecidos e arredonda subsídio para baixo", () => {
+  const input = { ...base, policy: historicalPolicy, carrierPriceCents: 10000, economicPriceCents: 10000,
+    netProductsCents: 10001, acquisitionCostCents: 4000, rewardsReserveCents: 2, operationalExtraCents: null };
+  const before = structuredClone(input), result = calculateShippingBenefit(input);
+  assert.equal(result.subsidyCents, 2999); assert.equal(result.customerPriceCents, 7001);
+  assert.deepEqual(input, before);
+  assert.equal(calculateShippingBenefit({ ...input, operationalExtraCents: 1000 }).subsidyCents, 2499);
+  assert.equal(calculateShippingBenefit({ ...input, operationalExtraCents: 1000, policy: { ...historicalPolicy, packagingCostCents: 500 } }).subsidyCents, 2249);
+  assert.equal(calculateShippingBenefit({ ...input, acquisitionCostCents: null }).subsidyCents, 0);
+  assert.equal(calculateShippingBenefit({ ...input, acquisitionCostCents: 20000 }).subsidyCents, 0);
+});
+
+test("histórico limita etiqueta econômica e teto informado; teto null nunca cria orçamento infinito", () => {
+  const input = { ...base, policy: historicalPolicy, carrierPriceCents: 10000, economicPriceCents: 3000, netProductsCents: 10000, acquisitionCostCents: 4000, rewardsReserveCents: 0, operationalExtraCents: null };
+  const result = calculateShippingBenefit(input);
+  assert.equal(result.subsidyCents, 3000); assert.equal(result.customerPriceCents, 7000); assert.equal(result.minimumOrderCents, null);
+  assert.equal(calculateShippingBenefit({ ...input, policy: { ...historicalPolicy, maximumSubsidyCents: 1000 } }).subsidyCents, 1000);
+  assert.equal(calculateShippingBenefit({ ...input, policy: { ...historicalPolicy, maximumSubsidyCents: 0 } }).subsidyCents, 0);
+});
+
+test("mínimo histórico usa a composição atual e extras fixos; arredonda para cima em R$10", () => {
+  const input = { ...base, policy: { ...historicalPolicy, packagingCostCents: 50 }, percentageBaseCents: 10000,
+    netProductsCents: 9700, acquisitionCostCents: 7000, rewardsReserveCents: 100, operationalExtraCents: 150 };
+  const result = calculateShippingBenefit(input);
+  assert.equal(result.subsidyCents, 1200); assert.equal(result.minimumOrderCents, 17000); assert.equal(result.remainingCents, 7000);
+  assert.equal(calculateShippingBenefit({ ...input, policy: { ...input.policy, maximumSubsidyCents: 1999 } }).minimumOrderCents, null);
+  assert.equal(calculateShippingBenefit({ ...input, economicPriceCents: 1999 }).minimumOrderCents, null);
+  assert.equal(calculateShippingBenefit({ ...input, acquisitionCostCents: 9700 }).minimumOrderCents, null);
+});
+
+test("histórico conserva pelo menos metade da margem disponível em centavos inteiros", () => {
+  for (let i = 1; i <= 150; i++) {
+    const net = 10000 + i * 31, cost = 4000 + i * 13, rewards = i * 3, extras = i % 19;
+    const result = calculateShippingBenefit({ ...base, policy: historicalPolicy, carrierPriceCents: 30000, economicPriceCents: 30000,
+      netProductsCents: net, acquisitionCostCents: cost, rewardsReserveCents: rewards, operationalExtraCents: extras });
+    const margin = net - cost - rewards - extras;
+    assert.equal(result.subsidyCents, Math.floor(Math.max(0, margin) / 2));
+    assert.ok(margin - result.subsidyCents >= Math.ceil(margin / 2));
+  }
+});

@@ -1,63 +1,73 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mkdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import postcss from "postcss";
-import tailwind from "@tailwindcss/postcss";
+import { readFile } from "node:fs/promises";
 import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
+import postcss from "postcss";
+import tailwind from "@tailwindcss/postcss";
 
-const styles = postcss([tailwind()]).process(readFileSync("src/app/globals.css", "utf8"), { from: "src/app/globals.css" }).then(result => result.css);
-
-for (const width of [320, 390, 1440]) {
-  test(`seleção e preço assinados invalidam por créditos em ${width}px`, async () => {
-    const bundle = await build({
-      stdin: { contents: `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';
-        import {CartProvider} from './src/components/site/cart-provider';
-        import {CheckoutShippingOptions} from './src/components/site/checkout-shipping-options';
-        import {ShippingBenefitFields} from './src/components/admin/shipping-benefit-fields';
-        import {defaultShippingBenefitPolicy} from './src/features/shipping/benefit-policy';
-        function Fixture(){const [selected,setSelected]=useState();const [discount,setDiscount]=useState(0);const [policy,setPolicy]=useState(defaultShippingBenefitPolicy);return <CartProvider><button onClick={()=>setDiscount(500)}>Usar crédito</button><output aria-label="Seleção">{selected?.token || 'Nenhuma'}</output><CheckoutShippingOptions postalCode="80010000" selected={selected} onSelect={setSelected} discountCents={discount} available onPickup={()=>{}}/><ShippingBenefitFields value={policy} onChange={setPolicy}/></CartProvider>};createRoot(document.getElementById('root')).render(<Fixture/>);`, resolveDir: process.cwd(), loader: "tsx" },
-      bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '\"production\"' },
-    });
-    const browser = await chromium.launch();
-    try {
-      const page = await browser.newPage({ viewport: { width, height: 950 } });
-      await page.addInitScript(() => localStorage.setItem("wimifarma-cart-v1", JSON.stringify([{ id: "synthetic", slug: "synthetic", name: "Sintético", imageUrl: null, category: null, unitPriceCents: 20000, originalPriceCents: null, stock: 5, quantity: 1, requiresPrescription: false, isPopularPharmacy: false }])));
-      const requests: { discountCents: number }[] = [];
-      const fixtureCss = await styles;
-      await page.route("**/*", route => {
-        const path = new URL(route.request().url()).pathname;
-        if (path === "/") return route.fulfill({ contentType: "text/html", body: '<meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/fixture.css"><style>#root{max-width:760px;margin:auto;padding:16px}output{display:block;margin-block:12px}</style><div id="root"></div><script src="/fixture.js"></script>' });
-        if (path === "/fixture.css") return route.fulfill({ contentType: "text/css", body: fixtureCss });
-        if (path === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text });
-        if (path === "/api/fretes/cotacao") {
-          const body = route.request().postDataJSON(); requests.push(body);
-          return route.fulfill({ json: { data: [{ provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC", priceCents: 1875, deliveryDays: 4, token: `signed-${body.discountCents}`, benefit: { status: body.discountCents ? "regular" : "discounted", customerPriceCents: body.discountCents ? 1875 : 375, subsidyCents: body.discountCents ? 0 : 1500, minimumOrderCents: null, remainingCents: null } }] } });
-        }
-        return route.fulfill({ json: {} });
-      });
-      await page.goto("http://127.0.0.1:3199");
-      await expect(page.getByRole("radio")).toBeVisible();
-      await expect(page.getByText(/3,75/)).toBeVisible();
-      await page.getByRole("radio").check();
-      await expect(page.getByLabel("Seleção", { exact: true })).toHaveText("signed-0");
-      await expect(page.getByText(/A Wimifarma oferece/)).toContainText(/15,00/);
-      if (process.env.SHIPPING_BENEFIT_CAPTURE_ROOT) {
-        mkdirSync(process.env.SHIPPING_BENEFIT_CAPTURE_ROOT, { recursive: true });
-        await page.screenshot({ path: join(process.env.SHIPPING_BENEFIT_CAPTURE_ROOT, `beneficio-frete-${width}.png`), fullPage: true });
-      }
-      await page.getByRole("button", { name: "Usar crédito" }).click();
-      await expect(page.getByLabel("Seleção", { exact: true })).toHaveText("Nenhuma");
-      await expect.poll(() => requests.length).toBe(2);
-      assert.equal(requests[1].discountCents, 500);
-      await expect(page.getByRole("radio")).not.toBeChecked();
-      await expect(page.getByText(/18,75/)).toBeVisible();
-      await expect(page.getByLabel("Limite de subsídio por pedido (R$)")).toHaveValue("");
-      await page.getByLabel("Limite de subsídio por pedido (R$)").fill("0");
-      await expect(page.getByLabel("Limite de subsídio por pedido (R$)")).toHaveValue("0");
-      await expect(page.getByLabel("Embalagem e proteção por volume (R$)")).toHaveValue("");
-      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
-    } finally { await browser.close(); }
+test("checkout mostra a menor meta antes da seleção e preserva as opções pagas", async () => {
+  const stylesheet = (await readFile("src/app/globals.css", "utf8")).replace(
+    '@import "tailwindcss";',
+    '@import "tailwindcss" source(none);\n@source "../components/site/checkout-shipping-options.tsx";\n@source "../components/site/shipping-benefit-note.tsx";',
+  );
+  const css = await postcss([tailwind()]).process(stylesheet, { from: "src/app/globals.css" });
+  const bundle = await build({
+    stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';import {CheckoutShippingOptions} from './src/components/site/checkout-shipping-options';function App(){const [selected,setSelected]=React.useState();const [cep,setCep]=React.useState('01001000');return <><button onClick={()=>setCep('02002000')}>Trocar CEP</button><CheckoutShippingOptions postalCode={cep} available selected={selected} onSelect={setSelected} onPickup={()=>{}}/></>};createRoot(document.getElementById('root')).render(<App/>);`, resolveDir: process.cwd(), loader: "tsx" },
+    bundle: true, write: false, jsx: "automatic", platform: "browser", format: "iife", define: { "process.env.NODE_ENV": '"production"' },
+    plugins: [{ name: "cart-fixture", setup(builder) {
+      builder.onResolve({ filter: /cart-provider$/ }, () => ({ path: "cart", namespace: "fixture" }));
+      builder.onLoad({ filter: /.*/, namespace: "fixture" }, () => ({ contents: `export const useCart=()=>({items:[{id:'synthetic',quantity:1,unitPriceCents:10000,requiresPrescription:false,isPopularPharmacy:false}]});` }));
+    } }],
   });
-}
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    const benefit = (minimumOrderCents: number | null, remainingCents: number | null, status = "regular") => ({ status, customerPriceCents: 1900, subsidyCents: 0, minimumOrderCents, remainingCents });
+    let benefits = [benefit(20000, 10000), { ...benefit(15000, 5000), customerPriceCents: 2000 }];
+    let fail = false;
+    const errors: string[] = [];
+    page.on("pageerror", error => errors.push(error.message));
+    await page.route("**/*", route => {
+      const path = new URL(route.request().url()).pathname;
+      if (path === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text });
+      if (path === "/fixture.css") return route.fulfill({ contentType: "text/css", body: css.css });
+      if (path === "/") return route.fulfill({ contentType: "text/html", body: '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>' });
+      if (path.startsWith("/api/")) return route.fulfill(fail ? { status: 503, json: { error: "Cotação indisponível" } } : { json: { data: benefits.map((benefit, index) => ({ provider: "melhor-envio", serviceId: index + 1, carrier: "Transportadora sintética", service: `Serviço ${index + 1}`, priceCents: 1900 + index * 100, deliveryDays: 5 + index, token: `token-${index}`, benefit })) } });
+      return route.abort();
+    });
+    await page.goto("http://127.0.0.1:3198/");
+    await expect(page.getByText(/faltam R\$\s*50,00/)).toBeVisible();
+    await expect(page.getByRole("radio")).toHaveCount(2);
+    await expect(page.getByRole("group")).toContainText(/R\$\s*19,00/);
+    await expect(page.getByRole("group")).toContainText(/R\$\s*20,00/);
+    for (const width of [320, 390, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect(page.getByText(/faltam R\$\s*50,00/)).toBeVisible();
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      const bounds = await page.getByRole("group").boundingBox();
+      assert.ok(bounds && bounds.x >= 0 && bounds.x + bounds.width <= width);
+    }
+    await page.getByRole("radio").first().check();
+    await expect(page.getByText(/Estimativa para frete grátis:/)).toHaveCount(1);
+    await expect(page.getByRole("radio").first()).toBeChecked();
+    benefits = [benefit(null, null), benefit(null, null)];
+    await page.getByRole("button", { name: "Trocar CEP" }).click();
+    await expect(page.getByText(/Estimativa para frete grátis:/)).toHaveCount(0);
+    await expect(page.getByRole("radio")).toHaveCount(2);
+    benefits = [benefit(15000, 5000), { ...benefit(null, null, "free"), customerPriceCents: 0, subsidyCents: 2000 }];
+    await page.getByRole("button", { name: "Consultar novamente" }).click();
+    await expect(page.getByText("Frete grátis nesta cotação")).toBeVisible();
+    await expect(page.getByText(/Estimativa para frete grátis:/)).toHaveCount(0);
+    await expect(page.getByRole("group")).toContainText("Grátis");
+    benefits = [{ ...benefit(null, null, "discounted"), customerPriceCents: 1400, subsidyCents: 500 }, { ...benefit(null, null), customerPriceCents: 2000 }];
+    await page.getByRole("button", { name: "Consultar novamente" }).click();
+    await expect(page.getByText("Desconto no frete nesta cotação")).toBeVisible();
+    await expect(page.getByText(/Estimativa para frete grátis:/)).toHaveCount(0);
+    fail = true;
+    await page.getByRole("button", { name: "Consultar novamente" }).click();
+    await expect(page.getByText("Cotação indisponível")).toBeVisible();
+    await expect(page.getByText("Frete grátis nesta cotação")).toHaveCount(0);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
