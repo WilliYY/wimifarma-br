@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Carrinho sincronizado entre abas, retorno à busca com filtros e posição e reconhecimento editorial das linhas Centrum conferidas: [carrinho](docs/carrinho-entre-abas-2026-11-03.md), [retorno às compras](docs/retorno-compras-contexto-2026-11-03.md) e [Vitaminas](docs/vitaminas-e-hint-2026-11-03.md).
+
 Cartões com preço do pacote e preço por fralda quando a contagem é explícita: [comparação de embalagens](docs/comparacao-preco-por-fralda-2026-11-02.md).
 
 Relacionados por composição/formulação e família de produto, com identidade conferida do Cimegripe por EAN: [recomendações e apresentação](docs/relacionados-e-cimegripe-2026-11-02.md).

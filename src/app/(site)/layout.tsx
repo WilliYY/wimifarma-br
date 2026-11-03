@@ -1,5 +1,7 @@
 import { FloatingWhatsApp } from "@/components/site/floating-whatsapp";
 import { SiteVisitTracker } from "@/components/site/site-visit-tracker";
+import { ShoppingNavigationTracker } from "@/components/site/shopping-navigation";
+import { Suspense } from "react";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { CartProvider } from "@/components/site/cart-provider";
@@ -21,6 +23,7 @@ export default async function SiteLayout({
     <CartProvider>
       <script dangerouslySetInnerHTML={{ __html: serializeProductStructuredData(siteStructuredData()) }} type="application/ld+json" />
       <SiteVisitTracker />
+      <Suspense fallback={null}><ShoppingNavigationTracker /></Suspense>
       <SiteHeader />
       <main className="flex-1">{children}</main>
       <FloatingWhatsApp viewer={viewer} />

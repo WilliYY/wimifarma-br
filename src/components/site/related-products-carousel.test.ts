@@ -11,7 +11,7 @@ const bundle = build({
   stdin: {
     contents: `import React from 'react';
       import {createRoot} from 'react-dom/client';
-      import {CartProvider} from './src/components/site/cart-provider';
+      import {CartProvider,useCart} from './src/components/site/cart-provider';
       import {RelatedProductsCarousel} from './src/components/site/related-products-carousel';
       const products=Array.from({length:8},(_,index)=>({
         id:'synthetic-related-'+index,slug:'correlato-sintetico-'+index,
@@ -28,8 +28,8 @@ const bundle = build({
           event.preventDefault();window.fixtureNavigations.push(link.getAttribute('href'));
         }
       });
-      createRoot(document.getElementById('root')).render(
-        <CartProvider><RelatedProductsCarousel products={products}/></CartProvider>
+      function CartState(){const cart=useCart();return <output hidden data-testid="cart-state">{JSON.stringify(cart.items)}</output>};createRoot(document.getElementById('root')).render(
+        <CartProvider><CartState/><RelatedProductsCarousel products={products}/></CartProvider>
       );`,
     resolveDir: process.cwd(),
     loader: "tsx",
@@ -96,7 +96,7 @@ test("correlato abre frete sem navegar ou alterar carrinho e consulta somente ap
       requests.push(route.request().postDataJSON());
       return route.fulfill({ json: { data: { mode: "available", options: [{ provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC", priceCents: 1875, deliveryDays: 4 }] } } });
     });
-    const cartBefore = await page.evaluate(() => localStorage.getItem("wimifarma-cart-v1"));
+    const cartBefore = await page.evaluate(() => document.querySelector('[data-testid="cart-state"]')!.textContent);
     const opener = page.getByRole("article").first().getByRole("button", { name: "Ver frete de Correlato sintético 0", exact: true });
     await expect(opener).toHaveCount(1);
     await opener.click();
@@ -110,7 +110,7 @@ test("correlato abre frete sem navegar ou alterar carrinho e consulta somente ap
     await page.getByRole("button", { name: "Fechar", exact: true }).click();
     await expect(opener).toBeFocused();
     assert.deepEqual(await navigations(page), []);
-    assert.equal(await page.evaluate(() => localStorage.getItem("wimifarma-cart-v1")), cartBefore);
+    assert.equal(await page.evaluate(() => document.querySelector('[data-testid="cart-state"]')!.textContent), cartBefore);
   });
 });
 
@@ -142,7 +142,7 @@ test("correlatos permitem arrastar imagem e link pelo mouse sem abrir produto ou
       await expect.poll(() => scrollLeft(page)).toBeGreaterThan(before + 40);
       assert.deepEqual(await navigations(page), [], `arraste de ${target} abriu produto`);
     }
-    assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1") ?? "[]")), []);
+    assert.deepEqual(await page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent ?? "[]")), []);
     await expect(page.getByRole("button", { name: "Ver produtos anteriores", exact: true })).toBeEnabled();
   });
 });
@@ -172,7 +172,7 @@ test("clique e Enter abrem produto; adicionar e quantidade continuam interativos
     await expect(quantity).toHaveValue("4");
     await first.getByRole("button", { name: "Diminuir Correlato sintético 0", exact: true }).click();
     await expect(quantity).toHaveValue("3");
-    await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1") ?? "[]")[0]?.quantity)).toBe(3);
+    await expect.poll(() => page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent ?? "[]")[0]?.quantity)).toBe(3);
     assert.equal((await navigations(page)).length, 2, "ações do carrinho não devem abrir produto");
 
     // Sair antes do primeiro movimento interno não pode deixar um arraste pendente.

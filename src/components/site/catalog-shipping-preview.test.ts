@@ -20,9 +20,9 @@ async function fixture(run: (page: Page) => Promise<void>, stock = 10, patch: Pa
   const bundle = await build({
     stdin: {
       contents: `import React from 'react';import {createRoot} from 'react-dom/client';
-        import {CartProvider} from './src/components/site/cart-provider';
+        import {CartProvider,useCart} from './src/components/site/cart-provider';
         import {CatalogShippingProvider,CatalogShippingButton} from './src/components/site/catalog-shipping-preview';
-        createRoot(document.getElementById('root')).render(<CartProvider><CatalogShippingProvider>
+        function CartState(){const cart=useCart();return <output hidden data-testid="cart-state">{JSON.stringify(cart.items)}</output>};createRoot(document.getElementById('root')).render(<CartProvider><CartState/><CatalogShippingProvider>
           <label>Pesquisar produtos<input type="search"/></label>
           <article onClick={()=>window.cardClicks++}><CatalogShippingButton product={${JSON.stringify({ ...product, stock, ...patch })}}/></article>
           <CatalogShippingButton product={${JSON.stringify(otherProduct)}}/>
@@ -82,7 +82,7 @@ test("frete do catálogo consulta apenas após envio, para uma unidade e sem alt
     assert.deepEqual(requests[0], { postalCode: "80010000", productId: product.id, quantity: 1 });
     await expect(page.getByRole("status")).toContainText(/18,75/);
     assert.equal(await page.evaluate("window.cardClicks"), 0);
-    assert.deepEqual(await page.evaluate(() => (JSON.parse(localStorage.getItem("wimifarma-cart-v1")!) as { id: string; quantity: number }[]).map(({ id, quantity }) => ({ id, quantity }))), [{ id: "cart-only", quantity: 7 }]);
+    assert.deepEqual(await page.evaluate(() => (JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent!) as { id: string; quantity: number }[]).map(({ id, quantity }) => ({ id, quantity }))), [{ id: "cart-only", quantity: 7 }]);
     await page.getByRole("button", { name: "Fechar", exact: true }).click();
     await expect(opener).toBeFocused();
   });
@@ -201,7 +201,7 @@ test("produto arquivado após abrir diálogo remove CEP e retirada sem criar avi
     await expect(contact).toBeVisible();
     await expect(contact).toHaveAttribute("href", /^https:\/\/wa\.me\//);
     assert.equal(requests, 1);
-    assert.deepEqual(await page.evaluate(() => (JSON.parse(localStorage.getItem("wimifarma-cart-v1")!) as { id: string; quantity: number }[]).map(({ id, quantity }) => ({ id, quantity }))), [{ id: "cart-only", quantity: 7 }]);
+    assert.deepEqual(await page.evaluate(() => (JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent!) as { id: string; quantity: number }[]).map(({ id, quantity }) => ({ id, quantity }))), [{ id: "cart-only", quantity: 7 }]);
   });
 });
 

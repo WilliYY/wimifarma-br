@@ -20,7 +20,7 @@ function availableCatalogSections(rows: Parameters<typeof matchesCatalogSection>
   }).map(section => section.id);
 }
 export const getPublicCatalogSections = cache(async () => {
-  const rows = await getPrisma().product.findMany({ where: { status: "ACTIVE" }, select: { id: true, name: true, category: true, activeIngredients: true, searchTerms: true, catalogClassification: true } });
+  const rows = await getPrisma().product.findMany({ where: { status: "ACTIVE" }, select: { id: true, name: true, category: true, activeIngredients: true, searchTerms: true, catalogClassification: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true } });
   return availableCatalogSections(rows, await getPublicCategories());
 });
 function productCategories(products: readonly { category: string | null }[]) {

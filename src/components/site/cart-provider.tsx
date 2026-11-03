@@ -12,9 +12,9 @@ import {
 
 import { requiresPurchaseAssistance, type PrescriptionType } from "@/features/products/purchase-policy";
 import { publicProductImageUrl } from "@/features/product-images/private-supplier-policy";
-import { reviewedCartItems, type CartReviewProposal } from "@/features/products/cart-review";
-import { orderQuantityLimit } from "@/features/products/quantity";
-const STORAGE_KEY = "wimifarma-cart-v1";
+import { type CartReviewProposal } from "@/features/products/cart-review";
+import { toast } from "sonner";
+import { CartStorage, CART_LEGACY_KEY, CART_OPERATION_PREFIX, CART_BASE_PREFIX, type CartOperation } from "./cart-storage";
 
 export type CartProduct = {
   supplierDemandAllowed?: boolean;
@@ -55,27 +55,48 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const notifiedCart = useRef<string | null>(null);
   const cartNoticeQueue = useRef<Promise<void>>(Promise.resolve());
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed: unknown = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setItems(parsed.filter(isCartItem).slice(0, 30).map(item => ({ ...item, imageUrl: publicProductImageUrl(item) })));
-        }
-      }
-    } catch {
-      try { localStorage.removeItem(STORAGE_KEY); } catch { /* Storage is optional. */ }
-    } finally {
-      setHydrated(true);
-    }
+  const cartStorage = useRef<CartStorage | null>(null);
+  const storageWarning = useRef(false);
+  const publish = useCallback((next: CartItem[]) => {
+    setItems(current => current === next ? current : next);
   }, []);
 
   useEffect(() => {
-    if (hydrated) {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch { /* Keep the cart usable in memory. */ }
-    }
-  }, [hydrated, items]);
+    // Resolve localStorage lazily: its getter can throw in private/restricted contexts.
+    const storage: Storage = {
+      get length() { return window.localStorage.length; },
+      key: index => window.localStorage.key(index),
+      getItem: key => window.localStorage.getItem(key),
+      setItem: (key, value) => window.localStorage.setItem(key, value),
+      removeItem: key => window.localStorage.removeItem(key),
+      clear: () => window.localStorage.clear(),
+    };
+    const store = new CartStorage(storage, () => {
+      if (storageWarning.current) return;
+      storageWarning.current = true;
+      toast.warning("O navegador não conseguiu salvar ou limpar os dados da cesta. Mantenha esta aba aberta; as outras abas podem não receber as alterações.");
+    });
+    cartStorage.current = store;
+    publish(store.read());
+    setHydrated(true);
+    const refresh = () => publish(store.read());
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === null || event.key === CART_LEGACY_KEY || event.key?.startsWith(CART_OPERATION_PREFIX) || event.key?.startsWith(CART_BASE_PREFIX)) refresh();
+    };
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", refresh);
+    const onVisibility = () => { if (document.visibilityState === "visible") refresh(); };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [publish]);
+
+  const commit = useCallback((operation: CartOperation) => {
+    if (cartStorage.current) publish(cartStorage.current.commit(operation));
+  }, [publish]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -108,45 +129,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    product = { ...product, imageUrl: publicProductImageUrl(product) };
-    const safeQuantity = Math.min(Math.max(Math.trunc(quantity), 1), orderQuantityLimit(product));
-
-    setItems((current) => {
-      const existing = current.find((item) => item.id === product.id);
-      if (!existing) return current.length >= 30 ? current : [...current, { ...product, quantity: safeQuantity }];
-      return current.map((item) =>
-        item.id === product.id
-          ? {
-              ...item,
-              ...product,
-              quantity: Math.min(item.quantity + safeQuantity, orderQuantityLimit(product)),
-            }
-          : item,
-      );
-    });
-  }, []);
+    commit({ type: "add", product: { ...product, imageUrl: publicProductImageUrl(product) }, quantity });
+  }, [commit]);
 
   const updateQuantity = useCallback((productId: string, quantity: number) => {
-    if (!Number.isFinite(quantity)) return;
-    setItems((current) =>
-      current
-        .map((item) =>
-          item.id === productId
-            ? { ...item, quantity: Math.min(Math.max(Math.trunc(quantity), 0), orderQuantityLimit(item)) }
-            : item,
-        )
-        .filter((item) => item.quantity > 0),
-    );
-  }, []);
-
-  const removeProduct = useCallback((productId: string) => {
-    setItems((current) => current.filter((item) => item.id !== productId));
-  }, []);
-
-  const clearCart = useCallback(() => setItems([]), []);
+    if (Number.isFinite(quantity)) commit({ type: "quantity", productId, quantity });
+  }, [commit]);
+  const removeProduct = useCallback((productId: string) => commit({ type: "remove", productId }), [commit]);
+  const clearCart = useCallback(() => commit({ type: "clear" }), [commit]);
   const applyCartReview = useCallback((proposal: CartReviewProposal) => {
-    setItems(current => reviewedCartItems(current, proposal) ?? current);
-  }, []);
+    // The journal also compares the source against freshly read cross-tab state.
+    const current = cartStorage.current?.read();
+    if (current) publish(current);
+    if (items === proposal.source && current === proposal.source) commit({ type: "review", source: proposal.source, items: proposal.items });
+  }, [commit, items, publish]);
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
   const subtotalCents = items.reduce(
     (total, item) => total + item.unitPriceCents * item.quantity,
@@ -175,27 +171,4 @@ export function useCart() {
   const context = useContext(CartContext);
   if (!context) throw new Error("useCart deve ser usado dentro de CartProvider.");
   return context;
-}
-
-function isCartItem(value: unknown): value is CartItem {
-  if (!value || typeof value !== "object") return false;
-  const item = value as Record<string, unknown>;
-  return (
-    typeof item.id === "string" &&
-    typeof item.slug === "string" &&
-    typeof item.name === "string" &&
-    (typeof item.imageUrl === "string" || item.imageUrl === null) &&
-    (typeof item.category === "string" || item.category === null) &&
-    Number.isSafeInteger(item.unitPriceCents) &&
-    Number(item.unitPriceCents) > 0 &&
-    (Number.isSafeInteger(item.originalPriceCents) || item.originalPriceCents === null) &&
-    Number.isSafeInteger(item.stock) &&
-    Number(item.stock) > 0 &&
-    typeof item.requiresPrescription === "boolean" &&
-    (item.prescriptionType === undefined || (typeof item.prescriptionType === "string" && ["UNREVIEWED", "ORDINARY", "CONTROLLED", "ANTIMICROBIAL"].includes(item.prescriptionType))) &&
-    typeof item.isPopularPharmacy === "boolean" &&
-    Number.isSafeInteger(item.quantity) &&
-    Number(item.quantity) > 0 &&
-    Number(item.quantity) <= orderQuantityLimit({ stock: Number(item.stock), inventorySource: typeof item.inventorySource === "string" ? item.inventorySource : undefined, supplierDemandAllowed: item.supplierDemandAllowed === true })
-  );
 }

@@ -1,3 +1,5 @@
+import { hasCosmeticProductForm, isVerifiedVitaminSupplementName } from "./vitamin-identity";
+
 export const productTypes = ["medicine", "supplement", "beauty", "hygiene", "food", "device", "other", "unknown"] as const;
 export type ProductType = typeof productTypes[number];
 
@@ -12,8 +14,10 @@ export const catalogCategorySuggestions = ["Medicamentos", "Suplementos", "Vitam
 // Only a form hint; never establishes identity, prescription or commercial rules.
 export function productTypeHint(text: string): ProductType {
   const value = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  if (/\b(medicamento|medicamentos|comprimidos|capsulas|dipirona|losartana)\b/.test(value)) return "medicine";
-  if (/\b(suplementos?|vitaminas?|whey|nutricao infantil|formula infantil)\b/.test(value)) return "supplement";
+  if (/\b(medicamento|medicamentos|dipirona|losartana)\b/.test(value)) return "medicine";
+  if (isVerifiedVitaminSupplementName(value)) return "supplement";
+  if (/\b(comprimidos|capsulas)\b/.test(value)) return "medicine";
+  if (!hasCosmeticProductForm(value) && /\b(suplementos?|vitaminas?|whey|nutricao infantil|formula infantil)\b/.test(value)) return "supplement";
   if (/\b(chocolates?|kit\s*-?\s*kat|wafer|alimentos?|biscoitos?|snacks?|balas?|gomas?|bebidas?|cafe)\b/.test(value)) return "food";
   if (/\b(perfumaria|perfumes?|dermocosmeticos?|cosmeticos?|beleza|maquiagem|pele|protecao solar|protetor solar)\b/.test(value)) return "beauty";
   if (/\b(higiene|sabonetes?|shampoos?|condicionadores?|desodorantes?|fraldas?|cabelos|bucal)\b/.test(value)) return "hygiene";

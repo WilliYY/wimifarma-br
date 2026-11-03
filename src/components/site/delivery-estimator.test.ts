@@ -25,10 +25,10 @@ async function fixture(run: (page: Page) => Promise<void>, cartOnly = false, fix
   const bundle = await build({
     stdin: {
       contents: `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';
-        import {CartProvider} from './src/components/site/cart-provider';
+        import {CartProvider,useCart} from './src/components/site/cart-provider';
         import {DeliveryEstimator} from './src/components/site/delivery-estimator';
         ${purchasePanel ? "import {Toaster} from 'sonner';import {ProductQuantityProvider} from './src/components/site/product-quantity';import {ProductPurchasePanel} from './src/components/site/product-purchase-panel';" : ""}
-        function Fixture(){const [quantity,setQuantity]=useState(2);return <CartProvider>
+        function CartState(){const cart=useCart();return <output hidden data-testid="cart-state">{JSON.stringify(cart.items)}</output>};function Fixture(){const [quantity,setQuantity]=useState(2);return <CartProvider><CartState/>
           ${purchasePanel ? `<Toaster/><ProductQuantityProvider><ProductPurchasePanel product={${JSON.stringify(fixtureProduct)}}/><DeliveryEstimator product={${JSON.stringify(fixtureProduct)}}/></ProductQuantityProvider>` : `
           <label>Quantidade de teste<input type="number" value={quantity} onChange={event=>setQuantity(Number(event.target.value))}/></label>
           <DeliveryEstimator initialPostalCode={${JSON.stringify(initialPostalCode)}} ${cartOnly ? "" : `product={${JSON.stringify(fixtureProduct)}} quantity={quantity}`}/>`}
@@ -233,7 +233,7 @@ test("botões do detalhe não navegam sem o novo produto quando o carrinho já t
       assert.deepEqual(await page.evaluate("window.navigations"), []);
       await expect(page.getByText("Seu carrinho ja tem 30 produtos diferentes.", { exact: true }).first()).toBeVisible();
     }
-    const items = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!) as { id: string }[]);
+    const items = await page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent!) as { id: string }[]);
     assert.equal(items.length, 30);
     assert.equal(items.some(item => item.id === product.id), false);
   }, false, product, true);
@@ -245,7 +245,7 @@ for (const count of [29, 30]) test(`detalhe permite comprar com ${count} itens q
     await page.goto(origin);
     await page.getByRole("button", { name: "Comprar agora", exact: true }).first().click();
     assert.deepEqual(await page.evaluate("window.navigations"), ["/checkout"]);
-    await expect.poll(() => page.evaluate(id => (JSON.parse(localStorage.getItem("wimifarma-cart-v1")!) as { id: string; quantity: number }[]).find(item => item.id === id)?.quantity, product.id)).toBe(count === 30 ? 2 : 1);
+    await expect.poll(() => page.evaluate(id => (JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent!) as { id: string; quantity: number }[]).find(item => item.id === id)?.quantity, product.id)).toBe(count === 30 ? 2 : 1);
   }, false, product, true);
 });
 

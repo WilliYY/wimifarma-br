@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Minus, PackageOpen, Plus, ShieldCheck, Trash2 } from "lucide-react";
 import { useCart } from "@/components/site/cart-provider";
+import { ContinueShoppingLink } from "@/components/site/shopping-navigation";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import { SupplierPreparationNotice } from "@/components/site/supplier-preparation-notice";
 import { productDisplayName } from "@/features/products/display-name";
@@ -108,7 +109,7 @@ export function CartPage() {
               <div className="mt-3 flex justify-between text-sm text-muted"><span>Entrega em Ivate ou retirada</span><span className="font-bold text-pharma-green">Gratis</span></div>
               <div className="mt-5 flex items-end justify-between border-t border-line pt-5"><span className="font-black text-ink">Total</span><strong className="text-2xl font-black text-brand">{currency.format(subtotalCents / 100)}</strong></div>
               <Link className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(208,14,49,0.2)] transition hover:bg-brand-dark" href="/checkout">Continuar para finalizar <ArrowRight className="h-4 w-4 shrink-0" /></Link>
-              <Link className="mt-2 flex min-h-11 items-center justify-center text-sm font-bold text-muted hover:text-brand" href="/catalogo">Continuar comprando</Link>
+              <ContinueShoppingLink className="mt-2 flex min-h-11 items-center justify-center text-sm font-bold text-muted hover:text-brand">Continuar comprando</ContinueShoppingLink>
               <div className="mt-5 rounded-lg border border-line bg-surface-subtle p-4">
                 <h3 className="text-sm font-black text-ink">Confira preços e disponibilidade</h3>
                 <p className="mt-2 text-xs leading-5 text-muted">Seu carrinho pode conter dados de uma visita anterior. Consulte os valores atuais e revise as diferenças antes de aplicar.</p>

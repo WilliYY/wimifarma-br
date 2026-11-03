@@ -7,11 +7,11 @@ const product = { id: "synthetic-cart", name: "Produto sintético", slug: "produ
 
 test("carrinho recarregado não propõe no-op; alterações reais e consulta concorrente permanecem explícitas", async () => {
   const bundle = await build({
-    stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';import {CartProvider} from './src/components/site/cart-provider';import {CartPage} from './src/components/site/cart-page';createRoot(document.getElementById('root')).render(<CartProvider><CartPage/></CartProvider>);`, resolveDir: process.cwd(), loader: "tsx" },
+    stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';import {CartProvider,useCart} from './src/components/site/cart-provider';import {CartPage} from './src/components/site/cart-page';function CartState(){const cart=useCart();return <output hidden data-testid="cart-state">{JSON.stringify(cart.items)}</output>};createRoot(document.getElementById('root')).render(<CartProvider><CartState/><CartPage/></CartProvider>);`, resolveDir: process.cwd(), loader: "tsx" },
     bundle: true, write: false, jsx: "automatic", platform: "browser", format: "iife", define: { "process.env.NODE_ENV": '"production"' },
     plugins: [{ name: "next-fixture", setup(builder) {
-      builder.onResolve({ filter: /^next\/(link|image)$/ }, args => ({ path: args.path, namespace: "fixture" }));
-      builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path === "next/link" ? "import React from 'react';export default ({children,...props})=><a {...props}>{children}</a>" : "import React from 'react';export default ({fill,...props})=><img {...props}/>", loader: "tsx", resolveDir: process.cwd() }));
+      builder.onResolve({ filter: /^next\/(link|image|navigation)$/ }, args => ({ path: args.path, namespace: "fixture" }));
+      builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path === "next/navigation" ? "export const useRouter=()=>({push(){},refresh(){}});export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);" : args.path === "next/link" ? "import React from 'react';export default ({children,...props})=><a {...props}>{children}</a>" : "import React from 'react';export default ({fill,...props})=><img {...props}/>", loader: "tsx", resolveDir: process.cwd() }));
     } }],
   });
   const browser = await chromium.launch();
@@ -41,14 +41,14 @@ test("carrinho recarregado não propõe no-op; alterações reais e consulta con
     await consult.click();
     await expect(page.getByRole("status")).toContainText("Seu carrinho já está atualizado");
     await expect(page.getByRole("button", { name: "Aplicar atualização" })).toHaveCount(0);
-    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!)[0].quantity), 2);
+    assert.equal(await page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent!)[0].quantity), 2);
 
     current = { ...product, stock: 1, unitPriceCents: 309 };
     await consult.click();
     await expect(page.getByText("Quantidade: 2 → 1", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Aplicar atualização" }).click();
     await expect(page.getByRole("status")).toContainText("Atualização aplicada");
-    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!)[0].unitPriceCents), 309);
+    assert.equal(await page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent!)[0].unitPriceCents), 309);
 
     current = { ...product, stock: 0 };
     await consult.click();

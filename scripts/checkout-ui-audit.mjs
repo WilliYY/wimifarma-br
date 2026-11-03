@@ -7,14 +7,14 @@ import { chromium, expect } from "@playwright/test";
 
 // Entirely intercepted loopback fixture: no Next server, live data or gateway.
 const base = "http://127.0.0.1:3198";
-const output = "outputs/checkout-shipping-review";
+const output = process.env.AUDIT_OUTPUT_DIR || "outputs/checkout-shipping-review";
 const productPhoto = await fs.readFile("public/banners/products/dove-oleo.webp");
 const modules = {
   "next/link": 'import React from "react"; export default function Link({children,...p}) { return React.createElement("a",p,children); }',
   "next/image": 'import React from "react"; export default function Image({unoptimized,priority,fill,...p}) { return React.createElement("img",p); }',
   "next/script": 'import {useEffect} from "react"; export default function Script({onReady}) { useEffect(()=>{ onReady?.(); },[]); return null; }',
 };
-const bundle = await build({ stdin: { contents: `import React from 'react'; import {createRoot} from 'react-dom/client'; import {CartProvider} from './src/components/site/cart-provider'; import {CheckoutPage} from './src/components/site/checkout-page'; createRoot(document.getElementById('root')).render(<CartProvider><CheckoutPage initialCustomer={{name:'',phone:'',email:'',street:'',neighborhood:''}} carrierShippingAvailable={!new URLSearchParams(location.search).has('shipping-disabled')} isCustomer={new URLSearchParams(location.search).has('customer')} paymentConfig={{publicKey:'TEST-fixture-only',environment:'test',brands:[{id:'visa',name:'Visa',image:null}]}} /></CartProvider>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"', "process.env": "{}" }, plugins: [{ name: "fixture-next", setup(b) { b.onResolve({filter:/^next\/(link|image|script)$/}, a => ({path:a.path,namespace:"fixture"})); b.onLoad({filter:/.*/,namespace:"fixture"}, a => ({contents:modules[a.path],loader:"js",resolveDir:process.cwd()})); } }] });
+const bundle = await build({ stdin: { contents: `import React from 'react'; import {createRoot} from 'react-dom/client'; import {CartProvider,useCart} from './src/components/site/cart-provider'; import {CheckoutPage} from './src/components/site/checkout-page'; function CartState(){const cart=useCart();return <output hidden data-testid="cart-state">{JSON.stringify(cart.items)}</output>};createRoot(document.getElementById('root')).render(<CartProvider><CartState/><CheckoutPage initialCustomer={{name:'',phone:'',email:'',street:'',neighborhood:''}} carrierShippingAvailable={!new URLSearchParams(location.search).has('shipping-disabled')} isCustomer={new URLSearchParams(location.search).has('customer')} paymentConfig={{publicKey:'TEST-fixture-only',environment:'test',brands:[{id:'visa',name:'Visa',image:null}]}} /></CartProvider>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"', "process.env": "{}" }, plugins: [{ name: "fixture-next", setup(b) { b.onResolve({filter:/^next\/(link|image|script)$/}, a => ({path:a.path,namespace:"fixture"})); b.onLoad({filter:/.*/,namespace:"fixture"}, a => ({contents:modules[a.path],loader:"js",resolveDir:process.cwd()})); } }] });
 const css = (await postcss([tailwind()]).process(await fs.readFile("src/app/globals.css", "utf8"), { from: "src/app/globals.css" })).css;
 await fs.mkdir(output, { recursive: true });
 const browser = await chromium.launch();
@@ -158,7 +158,7 @@ try {
     const { page } = f;
     try {
       f.state.status = status;
-      const cartBefore = await page.evaluate(() => localStorage.getItem("wimifarma-cart-v1"));
+      const cartBefore = await page.getByTestId("cart-state").textContent();
       await page.evaluate(() => {
         sessionStorage.setItem("wimifarma-active-payment:guest", "fixture-order");
         sessionStorage.setItem("wimifarma-payment-attempt:fixture-order", "wimifarma-checkout-attempt:guest");
@@ -172,12 +172,12 @@ try {
       await expect.poll(() => page.evaluate(() => sessionStorage.getItem("wimifarma-active-payment:guest"))).toBeNull();
       assert.equal(await page.evaluate(() => sessionStorage.getItem("wimifarma-payment-attempt:fixture-order")), null);
       assert.equal(await page.evaluate(() => sessionStorage.getItem("wimifarma-checkout-attempt:guest")), null);
-      assert.equal(await page.evaluate(() => localStorage.getItem("wimifarma-cart-v1")), cartBefore);
+      assert.equal(await page.evaluate(() => document.querySelector('[data-testid="cart-state"]').textContent), cartBefore);
       await page.screenshot({ path: `${output}/terminal-${status.toLowerCase()}-390.png`, fullPage: true });
       await page.reload();
       await expect(page.getByRole("button", { name: "Escolha a forma de pagamento" })).toBeDisabled();
       await expect(page.getByRole("heading", { name: "Situação do pagamento" })).toHaveCount(0);
-      assert.equal(await page.evaluate(() => localStorage.getItem("wimifarma-cart-v1")), cartBefore);
+      assert.equal(await page.evaluate(() => document.querySelector('[data-testid="cart-state"]').textContent), cartBefore);
       assert.equal(f.state.status, status);
       assert.equal(f.orders.length, 0);
       assert.equal(f.payments.length, 0);

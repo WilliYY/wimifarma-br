@@ -5,11 +5,11 @@ import test from "node:test";
 import { build } from "esbuild";
 import { groupCategoryNames, catalogGroup } from "./home-shortcuts";
 
-async function fixture(rows: object[], brands: Parameters<typeof import("./brands").buildPublicBrands>[0] = [], validPhotos: string[] = []) {
+async function fixture(rows: object[], brands: Parameters<typeof import("./brands").buildPublicBrands>[0] = [], validPhotos: string[] = [], respectSelect = false) {
   let query: Record<string, unknown> = {};
   const queries: Record<string, unknown>[] = [];
   const photoChecks: (string | null)[][] = [];
-  const db = { product: { fields: { price: "fixture-price" }, count: async () => rows.length, findMany: async (input: Record<string, unknown>) => { queries.push(input); if ((input.select as { brand?: boolean; id?: boolean }).brand && !(input.select as { id?: boolean }).id) return brands; query = input; return input.take ? rows.slice(Number(input.skip ?? 0), Number(input.skip ?? 0) + Number(input.take)) : rows; } } };
+  const db = { product: { fields: { price: "fixture-price" }, count: async () => rows.length, findMany: async (input: Record<string, unknown>) => { queries.push(input); if ((input.select as { brand?: boolean; id?: boolean }).brand && !(input.select as { id?: boolean }).id) return brands; query = input; const selected = input.take ? rows.slice(Number(input.skip ?? 0), Number(input.skip ?? 0) + Number(input.take)) : rows; return respectSelect ? selected.map(row => Object.fromEntries(Object.entries(row).filter(([key]) => (input.select as Record<string, unknown>)[key] === true))) : selected; } } };
   const bundle = await build({ entryPoints: ["src/features/products/storefront.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "storefront-db", setup(builder) {
     builder.onResolve({ filter: /lib\/prisma$|home-photos$/ }, args => ({ path: args.path, namespace: "fixture" }));
     builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("home-photos") ? "export const validatedHomePhotos=async urls=>{fixture.photoChecks.push(urls);return new Set(urls.filter(url=>fixture.validPhotos.includes(url)))};" : "export const getPrisma=()=>fixture.db;" }));
@@ -18,6 +18,43 @@ async function fixture(rows: object[], brands: Parameters<typeof import("./brand
   vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), fixture: { db, validPhotos, photoChecks }, URL });
   return { service: loaded.exports, query: () => query, queries, photoChecks };
 }
+
+test("Vitaminas aplica a identidade antes da contagem e paginação sem absorver whey e creatina", async () => {
+  const base = { category: "Suplementos", brand: "Marca sintética", inventorySource: "PHARMACY", catalogClassification: { kind: "SUPPLEMENT" }, stock: 10, price: "10.00", promotionalPrice: null, activeIngredients: [], searchTerms: [], searchText: "", requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false };
+  const names = [...Array.from({ length: 25 }, () => "Centrum Essencial 30 comprimidos"), ...Array.from({ length: 3 }, () => "Vitamina C 500mg 30 comprimidos"), "Whey Protein 900g", "Creatina 300g", "Suplemento proteico 30 cápsulas"];
+  const rows = names.map((name, index) => ({ ...base, id: `synthetic-${index}`, slug: `synthetic-${index}`, name }));
+  const { service, queries } = await fixture(rows);
+  const all = await service.getStorefrontProducts({ group: "vitamins" });
+  const first = await service.getStorefrontProducts({ group: "vitamins", section: "vitamins" });
+  const second = await service.getStorefrontProducts({ group: "vitamins", section: "vitamins", page: 2 });
+  assert.equal(all.count, 31);
+  assert.equal(first.count, 28);
+  assert.equal(second.count, 28);
+  assert.equal(first.products.length, 24);
+  assert.equal(second.products.length, 4);
+  assert.equal(new Set([...first.products, ...second.products].map(row => row.id)).size, 28);
+  assert.equal([...first.products, ...second.products].filter(row => row.name.startsWith("Centrum Essencial")).length, 25);
+  assert.ok([...first.products, ...second.products].every(row => !/whey|creatina|proteico/i.test(row.name)));
+  assert.ok(queries.filter(query => (query.select as { id?: boolean })?.id).every(query => !query.take && !query.skip), "SQL retrieves the group before the shared JS predicate and pagination");
+});
+
+test("seções globais preservam os bloqueios de receita com Prisma que respeita select e categorias vazias", async () => {
+  const base = { id: "synthetic-centrum", name: "Centrum Essencial 30 comprimidos", category: "Suplementos" as string | null, catalogClassification: { kind: "SUPPLEMENT" }, stock: 10, price: "10.00", promotionalPrice: null, activeIngredients: [], searchTerms: [], requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false };
+  const row = { ...base };
+  const { service } = await fixture([row], [], [], true);
+  assert.ok((await service.getPublicCatalogSections()).includes("vitamins"));
+  for (const conflict of [{ requiresPrescription: true }, { prescriptionType: "ORDINARY" }, { prescriptionType: "ANTIMICROBIAL" }, { prescriptionType: "CONTROLLED" }, { isPopularPharmacy: true }]) {
+    Object.assign(row, base, conflict);
+    assert.equal((await service.getPublicCatalogSections()).includes("vitamins"), false, JSON.stringify(conflict));
+    assert.equal((await service.getStorefrontProducts({ section: "vitamins" })).count, 0, JSON.stringify(conflict));
+  }
+  for (const category of [null, "", "  "]) {
+    Object.assign(row, base, { category });
+    assert.equal((await service.getPublicCatalogSections()).includes("vitamins"), false, `category=${String(category)}`);
+  }
+  Object.assign(row, base);
+  assert.ok((await service.getPublicCatalogSections()).includes("vitamins"));
+});
 
 test("grupo Medicamentos abrange genéricos, similares, éticos e MIP sem inventar categorias", () => {
   const names = ["Medicamentos", "Genéricos", "Similares", "Éticos", "Medicamentos MIP", "Perfumaria"];

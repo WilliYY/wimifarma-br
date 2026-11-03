@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { CartProvider } from "@/components/site/cart-provider";
+import { useEffect, useState } from "react";
+import { CartProvider, useCart } from "@/components/site/cart-provider";
 import { CartHeaderButton } from "@/components/site/cart-header-button";
 import { PublicProductCard, type RelatedProductCardItem } from "@/components/site/public-product-card";
 import { CheckoutPage } from "@/components/site/checkout-page";
@@ -10,7 +10,15 @@ import { buildHomeShortcuts } from "@/features/products/home-shortcuts";
 
 const product: RelatedProductCardItem = { id: "qa-product", slug: "qa-product", name: "Produto de teste com nome longo para conferencia do layout", price: "20.00", promotionalPrice: "18.00", imageUrl: "/favicon.svg", brand: "Wimifarma", category: "Cuidados pessoais", requiresPrescription: false, isPopularPharmacy: false, stock: 3, activeIngredients: [], searchTerms: [], cashbackEnabled: true, cashbackRateBps: 200 };
 
+function CartState() {
+  const cart = useCart();
+  useEffect(() => {
+    (window as typeof window & { qaCart?: ReturnType<typeof useCart> }).qaCart = cart;
+  }, [cart]);
+  return <output hidden data-testid="cart-state">{JSON.stringify(cart.items)}</output>;
+}
+
 export default function Page() {
   const [checkout, setCheckout] = useState(false);
-  return <CartProvider><div className="flex h-16 items-center justify-between border-b border-line bg-white px-5"><button onClick={() => setCheckout((value) => !value)} type="button">{checkout ? "Catalogo teste" : "Checkout teste"}</button><CartHeaderButton /></div>{checkout ? <CheckoutPage initialCustomer={{ name: "", phone: "", email: "", street: "", neighborhood: "" }} /> : <><div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4"><PublicProductCard product={product} /><PublicProductCard product={{ ...product, id: "qa-empty", slug: "qa-empty", stock: 0, name: "Sem estoque" }} /><PublicProductCard product={{ ...product, id: "qa-restricted", requiresPrescription: true, name: "Atendimento com receita" }} /></div><HomePage shortcuts={buildHomeShortcuts()} customerReviews={[]} collections={{ care: [product], otc: [], affordable: [] }} /></>}</CartProvider>;
+  return <CartProvider><CartState /><div className="flex h-16 items-center justify-between border-b border-line bg-white px-5"><button onClick={() => setCheckout((value) => !value)} type="button">{checkout ? "Catalogo teste" : "Checkout teste"}</button><CartHeaderButton /></div>{checkout ? <CheckoutPage initialCustomer={{ name: "", phone: "", email: "", street: "", neighborhood: "" }} /> : <><div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4"><PublicProductCard product={product} /><PublicProductCard product={{ ...product, id: "qa-empty", slug: "qa-empty", stock: 0, name: "Sem estoque" }} /><PublicProductCard product={{ ...product, id: "qa-restricted", requiresPrescription: true, name: "Atendimento com receita" }} /></div><HomePage shortcuts={buildHomeShortcuts()} customerReviews={[]} collections={{ care: [product], otc: [], affordable: [] }} /></>}</CartProvider>;
 }

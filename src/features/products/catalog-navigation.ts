@@ -2,6 +2,7 @@ import { catalogGroup, categoryShortcuts, groupCategoryNames, type CatalogGroup 
 import { commercialPrice } from "./home-collections";
 import { matchesSearchTopic, normalizeProductSearch, type SearchRankableProduct } from "./public-search";
 import { searchTopics } from "./search-topics";
+import { hasVitaminIdentity } from "./vitamin-identity";
 
 export const catalogSorts = [
   { value: "relevantes", label: "Mais relevantes" },
@@ -31,7 +32,7 @@ export const catalogSections: CatalogSection[] = [
   { id: "face", label: "Cuidados com o rosto", group: "dermo", pattern: /\b(facial|rosto|serum|micelar)\b/ },
   { id: "diapers", label: "Fraldas", group: "baby", pattern: /\b(fralda|fraldas)\b/ },
   { id: "baby-care", label: "Cuidados infantis", group: "baby", pattern: /\b(infantil|bebe|baby|lencos umedecidos)\b/ },
-  { id: "vitamins", label: "Vitaminas", group: "vitamins", pattern: /\b(vitamina|vitaminas|multivitaminico|polivitaminico)\b/ },
+  { id: "vitamins", label: "Vitaminas", group: "vitamins" },
   { id: "supplements", label: "Suplementos", group: "vitamins", pattern: /\b(suplemento|creatina|whey|colageno|omega)\b/ },
 ];
 
@@ -81,11 +82,14 @@ export function catalogPagination(page: number, pages: number): (number | string
   return numbers.flatMap((number, i) => i && number - numbers[i - 1] > 1 ? [`gap-${numbers[i - 1]}`, number] : [number]);
 }
 
-export function matchesCatalogSection(product: Omit<SearchRankableProduct, "searchText">, section: CatalogSection) {
+export function matchesCatalogSection(product: Omit<SearchRankableProduct, "searchText"> & { requiresPrescription?: boolean; prescriptionType?: string; isPopularPharmacy?: boolean }, section: CatalogSection) {
   if (section.group === "baby" && !groupCategoryNames([{ name: product.category ?? "" }], "baby").length) return false;
   if (section.topic) return matchesSearchTopic({ ...product, searchText: "" }, searchTopics.find(topic => topic.id === section.topic)!);
   const classification = product.catalogClassification as { kind?: string } | null;
   if (classification?.kind === "MEDICINE" || /^medicamentos?$/.test(normalizeProductSearch(product.category ?? ""))) return false;
+  if (section.id === "vitamins") return !["PERFUMERY", "HYGIENE", "FOOD"].includes(classification?.kind ?? "") &&
+    !product.requiresPrescription && !product.isPopularPharmacy && (!product.prescriptionType || product.prescriptionType === "UNREVIEWED") &&
+    !groupCategoryNames([{ name: product.category ?? "" }], "medicines").length && hasVitaminIdentity(product.name);
   let name = normalizeProductSearch(product.name);
   if (section.id === "perfume") {
     name = name.replace(/\b(com|sem|livre de|isento de) (perfume|fragrancia)\b/g, "");

@@ -14,7 +14,7 @@ const bundle = build({
   stdin: {
     contents: `import React from 'react';
       import {createRoot} from 'react-dom/client';
-      import {CartProvider} from './src/components/site/cart-provider';
+      import {CartProvider,useCart} from './src/components/site/cart-provider';
       import {PublicProductCard} from './src/components/site/public-product-card';
       import {ProductPmcDetails} from './src/components/site/product-pmc';
       const kind=new URLSearchParams(location.search).get('kind');
@@ -39,7 +39,7 @@ const bundle = build({
         {...product,id:'synthetic-similar',slug:'similar-sintetico',name:'Tadalafila 5 mg 30 comprimidos revestidos',brand:'MULTILAB INDUSTRIA E COMERCIO DE PRODUTOS FARMACEUTICOS LTDA',price:'12.90',requiresPrescription:true,prescriptionType:kind==='large-grid'?'CONTROLLED':'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
           catalogClassification:{kind:'MEDICINE',medicineClass:'SIMILAR',ethical:true,otc:false}}
       ]:[product];
-      createRoot(document.getElementById('root')).render(kind==='pmc-details'?<ProductPmcDetails reference={product.pmcReference}/>:<CartProvider>{cards.map(item=><PublicProductCard key={item.id} product={item}/>)}</CartProvider>);`,
+      function CartState(){const cart=useCart();return <output hidden data-testid="cart-state">{JSON.stringify(cart.items)}</output>};createRoot(document.getElementById('root')).render(kind==='pmc-details'?<ProductPmcDetails reference={product.pmcReference}/>:<CartProvider><CartState/>{cards.map(item=><PublicProductCard key={item.id} product={item}/>)}</CartProvider>);`,
     resolveDir: process.cwd(),
     loader: "tsx",
   },
@@ -94,7 +94,7 @@ async function fixture(run: (page: Page) => Promise<void>, kind = "physical") {
 }
 
 async function expectCartQuantity(page: Page, quantity: number) {
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1") ?? "[]")[0]?.quantity)).toBe(quantity);
+  await expect.poll(() => page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent ?? "[]")[0]?.quantity)).toBe(quantity);
 }
 
 test("fraldas mostram preço do pacote e por fralda sem mudar compra, promoção ou alinhamento", async () => {
@@ -123,7 +123,7 @@ test("fraldas mostram preço do pacote e por fralda sem mudar compra, promoção
       }
     }
     await cards.nth(1).getByRole("button", { name: "Adicionar", exact: true }).click();
-    const cart = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1") ?? "[]"));
+    const cart = await page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent ?? "[]"));
     assert.equal(cart[0].unitPriceCents, 11798);
     assert.equal(cart[0].quantity, 1);
   }, "diaper-grid");
@@ -256,7 +256,7 @@ test("cards alinham preços e ações com promoção, cashback, fornecedor e gen
         await expect(cards.nth(index).getByText(/Consulte seu CEP para frete grátis/)).toHaveCount(0);
       }
     }
-    assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1") ?? "[]")), []);
+    assert.deepEqual(await page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent ?? "[]")), []);
     await cards.nth(0).getByRole("button", { name: "Adicionar", exact: true }).click();
     await expect(cards.nth(0).getByRole("textbox", { name: quantityLabel })).toHaveValue("1");
     await expect(cards.nth(1).getByRole("button", { name: "Adicionar", exact: true })).toBeVisible();
@@ -368,7 +368,7 @@ test("card mostra somente o preço real do carrinho, sem antecipar Pix ou criar 
     }
     await page.getByRole("button", { name: "Adicionar", exact: true }).click();
     await expectCartQuantity(page, 1);
-    const item = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!)[0]);
+    const item = await page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent!)[0]);
     assert.equal(item.unitPriceCents, 344);
     assert.equal(item.originalPriceCents, null);
   }, "soap");
@@ -384,7 +384,7 @@ test("promoção cadastrada mantém somente referência real e preço atual do c
     await expect(page.getByText("23% OFF", { exact: true })).toHaveCount(0);
     await page.getByRole("button", { name: "Adicionar", exact: true }).click();
     await expectCartQuantity(page, 1);
-    const item = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!)[0]);
+    const item = await page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent!)[0]);
     assert.equal(item.unitPriceCents, 8000);
     assert.equal(item.originalPriceCents, 10000);
   }, "promotion");
@@ -408,7 +408,7 @@ test("referência elegível destaca economia sem rótulo técnico, preço anteri
     }
     await page.getByRole("button", { name: "Adicionar", exact: true }).click();
     await expectCartQuantity(page, 1);
-    const item = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!)[0]);
+    const item = await page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent!)[0]);
     assert.equal(item.unitPriceCents, 687);
     assert.equal(item.originalPriceCents, null);
   }, "pmc-mip");
@@ -431,7 +431,7 @@ test("PMC sem economia não empresta sua base ao percentual da promoção cadast
     await expect(page.getByText(/OFF|abaixo do PMC/)).toHaveCount(0);
     await page.getByRole("button", { name: "Adicionar", exact: true }).click();
     await expectCartQuantity(page, 1);
-    const item = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!)[0]);
+    const item = await page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent!)[0]);
     assert.equal(item.unitPriceCents, 8000);
     assert.equal(item.originalPriceCents, 10000);
   }, "pmc-above");
@@ -473,7 +473,7 @@ test("preço unitário em centavos continua igual ao carrinho em várias unidade
     await page.getByRole("button", { name: "Adicionar", exact: true }).click();
     await page.getByRole("textbox", { name: quantityLabel }).fill("3");
     await expectCartQuantity(page, 3);
-    const item = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1")!)[0]);
+    const item = await page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent!)[0]);
     assert.equal(item.unitPriceCents, 17);
     const subtotal = item.unitPriceCents * item.quantity;
     assert.equal(subtotal, 51);

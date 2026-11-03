@@ -14,7 +14,6 @@ const errors = [];
 const requests = [];
 page.on("pageerror", (error) => errors.push(error.message));
 const name = "Produto de teste com nome longo para conferencia do layout";
-const cartKey = "wimifarma-cart-v1";
 const draftKey = "wimifarma-checkout-draft-v1";
 const fixtureDirectory = fileURLToPath(new URL("../src/app/qa-shopping/", import.meta.url));
 const fixturePath = fileURLToPath(new URL("../src/app/qa-shopping/page.tsx", import.meta.url));
@@ -45,7 +44,7 @@ await page.route("**/api/**", async (route) => {
 async function openCheckout() { await page.getByRole("button", { name: "Checkout teste", exact: true }).click(); }
 async function next() { await page.getByRole("button", { name: "Continuar", exact: true }).click(); }
 async function fillCustomer() { await page.getByLabel("Nome completo").fill("Cliente QA"); await page.getByLabel("WhatsApp / telefone").fill("44999999999"); }
-async function cart() { return page.evaluate((key) => JSON.parse(localStorage.getItem(key) || "[]"), cartKey); }
+async function cart() { return JSON.parse(await page.getByTestId("cart-state").textContent()); }
 async function noOverflow() { assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "No document horizontal overflow"); }
 
 try {
@@ -234,7 +233,7 @@ try {
   console.log("PASS unavailable/stale CEP, pickup payment copy, consent reset, mocked submission and draft clearing");
 
   await page.goto(`${base}/qa-shopping`, { waitUntil: "networkidle" });
-  await page.evaluate(({ key, fixture }) => localStorage.setItem(key, JSON.stringify(Array.from({ length: 14 }, (_, index) => ({ ...fixture, id: `many-${index}` })))), { key: cartKey, fixture });
+  await page.evaluate(fixture => Array.from({ length: 14 }, (_, index) => window.qaCart.addProduct({ ...fixture, id: `many-${index}` }, fixture.quantity)), fixture);
   await page.reload({ waitUntil: "networkidle" });
   await page.setViewportSize({ width: 390, height: 740 });
   await page.getByRole("button", { name: /^Abrir cesta/ }).click();

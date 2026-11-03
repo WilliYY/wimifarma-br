@@ -2,6 +2,22 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { catalogCategoryGroups, catalogCategoryNavigationContext, catalogFilters, catalogFilterHref, catalogPagination, catalogSections, matchesCatalogSection, sortCatalogProducts } from "./catalog-navigation";
 
+test("Vitaminas reconhece as linhas multivitamínicas Centrum conferidas sem incluir todo suplemento", () => {
+  const section = catalogSections.find(item => item.id === "vitamins")!;
+  for (const name of ["Centrum Essencial 30 comprimidos", "Centrum Adulto 30 comprimidos", "Centrum Homem 30 comprimidos", "Centrum Mulher 30 comprimidos", "Centrum Select Homem 30 comprimidos", "Centrum Select Mulher 30 comprimidos", "Multivitamínicos 30 cápsulas", "Vitamina C 500mg 30 comprimidos"]) {
+    assert.equal(matchesCatalogSection({ id: name, name, category: "Suplementos" }, section), true, name);
+  }
+  for (const name of ["Creatina 300g", "Whey Protein 900g", "Suplemento proteico 30 cápsulas", "Centrum Produto desconhecido 30 comprimidos", "Centrum Essencial creme 30g", "Creme com vitamina C 30g"]) {
+    assert.equal(matchesCatalogSection({ id: name, name, category: "Suplementos" }, section), false, name);
+  }
+  const centrum = { id: "centrum", name: "Centrum Essencial 30 comprimidos", category: "Suplementos" };
+  assert.equal(matchesCatalogSection({ ...centrum, catalogClassification: { kind: "MEDICINE" } }, section), false);
+  assert.equal(matchesCatalogSection({ ...centrum, catalogClassification: { kind: "PERFUMERY" } }, section), false);
+  for (const conflict of [{ requiresPrescription: true }, { prescriptionType: "ORDINARY" }, { isPopularPharmacy: true }, { category: "Genéricos" }, { catalogClassification: { kind: "FOOD" } }]) {
+    assert.equal(matchesCatalogSection({ ...centrum, ...conflict }, section), false);
+  }
+});
+
 test("perfume como característica de absorventes e fraldas não muda o tipo", () => {
   const section = catalogSections.find(section => section.id === "perfume")!;
   for (const name of ["Absorvente Intimus com perfume 8un", "Protetor diário com perfume", "Fralda com perfume", "Absorvente perfume suave", "Sabonete com colônia"]) {

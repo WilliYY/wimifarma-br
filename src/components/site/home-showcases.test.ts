@@ -24,7 +24,7 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
   };
   const bundle = await build({ stdin: { contents: `import React from 'react';
     import {createRoot} from 'react-dom/client';
-    import {CartProvider} from './src/components/site/cart-provider';
+    import {CartProvider,useCart} from './src/components/site/cart-provider';
     import {HomePage} from './src/components/site/home-page';
     import {buildHomeCollections} from './src/features/products/home-collections';
     const withOtc=location.search.includes('otc');
@@ -34,7 +34,7 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
       isPopularPharmacy:false,activeIngredients:[],searchTerms:[],
       catalogClassification:withOtc&&i<3?{kind:'MEDICINE',medicineClass:'OTHER',ethical:false,otc:true}:{kind:'HYGIENE',medicineClass:'UNCLASSIFIED',ethical:false,otc:false}}));
     const collections=buildHomeCollections(products,new Set(products.map(p=>p.imageUrl)),new Date('2026-10-19T12:00:00Z'));
-    createRoot(document.getElementById('root')).render(<CartProvider><HomePage collections={collections} shortcuts={[]} customerReviews={[]}/></CartProvider>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "esm", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' }, plugins: [{ name: "home-showcases-fixture", setup(builder) {
+    function CartState(){const cart=useCart();return <output hidden data-testid="cart-state">{JSON.stringify(cart.items)}</output>};createRoot(document.getElementById('root')).render(<CartProvider><CartState/><HomePage collections={collections} shortcuts={[]} customerReviews={[]}/></CartProvider>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "esm", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' }, plugins: [{ name: "home-showcases-fixture", setup(builder) {
       builder.onResolve({ filter: /.*/ }, args => Object.hasOwn(mocks, args.path) ? { path: args.path, namespace: "fixture" } : undefined);
       builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: mocks[args.path], loader: "tsx", resolveDir: process.cwd() }));
     } }] });
@@ -112,7 +112,7 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
       requests.push(route.request().postDataJSON());
       return route.fulfill({ json: { data: { mode: "available", options: [{ provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC", priceCents: 1875, deliveryDays: 4 }] } } });
     });
-    const cartBefore = await page.evaluate(() => localStorage.getItem("wimifarma-cart-v1"));
+    const cartBefore = await page.evaluate(() => document.querySelector('[data-testid="cart-state"]')!.textContent);
     for (const id of ["home-care", "home-otc", "home-affordable"]) {
       const card = page.locator(`#${id} article`).first();
       const productId = (await card.getByRole("link").getAttribute("href"))!.split("/").at(-1);
@@ -133,7 +133,7 @@ test("Farmacinha reúne 15 itens com ou sem MIP, preservando Club e vitrines sem
       await page.getByRole("button", { name: "Fechar", exact: true }).click();
       await expect(opener).toBeFocused();
     }
-    assert.equal(await page.evaluate(() => localStorage.getItem("wimifarma-cart-v1")), cartBefore);
+    assert.equal(await page.evaluate(() => document.querySelector('[data-testid="cart-state"]')!.textContent), cartBefore);
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();

@@ -1,5 +1,12 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-03 — Carrinho entre abas, retorno à lista e Vitaminas
+
+- O carrinho passa de snapshots concorrentes para operações persistidas individualmente, com migração da cesta legada, revisão protegida e barreira de limpeza. A alteração de um SKU preserva operações de outros SKUs; uma quantidade obsoleta não reintroduz um item removido. Contrato, privacidade, limitações e regressões em [carrinho entre abas](carrinho-entre-abas-2026-11-03.md).
+- **Continuar comprando** usa a última lista pública da aba, com filtros, página e posição, sem aceitar destinos externos ou privados. A sessão tem validade de duas horas e o retorno sem contexto usa o catálogo. Contrato em [retorno às compras](retorno-compras-contexto-2026-11-03.md).
+- O filtro Vitaminas e a sugestão de tipo compartilham identidades Centrum delimitadas e conferidas no fabricante. A regra preserva restrições medicinais e não reclassifica registros ou importações automaticamente. Consulta, paginação e limites em [Vitaminas](vitaminas-e-hint-2026-11-03.md).
+- A consulta complementar de atualização do CNES foi enviada à Secretaria Municipal de Saúde, com contato pessoal autorizado pelo proprietário e pedido de conferência de nome, endereço e horário. O registro de envio foi confirmado no Gmail; nenhuma alteração no CNES foi realizada pelo projeto. O WhatsApp público da farmácia permanece separado desse contato cadastral.
+
 ## 2026-11-02 — Recompra no histórico do cliente
 
 - O histórico mantém os snapshots e sua restrição ao cliente ativo, expondo apenas o vínculo exato `productId` necessário à recompra. Os cartões permitem repetir o pedido ou um produto usando a API pública já existente de revisão do carrinho, sem criar endpoint, tabela ou pedido automático. Preço, disponibilidade, quantidade e regras de receita são os atuais; itens não elegíveis são explicados, sem substituição por similaridade.
