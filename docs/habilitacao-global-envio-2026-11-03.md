@@ -59,3 +59,37 @@ Para uma unidade, HTTP 200 e modo `available`:
 São valores daquele momento, com subsídio parcial e metas estimadas específicas do produto/carrinho/CEP/modalidade, recalculadas quando o carrinho muda. O Centrum retornou somente Correios 1/2, conforme a revisão dos alimentos/suplementos; os dois exemplos gerais retornaram sete opções. O CEP `40020000` permaneceu sem cotação confirmada em três consultas, incluindo dois produtos: HTTP 502 público e HTTP 422 do provedor. A validade desse CEP e o retorno do provedor continuam em análise; esse resultado não comprova indisponibilidade de todo um estado.
 
 As tentativas completas, inclusive falhas, estão em `commercial-proof-78.json`. O ticket técnico ao Melhor Envio foi autorizado, mas não enviado: o Computer Use encerrou o controle por não conseguir confirmar a URL atual. Rascunho e situação estão preservados em `consulta-melhor-envio-rascunho.md` e `consulta-melhor-envio-status.md`. As demais rotas permanecem nas pendências específicas descritas acima.
+
+## Encerramento posterior: 13 perfis Gillette
+
+Uma nova coorte de aparelhos manuais, refis de lâminas e kits Gillette/Venus foi revisada, simulada e aplicada uma única vez na janela `03/11/2026 19:39–19:53 UTC`. O manifesto canônico é `446f6523bce7da4c0b7091462c4c378f6a194b86025eaa110714270162e74ba5`; o plano confirmado no dry-run e na aplicação é `f20fcc60ba405b37d3aacf5c30f37ae35b77387009a6460c56da9ebff3ce3649`.
+
+A leitura posterior de `19:43:03.529107 UTC` confirmou **451 perfis habilitados/revisados, 2.617 pendentes e 3.068 produtos ativos**. As auditorias de revisão passaram de 439 para 452, com exatamente 13 na coorte. Os perfis gravados correspondem integralmente ao plano; campos físicos, kits completos, nomes, receitas, classes, Popular, preços, estoques, ofertas, integração e produtos fora da coorte foram preservados. As medidas continuam `estimated`; fontes de embalagem de venda não foram apresentadas como medição do pacote protegido.
+
+Os serviços aprovados nesta coorte são `1, 2, 3, 4, 33, 35`. O serviço `33` é JeT; `31` é Loggi e ficou fora desta revisão. A execução usou o runtime auditado da revisão APP `c39e3a6`, com APP/PG, imagens e StartedAt preservados. O checkout no momento da operação era `f4708d9930b97f7927fd2248ae65034ccf98eda0`; a comparação dos 25 caminhos relevantes de fonte/schema/dependências não encontrou diferenças nos contratos usados pelo runtime. O canônico `7a5a109c3f058ff3550de6c9e13511dc208c60b5559310ee1e30c566c24cac90` permaneceu preservado.
+
+O operador incluiu conferência final dos perfis físicos e revisões contra o manifesto. A regressão reproduziu a ausência dessa proteção antes da correção; o código corrigido passou em 22 testes mockados e revisão independente, seguida de revisão dos vínculos reais. A execução manteve ADMIN, CAS, locks, relógio do servidor, reserva de tempo, recibos por hash e antirreplay.
+
+O ciclo `42663bc385a17277` está **consumido**. A limpeza física às `19:44:15.988289 UTC` confirmou a ausência do runtime próprio no container e do bundle no job, preservando dois recibos, owner e registro de limpeza. Não repetir stage, simulação ou aplicação desse ciclo. Evidência: `D:/Codex-outputs/wimifarma-br/gillette-13-preparacao-2026-11-03/application-proof-13.json`, SHA256 `8c2e9432a55a7d38901e70d84d39b6745e352812cd0a3593aa7451facb899414`.
+
+### Frete e meta estimada nas cinco regiões
+
+Para uma unidade do Gillette Mach3 Sensitive, os cinco CEPs retornaram HTTP 200, modo `available` e seis opções de transporte. Os valores abaixo são da opção com menor valor a pagar na consulta:
+
+| Cidade | CEP | Frete normal | Frete a pagar | Faltam para a meta estimada | Meta estimada |
+| --- | --- | ---: | ---: | ---: | ---: |
+| São Paulo/SP | 01001000 | R$ 16,33 | R$ 14,15 | R$ 208,09 | R$ 240,00 |
+| Salvador/BA | 40010000 | R$ 25,74 | R$ 23,56 | R$ 348,09 | R$ 380,00 |
+| Manaus/AM | 69005010 | R$ 38,65 | R$ 36,47 | R$ 538,09 | R$ 570,00 |
+| Porto Alegre/RS | 90010150 | R$ 15,98 | R$ 13,80 | R$ 208,09 | R$ 240,00 |
+| Brasília/DF | 70058900 | R$ 23,14 | R$ 20,96 | R$ 308,09 | R$ 340,00 |
+
+O kit Mach3 Sensitive com um aparelho e 12 cargas também retornou HTTP 200, `available` e seis opções para `40010000`, mantendo a unidade comercial inteira. Recibos e retornos completos estão em `public-quotes-13.json` na pasta desta coorte.
+
+As cotações são daquele momento e daqueles CEPs; não comprovam cobertura universal ou aceite de qualquer mercadoria. O benefício usa a política de margem histórica já autorizada, com reserva de 50%. As metas e o valor restante são estimados e recalculados conforme produtos, quantidade, volume, CEP e modalidade. Esta revisão não converte custos históricos em custo atual nem comprova lucro real.
+
+### Pendências que continuam separadas
+
+A situação anterior do contato Melhor Envio foi superada: o **ticket 2100064 foi criado**, com confirmação visível no painel e por e-mail. As quatro questões abrangem medicamentos/contrato comercial, cosméticos/Loggi/FDS, perfumes/aerossóis e postagem em Ivaté, Douradina ou Umuarama. A verificação posterior ainda encontrou somente o recebimento automático, sem resposta técnica de aceitação. Não duplicar o ticket nem tratar sua abertura como autorização de carga.
+
+O refil Oral-B GTIN `4210201338444` recebeu aprovação documental de natureza/composição como duas cabeças mecânicas para uma proposta posterior separada; não foi incluído nestes 13 nem habilitado por esta execução. Os aparelhos Cars `4210201334774` e Princess `4210201334712` continuam pendentes de dados de pilhas/conteúdo vinculados à apresentação. Compatibilidade com aparelho elétrico não comprova bateria em um refil. Perfumes, aerossóis, medicamentos e as demais categorias condicionais mantêm suas exigências próprias.
