@@ -85,3 +85,21 @@ O fallback de `base-estimate.ts` não foi alterado: os seis absorventes continua
 O ajuste recebeu aprovação independente sem achados, 39 testes focais aprovados, ESLint dos arquivos pertinentes e `git diff --check` sem falhas. `npm.cmd run test:security` passou com **558/558**, zero falhas/cancelamentos/ignorados; `npm.cmd run typecheck` também passou, incluindo geração do Prisma. Esses gates cobrem a fonte local corrigida; a publicação APP e a reconferência pública das modalidades permanecem uma etapa coordenada separada, sem novas alterações de produto ou configuração.
 
 O lint global também passou. Auditoria completa (`npm.cmd audit --json --audit-level=moderate`): código 1 por 20 alertas, três baixos e 17 moderados, nenhum alto ou crítico. Auditoria de produção (`npm.cmd audit --json --omit=dev --audit-level=high`): código 0, sete alertas (três baixos e quatro moderados), nenhum alto ou crítico. Os pacotes de produção sinalizados permanecem `@react-email/render`, `deepmerge`, `fast-uri`, `glob`, `html-to-text`, `minimatch` e `react-email`; não houve atualização de dependências. Os JSON completos, logs e hashes de fonte/lockfile estão no diretório final, em `public-api-fix-gates.json` e arquivos `public-api-*`.
+
+## Encerramento da publicação e conferência comercial
+
+O hotfix `634233d45aae10086ba008c91798e39cf3f95584` foi publicado pelo chat 9 com build Linux/ARM64 e verificação física aprovados. Esta frente não repetiu operadores consumidos nem executou pull, build, restart ou novas alterações de catálogo após o encerramento dos 23 perfis.
+
+Depois do recibo APP, foram repetidas as três consultas reais em CEP 01001-000 e quantidade 1. As três retornaram HTTP 200 e `available`: Always Com Perfume 40 un passou de quatro para sete modalidades; Intimus Sem Perfume 40 un, de quatro para sete; a caixa Phebo 8 × 90 g manteve sete. Os serviços retornados foram Loggi Express (31), Correios PAC (1), SEDEX (2), Jadlog .Com (4), .Package (3), Total Express Standard (35) e JeT Standard (33).
+
+| Produto | Frete normal | Benefício | Cliente paga | Meta estimada | Falta |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Always Com Perfume 40 un | R$ 13,61 | R$ 2,12 | R$ 11,49 | R$ 120,00 | R$ 101,49 |
+| Intimus Sem Perfume 40 un | R$ 13,57 | R$ 1,65 | R$ 11,92 | R$ 120,00 | R$ 105,58 |
+| Caixa Phebo 8 × 90 g | R$ 20,39 | R$ 2,68 | R$ 17,71 | R$ 300,00 | R$ 260,70 |
+
+Os valores pertencem à opção econômica dessas cotações; a meta é estimada, não um mínimo nacional fixo. Alternativas pagas continuam presentes e o cálculo muda ao alterar CEP, composição, quantidades, custos elegíveis e frete. Não houve pedido ou etiqueta.
+
+Os recibos finais estão em `D:/Codex-outputs/wimifarma-br/23-envios-aplicacao-2026-11-03-01a19a02/`: `commercial-proof-final.json`, `public-post-publication-summary.json` e o resultado bruto mantido somente no arquivo privado local `private-post-publication-raw.json`, fora do Git. A publicação do APP é documentada pelo responsável em `D:/Codex-outputs/wimifarma-br/shipping-perfume-api-2026-11-03/release-proof.json`.
+
+O último inventário completo conferido mantém 360 perfis habilitados e 2.708 pendentes, entre 3.068 ativos, todos com medidas estimadas. Essa conferência de cotações não converte estimativas em medições nem libera itens pendentes como Imosec e os três Oral-B.
