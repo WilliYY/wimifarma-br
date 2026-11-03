@@ -12,6 +12,7 @@ import { productIngredientLabel } from "@/features/products/medicine-presentatio
 import { productOfferDiscount } from "@/features/offers/daily-rotation";
 import { ProductPmcBadge, ProductPmcPrice } from "./product-pmc";
 import { CatalogShippingButton } from "./catalog-shipping-preview";
+import { diaperPackageUnitPrice } from "@/features/products/diaper-unit-price";
 
 export type RelatedProductCardItem = PublicProductSearchItem & {
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
@@ -51,6 +52,7 @@ export function PublicProductCard({ product, showShippingEstimate = false }: { p
     stock: product.stock,
     unitPriceCents: Math.round(currentPrice * 100),
   } satisfies CartProduct;
+  const diaperPrice = diaperPackageUnitPrice(product, cartProduct.unitPriceCents);
 
   return (
     <article
@@ -100,7 +102,7 @@ export function PublicProductCard({ product, showShippingEstimate = false }: { p
         </span>
 
         <div className="mt-auto pt-2">
-          <div role="group" aria-label="Preço do produto" className="grid grid-rows-[0.75rem_1.5rem_1rem] gap-y-0.5 border-t border-line pt-2">
+          <div role="group" aria-label={diaperPrice ? `Preço do pacote com ${diaperPrice.quantity} fraldas` : "Preço do produto"} className="grid grid-rows-[0.75rem_1.5rem_1rem] gap-y-0.5 border-t border-line pt-2">
             <span className="block min-w-0 text-[0.68rem] font-semibold leading-3 text-muted">
               {pmc ? <ProductPmcPrice reference={pmc} strike={pmcSavings !== null} /> : hasPromotion ? <>De <s>{formatCurrency(normalPrice)}</s></> : null}
             </span>
@@ -109,7 +111,7 @@ export function PublicProductCard({ product, showShippingEstimate = false }: { p
               <strong className="text-lg font-black leading-none text-brand sm:text-xl">{formatCurrency(cartProduct.unitPriceCents / 100)}</strong>
             </div>
             <div className="min-w-0">
-              <p className="text-[0.68rem] leading-4 text-muted">Para 1 unidade.</p>
+              <p className="text-[0.68rem] leading-4 text-muted">{diaperPrice ? `${formatCurrency(diaperPrice.perDiaperCents / 100)} por fralda` : "Para 1 unidade."}</p>
             </div>
           </div>
           <ProductCardActions product={cartProduct} />

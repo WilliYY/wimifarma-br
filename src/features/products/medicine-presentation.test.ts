@@ -1,6 +1,27 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { medicineCompositionImportIssue, productIngredientLabel, verifiedMedicinePresentation } from "./medicine-presentation";
+import { medicineCompositionImportIssue, normalizeVerifiedMedicineProduct, productIngredientLabel, verifiedMedicinePresentation } from "./medicine-presentation";
+
+test("Cimegrip legado é apresentado como Cimegripe somente no EAN de 20 cápsulas conferido", () => {
+  const original = { name: "Cimegrip20cp", ean: "7896523200576", brand: "Cimed", activeIngredients: [] as string[], stock: 4, slug: "cimegrip-20cp" };
+  const normalized = normalizeVerifiedMedicineProduct(original);
+  assert.equal(original.name, "Cimegrip20cp");
+  assert.deepEqual(original.activeIngredients, []);
+  assert.equal(normalized.name, "Cimegripe 400 mg + 4 mg + 4 mg 20 cápsulas");
+  assert.equal(normalized.slug, original.slug);
+  assert.equal(normalized.stock, original.stock);
+  assert.equal(productIngredientLabel(normalized), "Paracetamol 400 mg + Maleato de clorfeniramina 4 mg + Cloridrato de fenilefrina 4 mg");
+  assert.deepEqual(normalizeVerifiedMedicineProduct(normalized), normalized);
+  const { brand: _brand, ...withoutBrand } = original;
+  const { activeIngredients: _ingredients, ...withoutIngredients } = original;
+  void [_brand, _ingredients];
+  assert.equal(normalizeVerifiedMedicineProduct(withoutBrand), withoutBrand);
+  assert.equal(normalizeVerifiedMedicineProduct(withoutIngredients), withoutIngredients);
+  for (const patch of [{ ean: "7896523210889" }, { ean: null }, { name: "Cimegripe gotas 20mL" }, { name: "Cimegripe 750mg 20 comprimidos" }, { brand: "Outra marca" }, { activeIngredients: ["Ibuprofeno"] }, { activeIngredients: ["Paracetamol"] }]) {
+    const conflicting = { ...original, ...patch };
+    assert.equal(normalizeVerifiedMedicineProduct(conflicting), conflicting);
+  }
+});
 
 test("associa a dose ao ingrediente conferido, nunca à posição do array", () => {
   assert.equal(productIngredientLabel({ name: "Dorilax DT 450 mg + 50 mg + 35 mg 12 comprimidos", activeIngredients: ["CITRATO DE ORFENADRINA", "CAFEÍNA ANIDRA", "PARACETAMOL"] }), "Paracetamol 450 mg + Cafeína anidra 50 mg + Citrato de orfenadrina 35 mg");

@@ -1,5 +1,11 @@
 # Wimifarma BR
 
+Cartões com preço do pacote e preço por fralda quando a contagem é explícita: [comparação de embalagens](docs/comparacao-preco-por-fralda-2026-11-02.md).
+
+Relacionados por composição/formulação e família de produto, com identidade conferida do Cimegripe por EAN: [recomendações e apresentação](docs/relacionados-e-cimegripe-2026-11-02.md).
+
+Catálogo próprio com SKU/EAN legíveis, origem preservada e grupos físicos somente para conferência: [loja física](docs/catalogo-loja-fisica-e-conferencia-2026-11-02.md).
+
 Histórico com **Comprar novamente** por pedido ou produto, conferência de preço/disponibilidade atuais e preservação do carrinho: [24](docs/24-minha-conta-pedidos.md#recompra-pelo-histórico--02112026).
 
 Consulta de frete também nas vitrines da home e nos produtos relacionados, com o mesmo diálogo por CEP e bloqueios comerciais: [140](docs/140-frete-nas-vitrines-e-relacionados.md).

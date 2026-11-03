@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     if (!parsed.success) throw new PaymentError("Informe até 30 produtos diferentes para revisar o carrinho.", 422);
     const products = await getPrisma().product.findMany({
       where: { id: { in: parsed.data.productIds }, status: "ACTIVE", deletedAt: null },
-      select: { ...supplierOfferInclude, ean: true, inventorySource: true, id: true, name: true, activeIngredients: true, slug: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true },
+      select: { ...supplierOfferInclude, ean: true, brand: true, inventorySource: true, id: true, name: true, activeIngredients: true, slug: true, category: true, imageUrl: true, price: true, promotionalPrice: true, stock: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true },
     });
     return NextResponse.json({ data: { products: products.map(p => toSaleProduct(p)).map(product => ({
       catalogClassification: product.catalogClassification,

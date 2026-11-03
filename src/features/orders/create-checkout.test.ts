@@ -18,15 +18,15 @@ const bundle = build({ entryPoints: ["src/features/orders/create-checkout.ts"], 
   }));
 } }] });
 
-async function createFixture(prescriptionType: "ORDINARY" | "CONTROLLED" | "UNREVIEWED", requiresPrescription = true, shippingProfile?: unknown) {
+async function createFixture(prescriptionType: "ORDINARY" | "CONTROLLED" | "UNREVIEWED", requiresPrescription = true, shippingProfile?: unknown, identity: Record<string, unknown> = {}) {
   let locked = false;
   let selected: Record<string, unknown> | undefined;
   let saved: Record<string, unknown> | undefined;
   const product = { id: "product-test", name: "Produto sintético", slug: "produto-sintetico", imageUrl: null, price: "10.00", promotionalPrice: null,
-    shippingProfile, status: "ACTIVE", stock: 5, requiresPrescription, prescriptionType, isPopularPharmacy: false, cashbackEnabled: false, cashbackRateBps: 0 };
+    shippingProfile, status: "ACTIVE", stock: 5, requiresPrescription, prescriptionType, isPopularPharmacy: false, cashbackEnabled: false, cashbackRateBps: 0, ...identity };
   const tx = {
     $queryRaw: async () => { locked = true; return []; },
-    product: { findMany: async ({ select }: { select: Record<string, unknown> }) => { selected = select; return [{ ...product, shippingProfile: locked ? shippingProfile : undefined }]; } },
+    product: { findMany: async ({ select }: { select: Record<string, unknown> }) => { selected = select; return [Object.fromEntries(Object.entries({ ...product, shippingProfile: locked ? shippingProfile : undefined }).filter(([key]) => select[key] === true))]; } },
     order: { create: async ({ data }: { data: Record<string, unknown> }) => { saved = { ...data, id: "order-test" }; return saved; }, findUniqueOrThrow: async () => saved },
   };
   const loaded = { exports: {} as { createCheckout: (tx: unknown, input: unknown) => Promise<unknown> } };
@@ -48,6 +48,25 @@ test("criação persiste snapshot calculado no servidor e não aceita conferênc
   const normal = await createFixture("UNREVIEWED", false);
   await normal.run();
   assert.equal(normal.saved()?.requiresPrescriptionReview, false);
+});
+
+test("checkout usa a identidade completa selecionada antes de corrigir o snapshot Cimegripe", async () => {
+  const base = { name: "Cimegrip20cp", ean: "7896523200576", brand: "Cimed", activeIngredients: [] };
+  for (const [identity, expected] of [
+    [base, "Cimegripe 400 mg + 4 mg + 4 mg 20 cápsulas"],
+    [{ ...base, brand: "Outra marca" }, base.name],
+    [{ ...base, activeIngredients: ["Ibuprofeno"] }, base.name],
+    [{ ...base, activeIngredients: ["Paracetamol"] }, base.name],
+  ] as const) {
+    const fixture = await createFixture("UNREVIEWED", false, undefined, identity);
+    await fixture.run();
+    const saved = fixture.saved()!;
+    const items = (saved.items as { create: { productName: string; unitPriceCents: number; quantity: number }[] }).create;
+    assert.equal(items[0].productName, expected);
+    assert.equal(items[0].unitPriceCents, 1000);
+    assert.equal(items[0].quantity, 1);
+    assert.equal(saved.requiresPrescriptionReview, false);
+  }
 });
 
 test("criação impede receita controlada ou classificação pendente antes de gravar pedido", async () => {

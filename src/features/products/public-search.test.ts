@@ -222,7 +222,7 @@ test("identidade completa não confunde ácidos e sais de substâncias diferente
     ["besilato de anlodipino", "besilato de atracurio", "acido acetilsalicilico", "acido ascorbico"]);
 });
 
-test("correlaciona primeiro por principio ativo, depois por termo e categoria", () => {
+test("sintoma, categoria e ingrediente parcial não bastam para correlacionar medicamentos", () => {
   const source = {
     activeIngredients: ["Paracetamol", "Fenilefrina"],
     category: "Gripes e resfriados",
@@ -257,8 +257,59 @@ test("correlaciona primeiro por principio ativo, depois por termo e categoria", 
 
   assert.deepEqual(
     rankRelatedProducts(source, candidates).map((product) => product.id),
-    ["ingredient", "term", "category"],
+    [],
   );
+});
+
+test("medicamentos relacionados preservam composição completa, dose e formulação", () => {
+  const source = { id: "source", name: "Losartana 50 mg 30 comprimidos", category: "Medicamentos", activeIngredients: ["Losartana potássica"], searchTerms: ["pressão"] };
+  const candidate = (id: string, name: string, activeIngredients = source.activeIngredients) => ({ ...source, id, name, activeIngredients });
+  const matching = candidate("matching", "Losartana 50mg 60 comprimidos");
+  const rows = [matching, candidate("dose", "Losartana 100mg 30 comprimidos"), candidate("form", "Losartana 50mg 30 cápsulas"), candidate("release", "Losartana 50mg 30 comprimidos de liberação prolongada"), candidate("other", "Atenolol 50mg 30 comprimidos", ["Atenolol"]), candidate("missing", "Losartana 30 comprimidos"), candidate("association", "Losartana 50mg + Hidroclorotiazida 12,5mg 30 comprimidos", ["Losartana potássica", "Hidroclorotiazida"])];
+  assert.deepEqual(rankRelatedProducts(source, rows).map(row => row.id), ["matching"]);
+});
+
+test("qualificadores completos de formulação ou via nunca somem da identidade de relacionados", () => {
+  const source = { id: "source", name: "Paracetamol 500mg 20 comprimidos", category: "Medicamentos", activeIngredients: ["Paracetamol"], searchTerms: [] };
+  for (const qualifier of ["orodispersíveis", "dispersíveis", "entéricos", "vaginais", "microencapsulados experimentais"]) {
+    for (const name of [`Paracetamol 500mg 20 comprimidos ${qualifier}`, `Paracetamol 500mg ${qualifier} 20 comprimidos`, `Paracetamol ${qualifier} 500mg 20 comprimidos`]) {
+      const candidate = { ...source, id: "different", name };
+      assert.deepEqual(rankRelatedProducts(source, [candidate]), [], name);
+      assert.deepEqual(rankRelatedProducts(candidate, [source]), [], `sentido inverso: ${name}`);
+    }
+  }
+  assert.deepEqual(rankRelatedProducts(source, [{ ...source, id: "safe", name: "PARACETAMOL 500 mg 60 comprimido" }]).map(row => row.id), ["safe"]);
+  const explicit = { ...source, name: "Paracetamol 500mg 20 comprimidos orodispersíveis" };
+  assert.deepEqual(rankRelatedProducts(explicit, [{ ...explicit, id: "same", name: "Paracetamol 500 mg 40 comprimidos orodispersiveis" }]).map(row => row.id), ["same"]);
+});
+
+test("associação sem pares de concentração conferidos não recomenda monofármaco ou outra associação", () => {
+  const source = { id: "source", name: "Antigripal 400mg + 4mg + 4mg 20 cápsulas", category: "Medicamentos", activeIngredients: ["Paracetamol", "Maleato de clorfeniramina", "Cloridrato de fenilefrina"], searchTerms: ["gripe"] };
+  assert.deepEqual(rankRelatedProducts(source, [{ ...source, id: "copy" }, { ...source, id: "mono", name: "Paracetamol 400mg 20 cápsulas", activeIngredients: ["Paracetamol"] }]), []);
+});
+
+test("relacionados preservam dose decimal e denominador da concentração", () => {
+  const source = { id: "source", name: "Sintético 2,5 mg 30 comprimidos", category: "Medicamentos", activeIngredients: ["Ingrediente sintético"], searchTerms: [] };
+  assert.deepEqual(rankRelatedProducts(source, [{ ...source, id: "decimal", name: "Sintético 2.5mg 60 comprimidos" }, { ...source, id: "integer", name: "Sintético 5mg 30 comprimidos" }]).map(row => row.id), ["decimal"]);
+  const liquid = { ...source, name: "Sintético 125mg/5mL suspensão 60mL" };
+  assert.deepEqual(rankRelatedProducts(liquid, [{ ...liquid, id: "same", name: "Sintético 125 mg/5 mL suspensão 100mL" }, { ...liquid, id: "wrong", name: "Sintético 125mg/mL suspensão 60mL" }]).map(row => row.id), ["same"]);
+});
+
+test("associação conferida compara os pares de dose, independentemente da posição dos ingredientes", () => {
+  const source = { id: "source", name: "Dorilax DT 450 mg + 50 mg + 35 mg 12 comprimidos", category: "Medicamentos", activeIngredients: ["Paracetamol", "Cafeína anidra", "Citrato de orfenadrina"], searchTerms: [] };
+  const matching = { ...source, id: "matching", name: "Dorilax DT 450 mg + 50 mg + 35 mg 100 comprimidos", activeIngredients: [...source.activeIngredients].reverse() };
+  assert.deepEqual(rankRelatedProducts(source, [matching, { ...matching, id: "conflicting", name: "Dorilax DT 35 mg + 50 mg + 450 mg 100 comprimidos" }]).map(row => row.id), ["matching"]);
+});
+
+test("famílias adicionais de higiene não misturam itens por marca, categoria ou termo genérico", () => {
+  const source = { id: "source", name: "Lenços Umedecidos Marca Suave 48 unidades", brand: "Marca", category: "Infantil", activeIngredients: [], searchTerms: ["bebê"] };
+  const rows = ["Sabonete Marca Suave 90g", "Fralda Marca Suave 20 unidades", "Lenços Umedecidos Marca Suave 96 unidades"].map((name, id) => ({ ...source, id: String(id), name }));
+  assert.deepEqual(rankRelatedProducts(source, rows).map(row => row.id), ["2"]);
+});
+
+test("cadastro sem família reconhecida não usa somente categoria ou sintomas como recomendação", () => {
+  const source = { id: "source", name: "Produto incompleto", category: "Perfumaria", activeIngredients: [], searchTerms: ["cuidado"] };
+  assert.deepEqual(rankRelatedProducts(source, [{ ...source, id: "other", name: "Outro produto" }]), []);
 });
 
 test("sabonete prioriza mesma marca e linha, incluindo kit em categoria diferente", () => {

@@ -1,6 +1,24 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { gtinVariants, normalizeGtin, resolveSupplierOffer, withCommerceAvailability } from "./commerce";
+import { gtinVariants, normalizeGtin, resolveSupplierOffer, toSaleProduct, withCommerceAvailability } from "./commerce";
+
+test("DTO de venda corrige somente identidade Cimegripe conferida e preserva regras comerciais e registro original", () => {
+  const row = { name: "Cimegrip20cp", ean: "7896523200576", brand: "Cimed", activeIngredients: [], stock: 7, price: "15.99", promotionalPrice: null, requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false, slug: "cimegrip-20cp" };
+  const persisted = structuredClone(row);
+  const snapshot = { productName: row.name, productId: "synthetic", unitPrice: row.price };
+  const beforeSnapshot = structuredClone(snapshot);
+  const raw = withCommerceAvailability(row);
+  const sale = toSaleProduct(row);
+  assert.equal(sale.name, "Cimegripe 400 mg + 4 mg + 4 mg 20 cápsulas");
+  assert.deepEqual(sale.activeIngredients, ["Paracetamol", "Maleato de clorfeniramina", "Cloridrato de fenilefrina"]);
+  const { name: _saleName, activeIngredients: _saleIngredients, ...saleRest } = sale;
+  const { name: _rawName, activeIngredients: _rawIngredients, ...rawRest } = raw;
+  void [_saleName, _saleIngredients, _rawName, _rawIngredients];
+  assert.deepEqual(saleRest, { ...rawRest, stock: raw.purchaseLimit });
+  assert.deepEqual(row, persisted);
+  assert.deepEqual(snapshot, beforeSnapshot);
+  assert.equal(toSaleProduct({ ...row, ean: "7896523210889" }).name, row.name);
+});
 
 const now = Date.parse("2026-10-17T15:00:00Z");
 const offer = { id: "offer-a", supplier: "ANB", eanNormalized: "01234567890128", unitCostCents: 1000, retailCeilingCents: 2000, available: true, stockQuantity: null, allocationQuantity: 5, reservedQuantity: 0, committedQuantity: 0, observedAt: new Date(now - 1000), validUntil: new Date(now + 1000) };

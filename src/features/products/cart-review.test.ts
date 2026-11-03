@@ -111,10 +111,12 @@ test("route reads only active non-deleted public products and sanitizes database
     builder.onLoad({ filter: /.*/, namespace: "fixture" }, () => ({ contents: "export const getPrisma=()=>globalThis.fixture.db;" }));
   } }] });
   const queries: Array<Record<string, unknown>> = [];
-  const fixture = { fail: false, held: false, db: { product: { findMany: async (query: Record<string, unknown>) => {
+  const fixture = { fail: false, held: false, identity: null as Record<string, unknown> | null, db: { product: { findMany: async (query: Record<string, unknown>) => {
     queries.push(query);
     if (fixture.fail) throw new Error("private database connection secret");
-    return [{ ...product, shippingProfile: fixture.held ? { notifyOnlyPendingLogistics: true } : null, price: { toString: () => "4.99" }, promotionalPrice: { toString: () => "3.99" } }];
+    const row = { ...product, ...fixture.identity, shippingProfile: fixture.held ? { notifyOnlyPendingLogistics: true } : null, price: { toString: () => "4.99" }, promotionalPrice: { toString: () => "3.99" } };
+    const select = query.select as Record<string, unknown>;
+    return [Object.fromEntries(Object.entries(row).filter(([key]) => select[key] === true))];
   } } } };
   const loaded = { exports: {} as { POST: (request: Request) => Promise<Response> } };
   vm.runInNewContext(result.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), URL, Request, Response, Buffer, console, process: { env: { AUTH_URL: "https://example.com" } }, fixture });
@@ -136,6 +138,23 @@ test("route reads only active non-deleted public products and sanitizes database
   assert.equal((await loaded.exports.POST(request({ productIds: [product.id] }, { origin: "https://other.example.com" }))).status, 403);
   assert.equal((await loaded.exports.POST(request({ productIds: [product.id] }, { "content-type": "text/plain" }))).status, 415);
   assert.equal(queries.length, 1);
+  const identity = { name: "Cimegrip20cp", ean: "7896523200576", brand: "Cimed", activeIngredients: [] };
+  for (const [current, expected] of [
+    [identity, "Cimegripe 400 mg + 4 mg + 4 mg 20 cápsulas"],
+    [{ ...identity, brand: "Outra marca" }, identity.name],
+    [{ ...identity, activeIngredients: ["Ibuprofeno"] }, identity.name],
+    [{ ...identity, activeIngredients: ["Paracetamol"] }, identity.name],
+  ] as const) {
+    fixture.identity = current;
+    const review = await loaded.exports.POST(request({ productIds: [product.id] }));
+    assert.equal(review.status, 200);
+    const currentProduct = (await review.json()).data.products[0];
+    assert.equal(currentProduct.name, expected);
+    assert.equal(currentProduct.unitPriceCents, 399);
+    assert.equal(currentProduct.stock, 10);
+    assert.equal(currentProduct.requiresPrescription, false);
+  }
+  fixture.identity = null;
   fixture.held = true;
   const heldResponse = await loaded.exports.POST(request({ productIds: [product.id] }));
   const heldData = await heldResponse.json();

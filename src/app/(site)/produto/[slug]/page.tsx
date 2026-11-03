@@ -38,8 +38,8 @@ import {
 import { getPrisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
-import { productIngredientLabel } from "@/features/products/medicine-presentation";
-import { buildPublicProductDescription } from "@/features/products/product-description";
+import { normalizeVerifiedMedicineProduct, productIngredientLabel } from "@/features/products/medicine-presentation";
+import { buildPublicProductDescription, isMedicineProduct } from "@/features/products/product-description";
 import { productCareInformation, productPackagePresentation } from "@/features/products/product-presentation";
 import { productKitPricing } from "@/features/products/kit-pricing";
 import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
@@ -145,11 +145,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const care = productCareInformation(product);
   const packagePresentation = productPackagePresentation(product);
 
-  const relationFilters: Prisma.ProductWhereInput[] = [
+  const medicine = isMedicineProduct(product) || product.activeIngredients.length > 0;
+  const relationFilters: Prisma.ProductWhereInput[] = medicine ? (product.activeIngredients.length ? [{ AND:
+    product.activeIngredients.map(ingredient => ({ searchText: { contains: normalizeProductSearch(ingredient) } })),
+  }] : []) : [
     ...product.activeIngredients.map((ingredient) => ({ searchText: { contains: normalizeProductSearch(ingredient) } })),
     ...product.searchTerms.map((term) => ({ searchText: { contains: normalizeProductSearch(term) } })),
   ];
-  if (product.category) relationFilters.push({ category: { equals: product.category, mode: "insensitive" } });
+  if (!medicine && product.category) relationFilters.push({ category: { equals: product.category, mode: "insensitive" } });
 
   const familyTerms = relatedProductFamilySearchTerms(product);
   const nutritionFamily = familyTerms.some(term => ["pediasure", "ensure", "glucerna", "nutren"].includes(term));
@@ -173,7 +176,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     : [];
 
   const uniqueCandidates = [...new Map([...sameLineCandidates, ...relatedCandidates].map(candidate => [candidate.id, candidate])).values()];
-  const relatedProducts = rankRelatedProducts(product, uniqueCandidates).slice(0, 10).map(serializeProduct);
+  const relatedProducts = rankRelatedProducts(product, uniqueCandidates.map(candidate => normalizeVerifiedMedicineProduct(candidate))).slice(0, 10).map(serializeProduct);
   const kitPricing = productKitPricing(product, uniqueCandidates.map(candidate => toSaleProduct(candidate)));
   const normalPrice = Number(product.price);
   const currentPrice = Number(product.promotionalPrice ?? product.price);

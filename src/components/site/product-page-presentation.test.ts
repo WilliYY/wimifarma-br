@@ -33,9 +33,9 @@ test("product page keeps product, related cards and details without public revie
     } }],
   });
   const product = {
-    id: "synthetic-product", slug: "synthetic-product", name: "Produto sintético", brand: "Marca sintética",
+    id: "synthetic-product", slug: "synthetic-product", name: "Produto sintético 10mg 20 comprimidos", brand: "Marca sintética",
     category: "Higiene", description: "Descrição sintética para a apresentação.", ean: null, sku: null,
-    price: "10.00", promotionalPrice: null, stock: 5, activeIngredients: [], searchTerms: [],
+    price: "10.00", promotionalPrice: null, stock: 5, activeIngredients: ["Ingrediente sintético"], searchTerms: [],
     imageUrl: null, imageUrls: [], requiresPrescription: false, prescriptionType: "UNREVIEWED",
     inventorySource: "PHARMACY", isPopularPharmacy: false, cashbackEnabled: false,
     catalogClassification: { kind: "MEDICINE", medicineClass: "GENERIC", ethical: false, otc: true },
@@ -49,7 +49,7 @@ test("product page keeps product, related cards and details without public revie
   const fixture = {
     authCalls: 0, reviewReads: 0,
     db: {
-      product: { findFirst: async () => product, findMany: async () => [{ ...product, id: "related", slug: "related", name: "Correlato sintético" }] },
+      product: { findFirst: async () => product, findMany: async () => [{ ...product, id: "related", slug: "related", name: "Produto sintético 10mg 60 comprimidos" }] },
       productReview: { findMany: async () => { fixture.reviewReads++; return []; } },
     },
   };
@@ -76,7 +76,7 @@ test("product page keeps product, related cards and details without public revie
   assert.ok(productData);
   assert.equal(Object.hasOwn(productData, "aggregateRating"), false, "no hidden rating in product metadata");
 
-  Object.assign(product, { name: "Sabonete Rexona Multivitaminas 84g", brand: "Rexona", category: "Higiene pessoal", inventorySource: "DISTRIBUTOR", catalogClassification: { kind: "HYGIENE", medicineClass: "UNCLASSIFIED", ethical: false, otc: false }, pmcReference: null });
+  Object.assign(product, { name: "Sabonete Rexona Multivitaminas 84g", brand: "Rexona", category: "Higiene pessoal", activeIngredients: [], inventorySource: "DISTRIBUTOR", catalogClassification: { kind: "HYGIENE", medicineClass: "UNCLASSIFIED", ethical: false, otc: false }, pmcReference: null });
   const queryCalls: unknown[] = [];
   const kit = { ...product, id: "rexona-kit-six", slug: "rexona-kit-six", name: "Kit sabonete Rexona Multivitaminas 6x84g" };
   fixture.db.product.findMany = async (...args: unknown[]) => {
@@ -98,6 +98,9 @@ test("product page keeps product, related cards and details without public revie
   assert.match(JSON.stringify(queryCalls[0]), /"AND".*sabonete.*Rexona/);
   Object.assign(product, { name: "Alenia 6 mcg + 200 mcg 60 cápsulas dura", activeIngredients: ["BUDESONIDA", "FUMARATO DE FORMOTEROL DIIDRATADO"], category: "Medicamentos", requiresPrescription: true, prescriptionType: "ORDINARY" });
   const inhalationHtml = renderToStaticMarkup(await loaded.exports.default({ params: Promise.resolve({ slug: product.slug }) }));
+  const medicineQuery = JSON.stringify(queryCalls.at(-1));
+  assert.match(medicineQuery, /"AND".*budesonida.*fumarato de formoterol diidratado/);
+  assert.doesNotMatch(medicineQuery, /"category"\s*:\s*\{/);
   assert.match(inhalationHtml, /data-cart-name="Alenia 6 mcg \+ 200 mcg 60 cápsulas dura · pó para inalação"/);
   assert.match(inhalationHtml, /<h1[^>]*>Alenia 6 mcg \+ 200 mcg 60 cápsulas dura · pó para inalação<\/h1>/);
   assert.match(inhalationHtml, /Fumarato de formoterol di-hidratado 6 mcg \+ Budesonida 200 mcg/);

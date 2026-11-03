@@ -3,6 +3,7 @@ import type { PublicPmcReference } from "./cmed-reference";
 import { searchTopics, type SearchTopic } from "./search-topics";
 import { normalizeGtin } from "./gtin";
 import { verifiedMedicinePresentation } from "./medicine-presentation";
+import { isMedicineProduct } from "./product-description";
 
 export const ALENIA_INHALATION_SEARCH_NAME = "alenia 6 mcg 200 mcg 60 capsulas dura";
 export const ALENIA_INHALATION_SEARCH_PRESENTATION = "6 mcg 200 mcg cap dura po inal ct fr plas opc x 60";
@@ -54,6 +55,10 @@ export type SearchRankableProduct = {
 };
 
 export type RelatedProduct = {
+  catalogClassification?: unknown;
+  requiresPrescription?: boolean;
+  prescriptionType?: PrescriptionType;
+  isPopularPharmacy?: boolean;
   activeIngredients: string[];
   brand?: string | null;
   category: string | null;
@@ -352,10 +357,49 @@ const relatedFamilies: Array<{ pattern: RegExp; searchTerms: string[] }> = [
   { pattern: /\bcreme dental\b/, searchTerms: ["creme dental"] },
   { pattern: /\bprotetor solar\b/, searchTerms: ["protetor solar"] },
   { pattern: /\bfraldas?\b/, searchTerms: ["fralda"] },
+  { pattern: /\blencos? umedecidos?\b/, searchTerms: ["lenço umedecido", "lenços umedecidos"] },
+  { pattern: /\b(hastes? flexiveis?|cotonetes?)\b/, searchTerms: ["haste flexível", "hastes flexíveis", "cotonete"] },
+  { pattern: /\b(escovas? dentais?|escovas? de dentes?)\b/, searchTerms: ["escova dental", "escova de dentes"] },
+  { pattern: /\bfios? denta(?:l|is)\b/, searchTerms: ["fio dental"] },
+  { pattern: /\babsorventes?\b/, searchTerms: ["absorvente"] },
+  { pattern: /\b(enxaguantes?|antissepticos?) buca(?:l|is)\b/, searchTerms: ["enxaguante bucal", "antisséptico bucal"] },
 ];
+
+function relatedMedicineIdentity(product: RelatedProduct) {
+  const name = product.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+  const presentation = verifiedMedicinePresentation(product);
+  const ingredients = normalizedSet(product.activeIngredients);
+  if (!ingredients.size || ingredients.size !== product.activeIngredients.length) return null;
+  // A list of doses must never be zipped to a separate ingredient array.
+  // Unknown combinations remain absent until an explicit presentation is verified.
+  const doses = [...name.matchAll(/\b\d+(?:[.,]\d+)?\s*(?:mcg|mg|g)\b(?:\s*\/\s*(?:\d+(?:[.,]\d+)?\s*)?(?:ml|l|g)\b)?/g)];
+  if (!presentation && (ingredients.size !== 1 || doses.length !== 1 || /\d\s*[+/]\s*\d/.test(name))) return null;
+  const forms = name.match(/\b(?:comprimidos?|capsulas?|solucao|suspensao|xarope|gotas|creme|pomada|gel)\b/g);
+  if (!forms?.length) return null;
+  // Preserve every explicit qualifier, including future/unknown formulations and
+  // routes. A whitelist silently equates unlisted qualifiers with plain tablets.
+  let formulation = name;
+  for (const dose of doses) formulation = formulation.replace(dose[0], " ");
+  formulation = formulation.replace(/\b\d+\s*(?=comprimidos?\b|capsulas?\b)/g, " ")
+    .replace(/\b\d+(?:[.,]\d+)?\s*(?:ml|l)\b/g, " ");
+  // Only remove complete registered identity labels, never unknown title words.
+  for (const identity of [...ingredients, normalizeProductSearch(product.brand ?? "")].filter(Boolean)) {
+    const escaped = identity.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    formulation = formulation.replace(new RegExp(`\\b${escaped}\\b`, "g"), " ");
+  }
+  formulation = normalizeProductSearch(formulation).replace(/\b(comprimido|capsula)s\b/g, "$1");
+  const composition = presentation ? presentation.components.map(component => `${normalizeProductSearch(component.ingredient)}:${component.dose.replace(/\s/g, "")}`).sort().join("+")
+    : `${[...ingredients][0]}:${doses[0][0].replace(/\s/g, "").replace(/,/g, ".")}`;
+  return `${composition}|${formulation}|${presentation?.inhalation ? "inhalation" : ""}`;
+}
+
+function medicineRelation(product: RelatedProduct) {
+  return isMedicineProduct(product) || product.activeIngredients.length > 0;
+}
 
 /** Candidate retrieval and ranking share the same editorial family; no therapeutic equivalence. */
 export function relatedProductFamilySearchTerms(product: RelatedProduct) {
+  if (isMedicineProduct(product)) return [];
   return relatedFamilies.find(family => family.pattern.test(normalizeProductSearch(product.name)))?.searchTerms ?? [];
 }
 
@@ -368,10 +412,15 @@ export function rankRelatedProducts<T extends RelatedProduct>(
   const sourceCategory = normalizeProductSearch(source.category ?? "");
   const sourceFamily = relatedProductFamilySearchTerms(source)[0];
   const sourceBrand = normalizeProductSearch(source.brand ?? "");
+  const medicine = medicineRelation(source);
+  const medicineIdentity = medicine ? relatedMedicineIdentity(source) : null;
+  if ((medicine && !medicineIdentity) || (!medicine && !sourceFamily)) return [];
   const sourceWords = normalizedSet(normalizeProductSearch(source.name).split(" ").filter(word => word.length > 2 && !/\d/.test(word) && !["kit", "com", "para", "unidades", "sabonete", "sabonetes"].includes(word)));
 
   return candidates
-    .filter((candidate) => candidate.id !== source.id)
+    .filter((candidate) => candidate.id !== source.id && (medicine
+      ? medicineRelation(candidate) && relatedMedicineIdentity(candidate) === medicineIdentity
+      : !medicineRelation(candidate) && relatedProductFamilySearchTerms(candidate)[0] === sourceFamily))
     .map((candidate) => {
       const ingredientMatches = candidate.activeIngredients.filter((ingredient) =>
         sourceIngredients.has(normalizeProductSearch(ingredient)),

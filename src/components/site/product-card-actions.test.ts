@@ -26,7 +26,11 @@ const bundle = build({
         ...(kind.startsWith('pmc')?{requiresPrescription:kind==='pmc-rx',catalogClassification:{kind:'MEDICINE',medicineClass:'GENERIC',ethical:false,otc:kind!=='pmc-rx'},
           pmcReference:{amountCents:kind==='pmc-above'?7000:1000,column:'PMC 0 %',publishedOn:'2026-10-09',sourceUrl:'https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos/arquivos/lista_pmc__20261009_115232671.xlsx/@@download/file',presentation:'10 MG COM X 10',laboratory:'Laboratório sintético',registration:'1234567890123',rates:[{label:'PMC 0 %',cents:1000},{label:'PMC 19,5 %',cents:1250},{label:'PMC 19,5 %  ALC',cents:1200}]}}:{}),
         inventorySource:kind==='demand'?'DISTRIBUTOR':'PHARMACY',supplierDemandAllowed:kind==='demand'};
-      const cards=(kind==='grid'||kind==='large-grid'||kind==='pmc-grid'||kind==='photo-grid')?[
+      const cards=kind==='diaper-grid'?[
+        {...product,id:'diaper-78',slug:'fralda-78',name:'Fralda sintética M 78 unidades',brand:'Marca sintética',category:'Fraldas infantis',prescriptionType:'UNREVIEWED',price:'116.73'},
+        {...product,id:'diaper-88',slug:'fralda-88',name:'Fralda sintética M 88 unidades',brand:'Marca sintética',category:'Fraldas infantis',prescriptionType:'UNREVIEWED',price:'130.00',promotionalPrice:'117.98'},
+        {...product,id:'diaper-kit',slug:'kit-fralda',name:'Kit Fralda sintética 2 pacotes 78 unidades',brand:'Marca sintética',category:'Fraldas infantis',prescriptionType:'UNREVIEWED',price:'199.90'},
+      ]:(kind==='grid'||kind==='large-grid'||kind==='pmc-grid'||kind==='photo-grid')?[
         {...product,prescriptionType:'UNREVIEWED',price:kind==='large-grid'?'1299.90':'6.90',promotionalPrice:kind==='large-grid'?'999.99':'4.99',cashbackEnabled:true,cashbackRateBps:200},
         {...product,id:'synthetic-demand',slug:'sob-demanda',name:'Tadalafila 20 mg 4 comprimidos revestidos',price:kind==='large-grid'?'0.01':'4.85',inventorySource:'DISTRIBUTOR',supplierDemandAllowed:true,
           brand:'EUROFARMA LABORATÓRIOS S.A',activeIngredients:['Composição sintética longa para conferir a linha de detalhes']},
@@ -92,6 +96,38 @@ async function fixture(run: (page: Page) => Promise<void>, kind = "physical") {
 async function expectCartQuantity(page: Page, quantity: number) {
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1") ?? "[]")[0]?.quantity)).toBe(quantity);
 }
+
+test("fraldas mostram preço do pacote e por fralda sem mudar compra, promoção ou alinhamento", async () => {
+  await fixture(async page => {
+    const cards = page.getByRole("article");
+    for (const width of [320, 390, 1280]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await expect(cards.nth(0).getByText(/R\$\s*1,50 por fralda/)).toBeVisible();
+      await expect(cards.nth(1).getByText(/R\$\s*1,34 por fralda/)).toBeVisible();
+      await expect(cards.nth(0).getByRole("group", { name: "Preço do pacote com 78 fraldas" })).toContainText(/R\$\s*116,73/);
+      await expect(cards.nth(1).getByRole("group", { name: "Preço do pacote com 88 fraldas" })).toContainText(/R\$\s*117,98/);
+      await expect(cards.nth(2).getByText("Para 1 unidade.", { exact: true })).toBeVisible();
+      assert.equal(await cards.nth(2).getByText(/por fralda/).count(), 0);
+      const geometry = await cards.evaluateAll(elements => elements.map(element => {
+        const price = element.querySelector('[role="group"]')!;
+        const unit = price.querySelector("p")!;
+        return { cardHeight: element.getBoundingClientRect().height, priceTop: price.getBoundingClientRect().top - element.getBoundingClientRect().top, fits: unit.scrollWidth <= unit.clientWidth && unit.scrollHeight <= 16 };
+      }));
+      assert.ok(geometry.every(item => item.fits), `comparativo cortado em ${width}px`);
+      assert.ok(Math.max(...geometry.map(item => item.cardHeight)) - Math.min(...geometry.map(item => item.cardHeight)) < 1);
+      assert.ok(Math.max(...geometry.map(item => item.priceTop)) - Math.min(...geometry.map(item => item.priceTop)) < 1);
+      const captureRoot = process.env.PRODUCT_CARD_CAPTURE_ROOT;
+      if (captureRoot) {
+        mkdirSync(captureRoot, { recursive: true });
+        await page.screenshot({ path: join(captureRoot, `diaper-${width}.png`), fullPage: true });
+      }
+    }
+    await cards.nth(1).getByRole("button", { name: "Adicionar", exact: true }).click();
+    const cart = await page.evaluate(() => JSON.parse(localStorage.getItem("wimifarma-cart-v1") ?? "[]"));
+    assert.equal(cart[0].unitPriceCents, 11798);
+    assert.equal(cart[0].quantity, 1);
+  }, "diaper-grid");
+});
 
 test("cards compactos mantêm benefícios fora do preço e altura uniforme sem espaços excessivos", async () => {
   await fixture(async page => {

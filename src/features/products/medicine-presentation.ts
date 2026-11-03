@@ -6,7 +6,16 @@ type Component = { ingredient: string; dose: string; aliases: readonly string[] 
 // https://www.ache.com.br/produto/isentos-de-prescricao/dorilax-dt/
 // https://www.buscopan.com.br/bula-buscoduo
 // https://www.ache.com.br/produto/sob-prescricao/alenia-6-200-mcg/
+// CIMED product page and SEFA/PR GTIN table, checked on 2026-11-02.
+// See docs/relacionados-e-cimegripe-2026-11-02.md for exact source URLs.
+const cimegripePresentation = { identity: /^cimegripe 400\s*mg\s*\+\s*4\s*mg\s*\+\s*4\s*mg 20 capsulas?$/u, components: [
+    { ingredient: "Paracetamol", dose: "400 mg", aliases: ["paracetamol"] },
+    { ingredient: "Maleato de clorfeniramina", dose: "4 mg", aliases: ["maleato de clorfeniramina"] },
+    { ingredient: "Cloridrato de fenilefrina", dose: "4 mg", aliases: ["cloridrato de fenilefrina"] },
+  ] };
+
 const presentations: readonly { identity: RegExp; components: readonly Component[]; inhalation?: boolean }[] = [
+  cimegripePresentation,
   { identity: /^dorilax dt 450\s*mg\s*\+\s*50\s*mg\s*\+\s*35\s*mg (?:12|100) comprimidos?$/u, components: [
     { ingredient: "Paracetamol", dose: "450 mg", aliases: ["paracetamol"] },
     { ingredient: "Cafeína anidra", dose: "50 mg", aliases: ["cafeina anidra"] },
@@ -21,6 +30,19 @@ const presentations: readonly { identity: RegExp; components: readonly Component
     { ingredient: "Budesonida", dose: "200 mcg", aliases: ["budesonida"] },
   ] },
 ];
+
+/** Public DTO correction only. Exact GTIN and known title are required; conflicting data stays for review. */
+export function normalizeVerifiedMedicineProduct<T extends { name?: string; ean?: string | null; brand?: string | null; activeIngredients?: string[] }>(product: T): T {
+  // A partial projection cannot establish that omitted identity fields are empty.
+  if (!Object.hasOwn(product, "brand") || !Array.isArray(product.activeIngredients)) return product;
+  if (typeof product.name !== "string" || product.ean !== "7896523200576" || product.brand && !/^cimed(?: industria(?: de medicamentos)?)?(?: s\.?\s*a\.?| ltda\.?)?$/u.test(normalize(product.brand))) return product;
+  const name = normalize(product.name);
+  if (!/^cimegrip(?:e)?\s*20\s*(?:cp|capsulas?)$/u.test(name) && !cimegripePresentation.identity.test(name)) return product;
+  const components = cimegripePresentation.components;
+  const ingredients = product.activeIngredients ?? [];
+  if (ingredients.length && (ingredients.length !== components.length || !components.every(component => ingredients.filter(ingredient => component.aliases.includes(normalize(ingredient))).length === 1))) return product;
+  return { ...product, name: "Cimegripe 400 mg + 4 mg + 4 mg 20 cápsulas", activeIngredients: components.map(component => component.ingredient) };
+}
 
 /** Enrichment requires the complete verified presentation and the exact ingredient set. */
 export function verifiedMedicinePresentation(product: MedicinePresentationInput) {

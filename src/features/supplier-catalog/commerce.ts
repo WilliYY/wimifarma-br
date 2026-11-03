@@ -6,6 +6,7 @@ import { hasRequiredSupplierTax, requiresSupplierTaxEvidence } from "@/features/
 import { normalizeGtin } from "@/features/products/gtin";
 import { readClassification } from "@/features/products/catalog-operations";
 import { resolveCmedReference, type PublicPmcReference } from "@/features/products/cmed-reference";
+import { normalizeVerifiedMedicineProduct } from "@/features/products/medicine-presentation";
 
 export { normalizeGtin, gtinVariants } from "@/features/products/gtin";
 
@@ -28,6 +29,9 @@ export type SupplierCommerceOffer = {
 };
 
 export type CommerceProduct = {
+  name?: string;
+  brand?: string | null;
+  activeIngredients?: string[];
   shippingProfile?: unknown;
   supplierDemandAllowed?: boolean;
   catalogClassification?: unknown;
@@ -108,5 +112,5 @@ export function withCommerceAvailability<T extends CommerceProduct>(product: T, 
 /** Legacy sale DTOs call their purchase limit `stock`; the database stock remains physical. */
 export function toSaleProduct<T extends CommerceProduct>(product: T, now = Date.now()) {
   const sale = withCommerceAvailability(product, now);
-  return { ...sale, stock: sale.purchaseLimit };
+  return normalizeVerifiedMedicineProduct({ ...sale, stock: sale.purchaseLimit });
 }

@@ -38,6 +38,7 @@ import { ProductImagePlaceholder } from "@/components/site/product-image-placeho
 import { BULK_PRODUCT_LIMIT, visibleBulkSelection } from "@/features/products/catalog-bulk";
 import { catalogKindLabels, classificationLabels, emptyClassification, medicineClassLabels, readClassification, type CatalogClassification } from "@/features/products/catalog-operations";
 import { productDisplayName } from "@/features/products/display-name";
+import { catalogPhysicalGroups } from "@/features/products/catalog-physical-groups";
 import { ProductShippingFields, type ProductShippingFieldsHandle } from "@/components/admin/product-shipping-fields";
 import { ProductMarketingTools } from "@/components/admin/product-marketing-tools";
 import { ProductDeleteButton, ProductTrashDialog } from "@/components/admin/product-trash";
@@ -627,7 +628,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
   const [classificationFilter, setClassificationFilter] = useState("");
   const [sort, setSort] = useState<ProductCatalogSort>("newest");
   const [origin, setOrigin] = useState<"PHARMACY" | "DISTRIBUTOR">("PHARMACY");
-  const originInitialized = useRef(false);
+  const [physicalGroupFilter, setPhysicalGroupFilter] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [catalogPage, setCatalogPage] = useState(1);
 
@@ -645,11 +646,6 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
       }
       const loadedProducts = payload.data ?? [];
       setProducts(loadedProducts);
-      if (!originInitialized.current) {
-        const physicalCount = loadedProducts.filter(product => (product.inventorySource ?? "PHARMACY") === "PHARMACY").length;
-        setOrigin(physicalCount >= loadedProducts.length - physicalCount ? "PHARMACY" : "DISTRIBUTOR");
-        originInitialized.current = true;
-      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel carregar os produtos.");
     } finally {
@@ -737,12 +733,16 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
     }
   }
 
-  const activeProducts = products.filter((product) => product.status === "ACTIVE").length;
-  const originProductCount = products.filter(product => (product.inventorySource ?? "PHARMACY") === origin).length;
-  const categoryOptions = useMemo(() => getProductCategories(products), [products]);
+  const originProducts = useMemo(() => products.filter(product => (product.inventorySource ?? "PHARMACY") === origin), [products, origin]);
+  const activeProducts = originProducts.filter((product) => product.status === "ACTIVE").length;
+  const originProductCount = originProducts.length;
+  const categoryOptions = useMemo(() => getProductCategories(originProducts), [originProducts]);
+  const physicalGroups = useMemo(() => catalogPhysicalGroups(originProducts), [originProducts]);
+  const physicalGroupIds = useMemo(() => new Set(physicalGroups.find(group => group.key === physicalGroupFilter)?.productIds ?? []), [physicalGroups, physicalGroupFilter]);
   const visibleProducts = useMemo(
     () => filterAndSortProducts(products.filter(product => {
       if ((product.inventorySource ?? "PHARMACY") !== origin) return false;
+      if (origin === "PHARMACY" && physicalGroupFilter && !physicalGroupIds.has(product.id)) return false;
       if (!classificationFilter) return true;
       const item = readClassification(product.catalogClassification);
       if (classificationFilter === "ETHICAL") return item.kind === "MEDICINE" && item.ethical;
@@ -755,12 +755,12 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
       sort,
       status: statusFilter,
     }),
-    [categoryFilter, classificationFilter, products, query, sort, statusFilter, origin],
+    [categoryFilter, classificationFilter, products, query, sort, statusFilter, origin, physicalGroupFilter, physicalGroupIds],
   );
   const catalogPages = Math.max(1, Math.ceil(visibleProducts.length / 100));
   const currentCatalogPage = Math.min(catalogPage, catalogPages);
   const pagedProducts = useMemo(() => visibleProducts.slice((currentCatalogPage - 1) * 100, currentCatalogPage * 100), [visibleProducts, currentCatalogPage]);
-  useEffect(() => { setCatalogPage(1); }, [origin, query, categoryFilter, classificationFilter, statusFilter, sort]);
+  useEffect(() => { setCatalogPage(1); }, [origin, query, categoryFilter, classificationFilter, statusFilter, sort, physicalGroupFilter]);
   const visibleSelectedIds = visibleBulkSelection(selectedIds, pagedProducts);
   const selectedProducts = pagedProducts.filter(product => visibleSelectedIds.includes(product.id));
   const selectableProducts = pagedProducts.slice(0, BULK_PRODUCT_LIMIT);
@@ -779,9 +779,10 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
       return [...selected, id];
     });
   }
-  const hasActiveFilters = Boolean(query || categoryFilter || classificationFilter || statusFilter !== "ALL" || sort !== "newest");
+  const hasActiveFilters = Boolean(query || categoryFilter || classificationFilter || physicalGroupFilter || statusFilter !== "ALL" || sort !== "newest");
 
   function clearFilters() {
+    setPhysicalGroupFilter("");
     setQuery("");
     setCategoryFilter("");
     setClassificationFilter("");
@@ -849,9 +850,9 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
           </div>
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-wide text-brand">Gestão de produtos</p>
-            <h2 className="mt-1 text-xl font-black text-ink sm:text-2xl">Produtos / Catálogo</h2>
+            <h2 className="mt-1 text-xl font-black text-ink sm:text-2xl">{origin === "PHARMACY" ? "Produtos da loja física" : "Produtos de distribuidoras"}</h2>
             <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-muted">
-              Produtos, preços e disponibilidade em um só lugar.
+              {origin === "PHARMACY" ? "Seu estoque próprio, organizado por cadastro, SKU e embalagem." : "Ofertas e disponibilidade dos fornecedores, separadas do estoque da loja."}
             </p>
           </div>
         </div>
@@ -871,12 +872,12 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
       </section>
 
       <div className="grid gap-5">
-        <dl aria-label="Resumo do catálogo" className="grid grid-cols-2 gap-4 rounded-xl border border-line bg-white py-4 sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-line">
+        <dl aria-label={`Resumo ${origin === "PHARMACY" ? "da loja física" : "das distribuidoras"}`} className="grid grid-cols-2 gap-4 rounded-xl border border-line bg-white py-4 sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-line">
           {[
-            { label: "Cadastrados", value: products.length, icon: Pill, tone: "text-brand" },
+            { label: "Cadastrados", value: originProductCount, icon: Pill, tone: "text-brand" },
             { label: "Publicados", value: activeProducts, icon: UploadCloud, tone: "text-pharma-green" },
-            { label: "Em destaque", value: products.filter((product) => isShowcasePosition(product.featuredPosition)).length, icon: Star, tone: "text-amber-600" },
-            { label: "Rascunhos", value: products.filter((product) => product.status === "DRAFT").length, icon: Archive, tone: "text-muted" },
+            { label: "Em destaque", value: originProducts.filter((product) => isShowcasePosition(product.featuredPosition)).length, icon: Star, tone: "text-amber-600" },
+            { label: "Rascunhos", value: originProducts.filter((product) => product.status === "DRAFT").length, icon: Archive, tone: "text-muted" },
           ].map(({ label, value, icon: Icon, tone }) => (
             <div className="min-w-0 px-4 sm:px-5" key={label}>
               <dt className="flex items-center gap-2 text-xs font-semibold text-muted"><Icon aria-hidden="true" className={cn("h-4 w-4 shrink-0", tone)} />{label}</dt>
@@ -886,12 +887,12 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
         </dl>
         <Card className="overflow-hidden rounded-xl">
           <CardHeader className="gap-1 border-b border-line px-4 py-4 sm:px-5">
-            <CardTitle>Seus produtos</CardTitle>
+            <CardTitle>{origin === "PHARMACY" ? "Seus produtos cadastrados" : "Catálogo de distribuidoras"}</CardTitle>
             <CardDescription>Busque, classifique, edite ou destaque cada item.</CardDescription>
           </CardHeader>
           <CardContent className="p-4 sm:p-5">
             <div aria-label="Origem dos produtos" role="tablist" className="mb-4 flex gap-1 rounded-xl bg-surface-subtle p-1">
-              {([ ["PHARMACY", "Loja física"], ["DISTRIBUTOR", "Distribuidoras"] ] as const).map(([value, label]) => <button role="tab" aria-selected={origin === value} aria-controls="catalog-origin-products" id={`catalog-origin-${value}`} className={cn("min-h-11 flex-1 rounded-lg px-3 text-sm font-bold transition-colors", origin === value ? "bg-white text-brand shadow-sm" : "text-muted hover:text-ink")} key={value} onClick={() => { originInitialized.current = true; setOrigin(value); setSelectedIds([]); }} type="button">{label}<span className="ml-2 text-xs tabular-nums opacity-70">{products.filter(product => (product.inventorySource ?? "PHARMACY") === value).length}</span></button>)}
+              {([ ["PHARMACY", "Loja física"], ["DISTRIBUTOR", "Distribuidoras"] ] as const).map(([value, label]) => <button role="tab" aria-selected={origin === value} aria-controls="catalog-origin-products" id={`catalog-origin-${value}`} className={cn("min-h-11 flex-1 rounded-lg px-3 text-sm font-bold transition-colors", origin === value ? "bg-white text-brand shadow-sm" : "text-muted hover:text-ink")} key={value} onClick={() => { setOrigin(value); clearFilters(); setSelectedIds([]); }} type="button">{label}<span className="ml-2 text-xs tabular-nums opacity-70">{products.filter(product => (product.inventorySource ?? "PHARMACY") === value).length}</span></button>)}
             </div>
             <p className="mb-4 text-xs leading-5 text-muted">{origin === "PHARMACY" ? "Cadastros da loja com estoque físico próprio. Novos produtos continuam com origem definida no cadastro." : "Cadastros de distribuidoras, com preço e disponibilidade vinculados a ofertas válidas. Estoque próprio continua separado."}</p>
             <div role="tabpanel" id="catalog-origin-products" aria-labelledby={`catalog-origin-${origin}`}>
@@ -908,6 +909,15 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                   {[["", "Todos"], ["MEDICINE", "Medicamentos"], ["CLASS:GENERIC", "Genéricos"], ["CLASS:SIMILAR", "Similares"], ["CLASS:REFERENCE", "Referência"], ["ETHICAL", "Éticos"], ["OTC", "MIP / OTC"], ["PERFUMERY", "Perfumaria"], ["UNCLASSIFIED", "A classificar"]].map(([value, label]) => <button key={value} type="button" aria-pressed={classificationFilter === value} onClick={() => setClassificationFilter(value)} className={cn("min-h-10 rounded-full border px-4 text-xs font-bold transition-colors", classificationFilter === value ? "border-brand bg-brand text-white" : "border-line bg-white text-muted hover:border-brand/30 hover:text-brand")}>{label}</button>)}
                 </div>
                 <div className="grid gap-3 rounded-xl bg-surface-subtle p-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
+                  {origin === "PHARMACY" && <div className="grid min-w-0 gap-2 rounded-lg border border-line bg-white p-3 xl:col-span-2">
+                    <label className="grid min-w-0 gap-1.5 text-xs font-bold text-ink">Conferir embalagens e medidas
+                      <select className="h-11 w-full min-w-0 rounded-md border border-line bg-white px-3 text-sm" value={physicalGroupFilter} onChange={event => setPhysicalGroupFilter(event.target.value)}>
+                        <option value="">Todos os cadastros da loja</option>
+                        {physicalGroups.map(group => <option key={group.key} value={group.key}>{group.label} · {group.productIds.length} produtos</option>)}
+                      </select>
+                    </label>
+                    <p className="text-xs leading-5 text-muted">Grupos com peso e medidas exatamente iguais, apresentação e fonte identificadas. A proximidade não comprova medição ou aprovação de frete. Cada SKU permanece separado; nenhum dado é copiado.</p>
+                  </div>}
                   <label className="grid gap-1.5 text-xs font-bold text-muted">
                     Buscar produto
                     <span className="relative">
@@ -944,7 +954,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                     </label>
                   </div>
                   <div className="flex min-h-9 flex-wrap items-center justify-between gap-2 xl:col-span-2">
-                    <p className="text-xs font-semibold text-muted">{visibleProducts.length} de {originProductCount} produtos · {products.length} no catálogo · 100 por página</p>
+                    <p className="text-xs font-semibold text-muted">{visibleProducts.length} de {originProductCount} produtos {origin === "PHARMACY" ? "da loja física" : "de distribuidoras"} · 100 por página</p>
                     {catalogPages > 1 && <nav aria-label="Páginas de produtos" className="flex items-center gap-2 text-xs font-semibold text-muted">
                       <Button aria-label="Página anterior de produtos" size="sm" variant="secondary" disabled={currentCatalogPage <= 1} onClick={() => { setSelectedIds([]); setCatalogPage(currentCatalogPage - 1); }}>Anterior</Button>
                       <span>Página {currentCatalogPage} de {catalogPages}</span>
@@ -965,7 +975,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                   <div className="overflow-hidden rounded-xl border border-line">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-surface-subtle px-3 py-2">
                       <label className="flex min-h-11 cursor-pointer items-center gap-2 text-xs font-semibold text-muted"><input aria-label="Selecionar produtos visíveis, até 50" className="h-4 w-4 accent-brand" type="checkbox" checked={allVisibleSelected} ref={element => { if (element) element.indeterminate = visibleSelectedIds.length > 0 && !allVisibleSelected; }} onChange={event => setSelectedIds(event.target.checked ? selectableProducts.map(product => product.id) : [])} />{visibleSelectedIds.length ? `${visibleSelectedIds.length} selecionados` : "Selecionar visíveis"}{visibleProducts.length > BULK_PRODUCT_LIMIT && " · limite 50"}</label>
-                      <div className="flex flex-wrap items-center gap-2">{visibleSelectedIds.length > 0 && <Button onClick={() => setSelectedIds([])} size="sm" type="button" variant="ghost">Limpar seleção</Button>}<ProductBulkEditor canManageFinancial={canManageCashback} products={selectedProducts} onSaved={async () => { setSelectedIds([]); await loadProducts(); }} /></div>
+                      <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2 [&>button]:h-auto [&>button]:min-h-10 [&>button]:max-w-full [&>button]:whitespace-normal [&>button]:py-2">{visibleSelectedIds.length > 0 && <Button onClick={() => setSelectedIds([])} size="sm" type="button" variant="ghost">Limpar seleção</Button>}<ProductBulkEditor canManageFinancial={canManageCashback} products={selectedProducts} onSaved={async () => { setSelectedIds([]); await loadProducts(); }} /></div>
                     </div>
                     {pagedProducts.map((product) => {
                       const status = statusInfo[product.status];
@@ -975,7 +985,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                       const salePrice = distributor ? pricing ? pricing.unitPriceCents / 100 : null : Number(product.promotionalPrice ?? product.price);
                       return (
                         <article className={cn("min-w-0 border-b border-line bg-white px-3 py-2 last:border-b-0", visibleSelectedIds.includes(product.id) && "bg-brand-soft/30")} key={product.id}>
-                          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                          <div className="grid min-w-0 grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-2 gap-y-1 sm:flex sm:gap-3">
                           <label className="flex min-h-11 w-6 shrink-0 cursor-pointer items-center justify-center"><input aria-label={`Selecionar ${product.name}`} type="checkbox" className="h-4 w-4 accent-brand" checked={visibleSelectedIds.includes(product.id)} disabled={!visibleSelectedIds.includes(product.id) && visibleSelectedIds.length >= BULK_PRODUCT_LIMIT} onChange={() => toggleSelection(product.id)} /></label>
                           <button
                             aria-label={`Editar ${product.name}`}
@@ -990,11 +1000,12 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                             )}
                             <span className="min-w-0 flex-1">
                               <span className="line-clamp-2 text-sm font-bold leading-5 text-ink">{productDisplayName(product.name)}</span>
-                              <span className="mt-0.5 block truncate text-[11px] text-muted">{[product.brand, product.category, product.ean && `EAN ${product.ean}`].filter(Boolean).join(" · ") || "Sem categoria"}</span>
+                              <span className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] font-semibold text-ink"><span className="break-all">SKU {product.sku || "não informado"}</span><span className="break-all text-muted">EAN {product.ean || "não informado"}</span></span>
+                              <span className="mt-0.5 block truncate text-[11px] text-muted">{[product.brand, product.category].filter(Boolean).join(" · ") || "Sem categoria"}</span>
                               <span className="mt-0.5 hidden truncate text-[10px] text-muted sm:block">{classificationLabels(product.catalogClassification).join(" · ")}{product.isPopularPharmacy ? " · Farmácia Popular" : ""}{isFeatured ? ` · Vitrine ${product.featuredPosition}` : ""}</span>
                             </span>
                           </button>
-                          <div className="shrink-0 text-right">
+                          <div className="col-start-2 flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 text-left sm:block sm:shrink-0 sm:text-right">
                             <p className="text-sm font-black tabular-nums text-ink">{salePrice === null ? "Indisponível" : formatCurrency(salePrice)}</p>
                             <p className="mt-0.5 text-[10px] text-muted">{distributor ? pricing ? `${pricing.supplier} · ${pricing.demandAllowed ? "quantidade a conferir" : `${pricing.purchaseLimit} disp.`}` : "Sem oferta válida" : `${product.stock} na loja`}</p>
                             <span className={cn("mt-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold", status.className)}>{status.label}</span>
