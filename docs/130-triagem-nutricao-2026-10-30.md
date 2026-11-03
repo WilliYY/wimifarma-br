@@ -315,3 +315,23 @@ Ordem preservada de `outputs/catalogo-nutricao-2026-10-30/solicitados.txt`. **C*
 - O — [Energyzip Protein, Prodiet](https://prodietnutrition.com/produtos/energyzip-protein-200ml/).
 
 Complemento regulatório: Mucilon e outros cereais infantis também exigem enquadramento NBCAL individual. A existência de produto “Zero Adição de Açúcares” não o transforma em fórmula infantil nem o exclui automaticamente das regras promocionais. Não houve alteração de regras do projeto.
+
+## Inclusão efetiva de 20 rascunhos — 02/11/2026
+
+Foram criados em produção **20 produtos DRAFT e 20 auditorias**, em uma única operação, sem alterar os registros anteriores. O lote reúne apresentações exatas de Aptamil, Aptanutri, Pregomin, Neocate, Milnutri, Fortini e Nutridrink. A relação individual de EANs, nomes e provas está no relatório local em `D:\Codex-outputs\wimifarma-br\nutricao-lotes-2026-11-02\RELATORIO-INCLUSAO-NUTRICAO20-v2.json`. Os arquivos operacionais e as cotações privadas permanecem fora do Git.
+
+Os 20 EANs têm identidade documental do fabricante e cotação GAM autenticada recente. Foi aplicado o markup explícito de 35%, sem dividir preços por quantidade presumida de embalagens. Estoque numérico desconhecido do fornecedor permaneceu desconhecido; o estoque físico dos novos produtos é zero. Não foram criados SupplierCatalogOffer nem imagens, e nenhum produto desse lote foi ativado ou liberado para compra.
+
+A inclusão é um cadastro administrativo, com revisão de imagem, logística, NBCAL, alegações e condições comerciais ainda pendente. Não comprova disponibilidade para venda ou envio. As 40 apresentações restantes do conjunto documental Danone foram pesquisadas por EAN na ANB: o coletor registrou 40 `not_found` e zero erros. Esse resultado de busca não comprova descontinuação, ausência de estoque ou ausência em outros fornecedores.
+
+O Aptamil Premium 1 800 g conserva alerta documental sobre os lotes **2026.09.07, 2026.10.03 e 2026.09.09**, objeto do recolhimento divulgado pela [Anvisa em 19/03/2026](https://www.gov.br/anvisa/pt-br/assuntos/noticias-anvisa/2026/anvisa-proibe-venda-de-formula-infantil-contaminada-por-toxina). O alerta na descrição não constitui um bloqueio técnico de publicação futura por lote. A conferência do lote e a revisão antes de disponibilizar o produto continuam obrigatórias; não se estendeu o recolhimento a todos os lotes do EAN.
+
+### Verificação desta operação
+
+- Operação própria `chat13-nutrition-draft20-v2-20261102`, com manifesto, configuração, fontes e runtime vinculados por hash. A v1 falhou antes de gravar produtos ou auditorias; duas verificações booleanas do executor foram corrigidas na v2, preservando a tentativa anterior.
+- Revisão estática independente, sete testes do adaptador e dois testes de regressão do executor aprovados. O ensaio PostgreSQL criou os 20 rascunhos em uma base isolada, com dois usuários sintéticos e nenhum cliente real; oito testes negativos verificaram repetição, duplicidade, ator inativo, simulação, rollback, revogação, mutação e negação de autorização.
+- Backup verificado, autorização técnica exclusiva por CAS, simulação sem gravação e aplicação única. A conferência SQL confirmou 20 DRAFT, 20 auditorias, zero novos ativos/ofertas/imagens e preservação dos registros anteriores.
+- Home e health responderam HTTP 200; as 20 páginas dos rascunhos responderam 404. A janela foi encerrada como `completed_released`, com `productionGrant=false`, e as duas bases de teste próprias foram removidas sem `FORCE`.
+- `npm run test:security` passou na imagem imutável do executor, sem rede ou credenciais de banco. A auditoria dessa imagem registrou **15 alertas moderados, zero altos e zero críticos**; os alertas completos e a prova da suíte estão em `D:\Codex-outputs\wimifarma-br\nutricao-lotes-2026-11-02\SEGURANCA-INCLUSAO-NUTRICAO20-v2.json`. Isso não representa auditoria de uma nova versão da aplicação pública: não houve deploy de código nesta inclusão.
+
+Não houve alteração de código versionado da aplicação, schema ou regras comerciais. As próximas inclusões continuam em lotes, com identidade exata, deduplicação e provas próprias; itens sem cotação autenticada suficiente permanecem pendentes.
