@@ -15,6 +15,16 @@ function normalizedCategory(category: string | null): string {
   return (category ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
+export function hasPerfumeShippingCargo(name: string): boolean {
+  const normalizedName = normalizedCategory(name);
+  // Only a dry absorbent presentation by unit can use perfume as a scent qualifier.
+  const dryAbsorbent = /^absorventes?\b/.test(normalizedName) && /\b\d+\s*un(?:idades?)?\.?$/.test(normalizedName) &&
+    !/ele(?:c)?tric|bateria|pilha|recarreg/.test(normalizedName) &&
+    !/\b(liquid[oa]s?|spray|aerossol|aerosol|gel|locao|solucao|essencia|fluido|umidecid[oa]s?|umedecid[oa]s?|umidificad[oa]s?)\b|\b\d+(?:[.,]\d+)?\s*(?:ml|l)\b/.test(normalizedName);
+  const perfumeName = dryAbsorbent ? normalizedName.replace(/\b(?:com|sem)\s+perfume\b/g, "") : normalizedName;
+  return /\b(perfume|eau de toilette|deo\s*colonia|body splash)\b/.test(perfumeName);
+}
+
 export function permittedShippingServices(configured: number[], products: {
   category: string | null; requiresPrescription: boolean; prescriptionType?: PrescriptionType; isPopularPharmacy: boolean;
   name?: string; catalogClassification?: unknown;
@@ -27,7 +37,7 @@ export function permittedShippingServices(configured: number[], products: {
     const medicine = Boolean(classification && typeof classification === "object" && "kind" in classification && classification.kind === "MEDICINE");
     if (medicine || requiresPrescriptionReview(product) || requiresPurchaseAssistance(product) || /medicament|farmaci/.test(normalizedCategory(product.category))) cargos.push("medication");
     const name = normalizedCategory(product.name ?? null);
-    if (/\b(perfume|eau de toilette|deo\s*colonia|body splash)\b/.test(name)) cargos.push("perfume");
+    if (hasPerfumeShippingCargo(name)) cargos.push("perfume");
     if (/\b(aerossol|aerosol)\b/.test(name)) cargos.push("aerosol");
     return { cargos, approved: profile.success ? profile.data.approvedServiceIds : undefined };
   });

@@ -3,7 +3,7 @@ import test from "node:test";
 import { reviewEstimatedShipping, estimatedReviewSha256, createEstimatedDraftOnly } from "./estimated-review";
 
 const profile = () => ({ enabled: false, transportReviewed: false, measurementBasis: "estimated", weightGrams: 300, lengthCm: 24, widthCm: 15, heightCm: 10, reference: null, approvedServiceIds: [], cargoKinds: ["unspecified"], provenance: { source: "owner-estimate", measured: false } });
-const product = () => ({ id: "synthetic", name: "Higiene sintética", ean: "7890000000000", eanNormalized: "07890000000000", category: "Higiene", status: "ACTIVE", deletedAt: null, updatedAt: new Date(0), requiresPrescription: false, prescriptionType: "UNREVIEWED" as const, isPopularPharmacy: false, catalogClassification: null, shippingProfile: profile() });
+const product = (catalogClassification: { kind: string } | null = null) => ({ id: "synthetic", name: "Higiene sintética", ean: "7890000000000", eanNormalized: "07890000000000", category: "Higiene", status: "ACTIVE", deletedAt: null, updatedAt: new Date(0), requiresPrescription: false, prescriptionType: "UNREVIEWED" as const, isPopularPharmacy: false, catalogClassification, shippingProfile: profile() });
 const entry = (row = product()) => ({ productId: row.id, expectedEan: row.ean, expectedName: row.name, expectedUpdatedAt: row.updatedAt.toISOString(), expectedShippingProfile: structuredClone(row.shippingProfile), expectedProfileSha256: estimatedReviewSha256(row.shippingProfile), cargoKinds: ["general"], approvedServiceIds: [1, 3] });
 
 test("revisão conserva estimativa, medidas, proveniência e objeto original", () => {
@@ -47,6 +47,37 @@ test("não amplia serviços anteriores; recusa configuração ausente ou aceita�
   assert.throws(() => reviewEstimatedShipping(restricted, { ...entry(), expectedShippingProfile: restricted.shippingProfile, expectedProfileSha256: estimatedReviewSha256(restricted.shippingProfile) }, [1, 3]), /restrições de carga/);
   const perfume = { ...product(), name: "Perfume sintético" };
   assert.throws(() => reviewEstimatedShipping(perfume, { ...entry(), expectedName: perfume.name }, [1, 3]), /explicitamente/);
+});
+
+test("qualificador com ou sem perfume em absorvente seco por unidades não declara perfume líquido", () => {
+  for (const name of [
+    "Absorvente Always Diários Com Perfume 40 unidades",
+    "Absorvente Always Sem Perfume 80 unidades",
+    "Absorvente Carefree Proteção Com Perfume 15Un",
+    "Absorvente Intimus Cuidado Diário Ph Balanceado Sem Perfume 15 unidades",
+    "Absorvente Intimus Cuidado Diário Ph Balanceado Sem Perfume 40 unidades",
+    "Absorvente Intimus Cuidado Diário Ph Balanceado Sem Perfume 80 unidades",
+  ]) {
+    const row = { ...product({ kind: "HYGIENE" }), name }, before = structuredClone(row);
+    assert.deepEqual(reviewEstimatedShipping(row, entry(row), [1, 3]), { ...row.shippingProfile, enabled: true, transportReviewed: true, cargoKinds: ["general"], approvedServiceIds: [1, 3] }, name);
+    assert.deepEqual(row, before);
+  }
+});
+
+test("exceção de absorvente não libera perfume, apresentação ambígua, spray ou restrição anterior", () => {
+  for (const name of [
+    "Perfume 40 unidades", "Higiene sem perfume 40 unidades", "Absorvente com perfume",
+    "Absorvente perfume 40 unidades", "Absorvente com perfume 40 unidades + perfume 100 ml",
+    "Absorvente com perfume 40 unidades + eau de toilette", "Absorvente com perfume 40 unidades + deo colonia",
+    "Absorvente com perfume 40 unidades + body splash", "Absorvente com perfume líquido 40 unidades",
+    "Absorvente com perfume spray 40 unidades", "Absorvente com perfume aerossol 40 unidades",
+    "Absorvente com perfume aerosol 40 unidades", "Absorvente com perfume elétrico 40 unidades",
+  ]) {
+    const row = { ...product(), name };
+    assert.throws(() => reviewEstimatedShipping(row, entry(row), [1, 3]), /explicitamente|elétric/, name);
+  }
+  const restricted = { ...product(), name: "Absorvente sem perfume 40 unidades", shippingProfile: { ...profile(), cargoKinds: ["perfume"] } };
+  assert.throws(() => reviewEstimatedShipping(restricted, entry(restricted), [1, 3]), /restrições de carga/);
 });
 
 test("DRAFT_ONLY aceita receita pendente somente com perfil nulo e nunca habilita transporte", () => {

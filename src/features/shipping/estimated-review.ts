@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { assessCarrierCargo, isKnownShippingService, shippingCargoKindsSchema } from "./cargo-policy";
-import { permittedShippingServices } from "./eligibility";
+import { hasPerfumeShippingCargo, permittedShippingServices } from "./eligibility";
 import { normalizeLogisticsGtin } from "./logistics-evidence";
 import { shippingProfileSchema, shippingServiceIdsSchema } from "./schema";
 import { validateShippingProduct, type ShippingProduct } from "./rules";
@@ -78,7 +78,7 @@ export function reviewEstimatedShipping(product: EstimatedReviewProduct, input: 
   const normalizedName = product.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   // Electrical products and their ambiguous refills have no reviewed battery cargo policy here.
   if (/ele(?:c)?tric|bateria|pilha|recarreg/.test(normalizedName)) throw new Error("Mercadoria elétrica, com bateria/pilha ou recarregável exige revisão separada de transporte.");
-  if ((/\b(perfume|eau de toilette|deo\s*colonia|body splash)\b/.test(normalizedName) && !expected.cargoKinds.includes("perfume")) ||
+  if ((hasPerfumeShippingCargo(normalizedName) && !expected.cargoKinds.includes("perfume")) ||
     (/\b(aerossol|aerosol)\b/.test(normalizedName) && !expected.cargoKinds.includes("aerosol"))) throw new Error("Declare explicitamente a carga identificada no produto.");
   const previousServices = profile.approvedServiceIds as number[] | undefined;
   if (previousServices?.length && expected.approvedServiceIds.some(service => !previousServices.includes(service))) throw new Error("A revisão não pode ampliar serviços já restritos.");

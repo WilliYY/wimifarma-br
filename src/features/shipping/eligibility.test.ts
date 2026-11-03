@@ -93,6 +93,32 @@ test("cargo restrictions cannot be overridden by carrier approval or general fla
   assert.deepEqual(permittedShippingServices([1, 3], [{ ...product, shippingProfile: { ...profile, cargoKinds: ["temperature_sensitive"] } }]), []);
 });
 
+test("dry absorbent scent qualifiers preserve services without clearing explicit perfume cargo", () => {
+  for (const name of ["Absorvente Always Diários Com Perfume 40 unidades", "Absorvente Always Sem Perfume 80 unidades", "Absorvente Carefree Proteção Com Perfume 15Un", "Absorvente Intimus Cuidado Diário Ph Balanceado Sem Perfume 15 unidades", "Absorvente Intimus Cuidado Diário Ph Balanceado Sem Perfume 40 unidades", "Absorvente Intimus Cuidado Diário Ph Balanceado Sem Perfume 80 unidades"]) {
+    assert.deepEqual(permittedShippingServices([1, 3], [{ ...product, name }]), [1, 3], name);
+  }
+  for (const name of ["Absorvente com perfume", "Absorvente perfume 40 unidades", "Absorvente com perfume spray 40 unidades", "Absorvente com perfume líquido 40 unidades", "Absorvente com perfume 100ml 40 unidades", "Absorvente com perfume aerossol 40 unidades", "Absorvente com perfume 40 unidades + eau de toilette"]) {
+    assert.deepEqual(permittedShippingServices([1, 3], [{ ...product, name }]), [3], name);
+  }
+  const absorbent = { ...product, name: "Absorvente sem perfume 40 unidades" };
+  assert.deepEqual(permittedShippingServices([1, 3], [{ ...absorbent, shippingProfile: { ...profile, cargoKinds: ["perfume"], approvedServiceIds: [1, 3] } }]), [3]);
+  assert.deepEqual(permittedShippingServices([1, 3], [{ ...absorbent, shippingProfile: { ...profile, cargoKinds: ["general"], approvedServiceIds: [3] } }]), [3]);
+});
+
+test("electrical and battery markers cannot use the dry absorbent scent exception", () => {
+  for (const marker of ["elétrico", "eletrico", "electric", "bateria", "pilha", "recarregável"]) {
+    const name = `Absorvente com perfume ${marker} 40 unidades`;
+    assert.deepEqual(permittedShippingServices([1, 3], [{ ...product, name }]), [3], name);
+  }
+});
+
+test("wet absorbents cannot use the dry absorbent scent exception", () => {
+  for (const marker of ["umedecido", "umidificado"]) {
+    const name = `Absorvente ${marker} com perfume 40 unidades`;
+    assert.deepEqual(permittedShippingServices([1, 3], [{ ...product, name }]), [3], name);
+  }
+});
+
 test("structured medicine closes free-category bypass while generic perfumery stays eligible", () => {
   assert.deepEqual(permittedShippingServices([1, 2, 3, 12, 22], [{ ...product, category: "Outros", catalogClassification: { kind: "MEDICINE" } }]), [1, 2]);
   assert.deepEqual(permittedShippingServices([1, 3, 31], [{ ...product, name: "Spray nasal sintético", category: "Perfumaria" }]), [1, 3, 31]);
