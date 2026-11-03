@@ -22,3 +22,7 @@ Uma correção persistente posterior deve usar revisão ADMIN auditável do mesm
 ## Verificação
 
 Os testes dirigidos cobrem exclusão de ingredientes parciais, sintomas isolados, dose/forma/liberação divergentes, decimais, denominadores, associações desconhecidas, famílias de higiene e a identidade exata do Cimegripe. O teste do DTO compara todos os demais campos com a saída comercial anterior e verifica que a entrada não sofre mutação.
+
+Foram aprovados 101 testes dirigidos e ESLint dos arquivos alterados. A revisão independente identificou e teve corrigidos dois casos: qualificadores de formulação desconhecidos e projeções incompletas de identidade. A revalidação independente aprovou probes bidirecionais e projeções conflitantes, sem achados restantes.
+
+Publicação verificada em 03/11/2026, fonte `d5b568a5e78864f822d7ff7d23b6bec4d698718d`: a busca pública pelo EAN mostrou `Cimegripe 400 mg + 4 mg + 4 mg 20 cápsulas` e os três princípios ativos. Nenhum pedido ou pagamento foi criado. Resultado integrado em [catálogo próprio](catalogo-loja-fisica-e-conferencia-2026-11-02.md#publicação-verificada--03112026); recibos em `D:/Codex-outputs/wimifarma-br/catalog-comparison-2026-11-02/`.
