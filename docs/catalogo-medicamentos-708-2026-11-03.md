@@ -59,3 +59,26 @@ O adaptador específico das correlatas registra a origem do EAN como `CMED_SAME_
 A tentativa B02 v1 parou antes de concessão, backup e aplicação por mudança do HEAD no servidor; sua QA foi removida após comprovar ausência de intenção de aplicação e de gravações da operação em produção. B02/B03 v2 reconstruíram os helpers e repetiram a QA com os bindings atuais. A comparação das fontes sustentou compatibilidade do operador de rascunhos, sem alegar equivalência binária entre checkout e imagem antiga.
 
 Nenhum build, restart ou deploy da aplicação foi executado por esta frente. Mudanças concorrentes de HEAD/imagem foram tratadas como motivo para nova vinculação e ensaio, sem enfraquecer os guardas.
+
+## Complemento de 03/11/2026 às 15:51: 29 medicamentos de marca
+
+A operação `rootchat13-medicine-ethical-b01-v1-20261103` incluiu **29 medicamentos em DRAFT e 29 auditorias**: 18 EANs dos pedidos e 11 outras apresentações. Somados aos 242 medicamentos anteriores, são **271 inclusões nesta frente de medicamentos**. As contagens anteriores de cuidados e dos conjuntos pesquisados continuam sendo retratos dos horários indicados; não representam um novo total global.
+
+Este lote aplica **acréscimo de 10% sobre o custo final comprovado**, somente às marcas éticas com enquadramento individual documentado, conforme a [política autorizada pelo lojista](111-expansao-medicamentos-e-politica-de-precos.md). Os percentuais e preços dos cadastros anteriores foram preservados. A classificação CMED como Novo, isoladamente, não foi aceita como prova de marca ética ou de receita.
+
+A conferência reuniu apresentação e titular da CMED de 09/10/2026, observações autenticadas do GAM e fontes documentais de prescrição por família/apresentação. As datas reais das cotações foram preservadas, sem renovação por releitura. Custo final e imposto genérico continuaram separados de uma comprovação de ST; nenhuma disponibilidade foi inventada.
+
+Todos os novos registros mantêm receita `UNREVIEWED`, exigência de receita habilitada, benefícios desativados, estoque físico zero e fornecimento por distribuidora. Não foram criadas ofertas de fornecedor, imagens, publicações ou produtos habilitados para compra. Registro, receita, alegações, imagem, logística e condições comerciais continuam sujeitos à revisão antes de publicar. Não foi presumida equivalência terapêutica.
+
+Dos 50 candidatos desta revisão, 19 ficaram retidos por pendências documentais ou de classificação e dois MIP foram excluídos deste lote. Eles não foram convertidos em marcas éticas para aumentar a quantidade.
+
+### Verificação deste complemento
+
+- Adaptador específico: 15 testes aprovados e typecheck strict. Preparação: nove testes e dois checks de sintaxe aprovados.
+- QA PostgreSQL real com usuários sintéticos: 29 produtos, 29 auditorias e oito casos negativos aprovados; 32 bindings de código e dez contratos de schema conferidos.
+- Suíte local de segurança: 559 testes aprovados. Auditoria local completa: três baixos e 17 moderados; dependências de produção locais: três baixos e quatro moderados; imagem imutável de ferramentas: 15 moderados. Todas ficaram com zero altos/críticos; os relatórios completos e seus achados foram preservados.
+- Revisão independente operacional aprovada, sem achados altos/críticos. Backup real: 2.921.197 bytes e 304 entradas de TOC.
+- Aplicação única às 18:51:02 UTC, seguida de SQL com 29 rascunhos, 29 auditorias e preservação dos dados anteriores. As 29 páginas retornaram 404; homepage e health responderam 200, incluindo URL final e JSON do health.
+- Concessão encerrada às 18:51:14 UTC, com `productionGrant: false` e `uncertainApply: false`. A QA própria, OID 225631, foi removida sem FORCE; a leitura posterior confirmou sua ausência. A QA de outra frente foi preservada.
+
+Provas privadas em `D:\Codex-outputs\wimifarma-br\catalogo-continuidade-2026-11-03`: `RELATORIO-INCLUSAO-ETICOS29-v1.json`, `PRODUCTION-EXECUTION-ETICOS29-v1.json`, `PRODUCTION-RECEIPT-HASHES-v1.json` e seis recibos físicos em `remote-production-v1`, com bytes e hashes conferidos. Não houve build, restart ou migration da aplicação neste complemento.
