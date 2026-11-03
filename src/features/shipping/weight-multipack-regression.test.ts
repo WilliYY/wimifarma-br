@@ -1,8 +1,36 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { estimateWeightOnly } from "./base-estimate";
+import { estimateBaseShipping, estimateWeightOnly } from "./base-estimate";
 
 const medicine = { gtin: "07890000000000", category: "Medicamentos", requiresPrescription: true, prescriptionType: "ORDINARY", isPopularPharmacy: false };
+const hygiene = { category: "Higiene bucal", brand: "Marca sintética", requiresPrescription: false, isPopularPharmacy: false };
+
+const promotionalPacks = [
+  "Creme dental sintético 70 g L6P5",
+  "Creme dental sintético 70g L6P4",
+  "Creme dental sintético 90 g L3P2",
+  "Creme dental sintético 70 g l 6 p 5",
+  "Creme dental sintético 70 g L6 P5",
+];
+
+test("peso individual não trata promoção abreviada como um único tubo", () => {
+  for (const name of promotionalPacks) {
+    assert.equal(estimateWeightOnly({ ...hygiene, name }), null, name);
+  }
+});
+
+test("estimativa de volume protegido também exige revisão do multipack abreviado", () => {
+  for (const name of promotionalPacks) {
+    assert.equal(estimateBaseShipping({ ...hygiene, name }), null, name);
+  }
+});
+
+test("tubo avulso e identificação numérica sem promoção preservam o cálculo individual", () => {
+  for (const name of ["Creme dental sintético 70 g", "Creme dental linha L6 70 g", "Creme dental linha P5 70 g"]) {
+    assert.equal(estimateWeightOnly({ ...hygiene, name })?.draft.weightGrams, 200, name);
+    assert.ok(estimateBaseShipping({ ...hygiene, name }), name);
+  }
+});
 
 test("peso individual não transforma conteúdo de um sachê no pacote inteiro", () => {
   for (const pack of ["28 sachês de 1 g", "28 sachês de 0,5 g", "28 sache de 1 g", "28 sachets de 1 g", "28 envelopes de 1 g"]) {
@@ -21,6 +49,20 @@ test("bruto documental próprio continua prioritário para o conjunto de sachês
   assert.equal(result?.family, "EXACT_GROSS_REFERENCE");
   assert.equal(result?.retailPackagingReserveGrams, 0);
   assert.equal(result?.draft.weightGrams, 500);
+  assert.equal(result?.draft.enabled, false);
+  assert.equal(result?.draft.transportReviewed, false);
+  assert.equal(JSON.stringify(source), before);
+});
+
+test("bruto documental do kit abreviado permanece prioritário sobre o bloqueio individual", () => {
+  const source = { version: 1, gtin: medicine.gtin, sourceDecisions: [], review: { confirmed: false, note: "" }, observations: [{ id: "gross", source: {
+    url: "https://example.org/ficha", capturedAt: "2026-10-27T00:00:00Z", sha256: "b".repeat(64), gtin: medicine.gtin, excerpt: "Peso bruto do kit completo: 600 gramas" },
+    packagingLevel: "retail_unit", units: 1, identityConflict: false, weightGrams: 600, weightBasis: "gross_explicit", sidesMm: null, dimensionsBasis: "unlabeled", sideOrder: ["a", "b", "c"], notes: "" }] };
+  const before = JSON.stringify(source);
+  const result = estimateWeightOnly({ ...hygiene, gtin: medicine.gtin, name: "Creme dental sintético 70 g L6P5", logisticsEvidence: source });
+  assert.equal(result?.family, "EXACT_GROSS_REFERENCE");
+  assert.equal(result?.retailPackagingReserveGrams, 0);
+  assert.equal(result?.draft.weightGrams, 700);
   assert.equal(result?.draft.enabled, false);
   assert.equal(result?.draft.transportReviewed, false);
   assert.equal(JSON.stringify(source), before);
