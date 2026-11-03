@@ -89,6 +89,30 @@ test("public estimate calculates complete drafts without approving shipment or e
   assert.deepEqual(Array.from((await loaded.exports.estimateProductShipping(input)).options, p => p.serviceId), [3], "negative name inference is preserved");
   product = { ...base, name: "Perfume sintético" };
   assert.deepEqual(Array.from((await loaded.exports.estimateProductShipping(input)).options, p => p.serviceId), [3], "perfume name does not bypass carrier prohibitions");
+  const absorbentServices = [1, 2, 3, 12, 22, 31, 33];
+  integration.settings.serviceIds = absorbentServices;
+  for (const name of ["Absorvente Always Diários Com Perfume 40 unidades", "Absorvente Always Sem Perfume 80 unidades", "Absorvente Carefree Proteção Com Perfume 15Un", "Absorvente Intimus Cuidado Diário Ph Balanceado Sem Perfume 15 unidades", "Absorvente Intimus Cuidado Diário Ph Balanceado Sem Perfume 40 unidades", "Absorvente Intimus Cuidado Diário Ph Balanceado Sem Perfume 80 unidades"]) {
+    for (const reviewed of [false, true]) {
+      product = { ...base, name, catalogClassification: { kind: "HYGIENE" }, shippingProfile: { ...profile, enabled: reviewed, transportReviewed: reviewed, cargoKinds: ["general"], approvedServiceIds: reviewed ? absorbentServices : [] } };
+      const snapshot = structuredClone(product);
+      const result = await loaded.exports.estimateProductShipping(input);
+      assert.deepEqual(Array.from(result.options, option => option.serviceId), absorbentServices, name);
+      assert.equal(calls.at(-1)?.services, absorbentServices.join(","), name);
+      assert.equal(result.mode, reviewed ? "available" : "estimate", name);
+      assert.deepEqual(product, snapshot);
+    }
+  }
+  for (const name of ["Perfume sintético", "Absorvente com perfume", "Absorvente perfume 40 unidades", "Absorvente com perfume spray 40 unidades", "Absorvente com perfume elétrico 40 unidades", "Absorvente com perfume bateria 40 unidades", "Absorvente umedecido com perfume 40 unidades", "Absorvente com perfume 100ml 40 unidades"]) {
+    product = { ...base, name, shippingProfile: { ...profile, cargoKinds: ["general"] } };
+    assert.deepEqual(Array.from((await loaded.exports.estimateProductShipping(input)).options, option => option.serviceId), [3, 22, 33], name);
+  }
+  product = { ...base, name: "Absorvente com perfume aerossol 40 unidades", shippingProfile: { ...profile, cargoKinds: ["general"] } };
+  assert.deepEqual(Array.from((await loaded.exports.estimateProductShipping(input)).options, option => option.serviceId), [3, 22], "aerosol restrictions remain stricter than perfume restrictions");
+  product = { ...base, name: "Absorvente sem perfume 40 unidades", shippingProfile: { ...profile, cargoKinds: ["perfume"] } };
+  assert.deepEqual(Array.from((await loaded.exports.estimateProductShipping(input)).options, option => option.serviceId), [3, 22, 33], "explicit perfume cargo is preserved");
+  product = { ...base, name: "Absorvente sem perfume 40 unidades", shippingProfile: { ...profile, cargoKinds: ["general"], approvedServiceIds: [3] } };
+  assert.deepEqual(Array.from((await loaded.exports.estimateProductShipping(input)).options, option => option.serviceId), [3], "existing service approval is preserved");
+  integration.settings.serviceIds = [1, 2, 3];
   product = { ...base, shippingProfile: { ...profile, cargoKinds: ["temperature_sensitive"] } };
   assert.equal((await loaded.exports.estimateProductShipping(input)).mode, "estimate", "unknown conservation does not authorize shipment");
   product = { ...base, catalogClassification: { kind: "MEDICINE" } };

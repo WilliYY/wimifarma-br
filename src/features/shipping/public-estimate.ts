@@ -8,7 +8,7 @@ import { melhorEnvioRequest } from "./provider";
 import { shippingProductSelect } from "./service";
 import { shippingProfileSchema, ShippingError } from "./schema";
 import { shippingAdminProfileSchema } from "./product-draft";
-import { permittedShippingServices, requiresPharmacyShippingSupport } from "./eligibility";
+import { hasPerfumeShippingCargo, permittedShippingServices, requiresPharmacyShippingSupport } from "./eligibility";
 import { assessCarrierCargo, isKnownShippingService, type ShippingCargo } from "./cargo-policy";
 import { calculatePackedQuotes } from "./calculate-packed-quotes";
 import { cartShippingBenefit } from "./benefit-service";
@@ -36,7 +36,7 @@ export async function estimateProductShipping(input: PublicShippingEstimateReque
   const cargos: ShippingCargo[] = [...(profile.cargoKinds?.length ? profile.cargoKinds : ["unspecified" as const])];
   const classification = product.catalogClassification;
   if ((classification && typeof classification === "object" && "kind" in classification && classification.kind === "MEDICINE") || requiresPrescriptionReview(product) || /medicament|farmaci/.test(normalized(product.category))) cargos.push("medication");
-  if (/\b(perfume|eau de toilette|deo\s*colonia|body splash)\b/.test(normalized(product.name))) cargos.push("perfume");
+  if (hasPerfumeShippingCargo(product.name)) cargos.push("perfume");
   if (/\b(aerossol|aerosol)\b/.test(normalized(product.name))) cargos.push("aerosol");
   const serviceIds = settings.serviceIds.filter(service => isKnownShippingService(service)
     && (!cargos.includes("medication") || service === 1 || service === 2)

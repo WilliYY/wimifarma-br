@@ -73,3 +73,9 @@ test("clear hygiene families are accepted without mistaking category perfumaria 
   }
   assert.ok(estimateBaseShipping({ ...medicine, requiresPrescription: false, prescriptionType: "UNREVIEWED", name: "Paracetamol 20 comprimidos" }));
 });
+
+test("absorbent scent qualifiers never invent unsupported unit weights or authorize ambiguous cargo", () => {
+  for (const name of ["Absorvente Always Diários Com Perfume 40 unidades", "Absorvente Always Sem Perfume 80 unidades", "Absorvente Carefree Proteção Com Perfume 15Un", "Absorvente Intimus Cuidado Diário Ph Balanceado Sem Perfume 15 unidades", "Absorvente Intimus Cuidado Diário Ph Balanceado Sem Perfume 40 unidades", "Absorvente Intimus Cuidado Diário Ph Balanceado Sem Perfume 80 unidades", "Absorvente com perfume", "Absorvente com perfume spray 40 unidades", "Absorvente com perfume elétrico 40 unidades", "Absorvente umedecido com perfume 40 unidades"]) {
+    assert.equal(estimateBaseShipping({ ...hygiene, name }), null, name);
+  }
+});

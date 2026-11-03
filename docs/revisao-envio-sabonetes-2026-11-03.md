@@ -1,5 +1,7 @@
 # Revisão de envio com medidas estimadas — 03/11/2026
 
+Estado posterior verificado: **360 perfis habilitados e 2.708 pendentes**, entre 3.068 produtos ativos. Os 23 planos adicionais foram aplicados após a publicação do código e o encerramento do lote cuidados19; a cronologia e os recibos estão na seção final.
+
 ## Resultado verificado
 
 O lojista autorizou estipular medidas e reaproveitar o trabalho existente. A revisão utilizou os perfis estimados, sem converter estimativas em medições ou atribuí-las ao fabricante. Foram habilitados mais 19 sabonetes sólidos, com identidade por SKU/EAN, carga geral e serviços permitidos. O total observado passou de 318 para **337 perfis habilitados**, entre 3.068 produtos ativos.
@@ -36,7 +38,7 @@ No snapshot de conferência, 2.731 perfis continuam pendentes: 1.269 medicamento
 
 O Imosec permanece com hipótese desativada, sem serviços aprovados, receita `UNREVIEWED` e estoque zero. A revisão não cria estoque ou oferta nem libera itens em “Avise-me”. As condições específicas de medicamentos, perfumes, aerossóis e demais cargas permanecem nas políticas existentes. Referência: [guia oficial de mercadorias do Melhor Envio](https://centraldeajuda.melhorenvio.com.br/hc/pt-br/articles/31220391789332-Guia-de-produtos-que-podem-ou-n%C3%A3o-ser-enviados-pelo-Melhor-Envio).
 
-## Triagem adicional somente local
+## Triagem adicional antes da aplicação
 
 A conferência complementar encontrou outros 23 sólidos candidatos, registrados em `triagem-adicional-nao-aplicada.json`. Dezessete passaram no preflight do helper existente; seis absorventes secos foram bloqueados exclusivamente pelo detector textual de perfume, inclusive apresentações chamadas “sem perfume”. Esses planos não foram aplicados em produção e não integram os 337 habilitados. Exigem snapshots novos e janela coordenada antes de qualquer aplicação. Nenhuma guarda foi contornada e nenhuma concessão externa foi restaurada ou revogada.
 
@@ -60,4 +62,26 @@ Hash do SQL das duas correções: `e6729291e1675d2f1bb004c413470dc3f3fe2369e10fd
 
 ## Publicação do código — 03/11/2026
 
-Os helpers desta revisão foram publicados com a fonte APP `f9abb42ac9bb9d7171ca1499acceb5fe97ed018f` e imagem `sha256:d6ebd114354d2dc1609f6762c8cc87caf45b4bf89b8607163551cef39521684b`, após revisão independente, 557 testes de segurança na fonte consolidada, build Linux e verificação do app/ambiente/PostgreSQL. A publicação da fonte não aplicou os 23 planos adicionais nem validou novas medições, estoque ou serviços. Esses planos permanecem sem aplicação e exigem conferência própria com o novo baseline.
+Os helpers desta revisão foram publicados com a fonte APP `f9abb42ac9bb9d7171ca1499acceb5fe97ed018f` e imagem `sha256:d6ebd114354d2dc1609f6762c8cc87caf45b4bf89b8607163551cef39521684b`, após revisão independente, 557 testes de segurança na fonte consolidada, build Linux e verificação do app/ambiente/PostgreSQL. A publicação da fonte não aplicou os 23 planos adicionais nem validou novas medições, estoque ou serviços. Naquele momento, os planos ainda exigiam conferência própria e novo baseline; a aplicação posterior está registrada abaixo.
+
+## Aplicação posterior dos 23 — 03/11/2026
+
+Após o encerramento real de cuidados19, foram renovados snapshots, runtime, operador e nonce. A operação descartada `caed26f5bca6c513`, vinculada a checkout740/canônico7782, nunca foi instalada nem executada. A operação nova `5d051f07f39c6f95` exigiu APP f9/a853/imagem d6, PG39b, checkout `6516ad8e1e1ba3fc25961ce8050d9e6e2897a8d6` limpo e canônico `ccb389e0e38483599c3b14a37c8868fb380a7990ac0497c575d935d21126d091` encerrado, sem grant. A revisão independente renovada aprovou as 23 identidades, apresentações, revisões e perfis. O coordenador 10 confirmou a janela de três minutos com as outras frentes.
+
+Dry-run e aplicação usaram o plano `4b2af4f6d942d7e4a9aab9d5728a6904126023ffab112f89f21237168ec79e14`, manifesto `966d79fa26063bb1170d53ad8a5c0c7469a4f531f87997282fc6864fb03fff9a` e runtime `839291bdb66eb5adcc2479e6ad49f30ae832f8cfb85729328531bb1e6d95a4a8`. A operação terminou em 28 segundos, com 23 revisões e 23 auditorias. O total passou de 337 para 360. Pesos, dimensões, referência e proveniência foram preservados como estimados; preços, estoques, classificações, demais campos, ofertas e configuração de frete permaneceram iguais. A política segue na revisão 8, MD5 `bb6c3d9e22ab9059b0405866616d5399`.
+
+APP, PostgreSQL, checkout e canônico foram preservados. As transações retornaram, os locks transacionais foram liberados e o runtime temporário próprio foi removido, conservando os recibos. O encerramento foi comunicado aos chats 9 e 10; não se repetiram os 19 sabonetes consumidos nem a operação descartada.
+
+Três cotações públicas reais em São Paulo/SP retornaram HTTP 200 e `available`, com frete a pagar, meta e valor faltante: Always com perfume 40 un (quatro modalidades), Intimus sem perfume 40 un (quatro) e caixa Phebo 8 × 90 g (sete). A diferença dos absorventes revelou outro detector textual em `public-estimate.ts`, que ainda exclui Correios e Loggi por “com/sem perfume”. Trata-se de correção adicional de código; as cotações existem e os perfis estão habilitados, mas não se declara que essa nova correção já foi publicada.
+
+Recibos completos, snapshots e `conferencia-produtos-final.csv` estão em `D:/Codex-outputs/wimifarma-br/23-envios-aplicacao-2026-11-03-01a19a02/`. O CSV foi gerado de uma consulta atual dos 3.068 produtos ativos: 360 habilitados, 2.708 pendentes e todos com medidas estimadas. Esses números não comprovam aceitação irrestrita de mercadorias ou cobertura de todos os CEPs.
+
+## Ajuste adicional da consulta pública por CEP
+
+`public-estimate.ts` passou a reutilizar `hasPerfumeShippingCargo`, já usada no revisor e na elegibilidade, em vez de acrescentar `perfume` por uma regex própria. A regressão demonstrou a exclusão indevida das modalidades dos seis absorventes em rascunho e revisados. Após o ajuste, o provedor recebe os sete serviços configurados quando permitidos, mantendo a distinção entre `estimate` e `available`, o objeto original, cargas explícitas e aprovações restritas. Perfumes reais, aerossóis e apresentações ambíguas/úmidas/elétricas seguem restritos.
+
+O fallback de `base-estimate.ts` não foi alterado: os seis absorventes continuam retornando `null` quando não há família/pacote suportado; o teste adicional impede inventar peso e medidas. Foram modificados somente `public-estimate.ts`, seu teste e `base-estimate.test.ts`, além deste documento.
+
+O ajuste recebeu aprovação independente sem achados, 39 testes focais aprovados, ESLint dos arquivos pertinentes e `git diff --check` sem falhas. `npm.cmd run test:security` passou com **558/558**, zero falhas/cancelamentos/ignorados; `npm.cmd run typecheck` também passou, incluindo geração do Prisma. Esses gates cobrem a fonte local corrigida; a publicação APP e a reconferência pública das modalidades permanecem uma etapa coordenada separada, sem novas alterações de produto ou configuração.
+
+O lint global também passou. Auditoria completa (`npm.cmd audit --json --audit-level=moderate`): código 1 por 20 alertas, três baixos e 17 moderados, nenhum alto ou crítico. Auditoria de produção (`npm.cmd audit --json --omit=dev --audit-level=high`): código 0, sete alertas (três baixos e quatro moderados), nenhum alto ou crítico. Os pacotes de produção sinalizados permanecem `@react-email/render`, `deepmerge`, `fast-uri`, `glob`, `html-to-text`, `minimatch` e `react-email`; não houve atualização de dependências. Os JSON completos, logs e hashes de fonte/lockfile estão no diretório final, em `public-api-fix-gates.json` e arquivos `public-api-*`.
