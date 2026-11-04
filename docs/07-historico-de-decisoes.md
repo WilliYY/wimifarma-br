@@ -4,7 +4,7 @@
 
 O modo explícito `--refine-multipacks` exige manifesto por GTIN, apresentação, revisão e perfil literal, com fontes preservadas. A hipótese soma o conteúdo líquido de todos os tubos, reserva comercial de 30 g por tubo e reserva externa única de 100 g, arredondando para cima em 10 g. Os cinco casos propostos são 700/700/460/460/340 g; quatro corrigem pesos inferiores ao próprio líquido e um refina a proteção estimada. Essa política não representa pesagem ou bruto confirmado.
 
-Somente o peso pode aumentar, em transação auditada com CAS. Dimensões, chaves ausentes, perfil desabilitado/não revisado, serviços, receita, comércio e integração permanecem preservados. Manifesto antigo é rejeitado após mudança de revisão; manifesto renovado sem aumento resulta em no-op. Contrato, fontes e prova operacional separados em [142](142-refino-peso-multipacks.md). A existência deste código não comprova aplicação ou publicação.
+Somente o peso pode aumentar, em transação auditada com CAS. Dimensões, chaves ausentes, perfil desabilitado/não revisado, serviços, receita, comércio e integração permanecem preservados. Manifesto antigo é rejeitado após mudança de revisão; manifesto renovado sem aumento resulta em no-op. A QA real passou e os cinco pesos foram aplicados uma única vez, com backup privado, cinco auditorias, pós-check integral e cleanup dos runtimes próprios. Permanecem 451 perfis habilitados e 2.617 pendentes; o lote não habilitou transporte. Contrato, fontes, validações e prova operacional em [142](142-refino-peso-multipacks.md).
 
 ## 2026-11-03 — Publicação de descoberta do catálogo e pacote de correções
 

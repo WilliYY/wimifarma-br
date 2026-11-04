@@ -11,8 +11,8 @@ substituir a prioridade da referência bruta documental própria do GTIN.
 Quatro rascunhos históricos estavam abaixo do próprio conteúdo líquido nominal
 do conjunto. O quinto já estava acima do líquido, mas precisava de refinamento
 explícito para considerar todos os tubos e reservas de embalagem. Os números
-abaixo são uma proposta estimada; este documento não comprova aplicação ou estado
-atual de produção.
+abaixo são estimativas autorizadas, aplicadas no lote limitado de 04/11/2026.
+A conferência produtiva e seus limites estão registrados ao final.
 
 | GTIN-14 | Apresentação comercial | Peso estimado anterior | Líquido total | Novo peso estimado |
 | --- | --- | ---: | ---: | ---: |
@@ -136,8 +136,41 @@ contagens de habilitados/revisados invariantes e preservação de comércio,
 integração, ofertas, fornecedores e perfis fora da coorte. O backup permanece no
 servidor privado; não se baixa banco de clientes para a pesquisa local.
 
-Este documento registra contrato e fontes, sem declarar resultado do QA real ou
-aplicação produtiva. Essas provas devem ser anexadas pelo responsável após os
-checks efetivamente concluídos. Permanecem pendentes pesagem do conjunto real,
-tara e proteção escolhidas, medidas físicas, encaixe e aprovação operacional de
-transporte. Nenhuma dessas pendências é resolvida pelo preenchimento do peso.
+Em 04/11/2026, a QA real usou clones próprios das imagens existentes, Node
+v24.21.0 e PostgreSQL 17.9, com dados sintéticos e sem portas publicadas. Os sete
+casos passaram: plataforma, dry-run sem escrita, hash errado/STAFF sem escrita,
+cinco atualizações com cinco auditorias exatas, replay rejeitado/no-op renovado,
+rollback por falha na segunda auditoria e rollback por segundo CAS recusado.
+Os probes de rollback foram respectivamente `[2,2]` e `[2,1]`. Os dois containers
+próprios foram removidos, sem conexões remanescentes. As duas tentativas iniciais
+pararam antes dos casos de peso por versão Node presumida e readiness temporário
+do PostgreSQL; a versão exata e a espera por TCP foram corrigidas e revisadas.
+
+Após nova captura e ACK exclusivo para 17:20–17:40 UTC, ocorreu uma única
+aplicação, iniciada às 17:24:25 UTC, sem retry ou resultado incerto. O plano
+`8fd78b949c7a351ce9cd890d0073055767d612609407c47b3641b9584336708d`
+aplicou somente os pesos da tabela e gerou cinco auditorias. O pós-check confirmou
+revisões avançadas, preservação integral dos demais campos e invariância dos
+demais produtos, ofertas, fornecedores e integração. A leitura final das
+17:26:53 UTC confirmou 3.068 ativos, 451 habilitados e 451 revisados; os cinco
+produtos do lote continuam desabilitados, não revisados e estimados. Restam 2.617
+perfis ativos pendentes de revisão de transporte.
+
+O backup custom foi validado antes da escrita por magic PGDMP, hashes e TOC com
+as seis tabelas exigidas. Nova leitura confirmou dump de 2.939.963 bytes, diretório
+0700 e arquivo 0600, sem baixar o banco de clientes. SHA-256 do dump:
+`8254e1073136a9b491e8538094110e23a6c2abe37316d95c51714f28a1a7cb43`.
+O cleanup removeu somente os dois runtimes próprios, na APP e no job; owner,
+markers, recibos e backup foram preservados. Não houve deploy ou restart da APP.
+As provas privadas ficam em
+`D:/Codex-outputs/wimifarma-br/pesos-multipacks-2026-11-04/production-window2/`
+e `qa/evidence-c4569a9aaa7ab08b/`. O primeiro pacote de janela não foi executado.
+
+Validações adicionais: 15 testes dirigidos e 559 de segurança, typecheck, lint e
+build do runtime passaram. Auditoria completa: 3 baixos/17 moderados, sem altos
+ou críticos; produção: 3 baixos/4 moderados, sem altos ou críticos. Os alertas
+permanecem registrados e não foram corrigidos nesta tarefa.
+
+Permanecem pendentes pesagem do conjunto real, tara e proteção escolhidas,
+medidas físicas, encaixe e aprovação operacional de transporte. Nenhuma dessas
+pendências é resolvida pelo preenchimento do peso.
