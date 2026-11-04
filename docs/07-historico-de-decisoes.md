@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-04 — Peso estimado de multipacks dentais
+
+O modo explícito `--refine-multipacks` exige manifesto por GTIN, apresentação, revisão e perfil literal, com fontes preservadas. A hipótese soma o conteúdo líquido de todos os tubos, reserva comercial de 30 g por tubo e reserva externa única de 100 g, arredondando para cima em 10 g. Os cinco casos propostos são 700/700/460/460/340 g; quatro corrigem pesos inferiores ao próprio líquido e um refina a proteção estimada. Essa política não representa pesagem ou bruto confirmado.
+
+Somente o peso pode aumentar, em transação auditada com CAS. Dimensões, chaves ausentes, perfil desabilitado/não revisado, serviços, receita, comércio e integração permanecem preservados. Manifesto antigo é rejeitado após mudança de revisão; manifesto renovado sem aumento resulta em no-op. Contrato, fontes e prova operacional separados em [142](142-refino-peso-multipacks.md). A existência deste código não comprova aplicação ou publicação.
+
 ## 2026-11-03 — Publicação de descoberta do catálogo e pacote de correções
 
 - Publicada fonte `f9abb42ac9bb9d7171ca1499acceb5fe97ed018f`, imagem `sha256:d6ebd114354d2dc1609f6762c8cc87caf45b4bf89b8607163551cef39521684b`, com app/PostgreSQL saudáveis e ambiente, execução e avaliações preservados. Somente app; nenhum lote, migration, preço, estoque, pedido ou configuração foi aplicado. Canonical de coordenação preservado: `7782112b1705d8a3225edda23a2f39b34f54cf9d4aa79ad09bcc57f6fb35c6ae`.

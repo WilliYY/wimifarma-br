@@ -48,6 +48,8 @@ Pesos aproximados para conferência, com hipóteses explícitas, dimensões pend
 
 Comparação por GTIN, prioridade de peso bruto documental e refinamento explícito somente do peso de rascunhos elegíveis: [119](docs/119-comparacao-e-refinamento-dos-pesos.md).
 
+Refinamento explícito de multipacks dentais por manifesto, preservando medidas estimadas e bloqueios de transporte: [142](docs/142-refino-peso-multipacks.md).
+
 Rotas em lote para dados físicos, limites dos provedores e amostra de 10 GTINs encaminhada à consulta GS1 já autorizada: [120](docs/120-rotas-para-dados-fisicos-em-lote.md).
 
 Médias por apresentação comparável e medidas aproximadas com proveniência, proteção hipotética e gravação auditada em rascunhos: [121](docs/121-medias-logisticas-por-apresentacao.md).
