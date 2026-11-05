@@ -93,7 +93,7 @@ export function PublicProductCard({ product, showShippingEstimate = false }: { p
         </span>
         <Link
           aria-label={`Ver ${fullTitle}`}
-          className="mt-1 h-14 min-w-0 shrink-0 text-[0.8125rem] font-bold leading-[1.125rem] text-ink after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand sm:h-16 sm:text-sm sm:leading-5"
+          className="mt-1 h-14 min-w-0 shrink-0 text-[0.8125rem] font-bold leading-[1.125rem] text-ink after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand sm:h-[3.75rem] sm:text-sm sm:leading-5"
           href={`/produto/${product.slug}`}
           title={fullTitle}
         >

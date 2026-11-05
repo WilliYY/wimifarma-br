@@ -234,6 +234,47 @@ model Product {
   @@index([isPopularPharmacy])
 }
 
+enum CatalogIdentityPublicState {
+  PRIVATE
+  PUBLIC
+  SUPPRESSED
+}
+
+enum CatalogIdentityRegulatoryStatus {
+  UNKNOWN
+  NON_MEDICINE
+}
+
+// No relation to Product: a consultation identity never represents an offer.
+model CatalogIdentity {
+  gtinCanonical String @id
+  ean String
+  name String
+  categoryName String?
+  categorySlug String?
+  identitySha256 String
+  sourceFileSha256 String
+  sourceRecord Json
+  publicState CatalogIdentityPublicState @default(PRIVATE)
+  regulatoryStatus CatalogIdentityRegulatoryStatus @default(UNKNOWN)
+  reviewIdentitySha256 String?
+  reviewedAt DateTime?
+  reviewedBy String?
+  reviewEvidence String?
+  suppressedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([publicState, regulatoryStatus, gtinCanonical])
+}
+
+// Persistent after Product hard purge and before the first source import.
+model CatalogIdentitySuppression {
+  gtinCanonical String @id
+  reason String
+  createdAt DateTime @default(now())
+}
+
 model ProductImage {
   id                String    @id @default(cuid())
   url               String    @unique

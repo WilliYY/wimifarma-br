@@ -1,5 +1,7 @@
 import { Prisma } from "@/generated/prisma/client";
 import { getPrisma } from "@/lib/prisma";
+import { getPublicCatalogIdentities } from "@/features/catalog-identities/public-query";
+import { consultationSearchRecord, isConsultationIdentity, paginateConsultationCatalog, searchConsultationCatalog } from "./consultation-catalog";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 import { gtinVariants, normalizeGtin } from "./gtin";
 import { ALENIA_INHALATION_SEARCH_NAME, ALENIA_INHALATION_SEARCH_PRESENTATION, correctProductSearchQuery, ingredientSearchIdentities, isPrescriptionSearchProduct, normalizeProductSearch, productSearchPlan, productSizePattern, productSpellingVocabulary, topicNamePattern } from "./public-search";
@@ -94,36 +96,20 @@ function searchOrder(query: string) {
     ELSE 100 END DESC, p."name" ASC, p."id" ASC`;
 }
 
-export async function getSearchCatalog(query: string, { page = 1, pageSize = SEARCH_PAGE_SIZE, relatedLimit = 8 } = {}) {
+async function getCommercialSearchCatalog(query: string, { relatedLimit = 8 } = {}) {
   const cleanQuery = query.trim();
-  let plan = productSearchPlan(cleanQuery);
+  const plan = productSearchPlan(cleanQuery);
   if (cleanQuery.length < 2 || cleanQuery.length > 80 || plan.blocked || (!plan.patterns.length && !plan.dosePatterns.length && !plan.topics.length)) {
     return { products: [], relatedProducts: [], count: 0, correctedQuery: null as string | null };
   }
   const prisma = getPrisma();
-  const safePage = Number.isInteger(page) && page >= 1 && page <= 10_000 ? page : 1;
-  const safeSize = Math.min(SEARCH_PAGE_SIZE, Math.max(1, pageSize));
   const findMatches = (value: string) => prisma.$queryRaw<{ id: string; total: number }[]>(Prisma.sql`
     SELECT p."id", (count(*) OVER())::int AS total FROM "Product" p
     WHERE p."status" = 'ACTIVE' AND ${queryCondition(value)}
     ORDER BY ${searchOrder(value)}
   `);
-  let matches = await findMatches(cleanQuery);
-  let correctedQuery: string | null = null;
-  if (!matches.length && /[a-z]{4}/.test(normalizeProductSearch(cleanQuery))) {
-    const suggestion = correctProductSearchQuery(cleanQuery, await spellingVocabulary(prisma));
-    if (suggestion) {
-      const correctedPlan = productSearchPlan(suggestion);
-      if (!correctedPlan.blocked) {
-        matches = await findMatches(suggestion);
-        if (matches.length) {
-          correctedQuery = suggestion;
-          plan = correctedPlan;
-        }
-      }
-    }
-  }
-  const condition = queryCondition(correctedQuery ?? cleanQuery);
+  const matches = await findMatches(cleanQuery);
+  const condition = queryCondition(cleanQuery);
   const rows = matches.length ? await prisma.product.findMany({
     where: { status: "ACTIVE", id: { in: matches.map(row => row.id) } }, select: searchSelect,
   }) : [];
@@ -133,7 +119,6 @@ export async function getSearchCatalog(query: string, { page = 1, pageSize = SEA
   const now = Date.now();
   const rankedProducts = rows.sort((a, b) => positions.get(a.id)! - positions.get(b.id)!).map(row => toSaleProduct(row, now));
   const orderedProducts = [...rankedProducts].sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0));
-  const products = orderedProducts.slice((safePage - 1) * safeSize, safePage * safeSize);
 
   // Medical relationships come from registered ingredients, never category alone.
   const identities = ingredientSearchIdentities(rankedProducts.slice(0, 4).flatMap(product => product.activeIngredients));
@@ -151,13 +136,46 @@ export async function getSearchCatalog(query: string, { page = 1, pageSize = SEA
   const relatedRows = relatedIds.length ? await prisma.product.findMany({
     where: { status: "ACTIVE", id: { in: relatedIds.map(row => row.id) } }, select: searchSelect, orderBy: [{ name: "asc" }, { id: "asc" }],
   }) : [];
-  return { products, relatedProducts: relatedRows.map(row => toSaleProduct(row, now)).sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0)), count: orderedProducts.length, correctedQuery };
+  return { products: orderedProducts, relatedProducts: relatedRows.map(row => toSaleProduct(row, now)).sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0)) };
+}
+
+export async function getSearchCatalog(query: string, { page = 1, pageSize = SEARCH_PAGE_SIZE, relatedLimit = 8 } = {}) {
+  const cleanQuery = query.trim();
+  const plan = productSearchPlan(cleanQuery);
+  if (cleanQuery.length < 2 || cleanQuery.length > 80 || plan.blocked || (!plan.patterns.length && !plan.dosePatterns.length && !plan.topics.length)) {
+    return { products: [], relatedProducts: [], count: 0, correctedQuery: null as string | null };
+  }
+  const [identities, initial] = await Promise.all([getPublicCatalogIdentities(), getCommercialSearchCatalog(cleanQuery, { relatedLimit })]);
+  let commercial = initial;
+  let consultations = searchConsultationCatalog(identities, cleanQuery);
+  let correctedQuery: string | null = null;
+  // One spelling decision for both sources prevents conflicting suggestions or
+  // hiding exact public identities behind an independent commercial correction.
+  if (!commercial.products.length && !consultations.length && /[a-z]{4}/.test(normalizeProductSearch(cleanQuery))) {
+    const vocabulary = [...await spellingVocabulary(getPrisma()), ...productSpellingVocabulary(identities.map(consultationSearchRecord))];
+    const suggestion = correctProductSearchQuery(cleanQuery, vocabulary);
+    if (suggestion && !productSearchPlan(suggestion).blocked) {
+      const suggested = await getCommercialSearchCatalog(suggestion, { relatedLimit });
+      const suggestedIdentities = searchConsultationCatalog(identities, suggestion);
+      if (suggested.products.length || suggestedIdentities.length) {
+        commercial = suggested;
+        consultations = suggestedIdentities;
+        correctedQuery = suggestion;
+      }
+    }
+  }
+  return { ...paginateConsultationCatalog(commercial.products, consultations, { page, pageSize, query: correctedQuery ?? cleanQuery }),
+    relatedProducts: commercial.relatedProducts, correctedQuery };
 }
 
 export type SearchCatalogProduct = Awaited<ReturnType<typeof getSearchCatalog>>["products"][number];
+export type SearchCatalogSaleProduct = Awaited<ReturnType<typeof getCommercialSearchCatalog>>["products"][number];
+export function isSaleSearchProduct(product: SearchCatalogProduct): product is SearchCatalogSaleProduct {
+  return !isConsultationIdentity(product);
+}
 
 export async function getSearchSidebar(products: SearchCatalogProduct[], { topicSearch = false } = {}) {
-  const available = products.filter(product => product.stock > 0 && (!topicSearch || !isPrescriptionSearchProduct(product)));
+  const available = products.filter(isSaleSearchProduct).filter(product => product.stock > 0 && (!topicSearch || !isPrescriptionSearchProduct(product)));
   if (!available.length) return { title: "Explore o catálogo", products: [] };
   const sales = await getPrisma().orderItem.groupBy({
     by: ["productId"],

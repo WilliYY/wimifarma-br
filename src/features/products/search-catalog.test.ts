@@ -4,6 +4,14 @@ import vm from "node:vm";
 import test from "node:test";
 import { build } from "esbuild";
 import { Prisma } from "@/generated/prisma/client";
+import type { PublicCatalogIdentity } from "../catalog-identities/types";
+import { isConsultationIdentity } from "./consultation-catalog";
+import type { SearchCatalogProduct } from "./search-catalog";
+
+function commercial(item: SearchCatalogProduct) {
+  assert.ok(!isConsultationIdentity(item), "expected a commercial Product, not a consultation identity");
+  return item;
+}
 
 function hasDosePattern(sql: Prisma.Sql, name: string) {
   return sql.values.some(value => typeof value === "string" && value.includes("(?!\\s*/)") && new RegExp(value, "i").test(name));
@@ -124,20 +132,31 @@ test("Extra G normaliza como XG no SQL e não vira um filtro extra", async () =>
   assert.ok(!queries[0].values.includes("(^| )extra"));
 });
 
-async function fixture(db: object) {
+async function fixture(db: object, identities: PublicCatalogIdentity[] = []) {
   const bundle = await build({ entryPoints: ["src/features/products/search-catalog.ts"], bundle: true, write: false,
     platform: "node", format: "cjs", packages: "external", plugins: [{ name: "search-db", setup(builder) {
-      builder.onResolve({ filter: /lib\/prisma$/ }, args => ({ path: args.path, namespace: "fixture" }));
+      builder.onResolve({ filter: /lib\/prisma$|catalog-identities\/public-query$/ }, args => ({ path: args.path, namespace: "fixture" }));
       builder.onResolve({ filter: /generated\/prisma\/client$/ }, args => ({ path: args.path, external: true }));
-      builder.onLoad({ filter: /.*/, namespace: "fixture" }, () => ({ contents: "export const getPrisma=()=>fixture.db;" }));
+      builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("public-query") ? "export const getPublicCatalogIdentities=async()=>fixture.identities;" : "export const getPrisma=()=>fixture.db;" }));
     } }] });
   const loaded = { exports: {} as typeof import("./search-catalog") };
   const nativeRequire = createRequire(import.meta.url);
   vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports,
-    require: (name: string) => name.endsWith("generated/prisma/client") ? { Prisma } : nativeRequire(name), fixture: { db },
+    require: (name: string) => name.endsWith("generated/prisma/client") ? { Prisma } : nativeRequire(name), fixture: { db, identities },
   });
   return loaded.exports;
 }
+
+test("consulta pública participa da contagem e paginação sem entrar no carrinho ou relacionados clínicos", async () => {
+  const identity: PublicCatalogIdentity = { kind: "CONSULTATION", id: "catalog:07891800002829", gtinCanonical: "07891800002829", ean: "7891800002829", name: "Algodão sintético", categoryName: "Higiene", categorySlug: "higiene", href: "/catalogo/item/7891800002829" };
+  const rows = Array.from({ length: 24 }, (_, i) => product(`a-${i}`, { name: `Algodão ${i}`, activeIngredients: [], requiresPrescription: false }));
+  const service = await fixture({ $queryRaw: async () => rows.map(row => ({ id: row.id })), product: { findMany: async () => [...rows] } }, [identity]);
+  const result = await service.getSearchCatalog("algodão", { page: 2, relatedLimit: 0 });
+  assert.equal(result.count, 25);
+  assert.deepEqual(Array.from(result.products, item => item.id), [identity.id]);
+  assert.equal("price" in result.products[0], false);
+  assert.equal(result.relatedProducts.length, 0);
+});
 
 test("tamanho de fralda ordena antes da relevância no SQL sem filtrar alternativas ou antecipar indisponíveis", async () => {
   const queries: Prisma.Sql[] = [];
@@ -179,8 +198,8 @@ test("disponibilidade vendável ordena simples e associações globalmente antes
   assert.equal(first.count, 27);
   assert.deepEqual(Array.from(first.products, row => row.id), rows.slice(2, 26).map(row => row.id));
   assert.deepEqual(Array.from(second.products, row => row.id), ["association-available", "single-unavailable", "association-unavailable"]);
-  assert.equal(second.products[2].stock, 0, "estoque bruto do distribuidor não comprova disponibilidade");
-  assert.equal(first.products[0].price, "10.00");
+  assert.equal(commercial(second.products[2]).stock, 0, "estoque bruto do distribuidor não comprova disponibilidade");
+  assert.equal(commercial(first.products[0]).price, "10.00");
   assert.equal(rawQueries, 2, "cada página usa uma consulta de candidatos, sem consulta por produto");
   assert.equal(productReads, 2, "cada página carrega produtos/ofertas em uma consulta, sem N+1");
   assert.doesNotMatch(JSON.stringify([first, second]), /supplierOffers|unitCostCents|allocationQuantity/);
@@ -203,8 +222,8 @@ test("oferta elegível disponibiliza distribuidor com estoque físico zero e man
   });
   const result = await service.getSearchCatalog("losartana", { relatedLimit: 0 });
   assert.deepEqual(Array.from(result.products, row => row.id), ["offer-available", "physical-available", "offer-unavailable"]);
-  assert.ok(result.products[0].stock > 0);
-  assert.equal(result.products[2].stock, 0);
+  assert.ok(commercial(result.products[0]).stock > 0);
+  assert.equal(commercial(result.products[2]).stock, 0);
   assert.equal(JSON.stringify(rows), before, "ordenação não altera dados comerciais de origem");
 });
 
@@ -217,8 +236,8 @@ test("busca preserva relevância dentro da disponibilidade e não expõe foto pr
   const result = await service.getSearchCatalog("losartana 50 mg (Corus)");
   assert.equal(result.count, 2);
   assert.deepEqual(Array.from(result.products, row => row.id), ["a", "b"]);
-  assert.equal(result.products[0].imageUrl, "/brand/medicamento-ilustrativo.webp");
-  assert.equal(result.products[1].imageUrl, "/brand/medicamento-ilustrativo.webp");
+  assert.equal(commercial(result.products[0]).imageUrl, "/brand/medicamento-ilustrativo.webp");
+  assert.equal(commercial(result.products[1]).imageUrl, "/brand/medicamento-ilustrativo.webp");
   assert.doesNotMatch(JSON.stringify(result.products), /\/public\.webp|\/api\/admin\/fornecedores\/imagens\//);
   assert.equal("supplierOffers" in result.products[0], false);
   assert.doesNotMatch(queries[0].text, /LIMIT|OFFSET/, "limites somente após disponibilidade vendável global");

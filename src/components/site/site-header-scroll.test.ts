@@ -342,6 +342,10 @@ test("ações móveis do administrador ficam alinhadas no topo e ao rolar", asyn
       for (const top of [0, 400]) {
         await page.evaluate(y => scrollTo({ top: y, behavior: "instant" }), top);
         await expect(page.locator("header")).toHaveAttribute("data-compact", String(top > 0));
+        // The state attribute changes before the account width finishes its CSS transition.
+        await expect.poll(() => page.locator("header").evaluate(header => header.getAnimations({ subtree: true })
+          .filter(animation => animation instanceof CSSTransition && (animation.pending || animation.playState === "running")).length),
+        { message: `${width}/${top}: layout final do cabeçalho` }).toBe(0);
         const controls = [page.getByRole("button", { name: "Abrir carrinho", exact: true }), page.getByRole("link", { name: "Abrir minha conta", exact: true }), page.getByRole("button", { name: "Sair", exact: true }).locator("visible=true"), page.getByRole("button", { name: "Abrir busca de produtos", exact: true })];
         await expect.poll(async () => {
           const boxes = await Promise.all(controls.map(control => control.boundingBox()));

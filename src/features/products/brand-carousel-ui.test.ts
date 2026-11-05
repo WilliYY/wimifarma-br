@@ -160,28 +160,64 @@ test("automatic brand motion has fractional steps without scrolling every frame 
     const list = page.locator("#home-brands-list");
     await expect(list).toHaveAttribute("data-looping", "true");
     await expect(page.getByRole("button", { name: /movimento das marcas/ })).toHaveCount(0);
-    const motion = await list.evaluate(async element => {
+    const sampleMotion = (settleLayout = true) => list.evaluate(async (element, settleLayout) => {
+      // ResizeObserver recalibrates the cycle after responsive card widths change.
+      if (settleLayout) {
+        await new Promise(requestAnimationFrame);
+        await new Promise(requestAnimationFrame);
+      }
+      const original = element.querySelector<HTMLElement>('li[data-copy="original"]')!;
+      const before = element.querySelector<HTMLElement>('li[data-copy="before"]')!;
+      const cycle = original.offsetLeft - before.offsetLeft;
       let scrolls = 0;
+      let renders = 0;
       const controller = new AbortController();
       element.addEventListener("scroll", () => { scrolls++; }, { signal: controller.signal });
-      const positions: number[] = [];
+      const observer = new MutationObserver(records => { renders += records.length; });
+      observer.observe(element, { childList: true, characterData: true, subtree: true });
+      const positions = [original.getBoundingClientRect().x];
       for (let frame = 0; frame < 30; frame++) {
         await new Promise(requestAnimationFrame);
         positions.push(element.querySelector('li[data-copy="original"]')!.getBoundingClientRect().x);
       }
       controller.abort();
-      return { scrolls, positions };
-    });
-    assert.ok(motion.positions.at(-1)! < motion.positions[0] - 2, "brands keep advancing");
-    assert.ok(motion.positions.some(x => Math.abs(x - Math.round(x)) > 0.05), "motion retains fractional pixels");
-    assert.ok(motion.scrolls < 3, `automatic motion emitted ${motion.scrolls} scroll events`);
+      observer.disconnect();
+      return { scrolls, renders, positions, cycle };
+    }, settleLayout);
+    const assertMotion = (motion: Awaited<ReturnType<typeof sampleMotion>>, label: string) => {
+      assert.ok(motion.cycle > 0, `${label}: a complete brand cycle is measurable`);
+      let distance = 0;
+      let wraps = 0;
+      for (let index = 1; index < motion.positions.length; index++) {
+        const rawStep = motion.positions[index - 1] - motion.positions[index];
+        // The same original card moves right by one cycle when its copy takes over.
+        const step = rawStep < -motion.cycle / 2 ? rawStep + motion.cycle : rawStep > motion.cycle / 2 ? rawStep - motion.cycle : rawStep;
+        if (rawStep < -motion.cycle / 2) wraps++;
+        assert.ok(step >= -0.01 && step <= 1.55, `${label}: continuous forward step ${step}px`);
+        distance += step;
+      }
+      assert.ok(distance > 3, `${label}: brands keep advancing (${distance}px)`);
+      assert.ok(motion.positions.some(x => Math.abs(x - Math.round(x)) > 0.05), `${label}: motion retains fractional pixels`);
+      assert.ok(motion.scrolls < 3, `${label}: automatic motion emitted ${motion.scrolls} scroll events`);
+      assert.equal(motion.renders, 0, `${label}: automatic motion does not rerender the brand cards`);
+      return wraps;
+    };
+    assertMotion(await sampleMotion(), "initial viewport");
     for (const width of [390, 1440, 320]) {
       await page.setViewportSize({ width, height: 800 });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-      const first = list.locator('li[data-copy="original"]').first();
-      const x = await first.evaluate(el => el.getBoundingClientRect().x);
-      await expect.poll(() => first.evaluate(el => el.getBoundingClientRect().x)).toBeLessThan(x - 3);
+      assertMotion(await sampleMotion(), `${width}px`);
     }
+    await list.hover();
+    await list.evaluate(element => {
+      const original = element.querySelector<HTMLElement>('li[data-copy="original"]')!;
+      const before = element.querySelector<HTMLElement>('li[data-copy="before"]')!;
+      element.scrollLeft = (original.offsetLeft - before.offsetLeft) * 2 - 4;
+    });
+    const wrappingMotion = sampleMotion(false);
+    await page.mouse.move(319, 700);
+    const wrapped = await wrappingMotion;
+    assert.equal(assertMotion(wrapped, "loop seam"), 1, "the sample crosses exactly one complete brand cycle");
   } finally { await browser.close(); }
 });
 

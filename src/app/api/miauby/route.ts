@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { miaubyCatalogQuery, miaubyLocalAnswer, miaubyReplyProducts, miaubyRequestSchema, type MiaubyCatalogProduct } from "@/features/miauby/assistant";
 import { limitMiaubyRequest } from "@/features/miauby/request-limits";
-import { getSearchCatalog } from "@/features/products/search-catalog";
+import { getSearchCatalog, type SearchCatalogSaleProduct } from "@/features/products/search-catalog";
+import { isConsultationIdentity } from "@/features/products/consultation-catalog";
 import { readJsonBody } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +33,8 @@ export async function POST(request: Request) {
     const result = await getSearchCatalog(query, { pageSize: 4, relatedLimit: 0 });
     // The public DTO retains its stored price when a supplier offer expires.
     // Never present that historical fallback as a current Miauby quote.
-    const pricedProducts = result.products.filter(product => product.inventorySource !== "DISTRIBUTOR" || product.availableForPurchase);
+    const pricedProducts = result.products.filter((product): product is SearchCatalogSaleProduct => !isConsultationIdentity(product))
+      .filter(product => product.inventorySource !== "DISTRIBUTOR" || product.availableForPurchase);
     const products: MiaubyCatalogProduct[] = pricedProducts.map(product => ({
       id: product.id, name: product.name, slug: product.slug, brand: product.brand,
       inventorySource: product.inventorySource, catalogClassification: product.catalogClassification,

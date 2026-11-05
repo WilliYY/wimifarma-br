@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { CatalogProductCard } from "./catalog-product-card";
 import { CatalogFilterPanel } from "./catalog-filter-panel";
 import { CatalogCategoryNavigation } from "./catalog-category-navigation";
-import { getPublicCategories, getPublicCatalogSections, getStorefrontProducts, PAGE_SIZE, catalogPageHref } from "@/features/products/storefront";
+import { getPublicCategories, getPublicCatalogSections, getPublicStorefrontProducts, PAGE_SIZE, catalogPageHref } from "@/features/products/storefront";
+import { isConsultationIdentity } from "@/features/products/consultation-catalog";
 import { catalogFilterHref, catalogPagination, catalogSections, catalogSorts, type CatalogSort } from "@/features/products/catalog-navigation";
 import { productSearchPlan } from "@/features/products/public-search";
 import { breadcrumbData, SITE_URL } from "@/lib/seo";
@@ -13,7 +14,7 @@ import { CatalogShippingProvider } from "./catalog-shipping-preview";
 
 export async function CatalogPage({ title, description, path, page, categoryNames, offers = false, group, sort = "relevantes", brand, section, query }: { title: string; description: string; path: string; page: number; categoryNames?: string[]; offers?: boolean; group?: CatalogGroup; sort?: CatalogSort; brand?: string; section?: string; query?: string }) {
   const [{ products, count, categorySections, offerNavigation }, publicCategories, globalSections] = await Promise.all([
-    getStorefrontProducts({ page, categories: categoryNames, offers, group, sort, brand, section, query }), offers ? Promise.resolve([]) : getPublicCategories(), categoryNames || offers ? Promise.resolve([]) : getPublicCatalogSections(),
+    getPublicStorefrontProducts({ page, categories: categoryNames, offers, group, sort, brand, section, query }), offers ? Promise.resolve([]) : getPublicCategories(), categoryNames || offers ? Promise.resolve([]) : getPublicCatalogSections(),
   ]);
   const categories = offers ? offerNavigation?.categories ?? [] : publicCategories;
   const availableSections = offers ? offerNavigation?.sections ?? [] : categoryNames ? categorySections ?? [] : globalSections;
@@ -24,7 +25,7 @@ export async function CatalogPage({ title, description, path, page, categoryName
   const parameters = [...new URL(path, SITE_URL).searchParams].filter(([key]) => key !== "pagina" && key !== "ordem");
   const pages = Math.max(1, Math.ceil(count / PAGE_SIZE));
   const crumbs = [{ name: "Início", path: "/" }, { name: "Catálogo", path: "/catalogo" }, ...(basePath !== "/catalogo" || group || section ? [{ name: title, path }] : [])];
-  const structured = [breadcrumbData(crumbs), { "@context": "https://schema.org", "@type": "CollectionPage", name: title, url: `${SITE_URL}${catalogPageHref(path, page)}`, mainEntity: { "@type": "ItemList", itemListElement: products.map((product, i) => ({ "@type": "ListItem", position: (page - 1) * PAGE_SIZE + i + 1, url: `${SITE_URL}/produto/${encodeURIComponent(product.slug)}`, name: product.name })) } }];
+  const structured = [breadcrumbData(crumbs), { "@context": "https://schema.org", "@type": "CollectionPage", name: title, url: `${SITE_URL}${catalogPageHref(path, page)}`, mainEntity: { "@type": "ItemList", itemListElement: products.map((product, i) => ({ "@type": "ListItem", position: (page - 1) * PAGE_SIZE + i + 1, url: `${SITE_URL}${isConsultationIdentity(product) ? product.href : `/produto/${encodeURIComponent(product.slug)}`}`, name: product.name })) } }];
   const linkClass = "flex min-h-11 items-center rounded-lg px-3 py-2 text-sm text-muted hover:bg-surface-subtle hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand aria-[current=page]:bg-brand/5 aria-[current=page]:font-bold aria-[current=page]:text-brand";
 
   return <CatalogShippingProvider><section className="bg-surface-subtle pb-16 pt-36 sm:pt-40 lg:pt-56">
@@ -55,7 +56,7 @@ export async function CatalogPage({ title, description, path, page, categoryName
           </div>
           {brand || query || section ? <div className="mb-5 flex flex-wrap gap-2 text-xs">{[["marca", brand], ["q", query], ["assunto", selectedSection?.label]].map(([key, value]) => value ? <Link aria-label={`Remover filtro ${value}`} className="inline-flex min-h-11 items-center gap-3 rounded-full border border-line bg-white px-4 font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" href={catalogFilterHref(path, { [key!]: undefined })} key={key}>{value}<span aria-hidden="true">×</span></Link> : null)}</div> : null}
           {topicSearch ? <p className="mb-5 text-xs leading-6 text-muted">Navegação por assunto. A escolha ou troca de medicamento deve seguir a orientação do profissional de saúde.</p> : null}
-          {products.length ? <div className="grid grid-cols-1 items-stretch gap-4 min-[380px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 xl:gap-3">{products.map(product => <CatalogProductCard key={product.id} product={product} topicSearch={topicSearch} />)}</div> : <div className="rounded-xl border border-line bg-white p-8"><h2 className="font-bold text-ink">Nenhum produto nesta seleção</h2><p className="mt-2 text-sm text-muted">Tente outra categoria ou remova um filtro para explorar o catálogo.</p><Link className="mt-4 inline-flex min-h-11 items-center font-bold text-brand" href="/catalogo">Ver catálogo</Link></div>}
+          {products.length ? <div className="grid auto-rows-fr grid-cols-1 items-stretch gap-4 min-[380px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 xl:gap-3">{products.map(product => <CatalogProductCard key={product.id} product={product} topicSearch={topicSearch} />)}</div> : <div className="rounded-xl border border-line bg-white p-8"><h2 className="font-bold text-ink">Nenhum produto nesta seleção</h2><p className="mt-2 text-sm text-muted">Tente outra categoria ou remova um filtro para explorar o catálogo.</p><Link className="mt-4 inline-flex min-h-11 items-center font-bold text-brand" href="/catalogo">Ver catálogo</Link></div>}
           <nav aria-label="Páginas do catálogo" className="mt-8 flex flex-wrap items-center justify-center gap-1.5">
             {page > 1 ? <><Link aria-label="Primeira página" className={linkClass} href={catalogPageHref(path, 1)}>«</Link><Link aria-label="Página anterior" className={linkClass} href={catalogPageHref(path, page - 1)}>‹</Link></> : null}
             {catalogPagination(page, pages).map(item => typeof item === "number" ? <Link aria-current={item === page ? "page" : undefined} aria-label={`Página ${item}`} className={`${linkClass} min-w-11 justify-center border border-line bg-white`} href={catalogPageHref(path, item)} key={item}>{item}</Link> : <span aria-hidden="true" className="px-1 text-muted" key={item}>…</span>)}
