@@ -67,7 +67,7 @@ export default async function SearchPage({ searchParams }: Props) {
               <section className="scroll-mt-44" id={section.id} key={section.id}>
                 {section.title ? <h2 className="text-xl font-black text-ink">{section.title}</h2> : null}
                 {section.description ? <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">{section.description}</p> : null}
-                <div className="mt-5 grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 md:grid-cols-3">{section.products.map(product => <CatalogProductCard key={product.id} product={product} topicSearch={topicSearch} />)}</div>
+                <div className="mt-5 grid auto-rows-fr grid-cols-1 gap-4 min-[380px]:grid-cols-2 md:grid-cols-3">{section.products.map(product => <CatalogProductCard key={product.id} product={product} topicSearch={topicSearch} />)}</div>
               </section>
             )) : (
               <div className="rounded-2xl border border-line bg-white px-6 py-12 sm:px-10">

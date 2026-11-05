@@ -10,7 +10,7 @@ As linhas da grade podiam ter alturas diferentes quando uma composição precisa
 
 O campo de composição mantém o texto inteiro visível, sem truncamento, altura fixa ou recorte. O DOM, o atributo `title` e o acesso à ficha também preservam a informação completa. O contrato de medicamentos protege os pares de substância e concentração; esconder parte do texto visualmente não atende a esse contrato.
 
-A equalização ocorre na grade central de `CatalogPage`, por `auto-rows-fr`, com os cartões já esticados pela altura da linha. As fixtures usam a mesma regra. As linhas crescem conforme o conteúdo, incluindo os cartões comerciais, neutros e de consulta; não se limita a altura de um ingrediente para alinhar preços. Os carrosséis da home e de relacionados continuam como linhas flexíveis e não são alterados.
+A equalização ocorre na grade de `CatalogPage` e na grade separada de `/busca`, por `auto-rows-fr`, com os cartões já esticados pela altura da linha. As fixtures usam a mesma regra. As linhas crescem conforme o conteúdo, incluindo os cartões comerciais, neutros e de consulta; não se limita a altura de um ingrediente para alinhar preços. Os carrosséis da home e de relacionados continuam como linhas flexíveis e não são alterados.
 
 No desktop, o título reserva 60 px para três linhas de 20 px, em vez de 64 px. O ajuste remove 4 px de espaço do slot. O título no celular permanece igual. Os testes mantêm as exigências de preço, alinhamento e largura e verificam texto integral, ausência de overflow e geometria sem recorte em 320, 390 e 1280 px. O limite de 520 px é uma verificação da amostra sintética; não é um teto de produção que permita esconder composições maiores.
 
