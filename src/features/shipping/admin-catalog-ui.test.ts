@@ -61,7 +61,7 @@ test("freight catalog searches all pages, preserves settings and applies the rep
     await expect.poll(() => saved.length).toBe(1);
     await expect(page.getByText("Dados de transporte salvos.", { exact: true })).toBeVisible();
     await expect(page.getByLabel("Cidade de origem", { exact: true })).toHaveValue("Origem ainda não salva");
-    assert.deepEqual(saved[0], { updatedAt: new Date(0).toISOString(), profile: { ...profile, enabled: false, transportReviewed: false, measurementBasis: "estimated", reference: null, widthCm: 15, heightCm: 10, lengthCm: 24 } });
+    assert.deepEqual(saved[0], { updatedAt: new Date(0).toISOString(), releaseNotifyOnly: false, profile: { ...profile, enabled: false, transportReviewed: false, measurementBasis: "estimated", reference: null, widthCm: 15, heightCm: 10, lengthCm: 24 } });
     await page.getByLabel("Buscar produto por nome, EAN ou SKU", { exact: true }).fill("Produto 0804");
     await page.getByRole("button", { name: "Buscar produtos", exact: true }).click();
     const incomplete = page.locator("form").filter({ has: page.getByText("Produto 0804", { exact: true }) });

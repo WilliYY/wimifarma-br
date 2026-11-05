@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-04 — Mais 33 perfis estimados de higiene
+
+Foram aplicados uma única vez 33 perfis de carga geral, com medidas estimadas e envio limitado a PAC/SEDEX em Ivaté: 32 preservativos embalados e um absorvente para seios Cremer de 30 unidades/Pague 24. A verificação posterior confirmou 3.068 produtos ativos, dos quais 484 estavam com envio habilitado/revisado e 2.584 permaneciam pendentes, além de 33 auditorias. Os dados físicos, comerciais, de ofertas e integração e os produtos externos foram preservados. Houve backup privado validado, revisão de CAS, ADMIN, lease e bytes, além de limpeza dos recursos próprios. A estimativa pública e a cotação assinada funcionaram para os dois grupos, sem criação de pedidos ou etiquetas. Os 15 dentifrícios seguem pendentes por ambiguidade do canal Melhor Envio; os protótipos de declarações e de origem por serviço foram preservados fora do release. Fontes, testes e recibos estão no [registro operacional](habilitacao-estimada-correios-2026-11-04.md).
+
 ## 2026-11-04 — Peso estimado de multipacks dentais
 
 O modo explícito `--refine-multipacks` exige manifesto por GTIN, apresentação, revisão e perfil literal, com fontes preservadas. A hipótese soma o conteúdo líquido de todos os tubos, reserva comercial de 30 g por tubo e reserva externa única de 100 g, arredondando para cima em 10 g. Os cinco casos propostos são 700/700/460/460/340 g; quatro corrigem pesos inferiores ao próprio líquido e um refina a proteção estimada. Essa política não representa pesagem ou bruto confirmado.
