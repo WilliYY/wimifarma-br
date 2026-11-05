@@ -1,6 +1,8 @@
 import { cache } from "react";
 import type { Prisma } from "@/generated/prisma/client";
 import { getPrisma } from "@/lib/prisma";
+import { getPublicCatalogIdentities } from "@/features/catalog-identities/public-query";
+import { consultationSearchRecord, isConsultationIdentity, mergeConsultationCatalog, searchConsultationCatalog } from "./consultation-catalog";
 import { categorySlug } from "@/lib/seo";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 import { isExplicitInfantCare, type CatalogGroup } from "./home-shortcuts";
@@ -22,7 +24,7 @@ function availableCatalogSections(rows: Parameters<typeof matchesCatalogSection>
 }
 export const getPublicCatalogSections = cache(async () => {
   const rows = await getPrisma().product.findMany({ where: { status: "ACTIVE" }, select: { id: true, name: true, brand: true, category: true, activeIngredients: true, searchTerms: true, catalogClassification: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true } });
-  return availableCatalogSections(rows, await getPublicCategories());
+  return availableCatalogSections([...rows, ...(await getPublicCatalogIdentities()).map(consultationSearchRecord)], await getPublicCategories());
 });
 function productCategories(products: readonly { category: string | null }[]) {
   const categories = new Map<string, { name: string; slug: string; names: string[] }>();
@@ -37,7 +39,7 @@ function productCategories(products: readonly { category: string | null }[]) {
 }
 export const getPublicCategories = cache(async () => {
   const products = await getPrisma().product.findMany({ where: { status: "ACTIVE", category: { not: null } }, distinct: ["category"], select: { category: true }, orderBy: { category: "asc" } });
-  return productCategories(products);
+  return productCategories([...products, ...(await getPublicCatalogIdentities()).map(item => ({ category: item.categoryName }))]);
 });
 export function catalogPageNumber(value: string | string[] | undefined) {
   const numeric = typeof value === "string" && /^\d+$/.test(value) ? Number(value) : 1;
@@ -49,7 +51,8 @@ export function catalogPageHref(path: string, page: number) {
   return `${url.pathname}${url.search}`;
 }
 
-export async function getStorefrontProducts({ page = 1, categories, offers = false, group, sort, brand, section, query }: { page?: number; categories?: string[]; offers?: boolean; group?: CatalogGroup; sort?: CatalogSort; brand?: string; section?: string; query?: string } = {}) {
+export type StorefrontOptions = { page?: number; categories?: string[]; offers?: boolean; group?: CatalogGroup; sort?: CatalogSort; brand?: string; section?: string; query?: string };
+async function getCommercialStorefrontProducts({ categories, offers = false, group, sort, brand, section, query }: StorefrontOptions = {}) {
   const prisma = getPrisma();
   const groupedNames = group ? catalogGroupNames(await getPublicCategories(), group) : undefined;
   const brandNames = brand !== undefined ? matchingBrandNames(await getPublicBrandRecords(), brand) : undefined;
@@ -87,8 +90,43 @@ export async function getStorefrontProducts({ page = 1, categories, offers = fal
     .map(item => ({ label: item.label as string, href: `/catalogo?grupo=${item.group}` }));
   const adultDiapers = careCategories.find(item => /^fraldas? adultas?$/i.test(item.name));
   if (adultDiapers) browseLinks.push({ label: adultDiapers.name, href: `/categorias/${adultDiapers.slug}` });
-  return { count: products.length, products: products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+  return { count: products.length, products,
     offerNavigation: offers ? { categories: offerCategories, sections: availableCatalogSections(scopeRows, offerCategories), browseLinks } : undefined,
     // These are the full category/brand rows, before subsection and pagination, never just the visible page.
     categorySections: categories ? availableCatalogSections(scopeRows, categories.map(name => ({ name }))) : undefined };
+}
+
+/** Existing commerce callers (home, offers, brands) retain their Product contract. */
+export async function getStorefrontProducts(options: StorefrontOptions = {}) {
+  const result = await getCommercialStorefrontProducts(options);
+  const page = catalogPageNumber(String(options.page ?? 1));
+  return { ...result, products: result.products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) };
+}
+
+/** Public browse pages count and paginate both sources, without synthetic prices. */
+export async function getPublicStorefrontProducts(options: StorefrontOptions = {}) {
+  const result = await getCommercialStorefrontProducts(options);
+  const { categories, offers, group, brand, section, query, sort } = options;
+  const identities = offers || brand !== undefined || group === "medicines" ? [] : await getPublicCatalogIdentities();
+  const groupNames = group ? catalogGroupNames(await getPublicCategories(), group) : [];
+  const subsection = catalogSections.find(item => item.id === section);
+  const scoped = identities.filter(item => {
+    const record = consultationSearchRecord(item);
+    return (!categories || categories.includes(item.categoryName ?? "")) &&
+      (!group || groupNames.includes(item.categoryName ?? "") || (group === "baby" && isExplicitInfantCare(record)));
+  });
+  const filtered = subsection ? scoped.filter(item => matchesCatalogSection(consultationSearchRecord(item), subsection)) : scoped;
+  const matches = query ? searchConsultationCatalog(filtered, query) : filtered;
+  const products = mergeConsultationCatalog(result.products, matches, { query });
+  if (sort === "nome-asc" || sort === "nome-desc") {
+    products.sort((a, b) => {
+      const available = Number(!isConsultationIdentity(b) && b.stock > 0) - Number(!isConsultationIdentity(a) && a.stock > 0);
+      const name = a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
+      return available || (sort === "nome-desc" ? -name : name) || a.id.localeCompare(b.id);
+    });
+  }
+  const page = catalogPageNumber(String(options.page ?? 1));
+  return { ...result, count: products.length, products: products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    categorySections: categories ? [...new Set([...(result.categorySections ?? []),
+      ...availableCatalogSections(scoped.map(consultationSearchRecord), categories.map(name => ({ name })))])] : result.categorySections };
 }

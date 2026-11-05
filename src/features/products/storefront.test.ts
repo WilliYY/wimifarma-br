@@ -4,6 +4,7 @@ import vm from "node:vm";
 import test from "node:test";
 import { build } from "esbuild";
 import { groupCategoryNames, catalogGroup } from "./home-shortcuts";
+import type { PublicCatalogIdentity } from "../catalog-identities/types";
 
 function matchesWhere(row: Record<string, unknown>, where: Record<string, unknown>): boolean {
   return Object.entries(where).every(([key, value]) => {
@@ -18,19 +19,33 @@ function matchesWhere(row: Record<string, unknown>, where: Record<string, unknow
   });
 }
 
-async function fixture(rows: object[], brands: Parameters<typeof import("./brands").buildPublicBrands>[0] = [], validPhotos: string[] = [], respectSelect = false, respectWhere = false) {
+async function fixture(rows: object[], brands: Parameters<typeof import("./brands").buildPublicBrands>[0] = [], validPhotos: string[] = [], respectSelect = false, respectWhere = false, identities: PublicCatalogIdentity[] = []) {
   let query: Record<string, unknown> = {};
   const queries: Record<string, unknown>[] = [];
   const photoChecks: (string | null)[][] = [];
   const db = { product: { fields: { price: "fixture-price" }, count: async () => rows.length, findMany: async (input: Record<string, unknown>) => { queries.push(input); if ((input.select as { brand?: boolean; id?: boolean }).brand && !(input.select as { id?: boolean }).id) return brands; query = input; const matching = respectWhere ? rows.filter(row => matchesWhere(row as Record<string, unknown>, input.where as Record<string, unknown>)) : rows; const selected = input.take ? matching.slice(Number(input.skip ?? 0), Number(input.skip ?? 0) + Number(input.take)) : matching; return respectSelect ? selected.map(row => Object.fromEntries(Object.entries(row).filter(([key]) => (input.select as Record<string, unknown>)[key] === true))) : selected; } } };
   const bundle = await build({ entryPoints: ["src/features/products/storefront.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "storefront-db", setup(builder) {
-    builder.onResolve({ filter: /lib\/prisma$|home-photos$/ }, args => ({ path: args.path, namespace: "fixture" }));
-    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("home-photos") ? "export const validatedHomePhotos=async urls=>{fixture.photoChecks.push(urls);return new Set(urls.filter(url=>fixture.validPhotos.includes(url)))};" : "export const getPrisma=()=>fixture.db;" }));
+    builder.onResolve({ filter: /lib\/prisma$|home-photos$|catalog-identities\/public-query$/ }, args => ({ path: args.path, namespace: "fixture" }));
+    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("public-query") ? "export const getPublicCatalogIdentities=async()=>fixture.identities;" : args.path.endsWith("home-photos") ? "export const validatedHomePhotos=async urls=>{fixture.photoChecks.push(urls);return new Set(urls.filter(url=>fixture.validPhotos.includes(url)))};" : "export const getPrisma=()=>fixture.db;" }));
   } }] });
   const loaded = { exports: {} as typeof import("./storefront") };
-  vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), fixture: { db, validPhotos, photoChecks }, URL });
+  vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), fixture: { db, validPhotos, photoChecks, identities }, URL });
   return { service: loaded.exports, query: () => query, queries, photoChecks };
 }
+
+test("catálogo misto pagina depois da mesclagem e não insere consultas nas ofertas ou marcas inferidas", async () => {
+  const identity: PublicCatalogIdentity = { kind: "CONSULTATION", id: "catalog:07891800002829", gtinCanonical: "07891800002829", ean: "7891800002829", name: "Shampoo sintético", categoryName: "Higiene", categorySlug: "higiene", href: "/catalogo/item/7891800002829" };
+  const rows = Array.from({ length: 24 }, (_, i) => ({ id: `sale-${i}`, name: `Shampoo ${i}`, category: "Higiene", activeIngredients: [], searchTerms: [], stock: 1, price: "10", promotionalPrice: null }));
+  const { service } = await fixture(rows, [], [], false, false, [identity]);
+  const result = await service.getPublicStorefrontProducts({ page: 2 });
+  assert.equal(result.count, 25);
+  assert.deepEqual(Array.from(result.products, item => item.id), [identity.id]);
+  assert.equal("price" in result.products[0], false);
+  assert.equal((await service.getStorefrontProducts({ page: 2 })).products.length, 0, "home/ofertas mantêm somente contratos comerciais");
+  assert.equal((await service.getPublicStorefrontProducts({ offers: true })).products.some(item => item.id === identity.id), false);
+  assert.equal((await service.getPublicStorefrontProducts({ brand: "Laboratório" })).products.some(item => item.id === identity.id), false);
+  assert.ok((await service.getPublicStorefrontProducts({ group: "beauty", section: "hair", page: 2 })).products.some(item => item.id === identity.id));
+});
 
 test("mesmo SKU Bepantol Baby permanece na marca, Infantil e Cuidados infantis com SQL filtrando candidatos", async () => {
   const base = { status: "ACTIVE", stock: 5, price: "10", promotionalPrice: null, requiresPrescription: false, isPopularPharmacy: false, prescriptionType: "UNREVIEWED", catalogClassification: { kind: "HYGIENE" }, activeIngredients: [], searchTerms: [] };

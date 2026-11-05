@@ -11,6 +11,7 @@ import { isProductAssociation, productSearchHref, productSearchPlan } from "@/fe
 import { catalogPageNumber } from "@/features/products/storefront";
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
+import { isConsultationIdentity } from "@/features/products/consultation-catalog";
 import { CatalogShippingProvider } from "@/components/site/catalog-shipping-preview";
 
 export const dynamic = "force-dynamic";
@@ -81,7 +82,7 @@ export default async function SearchPage({ searchParams }: Props) {
               <span className="text-sm text-muted">Página {page} de {pages}</span>
               {page < pages ? <Link className="inline-flex min-h-11 items-center gap-1 rounded-full border border-line bg-white px-4 text-sm font-semibold" href={productSearchHref(query, page + 1)}>Próxima <ChevronRight className="h-4 w-4" /></Link> : null}
             </nav> : null}
-            {topicSearch || result.products.some(isProductAssociation) || result.relatedProducts.length > 0 ? <p className="text-xs leading-6 text-muted">A escolha ou troca de medicamento deve seguir a orientação do profissional de saúde.</p> : null}
+            {topicSearch || result.products.some(product => !isConsultationIdentity(product) && isProductAssociation(product)) || result.relatedProducts.length > 0 ? <p className="text-xs leading-6 text-muted">A escolha ou troca de medicamento deve seguir a orientação do profissional de saúde.</p> : null}
           </div>
 
           <aside aria-label={sidebar.title} className="min-w-0 rounded-2xl border border-line bg-white lg:sticky lg:top-[var(--site-header-offset,10rem)]">

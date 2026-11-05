@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { Prisma } from "../src/generated/prisma/client";
 import { getPrisma } from "../src/lib/prisma";
-import { getSearchCatalog, getSearchSidebar } from "../src/features/products/search-catalog";
+import { getSearchCatalog, getSearchSidebar, isSaleSearchProduct } from "../src/features/products/search-catalog";
 import { productDosePatterns } from "../src/features/products/public-search";
 
 async function main() {
@@ -14,7 +14,7 @@ async function main() {
     if (query === "losartana 50mg") assert.ok(result.count >= 10, "Piloto de losartana não foi encontrado");
     if (query === "losartana 50 mg (corus)") assert.ok(result.products.some(product => /corus/i.test(product.name)));
     if (query === "corus") assert.ok(result.relatedProducts.length > 0, "Marcas relacionadas não foram encontradas");
-    assert.ok(result.products.every(product => !(product.inventorySource === "DISTRIBUTOR" && product.requiresPrescription && product.imageUrl)));
+    assert.ok(result.products.filter(isSaleSearchProduct).every(product => !(product.inventorySource === "DISTRIBUTOR" && product.requiresPrescription && product.imageUrl)));
     assert.ok(result.products.every(product => !("supplierOffers" in product)));
     const sidebar = await getSearchSidebar([...result.products, ...result.relatedProducts]);
     results.push({ query, count: result.count, related: result.relatedProducts.length, sidebar: sidebar.title, sidebarCount: sidebar.products.length });

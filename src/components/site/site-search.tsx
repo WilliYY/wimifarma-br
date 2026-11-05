@@ -14,11 +14,11 @@ import { createPortal } from "react-dom";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Loader2, Search, X } from "lucide-react";
 import { ProductSearchResults } from "@/components/site/product-search-results";
-import { productSearchHref, type PublicProductSearchItem } from "@/features/products/public-search";
+import { productSearchHref, type PublicCatalogSearchItem, type PublicProductSearchItem } from "@/features/products/public-search";
 
 type SearchResponse = {
   data?: {
-    products: PublicProductSearchItem[];
+    products: PublicCatalogSearchItem[];
     relatedProducts: PublicProductSearchItem[];
     correctedQuery?: string | null;
   };
@@ -26,7 +26,7 @@ type SearchResponse = {
 };
 
 const emptyResults = {
-  products: [] as PublicProductSearchItem[],
+  products: [] as PublicCatalogSearchItem[],
   relatedProducts: [] as PublicProductSearchItem[],
   correctedQuery: null as string | null,
 };

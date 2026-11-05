@@ -3,7 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Loader2, SearchX, Sparkles } from "lucide-react";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
-import { isPrescriptionSearchProduct, productSearchHref, productSearchPlan, type PublicProductSearchItem } from "@/features/products/public-search";
+import { isPrescriptionSearchProduct, productSearchHref, productSearchPlan, type PublicCatalogSearchItem, type PublicProductSearchItem } from "@/features/products/public-search";
+import { isConsultationIdentity } from "@/features/products/consultation-catalog";
 import { PrescriptionSearchDetails } from "./prescription-search-details";
 import { cn, formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
@@ -19,7 +20,7 @@ type ProductSearchResultsProps = {
   onActiveChange: (id: string) => void;
   onChoose: () => void;
   optionIdPrefix: string;
-  products: PublicProductSearchItem[];
+  products: PublicCatalogSearchItem[];
   query: string;
   relatedProducts: PublicProductSearchItem[];
 };
@@ -34,13 +35,25 @@ function ResultItem({
   topicSearch,
 }: {
   activeId: string | null;
-  item: PublicProductSearchItem;
+  item: PublicCatalogSearchItem;
   kind: "product" | "related";
   onActiveChange: (id: string) => void;
   onChoose: () => void;
   optionIdPrefix: string;
   topicSearch: boolean;
 }) {
+  if (isConsultationIdentity(item)) return (
+    <Link aria-selected={activeId === item.id} className={cn("grid min-h-20 grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-3 rounded-lg px-2 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/35", activeId === item.id ? "bg-brand-soft" : "hover:bg-surface-subtle")}
+      href={item.href} id={`${optionIdPrefix}-${item.id}`} onClick={onChoose}
+      onFocus={() => onActiveChange(item.id)} onMouseMove={() => onActiveChange(item.id)} role="option">
+      <ProductImagePlaceholder className="h-14 w-14 rounded-md border border-line bg-white p-2" />
+      <span className="min-w-0">
+        <span className="block break-words text-sm font-bold leading-5 text-ink">{item.name}</span>
+        <span className="mt-1 block text-xs text-muted">{item.categoryName ?? "Catálogo"} · EAN: {item.ean}</span>
+        <span className="mt-1 block text-xs font-bold text-brand">Preço e disponibilidade sob consulta</span>
+      </span>
+    </Link>
+  );
   if (topicSearch && isPrescriptionSearchProduct(item)) return (
     <Link aria-selected={activeId === item.id} className={cn("block rounded-md px-3 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/35", activeId === item.id ? "bg-surface-subtle" : "hover:bg-surface-subtle")}
       href={`/produto/${item.slug}`} id={`${optionIdPrefix}-${item.id}`} onClick={onChoose}

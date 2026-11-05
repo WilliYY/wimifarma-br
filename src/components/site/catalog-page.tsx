@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { CatalogProductCard } from "./catalog-product-card";
 import { CatalogFilterPanel } from "./catalog-filter-panel";
 import { CatalogCategoryNavigation } from "./catalog-category-navigation";
-import { getPublicCategories, getPublicCatalogSections, getStorefrontProducts, PAGE_SIZE, catalogPageHref } from "@/features/products/storefront";
+import { getPublicCategories, getPublicCatalogSections, getPublicStorefrontProducts, PAGE_SIZE, catalogPageHref } from "@/features/products/storefront";
+import { isConsultationIdentity } from "@/features/products/consultation-catalog";
 import { catalogFilterHref, catalogPagination, catalogSections, catalogSorts, type CatalogSort } from "@/features/products/catalog-navigation";
 import { productSearchPlan } from "@/features/products/public-search";
 import { breadcrumbData, SITE_URL } from "@/lib/seo";
@@ -13,7 +14,7 @@ import { CatalogShippingProvider } from "./catalog-shipping-preview";
 
 export async function CatalogPage({ title, description, path, page, categoryNames, offers = false, group, sort = "relevantes", brand, section, query }: { title: string; description: string; path: string; page: number; categoryNames?: string[]; offers?: boolean; group?: CatalogGroup; sort?: CatalogSort; brand?: string; section?: string; query?: string }) {
   const [{ products, count, categorySections, offerNavigation }, publicCategories, globalSections] = await Promise.all([
-    getStorefrontProducts({ page, categories: categoryNames, offers, group, sort, brand, section, query }), offers ? Promise.resolve([]) : getPublicCategories(), categoryNames || offers ? Promise.resolve([]) : getPublicCatalogSections(),
+    getPublicStorefrontProducts({ page, categories: categoryNames, offers, group, sort, brand, section, query }), offers ? Promise.resolve([]) : getPublicCategories(), categoryNames || offers ? Promise.resolve([]) : getPublicCatalogSections(),
   ]);
   const categories = offers ? offerNavigation?.categories ?? [] : publicCategories;
   const availableSections = offers ? offerNavigation?.sections ?? [] : categoryNames ? categorySections ?? [] : globalSections;
@@ -24,7 +25,7 @@ export async function CatalogPage({ title, description, path, page, categoryName
   const parameters = [...new URL(path, SITE_URL).searchParams].filter(([key]) => key !== "pagina" && key !== "ordem");
   const pages = Math.max(1, Math.ceil(count / PAGE_SIZE));
   const crumbs = [{ name: "Início", path: "/" }, { name: "Catálogo", path: "/catalogo" }, ...(basePath !== "/catalogo" || group || section ? [{ name: title, path }] : [])];
-  const structured = [breadcrumbData(crumbs), { "@context": "https://schema.org", "@type": "CollectionPage", name: title, url: `${SITE_URL}${catalogPageHref(path, page)}`, mainEntity: { "@type": "ItemList", itemListElement: products.map((product, i) => ({ "@type": "ListItem", position: (page - 1) * PAGE_SIZE + i + 1, url: `${SITE_URL}/produto/${encodeURIComponent(product.slug)}`, name: product.name })) } }];
+  const structured = [breadcrumbData(crumbs), { "@context": "https://schema.org", "@type": "CollectionPage", name: title, url: `${SITE_URL}${catalogPageHref(path, page)}`, mainEntity: { "@type": "ItemList", itemListElement: products.map((product, i) => ({ "@type": "ListItem", position: (page - 1) * PAGE_SIZE + i + 1, url: `${SITE_URL}${isConsultationIdentity(product) ? product.href : `/produto/${encodeURIComponent(product.slug)}`}`, name: product.name })) } }];
   const linkClass = "flex min-h-11 items-center rounded-lg px-3 py-2 text-sm text-muted hover:bg-surface-subtle hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand aria-[current=page]:bg-brand/5 aria-[current=page]:font-bold aria-[current=page]:text-brand";
 
   return <CatalogShippingProvider><section className="bg-surface-subtle pb-16 pt-36 sm:pt-40 lg:pt-56">

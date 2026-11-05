@@ -2,8 +2,12 @@ import Link from "next/link";
 import { isPrescriptionSearchProduct } from "@/features/products/public-search";
 import { PrescriptionSearchDetails } from "./prescription-search-details";
 import { PublicProductCard, type RelatedProductCardItem } from "./public-product-card";
+import type { PublicCatalogIdentity } from "@/features/catalog-identities/types";
+import { isConsultationIdentity } from "@/features/products/consultation-catalog";
+import { ConsultationProductCard } from "./consultation-product-card";
 
-export function CatalogProductCard({ product, topicSearch = false }: { product: RelatedProductCardItem; topicSearch?: boolean }) {
+export function CatalogProductCard({ product, topicSearch = false }: { product: RelatedProductCardItem | PublicCatalogIdentity; topicSearch?: boolean }) {
+  if (isConsultationIdentity(product)) return <ConsultationProductCard product={product} />;
   if (!topicSearch || !isPrescriptionSearchProduct(product)) return <PublicProductCard product={product} showShippingEstimate />;
 
   return (

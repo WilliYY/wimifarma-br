@@ -6,7 +6,7 @@ import { build } from "esbuild";
 
 const product = { id: "synthetic", name: "Losartana 50 mg 30 comprimidos", slug: "synthetic", inventorySource: "PHARMACY", catalogClassification: null, brand: "Fabricante", category: "Medicamentos", imageUrl: null, isPopularPharmacy: false, price: "12.34", promotionalPrice: "11.22", requiresPrescription: true };
 
-async function harness(failCatalog = false, unavailableSupplier = false) {
+async function harness(failCatalog = false, unavailableSupplier = false, consultationOnly = false) {
   let calls = 0, reads = 0, now = 1_800_000_000_000;
   const queries: Array<{ query: string; options: { pageSize: number; relatedLimit: number } }> = [];
   const bundle = await build({ entryPoints: ["src/app/api/miauby/route.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "isolated-catalog", setup(builder) {
@@ -19,7 +19,7 @@ async function harness(failCatalog = false, unavailableSupplier = false) {
   class Clock extends Date { static now() { return now; } }
   vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), Request, Response, Headers, AbortSignal, URL, TextDecoder, TextEncoder, Uint8Array, Buffer, setTimeout, clearTimeout, Date: Clock, console: { error() {} }, process: { env: { GEMINI_API_KEY: "synthetic-only", AUTH_URL: "https://example.com" } }, fixture: {
     prisma: { product: { findMany: async () => { reads++; return []; } } },
-    search: async (query: string, options: { pageSize: number; relatedLimit: number }) => { reads++; queries.push({ query, options }); if (failCatalog) throw new Error("PRIVATE_SYNTHETIC_DB_ERROR"); return { products: query === "nada-inexistente" ? [] : [{ ...product, ...(unavailableSupplier ? { inventorySource: "DISTRIBUTOR", availableForPurchase: false } : {}), supplierOffers: [{ secret: "PRIVATE" }], searchText: "private internal" }], correctedQuery: query === "losartna 50mg" ? "losartana 50mg" : null }; },
+    search: async (query: string, options: { pageSize: number; relatedLimit: number }) => { reads++; queries.push({ query, options }); if (failCatalog) throw new Error("PRIVATE_SYNTHETIC_DB_ERROR"); return { products: query === "nada-inexistente" ? [] : consultationOnly ? [{ kind: "CONSULTATION", id: "catalog:07891800002829", ean: "7891800002829", name: "Algodão sintético", href: "/catalogo/item/7891800002829" }] : [{ ...product, ...(unavailableSupplier ? { inventorySource: "DISTRIBUTOR", availableForPurchase: false } : {}), supplierOffers: [{ secret: "PRIVATE" }], searchText: "private internal" }], correctedQuery: query === "losartna 50mg" ? "losartana 50mg" : null }; },
   }, fetch: async () => { calls++; return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: "External synthetic answer" }] } }] })); } });
   const request = (message = "Qual o preço da losartana 50mg?", ip = "192.0.2.1", extra: Record<string, unknown> = {}, origin = "https://example.com") => new Request("https://example.com/api/miauby", { method: "POST", headers: { "content-type": "application/json", "x-real-ip": ip, origin }, body: JSON.stringify({ message, ...extra }) });
   return { post: loaded.exports.POST, request, queries, calls: () => calls, reads: () => reads, advance: (ms: number) => { now += ms; } };
@@ -111,4 +111,14 @@ test("oferta de distribuidora indisponível não vira cotação do preço histó
   assert.match(body.message, /preço.*disponível/i);
   assert.doesNotMatch(JSON.stringify(body), /12\.34|11\.22/);
   assert.equal(h.calls(), 0);
+});
+
+test("identidade sob consulta nunca vira cotação de preço ou produto comprável na Miauby", async () => {
+  const h = await harness(false, false, true);
+  const response = await h.post(h.request("Algodão"));
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.deepEqual(body.products, []);
+  assert.match(body.message, /confirmar.*preço.*disponível/i);
+  assert.doesNotMatch(JSON.stringify(body), /NaN|12\.34|11\.22|catalog:/);
 });

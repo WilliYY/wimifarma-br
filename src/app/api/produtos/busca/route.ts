@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { getSearchCatalog, type SearchCatalogProduct } from "@/features/products/search-catalog";
-import type { PublicProductSearchItem } from "@/features/products/public-search";
+import type { PublicCatalogSearchItem } from "@/features/products/public-search";
+import { isConsultationIdentity } from "@/features/products/consultation-catalog";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-function serializeProduct(product: SearchCatalogProduct): PublicProductSearchItem {
+function serializeProduct(product: SearchCatalogProduct): PublicCatalogSearchItem {
+  if (isConsultationIdentity(product)) return {
+    kind: "CONSULTATION", id: product.id, gtinCanonical: product.gtinCanonical,
+    ean: product.ean, name: product.name, categoryName: product.categoryName,
+    categorySlug: product.categorySlug, href: product.href,
+  };
   return {
     supplierDemandAllowed: product.supplierDemandAllowed,
     cashbackEnabled: product.cashbackEnabled, cashbackRateBps: product.cashbackRateBps,

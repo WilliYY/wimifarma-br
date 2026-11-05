@@ -1,4 +1,5 @@
 import type { PrescriptionType } from "./purchase-policy";
+import type { PublicCatalogIdentity } from "../catalog-identities/types";
 import type { PublicPmcReference } from "./cmed-reference";
 import { searchTopics, type SearchTopic } from "./search-topics";
 import { normalizeGtin } from "./gtin";
@@ -38,6 +39,8 @@ export type PublicProductSearchItem = {
   searchTerms: string[];
   slug: string;
 };
+
+export type PublicCatalogSearchItem = PublicProductSearchItem | PublicCatalogIdentity;
 
 export type SearchRankableProduct = {
   id: string;
@@ -329,7 +332,7 @@ export function rankProductsForQuery<T extends SearchRankableProduct>(products: 
   return corrected ? rankExactProductsForQuery(products, corrected) : exact;
 }
 
-function rankExactProductsForQuery<T extends SearchRankableProduct>(
+export function rankExactProductsForQuery<T extends SearchRankableProduct>(
   products: T[],
   query: string,
 ) {
