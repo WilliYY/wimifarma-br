@@ -101,7 +101,9 @@ Recibos privados: `D:\Codex-outputs\wimifarma-br\santa-cruz-publico-2026-11-05\v
 
 `scripts/audit-catalog-identities-public.ts` complementa a QA com os leitores e o handler reais. Ele aceita somente o banco sintético ligado ao nonce, substitui a conexão por esse destino validado e impõe `default_transaction_read_only=on` em todas as conexões usadas pelos leitores.
 
-Os ensaios anteriores comprovaram o SQL e o comportamento em PostgreSQL; registraram o histórico sintético e não substituem uma execução de `prisma migrate deploy`. A prova pelo CLI real e a suíte integral da CI no commit final são condições adicionais de publicação. Falhas e recibos parciais permanecem preservados no diretório privado de validação.
+Os ensaios anteriores comprovaram o SQL e o comportamento em PostgreSQL; registraram o histórico sintético e não substituem uma execução de `prisma migrate deploy`. A prova adicional pelo CLI real passou 27 verificações em ambiente ARM64 isolado: baseline de 34 migrations, quatro produtos sintéticos nos estados pertinentes, nova migration, histórico de 35 entradas e uma segunda execução sem alteração. Foram preservados os dados comerciais sintéticos, criadas nove supressões esperadas e confirmados zero clientes, pedidos ou identidades públicas. Node 24.21.0, Prisma 7.10.0 e lockfile foram conferidos. O recibo privado é `validation/qa-prisma-cli-v3-pass-receipt.json`; os recursos isolados foram removidos após preservar e validar seus dumps sintéticos. As duas tentativas anteriores com erros de permissão e fixture permanecem registradas, sem repetição sobre os mesmos bancos.
+
+A suíte integral da CI no commit final e a conferência da APP continuam condições de publicação. Falhas e recibos parciais permanecem preservados no diretório privado de validação; a QA isolada não concede autorização nem comprova aplicação em produção.
 
 ## Arquivos de referência
 

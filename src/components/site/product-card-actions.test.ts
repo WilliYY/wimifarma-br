@@ -78,7 +78,7 @@ async function fixture(run: (page: Page) => Promise<void>, kind = "physical") {
     await page.route("**/*", async route => {
       const url = new URL(route.request().url());
       if (url.origin !== origin) return route.abort();
-      if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: `<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><style>${kind.endsWith("grid") ? '#root{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:960px;margin:16px auto;padding:0 12px}@media(min-width:900px){#root{grid-template-columns:repeat(3,minmax(0,1fr))}}' : '#root{width:min(280px,calc(50vw - 24px));margin:24px}'}${kind === "large-grid" ? '#root{max-width:648px}' : ''}</style><div id="root"></div><script type="module" src="/fixture.js"></script>` });
+      if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: `<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><style>${kind.endsWith("grid") ? '#root{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:12px;max-width:960px;margin:16px auto;padding:0 12px}@media(min-width:900px){#root{grid-template-columns:repeat(3,minmax(0,1fr))}}' : '#root{width:min(280px,calc(50vw - 24px));margin:24px}'}${kind === "large-grid" ? '#root{max-width:648px}' : ''}</style><div id="root"></div><script type="module" src="/fixture.js"></script>` });
       if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: styles });
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: script });
       if (url.pathname === "/fixture-product.svg") return route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="200"><rect x="3" y="3" width="114" height="194" rx="8" fill="#f1f5f9" stroke="#b70c32" stroke-width="4"/><text x="60" y="95" text-anchor="middle" font-size="12">Produto</text><text x="60" y="112" text-anchor="middle" font-size="12">sintético</text></svg>' });
@@ -153,10 +153,18 @@ test("cards compactos mantêm benefícios fora do preço e altura uniforme sem e
     await expect(composition).toHaveAttribute("title", compositionText);
     for (const width of [320, 390, 1280]) {
       await page.setViewportSize({ width, height: 900 });
-      const compositionBox = await composition.boundingBox();
-      assert.ok(compositionBox && compositionBox.height <= 32, `composição excedeu duas linhas em ${width}px`);
-      const emptyCompositionBox = await cards.first().getByRole("link").locator("+ span").boundingBox();
-      assert.ok(emptyCompositionBox && emptyCompositionBox.height === compositionBox.height, `composição vazia alterou o slot em ${width}px`);
+      await expect(composition).toBeVisible();
+      const compositionGeometry = await composition.evaluate(element => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const text = range.getBoundingClientRect();
+        const box = element.getBoundingClientRect();
+        return {
+          fits: element.scrollHeight <= element.clientHeight && element.scrollWidth <= element.clientWidth,
+          visibleText: text.top >= box.top && text.bottom <= box.bottom && text.left >= box.left && text.right <= box.right,
+        };
+      });
+      assert.ok(compositionGeometry.fits && compositionGeometry.visibleText, `composição foi recortada em ${width}px`);
       if (width === 390) {
         for (const link of [eurofarma, multilab]) {
           const titleBox = await link.boundingBox();

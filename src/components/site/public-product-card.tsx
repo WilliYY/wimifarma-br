@@ -99,7 +99,7 @@ export function PublicProductCard({ product, showShippingEstimate = false }: { p
         >
           <span className="line-clamp-3">{displayName}{titleBrand ? <> <span className="font-black">{titleBrand}</span></> : null}</span>
         </Link>
-        <span className="mt-1 line-clamp-2 h-8 shrink-0 text-[0.68rem] font-semibold leading-4 text-muted" title={ingredientLabel || undefined}>
+        <span className="mt-1 min-h-4 shrink-0 text-[0.68rem] font-semibold leading-4 text-muted" title={ingredientLabel || undefined}>
           {ingredientLabel}
         </span>
 

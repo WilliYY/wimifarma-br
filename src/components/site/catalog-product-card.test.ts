@@ -18,7 +18,7 @@ test("catalog cards preserve neutral prescription topics, photos, placeholders a
         price:'10.00',promotionalPrice:null,activeIngredients:[],searchTerms:[],requiresPrescription:false,prescriptionType:'UNREVIEWED',isPopularPharmacy:false,stock:0};
       const rx={...base,id:'rx',name:'Medicamento sintético 5mg 30 comprimidos',category:'Medicamentos',requiresPrescription:true,prescriptionType:'ORDINARY',
         imageUrl:'/synthetic.svg',promotionalPrice:'8.00',cashbackEnabled:true,cashbackRateBps:200,activeIngredients:['Composição sintética']};
-      createRoot(document.getElementById('root')).render(<CartProvider><CatalogShippingProvider><main className="grid grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-3 gap-4 items-stretch">
+      createRoot(document.getElementById('root')).render(<CartProvider><CatalogShippingProvider><main className="grid auto-rows-fr grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-3 gap-4 items-stretch">
         <CatalogProductCard product={rx} topicSearch/><CatalogProductCard product={{...base,id:'photo',name:'Produto com foto',imageUrl:'/synthetic.svg',stock:1}} topicSearch/>
         <CatalogProductCard product={{...base,id:'placeholder',name:'Produto sem foto'}} topicSearch/>
       </main></CatalogShippingProvider><FooterPaymentMethodsContent brands={[{id:'elo',name:'Elo',image:null},{id:'debelo',name:'Elo Débito',image:null},{id:'visa',name:'Visa',image:null}]} fromMercadoPago/></CartProvider>);`,
