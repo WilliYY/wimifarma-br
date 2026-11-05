@@ -17,13 +17,13 @@ async function harness() {
   let refIndex = 0;
   let stateIndex = 0;
   let nextTimer = 0;
-  let effects: (() => (() => void) | void)[] = [];
+  let effects: { effect: () => (() => void) | void; dependencies: unknown[] }[] = [];
   let cleanup: (() => void) | void;
   let nextResponse: Promise<{ ok: boolean; status: number }> | undefined;
   const hooks = {
     useState: () => [stateIndex++ === 0 ? items : true, () => {}],
     useRef: (value: unknown) => refs[refIndex++] ?? (refs[refIndex - 1] = { current: value }),
-    useEffect: (effect: () => (() => void) | void) => effects.push(effect),
+    useEffect: (effect: () => (() => void) | void, dependencies: unknown[]) => effects.push({ effect, dependencies }),
   };
   const loaded = { exports: {} as { CartProvider: (props: { children: null }) => unknown } };
   const bundle = await bundlePromise;
@@ -34,7 +34,10 @@ async function harness() {
   });
   const render = (quantity = 0) => {
     cleanup?.(); items = quantity ? [{ id: "synthetic-product", quantity, unitPriceCents: 1000 }] : [];
-    refIndex = 0; stateIndex = 0; effects = []; loaded.exports.CartProvider({ children: null }); cleanup = effects[2]();
+    refIndex = 0; stateIndex = 0; effects = []; loaded.exports.CartProvider({ children: null });
+    const synchronizationEffects = effects.filter(({ dependencies }) => dependencies.length === 2 && dependencies[0] === true && dependencies[1] === items);
+    assert.equal(synchronizationEffects.length, 1, "expected one cart synchronization effect with [hydrated, items]");
+    cleanup = synchronizationEffects[0].effect();
   };
   const flush = async () => { for (let index = 0; index < 12; index++) await Promise.resolve(); };
   const tick = async (delay: number) => {

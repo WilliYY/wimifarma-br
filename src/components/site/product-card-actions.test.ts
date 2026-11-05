@@ -147,8 +147,16 @@ test("cards compactos mantêm benefícios fora do preço e altura uniforme sem e
     await expect(multilab).toHaveText("Tadalafila 5 mg 30 comp. rev. MULTILAB");
     await expect(multilab).toHaveAttribute("title", "Tadalafila 5 mg 30 comprimidos revestidos · MULTILAB INDUSTRIA E COMERCIO DE PRODUTOS FARMACEUTICOS LTDA");
     await expect(title.locator(".line-clamp-3")).toHaveCount(1);
+    const compositionText = "Composição sintética longa para conferir a linha de detalhes";
+    const composition = cards.nth(1).getByText(compositionText, { exact: true });
+    await expect(composition).toHaveText(compositionText);
+    await expect(composition).toHaveAttribute("title", compositionText);
     for (const width of [320, 390, 1280]) {
       await page.setViewportSize({ width, height: 900 });
+      const compositionBox = await composition.boundingBox();
+      assert.ok(compositionBox && compositionBox.height <= 32, `composição excedeu duas linhas em ${width}px`);
+      const emptyCompositionBox = await cards.first().getByRole("link").locator("+ span").boundingBox();
+      assert.ok(emptyCompositionBox && emptyCompositionBox.height === compositionBox.height, `composição vazia alterou o slot em ${width}px`);
       if (width === 390) {
         for (const link of [eurofarma, multilab]) {
           const titleBox = await link.boundingBox();

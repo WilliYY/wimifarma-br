@@ -1714,3 +1714,11 @@ Os cartões de fralda mostram o preço atual do pacote e o comparativo por peça
 Preparado um catálogo de consulta público independente de `Product` e `Offer`, com busca, cartão e ficha sem preço, estoque, custo, carrinho ou frete. A publicação exige revisão ADMIN da identidade exata como `NON_MEDICINE`, sem medicamento ou NBCAL; itens desconhecidos permanecem privados. GTINs de produtos em todos os estados, snapshots históricos e supressões persistentes impedem reaparecimento indevido. A importação manual exige dry-run transacional, hash do plano atual e CAS; não foi criado agendamento recorrente.
 
 O primeiro manifesto contém 250 candidatos de higiene e registra `PREPARED_NOT_APPLIED`. A deduplicação atual encontrou zero colisões e zero auditorias antigas de exclusão sem GTIN; a liberação pública segue pendente. Contrato, hashes, comandos verificados e limites de validação em [Catálogo de consulta Santa Cruz](catalogo-consulta-santa-cruz.md). Preparação não comprova publicação nem altera regras comerciais, sanitárias ou logísticas.
+
+A preparação posterior combinou 250 e 462 identidades revisadas em um manifesto de 712 GTINs distintos; outros 75 itens da segunda triagem ficaram retidos. A leitura atual de produção não encontrou colisões. O import permanece separado da migration e da publicação da APP, condicionado a um novo plano transacional no destino.
+
+## 05/11/2026 — Regressões de interface e contratos dos testes
+
+A revisão integral do PR13 encontrou fixtures, exports e expectativas antigas de navegação, origem do catálogo, efeitos do carrinho e seletores de status. Os testes foram alinhados aos contratos existentes, mantendo as assertivas comerciais. O teste do Pix passa a carregar o CSS global real e a preparar os recursos antes dos cenários.
+
+Nos cartões, a composição sem limite de linhas causava alturas diferentes. Foram reservadas duas linhas para a composição e 60 px para o título desktop, preservando o conteúdo integral acessível, a ficha, o celular e o teto existente dos testes. Causas, verificação dirigida e limites em [Alinhamento dos cartões e testes de interface](cartoes-alinhamento-e-testes-ui-2026-11-05.md). A suíte integral da CI no commit final continua obrigatória; correções locais não comprovam publicação.

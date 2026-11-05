@@ -21,6 +21,8 @@ test("distribuidoras mostram 100 por página sem carregar seleção escondida pa
     });
     await page.goto("http://127.0.0.1:3198/qa");
     await page.addScriptTag({ content: (await bundle).outputFiles[0].text });
+    await expect(page.getByRole("tab", { name: /Loja física/ })).toHaveAttribute("aria-selected", "true");
+    await page.getByRole("tab", { name: /Distribuidoras/ }).click();
     const rows = page.getByRole("checkbox", { name: /^Selecionar Lote/ });
     await expect(rows).toHaveCount(100);
     await rows.first().check();

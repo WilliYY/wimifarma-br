@@ -273,10 +273,11 @@ for (const width of [320, 390, 1440]) {
       });
       await page.goto(origin);
       await consult(page, "80010-000");
-      await expect(page.getByRole("status")).toContainText(/3,75/);
-      await expect(page.getByRole("status")).toContainText(/15,00/);
-      await expect(page.getByRole("status")).toContainText(/estimativa/i);
-      await expect(page.getByRole("status")).not.toContainText("Grátis");
+      const deliveryResult = page.getByRole("status").filter({ has: page.getByText("Opções de entrega", { exact: true }) });
+      await expect(deliveryResult).toContainText(/3,75/);
+      await expect(deliveryResult).toContainText(/15,00/);
+      await expect(deliveryResult).toContainText(/estimativa/i);
+      await expect(deliveryResult).not.toContainText("Grátis");
       assert.equal(requests, 1);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
     }, false, { ...product, unitPriceCents: 4995 });

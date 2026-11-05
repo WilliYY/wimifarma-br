@@ -15,7 +15,7 @@ test("Ofertas usa seus filtros disponíveis e os atalhos não conservam o filtro
         args.path === "next/navigation" ? "export const notFound=()=>{throw Error('404')};" :
         args.path.endsWith("catalog-product-card") ? "import React from 'react';export const CatalogProductCard=({product})=><article>{product.name}</article>;" :
         args.path.endsWith("catalog-shipping-preview") ? "export const CatalogShippingProvider=({children})=>children;" :
-        "export const PAGE_SIZE=24;export const getPublicCategories=async()=>{throw Error('global categories queried')};export const getPublicCatalogSections=async()=>{throw Error('global sections queried')};export const catalogPageHref=(path)=>path;export const getStorefrontProducts=async()=>({products:[{id:'soap',slug:'soap',name:'Sabonete sintético'}],count:1,offerNavigation:{categories:[{name:'Higiene',slug:'higiene',names:['Higiene']}],sections:['bath'],browseLinks:[{label:'Higiene e beleza',href:'/catalogo?grupo=beauty'},{label:'Fraldas adultas',href:'/categorias/fraldas-adultas'}]}});",
+        "export const PAGE_SIZE=24;export const getPublicCategories=async()=>{throw Error('global categories queried')};export const getPublicCatalogSections=async()=>{throw Error('global sections queried')};export const catalogPageHref=(path)=>path;export const getPublicStorefrontProducts=async()=>({products:[{id:'soap',slug:'soap',name:'Sabonete sintético'}],count:1,offerNavigation:{categories:[{name:'Higiene',slug:'higiene',names:['Higiene']}],sections:['bath'],browseLinks:[{label:'Higiene e beleza',href:'/catalogo?grupo=beauty'},{label:'Fraldas adultas',href:'/categorias/fraldas-adultas'}]}});",
         loader: "tsx", resolveDir: process.cwd(),
       }));
     } }],

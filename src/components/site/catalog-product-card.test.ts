@@ -19,7 +19,7 @@ test("catalog cards preserve neutral prescription topics, photos, placeholders a
       const rx={...base,id:'rx',name:'Medicamento sintético 5mg 30 comprimidos',category:'Medicamentos',requiresPrescription:true,prescriptionType:'ORDINARY',
         imageUrl:'/synthetic.svg',promotionalPrice:'8.00',cashbackEnabled:true,cashbackRateBps:200,activeIngredients:['Composição sintética']};
       createRoot(document.getElementById('root')).render(<CartProvider><CatalogShippingProvider><main className="grid grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-3 gap-4 items-stretch">
-        <CatalogProductCard product={rx} topicSearch/><CatalogProductCard product={{...base,id:'photo',name:'Produto com foto',imageUrl:'/synthetic.svg'}} topicSearch/>
+        <CatalogProductCard product={rx} topicSearch/><CatalogProductCard product={{...base,id:'photo',name:'Produto com foto',imageUrl:'/synthetic.svg',stock:1}} topicSearch/>
         <CatalogProductCard product={{...base,id:'placeholder',name:'Produto sem foto'}} topicSearch/>
       </main></CatalogShippingProvider><FooterPaymentMethodsContent brands={[{id:'elo',name:'Elo',image:null},{id:'debelo',name:'Elo Débito',image:null},{id:'visa',name:'Visa',image:null}]} fromMercadoPago/></CartProvider>);`,
       resolveDir: process.cwd(), loader: "tsx" },
@@ -84,6 +84,11 @@ test("catalog cards preserve neutral prescription topics, photos, placeholders a
       await dialog.getByRole("button", { name: "Fechar", exact: true }).click();
       await expect(opener).toBeFocused();
     }
+    await page.getByRole("button", { name: "Ver frete de Produto sem foto", exact: true }).click();
+    const unavailableDialog = page.getByRole("dialog", { name: "Frete e prazo", exact: true });
+    await expect(unavailableDialog.getByRole("heading", { name: "Indisponível no momento", exact: true })).toBeVisible();
+    await expect(unavailableDialog.getByRole("textbox", { name: "CEP", exact: true })).toHaveCount(0);
+    await expect(unavailableDialog.getByRole("button", { name: "Avise-me quando chegar", exact: true })).toBeVisible();
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

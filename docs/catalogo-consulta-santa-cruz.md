@@ -4,7 +4,7 @@
 
 Preparar os produtos da planilha Santa Cruz para descoberta no site público, além da consulta administrativa. O visitante pode pesquisar uma identidade elegível e consultar a equipe pelo WhatsApp, sem receber promessa de preço, disponibilidade ou venda.
 
-Em 05/11/2026, o código e o manifesto inicial de 250 identidades estão preparados. O recibo do lote registra `PREPARED_NOT_APPLIED`; a liberação pública continua `PENDING`. Preparação offline, revisão de dados, testes e leitura de produção não comprovam aplicação da migration, importação de identidades ou publicação.
+Em 05/11/2026, o código e o manifesto combinado de 712 identidades estão preparados: 250 candidatos iniciais e 462 candidatos adicionais revisados. Outros 75 itens da segunda triagem permanecem retidos. O manifesto privado `operations/public712-manifest-v1.json` tem SHA-256 `0d479b66bf92c090a152afe434f3c98bae503e65164dfe387d60d0d37692d71a`; a liberação pública continua `PENDING`. Preparação offline, revisão de dados, testes e leitura de produção não comprovam aplicação da migration, importação de identidades ou publicação.
 
 ## Identidade separada do produto comercial
 
@@ -34,6 +34,8 @@ A migration adiciona a supressão persistente e as guardas para futuras alteraç
 
 O snapshot conhecido de 04/11/2026 contém 3.497 produtos em todos os estados. A leitura atual de 05/11/2026 às 04:56:27 UTC também encontrou 3.497 produtos. O recibo do lote registra 3.494 GTINs históricos normalizados, zero colisões atuais ou históricas entre os 250 candidatos e `legacyPurgesWithoutGtin: 0`. Esse resultado não indica uma lacuna histórica real naquela leitura e não substitui nova conferência antes da escrita.
 
+A leitura posterior de 05/11/2026 às 11:21:24 UTC preservou os 3.497 produtos e confirmou zero colisões para o manifesto combinado de 712 identidades. A migration ainda não estava aplicada. A deduplicação será repetida transacionalmente antes de qualquer escrita.
+
 ## Fonte e lote inicial
 
 | Evidência | Resultado |
@@ -43,6 +45,7 @@ O snapshot conhecido de 04/11/2026 contém 3.497 produtos em todos os estados. A
 | GTIN inválido | 16 linhas segregadas |
 | Duplicatas canônicas na planilha | Zero |
 | Primeiro lote preparado | 250 candidatos de higiene, distintos por GTIN |
+| Manifesto combinado preparado | 712 identidades revisadas, distintas por GTIN |
 | Revisão de dados v2 | `03bcaae64a6cfc335573d693060bffe4010d2f739f554a7948b435ba77d5db6c` |
 | Manifesto preparado | `3a4f2c99c8847703145486622f93c7428649b238e4932bd1ea8b603992db8038` |
 
@@ -54,6 +57,7 @@ Os artefatos duráveis desta preparação ficam em `D:\Codex-outputs\wimifarma-b
 - `data/v2/candidate-review.json`: revisão preparada dos 250 candidatos;
 - `operations/catalog-snapshot-v2.json`: leitura atual usada na deduplicação;
 - `operations/public250-manifest-v1.json` e `operations/public250-preparation-receipt.json`: manifesto e recibo `PREPARED_NOT_APPLIED`;
+- `operations/public712-manifest-v1.json` e `operations/public712-preparation-receipt.json`: manifesto combinado e preparação, ainda sem aplicação;
 - `validation/`: logs e recibos de validação do código, separados dos recibos de dados.
 
 Esses caminhos identificam evidências locais desta tarefa. Não são arquivos distribuídos com o aplicativo nem autorização permanente para importar.
@@ -96,6 +100,8 @@ O ensaio real detectou uma revisão explícita indevidamente invalidada ao resta
 Recibos privados: `D:\Codex-outputs\wimifarma-br\santa-cruz-publico-2026-11-05\validation\integrated-checks.json` e `validation\pg-qa-v3\`. A auditoria completa registrou 12 alertas (nove moderate e três low); a de produção, sete (quatro moderate e três low). Ambas ficaram sem high/critical. Nenhuma dependência ou lockfile foi alterada nesta entrega; correções de dependências seguem uma frente própria. A publicação e a conferência pública real continuam pendentes e não são comprovadas por esses testes.
 
 `scripts/audit-catalog-identities-public.ts` complementa a QA com os leitores e o handler reais. Ele aceita somente o banco sintético ligado ao nonce, substitui a conexão por esse destino validado e impõe `default_transaction_read_only=on` em todas as conexões usadas pelos leitores.
+
+Os ensaios anteriores comprovaram o SQL e o comportamento em PostgreSQL; registraram o histórico sintético e não substituem uma execução de `prisma migrate deploy`. A prova pelo CLI real e a suíte integral da CI no commit final são condições adicionais de publicação. Falhas e recibos parciais permanecem preservados no diretório privado de validação.
 
 ## Arquivos de referência
 

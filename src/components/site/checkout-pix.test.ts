@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { before } from "node:test";
 import { mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { build } from "esbuild";
@@ -37,7 +37,9 @@ const bundle = build({
     });
   } }],
 });
-const css = (captureRoot ? readFile("src/app/globals.css", "utf8").then(source => postcss([tailwind()]).process(source, { from: "src/app/globals.css" })).then(result => result.css) : Promise.resolve("")).then(async source => `${source}\n${await readFile("src/components/site/pix-discount-banner.module.css", "utf8")}`);
+const css = readFile("src/app/globals.css", "utf8").then(source => postcss([tailwind()]).process(source, { from: "src/app/globals.css" })).then(result => result.css).then(async source => `${source}\n${await readFile("src/components/site/pix-discount-banner.module.css", "utf8")}`);
+
+before(async () => { await Promise.all([bundle, css]); });
 
 async function fixture(width: number, run: (page: Page, orders: Record<string, unknown>[]) => Promise<void>, path = "/checkout") {
   if (captureRoot) await mkdir(captureRoot, { recursive: true });

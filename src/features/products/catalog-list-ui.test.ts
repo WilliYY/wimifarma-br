@@ -46,10 +46,14 @@ async function fixture(physical: number, run: (page: Page, writes: Record<string
   } finally { await browser.close(); }
 }
 
-test("painel mostra totais completos, abre a maior origem e acompanha novo cadastro", async () => {
+test("painel abre a loja física, preserva totais por origem e acompanha novo cadastro", async () => {
   await fixture(3, async (page, writes) => {
     const summary = page.getByRole("definition").first();
-    await expect(summary).toHaveText("133");
+    await expect(summary).toHaveText("3");
+    await expect(page.getByRole("tab", { name: /Loja física/ })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("tab", { name: /Distribuidoras.*130/ })).toBeVisible();
+    await page.getByRole("tab", { name: /Distribuidoras/ }).click();
+    await expect(summary).toHaveText("130");
     await expect(page.getByRole("tab", { name: /Distribuidoras/ })).toHaveAttribute("aria-selected", "true");
     await expect(page.getByRole("checkbox", { name: "Selecionar Distribuidor sintético 0", exact: true })).toBeVisible();
     await expect(page.getByRole("checkbox", { name: /^Selecionar Distribuidor sintético/ })).toHaveCount(100);
@@ -72,7 +76,8 @@ test("painel mostra totais completos, abre a maior origem e acompanha novo cadas
     await dialog.locator("input[name='price']").fill("7.50");
     await dialog.getByRole("button", { name: "Cadastrar produto", exact: true }).click();
     await expect(dialog).toHaveCount(0);
-    await expect(summary).toHaveText("134");
+    await expect(summary).toHaveText("4");
+    await expect(page.getByRole("tab", { name: /Distribuidoras.*130/ })).toBeVisible();
     await expect(page.getByRole("tab", { name: /Loja física/ })).toHaveAttribute("aria-selected", "true");
     await expect(page.getByPlaceholder("Nome, marca, SKU ou EAN")).toHaveValue("");
     await expect(page.getByRole("checkbox", { name: "Selecionar Novo produto físico sintético", exact: true })).toBeVisible();
@@ -88,10 +93,12 @@ test("painel mostra totais completos, abre a maior origem e acompanha novo cadas
 
 test("origem vazia selecionada pela pessoa permanece explícita, sem esconder a outra contagem", async () => {
   await fixture(0, async page => {
+    await expect(page.getByRole("tab", { name: /Loja física/ })).toHaveAttribute("aria-selected", "true");
+    await page.getByRole("tab", { name: /Distribuidoras/ }).click();
     await expect(page.getByRole("tab", { name: /Distribuidoras/ })).toHaveAttribute("aria-selected", "true");
     await page.getByRole("tab", { name: /Loja física/ }).click();
     await expect(page.getByRole("tab", { name: /Loja física/ })).toHaveAttribute("aria-selected", "true");
-    await expect(page.getByText("0 de 0 produtos · 130 no catálogo · 100 por página", { exact: true })).toBeVisible();
+    await expect(page.getByText("0 de 0 produtos da loja física · 100 por página", { exact: true })).toBeVisible();
     await expect(page.getByRole("tab", { name: /Distribuidoras.*130/ })).toBeVisible();
   });
 });
