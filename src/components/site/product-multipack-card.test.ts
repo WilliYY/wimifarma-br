@@ -13,7 +13,7 @@ test("cards identify one commercial package while preserving price and cart quan
     "@/components/site/product-image-placeholder": "export const ProductImagePlaceholder=()=>null;",
     "@/components/site/product-card-actions": "import React from 'react';export const ProductCardActions=({product})=>React.createElement('div',{'data-price':product.unitPriceCents,'data-stock':product.stock});",
     "@/components/site/product-cashback": "export const ProductCashback=()=>null;",
-    "./catalog-shipping-preview": "export const CatalogShippingButton=()=>null;",
+    "./catalog-shipping-preview": "export const CatalogShippingButton=()=>null;export const CatalogShippingBenefitBadge=()=>null;",
   };
   const bundle = await build({
     entryPoints: ["src/components/site/public-product-card.tsx"], bundle: true, write: false,

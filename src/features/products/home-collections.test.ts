@@ -7,6 +7,35 @@ const item = (id: string, extra = {}) => ({ id, name: id, slug: id, imageUrl: `/
 const otc = { kind: "MEDICINE", medicineClass: "OTHER", ethical: false, otc: true };
 const hygiene = { kind: "HYGIENE", medicineClass: "UNCLASSIFIED", ethical: false, otc: false };
 const build = (products: ReturnType<typeof item>[], date = new Date("2026-10-19T12:00:00Z")) => buildHomeCollections(products, new Set(products.map(p => p.imageUrl)), date);
+const legacyCollections = ({ care, otc, affordable }: ReturnType<typeof build>) => [care, otc, affordable];
+
+test("fileiras de medicamentos selecionam 40 MIPs únicos, com rotação diária de Brasília", () => {
+  const products = Array.from({ length: 65 }, (_, i) => item(`rail-${i}`, { category: "Medicamentos", catalogClassification: otc, activeIngredients: [`ingrediente-${i % 5}`] }));
+  const first = build(products);
+  assert.equal(first.medicines.length, 40);
+  assert.equal(first.medicines.slice(0, 20).length, 20);
+  assert.equal(first.medicines.slice(20).length, 20);
+  assert.equal(new Set(first.medicines.map(product => product.id)).size, 40);
+  assert.deepEqual(first.medicines, build([...products].reverse()).medicines);
+  assert.notDeepEqual(first.medicines, build(products, new Date("2026-10-20T12:00:00Z")).medicines);
+  assert.deepEqual(first.medicines, build(products, new Date("2026-10-20T02:59:59Z")).medicines);
+});
+
+test("fileiras não completam escassez com higiene, receita, Popular, estoque ou fotos inválidos", () => {
+  const valid = item("valid-mip", { category: "Medicamentos", catalogClassification: otc });
+  const products = [valid, valid, item("hygiene", { catalogClassification: hygiene }),
+    ...["ORDINARY", "ANTIMICROBIAL", "CONTROLLED"].map(prescriptionType => item(prescriptionType, { catalogClassification: otc, prescriptionType })),
+    item("rx", { catalogClassification: otc, requiresPrescription: true }),
+    item("popular", { catalogClassification: otc, isPopularPharmacy: true }),
+    item("inconsistent", { catalogClassification: { ...hygiene, medicineClass: "GENERIC" } }),
+    item("no-stock", { catalogClassification: otc, stock: 0 }),
+    item("no-price", { catalogClassification: otc, price: "0" }),
+    item("unverified", { catalogClassification: otc, imageUrl: "/uploads/products/unverified.webp" }),
+    item("unknown", { category: "Medicamentos" })];
+  const result = buildHomeCollections(products, new Set(products.filter(product => product.id !== "unverified").map(product => product.imageUrl)), new Date("2026-10-19T12:00:00Z"));
+  assert.deepEqual(result.medicines.map(product => product.id), [valid.id]);
+  assert.deepEqual(build([]).medicines, []);
+});
 
 test("Farmacinha completa 15 itens com MIPs e cuidados classificados sem repetir outras vitrines", () => {
   const medicines = Array.from({ length: 3 }, (_, i) => item(`mip-${i}`, { category: "Medicamentos", price: "50", catalogClassification: otc }));
@@ -16,7 +45,7 @@ test("Farmacinha completa 15 itens com MIPs e cuidados classificados sem repetir
   assert.equal(result.otc.filter(product => medicines.some(medicine => medicine.id === product.id)).length, 3);
   assert.equal(result.otc.filter(product => readClassification(product.catalogClassification).kind === "HYGIENE").length, 12);
   assert.equal(result.otc.some(product => ["rx-disguised", "inconsistent"].includes(product.id)), false);
-  const ids = Object.values(result).flat().map(product => product.id);
+  const ids = legacyCollections(result).flat().map(product => product.id);
   assert.equal(new Set(ids).size, ids.length);
 });
 
@@ -75,7 +104,7 @@ test("MIP confirmado não se repete e medicamento sem classificação fica fora 
   const result = build([item("care"), item("cheap", { category: "Medicamentos", price: "2", catalogClassification: otc }), item("unknown", { category: "Medicamentos", price: "1" })]);
   assert.deepEqual(result.care.map(product => product.id), ["care"]);
   assert.deepEqual([...result.otc, ...result.affordable].map(product => product.id), ["cheap"]);
-  assert.equal(Object.values(result).flat().some(product => product.id === "unknown"), false);
+  assert.equal(legacyCollections(result).flat().some(product => product.id === "unknown"), false);
 });
 
 test("todas as vitrines usam produtos exclusivos em dias e acervos diferentes", () => {
@@ -86,11 +115,11 @@ test("todas as vitrines usam produtos exclusivos em dias e acervos diferentes", 
     }));
     for (const date of [new Date("2026-10-19T12:00:00Z"), new Date("2026-10-20T12:00:00Z")]) {
       const result = build([...products, ...products], date);
-      const ids = Object.values(result).flat().map(product => product.id);
+      const ids = legacyCollections(result).flat().map(product => product.id);
       assert.equal(new Set(ids).size, ids.length, `repetição com ${count} produtos`);
-      assert.ok(Object.values(result).every(collection => collection.length <= 15));
+      assert.ok(legacyCollections(result).every(collection => collection.length <= 15));
       assert.deepEqual(result, build([...products].reverse(), date));
-      if (count >= 2) assert.ok(Object.values(result).filter(collection => collection.length).length >= 2);
+      if (count >= 2) assert.ok(legacyCollections(result).filter(collection => collection.length).length >= 2);
     }
   }
 });
@@ -160,7 +189,7 @@ test("nenhuma vitrine aceita medicamento sem MIP confirmado, receita ou classifi
     item("antimicrobial", { price: "1", prescriptionType: "ANTIMICROBIAL", catalogClassification: otc }),
     item("inconsistent", { price: "1", catalogClassification: { ...hygiene, medicineClass: "GENERIC" } }),
   ];
-  assert.deepEqual(Object.values(build(invalid)).flat(), []);
+  assert.deepEqual(legacyCollections(build(invalid)).flat(), []);
 });
 
 test("as três vitrines alternam diariamente com variedade suficiente e conservam ordem no mesmo dia", () => {

@@ -11,9 +11,10 @@ import { productDisplayName, productTitleBrand } from "@/features/products/displ
 import { productIngredientLabel } from "@/features/products/medicine-presentation";
 import { productOfferDiscount } from "@/features/offers/daily-rotation";
 import { ProductPmcBadge, ProductPmcPrice } from "./product-pmc";
-import { CatalogShippingButton } from "./catalog-shipping-preview";
+import { CatalogShippingBenefitBadge, CatalogShippingButton } from "./catalog-shipping-preview";
 import { diaperPackageUnitPrice } from "@/features/products/diaper-unit-price";
 import { productSaleUnitLabel } from "@/features/products/product-presentation";
+import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
 
 export type RelatedProductCardItem = PublicProductSearchItem & {
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
@@ -21,7 +22,8 @@ export type RelatedProductCardItem = PublicProductSearchItem & {
   stock: number;
 };
 
-export function PublicProductCard({ product, showShippingEstimate = false }: { product: RelatedProductCardItem; showShippingEstimate?: boolean }) {
+export function PublicProductCard({ product, showShippingEstimate = false, variant = "default" }: { product: RelatedProductCardItem; showShippingEstimate?: boolean; variant?: "default" | "medicine-rail" }) {
+  const compact = variant === "medicine-rail";
   const publicName = productDisplayName(product.name, product.activeIngredients);
   const ingredientLabel = productIngredientLabel(product);
   const displayName = publicName
@@ -55,17 +57,50 @@ export function PublicProductCard({ product, showShippingEstimate = false }: { p
   } satisfies CartProduct;
   const diaperPrice = diaperPackageUnitPrice(product, cartProduct.unitPriceCents);
   const saleUnit = productSaleUnitLabel(product);
+  const showShippingBenefit = showShippingEstimate && product.stock > 0 && !product.requiresPrescription && !product.isPopularPharmacy && !requiresPurchaseAssistance(cartProduct);
+
+  if (compact) return (
+    <article data-product-variant="medicine-rail" className="group relative flex h-full min-w-0 flex-col rounded-xl border border-line bg-white p-3 shadow-sm">
+      <div data-product-badges className="flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <div className="flex flex-wrap items-center gap-1">
+          {pmcSavings !== null ? <ProductPmcBadge percent={pmcSavings} /> : discount !== null && !pmc ? <span className="rounded-md bg-brand px-2 py-1 text-xs font-black text-white">{discount}% OFF</span> : null}
+          <ProductCashback compact product={product} unitPriceCents={cartProduct.unitPriceCents} />
+        </div>
+        {showShippingEstimate ? <CatalogShippingButton product={cartProduct} variant={showShippingBenefit ? "benefit-badge" : "default"} /> : null}
+      </div>
+      <div className="flex min-w-0 items-center gap-3 py-1">
+        <div data-product-photo className="flex h-20 w-20 shrink-0 items-center justify-center bg-white">
+          {product.imageUrl ? <Image alt={productImageAlt(product.name, product.imageUrl)} className="h-full w-full object-contain" height={160} src={product.imageUrl} width={160} /> : <ProductImagePlaceholder catalogClassification={product.catalogClassification} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" />}
+        </div>
+        <div className="min-w-0 flex-1">
+          <Link aria-label={`Ver ${fullTitle}`} className="block min-w-0 break-words text-sm font-bold leading-5 text-ink after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand" href={`/produto/${product.slug}`} title={fullTitle}>
+            <span>{publicName}{titleBrand ? <> <span className="font-black">{titleBrand}</span></> : null}</span>
+          </Link>
+          {ingredientLabel ? <p className="mt-1 break-words text-xs font-semibold leading-4 text-muted">{ingredientLabel}</p> : null}
+        </div>
+      </div>
+      <div className="mt-auto border-t border-line pt-2">
+        <div role="group" aria-label="Preço do produto" className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          {pmc ? <span className="text-xs text-muted"><ProductPmcPrice reference={pmc} strike={pmcSavings !== null} /></span> : hasPromotion ? <span className="text-xs text-muted">De <s>{formatCurrency(normalPrice)}</s></span> : null}
+          <strong className="text-xl font-black leading-6 text-brand">{formatCurrency(cartProduct.unitPriceCents / 100)}</strong>
+          <span className="text-xs leading-4 text-muted">{saleUnit ? `Para ${saleUnit.toLowerCase()}.` : "Para 1 unidade."}</span>
+        </div>
+        <ProductCardActions compact product={cartProduct} />
+      </div>
+    </article>
+  );
 
   return (
     <article
       className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_18px_40px_rgba(17,24,39,0.11)] motion-reduce:transform-none"
     >
-      <div data-product-badges className="flex min-h-9 shrink-0 flex-wrap items-start gap-1 px-2 pb-0.5 pt-1.5">
+      <div data-product-badges className={`flex shrink-0 flex-wrap content-start items-start gap-1 px-2 pb-0.5 pt-1.5 ${showShippingEstimate ? "min-h-16 sm:min-h-10" : "min-h-9"}`}>
         {pmcSavings !== null ? <ProductPmcBadge percent={pmcSavings} /> : discount !== null && !pmc ? (
           <span className="rounded-lg bg-brand px-2 py-1.5 text-[0.65rem] font-black leading-tight text-white shadow-sm">
             {discount}% OFF
           </span>
         ) : null}
+        {showShippingBenefit ? <CatalogShippingBenefitBadge /> : null}
       </div>
       <div
         data-product-photo

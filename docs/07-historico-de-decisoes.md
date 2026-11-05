@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-05 — Galeria de mídia e duas fileiras de medicamentos
+
+- A pedido do lojista, o banner da home passa a uma galeria 3:4 de GIF/vídeo com versões MP4 leves, pôsteres, arraste, teclado, player e reprodução limitada por visibilidade/preferências. A faixa original de marcas e os atalhos permanecem.
+- Farmacinha é apresentada antes das marcas em duas fileiras de até 20 OTC elegíveis cada, a 11 px/s em sentidos opostos. Seleção diária independente, nome/composição completos, cartões horizontais e controles existentes de compra/frete preservam as regras comerciais.
+- O selo de frete condicional retorna com asterisco e acesso às condições por CEP, pedido e modalidade; não concede gratuidade nem habilita envio. Dados, APIs, preços, estoque e checkout ficam preservados. Contrato, formatos de mídia, testes e limites em [Home em movimento](home-motion-gallery-2026-11-05.md).
+
 ## 2026-11-04 — Mais 33 perfis estimados de higiene
 
 Foram aplicados uma única vez 33 perfis de carga geral, com medidas estimadas e envio limitado a PAC/SEDEX em Ivaté: 32 preservativos embalados e um absorvente para seios Cremer de 30 unidades/Pague 24. A verificação posterior confirmou 3.068 produtos ativos, dos quais 484 estavam com envio habilitado/revisado e 2.584 permaneciam pendentes, além de 33 auditorias. Os dados físicos, comerciais, de ofertas e integração e os produtos externos foram preservados. Houve backup privado validado, revisão de CAS, ADMIN, lease e bytes, além de limpeza dos recursos próprios. A estimativa pública e a cotação assinada funcionaram para os dois grupos, sem criação de pedidos ou etiquetas. Os 15 dentifrícios seguem pendentes por ambiguidade do canal Melhor Envio; os protótipos de declarações e de origem por serviço foram preservados fora do release. Fontes, testes e recibos estão no [registro operacional](habilitacao-estimada-correios-2026-11-04.md).

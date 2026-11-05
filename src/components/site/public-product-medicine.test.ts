@@ -12,7 +12,7 @@ test("cartão mostra pares completos e mantém nome inalatório no DTO de compra
     "next/image": "export default ()=>null;",
     "@/components/site/product-card-actions": "import React from 'react';export const ProductCardActions=p=>React.createElement('button',{'data-cart-name':p.product.name});",
     "@/components/site/product-cashback": "export const ProductCashback=()=>null;",
-    "./catalog-shipping-preview": "export const CatalogShippingButton=()=>null;",
+    "./catalog-shipping-preview": "export const CatalogShippingButton=()=>null;export const CatalogShippingBenefitBadge=()=>null;",
   };
   const bundle = await build({
     entryPoints: ["src/components/site/public-product-card.tsx"], bundle: true, write: false,

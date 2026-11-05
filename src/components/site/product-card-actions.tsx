@@ -10,7 +10,7 @@ import { requiresPurchaseAssistance } from "@/features/products/purchase-policy"
 import { orderQuantityLimit } from "@/features/products/quantity";
 import { RestockButton } from "@/components/site/restock-button";
 
-export function ProductCardActions({ product }: { product: CartProduct }) {
+export function ProductCardActions({ product, compact = false }: { product: CartProduct; compact?: boolean }) {
   const { addProduct, hydrated, items, updateQuantity } = useCart();
   const router = useRouter();
   const [quantityEmpty, setQuantityEmpty] = useState(false);
@@ -26,7 +26,7 @@ export function ProductCardActions({ product }: { product: CartProduct }) {
     if (buy) router.push("/checkout");
   }
 
-  return <div className="relative z-20 -mx-1 mt-2 grid min-h-24 gap-2 sm:mx-0" data-product-controls>
+  return <div className={`relative z-20 mt-2 grid gap-2 ${compact ? "min-h-11 grid-cols-2" : "-mx-1 min-h-24 sm:mx-0"}`} data-product-controls>
     {restricted ? <a className={`${button} h-auto min-h-24 border border-pharma-green/30 text-pharma-green hover:bg-emerald-50`} href={buildWhatsAppUrl(`Ola, gostaria de consultar ${product.name}.`)} rel="noreferrer" target="_blank"><MessageCircle className="h-4 w-4 shrink-0" />Consultar no WhatsApp</a> : product.stock < 1 ? <><span className="flex items-center justify-center text-xs font-semibold text-muted">Indisponível no momento</span><RestockButton compact product={product} /></> : <>
       {quantity > 0 ? <div aria-label={`Quantidade de ${product.name}`} className="grid h-11 grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center rounded-md border border-line bg-white" role="group">
         <button aria-label={`Diminuir ${product.name}`} className={`${button} px-0 text-brand hover:bg-brand-soft`} onClick={() => updateQuantity(product.id, quantity - 1)} type="button"><Minus className="h-4 w-4" /></button>

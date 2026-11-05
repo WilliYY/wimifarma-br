@@ -2,7 +2,7 @@ import type { RelatedProductCardItem } from "@/components/site/public-product-ca
 import { readClassification, classificationIsConsistent } from "./catalog-operations";
 
 export const HOME_COLLECTION_SIZE = 15;
-export type HomeCollections = { care: RelatedProductCardItem[]; otc: RelatedProductCardItem[]; affordable: RelatedProductCardItem[] };
+export type HomeCollections = { care: RelatedProductCardItem[]; otc: RelatedProductCardItem[]; affordable: RelatedProductCardItem[]; medicines: RelatedProductCardItem[] };
 
 export function brasiliaDay(date: Date) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
@@ -124,5 +124,6 @@ export function buildHomeCollections(products: RelatedProductCardItem[], verifie
   care.forEach(product => selectedIds.add(product.id));
   const cheapest = [...priorityPrices, ...byPrice.filter(product => !selectedIds.has(product.id))].slice(0, HOME_COLLECTION_SIZE);
   const affordable = [...priorityPrices, ...diverseDailySelection(cheapest.slice(priorityPrices.length), HOME_COLLECTION_SIZE - priorityPrices.length, day)];
-  return { care, otc, affordable };
+  const medicines = diverseDailySelection(otcPool, 40, day);
+  return { care, otc, affordable, medicines };
 }

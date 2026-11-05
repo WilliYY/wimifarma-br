@@ -1,0 +1,21 @@
+.section { width: 100%; min-width: 0; padding-block: 24px; background: var(--surface-subtle); }
+.heading { display: flex; max-width: 1440px; margin: 0 auto 16px; padding-inline: 16px; align-items: center; justify-content: space-between; gap: 12px; }
+.heading h2 { margin: 0; color: var(--ink); font-size: clamp(21px, 2.5vw, 30px); line-height: 1.2; font-weight: 800; letter-spacing: -0.025em; }
+.eyebrow { margin: 0 0 4px; color: var(--brand); font-size: 12px; font-weight: 700; }
+.pause { display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex-shrink: 0; min-height: 44px; border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; background: white; color: var(--brand); font-size: 12px; font-weight: 700; cursor: pointer; }
+.frame { position: relative; min-width: 0; }
+.frame + .frame { margin-top: 12px; }
+.frame::before, .frame::after { position: absolute; top: 0; bottom: 0; z-index: 30; width: clamp(12px, 3vw, 48px); pointer-events: none; content: ""; }
+.frame::before { left: 0; background: linear-gradient(90deg, var(--surface-subtle), transparent); }
+.frame::after { right: 0; background: linear-gradient(270deg, var(--surface-subtle), transparent); }
+.viewport { width: 100%; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; touch-action: auto; cursor: grab; user-select: none; -webkit-user-select: none; }
+.viewport::-webkit-scrollbar { display: none; }
+.viewport:focus-visible, .pause:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+.viewport[data-dragging="true"], .viewport[data-dragging="true"] a { cursor: grabbing; }
+.track { position: relative; display: flex; width: max-content; min-width: 100%; gap: 12px; margin: 0; padding: 6px 16px 10px; list-style: none; }
+.track[data-moving="true"] { will-change: transform; }
+.track > li { flex: 0 0 276px; width: 276px; min-width: 0; }
+.viewport[data-looping="false"] .track { justify-content: safe center; }
+@media (min-width: 640px) { .heading { padding-inline: 24px; } .track { padding-inline: 24px; gap: 16px; } .track > li { flex-basis: 320px; width: 320px; } }
+@media (max-width: 400px) { .heading { align-items: flex-start; } .pause { max-width: 98px; } }
+@media (prefers-reduced-motion: reduce) { .track { transform: none !important; } }
