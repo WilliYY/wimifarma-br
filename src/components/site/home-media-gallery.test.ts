@@ -15,7 +15,7 @@ after(async () => (await browser).close());
 const files = (async () => {
   const css = await readFile("src/app/globals.css", "utf8").then(source => postcss([tailwind()]).process(source, { from: "src/app/globals.css" })).then(result => result.css);
   const bundle = await build({
-    stdin: { contents: "import React from 'react';import {createRoot} from 'react-dom/client';import {HomeMediaGallery} from './src/components/site/home-media-gallery';import {homeMediaItems} from './src/features/home-media/items';const items=location.search.includes('gif')?[{...homeMediaItems[0],id:'gif-fixture',kind:'gif',src:'/media/home/fixture.gif'}]:undefined;createRoot(document.getElementById('root')).render(<HomeMediaGallery items={items}/>);", loader: "tsx", resolveDir: process.cwd() },
+    stdin: { contents: "import React from 'react';import {createRoot} from 'react-dom/client';import {HomeMediaGallery} from './src/components/site/home-media-gallery';import {homeMediaItems} from './src/features/home-media/items';const items=location.search.includes('gif')?[{...homeMediaItems[0],id:'gif-fixture',kind:'gif',continuousPreview:false,src:'/media/home/fixture.gif'}]:undefined;createRoot(document.getElementById('root')).render(<HomeMediaGallery items={items}/>);", loader: "tsx", resolveDir: process.cwd() },
     bundle: true, write: false, outfile: "fixture.js", platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' },
     plugins: [{ name: "media-gallery-image", setup(builder) {
       builder.onResolve({ filter: /^next\/image$/ }, () => ({ path: "image", namespace: "fixture" }));
@@ -121,7 +121,8 @@ test("institucional permanece contínuo enquanto as outras prévias alternam a c
   try {
     await expect.poll(() => gallery.locator('video[data-playing="true"]').count()).toBeGreaterThan(0);
     assert((await gallery.locator('video[data-playing="true"]').count()) <= 2);
-    const firstVideo = gallery.locator("video").first();
+    const firstRotatingItem = homeMediaItems.find(item => item.kind === "video" && item.id !== "wimifarma-institucional")!;
+    const firstVideo = gallery.locator(`[data-media-id="${firstRotatingItem.id}"] video`);
     await expect(firstVideo).toHaveAttribute("data-playing", "true");
     const visibleIds = await gallery.locator("[data-media-frame]").evaluateAll(elements => elements.filter(element => {
       const box = element.getBoundingClientRect();
@@ -129,7 +130,9 @@ test("institucional permanece contínuo enquanto as outras prévias alternam a c
     }).map(element => (element as HTMLElement).dataset.mediaId!));
     const institutionalId = "wimifarma-institucional";
     assert(visibleIds.includes(institutionalId));
-    const rotatingIds = visibleIds.filter(id => id !== institutionalId);
+    const continuousIds = homeMediaItems.filter(item => item.kind === "gif" && item.continuousPreview).slice(0, 2).map(item => item.id);
+    const videoIds = visibleIds.filter(id => !continuousIds.includes(id));
+    const rotatingIds = videoIds.filter(id => id !== institutionalId);
     const institutional = gallery.locator(`[data-media-id="${institutionalId}"] video`);
     await expect(institutional).toHaveAttribute("data-playing", "true");
     const metadata = await institutional.evaluate(element => {
@@ -149,26 +152,26 @@ test("institucional permanece contínuo enquanto as outras prévias alternam a c
     });
     const seen = new Set<string>();
     for (let turn = 0; turn <= rotatingIds.length; turn++) {
-      const expected = visibleIds.filter(id => id === institutionalId || id === rotatingIds[turn % rotatingIds.length]);
+      const expected = videoIds.filter(id => id === institutionalId || id === rotatingIds[turn % rotatingIds.length]);
       await expect.poll(() => gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!))).toEqual(expected);
       const active = await gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!));
       assert(active.length <= 2);
       active.forEach(id => seen.add(id));
       await page.clock.runFor(3100);
-      const next = visibleIds.filter(id => id === institutionalId || id === rotatingIds[(turn + 1) % rotatingIds.length]);
+      const next = videoIds.filter(id => id === institutionalId || id === rotatingIds[(turn + 1) % rotatingIds.length]);
       await expect.poll(() => gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!))).toEqual(next);
       if (turn === 0) {
-        await expect(firstVideo).toHaveAttribute("src", homeMediaItems[0].src);
+        await expect(firstVideo).toHaveAttribute("src", firstRotatingItem.src);
         await expect(firstVideo).toHaveAttribute("data-ready", "true");
         const position = await firstVideo.evaluate(element => (element as HTMLVideoElement).currentTime);
         await page.clock.runFor(100);
         assert.equal(await firstVideo.evaluate(element => (element as HTMLVideoElement).currentTime), position, "a prévia inativa preserva sua posição");
       }
     }
-    assert(visibleIds.every(id => seen.has(id)), "todas as prévias visíveis recebem sua vez");
+    assert(videoIds.every(id => seen.has(id)), "todas as prévias de vídeo visíveis recebem sua vez");
     assert.equal(await page.evaluate(() => (window as Window & { institutionalPauses?: number }).institutionalPauses), 0, "o institucional não pausa entre rodadas");
     assert.equal(await page.evaluate(() => (window as Window & { excessPlayback?: number }).excessPlayback), 0, "nenhuma transição reproduz mais de dois vídeos");
-    const hoveredFrame = gallery.locator("[data-media-frame]").nth(1);
+    const hoveredFrame = gallery.locator(`[data-media-id="${rotatingIds[1]}"]`);
     await hoveredFrame.hover();
     await expect(hoveredFrame.locator("video")).toHaveAttribute("data-playing", "true");
     await expect(institutional).toHaveAttribute("data-playing", "true");
@@ -207,11 +210,12 @@ test("institucional permanece contínuo enquanto as outras prévias alternam a c
 test("prévia visível pausa em quadro real e retoma da posição conservada", async () => {
   const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" });
   try {
-    const firstFrame = gallery.locator("[data-media-frame]").first();
+    const rotatingItems = homeMediaItems.filter(item => item.kind === "video" && item.id !== "wimifarma-institucional");
+    const firstFrame = gallery.locator(`[data-media-id="${rotatingItems[0].id}"]`);
     const firstVideo = firstFrame.locator("video");
     await firstFrame.hover();
     await expect.poll(() => firstVideo.evaluate(element => (element as HTMLVideoElement).currentTime)).toBeGreaterThan(0.15);
-    await gallery.locator("[data-media-frame]").nth(1).hover();
+    await gallery.locator(`[data-media-id="${rotatingItems[1].id}"]`).hover();
     await expect(firstVideo).toHaveAttribute("data-playing", "false");
     await expect(firstVideo).toHaveAttribute("data-ready", "true");
     const position = await firstVideo.evaluate(element => (element as HTMLVideoElement).currentTime);
@@ -221,6 +225,63 @@ test("prévia visível pausa em quadro real e retoma da posição conservada", a
     await firstFrame.hover();
     await expect(firstVideo).toHaveAttribute("data-playing", "true");
     assert((await firstVideo.evaluate(element => (element as HTMLVideoElement).currentTime)) >= position);
+    assert.deepEqual(errors, []);
+  } finally { await context.close(); }
+});
+
+test("os dois primeiros cards animam sem hover e sem consumir vagas de vídeo", async () => {
+  const { context, gallery, errors } = await fixture({ reducedMotion: "no-preference" });
+  try {
+    for (const index of [0, 1]) {
+      const frame = gallery.locator("[data-media-frame]").nth(index);
+      const animation = frame.locator('img[aria-hidden="true"]');
+      await expect(animation).toBeVisible();
+      await expect(animation).toHaveAttribute("src", homeMediaItems[index].src);
+      await expect.poll(() => animation.evaluate(element => (element as HTMLImageElement).complete && (element as HTMLImageElement).naturalWidth > 0)).toBe(true);
+      await expect(frame.locator("video")).toHaveCount(0);
+      await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(2);
+      const snapshot = await animation.screenshot();
+      await expect.poll(async () => !(await animation.screenshot()).equals(snapshot)).toBe(true);
+    }
+    assert.deepEqual(errors, []);
+  } finally { await context.close(); }
+});
+
+test("animações contínuas conservam o mesmo elemento e fonte durante as rodadas", async () => {
+  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true });
+  try {
+    const animations = gallery.locator('img[aria-hidden="true"]');
+    await expect(animations).toHaveCount(2);
+    await animations.evaluateAll(elements => elements.forEach(element => element.setAttribute("data-fixture-retained", "true")));
+    for (let turn = 0; turn < 4; turn++) {
+      await page.clock.runFor(3100);
+      await expect(animations).toHaveCount(2);
+      for (const [index, item] of homeMediaItems.slice(0, 2).entries()) {
+        await expect(animations.nth(index)).toHaveAttribute("src", item.src);
+        await expect(animations.nth(index)).toHaveAttribute("data-fixture-retained", "true");
+      }
+      assert((await gallery.locator('video[data-playing="true"]').count()) <= 2);
+    }
+    await gallery.locator("h2").hover();
+    await page.clock.runFor(6200);
+    await expect(animations).toHaveCount(2);
+    await gallery.getByRole("link").first().focus();
+    await expect(animations).toHaveCount(0);
+    const rail = gallery.getByRole("region", { name: "Explorar vídeos e animações" });
+    await rail.focus();
+    await page.keyboard.press("Escape");
+    await rail.evaluate(element => element.blur());
+    await expect(animations).toHaveCount(0);
+    await rail.focus();
+    await page.keyboard.press("Escape");
+    await rail.evaluate(element => element.blur());
+    await expect(animations).toHaveCount(2);
+    await page.evaluate(() => scrollTo(0, 1800));
+    await expect(animations).toHaveCount(0);
+    await page.evaluate(() => scrollTo(0, 0));
+    await expect(animations).toHaveCount(2);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(animations).toHaveCount(0);
     assert.deepEqual(errors, []);
   } finally { await context.close(); }
 });
@@ -235,11 +296,13 @@ test("institucional fora da tela preserva alternância de pares", async () => {
       const box = element.getBoundingClientRect();
       return Math.max(0, Math.min(box.right, innerWidth) - Math.max(box.left, 0)) / box.width >= 0.45;
     }).map(element => (element as HTMLElement).dataset.mediaId!));
+    const continuousIds = homeMediaItems.filter(item => item.kind === "gif" && item.continuousPreview).slice(0, 2).map(item => item.id);
+    const rotatingIds = visibleIds.filter(id => !continuousIds.includes(id));
     assert(!visibleIds.includes("wimifarma-institucional"));
-    assert(visibleIds.length > 2);
-    for (let turn = 0; turn < visibleIds.length; turn++) {
-      const pair = [visibleIds[(turn * 2) % visibleIds.length], visibleIds[(turn * 2 + 1) % visibleIds.length]];
-      await expect.poll(() => gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!))).toEqual(visibleIds.filter(id => pair.includes(id)));
+    assert(rotatingIds.length > 2);
+    for (let turn = 0; turn < rotatingIds.length; turn++) {
+      const pair = [rotatingIds[(turn * 2) % rotatingIds.length], rotatingIds[(turn * 2 + 1) % rotatingIds.length]];
+      await expect.poll(() => gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!))).toEqual(rotatingIds.filter(id => pair.includes(id)));
       await page.clock.runFor(3100);
     }
     assert.deepEqual(errors, []);
@@ -250,24 +313,29 @@ test("economia de dados, aba oculta e movimento reduzido conservam pôsteres, in
   const first = await fixture({ reducedMotion: "no-preference" }, { saveData: true });
   try {
     await expect(first.gallery.locator("video[src]")).toHaveCount(0);
+    await expect(first.gallery.locator('img[aria-hidden="true"]')).toHaveCount(0);
     assert.deepEqual(first.videoRequests, []);
     await first.page.evaluate(() => {
       const connection = (navigator as Navigator & { connection: EventTarget & { saveData: boolean } }).connection;
       connection.saveData = false; connection.dispatchEvent(new Event("change"));
     });
     await expect(first.gallery.locator('video[data-playing="true"]')).toHaveCount(2);
+    await expect(first.gallery.locator('img[aria-hidden="true"]')).toHaveCount(2);
     await expect(first.gallery.locator('[data-media-id="wimifarma-institucional"] video')).toHaveAttribute("data-playing", "true");
     await first.page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: true }); document.dispatchEvent(new Event("visibilitychange")); });
     await expect(first.gallery.locator('video[data-playing="true"]')).toHaveCount(0);
     await expect(first.gallery.locator("video[src]")).toHaveCount(0);
+    await expect(first.gallery.locator('img[aria-hidden="true"]')).toHaveCount(0);
     await first.page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: false }); document.dispatchEvent(new Event("visibilitychange")); });
     await expect(first.gallery.locator('video[data-playing="true"]')).toHaveCount(2);
+    await expect(first.gallery.locator('img[aria-hidden="true"]')).toHaveCount(2);
     await first.page.evaluate(() => {
       const connection = (navigator as Navigator & { connection: EventTarget & { saveData: boolean } }).connection;
       connection.saveData = true; connection.dispatchEvent(new Event("change"));
     });
     await expect(first.gallery.locator("video[src]")).toHaveCount(0);
     await expect(first.gallery.locator('video[data-ready="true"]')).toHaveCount(0);
+    await expect(first.gallery.locator('img[aria-hidden="true"]')).toHaveCount(0);
     assert.deepEqual(first.errors, []);
   } finally { await first.context.close(); }
   const second = await fixture({}, { gif: true });

@@ -100,10 +100,12 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
   const motionAllowed = !reducedMotion && !saveData && pageVisible;
   const autoPlaying = !paused && !focused && motionAllowed;
   const institutionalId = visibleIds.includes("wimifarma-institucional") ? "wimifarma-institucional" : null;
-  const rotatingIds = visibleIds.filter(id => id !== institutionalId);
+  const continuousIds = items.filter(item => item.kind === "gif" && item.continuousPreview && visibleIds.includes(item.id)).slice(0, 2).map(item => item.id);
+  const rotatingIds = visibleIds.filter(id => id !== institutionalId && !continuousIds.includes(id));
   const rotatingCount = rotatingIds.length;
   const rotatingSlots = institutionalId ? 1 : 2;
   const activeIds = autoPlaying ? [
+    ...continuousIds,
     ...(institutionalId ? [institutionalId] : []),
     ...Array.from({ length: Math.min(rotatingSlots, rotatingCount) }, (_, index) => rotatingIds[(previewOffset + index) % rotatingCount]),
   ] : [];
@@ -133,7 +135,7 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
     onFocusCapture={() => setFocused(true)}
     onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false); }}
     onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); setPaused(value => !value); } }}>
-    <p className="sr-only" id="home-media-motion-help">O vídeo institucional permanece animado enquanto estiver visível. O ponteiro do mouse fixa a outra prévia. O foco nesta seção pausa as animações. Pressione Escape para pausar ou retomar.</p>
+    <p className="sr-only" id="home-media-motion-help">As duas primeiras animações e o vídeo institucional permanecem animados enquanto estiverem visíveis. O ponteiro do mouse fixa a outra prévia de vídeo. O foco nesta seção pausa as animações. Pressione Escape para pausar ou retomar.</p>
     <div className={styles.heading}>
       <h2>Dê o play no seu cuidado <span aria-hidden="true">✨</span></h2>
     </div>

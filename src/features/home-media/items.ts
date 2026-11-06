@@ -10,24 +10,25 @@ export type HomeMediaItem = {
   href: string;
   action: string;
   background?: string;
+  continuousPreview?: boolean;
 };
 
-// GIFs supplied by the store are delivered as silent MP4 loops to reduce decoding and transfer costs.
+// The two original six-frame GIFs use lossless animated WebP previews; other clips use silent MP4.
 // Portrait media and complete product artwork fit inside the same 3:4 frames without cropping.
 export const homeMediaItems: HomeMediaItem[] = [
   {
-    id: "wimi-b-complex", kind: "video", title: "Wimi B Complex", caption: "Vitaminas e suplementos",
-    src: "/media/home/wimi-b-complex.mp4", poster: "/media/home/wimi-b-complex.webp", background: "#970309",
+    id: "wimi-b-complex", kind: "gif", continuousPreview: true, title: "Wimi B Complex", caption: "Vitaminas e suplementos",
+    src: "/media/home/wimi-b-complex-loop-v2.webp", poster: "/media/home/wimi-b-complex.webp", background: "#970309",
     href: catalogFilterHref("/catalogo", { grupo: "vitamins" }), action: "Ver vitaminas e suplementos",
   },
   {
-    id: "wimilab-creme-maos", kind: "video", title: "WimiLab · Creme para mãos", caption: "Seu momento de cuidado",
-    src: "/media/home/wimilab-creme-maos.mp4", poster: "/media/home/wimilab-creme-maos.webp", background: "#faf5f5",
+    id: "wimilab-creme-maos", kind: "gif", continuousPreview: true, title: "WimiLab · Creme para mãos", caption: "Seu momento de cuidado",
+    src: "/media/home/wimilab-creme-maos-loop-v2.webp", poster: "/media/home/wimilab-creme-maos.webp", background: "#faf5f5",
     href: catalogFilterHref("/catalogo", { grupo: "beauty" }), action: "Ver perfumaria e cuidados pessoais",
   },
   {
     id: "wimifarma-institucional", kind: "video", title: "Conte com a Wimifarma", caption: "Cuidado de perto, todos os dias",
-    src: "/media/home/wimifarma-institucional-portrait-v2.mp4", poster: "/media/home/wimifarma-institucional-portrait-v2.webp", background: "#eef3f1",
+    src: "/media/home/wimifarma-institucional-counter-v3.mp4", poster: "/media/home/wimifarma-institucional-counter-v3.webp", background: "#eef3f1",
     href: catalogFilterHref("/catalogo", { grupo: "medicines" }), action: "Ver medicamentos",
   },
   {
