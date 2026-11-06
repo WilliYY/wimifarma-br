@@ -28,7 +28,7 @@ export const homeMediaItems: HomeMediaItem[] = [
   },
   {
     id: "wimifarma-institucional", kind: "video", title: "Conte com a Wimifarma", caption: "Cuidado de perto, todos os dias",
-    src: "/media/home/wimifarma-institucional-counter-v3.mp4", poster: "/media/home/wimifarma-institucional-counter-v3.webp", background: "#eef3f1",
+    src: "/media/home/wimifarma-institucional-contact-v4.mp4", poster: "/media/home/wimifarma-institucional-contact-v4.webp", background: "#eef3f1",
     href: catalogFilterHref("/catalogo", { grupo: "medicines" }), action: "Ver medicamentos",
   },
   {
