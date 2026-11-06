@@ -56,7 +56,7 @@ async function fixture(options: BrowserContextOptions = {}, configuration: { sav
   return { page, context, gallery, errors, videoRequests };
 }
 
-test("mídias têm enquadramento 3:4 uniforme, sem corte ou overflow em seis larguras", async () => {
+test("mídias mantêm quadros 3:4 e enquadramento específico, sem overflow em seis larguras", async () => {
   const { page, context, gallery, errors, videoRequests } = await fixture();
   try {
     await expect(gallery.locator("[data-media-card]")).toHaveCount(homeMediaItems.length);
@@ -73,7 +73,7 @@ test("mídias têm enquadramento 3:4 uniforme, sem corte ou overflow em seis lar
       assert(sizes.every(size => Math.abs(size.width / size.height - 0.75) < 0.01));
       assert(sizes.every(size => Math.abs(size.height - sizes[0].height) < 1));
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-      assert.equal(await gallery.locator("img").evaluateAll(images => images.every(image => getComputedStyle(image).objectFit === "contain")), true);
+      assert.equal(await gallery.locator("img, video").evaluateAll(media => media.every(element => getComputedStyle(element).objectFit === (element.closest("[data-media-id]")?.getAttribute("data-media-id") === "wimifarma-institucional" ? "cover" : "contain"))), true);
       if (captureRoot && [320, 390, 1280].includes(width)) {
         await mkdir(captureRoot, { recursive: true });
         await gallery.screenshot({ path: join(captureRoot, `media-gallery-${width}.png`) });

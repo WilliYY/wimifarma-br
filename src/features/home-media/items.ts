@@ -13,7 +13,7 @@ export type HomeMediaItem = {
 };
 
 // GIFs supplied by the store are delivered as silent MP4 loops to reduce decoding and transfer costs.
-// Add new clips here; the gallery keeps the same 3:4 frame without cropping the original artwork.
+// Product clips keep the artwork whole in 3:4 frames; the institutional clip fills its frame via local CSS.
 export const homeMediaItems: HomeMediaItem[] = [
   {
     id: "wimi-b-complex", kind: "video", title: "Wimi B Complex", caption: "Vitaminas e suplementos",
