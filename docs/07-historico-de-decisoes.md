@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-05 — Cards animados com navegação direta
+
+- Novo pedido do lojista centraliza “Dê o play no seu cuidado”, retira player/ícones de play e controles visuais de pausa, e faz o card abrir diretamente sua categoria. Arraste, movimento reduzido, pausa por interação e limite de prévias continuam preservados; pares visíveis se alternam para não deixar os últimos cards permanentemente estáticos.
+- O título das duas fileiras passa a “Sua farmácia [logo oficial Wimifarma] tem tudo”, centralizado. A mudança visual não amplia a seleção OTC nem altera estoque, frete, preço ou checkout.
+- A animação institucional reenviada é idêntica ao GIF já preparado e entra com legenda genérica, sem identificação ou alegação sobre as caixas. A revisão logística e seus backups seguem uma trilha separada, com proteção explícita das duas tabelas novas de identidade do catálogo. Contrato em [Home em movimento](home-motion-gallery-2026-11-05.md).
+
 ## 2026-11-05 — Galeria de mídia e duas fileiras de medicamentos
 
 - A pedido do lojista, o banner da home passa a uma galeria 3:4 de GIF/vídeo com versões MP4 leves, pôsteres, arraste, teclado, player e reprodução limitada por visibilidade/preferências. A faixa original de marcas e os atalhos permanecem.

@@ -6,6 +6,7 @@ import { build } from "esbuild";
 import postcss from "postcss";
 import tailwind from "@tailwindcss/postcss";
 import { chromium, expect, type BrowserContextOptions } from "@playwright/test";
+import { homeMediaItems } from "@/features/home-media/items";
 
 const origin = "http://127.0.0.1:3195";
 const captureRoot = process.env.HOME_MEDIA_CAPTURE_ROOT;
@@ -24,10 +25,11 @@ const files = (async () => {
   return { js: bundle.outputFiles.find(file => file.path.endsWith(".js"))!.text, css: css + "\n" + bundle.outputFiles.filter(file => file.path.endsWith(".css")).map(file => file.text).join("\n") };
 })();
 
-async function fixture(options: BrowserContextOptions = {}, configuration: { saveData?: boolean; gif?: boolean } = {}) {
+async function fixture(options: BrowserContextOptions = {}, configuration: { saveData?: boolean; gif?: boolean; clock?: boolean } = {}) {
   const context = await (await browser).newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce", ...options });
   if (configuration.saveData) await context.addInitScript(() => Object.defineProperty(navigator, "connection", { configurable: true, value: Object.assign(new EventTarget(), { saveData: true }) }));
   const page = await context.newPage();
+  if (configuration.clock) await page.clock.install();
   const errors: string[] = [];
   const videoRequests: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
@@ -37,6 +39,7 @@ async function fixture(options: BrowserContextOptions = {}, configuration: { sav
     if (url.origin !== origin) return route.abort();
     if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: (await files).js });
     if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: (await files).css });
+    if (url.pathname === "/catalogo") return route.fulfill({ contentType: "text/html", body: "Categoria sintética" });
     if (url.pathname === "/media/home/fixture.gif") return route.fulfill({ contentType: "image/gif", body: Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64") });
     if (url.pathname.startsWith("/media/home/")) {
       const path = resolve("public", "." + url.pathname);
@@ -53,17 +56,20 @@ async function fixture(options: BrowserContextOptions = {}, configuration: { sav
   return { page, context, gallery, errors, videoRequests };
 }
 
-test("seis mídias têm enquadramento 3:4 uniforme, sem corte ou overflow em seis larguras", async () => {
+test("mídias têm enquadramento 3:4 uniforme, sem corte ou overflow em seis larguras", async () => {
   const { page, context, gallery, errors, videoRequests } = await fixture();
   try {
-    await expect(gallery.locator("[data-media-card]")).toHaveCount(6);
+    await expect(gallery.locator("[data-media-card]")).toHaveCount(homeMediaItems.length);
+    await expect(gallery.getByRole("button")).toHaveCount(0);
+    await expect(gallery.locator("svg")).toHaveCount(0);
     for (const width of [320, 390, 768, 1024, 1280, 1920]) {
       await page.setViewportSize({ width, height: 950 });
       const sizes = await gallery.locator("[data-media-frame]").evaluateAll(elements => elements.map(element => {
         const rect = element.getBoundingClientRect();
         return { width: rect.width, height: rect.height };
       }));
-      assert.equal(sizes.length, 6);
+      assert.equal(sizes.length, homeMediaItems.length);
+      assert.equal(await gallery.locator("h2").evaluate(element => getComputedStyle(element.parentElement!).textAlign), "center");
       assert(sizes.every(size => Math.abs(size.width / size.height - 0.75) < 0.01));
       assert(sizes.every(size => Math.abs(size.height - sizes[0].height) < 1));
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
@@ -78,60 +84,80 @@ test("seis mídias têm enquadramento 3:4 uniforme, sem corte ou overflow em sei
   } finally { await context.close(); }
 });
 
-test("arraste não abre o vídeo; clique e teclado abrem player com título e destino correto", async () => {
+test("arraste não navega; clique e teclado seguem diretamente para a categoria", async () => {
   const { page, context, gallery, errors } = await fixture({ viewport: { width: 390, height: 850 } });
   try {
     const rail = gallery.getByRole("region", { name: "Explorar vídeos e animações" });
-    const first = gallery.getByRole("button", { name: "Assistir Wimi B Complex", exact: true });
+    const first = gallery.getByRole("link", { name: "Ver vitaminas e suplementos", exact: true });
+    await expect(first).toHaveAttribute("href", homeMediaItems[0].href);
     const box = await first.boundingBox(); assert(box);
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
     await page.mouse.move(box.x + box.width / 2 - 100, box.y + box.height / 2, { steps: 8 });
     await page.mouse.up();
     await expect(page.getByRole("dialog")).toHaveCount(0);
+    assert.equal(new URL(page.url()).pathname, "/");
     await expect.poll(() => rail.evaluate(element => element.scrollLeft)).toBeGreaterThan(30);
     await rail.focus();
     const before = await rail.evaluate(element => element.scrollLeft);
     await page.keyboard.press("ArrowRight");
     await expect.poll(() => rail.evaluate(element => element.scrollLeft)).toBeGreaterThan(before);
     await first.focus(); await page.keyboard.press("Enter");
-    const dialog = page.getByRole("dialog", { name: "Wimi B Complex" });
-    await expect(dialog).toBeVisible();
-    await expect(dialog.locator("video[controls]")).toHaveCount(1);
-    await expect(dialog.getByRole("link", { name: "Ver vitaminas e suplementos" })).toHaveAttribute("href", "/catalogo?grupo=vitamins&ordem=preco-asc");
-    await page.keyboard.press("Escape");
-    await expect(dialog).toHaveCount(0);
-    await expect(first).toBeFocused();
+    await expect(page).toHaveURL(origin + homeMediaItems[0].href);
+    await page.goto(origin);
+    await first.click();
+    await expect(page).toHaveURL(origin + homeMediaItems[0].href);
     assert.deepEqual(errors, []);
   } finally { await context.close(); }
 });
 
-test("autoplay limitado aos itens visíveis pausa no controle, no diálogo e fora da tela", async () => {
-  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" });
+test("prévias alternam todos os itens visíveis, limitadas a duas, e pausam por interação e visibilidade", async () => {
+  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true });
   try {
     await expect.poll(() => gallery.locator('video[data-playing="true"]').count()).toBeGreaterThan(0);
     assert((await gallery.locator('video[data-playing="true"]').count()) <= 2);
-    await gallery.getByRole("button", { name: "Pausar animações" }).click();
+    await gallery.hover();
     await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(0);
-    await gallery.getByRole("button", { name: "Reproduzir animações" }).click();
+    await page.mouse.move(0, 850);
     await expect.poll(() => gallery.locator('video[data-playing="true"]').count()).toBeGreaterThan(0);
-    await gallery.getByRole("button", { name: "Assistir Wimi B Complex", exact: true }).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    const visibleIds = await gallery.locator("[data-media-frame]").evaluateAll(elements => elements.filter(element => {
+      const box = element.getBoundingClientRect();
+      return box.left >= 0 && box.right <= innerWidth;
+    }).map(element => (element as HTMLElement).dataset.mediaId!));
+    const seen = new Set<string>();
+    for (let pair = 0; pair < Math.ceil(visibleIds.length / 2); pair++) {
+      const active = await gallery.locator("video[src]").evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!));
+      assert(active.length <= 2);
+      active.forEach(id => seen.add(id));
+      await page.clock.runFor(5100);
+      await expect.poll(() => gallery.locator("video[src]").evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!).join(","))).not.toBe(active.join(","));
+    }
+    assert(visibleIds.every(id => seen.has(id)), "todas as prévias visíveis recebem sua vez");
+    await gallery.getByRole("link").first().focus();
     await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(0);
+    const rail = gallery.getByRole("region", { name: "Explorar vídeos e animações" });
+    await rail.focus();
     await page.keyboard.press("Escape");
+    await rail.evaluate(element => element.blur());
+    await expect(gallery.locator("video[src]")).toHaveCount(0);
+    await rail.focus();
+    await page.keyboard.press("Escape");
+    await rail.evaluate(element => element.blur());
+    await expect(gallery.locator("video[src]")).toHaveCount(2);
     await page.evaluate(() => scrollTo(0, 1800));
-    await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(0);
+    await expect(gallery.locator("video[src]")).toHaveCount(0);
     await page.evaluate(() => scrollTo(0, 0));
+    await expect(gallery.locator("video[src]")).toHaveCount(2);
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(0);
+    await expect(gallery.locator("video[src]")).toHaveCount(0);
     assert.deepEqual(errors, []);
   } finally { await context.close(); }
 });
 
-test("economia de dados e aba oculta impedem reprodução; GIF futuro abre somente por ação explícita", async () => {
+test("economia de dados, aba oculta e movimento reduzido conservam pôsteres, inclusive GIF", async () => {
   const first = await fixture({ reducedMotion: "no-preference" }, { saveData: true });
   try {
-    await expect(first.gallery.getByRole("button", { name: "Reproduzir animações" })).toBeDisabled();
+    await expect(first.gallery.locator("video[src]")).toHaveCount(0);
     assert.deepEqual(first.videoRequests, []);
     await first.page.evaluate(() => {
       const connection = (navigator as Navigator & { connection: EventTarget & { saveData: boolean } }).connection;
@@ -145,10 +171,10 @@ test("economia de dados e aba oculta impedem reprodução; GIF futuro abre somen
   const second = await fixture({}, { gif: true });
   try {
     await expect(second.gallery.locator('img[src$="fixture.gif"]')).toHaveCount(0);
-    await second.gallery.getByRole("button", { name: "Assistir Wimi B Complex", exact: true }).click();
-    await expect(second.page.getByRole("dialog").locator('img[src$="fixture.gif"]')).toBeVisible();
-    await second.page.keyboard.press("Escape");
-    await expect(second.page.locator('img[src$="fixture.gif"]')).toHaveCount(0);
+    await second.page.emulateMedia({ reducedMotion: "no-preference" });
+    await expect(second.gallery.locator('img[src$="fixture.gif"]')).toBeVisible();
+    await second.page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(second.gallery.locator('img[src$="fixture.gif"]')).toHaveCount(0);
     assert.deepEqual(second.errors, []);
   } finally { await second.context.close(); }
 });

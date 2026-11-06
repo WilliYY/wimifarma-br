@@ -1,9 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { homeMediaItems, type HomeMediaItem } from "@/features/home-media/items";
 import styles from "./home-media-gallery.module.css";
 
@@ -30,10 +28,11 @@ function MotionPreview({ item, active, priority }: { item: HomeMediaItem; active
 export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMediaItem[] }) {
   const rail = useRef<HTMLDivElement>(null);
   const frames = useRef(new Map<string, HTMLDivElement>());
-  const lastTrigger = useRef<HTMLButtonElement | null>(null);
   const gesture = useRef({ id: -1, x: 0, y: 0, left: 0, moved: false });
-  const [selected, setSelected] = useState<HomeMediaItem | null>(null);
   const [paused, setPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [previewOffset, setPreviewOffset] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(true);
   const [pageVisible, setPageVisible] = useState(false);
   const [saveData, setSaveData] = useState(false);
@@ -89,8 +88,14 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
     };
   }, []);
 
-  const autoPlaying = !paused && !reducedMotion && !saveData && pageVisible && !selected;
-  const activeIds = autoPlaying ? visibleIds.slice(0, 2) : [];
+  const autoPlaying = !paused && !hovered && !focused && !reducedMotion && !saveData && pageVisible;
+  const activeIds = autoPlaying ? Array.from({ length: Math.min(2, visibleIds.length) }, (_, index) => visibleIds[(previewOffset + index) % visibleIds.length]) : [];
+
+  useEffect(() => {
+    if (!autoPlaying || visibleIds.length <= 2) return;
+    const interval = window.setInterval(() => setPreviewOffset(offset => (offset + 2) % visibleIds.length), 5000);
+    return () => window.clearInterval(interval);
+  }, [autoPlaying, visibleIds]);
 
   function pointerMove(event: PointerEvent<HTMLDivElement>) {
     const start = gesture.current;
@@ -105,15 +110,14 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
   }
 
   if (!items.length) return null;
-  return <section aria-label="Vídeos e novidades da Wimifarma" className={styles.section}>
+  return <section aria-label="Vídeos e novidades da Wimifarma" aria-describedby="home-media-motion-help" className={styles.section}
+    onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+    onFocusCapture={() => setFocused(true)}
+    onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false); }}
+    onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); setPaused(value => !value); } }}>
+    <p className="sr-only" id="home-media-motion-help">As animações pausam com o ponteiro ou foco nesta seção. Pressione Escape para pausar ou retomar.</p>
     <div className={styles.heading}>
       <h2>Dê o play no seu cuidado <span aria-hidden="true">✨</span></h2>
-      <button aria-label={paused || reducedMotion || saveData ? "Reproduzir animações" : "Pausar animações"} className={styles.motionControl}
-        disabled={reducedMotion || saveData} onClick={() => setPaused(value => !value)} type="button"
-        title={reducedMotion || saveData ? "Abra um vídeo para assistir quando quiser" : paused ? "Reproduzir animações" : "Pausar animações"}>
-        {paused || reducedMotion || saveData ? <Play aria-hidden="true" size={15} /> : <Pause aria-hidden="true" size={15} />}
-        <span>{paused || reducedMotion || saveData ? "Reproduzir" : "Pausar"}</span>
-      </button>
     </div>
     <div className={styles.viewport}>
       <div aria-label="Explorar vídeos e animações" aria-roledescription="carrossel" className={styles.rail} ref={rail} role="region" tabIndex={0}
@@ -134,24 +138,13 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
         {items.map((item, index) => <article className={styles.card} data-media-card key={item.id}>
           <div className={styles.frame} data-media-frame data-media-id={item.id} style={{ "--media-background": item.background ?? "#fff" } as CSSProperties}
             ref={element => { if (element) frames.current.set(item.id, element); else frames.current.delete(item.id); }}>
-            <button aria-label={`Assistir ${item.title}`} className={styles.watch} onClick={event => { lastTrigger.current = event.currentTarget; setSelected(item); }} type="button">
+            <a aria-label={item.action} className={styles.watch} href={item.href}>
               <MotionPreview active={activeIds.includes(item.id)} item={item} priority={index === 0} />
-              <span aria-hidden="true" className={styles.play}><Play fill="currentColor" size={16} /></span>
-            </button>
+            </a>
           </div>
           <h3>{item.title}</h3><p>{item.caption}</p>
         </article>)}
       </div>
     </div>
-    <Dialog open={Boolean(selected)} onOpenChange={open => { if (!open) setSelected(null); }}>
-      {selected && <DialogContent className={styles.dialog} onCloseAutoFocus={event => { event.preventDefault(); lastTrigger.current?.focus({ preventScroll: true }); }}>
-        <DialogHeader><DialogTitle>{selected.title}</DialogTitle><DialogDescription>{selected.caption}</DialogDescription></DialogHeader>
-        {selected.kind === "video"
-          ? <video aria-label={selected.title} autoPlay className={styles.dialogMedia} controls loop muted playsInline poster={selected.poster} src={selected.src} />
-          // Animated GIFs are mounted only after the customer explicitly opens them.
-          : <Image alt={selected.title} className={styles.dialogMedia} height={720} src={selected.src} unoptimized width={540} />}
-        <a className={styles.catalogLink} href={selected.href}>{selected.action}</a>
-      </DialogContent>}
-    </Dialog>
   </section>;
 }

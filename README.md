@@ -1,6 +1,6 @@
 # Wimifarma BR
 
-Galeria de vídeos/GIFs em quadros 3:4 e duas fileiras compactas de medicamentos, com movimento lento em sentidos opostos, arraste, fade e selo condicional de frete: [home em movimento](docs/home-motion-gallery-2026-11-05.md).
+Galeria de vídeos/GIFs em quadros 3:4 com links diretos às categorias, títulos centralizados e duas fileiras compactas de medicamentos, com movimento lento em sentidos opostos, arraste, fade e selo condicional de frete: [home em movimento](docs/home-motion-gallery-2026-11-05.md).
 
 Mais 33 perfis de higiene habilitados com medidas estimadas, limitados a PAC/SEDEX em Ivaté. O total passou a 484 produtos ativos com envio habilitado/revisado: [resultado e provas de 04/11](docs/habilitacao-estimada-correios-2026-11-04.md).
 

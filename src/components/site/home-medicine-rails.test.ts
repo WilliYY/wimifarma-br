@@ -36,10 +36,19 @@ test("fileiras MIP: sentidos opostos, pausa, arraste, teclado, ações e 320px",
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: fixture.outputFiles.find(file => file.path.endsWith(".js"))!.text });
       if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: css });
       if (url.pathname === "/synthetic.svg") return route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="120" height="120" fill="#eee"/></svg>' });
+      if (url.pathname === "/brand/logo-wimifarma-compact.webp") return route.fulfill({ contentType: "image/webp", body: readFileSync("public/brand/logo-wimifarma-compact.webp") });
       if (url.pathname.startsWith("/produto/")) return route.fulfill({ contentType: "text/html", body: "Ficha sintética" });
       return route.abort();
     });
     await page.goto("http://127.0.0.1:3198/");
+    const heading = page.getByRole("heading", { name: "Sua farmácia Wimifarma tem tudo" });
+    await expect(heading).toBeVisible();
+    await expect(heading.getByRole("img", { name: "Wimifarma" })).toHaveAttribute("src", "/brand/logo-wimifarma-compact.webp");
+    await expect.poll(() => heading.getByRole("img", { name: "Wimifarma" }).evaluate(element => (element as HTMLImageElement).complete && (element as HTMLImageElement).naturalWidth > 0)).toBe(true);
+    assert.equal(await heading.evaluate(element => getComputedStyle(element).justifyContent), "center");
+    await expect(page.getByText("Medicamentos sem receita", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Farmacinha", { exact: false })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Pausar movimento|Retomar movimento/ })).toHaveCount(0);
     const rails = page.locator("[data-medicine-rail]");
     await expect(rails).toHaveCount(2);
     await expect(page.locator('[data-copy="original"]')).toHaveCount(40);
@@ -74,10 +83,9 @@ test("fileiras MIP: sentidos opostos, pausa, arraste, teclado, ações e 320px",
     await expect(page.locator('[data-medicine-track][data-moving="true"]')).toHaveCount(2);
     await rails.first().hover();
     await expect(rails.first().locator("[data-medicine-track]")).not.toHaveAttribute("data-moving", "true");
-    await page.getByRole("button", { name: /Pausar movimento/ }).click();
+    await rails.first().focus();
+    await page.keyboard.press("Escape");
     await expect(page.locator('[data-medicine-track][data-moving="true"]')).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /Retomar movimento/ })).toBeVisible();
-    await page.getByRole("button", { name: /Retomar movimento/ }).click();
     await rails.first().focus();
     const scroll = await rails.first().evaluate(el => el.scrollLeft);
     await page.keyboard.press("ArrowRight");
@@ -105,18 +113,30 @@ test("fileiras MIP: sentidos opostos, pausa, arraste, teclado, ações e 320px",
     await expect(page.locator('[data-medicine-track][data-moving="true"]')).toHaveCount(2);
     await page.waitForTimeout(500);
     await rails.first().hover();
+    await expect(rails.first().locator("[data-medicine-track]")).not.toHaveAttribute("data-moving", "true");
     const visualCopy = rails.first().locator('li[data-copy="after"][data-product-id="mip-0"]');
     const copyBounds = (await visualCopy.boundingBox())!;
     assert.ok(copyBounds.x >= -10 && copyBounds.x < 100, "a cópia testada está visível após a volta do loop");
     await visualCopy.locator("button").filter({ hasText: "Adicionar" }).click();
     const copyInput = visualCopy.locator("input");
     await expect(copyInput).toHaveValue("1");
-    const inputBounds = (await copyInput.boundingBox())!;
-    await copyInput.click();
+    // Measure the browser's mousedown/default-focus step without a round trip
+    // where the 180ms normalization timer can exchange identical copies first.
+    const focusExchange = await copyInput.evaluate(input => {
+      const viewport = input.closest<HTMLElement>("[data-medicine-rail]")!;
+      const track = viewport.querySelector<HTMLElement>("ul")!;
+      const beforeX = input.getBoundingClientRect().x;
+      const before = { time: performance.now(), scrollLeft: viewport.scrollLeft, moving: track.dataset.moving ?? "false", transform: getComputedStyle(track).transform };
+      const defaultAllowed = input.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0 }));
+      if (defaultAllowed) input.focus({ preventScroll: true });
+      const focused = document.activeElement as HTMLElement;
+      return { beforeX, afterX: focused.getBoundingClientRect().x, defaultAllowed, before, after: { time: performance.now(), scrollLeft: viewport.scrollLeft, moving: track.dataset.moving ?? "false", transform: getComputedStyle(track).transform, focused: focused.getAttribute("aria-label") } };
+    });
+    assert.equal(focusExchange.defaultAllowed, true, "mousedown da quantidade no clone permite o foco nativo");
     const originalInput = rails.first().locator('li[data-copy="original"][data-product-id="mip-0"] input');
     await expect(originalInput).toBeFocused();
-    const originalBounds = (await originalInput.boundingBox())!;
-    assert.ok(Math.abs(inputBounds.x - originalBounds.x) < 2, "troca de cópia preserva a posição visual do campo");
+    console.log("Troca de cópia:", JSON.stringify({ ...focusExchange, normalizeDelayMs: 180 }));
+    assert.ok(Math.abs(focusExchange.beforeX - focusExchange.afterX) < 2, `troca de cópia preserva a posição visual do campo: cópia=${focusExchange.beforeX}, original=${focusExchange.afterX}`);
     await page.keyboard.press("ControlOrMeta+A");
     await page.keyboard.insertText("5");
     await expect.poll(async () => JSON.parse((await page.locator("[data-cart-state]").textContent())!).find((product: { id: string }) => product.id === "mip-0")?.quantity).toBe(5);
@@ -140,13 +160,17 @@ test("fileiras MIP: sentidos opostos, pausa, arraste, teclado, ações e 320px",
     const touchRail = rails.first();
     await touchRail.evaluate(el => { el.scrollLeft += 100; });
     const touchBefore = await touchRail.evaluate(el => el.scrollLeft);
+    const touchCycle = await touchRail.locator("ul").evaluate(element => element.querySelector<HTMLElement>('li[data-copy="original"]')!.offsetLeft - element.querySelector<HTMLElement>('li[data-copy="before"]')!.offsetLeft);
     const touchBox = (await touchRail.boundingBox())!;
     const cdp = await page.context().newCDPSession(page);
     const touchY = Math.max(50, touchBox.y + 100);
     await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 270, y: touchY }] });
     for (let x = 250; x >= 90; x -= 20) await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: touchY }] });
     await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-    await expect.poll(() => touchRail.evaluate(el => el.scrollLeft)).toBeGreaterThan(touchBefore + 20);
+    await expect.poll(async () => {
+      const distance = ((await touchRail.evaluate(el => el.scrollLeft)) - touchBefore + touchCycle) % touchCycle;
+      return distance > 20 && distance < touchCycle / 2;
+    }).toBe(true);
     const captureRoot = process.env.HOME_MEDICINE_CAPTURE_ROOT;
     if (captureRoot) {
       mkdirSync(captureRoot, { recursive: true });

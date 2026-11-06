@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Pause, Play } from "lucide-react";
+import { BrandSignature } from "./brand-signature";
 import { PublicProductCard, type RelatedProductCardItem } from "./public-product-card";
 import styles from "./home-medicine-rails.module.css";
 
@@ -9,12 +9,11 @@ export function HomeMedicineRails({ products }: { products: RelatedProductCardIt
   const [paused, setPaused] = useState(false);
   const unique = useMemo(() => [...new Map(products.map(product => [product.id, product])).values()].slice(0, 40), [products]);
   if (!unique.length) return null;
-  return <section aria-labelledby="home-medicines-title" className={styles.section}>
+  return <section aria-labelledby="home-medicines-title" aria-describedby="home-medicines-motion-help" className={styles.section}
+    onKeyDown={event => { if (event.key === "Escape" && event.currentTarget.contains(event.target as Node)) { event.preventDefault(); setPaused(value => !value); } }}>
+    <p className="sr-only" id="home-medicines-motion-help">O movimento pausa com o ponteiro ou foco na fileira. Pressione Escape para pausar ou retomar todas as fileiras.</p>
     <div className={styles.heading}>
-      <div><p className={styles.eyebrow}>Medicamentos sem receita</p><h2 id="home-medicines-title">Farmacinha <span aria-hidden="true">💊</span></h2></div>
-      <button aria-label={paused ? "Retomar movimento" : "Pausar movimento"} aria-pressed={paused} className={styles.pause} onClick={() => setPaused(value => !value)} type="button">
-        {paused ? <Play aria-hidden="true" size={14} /> : <Pause aria-hidden="true" size={14} />}{paused ? "Retomar" : "Pausar"}
-      </button>
+      <h2 id="home-medicines-title"><span>Sua farmácia</span><BrandSignature className={styles.brand} /><span>tem tudo</span></h2>
     </div>
     <MedicineRail products={unique.slice(0, 20)} direction={-1} paused={paused} label="Medicamentos sem receita, primeira fileira" />
     {unique.length > 20 ? <MedicineRail products={unique.slice(20)} direction={1} paused={paused} label="Medicamentos sem receita, segunda fileira" /> : null}

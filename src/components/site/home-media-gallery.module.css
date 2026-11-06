@@ -7,12 +7,9 @@
   width: 100%;
   padding-block: 1rem 1.5rem;
 }
-.heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .75rem; }
+.heading { display: flex; align-items: center; justify-content: center; text-align: center; gap: .75rem; margin-bottom: .75rem; }
 .heading h2 { font-size: clamp(1rem, 1.8vw, 1.25rem); font-weight: 800; line-height: 1.25; color: var(--gallery-ink); }
-.motionControl { min-height: 44px; display: inline-flex; align-items: center; gap: .3rem; padding: .5rem; border-radius: 999px; color: var(--gallery-muted); font-size: .75rem; cursor: pointer; }
-.motionControl:hover { background: var(--gallery-surface); color: var(--gallery-brand); }
-.motionControl:disabled { opacity: .65; cursor: default; }
-.motionControl:focus-visible, .watch:focus-visible, .rail:focus-visible { outline: 2px solid var(--gallery-brand); outline-offset: 3px; }
+.watch:focus-visible, .rail:focus-visible { outline: 2px solid var(--gallery-brand); outline-offset: 3px; }
 .viewport { position: relative; }
 .viewport::before, .viewport::after { content: ""; position: absolute; z-index: 2; inset-block: 0; width: 18px; pointer-events: none; }
 .viewport::before { left: -1px; background: linear-gradient(to right, var(--gallery-surface), transparent); }
@@ -26,13 +23,8 @@
 .poster, .preview { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 .preview { opacity: 0; transition: opacity .2s ease; }
 .preview[data-playing="true"], img.preview { opacity: 1; }
-.play { position: absolute; right: .6rem; bottom: .6rem; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; color: var(--gallery-ink); background: #fffffff0; box-shadow: 0 2px 8px #11182712; }
 .card h3 { margin: .65rem .125rem 0; font-size: .8125rem; font-weight: 800; line-height: 1.35; color: var(--gallery-ink); }
 .card p { margin: .2rem .125rem 0; font-size: .6875rem; line-height: 1.4; color: var(--gallery-muted); }
-.dialog { max-width: 460px; border-radius: 24px; }
-.dialogMedia { width: 100%; height: min(62dvh, 540px); object-fit: contain; border-radius: 16px; background: #fff; }
-.catalogLink { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: .65rem 1rem; background: #cf002d; color: #fff; border-radius: 999px; text-align: center; font-size: .875rem; font-weight: 800; }
-.catalogLink:focus-visible { outline: 2px solid #cf002d; outline-offset: 3px; }
 @media (min-width: 640px) { .card { flex-basis: 180px; } .viewport::before, .viewport::after { width: 22px; } }
 @media (min-width: 1024px) { .card { flex-basis: 196px; } }
 @media (prefers-reduced-motion: reduce) { .preview { transition: none; } }
