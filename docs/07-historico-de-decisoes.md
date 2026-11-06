@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-06 — Política distinta de estimativas físicas por família
+
+A autorização do lojista para aproximar pesos e medidas por grandes famílias origina a política `family-physical-draft-v4.3-2026-11-06`. Ela permite refinar os quatro campos físicos de rascunhos estimados desativados elegíveis, inclusive valores existentes ou nulos, preservando perfis protegidos, evidências, restrições e campos comerciais. Não altera os contratos `reviewed-family-v1`/`comparable-package-v1`, não representa medição ou referências calibradas e não habilita transporte. A prévia contém 2.521 propostas; QA nativa integral e revisão independente passaram, mas ainda não houve aplicação em produção. Decisão, hipóteses, validações e limites em [estimativas físicas por família](estimativas-fisicas-por-familia-2026-11-06.md).
+
 ## 2026-11-05 — Cards animados com navegação direta
 
 - Novo pedido do lojista centraliza “Dê o play no seu cuidado”, retira player/ícones de play e controles visuais de pausa, e faz o card abrir diretamente sua categoria. Arraste, movimento reduzido, pausa por interação e limite de prévias continuam preservados; pares visíveis se alternam para não deixar os últimos cards permanentemente estáticos.
