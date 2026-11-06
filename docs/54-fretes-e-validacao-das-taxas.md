@@ -17,6 +17,26 @@ Encomenda de referência: **500 g, comprimento 20,8 × largura 20,8 × altura 21
 
 Somente PAC e SEDEX retornaram opções nessas duas consultas. Não foram alterados serviços ou perfis de produtos. Preços e cobertura variam conforme CEP, carga, conta e momento da consulta; os exemplos não garantem cobertura nacional integral nem preço futuro. O checkout ordena por preço crescente e usa o prazo crescente como desempate. Entrega local em Ivaté/Douradina permanece gratuita; a regra nacional de R$99,90 depende de serviço disponível.
 
+## Origem das consultas no domínio www — 06/11/2026
+
+O parser compartilhado de frete aceita o alias exato `https://www.wimifarma.com.br`
+somente quando `AUTH_URL` está explicitamente configurada com a origem
+`https://wimifarma.com.br`. A origem canônica continua aceita. Sem `AUTH_URL`,
+permanece a comparação exata com a origem da requisição; não há alias implícito
+nem liberação no sentido inverso. HTTP, portas adicionais, subdomínios, sufixos,
+origem ausente/`null` e listas de origens continuam rejeitados.
+
+A regra atende estimativas, cotações de checkout e os demais handlers que usam
+`shippingBody`. Ela não concede autenticação ou permissão ADMIN. O middleware
+continua exigindo que Origin corresponda ao Host público e recusando
+`sec-fetch-site: cross-site`; JSON obrigatório e limite de 32.000 bytes são
+preservados. Não há redirect de páginas, mudança de domínio, carrinho,
+localStorage ou sessão, nem alteração das origens aceitas por pagamentos e outros
+módulos. A regressão cobre o proxy com URL interna e Host www explícito.
+
+Essa mudança de código ainda exige revisão, CI/build e publicação pelo
+coordenador; os testes locais não comprovam ativação no domínio público.
+
 ## Opções para ampliar a comparação
 
 - Primeiro aproveitar serviços adicionais do próprio Melhor Envio quando retornarem cotação e houver postagem/coleta viável e aceitação da carga.

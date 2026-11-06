@@ -8,7 +8,8 @@ export function shippingFailure(error: unknown) {
 export async function shippingBody(request: Request) {
   const origin = request.headers.get("origin");
   const expected = new URL(process.env.AUTH_URL || request.url).origin;
-  if (!origin || origin !== expected) throw new ShippingError("Origem da solicitação inválida.", 403);
+  const storeAlias = Boolean(process.env.AUTH_URL) && expected === "https://wimifarma.com.br" && origin === "https://www.wimifarma.com.br";
+  if (!origin || (origin !== expected && !storeAlias)) throw new ShippingError("Origem da solicitação inválida.", 403);
   if (!request.headers.get("content-type")?.startsWith("application/json")) throw new ShippingError("Envie JSON.", 415);
   const reader = request.body?.getReader();
   if (!reader) throw new ShippingError("JSON inválido.", 400);
