@@ -29,7 +29,11 @@ async function fixture(options: BrowserContextOptions = {}, configuration: { sav
   const context = await (await browser).newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce", ...options });
   if (configuration.saveData) await context.addInitScript(() => Object.defineProperty(navigator, "connection", { configurable: true, value: Object.assign(new EventTarget(), { saveData: true }) }));
   const page = await context.newPage();
-  if (configuration.clock) await page.clock.install();
+  if (configuration.clock) {
+    await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
+    // Freeze before rendering so I/O and CPU delays cannot advance preview rounds.
+    await page.clock.pauseAt(new Date("2026-01-01T01:00:00Z"));
+  }
   const errors: string[] = [];
   const videoRequests: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
@@ -56,7 +60,7 @@ async function fixture(options: BrowserContextOptions = {}, configuration: { sav
   return { page, context, gallery, errors, videoRequests };
 }
 
-test("mídias mantêm quadros 3:4 e enquadramento específico, sem overflow em seis larguras", async () => {
+test("mídias mantêm quadros 3:4 e enquadramento inteiro, sem overflow em seis larguras", async () => {
   const { page, context, gallery, errors, videoRequests } = await fixture();
   try {
     await expect(gallery.locator("[data-media-card]")).toHaveCount(homeMediaItems.length);
@@ -74,7 +78,7 @@ test("mídias mantêm quadros 3:4 e enquadramento específico, sem overflow em s
       assert(sizes.every(size => Math.abs(size.width / size.height - 0.75) < 0.01));
       assert(sizes.every(size => Math.abs(size.height - sizes[0].height) < 1));
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-      assert.equal(await gallery.locator("img, video").evaluateAll(media => media.every(element => getComputedStyle(element).objectFit === (element.closest("[data-media-id]")?.getAttribute("data-media-id") === "wimifarma-institucional" ? "cover" : "contain"))), true);
+      assert.equal(await gallery.locator("img, video").evaluateAll(media => media.every(element => getComputedStyle(element).objectFit === "contain")), true);
       if (captureRoot && [320, 390, 1280].includes(width)) {
         await mkdir(captureRoot, { recursive: true });
         await gallery.screenshot({ path: join(captureRoot, `media-gallery-${width}.png`) });
@@ -112,7 +116,7 @@ test("arraste não navega; clique e teclado seguem diretamente para a categoria"
   } finally { await context.close(); }
 });
 
-test("prévias alternam em três segundos, retêm fontes visíveis e priorizam hover sem interromper tudo", async () => {
+test("institucional permanece contínuo enquanto as outras prévias alternam a cada três segundos", async () => {
   const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true });
   try {
     await expect.poll(() => gallery.locator('video[data-playing="true"]').count()).toBeGreaterThan(0);
@@ -123,17 +127,37 @@ test("prévias alternam em três segundos, retêm fontes visíveis e priorizam h
       const box = element.getBoundingClientRect();
       return Math.max(0, Math.min(box.right, innerWidth) - Math.max(box.left, 0)) / box.width >= 0.45;
     }).map(element => (element as HTMLElement).dataset.mediaId!));
+    const institutionalId = "wimifarma-institucional";
+    assert(visibleIds.includes(institutionalId));
+    const rotatingIds = visibleIds.filter(id => id !== institutionalId);
+    const institutional = gallery.locator(`[data-media-id="${institutionalId}"] video`);
+    await expect(institutional).toHaveAttribute("data-playing", "true");
+    const metadata = await institutional.evaluate(element => {
+      const video = element as HTMLVideoElement;
+      return { duration: video.duration, width: video.videoWidth, height: video.videoHeight };
+    });
+    assert(Math.abs(metadata.duration - 6) < 0.05, "as seis cenas duram um segundo cada");
+    assert.deepEqual([metadata.width, metadata.height], [540, 720], "o arquivo preenche o card 3:4 sem recorte");
+    await institutional.evaluate(element => {
+      const counters = window as Window & { institutionalPauses?: number; excessPlayback?: number };
+      counters.institutionalPauses = 0;
+      counters.excessPlayback = 0;
+      element.addEventListener("pause", () => { counters.institutionalPauses = (counters.institutionalPauses ?? 0) + 1; });
+      document.querySelectorAll("video").forEach(video => video.addEventListener("play", () => {
+        if (Array.from(document.querySelectorAll("video")).filter(media => !media.paused).length > 2) counters.excessPlayback = (counters.excessPlayback ?? 0) + 1;
+      }));
+    });
     const seen = new Set<string>();
-    for (let pair = 0; pair < Math.ceil(visibleIds.length / 2); pair++) {
-      const expected = Array.from({ length: Math.min(2, visibleIds.length) }, (_, index) => visibleIds[(pair * 2 + index) % visibleIds.length]);
+    for (let turn = 0; turn <= rotatingIds.length; turn++) {
+      const expected = visibleIds.filter(id => id === institutionalId || id === rotatingIds[turn % rotatingIds.length]);
       await expect.poll(() => gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!))).toEqual(expected);
       const active = await gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!));
       assert(active.length <= 2);
       active.forEach(id => seen.add(id));
       await page.clock.runFor(3100);
-      const next = Array.from({ length: Math.min(2, visibleIds.length) }, (_, index) => visibleIds[((pair + 1) * 2 + index) % visibleIds.length]);
-      await expect.poll(() => gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!))).toEqual(visibleIds.filter(id => next.includes(id)));
-      if (pair === 0) {
+      const next = visibleIds.filter(id => id === institutionalId || id === rotatingIds[(turn + 1) % rotatingIds.length]);
+      await expect.poll(() => gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!))).toEqual(next);
+      if (turn === 0) {
         await expect(firstVideo).toHaveAttribute("src", homeMediaItems[0].src);
         await expect(firstVideo).toHaveAttribute("data-ready", "true");
         const position = await firstVideo.evaluate(element => (element as HTMLVideoElement).currentTime);
@@ -142,13 +166,20 @@ test("prévias alternam em três segundos, retêm fontes visíveis e priorizam h
       }
     }
     assert(visibleIds.every(id => seen.has(id)), "todas as prévias visíveis recebem sua vez");
-    const hoveredFrame = gallery.locator("[data-media-frame]").nth(2);
+    assert.equal(await page.evaluate(() => (window as Window & { institutionalPauses?: number }).institutionalPauses), 0, "o institucional não pausa entre rodadas");
+    assert.equal(await page.evaluate(() => (window as Window & { excessPlayback?: number }).excessPlayback), 0, "nenhuma transição reproduz mais de dois vídeos");
+    const hoveredFrame = gallery.locator("[data-media-frame]").nth(1);
     await hoveredFrame.hover();
     await expect(hoveredFrame.locator("video")).toHaveAttribute("data-playing", "true");
+    await expect(institutional).toHaveAttribute("data-playing", "true");
+    await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(2);
     const pinned = await gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!).join(","));
     await page.clock.runFor(6200);
     assert.equal(await gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!).join(",")), pinned);
     assert((await gallery.locator('video[data-playing="true"]').count()) <= 2);
+    await institutional.hover();
+    await expect(hoveredFrame.locator("video")).toHaveAttribute("data-playing", "true");
+    await expect(institutional).toHaveAttribute("data-playing", "true");
     await page.mouse.move(0, 850);
     await gallery.getByRole("link").first().focus();
     await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(0);
@@ -180,7 +211,7 @@ test("prévia visível pausa em quadro real e retoma da posição conservada", a
     const firstVideo = firstFrame.locator("video");
     await firstFrame.hover();
     await expect.poll(() => firstVideo.evaluate(element => (element as HTMLVideoElement).currentTime)).toBeGreaterThan(0.15);
-    await gallery.locator("[data-media-frame]").nth(2).hover();
+    await gallery.locator("[data-media-frame]").nth(1).hover();
     await expect(firstVideo).toHaveAttribute("data-playing", "false");
     await expect(firstVideo).toHaveAttribute("data-ready", "true");
     const position = await firstVideo.evaluate(element => (element as HTMLVideoElement).currentTime);
@@ -194,6 +225,27 @@ test("prévia visível pausa em quadro real e retoma da posição conservada", a
   } finally { await context.close(); }
 });
 
+test("institucional fora da tela preserva alternância de pares", async () => {
+  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true });
+  try {
+    const institutional = gallery.locator('[data-media-id="wimifarma-institucional"]');
+    await institutional.evaluate(element => { element.style.visibility = "hidden"; element.style.position = "absolute"; element.style.left = "-10000px"; });
+    await expect(institutional.locator("video")).not.toHaveAttribute("src");
+    const visibleIds = await gallery.locator("[data-media-frame]").evaluateAll(elements => elements.filter(element => {
+      const box = element.getBoundingClientRect();
+      return Math.max(0, Math.min(box.right, innerWidth) - Math.max(box.left, 0)) / box.width >= 0.45;
+    }).map(element => (element as HTMLElement).dataset.mediaId!));
+    assert(!visibleIds.includes("wimifarma-institucional"));
+    assert(visibleIds.length > 2);
+    for (let turn = 0; turn < visibleIds.length; turn++) {
+      const pair = [visibleIds[(turn * 2) % visibleIds.length], visibleIds[(turn * 2 + 1) % visibleIds.length]];
+      await expect.poll(() => gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!))).toEqual(visibleIds.filter(id => pair.includes(id)));
+      await page.clock.runFor(3100);
+    }
+    assert.deepEqual(errors, []);
+  } finally { await context.close(); }
+});
+
 test("economia de dados, aba oculta e movimento reduzido conservam pôsteres, inclusive GIF", async () => {
   const first = await fixture({ reducedMotion: "no-preference" }, { saveData: true });
   try {
@@ -203,12 +255,13 @@ test("economia de dados, aba oculta e movimento reduzido conservam pôsteres, in
       const connection = (navigator as Navigator & { connection: EventTarget & { saveData: boolean } }).connection;
       connection.saveData = false; connection.dispatchEvent(new Event("change"));
     });
-    await expect.poll(() => first.gallery.locator('video[data-playing="true"]').count()).toBeGreaterThan(0);
+    await expect(first.gallery.locator('video[data-playing="true"]')).toHaveCount(2);
+    await expect(first.gallery.locator('[data-media-id="wimifarma-institucional"] video')).toHaveAttribute("data-playing", "true");
     await first.page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: true }); document.dispatchEvent(new Event("visibilitychange")); });
     await expect(first.gallery.locator('video[data-playing="true"]')).toHaveCount(0);
     await expect(first.gallery.locator("video[src]")).toHaveCount(0);
     await first.page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: false }); document.dispatchEvent(new Event("visibilitychange")); });
-    await expect.poll(() => first.gallery.locator('video[data-playing="true"]').count()).toBeGreaterThan(0);
+    await expect(first.gallery.locator('video[data-playing="true"]')).toHaveCount(2);
     await first.page.evaluate(() => {
       const connection = (navigator as Navigator & { connection: EventTarget & { saveData: boolean } }).connection;
       connection.saveData = true; connection.dispatchEvent(new Event("change"));

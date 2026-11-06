@@ -13,7 +13,7 @@ export type HomeMediaItem = {
 };
 
 // GIFs supplied by the store are delivered as silent MP4 loops to reduce decoding and transfer costs.
-// Product clips keep the artwork whole in 3:4 frames; the institutional clip fills its frame via local CSS.
+// Portrait media and complete product artwork fit inside the same 3:4 frames without cropping.
 export const homeMediaItems: HomeMediaItem[] = [
   {
     id: "wimi-b-complex", kind: "video", title: "Wimi B Complex", caption: "Vitaminas e suplementos",
@@ -27,7 +27,7 @@ export const homeMediaItems: HomeMediaItem[] = [
   },
   {
     id: "wimifarma-institucional", kind: "video", title: "Conte com a Wimifarma", caption: "Cuidado de perto, todos os dias",
-    src: "/media/home/wimifarma-institucional.mp4", poster: "/media/home/wimifarma-institucional.webp", background: "#eef3f1",
+    src: "/media/home/wimifarma-institucional-portrait-v2.mp4", poster: "/media/home/wimifarma-institucional-portrait-v2.webp", background: "#eef3f1",
     href: catalogFilterHref("/catalogo", { grupo: "medicines" }), action: "Ver medicamentos",
   },
   {

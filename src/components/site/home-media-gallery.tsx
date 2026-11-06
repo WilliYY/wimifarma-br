@@ -22,11 +22,8 @@ function MotionPreview({ item, active, eligible, priority }: { item: HomeMediaIt
       if (!element.hasAttribute("src")) element.src = item.src;
       void element.play().catch(() => { /* The poster remains available when playback is unavailable. */ });
     } else element.pause();
+    return () => element.pause();
   }, [active, eligible, item.src]);
-  useEffect(() => {
-    const element = video.current;
-    return () => { element?.pause(); };
-  }, []);
   return <>
     <Image alt={item.title} className={styles.poster} fill priority={priority} sizes="(max-width: 639px) 156px, (max-width: 1023px) 180px, 200px" src={item.poster} />
     {item.kind === "video" ? <video
@@ -102,13 +99,20 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
 
   const motionAllowed = !reducedMotion && !saveData && pageVisible;
   const autoPlaying = !paused && !focused && motionAllowed;
-  const activeIds = autoPlaying ? Array.from({ length: Math.min(2, visibleIds.length) }, (_, index) => visibleIds[(previewOffset + index) % visibleIds.length]) : [];
+  const institutionalId = visibleIds.includes("wimifarma-institucional") ? "wimifarma-institucional" : null;
+  const rotatingIds = visibleIds.filter(id => id !== institutionalId);
+  const rotatingCount = rotatingIds.length;
+  const rotatingSlots = institutionalId ? 1 : 2;
+  const activeIds = autoPlaying ? [
+    ...(institutionalId ? [institutionalId] : []),
+    ...Array.from({ length: Math.min(rotatingSlots, rotatingCount) }, (_, index) => rotatingIds[(previewOffset + index) % rotatingCount]),
+  ] : [];
 
   useEffect(() => {
-    if (!autoPlaying || hovered || visibleIds.length <= 2) return;
-    const interval = window.setInterval(() => setPreviewOffset(offset => (offset + 2) % visibleIds.length), 3000);
+    if (!autoPlaying || hovered || rotatingCount <= rotatingSlots) return;
+    const interval = window.setInterval(() => setPreviewOffset(offset => (offset + rotatingSlots) % rotatingCount), 3000);
     return () => window.clearInterval(interval);
-  }, [autoPlaying, hovered, visibleIds]);
+  }, [autoPlaying, hovered, rotatingCount, rotatingSlots, visibleIds]);
 
   function pointerMove(event: PointerEvent<HTMLDivElement>) {
     const start = gesture.current;
@@ -129,7 +133,7 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
     onFocusCapture={() => setFocused(true)}
     onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false); }}
     onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); setPaused(value => !value); } }}>
-    <p className="sr-only" id="home-media-motion-help">O ponteiro do mouse fixa a prévia do card. O foco nesta seção pausa as animações. Pressione Escape para pausar ou retomar.</p>
+    <p className="sr-only" id="home-media-motion-help">O vídeo institucional permanece animado enquanto estiver visível. O ponteiro do mouse fixa a outra prévia. O foco nesta seção pausa as animações. Pressione Escape para pausar ou retomar.</p>
     <div className={styles.heading}>
       <h2>Dê o play no seu cuidado <span aria-hidden="true">✨</span></h2>
     </div>
@@ -153,7 +157,7 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
           <div className={styles.frame} data-media-frame data-media-id={item.id} style={{ "--media-background": item.background ?? "#fff" } as CSSProperties}
             onPointerEnter={event => {
               if (event.pointerType !== "mouse") return;
-              const offset = visibleIds.indexOf(item.id);
+              const offset = rotatingIds.indexOf(item.id);
               if (offset >= 0) setPreviewOffset(offset);
             }}
             ref={element => { if (element) frames.current.set(item.id, element); else frames.current.delete(item.id); }}>
