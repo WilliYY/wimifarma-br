@@ -1,7 +1,8 @@
 .section { width: 100%; min-width: 0; padding-block: 24px; background: var(--surface-subtle); }
-.heading { max-width: 1440px; margin: 0 auto 16px; padding-inline: 16px; text-align: center; }
-.heading h2 { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 12px; margin: 0; color: var(--ink); font-size: clamp(21px, 2.5vw, 30px); line-height: 1.2; font-weight: 800; letter-spacing: -0.025em; }
-.brand { box-shadow: 0 3px 12px #11182708; }
+.heading { max-width: 1440px; margin: 0 auto 12px; padding-inline: 16px; text-align: center; }
+.heading h2 { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: clamp(6px, 1.6vw, 12px); margin: 0; color: var(--ink); font-size: clamp(16px, 4.25vw, 28px); line-height: 1.25; font-weight: 700; letter-spacing: -0.02em; }
+.brand { padding: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.brand img { display: block; width: clamp(100px, 28vw, 160px); height: auto; }
 .frame { position: relative; min-width: 0; }
 .frame + .frame { margin-top: 12px; }
 .frame::before, .frame::after { position: absolute; top: 0; bottom: 0; z-index: 30; width: clamp(12px, 3vw, 48px); pointer-events: none; content: ""; }

@@ -1742,3 +1742,7 @@ O teste das ações móveis do administrador também passa a aguardar as transi�
 ## 05/11/2026 — origem HTTPS do frete no alias www
 
 A consulta pública de frete retornou 403 para o endereço com `www`, enquanto os mesmos produtos e CEP retornaram opções pelo domínio principal. O helper de frete comparava a origem exclusivamente com `AUTH_URL`. A correção aceita somente o alias explícito `https://www.wimifarma.com.br` quando a origem configurada é `https://wimifarma.com.br`, preservando os guards de host/origem do middleware e a autorização de cada rota. Não há confiança genérica em subdomínios, alteração de CORS, redirecionamento de páginas ou migração do armazenamento do carrinho. JSON, limite de corpo e rejeição de origens externas continuam obrigatórios. Regressões de abuso e detalhes operacionais em [Fretes e validação das taxas](54-fretes-e-validacao-das-taxas.md).
+
+## 06/11/2026 — assinatura transparente no título das fileiras
+
+O título “Sua farmácia [logo] tem tudo” usa uma composição centralizada e proporcional à largura da tela, evitando deixar “tem tudo” isolado no celular em tamanho normal. A quebra natural continua disponível quando o texto é ampliado. O fundo branco e os adornos são removidos somente do contêiner dessa assinatura. A imagem oficial transparente e o componente global `BrandSignature` não mudam. A alteração é restrita à tipografia e ao CSS local, sem efeito sobre rotação, produtos, carrinho ou regras comerciais.

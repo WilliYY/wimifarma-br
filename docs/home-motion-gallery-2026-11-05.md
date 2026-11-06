@@ -14,6 +14,8 @@ Até duas prévias visíveis podem reproduzir ao mesmo tempo; a revisão alterna
 
 O cabeçalho usa a frase centralizada “Sua farmácia [logo oficial Wimifarma] tem tudo”, com `BrandSignature`. A sobrancelha “Medicamentos sem receita”, o título visual anterior e o botão visível de pausa foram retirados; a seleção continua restrita aos mesmos OTC elegíveis.
 
+Na revisão de 06/11, a frase fica em uma linha nas larguras usuais, com tamanho de letra, peso e espaçamento proporcionais à tela. Texto ampliado pode quebrar naturalmente, sem corte. Somente a assinatura desse título remove o fundo branco, o anel, a sombra e o padding do contêiner. A arte oficial já possui transparência e permanece intacta; as outras utilizações de `BrandSignature` mantêm seu estilo.
+
 Os primeiros 20 itens compõem a fileira superior, movendo-se para a direita; os demais, até 20, compõem a inferior, para a esquerda. O movimento de 11 CSS px/s é independente da quantidade de quadros, com `translate3d` e sem renderização React por frame. Hover, foco, arraste, toque, visibilidade, aba oculta e movimento reduzido suspendem o avanço. Arraste não aciona compra; cópias visuais do loop conservam ações e ficam fora da ordem de tabulação.
 
 A variante `medicine-rail` tem largura de 276 px no celular e 320 px nas telas maiores. Foto e identificação ficam lado a lado; nome e composição completos, preço, unidade e ações continuam disponíveis. Adicionar/Comprar ficam lado a lado, com alvos de 44 px. Na fixture sintética conferida, a mediana e o máximo de altura foram 243 px; apresentações reais mais longas podem aumentar a altura para preservar o conteúdo.
