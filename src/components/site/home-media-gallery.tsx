@@ -5,22 +5,34 @@ import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } fr
 import { homeMediaItems, type HomeMediaItem } from "@/features/home-media/items";
 import styles from "./home-media-gallery.module.css";
 
-function MotionPreview({ item, active, priority }: { item: HomeMediaItem; active: boolean; priority: boolean }) {
+function MotionPreview({ item, active, eligible, priority }: { item: HomeMediaItem; active: boolean; eligible: boolean; priority: boolean }) {
   const video = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
+  const [ready, setReady] = useState(false);
   useEffect(() => {
     const element = video.current;
     if (!element) return;
-    if (active) void element.play().catch(() => { /* The poster remains available when playback is unavailable. */ });
-    else element.pause();
-    return () => element.pause();
-  }, [active]);
+    if (!eligible || (element.hasAttribute("src") && element.getAttribute("src") !== item.src)) {
+      element.pause();
+      if (element.hasAttribute("src")) { element.removeAttribute("src"); element.load(); }
+      setReady(false);
+      setPlaying(false);
+    }
+    if (active && eligible) {
+      if (!element.hasAttribute("src")) element.src = item.src;
+      void element.play().catch(() => { /* The poster remains available when playback is unavailable. */ });
+    } else element.pause();
+  }, [active, eligible, item.src]);
+  useEffect(() => {
+    const element = video.current;
+    return () => { element?.pause(); };
+  }, []);
   return <>
     <Image alt={item.title} className={styles.poster} fill priority={priority} sizes="(max-width: 639px) 156px, (max-width: 1023px) 180px, 200px" src={item.poster} />
     {item.kind === "video" ? <video
-      aria-hidden="true" className={styles.preview} data-playing={active && playing}
-      loop muted onPause={() => setPlaying(false)} onPlaying={() => setPlaying(true)}
-      playsInline preload="none" ref={video} src={active ? item.src : undefined} tabIndex={-1}
+      aria-hidden="true" className={styles.preview} data-playing={active && playing} data-ready={eligible && ready}
+      loop muted onPause={() => setPlaying(false)} onPlaying={() => { setPlaying(true); setReady(true); }}
+      playsInline preload="none" ref={video} tabIndex={-1}
     /> : active ? <Image alt="" aria-hidden="true" className={styles.preview} fill sizes="200px" src={item.src} unoptimized /> : null}
   </>;
 }
@@ -88,14 +100,15 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
     };
   }, []);
 
-  const autoPlaying = !paused && !hovered && !focused && !reducedMotion && !saveData && pageVisible;
+  const motionAllowed = !reducedMotion && !saveData && pageVisible;
+  const autoPlaying = !paused && !focused && motionAllowed;
   const activeIds = autoPlaying ? Array.from({ length: Math.min(2, visibleIds.length) }, (_, index) => visibleIds[(previewOffset + index) % visibleIds.length]) : [];
 
   useEffect(() => {
-    if (!autoPlaying || visibleIds.length <= 2) return;
-    const interval = window.setInterval(() => setPreviewOffset(offset => (offset + 2) % visibleIds.length), 5000);
+    if (!autoPlaying || hovered || visibleIds.length <= 2) return;
+    const interval = window.setInterval(() => setPreviewOffset(offset => (offset + 2) % visibleIds.length), 3000);
     return () => window.clearInterval(interval);
-  }, [autoPlaying, visibleIds]);
+  }, [autoPlaying, hovered, visibleIds]);
 
   function pointerMove(event: PointerEvent<HTMLDivElement>) {
     const start = gesture.current;
@@ -111,11 +124,12 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
 
   if (!items.length) return null;
   return <section aria-label="Vídeos e novidades da Wimifarma" aria-describedby="home-media-motion-help" className={styles.section}
-    onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+    onPointerEnter={event => { if (event.pointerType === "mouse") setHovered(true); }}
+    onPointerLeave={event => { if (event.pointerType === "mouse") setHovered(false); }}
     onFocusCapture={() => setFocused(true)}
     onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false); }}
     onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); setPaused(value => !value); } }}>
-    <p className="sr-only" id="home-media-motion-help">As animações pausam com o ponteiro ou foco nesta seção. Pressione Escape para pausar ou retomar.</p>
+    <p className="sr-only" id="home-media-motion-help">O ponteiro do mouse fixa a prévia do card. O foco nesta seção pausa as animações. Pressione Escape para pausar ou retomar.</p>
     <div className={styles.heading}>
       <h2>Dê o play no seu cuidado <span aria-hidden="true">✨</span></h2>
     </div>
@@ -137,9 +151,14 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
         }}>
         {items.map((item, index) => <article className={styles.card} data-media-card key={item.id}>
           <div className={styles.frame} data-media-frame data-media-id={item.id} style={{ "--media-background": item.background ?? "#fff" } as CSSProperties}
+            onPointerEnter={event => {
+              if (event.pointerType !== "mouse") return;
+              const offset = visibleIds.indexOf(item.id);
+              if (offset >= 0) setPreviewOffset(offset);
+            }}
             ref={element => { if (element) frames.current.set(item.id, element); else frames.current.delete(item.id); }}>
             <a aria-label={item.action} className={styles.watch} href={item.href}>
-              <MotionPreview active={activeIds.includes(item.id)} item={item} priority={index === 0} />
+              <MotionPreview active={activeIds.includes(item.id)} eligible={motionAllowed && visibleIds.includes(item.id)} item={item} priority={index === 0} />
             </a>
           </div>
           <h3>{item.title}</h3><p>{item.caption}</p>

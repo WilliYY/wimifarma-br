@@ -26,6 +26,11 @@ export const homeMediaItems: HomeMediaItem[] = [
     href: catalogFilterHref("/catalogo", { grupo: "beauty" }), action: "Ver perfumaria e cuidados pessoais",
   },
   {
+    id: "wimifarma-institucional", kind: "video", title: "Conte com a Wimifarma", caption: "Cuidado de perto, todos os dias",
+    src: "/media/home/wimifarma-institucional.mp4", poster: "/media/home/wimifarma-institucional.webp", background: "#eef3f1",
+    href: catalogFilterHref("/catalogo", { grupo: "medicines" }), action: "Ver medicamentos",
+  },
+  {
     id: "dove-sabonete", kind: "video", title: "Dove Original", caption: "Sabonete · 90 g",
     src: "/media/home/dove-sabonete.mp4", poster: "/media/home/dove-sabonete.webp",
     href: catalogFilterHref("/catalogo", { grupo: "beauty", assunto: "bath" }), action: "Ver sabonetes e banho",
@@ -44,10 +49,5 @@ export const homeMediaItems: HomeMediaItem[] = [
     id: "principia-serum", kind: "video", title: "Principia NC-10", caption: "Sérum · 30 ml",
     src: "/media/home/principia-serum.mp4", poster: "/media/home/principia-serum.webp",
     href: catalogFilterHref("/catalogo", { grupo: "dermo", assunto: "face" }), action: "Ver cuidados com o rosto",
-  },
-  {
-    id: "wimifarma-institucional", kind: "video", title: "Conte com a Wimifarma", caption: "Cuidado de perto, todos os dias",
-    src: "/media/home/wimifarma-institucional.mp4", poster: "/media/home/wimifarma-institucional.webp", background: "#eef3f1",
-    href: catalogFilterHref("/catalogo", { grupo: "medicines" }), action: "Ver medicamentos",
   },
 ];

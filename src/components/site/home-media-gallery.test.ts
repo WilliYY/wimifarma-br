@@ -60,6 +60,7 @@ test("mídias mantêm quadros 3:4 e enquadramento específico, sem overflow em s
   const { page, context, gallery, errors, videoRequests } = await fixture();
   try {
     await expect(gallery.locator("[data-media-card]")).toHaveCount(homeMediaItems.length);
+    assert.equal(homeMediaItems[2].id, "wimifarma-institucional");
     await expect(gallery.getByRole("button")).toHaveCount(0);
     await expect(gallery.locator("svg")).toHaveCount(0);
     for (const width of [320, 390, 768, 1024, 1280, 1920]) {
@@ -111,45 +112,84 @@ test("arraste não navega; clique e teclado seguem diretamente para a categoria"
   } finally { await context.close(); }
 });
 
-test("prévias alternam todos os itens visíveis, limitadas a duas, e pausam por interação e visibilidade", async () => {
+test("prévias alternam em três segundos, retêm fontes visíveis e priorizam hover sem interromper tudo", async () => {
   const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true });
   try {
     await expect.poll(() => gallery.locator('video[data-playing="true"]').count()).toBeGreaterThan(0);
     assert((await gallery.locator('video[data-playing="true"]').count()) <= 2);
-    await gallery.hover();
-    await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(0);
-    await page.mouse.move(0, 850);
-    await expect.poll(() => gallery.locator('video[data-playing="true"]').count()).toBeGreaterThan(0);
+    const firstVideo = gallery.locator("video").first();
+    await expect(firstVideo).toHaveAttribute("data-playing", "true");
     const visibleIds = await gallery.locator("[data-media-frame]").evaluateAll(elements => elements.filter(element => {
       const box = element.getBoundingClientRect();
-      return box.left >= 0 && box.right <= innerWidth;
+      return Math.max(0, Math.min(box.right, innerWidth) - Math.max(box.left, 0)) / box.width >= 0.45;
     }).map(element => (element as HTMLElement).dataset.mediaId!));
     const seen = new Set<string>();
     for (let pair = 0; pair < Math.ceil(visibleIds.length / 2); pair++) {
-      const active = await gallery.locator("video[src]").evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!));
+      const expected = Array.from({ length: Math.min(2, visibleIds.length) }, (_, index) => visibleIds[(pair * 2 + index) % visibleIds.length]);
+      await expect.poll(() => gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!))).toEqual(expected);
+      const active = await gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!));
       assert(active.length <= 2);
       active.forEach(id => seen.add(id));
-      await page.clock.runFor(5100);
-      await expect.poll(() => gallery.locator("video[src]").evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!).join(","))).not.toBe(active.join(","));
+      await page.clock.runFor(3100);
+      const next = Array.from({ length: Math.min(2, visibleIds.length) }, (_, index) => visibleIds[((pair + 1) * 2 + index) % visibleIds.length]);
+      await expect.poll(() => gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!))).toEqual(visibleIds.filter(id => next.includes(id)));
+      if (pair === 0) {
+        await expect(firstVideo).toHaveAttribute("src", homeMediaItems[0].src);
+        await expect(firstVideo).toHaveAttribute("data-ready", "true");
+        const position = await firstVideo.evaluate(element => (element as HTMLVideoElement).currentTime);
+        await page.clock.runFor(100);
+        assert.equal(await firstVideo.evaluate(element => (element as HTMLVideoElement).currentTime), position, "a prévia inativa preserva sua posição");
+      }
     }
     assert(visibleIds.every(id => seen.has(id)), "todas as prévias visíveis recebem sua vez");
+    const hoveredFrame = gallery.locator("[data-media-frame]").nth(2);
+    await hoveredFrame.hover();
+    await expect(hoveredFrame.locator("video")).toHaveAttribute("data-playing", "true");
+    const pinned = await gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!).join(","));
+    await page.clock.runFor(6200);
+    assert.equal(await gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!).join(",")), pinned);
+    assert((await gallery.locator('video[data-playing="true"]').count()) <= 2);
+    await page.mouse.move(0, 850);
     await gallery.getByRole("link").first().focus();
     await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(0);
     const rail = gallery.getByRole("region", { name: "Explorar vídeos e animações" });
     await rail.focus();
     await page.keyboard.press("Escape");
     await rail.evaluate(element => element.blur());
-    await expect(gallery.locator("video[src]")).toHaveCount(0);
+    await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(0);
+    assert((await gallery.locator("video[src]").count()) > 0);
     await rail.focus();
     await page.keyboard.press("Escape");
     await rail.evaluate(element => element.blur());
-    await expect(gallery.locator("video[src]")).toHaveCount(2);
+    await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(2);
     await page.evaluate(() => scrollTo(0, 1800));
     await expect(gallery.locator("video[src]")).toHaveCount(0);
+    await expect(gallery.locator('video[data-ready="true"]')).toHaveCount(0);
     await page.evaluate(() => scrollTo(0, 0));
     await expect(gallery.locator("video[src]")).toHaveCount(2);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await expect(gallery.locator("video[src]")).toHaveCount(0);
+    assert.deepEqual(errors, []);
+  } finally { await context.close(); }
+});
+
+test("prévia visível pausa em quadro real e retoma da posição conservada", async () => {
+  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" });
+  try {
+    const firstFrame = gallery.locator("[data-media-frame]").first();
+    const firstVideo = firstFrame.locator("video");
+    await firstFrame.hover();
+    await expect.poll(() => firstVideo.evaluate(element => (element as HTMLVideoElement).currentTime)).toBeGreaterThan(0.15);
+    await gallery.locator("[data-media-frame]").nth(2).hover();
+    await expect(firstVideo).toHaveAttribute("data-playing", "false");
+    await expect(firstVideo).toHaveAttribute("data-ready", "true");
+    const position = await firstVideo.evaluate(element => (element as HTMLVideoElement).currentTime);
+    assert(position > 0);
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    assert.equal(await firstVideo.evaluate(element => (element as HTMLVideoElement).currentTime), position);
+    await firstFrame.hover();
+    await expect(firstVideo).toHaveAttribute("data-playing", "true");
+    assert((await firstVideo.evaluate(element => (element as HTMLVideoElement).currentTime)) >= position);
     assert.deepEqual(errors, []);
   } finally { await context.close(); }
 });
@@ -166,6 +206,15 @@ test("economia de dados, aba oculta e movimento reduzido conservam pôsteres, in
     await expect.poll(() => first.gallery.locator('video[data-playing="true"]').count()).toBeGreaterThan(0);
     await first.page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: true }); document.dispatchEvent(new Event("visibilitychange")); });
     await expect(first.gallery.locator('video[data-playing="true"]')).toHaveCount(0);
+    await expect(first.gallery.locator("video[src]")).toHaveCount(0);
+    await first.page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: false }); document.dispatchEvent(new Event("visibilitychange")); });
+    await expect.poll(() => first.gallery.locator('video[data-playing="true"]').count()).toBeGreaterThan(0);
+    await first.page.evaluate(() => {
+      const connection = (navigator as Navigator & { connection: EventTarget & { saveData: boolean } }).connection;
+      connection.saveData = true; connection.dispatchEvent(new Event("change"));
+    });
+    await expect(first.gallery.locator("video[src]")).toHaveCount(0);
+    await expect(first.gallery.locator('video[data-ready="true"]')).toHaveCount(0);
     assert.deepEqual(first.errors, []);
   } finally { await first.context.close(); }
   const second = await fixture({}, { gif: true });
