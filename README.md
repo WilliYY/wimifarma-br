@@ -4,7 +4,7 @@ Resumo do Club compartilhado por sessão, hidratação dos dados completos somen
 
 Pesos e medidas aproximados atualizados em 2.521 perfis; os 3.070 ativos têm dados físicos preenchidos. Duas revisões posteriores, de nove itens de higiene e sete cosméticos, elevaram os perfis habilitados para 523, com PAC/SEDEX conforme CEP: [resultado e limites](docs/estimativas-fisicas-por-familia-2026-11-06.md).
 
-Galeria de vídeos/GIFs em quadros 3:4 com links diretos às categorias, títulos centralizados e duas fileiras compactas de medicamentos, com movimento lento em sentidos opostos, arraste, fade e selo condicional de frete: [home em movimento](docs/home-motion-gallery-2026-11-05.md).
+Galeria de vídeos/GIFs em quadros 3:4 com links diretos às categorias, títulos centralizados e duas fileiras compactas de medicamentos, com movimento lento em sentidos opostos, arraste, fade e selo condicional de frete: [home em movimento](docs/home-motion-gallery-2026-11-05.md). Willian ocupa a quinta posição com três fotos em loop; a versão leve usa 117 KB e preserva o limite de dois vídeos, com até três imagens animadas de baixa cadência: [mídia do Willian](docs/home-media-willian-fifth-2026-11-07.md).
 
 Mais 33 perfis de higiene habilitados com medidas estimadas, limitados a PAC/SEDEX em Ivaté. O total passou a 484 produtos ativos com envio habilitado/revisado: [resultado e provas de 04/11](docs/habilitacao-estimada-correios-2026-11-04.md).
 

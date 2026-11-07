@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-07 — Willian em quinto com animação de fotos e orientação corrigida
+
+Três fotografias reais fornecidas pelo lojista compõem uma animação de três segundos, com um segundo por foto e repetição infinita. A orientação espelhada é corrigida no quadro inteiro, preservando rosto, mãos, produtos e rótulos; o encaixe3:4 conserva as fotografias completas. O novo card ocupa a quinta posição, depois de Thiago3 e LinhaVichy4, aponta para perfumaria/cuidados pessoais e usa a assinatura oficial completa sobre a área livre da foto. A versão pública é WebP animado de117KB, sem EXIF de origem. O limite de imagens animadas passa de duas para três para que a nova mídia não seja bloqueada pelas vagas existentes; o limite de dois vídeos, descarregamento e acessibilidade permanecem. Os dois GIFs originais e os vídeos existentes não são reexportados. Contratos em [mídia do Willian](home-media-willian-fifth-2026-11-07.md) e [galeria](home-motion-gallery-2026-11-05.md).
+
 ## 2026-11-07 — Linha Vichy na quarta posição e com prévia contínua
 
 O card passa a representar a linha Vichy, com filtro de marca sem restringir a um produto ou departamento. A ordem mantém Thiago em terceiro e coloca Vichy em quarto. O agendamento usa `continuousPreview` também para vídeos e reserva até duas vagas enquanto esses cards estão visíveis; vagas livres continuam rotativas, sem aumentar o limite de dois vídeos e duas imagens animadas. As preferências de movimento, economia de dados, foco por teclado e descarregamento fora da tela permanecem aplicadas. Os arquivos de mídia existentes não mudam. Contratos em [galeria](home-motion-gallery-2026-11-05.md) e [mídias da Vichy](home-media-assets-vichy-beauty-2026-11-06.md).

@@ -27,7 +27,7 @@ const files = (async () => {
           document.documentElement.dataset.previewIntervals=String(Number(document.documentElement.dataset.previewIntervals??0)+1);
           return originalSetInterval;
         }});
-        items=homeMediaItems.filter(item=>item.id!=='vichy-mineral89').map(item=>({...item,continuousPreview:item.kind==='gif'?item.continuousPreview:item.id==='wimifarma-institucional'}));
+        items=homeMediaItems.filter(item=>!['vichy-mineral89','willian-perfumaria'].includes(item.id)).map(item=>({...item,continuousPreview:item.kind==='gif'?item.continuousPreview:item.id==='wimifarma-institucional'}));
         items.splice(3,0,{...homeMediaItems.find(item=>item.id==='vichy-mineral89'),continuousPreview:true});
       }
       createRoot(document.getElementById('root')).render(<HomeMediaGallery items={items}/>);`, loader: "tsx", resolveDir: process.cwd() },
@@ -60,7 +60,7 @@ async function fixture(options: BrowserContextOptions = {}, configuration: { sav
     if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: (await files).css });
     if (url.pathname === "/catalogo") return route.fulfill({ contentType: "text/html", body: "Categoria sintética" });
     if (url.pathname === "/media/home/fixture.gif") return route.fulfill({ contentType: "image/gif", body: Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64") });
-    if (url.pathname.startsWith("/media/home/")) {
+    if (url.pathname.startsWith("/media/home/") || url.pathname === "/brand/logo-wimifarma-compact.webp") {
       const path = resolve("public", "." + url.pathname);
       if (!path.startsWith(resolve("public") + sep)) return route.abort();
       return route.fulfill({ contentType: path.endsWith(".mp4") ? "video/mp4" : "image/webp", body: await readFile(path) });
@@ -134,6 +134,18 @@ test("mídias mantêm quadros 3:4 e enquadramento inteiro, sem overflow em seis 
     await expect(vichyCard.locator("[data-media-frame]")).toHaveAttribute("data-media-id", "vichy-mineral89");
     await expect(vichyCard.getByRole("heading")).toHaveText("Linha Vichy");
     await expect(vichyCard.getByRole("link", { name: "Ver linha Vichy", exact: true })).toHaveAttribute("href", "/catalogo?marca=Vichy");
+    const willianCard = gallery.locator("[data-media-card]").nth(4);
+    await expect(willianCard.locator("[data-media-frame]")).toHaveAttribute("data-media-id", "willian-perfumaria");
+    await expect(willianCard.getByRole("heading")).toHaveText("Willian · Perfumaria");
+    await expect(willianCard.getByRole("link")).toHaveAttribute("href", "/catalogo?grupo=beauty");
+    const signature = willianCard.locator("[data-brand-signature]");
+    await expect(signature.locator("img")).toHaveAttribute("src", "/brand/logo-wimifarma-compact.webp");
+    await expect(signature.locator("img")).toHaveJSProperty("complete", true);
+    await expect(signature.locator("img")).toHaveJSProperty("naturalWidth", 640);
+    await expect(signature.locator("..")).toHaveAttribute("aria-hidden", "true");
+    assert.equal(await signature.locator("..").evaluate(element => getComputedStyle(element).pointerEvents), "none");
+    await expect(gallery.locator("[data-brand-signature]")).toHaveCount(1);
+    await expect(gallery.locator("#home-media-motion-help")).toContainText("dois vídeos e três imagens animadas");
     await expect(gallery.getByRole("button")).toHaveCount(0);
     await expect(gallery.locator("svg")).toHaveCount(0);
     for (const width of [320, 390, 768, 1024, 1280, 1920]) {
@@ -142,12 +154,18 @@ test("mídias mantêm quadros 3:4 e enquadramento inteiro, sem overflow em seis 
         const rect = element.getBoundingClientRect();
         return { width: rect.width, height: rect.height };
       }));
+      assert(await signature.evaluate(element => {
+        const style = getComputedStyle(element);
+        const logo = element.querySelector("img")!.getBoundingClientRect();
+        const frame = element.closest("[data-media-frame]")!.getBoundingClientRect();
+        return style.backgroundColor === "rgba(0, 0, 0, 0)" && style.padding === "0px" && logo.width >= 72 && logo.width <= 80 && logo.top - frame.top >= 0 && logo.bottom - frame.top < frame.height * .2;
+      }), "a marca completa ocupa apenas o teto da foto, sem fundo ou padding extras");
       assert.equal(sizes.length, homeMediaItems.length);
       assert.equal(await gallery.locator("h2").evaluate(element => getComputedStyle(element.parentElement!).textAlign), "center");
       assert(sizes.every(size => Math.abs(size.width / size.height - 0.75) < 0.01));
       assert(sizes.every(size => Math.abs(size.height - sizes[0].height) < 1));
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-      assert.equal(await gallery.locator("img, video").evaluateAll(media => media.every(element => getComputedStyle(element).objectFit === "contain")), true);
+      assert.equal(await gallery.locator("a img, video").evaluateAll(media => media.every(element => getComputedStyle(element).objectFit === "contain")), true);
       if (captureRoot && [320, 390, 1280].includes(width)) {
         await mkdir(captureRoot, { recursive: true });
         await gallery.screenshot({ path: join(captureRoot, `media-gallery-${width}.png`) });
@@ -250,6 +268,35 @@ test("Vichy contínua não pausa entre rodadas e arraste enquanto permanece vis�
   } finally { await context.close(); }
 });
 
+test("terceira imagem contínua mantém fonte e elemento com dois vídeos após rodadas e arraste", async () => {
+  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true });
+  try {
+    const animations = gallery.locator('img[aria-hidden="true"]');
+    const willian = gallery.locator('[data-media-id="willian-perfumaria"] img[aria-hidden="true"]');
+    await expect(willian).toHaveAttribute("src", "/media/home/willian-perfumaria-loop-v1.webp");
+    await expect(animations).toHaveCount(3);
+    await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(2);
+    await animations.evaluateAll(elements => elements.forEach(element => element.setAttribute("data-third-retained", element.getAttribute("src")!)));
+    for (let round = 0; round < 4; round++) {
+      await page.clock.runFor(3100);
+      await expect(gallery.locator('img[data-third-retained]')).toHaveCount(3);
+      assert(await animations.evaluateAll(elements => elements.every(element => element.getAttribute("data-third-retained") === element.getAttribute("src"))));
+      await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(2);
+    }
+    const rail = gallery.getByRole("region", { name: "Explorar vídeos e animações" });
+    const box = await rail.boundingBox(); assert(box);
+    await page.mouse.move(box.x + 200, box.y + 100);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 180, box.y + 100, { steps: 4 });
+    await page.mouse.up();
+    await page.clock.runFor(100);
+    await expect(gallery.locator('img[data-third-retained]')).toHaveCount(3);
+    await expect(willian).toHaveAttribute("src", "/media/home/willian-perfumaria-loop-v1.webp");
+    await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(2);
+    assert.deepEqual(errors, []);
+  } finally { await context.close(); }
+});
+
 test("institucional permanece contínuo enquanto as outras prévias alternam a cada três segundos", async () => {
   const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true, mode: "one-fixed" });
   try {
@@ -264,7 +311,7 @@ test("institucional permanece contínuo enquanto as outras prévias alternam a c
     }).map(element => (element as HTMLElement).dataset.mediaId!));
     const institutionalId = "wimifarma-institucional";
     assert(visibleIds.includes(institutionalId));
-    const continuousIds = homeMediaItems.filter(item => item.kind === "gif" && item.continuousPreview).slice(0, 2).map(item => item.id);
+    const continuousIds = homeMediaItems.filter(item => item.kind === "gif" && item.continuousPreview).slice(0, 3).map(item => item.id);
     const videoIds = visibleIds.filter(id => !continuousIds.includes(id));
     const rotatingIds = videoIds.filter(id => id !== institutionalId);
     const institutional = gallery.locator(`[data-media-id="${institutionalId}"] video`);
@@ -394,12 +441,12 @@ test("animações contínuas conservam o mesmo elemento e fonte durante as rodad
   const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true });
   try {
     const animations = gallery.locator('img[aria-hidden="true"]');
-    await expect(animations).toHaveCount(2);
+    await expect(animations).toHaveCount(3);
     await animations.evaluateAll(elements => elements.forEach(element => element.setAttribute("data-fixture-retained", "true")));
     for (let turn = 0; turn < 4; turn++) {
       await page.clock.runFor(3100);
-      await expect(animations).toHaveCount(2);
-      for (const [index, item] of homeMediaItems.slice(0, 2).entries()) {
+      await expect(animations).toHaveCount(3);
+      for (const [index, item] of homeMediaItems.filter(item => item.kind === "gif" && item.continuousPreview).entries()) {
         await expect(animations.nth(index)).toHaveAttribute("src", item.src);
         await expect(animations.nth(index)).toHaveAttribute("data-fixture-retained", "true");
       }
@@ -407,7 +454,7 @@ test("animações contínuas conservam o mesmo elemento e fonte durante as rodad
     }
     await gallery.locator("h2").hover();
     await page.clock.runFor(6200);
-    await expect(animations).toHaveCount(2);
+    await expect(animations).toHaveCount(3);
     await gallery.getByRole("link").first().focus();
     await expect(animations).toHaveCount(0);
     const rail = gallery.getByRole("region", { name: "Explorar vídeos e animações" });
@@ -418,11 +465,11 @@ test("animações contínuas conservam o mesmo elemento e fonte durante as rodad
     await rail.focus();
     await page.keyboard.press("Escape");
     await rail.evaluate(element => element.blur());
-    await expect(animations).toHaveCount(2);
+    await expect(animations).toHaveCount(3);
     await page.evaluate(() => scrollTo(0, 1800));
     await expect(animations).toHaveCount(0);
     await page.evaluate(() => scrollTo(0, 0));
-    await expect(animations).toHaveCount(2);
+    await expect(animations).toHaveCount(3);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await expect(animations).toHaveCount(0);
     assert.deepEqual(errors, []);
@@ -430,7 +477,7 @@ test("animações contínuas conservam o mesmo elemento e fonte durante as rodad
 });
 
 test("institucional fora da tela preserva alternância de pares", async () => {
-  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true, mode: "one-fixed" });
+  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference", viewport: { width: 1440, height: 900 } }, { clock: true, mode: "one-fixed" });
   try {
     const institutional = gallery.locator('[data-media-id="wimifarma-institucional"]');
     await institutional.evaluate(element => { element.style.visibility = "hidden"; element.style.position = "absolute"; element.style.left = "-10000px"; });
@@ -439,7 +486,7 @@ test("institucional fora da tela preserva alternância de pares", async () => {
       const box = element.getBoundingClientRect();
       return Math.max(0, Math.min(box.right, innerWidth) - Math.max(box.left, 0)) / box.width >= 0.45;
     }).map(element => (element as HTMLElement).dataset.mediaId!));
-    const continuousIds = homeMediaItems.filter(item => item.kind === "gif" && item.continuousPreview).slice(0, 2).map(item => item.id);
+    const continuousIds = homeMediaItems.filter(item => item.kind === "gif" && item.continuousPreview).slice(0, 3).map(item => item.id);
     const rotatingIds = visibleIds.filter(id => !continuousIds.includes(id));
     assert(!visibleIds.includes("wimifarma-institucional"));
     assert(rotatingIds.length > 2);
@@ -463,7 +510,7 @@ test("economia de dados, aba oculta e movimento reduzido conservam pôsteres, in
       connection.saveData = false; connection.dispatchEvent(new Event("change"));
     });
     await expect(first.gallery.locator('video[data-playing="true"]')).toHaveCount(2);
-    await expect(first.gallery.locator('img[aria-hidden="true"]')).toHaveCount(2);
+    await expect(first.gallery.locator('img[aria-hidden="true"]')).toHaveCount(3);
     await expect(first.gallery.locator('[data-media-id="wimifarma-institucional"] video')).toHaveAttribute("data-playing", "true");
     await first.page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: true }); document.dispatchEvent(new Event("visibilitychange")); });
     await expect(first.gallery.locator('video[data-playing="true"]')).toHaveCount(0);
@@ -471,7 +518,7 @@ test("economia de dados, aba oculta e movimento reduzido conservam pôsteres, in
     await expect(first.gallery.locator('img[aria-hidden="true"]')).toHaveCount(0);
     await first.page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: false }); document.dispatchEvent(new Event("visibilitychange")); });
     await expect(first.gallery.locator('video[data-playing="true"]')).toHaveCount(2);
-    await expect(first.gallery.locator('img[aria-hidden="true"]')).toHaveCount(2);
+    await expect(first.gallery.locator('img[aria-hidden="true"]')).toHaveCount(3);
     await first.page.evaluate(() => {
       const connection = (navigator as Navigator & { connection: EventTarget & { saveData: boolean } }).connection;
       connection.saveData = true; connection.dispatchEvent(new Event("change"));
@@ -546,7 +593,7 @@ test("arraste mantém as prévias visíveis e libera a pausa de teclado sem clic
   try {
     const rail = gallery.getByRole("region", { name: "Explorar vídeos e animações" });
     const animations = gallery.locator('img[aria-hidden="true"]');
-    await expect(animations).toHaveCount(2);
+    await expect(animations).toHaveCount(3);
     await animations.evaluateAll(elements => elements.forEach(element => element.setAttribute("data-retained", "true")));
     await rail.focus();
     await page.keyboard.press("ArrowRight");
@@ -558,13 +605,13 @@ test("arraste mantém as prévias visíveis e libera a pausa de teclado sem clic
     await page.mouse.down();
     await page.mouse.move(box.x + 85, box.y + 100, { steps: 5 });
     await page.mouse.up();
-    await expect(animations).toHaveCount(2);
+    await expect(animations).toHaveCount(3);
     await expect.poll(() => gallery.locator('video[data-playing="true"]').count()).toBeGreaterThan(0);
     await animations.evaluateAll(elements => elements.forEach(element => element.setAttribute("data-retained", "true")));
     await page.mouse.down();
     await page.mouse.move(box.x + 75, box.y + 100, { steps: 5 });
     await page.mouse.up();
-    await expect(gallery.locator('img[data-retained="true"]')).toHaveCount(2);
+    await expect(gallery.locator('img[data-retained="true"]')).toHaveCount(3);
     assert.equal(new URL(page.url()).pathname, "/");
     assert.deepEqual(errors, []);
   } finally { await context.close(); }

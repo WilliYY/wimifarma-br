@@ -11,6 +11,7 @@ export type HomeMediaItem = {
   action: string;
   background?: string;
   continuousPreview?: boolean;
+  showBrandSignature?: boolean;
 };
 
 // The two original six-frame GIFs use lossless animated WebP previews; other clips use silent MP4.
@@ -35,6 +36,12 @@ export const homeMediaItems: HomeMediaItem[] = [
     id: "vichy-mineral89", kind: "video", continuousPreview: true, title: "Linha Vichy", caption: "Cuidados para sua pele",
     src: "/media/home/vichy-mineral89.mp4", poster: "/media/home/vichy-mineral89.webp", background: "#effbff",
     href: catalogFilterHref("/catalogo", { marca: "Vichy" }), action: "Ver linha Vichy",
+  },
+  {
+    id: "willian-perfumaria", kind: "gif", continuousPreview: true, showBrandSignature: true,
+    title: "Willian · Perfumaria", caption: "Seu cuidado de perto",
+    src: "/media/home/willian-perfumaria-loop-v1.webp", poster: "/media/home/willian-perfumaria.webp", background: "#eef3f1",
+    href: catalogFilterHref("/catalogo", { grupo: "beauty" }), action: "Ver perfumaria e cuidados pessoais",
   },
   {
     id: "dove-sabonete", kind: "video", title: "Dove Original", caption: "Sabonete · 90 g",

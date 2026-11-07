@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { homeMediaItems, type HomeMediaItem } from "@/features/home-media/items";
+import { BrandSignature } from "./brand-signature";
 import styles from "./home-media-gallery.module.css";
 
 function MotionPreview({ item, active, eligible, priority }: { item: HomeMediaItem; active: boolean; eligible: boolean; priority: boolean }) {
@@ -148,7 +149,7 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
 
   const motionAllowed = !reducedMotion && !saveData && pageVisible;
   const autoPlaying = !paused && !focused && motionAllowed;
-  const continuousIds = items.filter(item => item.kind === "gif" && item.continuousPreview && visibleIds.includes(item.id)).slice(0, 2).map(item => item.id);
+  const continuousIds = items.filter(item => item.kind === "gif" && item.continuousPreview && visibleIds.includes(item.id)).slice(0, 3).map(item => item.id);
   const continuousVideoIds = items.filter(item => item.kind === "video" && item.continuousPreview && visibleIds.includes(item.id)).slice(0, 2).map(item => item.id);
   const rotatingIds = visibleIds.filter(id => !continuousVideoIds.includes(id) && !continuousIds.includes(id));
   const rotatingCount = rotatingIds.length;
@@ -189,7 +190,7 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
       setFocused(true);
       if (event.key === "Escape") { event.preventDefault(); setPaused(value => !value); }
     }}>
-    <p className="sr-only" id="home-media-motion-help">As duas primeiras animações, o vídeo institucional e a Linha Vichy permanecem animados enquanto estiverem visíveis. Até dois vídeos e duas imagens animadas reproduzem ao mesmo tempo. O ponteiro do mouse fixa a alternância das demais prévias. O foco por teclado nesta seção pausa as animações. Arraste ou use as setas para percorrer as mídias em círculo. Pressione Escape para pausar ou retomar.</p>
+    <p className="sr-only" id="home-media-motion-help">As duas primeiras animações, o vídeo institucional, a Linha Vichy e a animação do Willian permanecem animados enquanto estiverem visíveis. Até dois vídeos e três imagens animadas reproduzem ao mesmo tempo. O ponteiro do mouse fixa a alternância das demais prévias. O foco por teclado nesta seção pausa as animações. Arraste ou use as setas para percorrer as mídias em círculo. Pressione Escape para pausar ou retomar.</p>
     <div className={styles.heading}>
       <h2>Dê o play no seu cuidado <span aria-hidden="true">✨</span></h2>
     </div>
@@ -224,6 +225,9 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
             <a aria-label={item.action} className={styles.watch} href={item.href}>
               <MotionPreview active={activeIds.includes(item.id)} eligible={motionAllowed && visibleIds.includes(item.id)} item={item} priority={index === 0} />
             </a>
+            {item.showBrandSignature ? <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-2 z-10 flex justify-center">
+              <BrandSignature className="bg-transparent px-0 py-0 ring-0 [&_img]:w-[76px]" />
+            </span> : null}
           </div>
           <h3>{item.title}</h3><p>{item.caption}</p>
         </article>)}
