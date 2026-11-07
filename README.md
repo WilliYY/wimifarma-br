@@ -1,6 +1,6 @@
 # Wimifarma BR
 
-Pesos e medidas aproximados atualizados em 2.521 perfis; os 3.070 ativos têm dados físicos preenchidos. A revisão auditada de mais nove itens de higiene elevou os perfis habilitados para 516, com PAC/SEDEX conforme CEP: [resultado e limites](docs/estimativas-fisicas-por-familia-2026-11-06.md).
+Pesos e medidas aproximados atualizados em 2.521 perfis; os 3.070 ativos têm dados físicos preenchidos. Duas revisões posteriores, de nove itens de higiene e sete cosméticos, elevaram os perfis habilitados para 523, com PAC/SEDEX conforme CEP: [resultado e limites](docs/estimativas-fisicas-por-familia-2026-11-06.md).
 
 Galeria de vídeos/GIFs em quadros 3:4 com links diretos às categorias, títulos centralizados e duas fileiras compactas de medicamentos, com movimento lento em sentidos opostos, arraste, fade e selo condicional de frete: [home em movimento](docs/home-motion-gallery-2026-11-05.md).
 

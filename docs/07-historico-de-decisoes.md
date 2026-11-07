@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-06 — Mais sete cosméticos com PAC/SEDEX
+
+Sete apresentações em bastão ou pó comum receberam revisão de carga geral por família, mantendo identidade e os pesos/medidas estimados. O lote próprio foi aplicado uma única vez com sete auditorias; a reconciliação confirmou 523 habilitados entre 3.070 ativos, seis Avise-me, 35 migrations e preservação dos demais produtos/campos comerciais observados. O fechamento por CAS foi observado com grant consumido e metadata6/23 Compose. Diferenças documentais de edição/apresentação permanecem explicitadas; dois descolorantes com persulfato ficam fora do lote. Fontes e limites em [estimativas por família](estimativas-fisicas-por-familia-2026-11-06.md#revisão-posterior-de-sete-cosméticos).
+
 ## 2026-11-06 — Meta de frete grátis com carrinho futuro recotado
 
 A consulta de produto e a cotação do checkout passam a publicar uma meta somente após encontrar uma composição proporcional comprável, dentro de 20 unidades, e confirmar gratuidade na recotação física da mesma modalidade. A enumeração usa preços, disponibilidade, aquisição por quantidade e benefício canônicos; reserva descontos proporcionalmente e mostra o subtotal bruto concreto, sem arredondar a meta para R$ 10. Há no máximo duas chamadas adicionais, incluindo fallback, com prazo compartilhado de 1.500 ms; quando a prova não é obtida, a meta é omitida e a cotação paga permanece disponível. A política financeira de 50%, o subsídio atual e a validação do pagamento permanecem preservados. Implementação validada localmente em 258 testes de shipping; publicação conjunta ainda pendente. Contrato em [envio nacional e meta](envio-nacional-e-meta-frete-gratis-2026-11-02.md#meta-estimada-e-verificável-para-a-composição-atual).
