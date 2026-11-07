@@ -102,6 +102,7 @@ test("CEP nacional consulta frete do produto e quantidade atuais, sem misturar o
     await expect(page.getByRole("status")).toContainText("PAC");
     await expect(page.getByRole("status")).toContainText(/18,75/);
     await expect(page.getByRole("status")).toContainText(/4 dias/);
+    await expect(page.getByRole("link", { name: "Consultar envio no WhatsApp", exact: true })).toHaveCount(0);
   });
 });
 
@@ -112,11 +113,13 @@ test("CEP inválido não consulta e entrega local reconfere disponibilidade no s
     await page.goto(origin);
     await consult(page, "12345");
     await expect(page.getByRole("status")).toContainText(/CEP/i);
+    await expect(page.getByRole("link", { name: /WhatsApp/ })).toHaveCount(0);
     assert.equal(requests, 0);
     for (const [postalCode, city] of [["87525-000", "Ivaté"], ["87485-000", "Douradina"]]) {
       await consult(page, postalCode);
       await expect(page.getByRole("status")).toContainText(city);
       await expect(page.getByRole("status")).toContainText(/grátis|gratuita/i);
+      await expect(page.getByRole("link", { name: /WhatsApp/ })).toHaveCount(0);
     }
     assert.equal(requests, 2);
   });
@@ -133,6 +136,10 @@ for (const [status, error] of [
       await consult(page, "80010-000");
       await expect(page.getByRole("status")).toContainText(error);
       await expect(page.getByRole("status")).not.toContainText(/fora de cobertura|ainda nao disponivel|18,75|4 dias/i);
+      if (status === 409) {
+        await expect(page.getByRole("button", { name: "Avise-me quando chegar", exact: true })).toBeVisible();
+        await expect(page.getByRole("link", { name: /WhatsApp/ })).toHaveCount(0);
+      }
     });
   });
 }
@@ -249,7 +256,7 @@ for (const count of [29, 30]) test(`detalhe permite comprar com ${count} itens q
   }, false, product, true);
 });
 
-for (const prescriptionType of ["CONTROLLED", "ANTIMICROBIAL"] as const) {
+for (const prescriptionType of ["CONTROLLED", "ANTIMICROBIAL", "UNREVIEWED"] as const) {
   test(`produto ${prescriptionType} preserva atendimento assistido sem cotar transportadora`, async () => {
     await fixture(async page => {
       let requests = 0;
@@ -257,10 +264,49 @@ for (const prescriptionType of ["CONTROLLED", "ANTIMICROBIAL"] as const) {
       await page.goto(origin);
       await consult(page, "80010-000");
       await expect(page.getByRole("status")).toContainText(/atendimento.*farmácia/i);
+      await expect(page.getByRole("link", { name: "Consultar no WhatsApp", exact: true })).toBeVisible();
+      await expect(page.getByRole("link", { name: "Consultar envio no WhatsApp", exact: true })).toHaveCount(0);
       assert.equal(requests, 0);
     }, false, { ...product, requiresPrescription: true, prescriptionType });
   });
 }
+
+test("Farmácia Popular mantém atendimento assistido sem cotar transportadora", async () => {
+  await fixture(async page => {
+    let requests = 0;
+    await page.route("**/api/fretes/estimativa", route => { requests++; return route.fulfill({ json: quotePayload(route, [quote]) }); });
+    await page.goto(origin);
+    await consult(page, "80010-000");
+    await expect(page.getByRole("status")).toContainText("Entrega com atendimento da farmácia");
+    await expect(page.getByRole("link", { name: "Consultar no WhatsApp", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Consultar envio no WhatsApp", exact: true })).toHaveCount(0);
+    assert.equal(requests, 0);
+  }, false, { ...product, isPopularPharmacy: true });
+});
+
+test("produto sem estoque preserva Avise-me e não consulta frete", async () => {
+  await fixture(async page => {
+    await page.goto(origin);
+    await expect(page.getByRole("heading", { name: "Indisponível no momento", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Avise-me quando chegar", exact: true })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "CEP", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /WhatsApp/ })).toHaveCount(0);
+  }, false, { ...product, stock: 0 });
+});
+
+test("produto removido do catálogo preserva consulta genérica sem Avise-me", async () => {
+  await fixture(async page => {
+    await page.route("**/api/fretes/estimativa", route => route.fulfill({ status: 404, json: { error: "Produto sintético removido." } }));
+    await page.goto(origin);
+    await consult(page, "80010-000");
+    await expect(page.getByRole("heading", { name: "Indisponível no momento", exact: true })).toBeVisible();
+    const contact = page.getByRole("link", { name: "Consultar no WhatsApp", exact: true });
+    await expect(contact).toBeVisible();
+    assert.equal(new URL((await contact.getAttribute("href"))!).searchParams.get("text"), `Ola, gostaria de consultar ${product.name}.`);
+    await expect(page.getByRole("button", { name: "Avise-me quando chegar", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Consultar envio no WhatsApp", exact: true })).toHaveCount(0);
+  });
+});
 
 for (const width of [320, 390, 1440]) {
   test(`benefício exibido vem do servidor e mantém leitura em ${width}px`, async () => {
@@ -285,18 +331,55 @@ for (const width of [320, 390, 1440]) {
 }
 
 
-test("rascunho mostra tarifas estimadas sem prometer envio habilitado ou gratuidade", async () => {
+test("rascunho oferece consulta de envio com produto, quantidade e CEP sem prometer transporte", async () => {
   await fixture(async page => {
-    await page.route("**/api/fretes/estimativa", route => {
+    const requests: unknown[] = [];
+    let release: (() => void) | undefined;
+    await page.route("**/api/fretes/estimativa", async route => {
+      requests.push(route.request().postDataJSON());
+      await new Promise<void>(resolve => { release = resolve; });
       const { token: _token, ...option } = quote; void _token;
       return route.fulfill({ json: { data: { mode: "estimate", options: [option, { ...option, serviceId: 2, service: "SEDEX" }] } } });
     });
     await page.goto(origin);
     await consult(page, "80010-000");
+    await expect.poll(() => requests.length).toBe(1);
+    try {
+      await expect(page.getByRole("button", { name: "Consultando...", exact: true })).toBeDisabled();
+      await expect(page.getByRole("link", { name: /WhatsApp/ })).toHaveCount(0);
+    } finally { release?.(); }
     await expect(page.getByRole("status")).toContainText("Estimativa de frete");
-    await expect(page.getByRole("status")).toContainText("Envio ainda em preparação.");
+    const contact = page.getByRole("link", { name: "Consultar envio no WhatsApp", exact: true });
+    await expect(contact).toBeVisible();
+    const url = new URL((await contact.getAttribute("href"))!);
+    assert.equal(url.origin, "https://wa.me");
+    assert.match(url.searchParams.get("text")!, /Produto sintético/);
+    assert.match(url.searchParams.get("text")!, /2 unidades/);
+    assert.match(url.searchParams.get("text")!, /80010-000/);
+    assert.deepEqual(requests, [{ productId: product.id, quantity: 2, postalCode: "80010000" }]);
+    await expect(page.getByRole("status")).toContainText("Envio sob consulta para este CEP.");
+    await expect(page.getByRole("status")).toContainText("A equipe confirma a possibilidade e as condições do envio.");
+    await expect(page.getByRole("status")).toContainText("Valores e prazos estimados.");
+    await expect(page.getByRole("status").getByRole("listitem")).toHaveCount(2);
+    await expect(page.getByRole("status")).toContainText("PAC");
+    await expect(page.getByRole("status")).toContainText("SEDEX");
+    await expect(page.getByRole("status")).toContainText("4 dias úteis estimados");
     await expect(page.getByRole("status")).toContainText(/18,75/);
-    await expect(page.getByRole("status")).not.toContainText(/Opções de entrega|Grátis/);
-    assert.equal(await page.getByText("Envio ainda em preparação.", { exact: true }).count(), 1);
+    await expect(page.getByRole("status")).not.toContainText(/Opções de entrega|Grátis|Envio ainda em preparação/);
+    await page.getByLabel("Quantidade de teste").fill("3");
+    await expect(contact).toHaveCount(0);
+    assert.deepEqual(await page.evaluate("window.navigations"), []);
+  });
+});
+
+test("fallback sem tarifas preserva o atendimento genérico", async () => {
+  await fixture(async page => {
+    await page.route("**/api/fretes/estimativa", route => route.fulfill({ json: { data: { mode: "available", options: [] } } }));
+    await page.goto(origin);
+    await consult(page, "80010-000");
+    const contact = page.getByRole("link", { name: "Consultar no WhatsApp", exact: true });
+    await expect(contact).toBeVisible();
+    assert.equal(new URL((await contact.getAttribute("href"))!).searchParams.get("text"), "Ola, gostaria de consultar entrega para o meu CEP.");
+    await expect(page.getByRole("link", { name: "Consultar envio no WhatsApp", exact: true })).toHaveCount(0);
   });
 });

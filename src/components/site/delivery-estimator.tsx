@@ -140,7 +140,7 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
           <div className="min-w-0 flex-1">
             <strong className="block text-sm font-black text-ink">{result.title}</strong>
             <p className="mt-1 text-xs font-semibold leading-5 text-muted">
-              {result.mode === "estimate" && result.options.length ? "Envio ainda em preparação." : result.message}
+              {result.mode === "estimate" && result.options.length ? "Envio sob consulta para este CEP." : result.message}
             </p>
             {result.local && <strong className="mt-2 block text-sm text-pharma-green">Grátis</strong>}
             {result.options.length > 0 && <>
@@ -155,12 +155,12 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
                   </li>;
                 })}
               </ul>
-              <p className="mt-3 text-xs leading-5 text-muted">{result.mode === "estimate" ? "Valores e prazos estimados. A farmácia precisa concluir a preparação do envio." : "Estimativa para os itens informados. Frete, descontos e disponibilidade são conferidos novamente no checkout."}</p>
+              <p className="mt-3 text-xs leading-5 text-muted">{result.mode === "estimate" ? "Valores e prazos estimados. A equipe confirma a possibilidade e as condições do envio." : "Estimativa para os itens informados. Frete, descontos e disponibilidade são conferidos novamente no checkout."}</p>
             </>}
-            {!result.busy && !result.local && !result.invalid && !result.options.length ? (
-              <a className="mt-2 inline-flex items-center gap-2 text-xs font-black text-brand underline" href={buildWhatsAppUrl("Ola, gostaria de consultar entrega para o meu CEP.")} rel="noreferrer" target="_blank">
+            {!result.busy && !result.local && !result.invalid && (!result.options.length || result.mode === "estimate") ? (
+              <a className="mt-2 inline-flex items-center gap-2 text-xs font-black text-brand underline" href={buildWhatsAppUrl(result.mode === "estimate" && product ? `Ola, gostaria de consultar o envio de ${selectedQuantity} ${selectedQuantity === 1 ? "unidade" : "unidades"} de ${product.name} para o CEP ${formatPostalCode(normalizedPostalCode)}.` : "Ola, gostaria de consultar entrega para o meu CEP.")} rel="noreferrer" target="_blank">
                 <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                Consultar no WhatsApp
+                {result.mode === "estimate" ? "Consultar envio no WhatsApp" : "Consultar no WhatsApp"}
               </a>
             ) : null}
             {!items.length && !result.invalid && !result.local && <Link className="mt-2 block text-xs font-bold text-brand underline" href="/catalogo">Escolher produtos</Link>}
