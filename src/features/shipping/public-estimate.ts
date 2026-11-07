@@ -12,6 +12,7 @@ import { hasPerfumeShippingCargo, permittedShippingServices, requiresPharmacyShi
 import { assessCarrierCargo, isKnownShippingService, type ShippingCargo } from "./cargo-policy";
 import { calculatePackedQuotes } from "./calculate-packed-quotes";
 import { cartShippingBenefit } from "./benefit-service";
+import { resolveAttainableShippingGoals } from "./attainable-goal";
 import { localDeliveryCity } from "./delivery-policy";
 import { publicShippingEstimateRequestSchema, publicShippingEstimateSchema, type PublicShippingEstimateRequest } from "./public-estimate-contract";
 
@@ -56,8 +57,17 @@ export async function estimateProductShipping(input: PublicShippingEstimateReque
     from: { postal_code: settings.originPostalCode }, to: { postal_code: request.postalCode }, products, services: ids.join(","), options: { receipt: false, own_hand: false },
   }));
   const economicPriceCents = Math.min(...options.map(option => option.priceCents));
-  return publicShippingEstimateSchema.parse({ mode: available ? "available" : "estimate", options: options.map(option => ({
+  const items = [{ productId: product.id, quantity: request.quantity, unitPriceCents }];
+  const benefitedOptions = available ? options.map(option => ({ ...option,
+    benefit: cartShippingBenefit({ settings, products: [product], items, subtotalCents: unitPriceCents * request.quantity, discountCents: 0, quote: option, economicPriceCents }) })) : [];
+  const goals = available ? await resolveAttainableShippingGoals({ settings, products: [product], items, subtotalCents: unitPriceCents * request.quantity, discountCents: 0, options: benefitedOptions,
+    quoteTarget: (products, ids, timeoutMs) => melhorEnvioRequest(settings, "/api/v2/me/shipment/calculate", token, {
+      from: { postal_code: settings.originPostalCode }, to: { postal_code: request.postalCode }, products,
+      services: ids.join(","), options: { receipt: false, own_hand: false },
+    }, { timeoutMs }),
+  }) : undefined;
+  return publicShippingEstimateSchema.parse({ mode: available ? "available" : "estimate", options: options.map((option, index) => ({
     provider: option.provider, serviceId: option.serviceId, carrier: option.carrier, service: option.service, priceCents: option.priceCents, deliveryDays: option.deliveryDays,
-    ...(available ? { benefit: cartShippingBenefit({ settings, products: [product], items: [{ productId: product.id, quantity: request.quantity, unitPriceCents }], subtotalCents: unitPriceCents * request.quantity, discountCents: 0, quote: option, economicPriceCents }) } : {}),
+    ...(available ? { benefit: { ...benefitedOptions[index].benefit, ...goals?.get(option.serviceId) } } : {}),
   })) });
 }

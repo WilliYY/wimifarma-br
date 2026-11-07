@@ -11,6 +11,7 @@ import { resolvePostingLocation } from "./posting";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
 import { getSupplierPreparationEstimate } from "@/features/supplier-catalog/preparation";
 import { cartShippingBenefit } from "./benefit-service";
+import { resolveAttainableShippingGoals } from "./attainable-goal";
 
 export const shippingProductSelect = { ...supplierOfferInclude, ean: true, inventorySource: true, id: true, name: true, slug: true, imageUrl: true, category: true, catalogClassification: true, price: true, promotionalPrice: true, status: true, stock: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, shippingProfile: true, updatedAt: true, cashbackEnabled: true, cashbackRateBps: true, wimicoinsEnabled: true, wimicoinsRateBps: true } satisfies Prisma.ProductSelect;
 function signingKey() { const key = process.env.AUTH_SECRET; if (!key) throw new ShippingError("O frete está temporariamente indisponível.", 503); return key; }
@@ -46,8 +47,16 @@ export async function quoteCart(postalCode: string, items: CheckoutRequest["item
     services: ids.join(","), options: { receipt: false, own_hand: false },
   }));
   const economicPriceCents = Math.min(...options.map(option => option.priceCents));
-  return options.map((option) => {
-    const benefit = cartShippingBenefit({ settings, products, items: prepared.items, subtotalCents: prepared.subtotalCents, discountCents, quote: option, economicPriceCents });
+  const benefitedOptions = options.map(option => ({ ...option,
+    benefit: cartShippingBenefit({ settings, products, items: prepared.items, subtotalCents: prepared.subtotalCents, discountCents, quote: option, economicPriceCents }) }));
+  const goals = await resolveAttainableShippingGoals({ settings, products, items: prepared.items, subtotalCents: prepared.subtotalCents, discountCents, options: benefitedOptions,
+    quoteTarget: (products, ids, timeoutMs) => melhorEnvioRequest(settings, "/api/v2/me/shipment/calculate", accessToken, {
+      from: { postal_code: settings.originPostalCode }, to: { postal_code: postalCode }, products,
+      services: ids.join(","), options: { receipt: false, own_hand: false },
+    }, { timeoutMs }),
+  });
+  return benefitedOptions.map((option) => {
+    const benefit = { ...option.benefit, ...goals.get(option.serviceId) };
     const result = { ...option, benefit };
     return { ...result, token: signShippingQuote({ ...result, economicPriceCents, discountCents, preparationDays, postalCode, fingerprint, expiresAt, revision: integration.revision }, signingKey()) };
   });

@@ -7,10 +7,10 @@ export function melhorEnvioBase(environment: ShippingSettings["environment"]) {
 }
 export const tokenSchema = z.object({ access_token: z.string().min(1), refresh_token: z.string().min(1), expires_in: z.number().positive().max(90 * 86400) });
 
-export async function melhorEnvioRequest(settings: ShippingSettings, path: string, accessToken?: string, body?: unknown) {
+export async function melhorEnvioRequest(settings: ShippingSettings, path: string, accessToken?: string, body?: unknown, options?: { timeoutMs?: number }) {
   // The host and paths are application-owned; never accept a URL from the browser.
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 12_000);
+  const timer = setTimeout(() => controller.abort(), options?.timeoutMs ?? 12_000);
   try {
     const response = await fetch(`${melhorEnvioBase(settings.environment)}${path}`, {
       method: body === undefined ? "GET" : "POST", cache: "no-store", redirect: "error", signal: controller.signal,

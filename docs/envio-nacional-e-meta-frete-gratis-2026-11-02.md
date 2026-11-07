@@ -51,15 +51,17 @@ O cálculo usa `BigInt` e centavos inteiros; o subsídio é arredondado para bai
 
 A reserva de Pix não aplica desconto antecipado na interface: Pix continua sendo concedido somente quando escolhido no checkout. Resgates reduzem a receita disponível, enquanto os ganhos futuros elegíveis permanecem reservados. Frete caro pode continuar parcialmente pago mesmo com margem positiva. A modalidade mais cara preserva pelo menos a diferença para a etiqueta econômica, além de eventuais limites do orçamento ou do teto.
 
-## Meta estimada para a composição atual
+## Meta estimada e verificável para a composição atual
 
-A meta aparece somente quando a modalidade econômica e o teto informado permitem gratuidade integral e a margem proporcional da composição é positiva. No modo histórico, mantendo `K` fixo e escalando a composição atual, o mínimo teórico antes do arredondamento é:
+A revisão de 06/11 acrescenta uma verificação informativa antes de expor a meta no produto ou no checkout. Ela preserva a política financeira, o preço do frete atual e o subsídio real. O antigo mínimo teórico, que mantinha o frete fixo e arredondava para R$ 10, deixa de determinar o valor mostrado ao cliente: poderia exigir mais de 20 unidades ou ignorar o aumento do pacote.
 
-```text
-P_minimo = ceil(P * (2 * Q + K) / MargemBase)
-```
+O assessor enumera localmente carrinhos maiores, aumentando proporcionalmente os mesmos produtos em unidades inteiras e respeitando o limite existente de 20 unidades no total. Preço, disponibilidade comercial e custo elegível por quantidade são recalculados pelas funções canônicas. A cotação atual serve somente como hipótese para selecionar o primeiro candidato; publicar a meta exige uma nova cotação física e resultado `free` no benefício canônico daquela mesma modalidade. Peso, dimensões e volumes são recalculados. Se o frete aumentar, há uma segunda tentativa com a nova hipótese.
 
-O resultado é arredondado para cima em múltiplos de R$ 10 e fica acima do valor atual do carrinho. Margem sem crescimento positivo, modalidade mais cara que a econômica ou teto insuficiente omitem essa meta. A projeção utiliza somente custos conhecidos e não promete gratuidade ou lucro para uma compra futura.
+A busca compartilha um prazo de 1.500 ms e no máximo duas chamadas adicionais reais ao Melhor Envio, incluindo eventual fallback de empacotamento. Timeout, falha, quantidade indisponível, aquisição inelegível ou candidato não comprovado omitem os dois campos da meta. A cotação paga atual continua disponível. Ausência de meta não afirma impossibilidade de frete grátis com outra composição.
+
+Os valores publicados correspondem ao subtotal bruto concreto do candidato, sem arredondamento adicional. `remainingCents` é esse subtotal menos o subtotal bruto atual. Para a análise futura, a reserva de descontos atuais cresce proporcionalmente, arredondada para cima; isso não concede saldo ou desconto futuro e não é deduzido novamente do valor que falta. Pix, recompensas, aquisição, custos operacionais conhecidos e embalagem continuam seguindo a regra financeira original de 50% da margem.
+
+Por exemplo, sem resgates e com preço de R$ 19,98, três unidades podem justificar meta de R$ 59,94 quando a nova cotação comprovar gratuidade. A semente antiga arredondada poderia exigir quatro unidades/R$ 79,92. O resultado continua estimado: mudanças de preço, disponibilidade, desconto, composição ou tarifa podem alterar a condição ao recotar.
 
 Mudar produtos, quantidades, resgates ou CEP exige nova cotação. O checkout recalcula as condições antes de aceitar a seleção; o contrato público e assinado continua contendo somente o benefício comercial, sem custos privados, fornecedor ou percentuais internos.
 

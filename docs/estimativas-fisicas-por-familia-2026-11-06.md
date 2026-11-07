@@ -41,6 +41,26 @@ As provas e ferramentas privadas permanecem fora do Git em `D:/Codex-outputs/wim
 
 O backup privado permaneceu no servidor, com 3.484.480 bytes e SHA-256 `0a0d1cdecff947107a8ccb6e910f16d85128db4606f088d4883629e1996dd1ff`. Formato, hash e índice foram validados; não foi realizado teste de restauração. A operação anterior dos 21 perfis não foi repetida nem teve seu estado histórico reescrito.
 
+## Revisão posterior de nove itens de higiene
+
+Após o lote físico e a publicação da interface na origem `543777a`, a operação `general-review-caf38ecc21dc940b` revisou explicitamente dois kits de seis sabonetes Palmolive e sete apresentações de preservativos Jontex/Olla. Os nove receberam carga `general`, `enabled=true`, `transportReviewed=true` e serviços `[1,2]` — PAC/SEDEX. A revisão preservou os pesos e medidas estimados, referência, proveniência e os demais campos do produto. Não alterou a classificação de medicamentos nem removeu restrições de outras cargas.
+
+| Apresentação | Cadastros | Peso estimado | Dimensões propostas |
+| --- | ---: | ---: | --- |
+| Kit de seis sabonetes | 2 | 880 g | 24 × 15 × 10 cm |
+| Preservativos, três unidades | 3 | 130 g | 16 × 11 × 6 cm |
+| Preservativos, seis unidades | 4 | 150 g | 16 × 11 × 6 cm |
+
+O executor reutilizou o batch completo `reviewEstimatedShippingBatch`, com lock de catálogo, ADMIN ativo, configuração de produção, identidade, revisão, plano fixado, CAS, transação e auditoria. O bundle foi reproduzido e revisado independentemente; 15 grupos de checks offline, 27 testes da rotina faseada e três do launcher passaram. A QA real em containers temporários isolados confirmou cinco cenários: dry sem gravação, aplicação de nove perfis/nove auditorias, recusa de repetição, recusa de plano alterado e rollback completo após falha na quinta auditoria. Os dois containers foram removidos, com identidades verificadas.
+
+A aplicação de produção teve backup privado novo, intenção exclusiva e um único despacho. Os bytes reais recebidos foram conferidos localmente: nove perfis e nove auditorias, total de **516 habilitados entre 3.070 ativos**, seis Avise-me e **zero ativos sem peso, comprimento, largura ou altura preenchidos**. Produtos externos ao lote, demais campos dos nove, auditorias anteriores, outras tabelas observadas e 35 migrations foram preservados dentro desse contrato. Não se declara igualdade global do banco.
+
+O fechamento por CAS foi observado com metadata6 e 23 descritores Compose, `completed_released`, grant consumido e canônico `2ead30b3df361fde95f300dd5f85e66777d8f01e7ffaef9251987ecfb61e1a6c`. O backup tem 3.609.819 bytes, SHA-256 `ab5e2955466199d7b179b79a6475d1bd91ac6ccec38c05d5d9bdefea503f898e`; formato, índice e hashes foram conferidos, sem teste de restauração. Relatório local: `46c3e01ebffbd775f62fc5ded2154c0e72bda5394f4d16ca2790599db12edbb9`, mantido fora do Git.
+
+Uma falha local de confirmação do canal vazio da captura inicial foi preservada e resolvida por conferência de ACL e bytes em um novo journal. Não houve repetição do transporte da captura, do apply ou de qualquer operação anterior.
+
+A conferência pública posterior consultou o kit de R$ 15,95 nos CEPs 01001-000, 40010-000, 69005-010, 90010-000 e 70050-000. Estimativa e cotação do checkout retornaram HTTP 200, PAC/SEDEX e benefícios iguais; a página de checkout também respondeu. Para essa composição, São Paulo mostrou meta estimada de R$ 290,00 e faltante de R$ 274,05; Salvador, R$ 890,00 e R$ 874,05. São valores daquele momento para esse pacote, não uma tabela fixa por estado. SEDEX permaneceu como alternativa paga, sem meta de gratuidade nessa resposta. Um preservativo recém-liberado também passou na consulta de São Paulo. Nenhum pedido, pagamento ou etiqueta foi criado.
+
 ## Rotas
 
 PAC e SEDEX em Ivaté são a base para carga aceita, sempre conforme CEP e pacote. [As regras nacionais dos Correios](https://www.correios.com.br/enviar/proibicoes-e-restricoes) contemplam medicamentos sem controle especial para clientes com ou sem contrato. Essa alternativa de postagem direta não comprova o uso da etiqueta ou tarifa do Melhor Envio para a mesma carga. A API oficial de Preço tem acesso contratual.
