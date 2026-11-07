@@ -123,6 +123,57 @@ const product = (id: string, extra = {}) => ({
   requiresPrescription: true, ...extra,
 });
 
+test("busca hidrata somente a página, mantém ranking global e suprime consulta com GTIN de outra página", async () => {
+  const rows = Array.from({ length: 29 }, (_, index) => product(`row-${index}`, {
+    name: `Algodão ${index}`, stock: index === 0 ? 0 : 3, activeIngredients: [], requiresPrescription: false,
+    ean: index === 1 ? "7891800002829" : null, imageUrls: [`/photo-${index}.webp`],
+  }));
+  const identity: PublicCatalogIdentity = { kind: "CONSULTATION", id: "catalog:07891800002829", gtinCanonical: "07891800002829", ean: "7891800002829", name: "Algodão sintético", categoryName: "Higiene", categorySlug: "higiene", href: "/catalogo/item/7891800002829" };
+  const reads: { select: Record<string, unknown>; where: { id: { in: string[] } } }[] = [];
+  const service = await fixture({
+    $queryRaw: async () => rows.map(row => ({ id: row.id })),
+    product: { findMany: async (input: typeof reads[number]) => {
+      reads.push(input);
+      return rows.filter(row => input.where.id.in.includes(row.id)).reverse().map(row =>
+        Object.fromEntries(Object.entries(row).filter(([key]) => Boolean(input.select[key]))));
+    } },
+  }, [identity]);
+  const result = await service.getSearchCatalog("algodão", { page: 2, relatedLimit: 0 });
+  const expected = [...rows.slice(25), rows[0]];
+  assert.equal(result.count, 29);
+  assert.deepEqual(Array.from(result.products, item => item.id), expected.map(row => row.id));
+  assert.equal(reads.length, 2);
+  assert.equal(reads[0].select.imageUrls, undefined);
+  assert.deepEqual(Array.from(reads[1].where.id.in), expected.map(row => row.id));
+  assert.deepEqual(Array.from(commercial(result.products[0]).imageUrls), ["/photo-25.webp"]);
+});
+
+test("relacionados mantêm ingredientes dos primeiros quatro ranqueados mesmo na segunda página", async () => {
+  const rows = Array.from({ length: 27 }, (_, index) => product(`main-${index}`, {
+    activeIngredients: index < 4 ? ["losartana potássica"] : ["cloridrato de metformina"],
+  }));
+  const related = product("related");
+  const queries: Prisma.Sql[] = [];
+  const heavyIds: string[][] = [];
+  const service = await fixture({
+    $queryRaw: async (sql: Prisma.Sql) => {
+      queries.push(sql);
+      return queries.length === 1 ? rows.map(row => ({ id: row.id })) : [{ id: related.id }];
+    },
+    product: { findMany: async ({ select, where }: { select: Record<string, unknown>; where: { id: { in: string[] } } }) => {
+      if (select.imageUrls) heavyIds.push(where.id.in);
+      return [...rows, related].filter(row => where.id.in.includes(row.id)).map(row =>
+        Object.fromEntries(Object.entries(row).filter(([key]) => Boolean(select[key]))));
+    } },
+  });
+  const result = await service.getSearchCatalog("losartana", { page: 2 });
+  assert.deepEqual(Array.from(result.products, row => row.id), rows.slice(24).map(row => row.id));
+  assert.deepEqual(Array.from(result.relatedProducts, row => row.id), [related.id]);
+  assert.ok(queries[1].values.includes("losartana"));
+  assert.equal(queries[1].values.includes("metformina"), false);
+  assert.deepEqual(heavyIds.map(ids => Array.from(ids)), [[related.id], rows.slice(24).map(row => row.id)]);
+});
+
 test("Extra G normaliza como XG no SQL e não vira um filtro extra", async () => {
   const queries: Prisma.Sql[] = [];
   const service = await fixture({ $queryRaw: async (sql: Prisma.Sql) => { queries.push(sql); return []; }, product: { findMany: async () => [] } });
@@ -201,7 +252,7 @@ test("disponibilidade vendável ordena simples e associações globalmente antes
   assert.equal(commercial(second.products[2]).stock, 0, "estoque bruto do distribuidor não comprova disponibilidade");
   assert.equal(commercial(first.products[0]).price, "10.00");
   assert.equal(rawQueries, 2, "cada página usa uma consulta de candidatos, sem consulta por produto");
-  assert.equal(productReads, 2, "cada página carrega produtos/ofertas em uma consulta, sem N+1");
+  assert.equal(productReads, 4, "cada página seleciona candidatos leves e hidrata os IDs visíveis em lote, sem N+1");
   assert.doesNotMatch(JSON.stringify([first, second]), /supplierOffers|unitCostCents|allocationQuantity/);
 });
 

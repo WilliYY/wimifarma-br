@@ -10,6 +10,8 @@ import { catalogGroupNames, catalogSections, matchesCatalogSection, sortCatalogP
 import { buildProductSearchText, rankProductsForQuery } from "./public-search";
 import { buildPublicBrands, matchingBrandNames, matchesPublicBrand, type PublicBrand } from "./brands";
 import { isDiscountedOffer, rotateDailyOffers } from "@/features/offers/daily-rotation";
+import { catalogCandidateSelect, projectCatalogCandidate } from "./catalog-projection";
+import type { PublicCatalogIdentity } from "@/features/catalog-identities/types";
 
 export const PAGE_SIZE = 24;
 const getPublicBrandRecords = cache(async () => getPrisma().product.findMany({ where: { status: "ACTIVE", brand: { not: null } }, select: { brand: true, name: true, category: true, requiresPrescription: true, isPopularPharmacy: true, catalogClassification: true }, orderBy: { brand: "asc" } }));
@@ -61,13 +63,13 @@ async function getCommercialStorefrontProducts({ categories, offers = false, gro
   ]) : [];
   const where: Prisma.ProductWhereInput = { status: "ACTIVE", ...(categories ? { category: { in: categories } } : {}), ...(brandNames ? { brand: { in: brandNames } } : {}), ...(group ? { OR: [{ category: { in: groupedNames } }, ...(group === "medicines" ? [{ catalogClassification: { path: ["kind"], equals: "MEDICINE" } }] : []), ...infantCandidates] } : {}) };
   // Resolve supplier availability before sorting the full result and paginating.
-  const rows = await prisma.product.findMany({ where, select: storefrontSelect });
+  const rows = await prisma.product.findMany({ where, select: { ...catalogCandidateSelect, searchText: Boolean(query), cmedReference: offers } });
   const brandRows = brand !== undefined ? rows.filter(item => matchesPublicBrand(item, brand)) : rows;
   const groupedRows = group === "beauty" ? brandRows.filter(item => (item.catalogClassification as { kind?: string } | null)?.kind !== "MEDICINE"
     && !item.requiresPrescription && !item.isPopularPharmacy && (!item.prescriptionType || item.prescriptionType === "UNREVIEWED"))
     : group === "baby" ? brandRows.filter(item => groupedNames?.includes(item.category ?? "") || isExplicitInfantCare(item)) : brandRows;
   const now = Date.now();
-  const saleRows = groupedRows.map(item => toSaleProduct(item, now));
+  const saleRows = groupedRows.map(item => projectCatalogCandidate(item, now));
   const saleById = new Map(saleRows.map(item => [item.id, item]));
   const offerRows = offers ? saleRows.filter(isDiscountedOffer) : [];
   const offerIds = new Set(offerRows.map(item => item.id));
@@ -90,7 +92,7 @@ async function getCommercialStorefrontProducts({ categories, offers = false, gro
     .map(item => ({ label: item.label as string, href: `/catalogo?grupo=${item.group}` }));
   const adultDiapers = careCategories.find(item => /^fraldas? adultas?$/i.test(item.name));
   if (adultDiapers) browseLinks.push({ label: adultDiapers.name, href: `/categorias/${adultDiapers.slug}` });
-  return { count: products.length, products,
+  return { now, count: products.length, products,
     offerNavigation: offers ? { categories: offerCategories, sections: availableCatalogSections(scopeRows, offerCategories), browseLinks } : undefined,
     // These are the full category/brand rows, before subsection and pagination, never just the visible page.
     categorySections: categories ? availableCatalogSections(scopeRows, categories.map(name => ({ name }))) : undefined };
@@ -98,14 +100,21 @@ async function getCommercialStorefrontProducts({ categories, offers = false, gro
 
 /** Existing commerce callers (home, offers, brands) retain their Product contract. */
 export async function getStorefrontProducts(options: StorefrontOptions = {}) {
-  const result = await getCommercialStorefrontProducts(options);
+  const { now, ...result } = await getCommercialStorefrontProducts(options);
   const page = catalogPageNumber(String(options.page ?? 1));
-  return { ...result, products: result.products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) };
+  return { ...result, products: await hydrateStorefrontPage(result.products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), now) };
+}
+
+async function hydrateStorefrontPage(products: { id: string }[], now: number) {
+  if (!products.length) return [];
+  const rows = await getPrisma().product.findMany({ where: { status: "ACTIVE", id: { in: products.map(item => item.id) } }, select: storefrontSelect });
+  const byId = new Map(rows.map(row => [row.id, toSaleProduct(row, now)]));
+  return products.flatMap(item => { const row = byId.get(item.id); return row ? [row] : []; });
 }
 
 /** Public browse pages count and paginate both sources, without synthetic prices. */
 export async function getPublicStorefrontProducts(options: StorefrontOptions = {}) {
-  const result = await getCommercialStorefrontProducts(options);
+  const { now, ...result } = await getCommercialStorefrontProducts(options);
   const { categories, offers, group, brand, section, query, sort } = options;
   const identities = offers || brand !== undefined || group === "medicines" ? [] : await getPublicCatalogIdentities();
   const groupNames = group ? catalogGroupNames(await getPublicCategories(), group) : [];
@@ -126,7 +135,13 @@ export async function getPublicStorefrontProducts(options: StorefrontOptions = {
     });
   }
   const page = catalogPageNumber(String(options.page ?? 1));
-  return { ...result, count: products.length, products: products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+  const visible = products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const hydrated = await hydrateStorefrontPage(visible.filter(item => !isConsultationIdentity(item)), now);
+  const byId = new Map(hydrated.map(item => [item.id, item]));
+  return { ...result, count: products.length, products: visible.flatMap<PublicCatalogIdentity | (typeof hydrated)[number]>(item => {
+    if (isConsultationIdentity(item)) return [item];
+    const row = byId.get(item.id); return row ? [row] : [];
+  }),
     categorySections: categories ? [...new Set([...(result.categorySections ?? []),
       ...availableCatalogSections(scoped.map(consultationSearchRecord), categories.map(name => ({ name })))])] : result.categorySections };
 }

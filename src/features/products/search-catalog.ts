@@ -3,6 +3,8 @@ import { getPrisma } from "@/lib/prisma";
 import { getPublicCatalogIdentities } from "@/features/catalog-identities/public-query";
 import { consultationSearchRecord, isConsultationIdentity, paginateConsultationCatalog, searchConsultationCatalog } from "./consultation-catalog";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
+import { catalogCandidateSelect, projectCatalogCandidate } from "./catalog-projection";
+import type { PublicCatalogIdentity } from "@/features/catalog-identities/types";
 import { gtinVariants, normalizeGtin } from "./gtin";
 import { ALENIA_INHALATION_SEARCH_NAME, ALENIA_INHALATION_SEARCH_PRESENTATION, correctProductSearchQuery, ingredientSearchIdentities, isPrescriptionSearchProduct, normalizeProductSearch, productSearchPlan, productSizePattern, productSpellingVocabulary, topicNamePattern } from "./public-search";
 
@@ -111,13 +113,13 @@ async function getCommercialSearchCatalog(query: string, { relatedLimit = 8 } = 
   const matches = await findMatches(cleanQuery);
   const condition = queryCondition(cleanQuery);
   const rows = matches.length ? await prisma.product.findMany({
-    where: { status: "ACTIVE", id: { in: matches.map(row => row.id) } }, select: searchSelect,
+    where: { status: "ACTIVE", id: { in: matches.map(row => row.id) } }, select: catalogCandidateSelect,
   }) : [];
   const positions = new Map(matches.map((row, index) => [row.id, index]));
   // Resolve the same sellable quantity as checkout before partitioning the full
   // result set. Distributor physical stock alone cannot establish availability.
   const now = Date.now();
-  const rankedProducts = rows.sort((a, b) => positions.get(a.id)! - positions.get(b.id)!).map(row => toSaleProduct(row, now));
+  const rankedProducts = rows.slice().sort((a, b) => positions.get(a.id)! - positions.get(b.id)!).map(row => projectCatalogCandidate(row, now));
   const orderedProducts = [...rankedProducts].sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0));
 
   // Medical relationships come from registered ingredients, never category alone.
@@ -136,7 +138,7 @@ async function getCommercialSearchCatalog(query: string, { relatedLimit = 8 } = 
   const relatedRows = relatedIds.length ? await prisma.product.findMany({
     where: { status: "ACTIVE", id: { in: relatedIds.map(row => row.id) } }, select: searchSelect, orderBy: [{ name: "asc" }, { id: "asc" }],
   }) : [];
-  return { products: orderedProducts, relatedProducts: relatedRows.map(row => toSaleProduct(row, now)).sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0)) };
+  return { now, products: orderedProducts, relatedProducts: relatedRows.map(row => toSaleProduct(row, now)).sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0)) };
 }
 
 export async function getSearchCatalog(query: string, { page = 1, pageSize = SEARCH_PAGE_SIZE, relatedLimit = 8 } = {}) {
@@ -164,12 +166,20 @@ export async function getSearchCatalog(query: string, { page = 1, pageSize = SEA
       }
     }
   }
-  return { ...paginateConsultationCatalog(commercial.products, consultations, { page, pageSize, query: correctedQuery ?? cleanQuery }),
-    relatedProducts: commercial.relatedProducts, correctedQuery };
+  const result = paginateConsultationCatalog(commercial.products, consultations, { page, pageSize, query: correctedQuery ?? cleanQuery });
+  const visibleIds = result.products.filter(item => !isConsultationIdentity(item)).map(item => item.id);
+  const visibleRows = visibleIds.length ? await getPrisma().product.findMany({ where: { status: "ACTIVE", id: { in: visibleIds } }, select: searchSelect }) : [];
+  const hydrated = visibleRows.map(row => toSaleProduct(row, commercial.now));
+  const byId = new Map(hydrated.map(row => [row.id, row]));
+  const products = result.products.flatMap<PublicCatalogIdentity | (typeof hydrated)[number]>(item => {
+    if (isConsultationIdentity(item)) return [item];
+    const row = byId.get(item.id); return row ? [row] : [];
+  });
+  return { ...result, products, relatedProducts: commercial.relatedProducts, correctedQuery };
 }
 
 export type SearchCatalogProduct = Awaited<ReturnType<typeof getSearchCatalog>>["products"][number];
-export type SearchCatalogSaleProduct = Awaited<ReturnType<typeof getCommercialSearchCatalog>>["products"][number];
+export type SearchCatalogSaleProduct = Exclude<SearchCatalogProduct, PublicCatalogIdentity>;
 export function isSaleSearchProduct(product: SearchCatalogProduct): product is SearchCatalogSaleProduct {
   return !isConsultationIdentity(product);
 }

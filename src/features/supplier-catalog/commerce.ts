@@ -97,16 +97,25 @@ export function withCommerceAvailability<T extends CommerceProduct>(product: T, 
   const imageUrl = publicProductImageUrl(product);
   const pmcReference = !product.isPopularPharmacy && readClassification(product.catalogClassification).kind === "MEDICINE"
     ? resolveCmedReference(product.cmedReference, product.eanNormalized ?? product.ean, now) : null;
-  const held = isNotifyOnlyPendingLogistics(product.shippingProfile);
+  const terms = resolveCommerceTerms(product, now);
   if (inventorySource === "PHARMACY") return {
-    ...safe, inventorySource, pmcReference, supplierDemandAllowed: false, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: imageUrl && !product.requiresPrescription ? product.imageAsset : null, purchaseLimit: held ? 0 : Math.max(0, product.stock), availableForPurchase: !held && product.stock > 0,
-    price: String(product.price), promotionalPrice: product.promotionalPrice == null ? null : String(product.promotionalPrice),
+    ...safe, inventorySource, pmcReference, supplierDemandAllowed: false, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: imageUrl && !product.requiresPrescription ? product.imageAsset : null, ...terms,
   };
-  const offer = resolveSupplierOffer({ ...product, supplierDemandAllowed: true }, 1, now);
   return {
-    ...safe, inventorySource, pmcReference, supplierDemandAllowed: true, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: null, purchaseLimit: offer?.purchaseLimit ?? 0, availableForPurchase: Boolean(offer),
-    price: offer ? (offer.unitPriceCents / 100).toFixed(2) : String(product.price), promotionalPrice: null,
+    ...safe, inventorySource, pmcReference, supplierDemandAllowed: true, imageUrl, imageUrls: publicProductImageUrls(product), imageAsset: null, ...terms,
   };
+}
+
+/** Shared by lightweight catalog ordering and the public sale DTO. */
+export function resolveCommerceTerms(product: CommerceProduct, now = Date.now()) {
+  if ((product.inventorySource ?? "PHARMACY") === "PHARMACY") {
+    const held = isNotifyOnlyPendingLogistics(product.shippingProfile);
+    return { purchaseLimit: held ? 0 : Math.max(0, product.stock), availableForPurchase: !held && product.stock > 0,
+      price: String(product.price), promotionalPrice: product.promotionalPrice == null ? null : String(product.promotionalPrice) };
+  }
+  const offer = resolveSupplierOffer({ ...product, supplierDemandAllowed: true }, 1, now);
+  return { purchaseLimit: offer?.purchaseLimit ?? 0, availableForPurchase: Boolean(offer),
+    price: offer ? (offer.unitPriceCents / 100).toFixed(2) : String(product.price), promotionalPrice: null };
 }
 
 /** Legacy sale DTOs call their purchase limit `stock`; the database stock remains physical. */

@@ -6,6 +6,42 @@ import { build } from "esbuild";
 import { groupCategoryNames, catalogGroup } from "./home-shortcuts";
 import type { PublicCatalogIdentity } from "../catalog-identities/types";
 
+test("hidrata fotos e cashback somente para os IDs da página, depois de ordenar todos os candidatos", async () => {
+  const rows = Array.from({ length: 31 }, (_, index) => ({ status: "ACTIVE", id: `item-${index}`, name: `Produto ${String(index).padStart(2, "0")}`, stock: index < 3 ? 0 : 2, price: "10", promotionalPrice: null, imageUrls: [`/photo-${index}.webp`], cashbackEnabled: true }));
+  const { service, queries } = await fixture(rows, [], [], true, true);
+  const result = await service.getStorefrontProducts({ page: 2, sort: "nome-asc" });
+  const expected = [...rows.slice(27), ...rows.slice(0, 3)];
+  assert.deepEqual(Array.from(result.products, item => item.id), expected.map(item => item.id));
+  assert.equal(result.count, 31);
+  const heavy = queries.filter(query => (query.select as Record<string, unknown>).imageUrls);
+  assert.equal(heavy.length, 1);
+  assert.deepEqual(Array.from((heavy[0].where as { id: { in: string[] } }).id.in), expected.map(item => item.id));
+  assert.equal((queries[0].select as Record<string, unknown>).cashbackEnabled, undefined);
+  assert.deepEqual(Array.from(result.products[0].imageUrls), expected[0].imageUrls);
+});
+
+test("consulta com mesmo GTIN comercial fora da página não reaparece na mesclagem", async () => {
+  const identity: PublicCatalogIdentity = { kind: "CONSULTATION", id: "catalog:07891800002829", gtinCanonical: "07891800002829", ean: "7891800002829", name: "Shampoo sintético", categoryName: "Higiene", categorySlug: "higiene", href: "/catalogo/item/7891800002829" };
+  const rows = Array.from({ length: 30 }, (_, index) => ({ status: "ACTIVE", id: `sale-${index}`, name: `Shampoo ${String(index).padStart(2, "0")}`, ean: index === 0 ? identity.ean : null, category: "Higiene", stock: 1, price: "10", promotionalPrice: null, activeIngredients: [], searchTerms: [] }));
+  const { service, queries } = await fixture(rows, [], [], true, true, [identity]);
+  const result = await service.getPublicStorefrontProducts({ page: 2, sort: "nome-asc" });
+  assert.equal(result.count, 30);
+  assert.deepEqual(Array.from(result.products, item => item.id), rows.slice(24).map(row => row.id));
+  const heavy = queries.filter(query => (query.select as Record<string, unknown>).imageUrls);
+  assert.deepEqual(Array.from((heavy[0].where as { id: { in: string[] } }).id.in), rows.slice(24).map(row => row.id));
+});
+
+test("ordenação global usa nome medicinal corrigido antes de escolher a página", async () => {
+  const rows = [
+    ...Array.from({ length: 24 }, (_, index) => ({ status: "ACTIVE", id: `before-${index}`, name: `Cimegripe 100 ${index}`, brand: "Marca sintética", activeIngredients: [], stock: 1, price: "10", promotionalPrice: null })),
+    { status: "ACTIVE", id: "verified", name: "Cimegrip 20 cp", brand: "Cimed", ean: "7896523200576", activeIngredients: [], stock: 1, price: "10", promotionalPrice: null },
+  ];
+  const { service } = await fixture(rows, [], [], true, true);
+  const result = await service.getStorefrontProducts({ sort: "nome-asc", page: 2 });
+  assert.deepEqual(Array.from(result.products, row => row.id), ["verified"]);
+  assert.equal(result.products[0].name, "Cimegripe 400 mg + 4 mg + 4 mg 20 cápsulas");
+});
+
 function matchesWhere(row: Record<string, unknown>, where: Record<string, unknown>): boolean {
   return Object.entries(where).every(([key, value]) => {
     if (key === "OR") return (value as Record<string, unknown>[]).some(clause => matchesWhere(row, clause));
@@ -23,7 +59,7 @@ async function fixture(rows: object[], brands: Parameters<typeof import("./brand
   let query: Record<string, unknown> = {};
   const queries: Record<string, unknown>[] = [];
   const photoChecks: (string | null)[][] = [];
-  const db = { product: { fields: { price: "fixture-price" }, count: async () => rows.length, findMany: async (input: Record<string, unknown>) => { queries.push(input); if ((input.select as { brand?: boolean; id?: boolean }).brand && !(input.select as { id?: boolean }).id) return brands; query = input; const matching = respectWhere ? rows.filter(row => matchesWhere(row as Record<string, unknown>, input.where as Record<string, unknown>)) : rows; const selected = input.take ? matching.slice(Number(input.skip ?? 0), Number(input.skip ?? 0) + Number(input.take)) : matching; return respectSelect ? selected.map(row => Object.fromEntries(Object.entries(row).filter(([key]) => (input.select as Record<string, unknown>)[key] === true))) : selected; } } };
+  const db = { product: { fields: { price: "fixture-price" }, count: async () => rows.length, findMany: async (input: Record<string, unknown>) => { queries.push(input); if ((input.select as { brand?: boolean; id?: boolean }).brand && !(input.select as { id?: boolean }).id) return brands; if (!(input.where as { id?: unknown }).id) query = input; const matching = respectWhere ? rows.filter(row => matchesWhere(row as Record<string, unknown>, input.where as Record<string, unknown>)) : rows; const selected = input.take ? matching.slice(Number(input.skip ?? 0), Number(input.skip ?? 0) + Number(input.take)) : matching; return respectSelect ? selected.map(row => Object.fromEntries(Object.entries(row).filter(([key]) => Boolean((input.select as Record<string, unknown>)[key])))) : selected; } } };
   const bundle = await build({ entryPoints: ["src/features/products/storefront.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "storefront-db", setup(builder) {
     builder.onResolve({ filter: /lib\/prisma$|home-photos$|catalog-identities\/public-query$/ }, args => ({ path: args.path, namespace: "fixture" }));
     builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("public-query") ? "export const getPublicCatalogIdentities=async()=>fixture.identities;" : args.path.endsWith("home-photos") ? "export const validatedHomePhotos=async urls=>{fixture.photoChecks.push(urls);return new Set(urls.filter(url=>fixture.validPhotos.includes(url)))};" : "export const getPrisma=()=>fixture.db;" }));
@@ -329,7 +365,7 @@ test("Cabelos usa suas próprias subcategorias sem consulta global ou produtos d
   const { service, queries } = await fixture([row("hair", "Shampoo sintético", "Cabelos")]);
   const selected = await service.getStorefrontProducts({ categories: ["Cabelos"] });
   assert.deepEqual(Array.from(selected.categorySections ?? []), ["hair"]);
-  assert.equal(queries.length, 1);
+  assert.equal(queries.length, 2, "seleção global leve e hidratação da página em lote");
   assert.equal(JSON.stringify((queries[0].where as { category: unknown }).category), JSON.stringify({ in: ["Cabelos"] }));
   const global = await fixture([row("hair", "Shampoo sintético", "Cabelos"), row("soap", "Sabonete sintético", "Higiene"), row("deodorant", "Desodorante sintético", "Higiene")]);
   assert.deepEqual(Array.from(await global.service.getPublicCatalogSections()), ["hair", "bath", "deodorant"]);
