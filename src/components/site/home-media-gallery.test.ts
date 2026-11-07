@@ -5,7 +5,7 @@ import { join, resolve, sep } from "node:path";
 import { build } from "esbuild";
 import postcss from "postcss";
 import tailwind from "@tailwindcss/postcss";
-import { chromium, expect, type BrowserContextOptions } from "@playwright/test";
+import { chromium, expect, type BrowserContextOptions, type Locator, type Page } from "@playwright/test";
 import { homeMediaItems } from "@/features/home-media/items";
 
 const origin = "http://127.0.0.1:3195";
@@ -58,6 +58,55 @@ async function fixture(options: BrowserContextOptions = {}, configuration: { sav
   const gallery = page.getByRole("region", { name: "Vídeos e novidades da Wimifarma" });
   await expect(gallery).toBeVisible();
   return { page, context, gallery, errors, videoRequests };
+}
+
+async function renderedFrame(page: Page) {
+  // Scroll delivery and its recycled transforms must finish before observing a frame.
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+}
+
+async function monitorRailFrames(rail: Locator) {
+  await rail.evaluate(element => {
+    element.dataset.monitorFrames = "true";
+    element.dataset.checkedFrames = "0";
+    const monitor = { sample() {
+      if (!element.isConnected || element.dataset.monitorFrames !== "true") return;
+      const bounds = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      const gap = parseFloat(getComputedStyle(element.firstElementChild!).columnGap);
+      const cards = [...element.querySelectorAll("[data-media-card]")].map(card => card.getBoundingClientRect()).filter(rect => rect.right > bounds.left && rect.left < bounds.right).sort((a, b) => a.left - b.left);
+      let end = bounds.left + parseFloat(style.paddingLeft);
+      let missing = 0;
+      for (const rect of cards) { missing = Math.max(missing, rect.left - end); end = Math.max(end, rect.right); }
+      missing = Math.max(missing, bounds.right - parseFloat(style.paddingRight) - end);
+      if (missing > gap + 1 && !element.dataset.frameFailure) element.dataset.frameFailure = JSON.stringify({ phase: element.dataset.phase, scrollLeft: element.scrollLeft, scrollWidth: element.scrollWidth, viewportLeft: bounds.left, viewportRight: bounds.right, trackLeft: element.firstElementChild!.getBoundingClientRect().left, trackOffsetLeft: (element.firstElementChild as HTMLElement).offsetLeft, scrollX, missing, gap, cards: [...element.querySelectorAll<HTMLElement>("[data-media-card]")].map(card => ({ left: card.getBoundingClientRect().left, right: card.getBoundingClientRect().right, transform: card.style.transform })) });
+      element.dataset.checkedFrames = String(Number(element.dataset.checkedFrames) + 1);
+      requestAnimationFrame(() => monitor.sample());
+    } };
+    requestAnimationFrame(() => monitor.sample());
+  });
+  return async () => {
+    const result = await rail.evaluate(element => { delete element.dataset.monitorFrames; return { frames: Number(element.dataset.checkedFrames), failure: element.dataset.frameFailure ?? null }; });
+    assert(result.frames > 0, "a verificação precisa observar quadros renderizados");
+    assert.equal(result.failure, null, "nenhum quadro pode expor uma faixa vazia maior que o espaço normal entre cards");
+  };
+}
+
+async function visibleCard(rail: Locator, margin = 40) {
+  return rail.evaluate((element, margin) => {
+    const cards = [...element.querySelectorAll<HTMLElement>("[data-media-card]")];
+    const bounds = element.getBoundingClientRect();
+    const card = cards.find(card => { const rect = card.getBoundingClientRect(); return rect.left > bounds.left + margin && rect.left < bounds.right - 40; });
+    if (!card) throw new Error(JSON.stringify({ scrollLeft: element.scrollLeft, clientWidth: element.clientWidth, cards: cards.map(card => ({ left: card.getBoundingClientRect().left, transform: card.style.transform })) }));
+    return { id: card.querySelector<HTMLElement>("[data-media-id]")!.dataset.mediaId!, before: card.getBoundingClientRect().left };
+  }, margin);
+}
+
+async function expectTouchMovement(gallery: Locator, reference: { id: string; before: number }) {
+  await expect.poll(async () => {
+    const delta = await gallery.locator(`[data-media-id="${reference.id}"]`).evaluate(element => element.getBoundingClientRect().left) - reference.before;
+    return { moved: delta < -80 && delta > -200, delta };
+  }).toMatchObject({ moved: true });
 }
 
 test("mídias mantêm quadros 3:4 e enquadramento inteiro, sem overflow em seis larguras", async () => {
@@ -200,7 +249,16 @@ test("institucional permanece contínuo enquanto as outras prévias alternam a c
     await expect(gallery.locator("video[src]")).toHaveCount(0);
     await expect(gallery.locator('video[data-ready="true"]')).toHaveCount(0);
     await page.evaluate(() => scrollTo(0, 0));
-    await expect(gallery.locator("video[src]")).toHaveCount(2);
+    await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(2);
+    await expect.poll(() => gallery.locator("video").evaluateAll(elements => elements.filter(element => !(element as HTMLVideoElement).paused).length)).toBe(2);
+    await expect.poll(() => gallery.locator("video[src]").evaluateAll(elements => elements.every(element => {
+      const video = element as HTMLVideoElement;
+      const rect = video.getBoundingClientRect();
+      const bounds = video.closest('[aria-roledescription="carrossel"]')!.getBoundingClientRect();
+      const width = Math.max(0, Math.min(rect.right, bounds.right, innerWidth) - Math.max(rect.left, bounds.left, 0));
+      const height = Math.max(0, Math.min(rect.bottom, bounds.bottom, innerHeight) - Math.max(rect.top, bounds.top, 0));
+      return width * height / (rect.width * rect.height) >= .45 && (video.dataset.playing === "true" ? !video.paused : video.paused);
+    }))).toBe(true);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await expect(gallery.locator("video[src]")).toHaveCount(0);
     assert.deepEqual(errors, []);
@@ -356,26 +414,44 @@ test("toque horizontal percorre as mídias e gesto vertical conserva a rolagem d
     const rect = await rail.boundingBox(); assert(rect);
     const client = await context.newCDPSession(page);
     const y = rect.y + 100;
+    await renderedFrame(page);
+    const finishFrameChecks = await monitorRailFrames(rail);
+    const firstReference = await visibleCard(rail, 100);
     await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 300, y }] });
-    for (const x of [275, 240, 195, 140]) await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y }] });
+    for (const x of [275, 240, 195, 140]) {
+      await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y }] });
+      await renderedFrame(page);
+    }
+    await expectTouchMovement(gallery, firstReference);
     await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-    await expect.poll(() => rail.evaluate(element => element.scrollLeft)).toBeGreaterThan(30);
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    await rail.evaluate(element => {
-      const card = element.querySelector<HTMLElement>("[data-media-card]")!;
-      const cycle = (card.offsetWidth + 14) * element.querySelectorAll("[data-media-card]").length;
-      element.scrollLeft = cycle * 2 - element.clientWidth / 2 - 30;
-    });
-    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-    const beforeSeam = await rail.evaluate(element => element.scrollLeft);
+    // A new contact cancels the previous fling before positioning the seam fixture.
     await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 300, y }] });
-    for (const x of [275, 240, 195, 140]) await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y }] });
+    await renderedFrame(page);
+    await finishFrameChecks();
+    const target = await rail.evaluate(element => {
+      const card = element.querySelector<HTMLElement>("[data-media-card]")!;
+      const cycle = (card.offsetWidth + parseFloat(getComputedStyle(element.firstElementChild!).columnGap)) * element.querySelectorAll("[data-media-card]").length;
+      const target = cycle * 2 - element.clientWidth / 2 - 30;
+      element.scrollLeft = target;
+      return target;
+    });
+    await renderedFrame(page);
+    await expect.poll(() => rail.evaluate(element => element.scrollLeft)).toBe(target);
+    const seamReference = await visibleCard(rail, 100);
+    const finishSeamFrameChecks = await monitorRailFrames(rail);
+    for (const x of [275, 240, 195, 140]) {
+      await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y }] });
+      await renderedFrame(page);
+    }
+    await expectTouchMovement(gallery, seamReference);
     await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-    await expect.poll(() => rail.evaluate(element => element.scrollLeft)).toBeLessThan(beforeSeam);
     await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 280, y: y + 40 }] });
     for (const dy of [25, 60, 105]) await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: 280, y: y + 40 - dy }] });
     await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
     await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(20);
+    await renderedFrame(page);
+    await finishSeamFrameChecks();
     assert.deepEqual(errors, []);
   } finally { await context.close(); }
 });
@@ -413,17 +489,17 @@ test("trilho circular atravessa os dois limites sem clones ou saltos dos cards v
   const { page, context, gallery, errors } = await fixture({ viewport: { width: 390, height: 850 } });
   try {
     const rail = gallery.getByRole("region", { name: "Explorar vídeos e animações" });
+    await renderedFrame(page);
+    const finishFrameChecks = await monitorRailFrames(rail);
     await gallery.locator("[data-media-card]").evaluateAll(elements => elements.forEach(element => element.setAttribute("data-retained", "true")));
     for (const direction of [1, -1]) {
       for (let step = 0; step < homeMediaItems.length * 5; step++) {
-        const reference = await rail.evaluate((element, direction) => {
-          const cards = [...element.querySelectorAll<HTMLElement>("[data-media-card]")];
-          const bounds = element.getBoundingClientRect();
-          const card = cards.find(card => { const rect = card.getBoundingClientRect(); return rect.left > bounds.left + 40 && rect.left < bounds.right - 40; })!;
-          const before = card.getBoundingClientRect().left;
+        const reference = await visibleCard(rail);
+        await rail.evaluate((element, { direction, phase }) => {
+          element.dataset.phase = phase;
           element.scrollBy({ left: direction * 35, behavior: "instant" });
-          return { id: card.querySelector<HTMLElement>("[data-media-id]")!.dataset.mediaId!, before };
-        }, direction);
+        }, { direction, phase: `scroll-${direction}-${step}` });
+        await renderedFrame(page);
         await expect.poll(async () => Math.abs(await gallery.locator(`[data-media-id="${reference.id}"]`).evaluate(element => element.getBoundingClientRect().left) - reference.before + direction * 35)).toBeLessThan(2);
       }
     }
@@ -431,7 +507,9 @@ test("trilho circular atravessa os dois limites sem clones ou saltos dos cards v
     await expect(gallery.getByRole("link")).toHaveCount(homeMediaItems.length);
     await rail.focus();
     for (let index = 0; index < homeMediaItems.length; index++) {
+      await rail.evaluate((element, phase) => { element.dataset.phase = phase; }, `tab-${index}`);
       await page.keyboard.press("Tab");
+      await renderedFrame(page);
       const link = gallery.getByRole("link").nth(index);
       await expect(link).toBeFocused();
       await expect.poll(() => link.evaluate(element => {
@@ -440,6 +518,7 @@ test("trilho circular atravessa os dois limites sem clones ou saltos dos cards v
         return { visible: rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1, left: rect.left, right: rect.right, width: bounds.width };
       })).toMatchObject({ visible: true });
     }
+    await finishFrameChecks();
     assert.deepEqual(errors, []);
   } finally { await context.close(); }
 });
@@ -486,3 +565,4 @@ test("HTML renderizado no servidor mantém os cards lado a lado sem JavaScript",
     assert.deepEqual(errors, []);
   } finally { await context.close(); }
 });
+
