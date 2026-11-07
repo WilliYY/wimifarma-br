@@ -27,9 +27,14 @@ export const homeMediaItems: HomeMediaItem[] = [
     href: catalogFilterHref("/catalogo", { grupo: "beauty" }), action: "Ver perfumaria e cuidados pessoais",
   },
   {
-    id: "wimifarma-institucional", kind: "video", title: "Conte com a Wimifarma", caption: "Cuidado de perto, todos os dias",
+    id: "wimifarma-institucional", kind: "video", continuousPreview: true, title: "Conte com a Wimifarma", caption: "Cuidado de perto, todos os dias",
     src: "/media/home/wimifarma-institucional-contact-v4.mp4", poster: "/media/home/wimifarma-institucional-contact-v4.webp", background: "#eef3f1",
     href: catalogFilterHref("/catalogo", { grupo: "medicines" }), action: "Ver medicamentos",
+  },
+  {
+    id: "vichy-mineral89", kind: "video", continuousPreview: true, title: "Linha Vichy", caption: "Cuidados para sua pele",
+    src: "/media/home/vichy-mineral89.mp4", poster: "/media/home/vichy-mineral89.webp", background: "#effbff",
+    href: catalogFilterHref("/catalogo", { marca: "Vichy" }), action: "Ver linha Vichy",
   },
   {
     id: "dove-sabonete", kind: "video", title: "Dove Original", caption: "Sabonete · 90 g",
@@ -49,11 +54,6 @@ export const homeMediaItems: HomeMediaItem[] = [
   {
     id: "principia-serum", kind: "video", title: "Principia NC-10", caption: "Sérum · 30 ml",
     src: "/media/home/principia-serum.mp4", poster: "/media/home/principia-serum.webp",
-    href: catalogFilterHref("/catalogo", { grupo: "dermo", assunto: "face" }), action: "Ver cuidados com o rosto",
-  },
-  {
-    id: "vichy-mineral89", kind: "video", title: "Vichy Minéral 89", caption: "Cuidados com o rosto",
-    src: "/media/home/vichy-mineral89.mp4", poster: "/media/home/vichy-mineral89.webp", background: "#effbff",
     href: catalogFilterHref("/catalogo", { grupo: "dermo", assunto: "face" }), action: "Ver cuidados com o rosto",
   },
   {

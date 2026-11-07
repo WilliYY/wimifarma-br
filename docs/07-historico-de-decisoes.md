@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-07 — Linha Vichy na quarta posição e com prévia contínua
+
+O card passa a representar a linha Vichy, com filtro de marca sem restringir a um produto ou departamento. A ordem mantém Thiago em terceiro e coloca Vichy em quarto. O agendamento usa `continuousPreview` também para vídeos e reserva até duas vagas enquanto esses cards estão visíveis; vagas livres continuam rotativas, sem aumentar o limite de dois vídeos e duas imagens animadas. As preferências de movimento, economia de dados, foco por teclado e descarregamento fora da tela permanecem aplicadas. Os arquivos de mídia existentes não mudam. Contratos em [galeria](home-motion-gallery-2026-11-05.md) e [mídias da Vichy](home-media-assets-vichy-beauty-2026-11-06.md).
+
 ## 2026-11-07 — Club compartilhado por sessão e hidratação por página
 
 O resumo do Club compartilha requisições pendentes dentro de um provider por identidade, com descarte de respostas antigas e proteção na troca de autenticação. Catálogo e busca mantêm a seleção editorial global e hidratam os dados completos somente dos produtos exibidos, reutilizando a resolução comercial. Rotas de listagem recebem carregamento acessível; vitrines sem setas dispensam o cálculo de controles ocultos. Não há dependência, cache persistente, migração ou mudança comercial. Contratos, regressões e limites das medições em [desempenho do catálogo e Club](desempenho-catalogo-e-club-2026-11-07.md). Publicação e validações finais exigem comprovante próprio da entrega.

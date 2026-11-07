@@ -15,7 +15,22 @@ after(async () => (await browser).close());
 const files = (async () => {
   const css = await readFile("src/app/globals.css", "utf8").then(source => postcss([tailwind()]).process(source, { from: "src/app/globals.css" })).then(result => result.css);
   const bundle = await build({
-    stdin: { contents: "import React from 'react';import {createRoot} from 'react-dom/client';import {renderToString} from 'react-dom/server.browser';import {HomeMediaGallery} from './src/components/site/home-media-gallery';import {homeMediaItems} from './src/features/home-media/items';globalThis.renderGalleryMarkup=()=>renderToString(<HomeMediaGallery/>);const items=location.search.includes('gif')?[{...homeMediaItems[0],id:'gif-fixture',kind:'gif',continuousPreview:false,src:'/media/home/fixture.gif'}]:undefined;createRoot(document.getElementById('root')).render(<HomeMediaGallery items={items}/>);", loader: "tsx", resolveDir: process.cwd() },
+    stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';import {renderToString} from 'react-dom/server.browser';import {HomeMediaGallery} from './src/components/site/home-media-gallery';import {homeMediaItems} from './src/features/home-media/items';
+      globalThis.renderGalleryMarkup=()=>renderToString(<HomeMediaGallery/>);
+      const mode=new URLSearchParams(location.search).get('mode');
+      let items;
+      if(mode==='gif') items=[{...homeMediaItems[0],id:'gif-fixture',kind:'gif',continuousPreview:false,src:'/media/home/fixture.gif'}];
+      if(mode==='one-fixed') items=homeMediaItems.map(item=>({...item,continuousPreview:item.kind==='gif'?item.continuousPreview:item.id==='wimifarma-institucional'}));
+      if(mode==='vichy-continuous') {
+        const originalSetInterval=window.setInterval;
+        Object.defineProperty(window,'setInterval',{configurable:true,get(){
+          document.documentElement.dataset.previewIntervals=String(Number(document.documentElement.dataset.previewIntervals??0)+1);
+          return originalSetInterval;
+        }});
+        items=homeMediaItems.filter(item=>item.id!=='vichy-mineral89').map(item=>({...item,continuousPreview:item.kind==='gif'?item.continuousPreview:item.id==='wimifarma-institucional'}));
+        items.splice(3,0,{...homeMediaItems.find(item=>item.id==='vichy-mineral89'),continuousPreview:true});
+      }
+      createRoot(document.getElementById('root')).render(<HomeMediaGallery items={items}/>);`, loader: "tsx", resolveDir: process.cwd() },
     bundle: true, write: false, outfile: "fixture.js", platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' },
     plugins: [{ name: "media-gallery-image", setup(builder) {
       builder.onResolve({ filter: /^next\/image$/ }, () => ({ path: "image", namespace: "fixture" }));
@@ -25,7 +40,7 @@ const files = (async () => {
   return { js: bundle.outputFiles.find(file => file.path.endsWith(".js"))!.text, css: css + "\n" + bundle.outputFiles.filter(file => file.path.endsWith(".css")).map(file => file.text).join("\n") };
 })();
 
-async function fixture(options: BrowserContextOptions = {}, configuration: { saveData?: boolean; gif?: boolean; clock?: boolean; markup?: string } = {}) {
+async function fixture(options: BrowserContextOptions = {}, configuration: { saveData?: boolean; gif?: boolean; clock?: boolean; markup?: string; mode?: "one-fixed" | "vichy-continuous" } = {}) {
   const context = await (await browser).newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce", ...options });
   if (configuration.saveData) await context.addInitScript(() => Object.defineProperty(navigator, "connection", { configurable: true, value: Object.assign(new EventTarget(), { saveData: true }) }));
   const page = await context.newPage();
@@ -54,7 +69,7 @@ async function fixture(options: BrowserContextOptions = {}, configuration: { sav
     return route.fulfill({ contentType: "text/html; charset=utf-8", body: '<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><style>body{margin:0}#root{padding-bottom:1400px}</style><div id="root">' + (configuration.markup ?? "") + '</div><script src="/fixture.js"></script></html>' });
   });
   await files;
-  await page.goto(origin + (configuration.gif ? "/?gif" : ""), { waitUntil: "domcontentloaded" });
+  await page.goto(origin + (configuration.gif || configuration.mode ? `/?mode=${configuration.gif ? "gif" : configuration.mode}` : ""), { waitUntil: "domcontentloaded" });
   const gallery = page.getByRole("region", { name: "Vídeos e novidades da Wimifarma" });
   await expect(gallery).toBeVisible();
   return { page, context, gallery, errors, videoRequests };
@@ -114,6 +129,11 @@ test("mídias mantêm quadros 3:4 e enquadramento inteiro, sem overflow em seis 
   try {
     await expect(gallery.locator("[data-media-card]")).toHaveCount(homeMediaItems.length);
     assert.equal(homeMediaItems[2].id, "wimifarma-institucional");
+    await expect(gallery.locator("[data-media-frame]").nth(2)).toHaveAttribute("data-media-id", "wimifarma-institucional");
+    const vichyCard = gallery.locator("[data-media-card]").nth(3);
+    await expect(vichyCard.locator("[data-media-frame]")).toHaveAttribute("data-media-id", "vichy-mineral89");
+    await expect(vichyCard.getByRole("heading")).toHaveText("Linha Vichy");
+    await expect(vichyCard.getByRole("link", { name: "Ver linha Vichy", exact: true })).toHaveAttribute("href", "/catalogo?marca=Vichy");
     await expect(gallery.getByRole("button")).toHaveCount(0);
     await expect(gallery.locator("svg")).toHaveCount(0);
     for (const width of [320, 390, 768, 1024, 1280, 1920]) {
@@ -165,8 +185,73 @@ test("arraste não navega; clique e teclado seguem diretamente para a categoria"
   } finally { await context.close(); }
 });
 
+test("Vichy contínua não pausa entre rodadas e arraste enquanto permanece visível", async () => {
+  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true, mode: "vichy-continuous" });
+  try {
+    const vichy = gallery.locator('[data-media-id="vichy-mineral89"] video');
+    const institutional = gallery.locator('[data-media-id="wimifarma-institucional"] video');
+    await expect(vichy).toHaveAttribute("data-playing", "true");
+    await expect(institutional).toHaveAttribute("data-playing", "true");
+    await vichy.evaluate(element => {
+      element.setAttribute("data-retained", "true");
+      element.setAttribute("data-pauses", "0");
+      element.addEventListener("pause", () => element.setAttribute("data-pauses", String(Number(element.getAttribute("data-pauses")) + 1)));
+      document.querySelectorAll("video").forEach(video => video.addEventListener("play", () => {
+        if ([...document.querySelectorAll("video")].filter(media => !media.paused).length > 2) element.setAttribute("data-excess-playback", "true");
+      }));
+    });
+    for (let round = 0; round < 3; round++) await page.clock.runFor(3100);
+    const box = await vichy.boundingBox(); assert(box);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 - 40, box.y + box.height / 2, { steps: 4 });
+    await page.mouse.up();
+    await page.clock.runFor(100);
+    assert(await vichy.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      const bounds = element.closest('[aria-roledescription="carrossel"]')!.getBoundingClientRect();
+      return Math.max(0, Math.min(rect.right, bounds.right) - Math.max(rect.left, bounds.left)) / rect.width >= 0.45;
+    }), "Vichy permanece pelo menos 45% visível após o arraste");
+    await expect(vichy).toHaveAttribute("data-retained", "true");
+    await expect(vichy).toHaveAttribute("data-pauses", "0");
+    await expect(vichy).not.toHaveAttribute("data-excess-playback", "true");
+    await expect(vichy).toHaveAttribute("data-playing", "true");
+    await expect(institutional).toHaveAttribute("data-playing", "true");
+    await expect(gallery.locator("video[src]")).toHaveCount(2);
+    await expect(gallery.locator('img[aria-hidden="true"]')).toHaveCount(2);
+    assert.equal(await page.locator("html").getAttribute("data-preview-intervals"), null, "duas vagas contínuas não criam timer de alternância");
+    await page.mouse.move(0, 850);
+    await institutional.evaluate(element => {
+      const frame = element.closest<HTMLElement>("[data-media-frame]")!;
+      frame.style.visibility = "hidden"; frame.style.position = "absolute"; frame.style.left = "-10000px";
+    });
+    await expect(institutional).not.toHaveAttribute("src");
+    await expect.poll(() => gallery.locator('video[data-playing="true"]').count()).toBe(2);
+    const rotatingIds = await gallery.locator("[data-media-frame]").evaluateAll(elements => elements.filter(element => {
+      const rect = element.getBoundingClientRect();
+      const bounds = element.closest('[aria-roledescription="carrossel"]')!.getBoundingClientRect();
+      return element.querySelector("video") && !["wimifarma-institucional", "vichy-mineral89"].includes((element as HTMLElement).dataset.mediaId!) && Math.max(0, Math.min(rect.right, bounds.right) - Math.max(rect.left, bounds.left)) / rect.width >= 0.45;
+    }).map(element => (element as HTMLElement).dataset.mediaId!));
+    assert(rotatingIds.length > 1);
+    const rotating = new Set<string>();
+    for (let round = 0; round < 3; round++) {
+      await expect(vichy).toHaveAttribute("data-playing", "true");
+      const ids = await gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!));
+      ids.filter(id => id !== "vichy-mineral89").forEach(id => rotating.add(id));
+      await page.clock.runFor(3100);
+      const current = ids.find(id => id !== "vichy-mineral89")!;
+      const next = rotatingIds[(rotatingIds.indexOf(current) + 1) % rotatingIds.length];
+      await expect.poll(() => gallery.locator('video[data-playing="true"]').evaluateAll(elements => elements.map(element => element.closest<HTMLElement>("[data-media-id]")!.dataset.mediaId!).sort())).toEqual(["vichy-mineral89", next].sort());
+    }
+    assert(rotating.size > 1, `a vaga liberada alterna os demais vídeos mantendo Vichy contínua: ${JSON.stringify({ rotating: [...rotating], intervals: await page.locator("html").getAttribute("data-preview-intervals") })}`);
+    await expect(vichy).toHaveAttribute("data-pauses", "0");
+    await expect(vichy).not.toHaveAttribute("data-excess-playback", "true");
+    assert.deepEqual(errors, []);
+  } finally { await context.close(); }
+});
+
 test("institucional permanece contínuo enquanto as outras prévias alternam a cada três segundos", async () => {
-  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true });
+  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true, mode: "one-fixed" });
   try {
     await expect.poll(() => gallery.locator('video[data-playing="true"]').count()).toBeGreaterThan(0);
     assert((await gallery.locator('video[data-playing="true"]').count()) <= 2);
@@ -266,7 +351,7 @@ test("institucional permanece contínuo enquanto as outras prévias alternam a c
 });
 
 test("prévia visível pausa em quadro real e retoma da posição conservada", async () => {
-  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" });
+  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { mode: "one-fixed" });
   try {
     const rotatingItems = homeMediaItems.filter(item => item.kind === "video" && item.id !== "wimifarma-institucional");
     const firstFrame = gallery.locator(`[data-media-id="${rotatingItems[0].id}"]`);
@@ -345,7 +430,7 @@ test("animações contínuas conservam o mesmo elemento e fonte durante as rodad
 });
 
 test("institucional fora da tela preserva alternância de pares", async () => {
-  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true });
+  const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true, mode: "one-fixed" });
   try {
     const institutional = gallery.locator('[data-media-id="wimifarma-institucional"]');
     await institutional.evaluate(element => { element.style.visibility = "hidden"; element.style.position = "absolute"; element.style.left = "-10000px"; });

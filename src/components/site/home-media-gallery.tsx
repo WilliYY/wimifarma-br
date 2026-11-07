@@ -148,19 +148,19 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
 
   const motionAllowed = !reducedMotion && !saveData && pageVisible;
   const autoPlaying = !paused && !focused && motionAllowed;
-  const institutionalId = visibleIds.includes("wimifarma-institucional") ? "wimifarma-institucional" : null;
   const continuousIds = items.filter(item => item.kind === "gif" && item.continuousPreview && visibleIds.includes(item.id)).slice(0, 2).map(item => item.id);
-  const rotatingIds = visibleIds.filter(id => id !== institutionalId && !continuousIds.includes(id));
+  const continuousVideoIds = items.filter(item => item.kind === "video" && item.continuousPreview && visibleIds.includes(item.id)).slice(0, 2).map(item => item.id);
+  const rotatingIds = visibleIds.filter(id => !continuousVideoIds.includes(id) && !continuousIds.includes(id));
   const rotatingCount = rotatingIds.length;
-  const rotatingSlots = institutionalId ? 1 : 2;
+  const rotatingSlots = 2 - continuousVideoIds.length;
   const activeIds = autoPlaying ? [
     ...continuousIds,
-    ...(institutionalId ? [institutionalId] : []),
+    ...continuousVideoIds,
     ...Array.from({ length: Math.min(rotatingSlots, rotatingCount) }, (_, index) => rotatingIds[(previewOffset + index) % rotatingCount]),
   ] : [];
 
   useEffect(() => {
-    if (!autoPlaying || hovered || rotatingCount <= rotatingSlots) return;
+    if (!autoPlaying || hovered || rotatingSlots === 0 || rotatingCount <= rotatingSlots) return;
     const interval = window.setInterval(() => setPreviewOffset(offset => (offset + rotatingSlots) % rotatingCount), 3000);
     return () => window.clearInterval(interval);
   }, [autoPlaying, hovered, rotatingCount, rotatingSlots, visibleIds]);
@@ -189,7 +189,7 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
       setFocused(true);
       if (event.key === "Escape") { event.preventDefault(); setPaused(value => !value); }
     }}>
-    <p className="sr-only" id="home-media-motion-help">As duas primeiras animações e o vídeo institucional permanecem animados enquanto estiverem visíveis. O ponteiro do mouse fixa a outra prévia de vídeo. O foco por teclado nesta seção pausa as animações. Arraste ou use as setas para percorrer as mídias em círculo. Pressione Escape para pausar ou retomar.</p>
+    <p className="sr-only" id="home-media-motion-help">As duas primeiras animações, o vídeo institucional e a Linha Vichy permanecem animados enquanto estiverem visíveis. Até dois vídeos e duas imagens animadas reproduzem ao mesmo tempo. O ponteiro do mouse fixa a alternância das demais prévias. O foco por teclado nesta seção pausa as animações. Arraste ou use as setas para percorrer as mídias em círculo. Pressione Escape para pausar ou retomar.</p>
     <div className={styles.heading}>
       <h2>Dê o play no seu cuidado <span aria-hidden="true">✨</span></h2>
     </div>
@@ -216,7 +216,7 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
         {items.map((item, index) => <article className={styles.card} data-media-card key={item.id}>
           <div className={styles.frame} data-media-frame data-media-id={item.id} style={{ "--media-background": item.background ?? "#fff" } as CSSProperties}
             onPointerEnter={event => {
-              if (event.pointerType !== "mouse") return;
+              if (event.pointerType !== "mouse" || rotatingSlots === 0) return;
               const offset = rotatingIds.indexOf(item.id);
               if (offset >= 0) setPreviewOffset(offset);
             }}

@@ -1,6 +1,8 @@
 # Novas animações da galeria — 06/11/2026
 
-Foram adicionadas duas animações fornecidas pelo lojista: Vichy Minéral 89 e uma composição de produtos de beleza. As entradas seguem os sete cards existentes; o institucional do Thiago permanece em terceiro. O destino de cada card é uma categoria de cuidados com o rosto ou de perfumaria, sem promessa de disponibilidade dos produtos representados.
+Foram adicionadas duas animações fornecidas pelo lojista: Vichy Minéral 89 e uma composição de produtos de beleza. Na revisão de 07/11, o card da Vichy ocupa a quarta posição, logo depois do institucional do Thiago, preservado em terceiro. A apresentação passa a ser “Linha Vichy”, com legenda “Cuidados para sua pele” e destino no catálogo filtrado somente pela marca Vichy, incluindo suas diferentes linhas. Os nomes dos arquivos e a imagem do frasco preservam a mídia original; o texto do card se refere à linha e não anuncia uma apresentação específica ou sua disponibilidade.
+
+A Vichy recebe prévia contínua enquanto estiver visível e o movimento for permitido. Ela compartilha com o institucional as duas vagas existentes de vídeo, sem aumentar a quantidade máxima de decodificadores ativos. Os demais vídeos usam as vagas que estiverem livres. Movimento reduzido, economia de dados, aba oculta e descarregamento fora da tela permanecem respeitados. O vídeo leve já existente e seu pôster não foram modificados.
 
 ## Preparação
 
