@@ -440,6 +440,8 @@ test("os dois primeiros cards animam sem hover e sem consumir vagas de vídeo", 
 test("animações contínuas conservam o mesmo elemento e fonte durante as rodadas", async () => {
   const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" }, { clock: true });
   try {
+    const rail = gallery.getByRole("region", { name: "Explorar vídeos e animações" });
+    const initialLeft = await rail.evaluate(element => element.scrollLeft);
     const animations = gallery.locator('img[aria-hidden="true"]');
     await expect(animations).toHaveCount(3);
     await animations.evaluateAll(elements => elements.forEach(element => element.setAttribute("data-fixture-retained", "true")));
@@ -457,7 +459,6 @@ test("animações contínuas conservam o mesmo elemento e fonte durante as rodad
     await expect(animations).toHaveCount(3);
     await gallery.getByRole("link").first().focus();
     await expect(animations).toHaveCount(0);
-    const rail = gallery.getByRole("region", { name: "Explorar vídeos e animações" });
     await rail.focus();
     await page.keyboard.press("Escape");
     await rail.evaluate(element => element.blur());
@@ -465,6 +466,17 @@ test("animações contínuas conservam o mesmo elemento e fonte durante as rodad
     await rail.focus();
     await page.keyboard.press("Escape");
     await rail.evaluate(element => element.blur());
+    // Centering the first keyboard link moves Willian outside the eligible area.
+    const willian = gallery.locator('[data-media-id="willian-perfumaria"]');
+    await expect.poll(() => willian.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      const bounds = element.closest('[aria-roledescription="carrossel"]')!.getBoundingClientRect();
+      return Math.max(0, Math.min(rect.right, bounds.right) - Math.max(rect.left, bounds.left)) / rect.width;
+    })).toBeLessThan(.45);
+    await expect(willian.locator('img[aria-hidden="true"]')).toHaveCount(0);
+    await expect(animations).toHaveCount(2);
+    await rail.evaluate((element, left) => element.scrollTo({ left, behavior: "instant" }), initialLeft);
+    await expect.poll(() => rail.evaluate(element => element.scrollLeft)).toBe(initialLeft);
     await expect(animations).toHaveCount(3);
     await page.evaluate(() => scrollTo(0, 1800));
     await expect(animations).toHaveCount(0);
@@ -592,14 +604,16 @@ test("arraste mantém as prévias visíveis e libera a pausa de teclado sem clic
   const { page, context, gallery, errors } = await fixture({ reducedMotion: "no-preference" });
   try {
     const rail = gallery.getByRole("region", { name: "Explorar vídeos e animações" });
+    const initialLeft = await rail.evaluate(element => element.scrollLeft);
     const animations = gallery.locator('img[aria-hidden="true"]');
     await expect(animations).toHaveCount(3);
     await animations.evaluateAll(elements => elements.forEach(element => element.setAttribute("data-retained", "true")));
     await rail.focus();
     await page.keyboard.press("ArrowRight");
     await expect(gallery.locator('video[data-playing="true"]')).toHaveCount(0);
-    // Return to the first cards before testing the pointer modality.
-    await rail.evaluate(element => element.scrollBy({ left: -element.clientWidth * .75, behavior: "instant" }));
+    // Restore the known position instead of subtracting an unfinished smooth scroll.
+    await rail.evaluate((element, left) => element.scrollTo({ left, behavior: "instant" }), initialLeft);
+    await expect.poll(() => rail.evaluate(element => element.scrollLeft)).toBe(initialLeft);
     const box = await rail.boundingBox(); assert(box);
     await page.mouse.move(box.x + 100, box.y + 100);
     await page.mouse.down();
