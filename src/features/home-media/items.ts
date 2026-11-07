@@ -51,4 +51,14 @@ export const homeMediaItems: HomeMediaItem[] = [
     src: "/media/home/principia-serum.mp4", poster: "/media/home/principia-serum.webp",
     href: catalogFilterHref("/catalogo", { grupo: "dermo", assunto: "face" }), action: "Ver cuidados com o rosto",
   },
+  {
+    id: "vichy-mineral89", kind: "video", title: "Vichy Minéral 89", caption: "Cuidados com o rosto",
+    src: "/media/home/vichy-mineral89.mp4", poster: "/media/home/vichy-mineral89.webp", background: "#effbff",
+    href: catalogFilterHref("/catalogo", { grupo: "dermo", assunto: "face" }), action: "Ver cuidados com o rosto",
+  },
+  {
+    id: "ritual-beleza", kind: "video", title: "Seu ritual de beleza", caption: "Perfumaria e autocuidado",
+    src: "/media/home/ritual-beleza.mp4", poster: "/media/home/ritual-beleza.webp", background: "#f3e7df",
+    href: catalogFilterHref("/catalogo", { grupo: "beauty" }), action: "Ver perfumaria e cuidados pessoais",
+  },
 ];

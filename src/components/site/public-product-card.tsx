@@ -1,5 +1,5 @@
-import { productImageAlt } from "@/features/products/image-placeholder";
-import Image from "next/image";
+import { productCardAlternateImage } from "@/features/products/card-alternate-image";
+import { ProductCardImage, ProductCardSurface } from "./product-card-image";
 import Link from "next/link";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import { ProductCardActions } from "@/components/site/product-card-actions";
@@ -24,6 +24,8 @@ export type RelatedProductCardItem = PublicProductSearchItem & {
 
 export function PublicProductCard({ product, showShippingEstimate = false, variant = "default" }: { product: RelatedProductCardItem; showShippingEstimate?: boolean; variant?: "default" | "medicine-rail" }) {
   const compact = variant === "medicine-rail";
+  const alternateImageUrl = productCardAlternateImage(product);
+  const imageKey = `${product.imageUrl}:${alternateImageUrl ?? ""}`;
   const publicName = productDisplayName(product.name, product.activeIngredients);
   const ingredientLabel = productIngredientLabel(product);
   const displayName = publicName
@@ -60,7 +62,7 @@ export function PublicProductCard({ product, showShippingEstimate = false, varia
   const showShippingBenefit = showShippingEstimate && product.stock > 0 && !product.requiresPrescription && !product.isPopularPharmacy && !requiresPurchaseAssistance(cartProduct);
 
   if (compact) return (
-    <article data-product-variant="medicine-rail" className="group relative flex h-full min-w-0 flex-col rounded-xl border border-line bg-white p-3 shadow-sm">
+    <ProductCardSurface key={imageKey} alternateImageUrl={alternateImageUrl} variant="medicine-rail" className="group relative flex h-full min-w-0 flex-col rounded-xl border border-line bg-white p-3 shadow-sm">
       <div data-product-badges className="flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <div className="flex flex-wrap items-center gap-1">
           {pmcSavings !== null ? <ProductPmcBadge percent={pmcSavings} /> : discount !== null && !pmc ? <span className="rounded-md bg-brand px-2 py-1 text-xs font-black text-white">{discount}% OFF</span> : null}
@@ -70,7 +72,7 @@ export function PublicProductCard({ product, showShippingEstimate = false, varia
       </div>
       <div className="flex min-w-0 items-center gap-3 py-1">
         <div data-product-photo className="flex h-20 w-20 shrink-0 items-center justify-center bg-white">
-          {product.imageUrl ? <Image alt={productImageAlt(product.name, product.imageUrl)} className="h-full w-full object-contain" height={160} src={product.imageUrl} width={160} /> : <ProductImagePlaceholder catalogClassification={product.catalogClassification} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" />}
+          {product.imageUrl ? <ProductCardImage imageUrl={product.imageUrl} alternateImageUrl={alternateImageUrl} name={product.name} size={160} /> : <ProductImagePlaceholder catalogClassification={product.catalogClassification} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" />}
         </div>
         <div className="min-w-0 flex-1">
           <Link aria-label={`Ver ${fullTitle}`} className="block min-w-0 break-words text-sm font-bold leading-5 text-ink after:absolute after:inset-0 after:z-10 after:cursor-pointer hover:text-brand focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand" href={`/produto/${product.slug}`} title={fullTitle}>
@@ -87,11 +89,11 @@ export function PublicProductCard({ product, showShippingEstimate = false, varia
         </div>
         <ProductCardActions compact product={cartProduct} />
       </div>
-    </article>
+    </ProductCardSurface>
   );
 
   return (
-    <article
+    <ProductCardSurface key={imageKey} alternateImageUrl={alternateImageUrl}
       className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_18px_40px_rgba(17,24,39,0.11)] motion-reduce:transform-none"
     >
       <div data-product-badges className={`flex shrink-0 flex-wrap content-start items-start gap-1 px-2 pb-0.5 pt-1.5 ${showShippingEstimate ? "min-h-16 sm:min-h-10" : "min-h-9"}`}>
@@ -107,13 +109,7 @@ export function PublicProductCard({ product, showShippingEstimate = false, varia
         className="relative flex h-32 shrink-0 items-center justify-center overflow-hidden bg-white p-2 sm:h-36 sm:p-3"
       >
         {product.imageUrl ? (
-          <Image
-            alt={productImageAlt(product.name, product.imageUrl)}
-            className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
-            height={240}
-            src={product.imageUrl}
-            width={240}
-          />
+          <ProductCardImage imageUrl={product.imageUrl} alternateImageUrl={alternateImageUrl} name={product.name} size={240} />
         ) : (
           <ProductImagePlaceholder catalogClassification={product.catalogClassification} category={product.category} requiresPrescription={product.requiresPrescription} isPopularPharmacy={product.isPopularPharmacy} className="h-full w-full" showLabel />
         )}
@@ -155,6 +151,6 @@ export function PublicProductCard({ product, showShippingEstimate = false, varia
           {showShippingEstimate ? <CatalogShippingButton product={cartProduct} /> : null}
         </div>
       </div>
-    </article>
+    </ProductCardSurface>
   );
 }

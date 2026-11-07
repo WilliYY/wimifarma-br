@@ -31,6 +31,7 @@ export type PublicProductSearchItem = {
   category: string | null;
   id: string;
   imageUrl: string | null;
+  imageUrls?: string[];
   name: string;
   price: string;
   promotionalPrice: string | null;

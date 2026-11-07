@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { homeMediaItems, type HomeMediaItem } from "@/features/home-media/items";
 import styles from "./home-media-gallery.module.css";
 
@@ -36,6 +36,8 @@ function MotionPreview({ item, active, eligible, priority }: { item: HomeMediaIt
 
 export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMediaItem[] }) {
   const rail = useRef<HTMLDivElement>(null);
+  const track = useRef<HTMLDivElement>(null);
+  const pointerFocus = useRef(false);
   const frames = useRef(new Map<string, HTMLDivElement>());
   const gesture = useRef({ id: -1, x: 0, y: 0, left: 0, moved: false });
   const [paused, setPaused] = useState(false);
@@ -46,6 +48,53 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
   const [pageVisible, setPageVisible] = useState(false);
   const [saveData, setSaveData] = useState(false);
   const [visibleIds, setVisibleIds] = useState<string[]>([]);
+
+  useLayoutEffect(() => {
+    const element = rail.current;
+    const content = track.current;
+    if (!element || !content || !items.length) return;
+    const cards = [...content.querySelectorAll<HTMLElement>("[data-media-card]")];
+    let cycle = 0;
+    let stride = 0;
+    let cardWidth = 0;
+    let circular = false;
+    const position = () => {
+      if (!circular) return;
+      const before = element.scrollLeft;
+      const normalized = before < cycle / 2 ? before + cycle : before > cycle * 2 - element.clientWidth / 2 ? before - cycle : before;
+      const shift = normalized - before;
+      if (Math.abs(shift) > .5) {
+        element.scrollLeft = normalized;
+        gesture.current.left += shift;
+      }
+      const center = element.scrollLeft + element.clientWidth / 2;
+      cards.forEach((card, index) => {
+        const base = cycle + index * stride;
+        const turn = Math.round((center - base - cardWidth / 2) / cycle);
+        card.style.transform = `translateX(${base + turn * cycle}px)`;
+      });
+    };
+    const measure = () => {
+      const available = element.parentElement!.clientWidth;
+      const gap = parseFloat(getComputedStyle(content).columnGap);
+      cardWidth = cards[0].offsetWidth;
+      stride = cardWidth + gap;
+      cycle = stride * cards.length;
+      circular = cycle - gap > available && cards.length > 1;
+      content.dataset.ready = "true";
+      // Keep one complete offscreen card available for recycling without clones.
+      element.style.maxWidth = circular ? `${cycle - stride}px` : "";
+      content.style.width = `${circular ? cycle * 3 : cycle - gap}px`;
+      element.scrollLeft = circular ? cycle : 0;
+      cards.forEach((card, index) => { card.style.transform = `translateX(${index * stride}px)`; });
+      position();
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element.parentElement!);
+    element.addEventListener("scroll", position, { passive: true });
+    return () => { observer.disconnect(); element.removeEventListener("scroll", position); };
+  }, [items]);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -132,15 +181,23 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
   return <section aria-label="Vídeos e novidades da Wimifarma" aria-describedby="home-media-motion-help" className={styles.section}
     onPointerEnter={event => { if (event.pointerType === "mouse") setHovered(true); }}
     onPointerLeave={event => { if (event.pointerType === "mouse") setHovered(false); }}
-    onFocusCapture={() => setFocused(true)}
-    onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false); }}
-    onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); setPaused(value => !value); } }}>
-    <p className="sr-only" id="home-media-motion-help">As duas primeiras animações e o vídeo institucional permanecem animados enquanto estiverem visíveis. O ponteiro do mouse fixa a outra prévia de vídeo. O foco nesta seção pausa as animações. Pressione Escape para pausar ou retomar.</p>
+    onPointerDownCapture={() => { pointerFocus.current = true; setFocused(false); }}
+    onFocusCapture={() => setFocused(!pointerFocus.current)}
+    onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) { pointerFocus.current = false; setFocused(false); } }}
+    onKeyDown={event => {
+      pointerFocus.current = false;
+      setFocused(true);
+      if (event.key === "Escape") { event.preventDefault(); setPaused(value => !value); }
+    }}>
+    <p className="sr-only" id="home-media-motion-help">As duas primeiras animações e o vídeo institucional permanecem animados enquanto estiverem visíveis. O ponteiro do mouse fixa a outra prévia de vídeo. O foco por teclado nesta seção pausa as animações. Arraste ou use as setas para percorrer as mídias em círculo. Pressione Escape para pausar ou retomar.</p>
     <div className={styles.heading}>
       <h2>Dê o play no seu cuidado <span aria-hidden="true">✨</span></h2>
     </div>
     <div className={styles.viewport}>
       <div aria-label="Explorar vídeos e animações" aria-roledescription="carrossel" className={styles.rail} ref={rail} role="region" tabIndex={0}
+        onFocusCapture={event => {
+          if (!pointerFocus.current && event.target !== event.currentTarget) event.target.scrollIntoView({ block: "nearest", inline: "center", behavior: "instant" });
+        }}
         onDragStart={event => event.preventDefault()}
         onPointerDown={event => {
           if (!event.isPrimary || event.button !== 0) return;
@@ -155,6 +212,7 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
           event.preventDefault();
           event.currentTarget.scrollBy({ left: (event.key === "ArrowRight" ? 1 : -1) * event.currentTarget.clientWidth * 0.75, behavior: reducedMotion ? "instant" : "smooth" });
         }}>
+        <div className={styles.track} ref={track}>
         {items.map((item, index) => <article className={styles.card} data-media-card key={item.id}>
           <div className={styles.frame} data-media-frame data-media-id={item.id} style={{ "--media-background": item.background ?? "#fff" } as CSSProperties}
             onPointerEnter={event => {
@@ -169,6 +227,7 @@ export function HomeMediaGallery({ items = homeMediaItems }: { items?: HomeMedia
           </div>
           <h3>{item.title}</h3><p>{item.caption}</p>
         </article>)}
+        </div>
       </div>
     </div>
   </section>;

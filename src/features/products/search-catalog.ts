@@ -25,7 +25,7 @@ const searchSelect = {
   ...supplierOfferInclude,
   cmedReference: true,
   id: true, name: true, slug: true, ean: true, inventorySource: true,
-  brand: true, category: true, imageUrl: true, price: true, promotionalPrice: true,
+  brand: true, category: true, imageUrl: true, imageUrls: true, price: true, promotionalPrice: true,
   stock: true, activeIngredients: true, searchTerms: true, searchText: true,
   requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true,
   cashbackEnabled: true, cashbackRateBps: true,

@@ -23,7 +23,7 @@ export default async function Page() {
       select: {
         ...supplierOfferInclude, cmedReference: true, ean: true, inventorySource: true,
         id: true, name: true, slug: true, brand: true, category: true,
-        imageUrl: true, price: true, promotionalPrice: true, stock: true,
+        imageUrl: true, imageUrls: true, price: true, promotionalPrice: true, stock: true,
         activeIngredients: true, searchTerms: true, requiresPrescription: true,
         prescriptionType: true, isPopularPharmacy: true, cashbackEnabled: true, cashbackRateBps: true,
       },
