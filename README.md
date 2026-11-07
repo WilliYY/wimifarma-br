@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Resumo do Club compartilhado por sessão, hidratação dos dados completos somente dos itens exibidos e indicadores acessíveis de carregamento: [desempenho de catálogo e Club](docs/desempenho-catalogo-e-club-2026-11-07.md).
+
 Pesos e medidas aproximados atualizados em 2.521 perfis; os 3.070 ativos têm dados físicos preenchidos. Duas revisões posteriores, de nove itens de higiene e sete cosméticos, elevaram os perfis habilitados para 523, com PAC/SEDEX conforme CEP: [resultado e limites](docs/estimativas-fisicas-por-familia-2026-11-06.md).
 
 Galeria de vídeos/GIFs em quadros 3:4 com links diretos às categorias, títulos centralizados e duas fileiras compactas de medicamentos, com movimento lento em sentidos opostos, arraste, fade e selo condicional de frete: [home em movimento](docs/home-motion-gallery-2026-11-05.md).

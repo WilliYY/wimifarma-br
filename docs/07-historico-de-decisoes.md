@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-07 — Club compartilhado por sessão e hidratação por página
+
+O resumo do Club compartilha requisições pendentes dentro de um provider por identidade, com descarte de respostas antigas e proteção na troca de autenticação. Catálogo e busca mantêm a seleção editorial global e hidratam os dados completos somente dos produtos exibidos, reutilizando a resolução comercial. Rotas de listagem recebem carregamento acessível; vitrines sem setas dispensam o cálculo de controles ocultos. Não há dependência, cache persistente, migração ou mudança comercial. Contratos, regressões e limites das medições em [desempenho do catálogo e Club](desempenho-catalogo-e-club-2026-11-07.md). Publicação e validações finais exigem comprovante próprio da entrega.
+
 ## 2026-11-06 — Mais sete cosméticos com PAC/SEDEX
 
 Sete apresentações em bastão ou pó comum receberam revisão de carga geral por família, mantendo identidade e os pesos/medidas estimados. O lote próprio foi aplicado uma única vez com sete auditorias; a reconciliação confirmou 523 habilitados entre 3.070 ativos, seis Avise-me, 35 migrations e preservação dos demais produtos/campos comerciais observados. O fechamento por CAS foi observado com grant consumido e metadata6/23 Compose. Diferenças documentais de edição/apresentação permanecem explicitadas; dois descolorantes com persulfato ficam fora do lote. Fontes e limites em [estimativas por família](estimativas-fisicas-por-familia-2026-11-06.md#revisão-posterior-de-sete-cosméticos).
