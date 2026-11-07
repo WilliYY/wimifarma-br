@@ -10,6 +10,7 @@ import { serializeProductStructuredData } from "@/features/products/product-deta
 import { createHash } from "node:crypto";
 import { auth } from "@/features/auth/auth";
 import { safeMiaubyFirstName } from "@/features/miauby/greetings";
+import { ClubSummaryProvider } from "@/hooks/club-summary-provider";
 
 export default async function SiteLayout({
   children,
@@ -21,13 +22,15 @@ export default async function SiteLayout({
   } : null;
   return (
     <CartProvider>
-      <script dangerouslySetInnerHTML={{ __html: serializeProductStructuredData(siteStructuredData()) }} type="application/ld+json" />
-      <SiteVisitTracker />
-      <Suspense fallback={null}><ShoppingNavigationTracker /></Suspense>
-      <SiteHeader />
-      <main className="flex-1">{children}</main>
-      <FloatingWhatsApp viewer={viewer} />
-      <SiteFooter />
+      <ClubSummaryProvider key={viewer?.key ?? "anonymous"} ownerKey={viewer?.key ?? null}>
+        <script dangerouslySetInnerHTML={{ __html: serializeProductStructuredData(siteStructuredData()) }} type="application/ld+json" />
+        <SiteVisitTracker />
+        <Suspense fallback={null}><ShoppingNavigationTracker /></Suspense>
+        <SiteHeader />
+        <main className="flex-1">{children}</main>
+        <FloatingWhatsApp viewer={viewer} />
+        <SiteFooter />
+      </ClubSummaryProvider>
     </CartProvider>
   );
 }
