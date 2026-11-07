@@ -23,19 +23,24 @@ export function HomeProductCarousel({
     startX: 0,
   });
   const [controls, setControls] = useState({ next: false, previous: false });
+  const controlsRef = useRef(controls);
 
   const updateControls = useCallback(() => {
     const carousel = carouselRef.current;
     if (!carousel) return;
 
     const maximumScroll = Math.max(0, carousel.scrollWidth - carousel.clientWidth);
-    setControls({
+    const nextControls = {
       next: carousel.scrollLeft < maximumScroll - 2,
       previous: carousel.scrollLeft > 2,
-    });
+    };
+    if (controlsRef.current.next === nextControls.next && controlsRef.current.previous === nextControls.previous) return;
+    controlsRef.current = nextControls;
+    setControls(nextControls);
   }, []);
 
   useEffect(() => {
+    if (compactHeader) return;
     const carousel = carouselRef.current;
     if (!carousel) return;
 
@@ -47,7 +52,7 @@ export function HomeProductCarousel({
       window.cancelAnimationFrame(animationFrame);
       resizeObserver.disconnect();
     };
-  }, [updateControls]);
+  }, [compactHeader, updateControls]);
 
   function scrollProducts(direction: -1 | 1) {
     const carousel = carouselRef.current;
@@ -200,7 +205,7 @@ export function HomeProductCarousel({
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={finishPointerDrag}
-          onScroll={updateControls}
+          onScroll={compactHeader ? undefined : updateControls}
           ref={carouselRef}
           role="region"
           tabIndex={0}
