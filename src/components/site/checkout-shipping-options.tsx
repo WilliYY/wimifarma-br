@@ -48,7 +48,11 @@ export function CheckoutShippingOptions({ postalCode, selected, onSelect, discou
   const displayed = [...options].sort((a, b) => shippingCustomerPrice(a) - shippingCustomerPrice(b) || a.deliveryDays - b.deliveryDays || a.serviceId - b.serviceId);
   const fastest = Math.min(...displayed.map((option) => option.deliveryDays));
   const benefitOptions = !busy ? displayed.filter((option) => option.benefit) : [];
-  const goalOptions = benefitOptions.filter(({ benefit }) => Number.isSafeInteger(benefit?.minimumOrderCents) && (benefit?.minimumOrderCents ?? 0) > 0 && Number.isSafeInteger(benefit?.remainingCents) && (benefit?.remainingCents ?? 0) > 0);
+  const goalOptions = benefitOptions.filter(({ benefit }) => {
+    const minimum = benefit?.minimumOrderCents ?? 0;
+    const remaining = benefit?.remainingCents ?? 0;
+    return Number.isSafeInteger(minimum) && Number.isSafeInteger(remaining) && remaining > 0 && remaining <= minimum;
+  });
   const benefitOption = benefitOptions.find(({ benefit }) => benefit?.status === "free")
     ?? goalOptions.sort((a, b) => a.benefit!.remainingCents! - b.benefit!.remainingCents! || a.benefit!.minimumOrderCents! - b.benefit!.minimumOrderCents!)[0]
     ?? benefitOptions.find(({ benefit }) => benefit?.status === "discounted");
@@ -59,7 +63,13 @@ export function CheckoutShippingOptions({ postalCode, selected, onSelect, discou
   return <div className="mt-5 rounded-xl border border-line bg-surface-subtle p-4 sm:p-5">
     <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="flex items-center gap-2 font-black text-ink"><Truck className="h-5 w-5 text-brand" />Entrega por transportadora</h2><p className="mt-1 text-xs leading-5 text-muted">Cotação automática após preencher o CEP. Escolha uma opção abaixo. Prazo em dias úteis, incluindo preparação.</p></div><button className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-50" disabled={busy || !canQuote} onClick={() => quote()} type="button">{busy && <Loader2 className="h-4 w-4 animate-spin" />}{busy ? "Consultando..." : "Consultar novamente"}</button></div>
     {message && <p className="mt-4 text-sm text-muted" role="status">{message}</p>}
-    {benefitOption && <ShippingBenefitNote benefit={benefitOption.benefit} service={`${benefitOption.carrier} · ${benefitOption.service}`} />}
+    <div aria-live="polite">
+      {benefitOption && (
+        <div className="mt-2 rounded-lg border border-emerald-100 bg-emerald-50 px-2.5 pb-1.5">
+          <ShippingBenefitNote benefit={benefitOption.benefit} service={`${benefitOption.carrier} · ${benefitOption.service}`} />
+        </div>
+      )}
+    </div>
     <fieldset className="mt-4 grid gap-3"><legend className="sr-only">Opções de transportadora</legend>{displayed.map((option, index) => {
       const fee = shippingCustomerPrice(option);
       return <label className={`flex cursor-pointer items-start gap-3 rounded-lg border bg-white p-3 ${currentSelection?.token === option.token ? "border-brand ring-1 ring-brand" : "border-line"}`} key={option.serviceId}>

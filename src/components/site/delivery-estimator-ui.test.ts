@@ -97,7 +97,7 @@ for (const width of [320, 390, 1440]) {
       } finally { release?.(); }
       await expect(dialog.getByRole("status")).toContainText("Entrega com prazo estendido");
       await expect(dialog.getByText("Frete consultado para este pedido", { exact: true })).toHaveCount(0);
-      await expect(dialog.getByText("Estimativa para os itens informados. Frete, descontos e disponibilidade são conferidos novamente no checkout.", { exact: true })).toHaveCount(1);
+      await expect(dialog.getByText("Prazos estimados incluem preparação. O checkout confirma o frete.", { exact: true })).toHaveCount(1);
       await expect(dialog.getByText(/18,75/)).toHaveCount(3);
       assert.deepEqual(requests, [{ postalCode: "80010000", productId: product.id, quantity: 1 }]);
       assert.ok(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth));
@@ -129,20 +129,25 @@ test("frete compacto preserva desconto, gratuidade, subsídio e progresso reais"
     const rows = dialog.getByRole("listitem");
     await expect(rows).toHaveCount(7);
     await expect(rows.filter({ hasText: "Regular sem benefício" }).getByText("Frete consultado para este pedido", { exact: true })).toHaveCount(0);
-    await expect(rows.filter({ hasText: "Regular com progresso" })).toContainText(/150,00; faltam R\$\s*50,10/);
-    await expect(rows.filter({ hasText: "Regular com subsídio" })).toContainText(/10,00 de benefício/);
-    await expect(rows.filter({ hasText: "Desconto confirmado" })).toContainText("Desconto no frete nesta cotação");
+    await expect(rows.filter({ hasText: "Regular com progresso" })).toContainText(/faltam R\$\s*50,10/);
+    await expect(rows.filter({ hasText: "Regular com progresso" })).toContainText(/Meta estimada de R\$\s*150,00/);
+    await expect(rows.filter({ hasText: "Regular com progresso" }).getByRole("progressbar")).toHaveAttribute("aria-valuenow", "66");
+    await expect(rows.filter({ hasText: "Regular com subsídio" })).toContainText(/10,00 de desconto no frete/);
+    await expect(rows.filter({ hasText: "Desconto confirmado" })).toContainText(/15,00 de desconto no frete/);
     await expect(rows.filter({ hasText: "Desconto confirmado" })).toContainText(/3,75/);
     await expect(rows.filter({ hasText: "Gratuidade confirmada" })).toContainText("Frete grátis nesta cotação");
     await expect(rows.filter({ hasText: "Gratuidade confirmada" }).getByText("Grátis", { exact: true })).toHaveCount(1);
-    for (const service of ["Regular com mínimo", "Regular com restante"]) await expect(rows.filter({ hasText: service })).toContainText("Frete consultado para este pedido");
+    for (const service of ["Regular com mínimo", "Regular com restante", "Desconto confirmado"]) {
+      await expect(rows.filter({ hasText: service }).getByRole("progressbar")).toHaveCount(0);
+    }
     for (const width of [320, 390, 1440]) {
       await page.setViewportSize({ width, height: width === 320 ? 568 : 900 });
       assert.ok(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth));
       await dialog.evaluate(element => { element.scrollTop = 0; });
       await capture(page, `beneficios-${width}`);
     }
-    await expect(dialog.getByText("Estimativa para os itens informados. Frete, descontos e disponibilidade são conferidos novamente no checkout.", { exact: true })).toHaveCount(1);
+    await expect(dialog.getByText("Prazos estimados incluem preparação. O checkout confirma o frete.", { exact: true })).toHaveCount(1);
+    await expect(dialog.getByText(/Estimativa da cotação atual/)).toHaveCount(0);
   });
 });
 

@@ -23,6 +23,7 @@ const bundle = build({
 
 async function fixture(role: string | null, databaseUnavailable = false) {
   const calls: string[] = [];
+  const recentVisitWindows: { gte: Date; lte: Date }[] = [];
   const loaded = { exports: {} as { default: () => Promise<React.ReactElement> } };
   vm.runInNewContext((await bundle).outputFiles[0].text, {
     module: loaded, exports: loaded.exports, require: createRequire(import.meta.url),
@@ -43,7 +44,11 @@ async function fixture(role: string | null, databaseUnavailable = false) {
           customer: { count: async (args?: unknown) => args ? 6 : 8 },
           coupon: { count: async () => 2, aggregate: async () => ({ _sum: { usesCount: 4 } }) },
           whatsAppContact: { count: async () => 5 },
-          siteVisit: { count: async (args?: unknown) => args ? 10 : 21 },
+          siteVisit: { count: async (args?: { where: { lastSeenAt: { gte: Date; lte: Date } } }) => {
+            if (!args) return 21;
+            recentVisitWindows.push(args.where.lastSeenAt);
+            return 10;
+          } },
           order: { count: async ({ where }: { where: { AND: [{ status?: string }, { customerId: unknown }] } }) => {
             const purchase = where.AND[0].status === "COMPLETED";
             const withoutAccount = where.AND[1].customerId === null;
@@ -53,7 +58,7 @@ async function fixture(role: string | null, databaseUnavailable = false) {
       },
     },
   });
-  return { render: loaded.exports.default, calls };
+  return { render: loaded.exports.default, calls, recentVisitWindows };
 }
 
 test("dashboard authorizes before accessing the database", async () => {
@@ -75,16 +80,21 @@ test("real dashboard renders honest metrics, account-link counts and no demonstr
   assert.match(html, /3 com conta vinculada · 2 sem conta vinculada/);
   assert.match(html, /Sem conta vinculada não comprova compra sem login/);
   assert.match(html, /Pagamentos e frete não foram verificados/);
-  assert.match(html, /nesta consulta/);
+  assert.match(html, /<time datetime="2026-10-24T15:00:00\.000Z">12:00:00<\/time>/i);
+  assert.doesNotMatch(html, /nesta consulta/);
+  assert.equal(f.recentVisitWindows.length, 1);
+  const { gte, lte } = f.recentVisitWindows[0];
+  assert.equal(lte.getTime() - gte.getTime(), 24 * 60 * 60 * 1_000);
+  assert.ok(html.includes(lte.toISOString()));
   assert.doesNotMatch(html, /Roadmap modular|Interesse comercial|Exemplo visual|Recharts|TanStack Table|Pedidos via WhatsApp|ao vivo/);
 });
 
 test("STAFF retains order summaries and cannot see coupon metrics or creation action", async () => {
   const admin = renderToStaticMarkup(await (await fixture("ADMIN")).render());
   const staff = renderToStaticMarkup(await (await fixture("STAFF")).render());
-  assert.match(admin, /Cupons usados/);
+  assert.match(admin, /Usos informados de cupons/);
   assert.match(admin, /Criar cupom/);
-  assert.doesNotMatch(staff, /Cupons usados|Criar cupom|href="\/admin\/cupons"/);
+  assert.doesNotMatch(staff, /Usos informados de cupons|Criar cupom|href="\/admin\/cupons"/);
   assert.match(staff, /Pedidos registrados/);
   assert.match(staff, /Compras concluídas e pagas/);
 });

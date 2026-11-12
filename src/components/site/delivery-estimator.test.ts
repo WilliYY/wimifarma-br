@@ -322,7 +322,8 @@ for (const width of [320, 390, 1440]) {
       const deliveryResult = page.getByRole("status").filter({ has: page.getByText("Opções de entrega", { exact: true }) });
       await expect(deliveryResult).toContainText(/3,75/);
       await expect(deliveryResult).toContainText(/15,00/);
-      await expect(deliveryResult).toContainText(/estimativa/i);
+      await expect(deliveryResult.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "66");
+      await expect(deliveryResult).toContainText(/prazos estimados/i);
       await expect(deliveryResult).not.toContainText("Grátis");
       assert.equal(requests, 1);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);

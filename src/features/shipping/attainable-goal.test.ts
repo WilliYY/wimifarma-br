@@ -173,7 +173,9 @@ test("cotação do carrinho e produto expõem somente meta verificada; falha fut
   assert.equal(payload.benefit?.minimumOrderCents, 6000);
   const input = checkoutRequestSchema.parse({ customer: { name: "Cliente sintético", phone: "44999990000" }, fulfillmentMethod: "DELIVERY", paymentMethod: "PIX", privacyConsent: true,
     address: { postalCode: "01001000", street: "Rua teste", number: "1", neighborhood: "Teste", city: "São Paulo", state: "SP" }, items, shippingToken: quoted[0].token });
-  await loaded.exports.validateOrderShipping(tx as never, input);
+  const savedQuote = await loaded.exports.validateOrderShipping(tx as never, input);
+  assert.equal(savedQuote?.benefit.minimumOrderCents, 6000);
+  assert.equal(savedQuote?.benefit.remainingCents, 4000);
   assert.equal(calls, 2, "finalization never quotes an advisory cart");
   const estimate = await loaded.exports.estimateProductShipping({ productId: f.products[0].id, quantity: 1, postalCode: "01001000" });
   assert.equal(estimate.options[0].benefit?.minimumOrderCents, 6000);
@@ -184,4 +186,8 @@ test("cotação do carrinho e produto expõem somente meta verificada; falha fut
   assert.equal(calls, 2); assert.equal(degraded[0].benefit?.minimumOrderCents, null);
   assert.equal(degraded[0].benefit?.customerPriceCents, quoted[0].benefit?.customerPriceCents);
   assert.equal(verifyShippingQuote(degraded[0].token, key).priceCents, 1200);
+  const savedDegradedQuote = await loaded.exports.validateOrderShipping(tx as never, { ...input, shippingToken: degraded[0].token });
+  assert.equal(savedDegradedQuote?.benefit.minimumOrderCents, null);
+  assert.equal(savedDegradedQuote?.benefit.remainingCents, null);
+  assert.equal(calls, 2);
 });

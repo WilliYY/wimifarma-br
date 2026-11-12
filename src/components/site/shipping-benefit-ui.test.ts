@@ -38,6 +38,9 @@ test("checkout mostra a menor meta antes da seleção e preserva as opções pag
     });
     await page.goto("http://127.0.0.1:3198/");
     await expect(page.getByText(/faltam R\$\s*50,00/)).toBeVisible();
+    const progress = page.getByRole("progressbar", { name: /Serviço 2/ });
+    await expect(progress).toHaveAttribute("aria-valuenow", "66");
+    await expect(page.getByText(/Estimativa da cotação atual/)).toHaveCount(0);
     await expect(page.getByRole("radio")).toHaveCount(2);
     await expect(page.getByRole("group")).toContainText(/R\$\s*19,00/);
     await expect(page.getByRole("group")).toContainText(/R\$\s*20,00/);
@@ -49,21 +52,21 @@ test("checkout mostra a menor meta antes da seleção e preserva as opções pag
       assert.ok(bounds && bounds.x >= 0 && bounds.x + bounds.width <= width);
     }
     await page.getByRole("radio").first().check();
-    await expect(page.getByText(/Estimativa para frete grátis:/)).toHaveCount(1);
+    await expect(page.getByRole("progressbar")).toHaveCount(1);
     await expect(page.getByRole("radio").first()).toBeChecked();
     benefits = [benefit(null, null), benefit(null, null)];
     await page.getByRole("button", { name: "Trocar CEP" }).click();
-    await expect(page.getByText(/Estimativa para frete grátis:/)).toHaveCount(0);
+    await expect(page.getByRole("progressbar")).toHaveCount(0);
     await expect(page.getByRole("radio")).toHaveCount(2);
     benefits = [benefit(15000, 5000), { ...benefit(null, null, "free"), customerPriceCents: 0, subsidyCents: 2000 }];
     await page.getByRole("button", { name: "Consultar novamente" }).click();
     await expect(page.getByText("Frete grátis nesta cotação")).toBeVisible();
-    await expect(page.getByText(/Estimativa para frete grátis:/)).toHaveCount(0);
+    await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "100");
     await expect(page.getByRole("group")).toContainText("Grátis");
     benefits = [{ ...benefit(null, null, "discounted"), customerPriceCents: 1400, subsidyCents: 500 }, { ...benefit(null, null), customerPriceCents: 2000 }];
     await page.getByRole("button", { name: "Consultar novamente" }).click();
-    await expect(page.getByText("Desconto no frete nesta cotação")).toBeVisible();
-    await expect(page.getByText(/Estimativa para frete grátis:/)).toHaveCount(0);
+    await expect(page.getByText(/R\$\s*5,00 de desconto no frete/)).toBeVisible();
+    await expect(page.getByRole("progressbar")).toHaveCount(0);
     fail = true;
     await page.getByRole("button", { name: "Consultar novamente" }).click();
     await expect(page.getByText("Cotação indisponível")).toBeVisible();

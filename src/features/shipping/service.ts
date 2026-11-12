@@ -81,9 +81,16 @@ export async function validateOrderShipping(tx: Prisma.TransactionClient, input:
   if (benefit.customerPriceCents !== payload.benefit.customerPriceCents) throw new ShippingError("As condições do frete mudaram. Calcule novamente para confirmar o valor.", 409);
   const preparationDays = products.some(p => p.inventorySource === "DISTRIBUTOR") ? Math.max(settings.preparationDays, getSupplierPreparationEstimate(new Date()).preparationDays) : settings.preparationDays;
   if ((payload.preparationDays ?? (products.some(p => p.inventorySource === "DISTRIBUTOR") ? -1 : settings.preparationDays)) < preparationDays) throw new ShippingError("O prazo de preparação mudou. Calcule o frete novamente.", 409);
+  const quote = {
+    ...payload,
+    benefit: {
+      ...benefit,
+      minimumOrderCents: payload.benefit.minimumOrderCents,
+      remainingCents: payload.benefit.remainingCents,
+    },
+  };
   // Resolve at checkout from server settings; never accept a client-supplied posting plan.
   // Keep it in the order snapshot so future routing edits cannot rewrite old orders.
-  const quote = { ...payload, benefit };
   delete quote.postingLocation;
   const postingLocation = resolvePostingLocation(settings, payload.serviceId);
   if (postingLocation) quote.postingLocation = postingLocation;

@@ -144,18 +144,22 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
             </p>
             {result.local && <strong className="mt-2 block text-sm text-pharma-green">Grátis</strong>}
             {result.options.length > 0 && <>
-              <ul className="mt-3 grid gap-2">
+              <ul className="mt-2 grid gap-1.5">
                 {result.options.map(option => {
                   const fee = shippingCustomerPrice(option);
-                  const hideRegularNote = option.benefit?.status === "regular" && option.benefit.subsidyCents === 0
-                    && option.benefit.minimumOrderCents === null && option.benefit.remainingCents === null;
-                  return <li className="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-white p-3 text-sm" key={option.serviceId}>
-                    <div className="min-w-0 flex-1"><strong className="block">{option.carrier} · {option.service}</strong><span className="mt-1 block text-xs text-muted">Até {option.deliveryDays} dias úteis estimados, incluindo preparação</span>{option.benefit && !hideRegularNote ? <ShippingBenefitNote benefit={option.benefit} /> : null}</div>
-                    <strong className="text-pharma-green">{fee === 0 ? "Grátis" : formatCurrency(fee / 100)}</strong>
+                  return <li className="rounded-lg border border-emerald-100 bg-white px-2.5 py-2 text-sm sm:px-3" key={option.serviceId}>
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2">
+                      <div className="min-w-0">
+                        <strong className="block break-words leading-5">{option.carrier} · {option.service}</strong>
+                        <span className="block text-xs leading-4 text-muted">Até {option.deliveryDays} dias úteis</span>
+                      </div>
+                      <strong className="whitespace-nowrap tabular-nums text-pharma-green">{fee === 0 ? "Grátis" : formatCurrency(fee / 100)}</strong>
+                    </div>
+                    <ShippingBenefitNote benefit={option.benefit} />
                   </li>;
                 })}
               </ul>
-              <p className="mt-3 text-xs leading-5 text-muted">{result.mode === "estimate" ? "Valores e prazos estimados. A equipe confirma a possibilidade e as condições do envio." : "Estimativa para os itens informados. Frete, descontos e disponibilidade são conferidos novamente no checkout."}</p>
+              <p className="mt-2 text-xs leading-4 text-muted">{result.mode === "estimate" ? "Valores e prazos estimados. O prazo inclui preparação." : "Prazos estimados incluem preparação. O checkout confirma o frete."}</p>
             </>}
             {!result.busy && !result.local && !result.invalid && (!result.options.length || result.mode === "estimate") ? (
               <a className="mt-2 inline-flex items-center gap-2 text-xs font-black text-brand underline" href={buildWhatsAppUrl(result.mode === "estimate" && product ? `Ola, gostaria de consultar o envio de ${selectedQuantity} ${selectedQuantity === 1 ? "unidade" : "unidades"} de ${product.name} para o CEP ${formatPostalCode(normalizedPostalCode)}.` : "Ola, gostaria de consultar entrega para o meu CEP.")} rel="noreferrer" target="_blank">

@@ -52,17 +52,50 @@ export function OnlineVisitorsCard({ initialCount, measuredAt }: { initialCount:
     };
   }, []);
 
-  const updatedAt = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(snapshot.measuredAt));
+  const updatedAt = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(new Date(snapshot.measuredAt));
+
   return (
-    <section aria-label="Visitantes online" className="rounded-xl border border-teal-200 bg-teal-50 p-5 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-2 text-sm font-bold text-teal-900"><Radio aria-hidden="true" className="h-5 w-5" />Visitantes online agora</span>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${unavailable ? "bg-amber-100 text-amber-900" : "bg-white text-teal-900"}`}>{unavailable ? "Atualização indisponível" : "Atualiza a cada 30 s"}</span>
+    <section aria-label="Visitantes online" className="rounded-xl border border-teal-200 bg-teal-50 p-3 shadow-sm">
+      <div className="flex items-center gap-2.5">
+        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white text-teal-800">
+          <Radio aria-hidden="true" className="size-4" />
+        </span>
+        <h2 className="text-sm font-bold leading-tight text-teal-950">Visitantes online agora</h2>
       </div>
-      <p aria-live="polite" aria-atomic="true" className="mt-4 text-4xl font-black tabular-nums text-teal-950">{snapshot.online === null ? "—" : snapshot.online.toLocaleString("pt-BR")}<span className="ml-2 text-sm font-semibold">{snapshot.online === 1 ? "navegador ativo" : "navegadores ativos"}</span></p>
-      <p className="mt-2 text-sm leading-6 text-teal-900">Presença nos últimos {ONLINE_WINDOW_SECONDS / 60} minutos, com o site visível. Abas do mesmo navegador contam uma vez.</p>
-      <p className="mt-2 text-xs leading-5 text-teal-900">Estimativa: outro navegador, perfil ou modo anônimo pode contar separadamente no mesmo aparelho. Inclui acessos da equipe ao site público.</p>
-      <p className="mt-3 text-xs font-semibold text-teal-900">{snapshot.online === null ? "Aguardando consulta." : `${unavailable ? "Última consulta válida" : "Consultado"} às ${updatedAt} (Brasília).`}</p>
+      <p aria-live="polite" aria-atomic="true" className="mt-1.5 text-2xl font-black leading-tight tabular-nums text-teal-950">
+        {snapshot.online === null ? "—" : snapshot.online.toLocaleString("pt-BR")}
+        <span className="ml-1.5 text-xs font-semibold">
+          {snapshot.online === 1 ? "navegador ativo" : "navegadores ativos"}
+        </span>
+      </p>
+      <p className="mt-1 text-xs leading-snug text-teal-900">
+        Atividade no site visível nos últimos {ONLINE_WINDOW_SECONDS / 60} minutos.
+        Abas do mesmo navegador contam uma vez.
+      </p>
+      <div className="mt-2 space-y-0.5 border-t border-teal-200 pt-1.5 text-xs leading-snug text-teal-900">
+        <p className={unavailable ? "font-bold text-amber-900" : undefined}>
+          {unavailable ? "Atualização indisponível" : "Atualiza a cada 30 s"}
+        </p>
+        <p>
+          {snapshot.online === null ? "Aguardando consulta." : (
+            <>
+              {unavailable ? "Última consulta válida" : "Consultado"} às{" "}
+              <time dateTime={snapshot.measuredAt}>{updatedAt}</time> (Brasília).
+            </>
+          )}
+        </p>
+      </div>
+      <details className="mt-1.5 text-xs leading-snug text-teal-900">
+        <summary className="cursor-pointer font-semibold">Como é contado</summary>
+        <p className="mt-1">
+          A estimativa inclui a equipe no site público. Outros navegadores, perfis e abas anônimas podem contar separadamente.
+        </p>
+      </details>
     </section>
   );
 }

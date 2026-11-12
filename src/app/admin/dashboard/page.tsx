@@ -8,7 +8,6 @@ import {
   Eye,
   MessageCircle,
   Package,
-  Plus,
   TicketPercent,
   Users,
   type LucideIcon,
@@ -33,7 +32,6 @@ type MetricTone =
   | "blue"
   | "green"
   | "red"
-  | "slate"
   | "teal"
   | "violet";
 
@@ -48,7 +46,6 @@ type DashboardMetric = {
 };
 
 type DashboardAction = {
-  description: string;
   external?: boolean;
   href: string;
   icon: LucideIcon;
@@ -63,7 +60,6 @@ const metricToneStyles: Record<
   MetricTone,
   {
     accent: string;
-    badge: string;
     border: string;
     icon: string;
     value: string;
@@ -71,49 +67,36 @@ const metricToneStyles: Record<
 > = {
   amber: {
     accent: "bg-[#f59e0b]",
-    badge: "bg-[#fff7ed] text-[#b45309]",
     border: "hover:border-[#f59e0b]/45",
     icon: "bg-[#fff7ed] text-[#b45309]",
     value: "text-[#92400e]",
   },
   blue: {
     accent: "bg-[#2563eb]",
-    badge: "bg-[#eff6ff] text-[#1d4ed8]",
     border: "hover:border-[#2563eb]/40",
     icon: "bg-[#eff6ff] text-[#1d4ed8]",
     value: "text-[#1e3a8a]",
   },
   green: {
     accent: "bg-pharma-green",
-    badge: "bg-[#ecfdf3] text-[#027a48]",
     border: "hover:border-pharma-green/40",
     icon: "bg-[#ecfdf3] text-[#027a48]",
     value: "text-[#065f46]",
   },
   red: {
     accent: "bg-brand",
-    badge: "bg-brand-soft text-brand",
     border: "hover:border-brand/45",
     icon: "bg-brand-soft text-brand",
     value: "text-brand-strong",
   },
-  slate: {
-    accent: "bg-[#475467]",
-    badge: "bg-[#f2f4f7] text-[#475467]",
-    border: "hover:border-[#98a2b3]",
-    icon: "bg-[#f2f4f7] text-[#475467]",
-    value: "text-ink",
-  },
   teal: {
     accent: "bg-[#0891b2]",
-    badge: "bg-[#ecfeff] text-[#0e7490]",
     border: "hover:border-[#0891b2]/40",
     icon: "bg-[#ecfeff] text-[#0e7490]",
     value: "text-[#155e75]",
   },
   violet: {
     accent: "bg-[#7c3aed]",
-    badge: "bg-[#f5f3ff] text-[#6d28d9]",
     border: "hover:border-[#7c3aed]/40",
     icon: "bg-[#f5f3ff] text-[#6d28d9]",
     value: "text-[#5b21b6]",
@@ -122,7 +105,6 @@ const metricToneStyles: Record<
 
 const quickActions: DashboardAction[] = [
   {
-    description: "Criar ou revisar campanha comercial",
     href: "/admin/ofertas",
     icon: Gift,
     label: "Nova oferta",
@@ -130,7 +112,6 @@ const quickActions: DashboardAction[] = [
     variant: "default",
   },
   {
-    description: "Cadastrar item, preco e estoque",
     href: "/admin/catalogos",
     icon: Boxes,
     label: "Novo produto",
@@ -138,7 +119,6 @@ const quickActions: DashboardAction[] = [
     variant: "secondary",
   },
   {
-    description: "Preparar desconto para campanhas",
     href: "/admin/cupons",
     icon: TicketPercent,
     label: "Criar cupom",
@@ -146,7 +126,6 @@ const quickActions: DashboardAction[] = [
     variant: "secondary",
   },
   {
-    description: "Consultar base e leads",
     href: "/admin/clientes",
     icon: Users,
     label: "Ver clientes",
@@ -154,7 +133,6 @@ const quickActions: DashboardAction[] = [
     variant: "secondary",
   },
   {
-    description: "Abrir atendimento em nova aba",
     external: true,
     href: siteConfig.whatsappUrl,
     icon: MessageCircle,
@@ -164,8 +142,7 @@ const quickActions: DashboardAction[] = [
   },
 ];
 
-async function getDashboardMetrics(): Promise<DashboardMetric[]> {
-  const now = new Date();
+async function getDashboardMetrics(now: Date): Promise<DashboardMetric[] | null> {
   const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
   try {
@@ -208,7 +185,7 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
       prisma.coupon.aggregate({ _sum: { usesCount: true } }),
       prisma.whatsAppContact.count(),
       prisma.siteVisit.count(),
-      prisma.siteVisit.count({ where: { lastSeenAt: { gte: last24Hours } } }),
+      prisma.siteVisit.count({ where: { lastSeenAt: { gte: last24Hours, lte: now } } }),
       getDashboardOrderSummary(prisma),
     ]);
 
@@ -223,7 +200,7 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
         value: numberFormatter.format(totalProducts),
       },
       {
-        description: "campanhas publicadas e dentro da vigência; não conta descontos do catálogo",
+        description: "Campanhas publicadas e vigentes",
         href: "/admin/ofertas",
         icon: Gift,
         label: "Campanhas ativas",
@@ -232,7 +209,7 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
         value: numberFormatter.format(activeOffers),
       },
       {
-        description: `${numberFormatter.format(activeCustomers)} cadastros habilitados; não mede presença online`,
+        description: `${numberFormatter.format(activeCustomers)} cadastros habilitados`,
         href: "/admin/clientes",
         icon: Users,
         label: "Clientes cadastrados",
@@ -241,16 +218,16 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
         value: numberFormatter.format(totalCustomers),
       },
       {
-        description: `${numberFormatter.format(activeCoupons)} cupons ativos`,
+        description: `${numberFormatter.format(activeCoupons)} cupons habilitados e vigentes`,
         href: "/admin/cupons",
         icon: TicketPercent,
-        label: "Cupons usados",
+    label: "Usos informados de cupons",
         roles: ["ADMIN", "MANAGER"],
         tone: "violet",
         value: numberFormatter.format(couponUsage._sum.usesCount ?? 0),
       },
       {
-        description: "contatos registrados",
+        description: "Contatos registrados no sistema",
         href: "/admin/clientes",
         icon: MessageCircle,
         label: "Contatos via WhatsApp",
@@ -259,20 +236,12 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
         value: numberFormatter.format(whatsappContacts),
       },
       {
-        description: `${numberFormatter.format(recentSiteVisitors)} identificadores vistos nas últimas 24h; não representa pessoas`,
+        description: `${numberFormatter.format(recentSiteVisitors)} nas últimas 24 h`,
         icon: Eye,
         label: "Navegadores registrados",
         roles: ["ADMIN", "MANAGER", "STAFF"],
         tone: "teal",
         value: numberFormatter.format(siteVisitors),
-      },
-      {
-        description: "Consultas do resumo respondendo. Pagamentos e frete não foram verificados.",
-        icon: Activity,
-        label: "Status do sistema",
-        roles: ["ADMIN", "MANAGER", "STAFF"],
-        tone: "green",
-        value: "Ativo",
       },
       {
         description: `${numberFormatter.format(orderSummary.orders.withAccount)} com conta vinculada · ${numberFormatter.format(orderSummary.orders.withoutAccount)} sem conta vinculada`,
@@ -296,16 +265,7 @@ async function getDashboardMetrics(): Promise<DashboardMetric[]> {
   } catch (error) {
     console.error("Erro ao carregar metricas do dashboard", error);
 
-    return [
-      {
-        description: "Resumo indisponível. Não foi possível concluir as consultas ao banco.",
-        icon: BadgePercent,
-        label: "Status do sistema",
-        roles: ["ADMIN", "MANAGER", "STAFF"],
-        tone: "slate",
-        value: "Indisponível",
-      },
-    ];
+    return null;
   }
 }
 
@@ -313,120 +273,53 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
   const Icon = metric.icon;
   const tone = metricToneStyles[metric.tone];
   const card = (
-    <Card
-      className={cn(
-        "group h-full overflow-hidden bg-white transition duration-300 hover:-translate-y-0.5 hover:shadow-md",
-        tone.border,
-      )}
-    >
-      <CardContent className="relative p-4">
-        <span className={cn("absolute inset-x-0 top-0 h-1", tone.accent)} />
-        <div className="flex items-start justify-between gap-3">
-          <span
-            className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-xl",
-              tone.icon,
-            )}
-          >
-            <Icon className="h-5 w-5" />
-          </span>
-          <span
-            className={cn(
-              "rounded-full px-2.5 py-1 text-[0.68rem] font-black uppercase",
-              tone.badge,
-            )}
-          >
-            nesta consulta
-          </span>
+    <Card className={cn("h-full overflow-hidden bg-white transition-colors", tone.border)}>
+      <CardContent className="relative flex h-full items-start gap-2.5 p-3 sm:gap-3">
+        <span aria-hidden="true" className={cn("absolute inset-y-0 left-0 w-0.5", tone.accent)} />
+        <span className={cn("grid size-8 shrink-0 place-items-center rounded-lg", tone.icon)}>
+          <Icon aria-hidden="true" className="size-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-bold leading-tight text-ink">{metric.label}</p>
+          <p className={cn("mt-0.5 text-2xl font-black leading-tight tabular-nums", tone.value)}>
+            {metric.value}
+          </p>
+          <p className="mt-1 text-xs leading-snug text-muted">{metric.description}</p>
         </div>
-        <p className="mt-4 text-sm font-bold leading-tight text-ink">
-          {metric.label}
-        </p>
-        <p className={cn("mt-1 text-3xl font-black", tone.value)}>
-          {metric.value}
-        </p>
-        <p className="mt-2 min-h-8 text-xs font-semibold leading-4 text-muted">
-          {metric.description}
-        </p>
       </CardContent>
     </Card>
   );
 
-  if (!metric.href) {
-    return card;
-  }
-
-  return (
-    <Link className="block h-full" href={metric.href}>
+  return metric.href ? (
+    <Link
+      className="block h-full rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      href={metric.href}
+    >
       {card}
     </Link>
-  );
+  ) : card;
 }
 
-function SystemStatusCard({ metric }: { metric?: DashboardMetric }) {
-  if (!metric) {
-    return null;
-  }
-
-  const Icon = metric.icon;
-  const isActive = metric.value.toLowerCase() === "ativo";
-
+function SystemStatusCard({ available }: { available: boolean }) {
   return (
-    <Card
-      className={cn(
-        "h-full overflow-hidden border-[#d0d5dd] bg-white",
-        isActive && "border-[#a6f4c5] bg-[#f6fef9]",
-      )}
-    >
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <span
-            className={cn(
-              "flex h-11 w-11 items-center justify-center rounded-xl",
-              isActive
-                ? "bg-[#dcfae6] text-[#027a48]"
-                : "bg-[#f2f4f7] text-[#475467]",
-            )}
-          >
-            <Icon className="h-5 w-5" />
-          </span>
-          <span
-            className={cn(
-              "rounded-full px-2.5 py-1 text-[0.68rem] font-black uppercase",
-              isActive
-                ? "bg-[#dcfae6] text-[#027a48]"
-                : "bg-[#f2f4f7] text-[#475467]",
-            )}
-          >
-            {isActive ? "consultado" : "atenção"}
-          </span>
-        </div>
-
-        <p className="mt-5 text-sm font-bold text-muted">Consulta ao banco</p>
-        <p className="mt-1 text-3xl font-black text-ink">{metric.value}</p>
-        <p className="mt-2 text-sm font-semibold leading-5 text-muted">
-          {metric.description}
-        </p>
-
-        <div className="mt-5 grid gap-2 text-xs font-bold text-ink">
-          <span className="flex items-center gap-2 rounded-md bg-white px-3 py-2 shadow-sm">
-            <span
-              className={cn(
-                "h-2.5 w-2.5 rounded-full",
-                isActive ? "bg-[#12b76a]" : "bg-[#98a2b3]",
-              )}
-            />
-            {isActive ? "Consultas concluídas" : "Consultas indisponíveis"}
-          </span>
-          <span className="flex items-center gap-2 rounded-md bg-white px-3 py-2 shadow-sm">
-            <span
-              className={cn(
-                "h-2.5 w-2.5 rounded-full",
-                isActive ? "bg-[#12b76a]" : "bg-[#98a2b3]",
-              )}
-            />
-            Página renderizada; integrações não verificadas
-          </span>
+    <Card className="border-[#d0d5dd] bg-white">
+      <CardContent className="flex items-start gap-2.5 p-3">
+        <span className={cn(
+          "grid size-8 shrink-0 place-items-center rounded-lg",
+          available ? "bg-[#dcfae6] text-[#027a48]" : "bg-amber-100 text-amber-900",
+        )}>
+          <Activity aria-hidden="true" className="size-4" />
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-sm font-bold text-ink">Consulta ao banco</h2>
+          <p className="mt-0.5 text-sm font-semibold text-ink">
+            {available ? "Consultas concluídas" : "Resumo indisponível"}
+          </p>
+          {available && (
+            <p className="mt-0.5 text-xs leading-snug text-muted">
+              Pagamentos e frete não foram verificados.
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -435,125 +328,106 @@ function SystemStatusCard({ metric }: { metric?: DashboardMetric }) {
 
 function QuickActions({ actions }: { actions: DashboardAction[] }) {
   return (
-    <Card className="mt-6 border-brand/20 bg-white shadow-sm">
-      <CardContent className="p-5">
-        <div className="grid gap-5 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-center">
-          <div>
-            <p className="text-xs font-black uppercase text-brand">
-              Acoes rapidas
-            </p>
-            <h2 className="mt-1 text-xl font-black text-ink">
-              Operacao comercial do dia
-            </h2>
-            <p className="mt-1 text-sm text-muted">
-              Atalhos para cadastrar, revisar e atender sem procurar no menu.
-            </p>
-          </div>
+    <nav aria-label="Ações rápidas" className="flex flex-wrap gap-2">
+      {actions.map((action) => {
+        const Icon = action.icon;
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            {actions.map((action) => {
-              const Icon = action.icon;
-
-              return (
-                <Button
-                  asChild
-                  className="h-full min-h-16 w-full justify-start px-4 py-3"
-                  key={action.label}
-                  variant={action.variant ?? "secondary"}
-                >
-                  <Link
-                    href={action.href}
-                    rel={action.external ? "noreferrer" : undefined}
-                    target={action.external ? "_blank" : undefined}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <span className="min-w-0 flex-1 text-left">
-                      <span className="block font-black leading-5">
-                        {action.label}
-                      </span>
-                      <span className="block whitespace-normal text-xs font-medium opacity-80">
-                        {action.description}
-                      </span>
-                    </span>
-                    {action.external ? (
-                      <ExternalLink className="ml-auto h-3.5 w-3.5 shrink-0" />
-                    ) : (
-                      <Plus className="ml-auto h-3.5 w-3.5 shrink-0" />
-                    )}
-                  </Link>
-                </Button>
-              );
-            })}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        return (
+          <Button
+            asChild
+            className="min-h-11 justify-start px-3"
+            key={action.label}
+            variant={action.variant ?? "secondary"}
+          >
+            <Link
+              href={action.href}
+              rel={action.external ? "noreferrer" : undefined}
+              target={action.external ? "_blank" : undefined}
+            >
+              <Icon aria-hidden="true" className="size-4" />
+              {action.label}
+              {action.external && (
+                <>
+                  <ExternalLink aria-hidden="true" className="size-3.5" />
+                  <span className="sr-only">(abre em nova aba)</span>
+                </>
+              )}
+            </Link>
+          </Button>
+        );
+      })}
+    </nav>
   );
+}
+
+async function getDashboardOnlineSummary() {
+  try {
+    return await getOnlineVisitorSummary(getPrisma());
+  } catch (error) {
+    console.error("Erro ao consultar presença online do dashboard", error);
+    return null;
+  }
 }
 
 export default async function Page() {
   const { role } = await requireAdminPageRoute("/admin/dashboard");
-  const measuredAt = new Date().toISOString();
-  let onlineCount: number | null = null;
-  try {
-    onlineCount = (await getOnlineVisitorSummary(getPrisma())).online;
-  } catch (error) {
-    console.error("Erro ao consultar presença online do dashboard", error);
-  }
-  const metrics = await getDashboardMetrics();
-  const visibleMetrics = metrics.filter(
-    (metric) => metric.roles.includes(role),
-  );
-  const statusMetric = visibleMetrics.find(
-    (metric) => metric.label === "Status do sistema",
-  );
-  const commercialMetrics = visibleMetrics.filter(
-    (metric) => metric.label !== "Status do sistema",
-  );
-  const visibleActions = quickActions.filter(
-    (action) => action.roles.includes(role),
-  );
+  const now = new Date();
+  const [metrics, onlineSummary] = await Promise.all([
+    getDashboardMetrics(now),
+    getDashboardOnlineSummary(),
+  ]);
+  const visibleMetrics = metrics?.filter((metric) => metric.roles.includes(role));
+  const visibleActions = quickActions.filter((action) => action.roles.includes(role));
 
   return (
     <AdminShell
       allowedRoles={adminRoutePermissions["/admin/dashboard"]}
       title="Dashboard"
     >
-      <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="space-y-3">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase text-brand">
-                Resumo comercial
-              </p>
-              <h2 className="text-xl font-black text-ink">Visao do painel</h2>
+      <div className="space-y-4">
+        <QuickActions actions={visibleActions} />
+
+        <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_17rem]">
+          <section aria-labelledby="dashboard-summary-title" className="min-w-0 space-y-2">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <h2 id="dashboard-summary-title" className="text-lg font-black text-ink">Resumo comercial</h2>
+              {metrics && (
+                <p className="text-xs text-muted">
+                  Consultado em{" "}
+                  <time dateTime={now.toISOString()}>
+                    {now.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+                  </time>
+                  {" "}(Brasília)
+                </p>
+              )}
             </div>
-            <p className="text-sm font-semibold text-muted">
-              Resumo consultado em {new Date(measuredAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} (Brasília).
-            </p>
-          </div>
+            {visibleMetrics && (
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,10.5rem),1fr))] gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                {visibleMetrics.map((metric) => (
+                  <MetricCard key={metric.label} metric={metric} />
+                ))}
+              </div>
+            )}
+          </section>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-            {commercialMetrics.map((metric) => (
-              <MetricCard key={metric.label} metric={metric} />
-            ))}
+          <div className="grid items-start gap-2 sm:grid-cols-2 xl:grid-cols-1">
+            <OnlineVisitorsCard
+              initialCount={onlineSummary?.online ?? null}
+              measuredAt={onlineSummary?.measuredAt ?? now.toISOString()}
+            />
+            <SystemStatusCard available={metrics !== null} />
           </div>
         </div>
 
-        <div className="space-y-4">
-          <OnlineVisitorsCard initialCount={onlineCount} measuredAt={measuredAt} />
-          <SystemStatusCard metric={statusMetric} />
-        </div>
-      </section>
-
-      <QuickActions actions={visibleActions} />
-
-      <p className="mt-6 text-sm text-muted">
-        Pedidos incluem todos os estados, exceto pagamentos online de teste. Compras exigem conclusão e pagamento confirmado;
-        pagamentos online em produção também precisam estar sem revisão, disputa ou estorno.
-        Sem conta vinculada não comprova compra sem login: uma conta excluída pode desvincular o pedido.
-        Os totais comerciais são atualizados ao recarregar a página.
-      </p>
+        {metrics && (
+          <p className="max-w-4xl text-xs leading-relaxed text-muted">
+            Pedidos incluem todos os estados, exceto pagamentos online de teste. Compras exigem conclusão e pagamento confirmado.
+            Pagamentos online em produção também precisam estar sem revisão, disputa ou estorno.
+            Sem conta vinculada não comprova compra sem login: uma conta excluída pode desvincular o pedido.
+            Os totais comerciais são atualizados ao recarregar a página.
+          </p>
+        )}
+      </div>
     </AdminShell>
   );
 }

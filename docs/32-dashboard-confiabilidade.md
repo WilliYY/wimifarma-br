@@ -1,17 +1,17 @@
 # Confiabilidade do dashboard
 
-Atualizado em 24/10/2026.
+Atualizado em 12/11/2026.
 
-O dashboard apresenta contagens consultadas no banco durante a renderização. A data da consulta aparece em horário de Brasília; recarregar a página atualiza os indicadores comerciais. Somente o card de presença online possui atualização periódica. Uma falha de consulta é apresentada como indisponibilidade, sem simular zero.
+O dashboard apresenta contagens consultadas no banco durante a renderização. A data da consulta aparece em horário de Brasília; recarregar a página atualiza os indicadores comerciais. O card de presença online mostra o horário da sua própria consulta e se atualiza a cada 30 segundos com a aba visível. Uma falha de consulta é apresentada como indisponibilidade, sem simular zero.
 
 ## Significado dos indicadores
 
 - **Produtos cadastrados:** registros de produtos e quantidade com status `ACTIVE`.
 - **Campanhas ativas:** campanhas `Offer` com status `ACTIVE` dentro da vigência. Não é a quantidade de produtos com desconto no catálogo.
 - **Clientes cadastrados:** registros de `Customer`; habilitados são aqueles com status `ACTIVE`. Não mede pessoas online ou compradores.
-- **Cupons usados:** soma de `usesCount`, acompanhada da quantidade de cupons habilitados e vigentes.
-- **Contatos via WhatsApp:** registros de `WhatsAppContact`, sem inferir pedidos ou conversões.
-- **Navegadores registrados:** identificadores de `SiteVisit`, acompanhados dos vistos nas últimas 24 horas. Não representa pessoas únicas.
+- **Usos informados de cupons:** soma de `usesCount`, acompanhada da quantidade de cupons habilitados e vigentes. O contador aceita valor no cadastro administrativo. O checkout atual não incrementa esse campo automaticamente.
+- **Contatos via WhatsApp:** registros de `WhatsAppContact`. Os links diretos para o WhatsApp não alimentam essa tabela.
+- **Navegadores registrados:** identificadores de `SiteVisit`, acompanhados dos vistos nas últimas 24 horas até o momento da consulta. Não representa pessoas únicas.
 - **Pedidos registrados:** registros de `Order`, em todos os estados, excluindo pedidos associados a `OnlinePayment.environment = test`.
 - **Compras concluídas e pagas:** pedidos com `status = COMPLETED` e `paymentStatus = PAID`. Pagamentos manuais sem `OnlinePayment` são aceitos. Havendo pagamento online, exige ambiente `production`, status `PAID`, `financialReviewReason = null` e ausência de `partial`, `disput`, `chargeback` e `refund` em `statusDetail`, sem diferenciar maiúsculas. Um pedido com método `ONLINE` sem confirmação online não entra nessa contagem.
 
