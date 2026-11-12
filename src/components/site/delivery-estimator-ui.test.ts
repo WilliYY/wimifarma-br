@@ -109,6 +109,24 @@ for (const width of [320, 390, 1440]) {
   });
 }
 
+test("diálogo de frete preserva a limpeza explícita do CEP", async () => {
+  await fixture(390, async page => {
+    const storageKey = "wimifarma-shipping-postal-code";
+    await page.addInitScript(key => localStorage.setItem(key, "87525000"), storageKey);
+    await page.goto(origin);
+    const opener = page.getByRole("button", { name: /^Ver frete de / });
+    const postal = page.getByRole("dialog").getByRole("textbox", { name: "CEP", exact: true });
+    await opener.click();
+    await expect(postal).toHaveValue("87525-000");
+    await postal.fill("");
+    await page.keyboard.press("Escape");
+    await expect(opener).toBeFocused();
+    await opener.click();
+    await expect(postal).toHaveValue("");
+    assert.equal(await page.evaluate(key => localStorage.getItem(key), storageKey), "87525000");
+  });
+});
+
 test("frete compacto preserva desconto, gratuidade, subsídio e progresso reais", async () => {
   await fixture(390, async page => {
     const options: ShippingOption[] = [

@@ -48,6 +48,8 @@ O checkout refaz as verificações logísticas, comerciais e do benefício. Alte
 
 A lista de fretes do produto mostra o preço ao cliente e o desconto de cada modalidade cotada. A barra do frete grátis usa o mínimo e o valor faltante da própria cotação, com 100% quando o frete já é grátis. Na ausência de meta, a interface mostra o desconto recebido, quando houver. O pedido conserva no registro do frete o mínimo e o valor faltante apresentados na cotação assinada. O valor cobrado continua vindo da revalidação no checkout.
 
+O CEP informado na consulta é lembrado neste navegador e sugerido em consultas futuras. No checkout, a sugestão entra quando o rascunho ainda está sem destino. O site consulta cidade, UF, rua e bairro do CEP sugerido, e a pessoa completa o endereço de entrega. O CEP digitado ou o endereço em edição têm prioridade. O armazenamento da preferência guarda somente o CEP. Para Ivaté e Douradina, a barra fica completa quando o destino atende à política de entrega local grátis. Para transportadoras, a meta continua vinculada à cotação do CEP e do carrinho.
+
 O preço no navegador vem somente do benefício retornado. A API exige `X-Wimifarma-Shipping-Benefit: 1`: clientes antigos precisam atualizar a página, sem obter um token novo enquanto exibem a antiga regra de R$ 99,90. Antes do CEP não aparece limiar universal. O mínimo é estimativa para a composição e cotação atuais, arredondada conservadoramente; adicionar produtos pode mudar custo, peso e benefício. Omitir essa estimativa quando o teto ou a modalidade impossibilita gratuidade integral.
 
 ## Preparação do catálogo e diagnóstico

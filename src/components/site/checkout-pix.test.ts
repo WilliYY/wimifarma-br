@@ -14,8 +14,9 @@ const bundle = build({
     import {CartProvider} from './src/components/site/cart-provider';
     import {CheckoutPage} from './src/components/site/checkout-page';
     import {PixDiscountBanner} from './src/components/site/pix-discount-banner';
+    const previousAddress = new URLSearchParams(location.search).has('previousAddress');
     createRoot(document.getElementById('root')).render(location.pathname==='/banner'?<PixDiscountBanner/>:
-      <CartProvider><CheckoutPage initialCustomer={{name:'',phone:'',email:'',street:'',neighborhood:''}}
+      <CartProvider><CheckoutPage initialCustomer={{name:'',phone:'',email:'',street:previousAddress?'Rua anterior':'',neighborhood:previousAddress?'Bairro anterior':''}}
         isCustomer={true} paymentConfig={location.search==='?manual'?null:{publicKey:'TEST-synthetic',environment:'test',brands:[]}}/></CartProvider>);`,
     resolveDir: process.cwd(), loader: "tsx" },
   bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic",
@@ -125,6 +126,69 @@ test("sem escolha de pagamento o handler também impede criar pedido", async () 
     await expect(page.getByRole("alert").filter({ hasText: "Escolha uma forma de pagamento para continuar." })).toBeVisible();
     assert.equal(orders.length, 0);
   });
+});
+
+test("checkout reaproveita CEP na entrega, preserva retirada, Pix e CEP do rascunho", async () => {
+  await fixture(390, async (page, orders) => {
+    const storageKey = "wimifarma-shipping-postal-code";
+    const lookups: string[] = [];
+    await page.route("**/api/cep/*", route => {
+      const postalCode = new URL(route.request().url()).pathname.split("/").at(-1);
+      if (postalCode !== "87525000" && postalCode !== "87485000") return route.fulfill({ status: 404, json: { error: "CEP não encontrado." } });
+      lookups.push(postalCode);
+      return route.fulfill({ json: { data: { postalCode, city: postalCode === "87525000" ? "Ivaté" : "Douradina", state: "PR", street: "Rua do destino", neighborhood: "Bairro do destino" } } });
+    });
+    await expect(page.getByLabel("Endereco", { exact: true })).toHaveValue("Rua anterior");
+    await expect(page.getByLabel("Bairro", { exact: true })).toHaveValue("Bairro anterior");
+    await page.getByText("Retirar na farmacia", { exact: true }).click();
+    await page.evaluate(key => localStorage.setItem(key, "87525000"), storageKey);
+    await page.reload();
+    await expect(page.getByRole("radio", { name: /Retirar na farmacia/ })).toBeChecked();
+    await expect(page.getByLabel("CEP", { exact: true })).toHaveCount(0);
+    assert.deepEqual(lookups, []);
+    await page.getByText("Pix", { exact: true }).click();
+    await page.getByText("Receber em casa", { exact: true }).click();
+    const postal = page.getByLabel("CEP", { exact: true });
+    await expect(postal).toHaveValue("87525-000");
+    await expect(page.getByLabel("Cidade", { exact: true })).toHaveValue("Ivaté");
+    await expect(page.getByLabel("UF", { exact: true })).toHaveValue("PR");
+    await expect(page.getByLabel("Endereco", { exact: true })).toHaveValue("Rua do destino");
+    await expect(page.getByLabel("Bairro", { exact: true })).toHaveValue("Bairro do destino");
+    await expect(page.getByRole("progressbar", { name: /Ivaté/ })).toHaveAttribute("aria-valuenow", "100");
+    await expect(page.getByRole("radio", { name: "Pix", exact: true })).toBeChecked();
+
+    await postal.fill("01001-000");
+    await expect(page.getByText("CEP não encontrado.")).toBeVisible();
+    await expect(page.getByRole("progressbar")).toHaveCount(0);
+    assert.equal(await page.evaluate(key => localStorage.getItem(key), storageKey), "87525000");
+
+    await postal.fill("87485-000");
+    await expect(page.getByRole("progressbar", { name: /Douradina/ })).toHaveAttribute("aria-valuenow", "100");
+    assert.equal(await page.evaluate(key => localStorage.getItem(key), storageKey), "87485000");
+    await page.evaluate(key => localStorage.setItem(key, "87525000"), storageKey);
+    await page.reload();
+    await expect(postal).toHaveValue("87485-000");
+    await expect(page.getByLabel("Cidade", { exact: true })).toHaveValue("Douradina");
+    await postal.fill("");
+    await page.getByText("Retirar na farmacia", { exact: true }).click();
+    await page.getByText("Receber em casa", { exact: true }).click();
+    await expect(postal).toHaveValue("");
+    await page.getByLabel("Numero", { exact: true }).fill("42");
+    await page.reload();
+    await expect(postal).toHaveValue("");
+    const number = page.getByLabel("Numero", { exact: true });
+    await expect(number).toHaveValue("42");
+    await number.fill("");
+    const street = page.getByLabel("Endereco", { exact: true });
+    const neighborhood = page.getByLabel("Bairro", { exact: true });
+    await street.fill("Rua digitada");
+    await neighborhood.fill("Bairro digitado");
+    await page.reload();
+    await expect(street).toHaveValue("Rua digitada");
+    await expect(neighborhood).toHaveValue("Bairro digitado");
+    await expect(postal).toHaveValue("");
+    assert.equal(orders.length, 0);
+  }, "/checkout?previousAddress");
 });
 
 test("checkout manual exige escolha e não converte cartão local em Pix ao trocar entrega", async () => {

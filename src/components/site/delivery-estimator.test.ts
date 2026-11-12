@@ -21,7 +21,7 @@ function quotePayload(route: Route, options: (typeof quote & { benefit?: unknown
     : { data: options };
 }
 
-async function fixture(run: (page: Page) => Promise<void>, cartOnly = false, fixtureProduct = product, purchasePanel = false, initialPostalCode = "") {
+async function fixture(run: (page: Page) => Promise<void>, cartOnly = false, fixtureProduct = product, purchasePanel = false, initialPostalCode?: string) {
   const bundle = await build({
     stdin: {
       contents: `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';
@@ -77,6 +77,7 @@ test("CEP inicial compartilhado fica preenchido sem consultar automaticamente", 
   await fixture(async page => {
     let requests = 0;
     await page.route("**/api/fretes/{cotacao,estimativa}", route => { requests++; return route.fulfill({ json: quotePayload(route, [quote]) }); });
+    await page.addInitScript(() => localStorage.setItem("wimifarma-shipping-postal-code", "87525000"));
     await page.goto(origin);
     await expect(page.getByRole("textbox", { name: "CEP", exact: true })).toHaveValue("80010-000");
     assert.equal(requests, 0);
@@ -84,6 +85,49 @@ test("CEP inicial compartilhado fica preenchido sem consultar automaticamente", 
     await expect(page.getByRole("status")).toContainText("PAC");
     assert.equal(requests, 1);
   }, false, product, false, "80010000");
+});
+
+test("CEP consultado é reaproveitado após recarregar, sem nova consulta automática", async () => {
+  await fixture(async page => {
+    const storageKey = "wimifarma-shipping-postal-code";
+    let requests = 0;
+    await page.route("**/api/fretes/estimativa", route => {
+      requests++;
+      if (route.request().postDataJSON().postalCode === "01001000") {
+        return route.fulfill({ status: 422, json: { error: "Cotação indisponível para este CEP." } });
+      }
+      return route.fulfill({ json: quotePayload(route, [quote]) });
+    });
+    await page.goto(origin);
+    const postal = page.getByRole("textbox", { name: "CEP", exact: true });
+    await postal.fill("80010-000");
+    assert.equal(await page.evaluate(key => localStorage.getItem(key), storageKey), null);
+    await page.getByRole("button", { name: "Consultar", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("PAC");
+    assert.equal(await page.evaluate(key => localStorage.getItem(key), storageKey), "80010000");
+    await consult(page, "87485");
+    assert.equal(await page.evaluate(key => localStorage.getItem(key), storageKey), "80010000");
+    await consult(page, "01001-000");
+    await expect(page.getByRole("status")).toContainText("Cotação indisponível para este CEP.");
+    assert.equal(await page.evaluate(key => localStorage.getItem(key), storageKey), "80010000");
+    await page.reload();
+    await expect(postal).toHaveValue("80010-000");
+    await expect(page.getByRole("status")).toHaveCount(0);
+    await postal.fill("");
+    await expect(postal).toHaveValue("");
+    assert.equal(requests, 2);
+  });
+});
+
+test("entrega local pode ser consultada com carrinho vazio", async () => {
+  await fixture(async page => {
+    await page.goto(origin);
+    await consult(page, "87485-000");
+    await expect(page.getByRole("progressbar", { name: /Douradina/ })).toHaveAttribute("aria-valuenow", "100");
+    await consult(page, "80010-000");
+    await expect(page.getByRole("status")).toContainText("Escolha os produtos para calcular o frete");
+    await expect(page.getByRole("progressbar")).toHaveCount(0);
+  }, true);
 });
 
 test("CEP nacional consulta frete do produto e quantidade atuais, sem misturar o carrinho", async () => {
@@ -119,6 +163,7 @@ test("CEP inválido não consulta e entrega local reconfere disponibilidade no s
       await consult(page, postalCode);
       await expect(page.getByRole("status")).toContainText(city);
       await expect(page.getByRole("status")).toContainText(/grátis|gratuita/i);
+      await expect(page.getByRole("progressbar", { name: new RegExp(city) })).toHaveAttribute("aria-valuenow", "100");
       await expect(page.getByRole("link", { name: /WhatsApp/ })).toHaveCount(0);
     }
     assert.equal(requests, 2);

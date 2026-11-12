@@ -12,7 +12,7 @@ const CatalogShippingContext = createContext<OpenShippingPreview | null>(null);
 
 export function CatalogShippingProvider({ children }: { children: ReactNode }) {
   const [selectedProduct, setSelectedProduct] = useState<CartProduct | null>(null);
-  const [postalCode, setPostalCode] = useState("");
+  const [postalCode, setPostalCode] = useState<string>();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const openPreview = useCallback<OpenShippingPreview>((product, trigger) => {
     triggerRef.current = trigger;

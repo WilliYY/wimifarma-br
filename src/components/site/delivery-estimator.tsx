@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useContext, useId, useLayoutEffect, useMemo, useState, type FormEvent } from "react";
+import { useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { CheckCircle2, Loader2, MapPin, MessageCircle, Store, Truck, XCircle } from "lucide-react";
 import {
   formatPostalCode,
@@ -10,7 +10,9 @@ import {
 import { createCheckoutQuote } from "@/features/shipping/checkout-quote";
 import { createPublicShippingEstimate, type PublicEstimateState } from "@/features/shipping/public-estimate-quote";
 import { shippingCustomerPrice } from "@/features/shipping/benefit-policy";
-import { ShippingBenefitNote } from "./shipping-benefit-note";
+import { LocalShippingBenefitNote, ShippingBenefitNote } from "./shipping-benefit-note";
+import { localDeliveryCity } from "@/features/shipping/delivery-policy";
+import { readPreferredPostalCode, rememberPreferredPostalCode } from "@/features/shipping/preferred-postal-code";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { formatCurrency } from "@/lib/utils";
@@ -21,7 +23,7 @@ import { requiresPurchaseAssistance } from "@/features/products/purchase-policy"
 
 type DeliveryEstimate = PublicEstimateState & { key: string; title: string; local: boolean; invalid: boolean };
 
-export function DeliveryEstimator({ product, quantity, initialPostalCode = "", onPostalCodeChange, compact = false }: {
+export function DeliveryEstimator({ product, quantity, initialPostalCode, onPostalCodeChange, compact = false }: {
   product?: CartProduct;
   quantity?: number;
   initialPostalCode?: string;
@@ -32,7 +34,8 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
   const sharedQuantity = useContext(ProductQuantityContext);
   const selectedQuantity = quantity ?? sharedQuantity?.quantity ?? 1;
   const items = useMemo(() => product ? [{ ...product, quantity: selectedQuantity }] : cartItems, [cartItems, product, selectedQuantity]);
-  const [postalCode, setPostalCode] = useState(() => formatPostalCode(initialPostalCode));
+  const [postalCode, setPostalCode] = useState(() => formatPostalCode(initialPostalCode ?? ""));
+  const postalCodeEdited = useRef(false);
   const instanceId = useId();
   const titleId = `${instanceId}-delivery-title`;
   const postalCodeId = `${instanceId}-postal-code`;
@@ -46,6 +49,13 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
   const requestKey = JSON.stringify(product ? { ...estimateRequest, stock: product.stock } : request);
   const result = estimate?.key === requestKey ? estimate : null;
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const localCity = result?.local ? localDeliveryCity(normalizedPostalCode) : null;
+
+  useEffect(() => {
+    if (initialPostalCode !== undefined || postalCodeEdited.current) return;
+    const saved = readPreferredPostalCode();
+    if (saved) setPostalCode(current => current || formatPostalCode(saved));
+  }, [initialPostalCode]);
 
   useLayoutEffect(() => {
     setEstimate(null);
@@ -62,18 +72,24 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
     };
     if (normalizedPostalCode.length !== 8) {
       showMessage(availability.title, "Informe um CEP com 8 números.", false, true);
-    } else if (!items.length) {
-      showMessage("Escolha os produtos para calcular o frete", "Adicione os produtos ao carrinho e consulte novamente. O valor depende dos itens, da quantidade e do CEP.");
-    } else if (items.some(requiresPharmacyShippingSupport)) {
+      return;
+    }
+    if (items.some(requiresPharmacyShippingSupport)) {
       showMessage("Entrega com atendimento da farmácia", "Um dos itens precisa de atendimento da farmácia para confirmar o envio. Consulte a equipe ou escolha retirada.");
     } else if (availability.available && !product) {
+      rememberPreferredPostalCode(normalizedPostalCode);
       showMessage(availability.title, "Entrega local grátis. Informe o endereço completo no checkout; a equipe confirma o atendimento.", true);
+    } else if (!items.length) {
+      showMessage("Escolha os produtos para calcular o frete", "Adicione os produtos ao carrinho e consulte novamente. O valor depende dos itens, da quantidade e do CEP.");
     } else {
-      const onState = (next: PublicEstimateState) => setEstimate({
-        ...next, key: requestKey, local: next.mode === "local", invalid: false,
-        ...(next.mode === "local" ? { message: "Entrega local grátis. Informe o endereço completo no checkout; a equipe confirma o atendimento." } : {}),
-        title: next.mode === "local" ? availability.title : next.busy ? "Consultando o frete" : next.options.length ? next.mode === "estimate" ? "Estimativa de frete" : "Opções de entrega" : "Confira as condições de entrega",
-      });
+      const onState = (next: PublicEstimateState) => {
+        if (next.mode === "local" || next.options.length > 0) rememberPreferredPostalCode(normalizedPostalCode);
+        setEstimate({
+          ...next, key: requestKey, local: next.mode === "local", invalid: false,
+          ...(next.mode === "local" ? { message: "Entrega local grátis. Informe o endereço completo no checkout; a equipe confirma o atendimento." } : {}),
+          title: next.mode === "local" ? availability.title : next.busy ? "Consultando o frete" : next.options.length ? next.mode === "estimate" ? "Estimativa de frete" : "Opções de entrega" : "Confira as condições de entrega",
+        });
+      };
       if (estimateRequest) estimateRunner.schedule(estimateRequest, onState, 0);
       else quoteRunner.schedule(request, onState, 0);
     }
@@ -113,6 +129,7 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
             aria-invalid={result?.invalid || undefined}
             maxLength={9}
             onChange={(event) => {
+              postalCodeEdited.current = true;
               const nextPostalCode = formatPostalCode(event.target.value);
               setPostalCode(nextPostalCode);
               onPostalCodeChange?.(nextPostalCode);
@@ -142,7 +159,7 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
             <p className="mt-1 text-xs font-semibold leading-5 text-muted">
               {result.mode === "estimate" && result.options.length ? "Envio sob consulta para este CEP." : result.message}
             </p>
-            {result.local && <strong className="mt-2 block text-sm text-pharma-green">Grátis</strong>}
+            {localCity ? <LocalShippingBenefitNote city={localCity} /> : result.local && <strong className="mt-2 block text-sm text-pharma-green">Grátis</strong>}
             {result.options.length > 0 && <>
               <ul className="mt-2 grid gap-1.5">
                 {result.options.map(option => {

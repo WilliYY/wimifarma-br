@@ -24,8 +24,6 @@ export function ShippingBenefitNote({ benefit, service }: { benefit?: ShippingBe
   const message = free
     ? "Frete grátis nesta cotação"
     : `Para frete grátis, faltam ${formatCurrency((remaining ?? 0) / 100)}`;
-  const trackStyle = { "--shipping-progress": `${progress}%` } as CSSProperties;
-
   return <div className="mt-1.5 min-w-0 text-xs leading-4 text-emerald-950">
     <p className="font-bold">{message}</p>
     {(!free || service) && (
@@ -35,6 +33,21 @@ export function ShippingBenefitNote({ benefit, service }: { benefit?: ShippingBe
         {!free && subsidyCents > 0 ? ` · ${formatCurrency(subsidyCents / 100)} de desconto` : null}
       </p>
     )}
+    <ShippingProgress progress={progress} message={message} service={service} />
+  </div>;
+}
+
+export function LocalShippingBenefitNote({ city }: { city: string }) {
+  const message = `Entrega grátis em ${city}`;
+  return <div className="mt-1.5 min-w-0 text-xs leading-4 text-emerald-950">
+    <p className="font-bold">{message}</p>
+    <ShippingProgress progress={100} message={message} service={city} />
+  </div>;
+}
+
+function ShippingProgress({ progress, message, service }: { progress: number; message: string; service?: string }) {
+  const trackStyle = { "--shipping-progress": `${progress}%` } as CSSProperties;
+  return (
     <div className="mt-1 flex h-6 items-center px-3" role="progressbar"
       aria-label={service ? `Progresso para frete grátis em ${service}` : "Progresso para frete grátis"}
       aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-valuetext={message}>
@@ -47,5 +60,5 @@ export function ShippingBenefitNote({ benefit, service }: { benefit?: ShippingBe
         </div>
       </div>
     </div>
-  </div>;
+  );
 }

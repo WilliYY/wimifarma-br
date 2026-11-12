@@ -6,7 +6,7 @@ Ampliação de 02/11: a consulta também passa a cobrir as vitrines da home e os
 
 Catálogo, ofertas e página de busca passam a oferecer **Ver frete** nos cartões comerciais. A ação abre uma janela compartilhada, sem navegar ao detalhe, adicionar ao carrinho ou alterar estoque. A simulação considera exatamente uma unidade do produto escolhido e reutiliza `DeliveryEstimator` e `/api/fretes/cotacao`.
 
-O CEP fica em memória durante a permanência na página e é reaproveitado ao consultar outro produto. Não há persistência adicional, cookie, rastreamento ou envio ao digitar na busca. Somente o envio explícito do formulário consulta a transportadora. Mudanças de CEP, fechamento e troca de produto invalidam a resposta anterior; o foco retorna ao botão que abriu a janela.
+O navegador lembra o CEP após uma cotação válida ou confirmação de cobertura local e sugere esse CEP ao consultar outro produto. O campo apagado permanece vazio ao reabrir o diálogo na mesma página. O envio do formulário inicia a consulta à transportadora. Mudanças de CEP, fechamento e troca de produto invalidam a resposta anterior. O foco retorna ao botão que abriu a janela.
 
 Há apenas um diálogo por página, com conteúdo desmontado ao fechar. Os cartões informativos de medicamentos em pesquisa por assunto permanecem sem chamada comercial. Home e correlatos conservam os cartões compactos existentes, sem acrescentar o botão nessa etapa. Cada instância do simulador usa IDs próprios para título, campo e resultado. A versão compacta aproveita toda a largura do resultado no celular e não repete a mensagem genérica para consultar CEP depois de já receber a cotação.
 

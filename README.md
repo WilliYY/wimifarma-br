@@ -36,7 +36,7 @@ Detalhe do produto com compra simplificada e orçamento público de frete separa
 
 Novos produtos em rascunho até conferência logística, ou em modo explícito somente Avise-me com compra bloqueada até a revisão ADMIN: [134](docs/134-prontidao-logistica-publicacao.md).
 
-Consulta de frete nos cartões de catálogo e busca, com um diálogo compartilhado e CEP em memória, preservando revisão logística e cálculo no servidor: [132](docs/132-consulta-frete-no-catalogo.md). Preparação, regras de produtos e custos do Mercado Livre: [133](docs/133-mercado-livre-preparacao.md).
+Consulta de frete nos cartões de catálogo e busca, com um diálogo compartilhado e CEP lembrado no navegador, preservando revisão logística e cálculo no servidor. [Consulta de frete](docs/132-consulta-frete-no-catalogo.md) · [Preparação, regras de produtos e custos do Mercado Livre](docs/133-mercado-livre-preparacao.md).
 
 Conferência logística de 01/11: 3.056 de 3.061 ativos com peso e medidas preenchidos, três exceções completadas com estimativas auditadas e cinco pendências preservadas. Transporte não é habilitado pelo preenchimento: [129](docs/129-hipoteses-por-tipo-de-embalagem.md#continuidade-das-exceções--01112026).
 
