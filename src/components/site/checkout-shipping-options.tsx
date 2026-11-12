@@ -11,7 +11,8 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export function CheckoutShippingOptions({ postalCode, selected, onSelect, discountCents = 0, available = false, onPickup }: { postalCode: string; selected?: ShippingSelection; onSelect: (option?: ShippingSelection) => void; discountCents?: number; available?: boolean; onPickup: () => void }) {
   const { items } = useCart();
-  const needsSupport = items.some(requiresPharmacyShippingSupport);
+  const assistedItems = items.filter(requiresPharmacyShippingSupport);
+  const needsSupport = assistedItems.length > 0;
   const requestKey = JSON.stringify({ discountCents, postalCode: postalCode.replace(/\D/g, ""), items: items.map((item) => ({ productId: item.id, quantity: item.quantity, expectedUnitPriceCents: item.unitPriceCents })).sort((a, b) => a.productId.localeCompare(b.productId)) });
   const request = useMemo(() => JSON.parse(requestKey) as { discountCents: number; postalCode: string; items: { productId: string; quantity: number; expectedUnitPriceCents: number }[] }, [requestKey]);
   const canQuote = available && !needsSupport && /^\d{8}$/.test(request.postalCode) && items.length > 0;
@@ -57,7 +58,14 @@ export function CheckoutShippingOptions({ postalCode, selected, onSelect, discou
     ?? goalOptions.sort((a, b) => a.benefit!.remainingCents! - b.benefit!.remainingCents! || a.benefit!.minimumOrderCents! - b.benefit!.minimumOrderCents!)[0]
     ?? benefitOptions.find(({ benefit }) => benefit?.status === "discounted");
   if (!available || needsSupport) return <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/60 p-4" role="status">
-    <div className="flex items-start gap-3"><Truck className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" /><div className="min-w-0"><h3 className="text-sm font-bold text-ink">{needsSupport ? "Este carrinho precisa de atendimento" : "Entrega por transportadora indisponível"}</h3><p className="mt-1.5 text-xs leading-5 text-muted">{needsSupport ? "Itens sujeitos a receita e Farmácia Popular precisam de avaliação farmacêutica. Fale com a equipe antes de comprar." : "A consulta de transportadoras está temporariamente indisponível. Escolha retirada ou consulte a equipe para combinar o recebimento."}</p></div></div>
+    <div className="flex items-start gap-3">
+      <Truck className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+      <div className="min-w-0">
+        <h3 className="text-sm font-bold text-ink">{needsSupport ? "Este carrinho precisa de atendimento" : "Entrega por transportadora indisponível"}</h3>
+        <p className="mt-1.5 text-xs leading-5 text-muted">{needsSupport ? "Estes itens precisam da avaliação da equipe antes da compra." : "A consulta de transportadoras está temporariamente indisponível. Escolha retirada ou consulte a equipe para combinar o recebimento."}</p>
+        {needsSupport && <ul className="mt-1 list-disc space-y-1 pl-4 text-xs font-semibold leading-5 text-ink">{assistedItems.map((item) => <li key={item.id}>{item.name}</li>)}</ul>}
+      </div>
+    </div>
     <div className="mt-3 grid grid-cols-2 gap-2"><button className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-line bg-white px-2 text-xs font-bold text-ink transition hover:border-brand focus-visible:ring-2 focus-visible:ring-brand" onClick={onPickup} type="button"><Store className="h-4 w-4 shrink-0" />Retirar na loja</button><a className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-white px-2 text-xs font-bold text-pharma-green ring-1 ring-emerald-200 transition hover:bg-emerald-50 focus-visible:ring-2 focus-visible:ring-pharma-green" href={buildWhatsAppUrl("Olá! Gostaria de consultar a entrega de um pedido pelo site.")} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4 shrink-0" />Falar com a equipe</a></div>
   </div>;
   return <div className="mt-5 rounded-xl border border-line bg-surface-subtle p-4 sm:p-5">

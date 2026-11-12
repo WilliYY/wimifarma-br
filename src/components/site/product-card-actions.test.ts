@@ -8,17 +8,20 @@ import postcss from "postcss";
 import tailwind from "@tailwindcss/postcss";
 
 const origin = "http://127.0.0.1:3196";
-const quantityLabel = "Quantidade de caixas de Produto sintético";
+const quantityLabel = "Quantidade de unidades de Produto sintético";
 
 const bundle = build({
   stdin: {
     contents: `import React from 'react';
       import {createRoot} from 'react-dom/client';
       import {CartProvider,useCart} from './src/components/site/cart-provider';
+      import {CartStorage} from './src/components/site/cart-storage';
+      import {Toaster} from 'sonner';
       import {PublicProductCard} from './src/components/site/public-product-card';
+      import {ProductPurchasePanel} from './src/components/site/product-purchase-panel';
       import {ProductPmcDetails} from './src/components/site/product-pmc';
       const kind=new URLSearchParams(location.search).get('kind');
-      const product={id:'synthetic-product',slug:'produto-sintetico',name:'Produto sintético',
+      const product={id:'synthetic-product',slug:'produto-sintetico',name:kind==='detail-kit'?'Kit Elmex Sensitive 2 × 110 g':kind==='soap'?'Sabonete sintético 90 g':'Produto sintético',
         imageUrl:kind==='photo-grid'?'/fixture-product.svg':null,category:'Produto',brand:'Marca sintética',activeIngredients:[],searchTerms:[],
         price:kind==='soap'?'3.44':kind==='promotion'||kind==='pmc-above'?'100.00':kind==='tiny'?'0.17':kind==='penny'?'0.01':'6.87',
         promotionalPrice:kind==='promotion'||kind==='pmc-above'?'80.00':null,isPopularPharmacy:false,requiresPrescription:kind==='restricted',
@@ -26,6 +29,17 @@ const bundle = build({
         ...(kind.startsWith('pmc')?{requiresPrescription:kind==='pmc-rx',catalogClassification:{kind:'MEDICINE',medicineClass:'GENERIC',ethical:false,otc:kind!=='pmc-rx'},
           pmcReference:{amountCents:kind==='pmc-above'?7000:1000,column:'PMC 0 %',publishedOn:'2026-10-09',sourceUrl:'https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos/arquivos/lista_pmc__20261009_115232671.xlsx/@@download/file',presentation:'10 MG COM X 10',laboratory:'Laboratório sintético',registration:'1234567890123',rates:[{label:'PMC 0 %',cents:1000},{label:'PMC 19,5 %',cents:1250},{label:'PMC 19,5 %  ALC',cents:1200}]}}:{}),
         inventorySource:kind==='demand'?'DISTRIBUTOR':'PHARMACY',supplierDemandAllowed:kind==='demand'};
+      const cartProduct={...product,unitPriceCents:687,originalPriceCents:null};
+      const addToOtherCart=(cart,id)=>cart.commit({type:'add',product:{...cartProduct,id},quantity:1});
+      if(kind==='cart-limit') {
+        const cart=new CartStorage(localStorage);
+        for(let i=0;i<30;i++) addToOtherCart(cart,'other-'+i);
+      }
+      window.removeFromAnotherCart=(id=product.id,replacement)=>{
+        const cart=new CartStorage(localStorage);
+        cart.commit({type:'remove',productId:id});
+        if(replacement) addToOtherCart(cart,replacement);
+      };
       const cards=kind==='diaper-grid'?[
         {...product,id:'diaper-78',slug:'fralda-78',name:'Fralda sintética M 78 unidades',brand:'Marca sintética',category:'Fraldas infantis',prescriptionType:'UNREVIEWED',price:'116.73'},
         {...product,id:'diaper-88',slug:'fralda-88',name:'Fralda sintética M 88 unidades',brand:'Marca sintética',category:'Fraldas infantis',prescriptionType:'UNREVIEWED',price:'130.00',promotionalPrice:'117.98'},
@@ -39,7 +53,7 @@ const bundle = build({
         {...product,id:'synthetic-similar',slug:'similar-sintetico',name:'Tadalafila 5 mg 30 comprimidos revestidos',brand:'MULTILAB INDUSTRIA E COMERCIO DE PRODUTOS FARMACEUTICOS LTDA',price:'12.90',requiresPrescription:true,prescriptionType:kind==='large-grid'?'CONTROLLED':'ORDINARY',cashbackEnabled:true,cashbackRateBps:100,
           catalogClassification:{kind:'MEDICINE',medicineClass:'SIMILAR',ethical:true,otc:false}}
       ]:[product];
-      function CartState(){const cart=useCart();return <output hidden data-testid="cart-state">{JSON.stringify(cart.items)}</output>};createRoot(document.getElementById('root')).render(kind==='pmc-details'?<ProductPmcDetails reference={product.pmcReference}/>:<CartProvider><CartState/>{cards.map(item=><PublicProductCard key={item.id} product={item}/>)}</CartProvider>);`,
+      function CartState(){const cart=useCart();return <output hidden data-testid="cart-state">{JSON.stringify(cart.items)}</output>};createRoot(document.getElementById('root')).render(kind==='pmc-details'?<ProductPmcDetails reference={product.pmcReference}/>:<CartProvider><CartState/>{kind==='cart-limit'&&<Toaster/>}{kind==='detail-kit'?<ProductPurchasePanel product={cartProduct}/>:cards.map(item=><PublicProductCard key={item.id} product={item}/>)}</CartProvider>);`,
     resolveDir: process.cwd(),
     loader: "tsx",
   },
@@ -95,6 +109,14 @@ async function fixture(run: (page: Page) => Promise<void>, kind = "physical") {
 
 async function expectCartQuantity(page: Page, quantity: number) {
   await expect.poll(() => page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent ?? "[]")[0]?.quantity)).toBe(quantity);
+}
+
+async function buyAfterExternalRemoval(button: ReturnType<Page["getByRole"]>) {
+  await button.evaluate(element => {
+    // Simulate another cart writing to storage before this tab receives its storage event.
+    (window as unknown as { removeFromAnotherCart(): void }).removeFromAnotherCart();
+    (element as HTMLButtonElement).click();
+  });
 }
 
 test("fraldas mostram preço do pacote e por fralda sem mudar compra, promoção ou alinhamento", async () => {
@@ -279,11 +301,12 @@ test("cards alinham preços e ações com promoção, cashback, fornecedor e gen
   }, "grid");
 });
 
-test("card permite digitar caixas e mantém a quantidade ao comprar e usar mais/menos", async () => {
+test("card permite digitar unidades e mantém a quantidade ao comprar e usar mais/menos", async () => {
   await fixture(async page => {
     await page.getByRole("button", { name: "Adicionar", exact: true }).click();
     const input = page.getByRole("textbox", { name: quantityLabel });
     await expect(input).toHaveAttribute("inputmode", "numeric");
+    await expect(input).toHaveAttribute("title", "Digite a quantidade de unidades (de 1 a 15)");
     await input.fill("12");
     await expectCartQuantity(page, 12);
     if (process.env.PRODUCT_CARD_CAPTURE_ROOT) {
@@ -298,10 +321,56 @@ test("card permite digitar caixas e mantém a quantidade ao comprar e usar mais/
     await expect(input).toHaveValue("13");
     await page.getByRole("button", { name: "Diminuir Produto sintético", exact: true }).click();
     await expect(input).toHaveValue("12");
-    await page.getByRole("button", { name: "Comprar", exact: true }).click();
+    const buy = page.getByRole("button", { name: "Comprar", exact: true });
+    await buy.click();
     await expectCartQuantity(page, 12);
     assert.equal(await page.evaluate(() => (window as unknown as { lastNavigation: string }).lastNavigation), "/checkout");
+    await buyAfterExternalRemoval(buy);
+    await expectCartQuantity(page, 1);
   });
+});
+
+test("ficha do kit usa a quantidade selecionada na primeira compra e preserva a quantidade já na cesta", async () => {
+  await fixture(async page => {
+    const input = page.getByRole("spinbutton", { name: "Quantidade de kits de Kit Elmex Sensitive 2 × 110 g" });
+    await expect(page.getByText("Total de 1 kit", { exact: true })).toBeVisible();
+    await expect(input).toHaveAttribute("title", "Digite a quantidade de kits (de 1 a 15)");
+    await input.fill("2");
+    const buy = page.getByRole("button", { name: "Comprar agora" });
+    await buy.click();
+    await expectCartQuantity(page, 2);
+    await input.fill("3");
+    await expect(page.getByText("Total de 3 kits", { exact: true })).toBeVisible();
+    await expect(page.getByText("Comprar agora mantém 2 kits na cesta. Adicionar ao carrinho soma a quantidade selecionada.", { exact: true })).toBeVisible();
+    await buy.click();
+    await expectCartQuantity(page, 2);
+    assert.equal(await page.evaluate(() => (window as unknown as { lastNavigation: string }).lastNavigation), "/checkout");
+    await page.getByRole("button", { name: "Adicionar ao carrinho" }).click();
+    await expectCartQuantity(page, 5);
+    assert.equal(await page.evaluate(() => (window as unknown as { lastNavigation: string }).lastNavigation), "/carrinho");
+    await buyAfterExternalRemoval(buy);
+    await expectCartQuantity(page, 3);
+    assert.equal(await page.evaluate(() => (window as unknown as { lastNavigation: string }).lastNavigation), "/checkout");
+  }, "detail-kit");
+});
+
+test("Comprar usa o limite atualizado quando outra aba altera a cesta antes do clique", async () => {
+  await fixture(async page => {
+    const buy = page.getByRole("button", { name: "Comprar", exact: true });
+    await expect(buy).toBeEnabled();
+    const clickAfterChange = (removeId: string, replacement?: string) => buy.evaluate((element, { removeId, replacement }) => {
+      const state = window as unknown as { removeFromAnotherCart(id: string, replacement?: string): void; lastNavigation?: string };
+      state.lastNavigation = undefined;
+      state.removeFromAnotherCart(removeId, replacement);
+      (element as HTMLButtonElement).click();
+      return state.lastNavigation;
+    }, { removeId, replacement });
+    assert.equal(await clickAfterChange("other-0"), "/checkout");
+    await expect(page.getByRole("textbox", { name: quantityLabel })).toHaveValue("1");
+    assert.equal(await clickAfterChange("synthetic-product", "other-0"), undefined);
+    await expect(page.getByText("Seu carrinho ja tem 30 produtos diferentes.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: quantityLabel })).toHaveCount(0);
+  }, "cart-limit");
 });
 
 test("card rejeita letras, sinais e frações; normaliza vazio, zero e limite físico", async () => {
@@ -384,6 +453,7 @@ test("card mostra somente o preço real do carrinho, sem antecipar Pix ou criar 
     }
     await page.getByRole("button", { name: "Adicionar", exact: true }).click();
     await expectCartQuantity(page, 1);
+    await expect(page.getByRole("textbox", { name: "Quantidade de unidades de Sabonete sintético 90 g" })).toHaveAttribute("title", "Digite a quantidade de unidades (de 1 a 15)");
     const item = await page.evaluate(() => JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent!)[0]);
     assert.equal(item.unitPriceCents, 344);
     assert.equal(item.originalPriceCents, null);

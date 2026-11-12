@@ -166,7 +166,7 @@ test("clique e Enter abrem produto; adicionar e quantidade continuam interativos
     await expect.poll(() => navigations(page)).toEqual(["/produto/correlato-sintetico-0", "/produto/correlato-sintetico-0"]);
 
     await first.getByRole("button", { name: "Adicionar", exact: true }).click();
-    const quantity = first.getByRole("textbox", { name: "Quantidade de caixas de Correlato sintético 0", exact: true });
+    const quantity = first.getByRole("textbox", { name: "Quantidade de unidades de Correlato sintético 0", exact: true });
     await quantity.fill("3");
     await first.getByRole("button", { name: "Aumentar Correlato sintético 0", exact: true }).click();
     await expect(quantity).toHaveValue("4");

@@ -36,6 +36,8 @@ test("carrinho recarregado não propõe no-op; alterações reais e consulta con
     await page.addInitScript(item => localStorage.setItem("wimifarma-cart-v1", JSON.stringify([item])), { ...product, quantity: 2 });
     await page.goto("http://127.0.0.1:3198/carrinho");
     await page.reload();
+    await expect(page.getByText("Subtotal", { exact: true })).toBeVisible();
+    await expect(page.getByText("Total", { exact: true })).toHaveCount(0);
     await expect(page.getByText("R$ 4,16", { exact: true })).toHaveCount(2);
     const consult = page.getByRole("button", { name: "Consultar dados atuais" });
     await consult.click();

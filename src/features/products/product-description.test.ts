@@ -25,6 +25,14 @@ test("preserva o texto editorial, inclusive suas quebras de linha", () => {
   assert.equal(buildPublicProductDescription({ ...importedProduct, description: `${importedProduct.description} Informação revisada.` }), `${importedProduct.description} Informação revisada.`);
 });
 
+test("remove a nota de importação legada e preserva a descrição pública da fralda", () => {
+  const name = "Fralda Mili Vita Adulto Comfort M 9 unidades";
+  const first = "Fralda Mili Vita Adulto Comfort M 9 unidades.";
+  const last = "Confira o tamanho, a quantidade e as orientações na embalagem.";
+  const internal = "Unidade comercial identificada na fonte do distribuidor, sem fracionar caixa ou dividir custos.";
+  assert.equal(buildPublicProductDescription({ name, brand: "Mili", description: first + " " + internal + " " + last }), first + " " + last);
+});
+
 test("não transfere benefícios entre shampoo, condicionador, pré-shampoo e tamanhos", () => {
   for (const [name, ean] of [
     ["COND DERCOS COLLAGEN REPAIR 17 200G", "07908966523737"],

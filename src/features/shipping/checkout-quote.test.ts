@@ -1,10 +1,22 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createCheckoutQuote } from "./checkout-quote";
+import { createPublicShippingEstimate, type PublicEstimateState } from "./public-estimate-quote";
 
 const request = { postalCode: "01001000", items: [{ productId: "synthetic-product", quantity: 1, expectedUnitPriceCents: 2000 }] };
 const option = { provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC", priceCents: 1500, deliveryDays: 5, token: "synthetic-quote" };
 const flush = () => new Promise<void>((resolve) => setImmediate(resolve));
+
+test("public product estimate explains the 20-unit limit without scheduling a request", (context) => {
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  const fetchMock = context.mock.method(globalThis, "fetch", async () => Response.json({ data: [] }));
+  const states: PublicEstimateState[] = [];
+  createPublicShippingEstimate().schedule({ postalCode: "01001000", productId: "synthetic-product", quantity: 21 }, (state) => states.push(state));
+  context.mock.timers.tick(450);
+  assert.equal(fetchMock.mock.callCount(), 0);
+  assert.equal(states.length, 1);
+  assert.match(states[0].message, /até 20 unidades.*farmácia/);
+});
 
 test("checkout quote waits 450 ms and replacement cart cancels the previous debounce", async (context) => {
   context.mock.timers.enable({ apis: ["setTimeout"] });

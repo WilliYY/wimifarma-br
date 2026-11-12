@@ -59,6 +59,7 @@ export function PublicProductCard({ product, showShippingEstimate = false, varia
   } satisfies CartProduct;
   const diaperPrice = diaperPackageUnitPrice(product, cartProduct.unitPriceCents);
   const saleUnit = productSaleUnitLabel(product);
+  const quantityUnit = saleUnit ?? (diaperPrice ? "1 pacote" : null);
   const showShippingBenefit = showShippingEstimate && product.stock > 0 && !product.requiresPrescription && !product.isPopularPharmacy && !requiresPurchaseAssistance(cartProduct);
 
   if (compact) return (
@@ -87,7 +88,7 @@ export function PublicProductCard({ product, showShippingEstimate = false, varia
           <strong className="text-xl font-black leading-6 text-brand">{formatCurrency(cartProduct.unitPriceCents / 100)}</strong>
           <span className="text-xs leading-4 text-muted">{saleUnit ? `Para ${saleUnit.toLowerCase()}.` : "Para 1 unidade."}</span>
         </div>
-        <ProductCardActions compact product={cartProduct} />
+        <ProductCardActions compact product={cartProduct} saleUnitLabel={quantityUnit} />
       </div>
     </ProductCardSurface>
   );
@@ -147,7 +148,7 @@ export function PublicProductCard({ product, showShippingEstimate = false, varia
               <p className="text-[0.68rem] leading-4 text-muted">{diaperPrice ? `${formatCurrency(diaperPrice.perDiaperCents / 100)} por fralda` : saleUnit ? `Para ${saleUnit.toLowerCase()}.` : "Para 1 unidade."}</p>
             </div>
           </div>
-          <ProductCardActions product={cartProduct} />
+          <ProductCardActions product={cartProduct} saleUnitLabel={quantityUnit} />
           {showShippingEstimate ? <CatalogShippingButton product={cartProduct} /> : null}
         </div>
       </div>

@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { shippingOptionSchema } from "./schema";
+import { AUTOMATIC_QUOTE_MAX_UNITS, shippingOptionSchema } from "./schema";
 
 export const publicShippingEstimateRequestSchema = z.object({
   productId: z.string().min(1).max(64),
   postalCode: z.string().regex(/^(?!0{8}$)\d{8}$/),
-  quantity: z.number().int().min(1).max(20),
+  quantity: z.number().int().min(1).max(AUTOMATIC_QUOTE_MAX_UNITS),
 }).strict();
 
 // Estimates never carry a checkout authorization or private packing/product data.

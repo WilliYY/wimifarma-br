@@ -8,7 +8,11 @@ A galeria do detalhe também deixa de exibir a legenda visual “Imagem ilustrat
 
 O teste de apresentação da página verifica a ausência do bloco e da mensagem removidos, mantendo galeria, compra, entrega, relacionados e informações do produto.
 
+Na revisão de 12/11/2026, a ficha passou a separar concentração e contagem para medicamentos como a dipirona Medley de 1 g com 10 comprimidos. Kits com composição explícita exibem os componentes e a unidade comercial do conjunto. As medidas de conteúdo vêm da apresentação cadastrada. Peso e dimensões de envio vêm do perfil logístico.
+
 ## Orçamento público separado da aprovação de transporte
+
+No checkout, a opção de transportadora identifica pelo nome os itens do carrinho que exigem atendimento farmacêutico e mantém a orientação de falar com a equipe. A cotação automática atende até 20 unidades no pedido. Acima desse limite, a mensagem orienta combinar a embalagem e calcular o frete com a farmácia.
 
 Produto e diálogo do catálogo passam a consultar `POST /api/fretes/estimativa`, com corpo estrito contendo apenas `productId`, `postalCode` e `quantity` (até 20 unidades). Produto ativo, preço atual, peso, medidas e características de carga são recuperados no servidor. A consulta mantém validação de origem/JSON/tamanho, limite de requisições e resposta privada sem cache.
 

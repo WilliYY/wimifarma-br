@@ -5,6 +5,9 @@ import { shippingCargoKindsSchema } from "./cargo-policy";
 import { shippingOperationalCostSchema } from "./operational-cost-schema";
 import { shippingBenefitPolicySchema, shippingBenefitSchema } from "./benefit-policy";
 
+export const AUTOMATIC_QUOTE_MAX_UNITS = 20;
+export const AUTOMATIC_QUOTE_LIMIT_MESSAGE = `A cotação automática atende até ${AUTOMATIC_QUOTE_MAX_UNITS} unidades por pedido. Para enviar mais, fale com a farmácia para combinar a embalagem e calcular o frete.`;
+
 export const shippingServiceIdsSchema = z.array(z.number().int().positive()).max(50);
 const citySchema = z.string().trim().min(2).max(100);
 const stateSchema = z.enum(["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"]);

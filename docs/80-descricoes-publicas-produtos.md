@@ -8,6 +8,8 @@ Em 19/10/2026, o lojista pediu descrições mais bonitas e atraentes para o cons
 
 A mudança ocorre na apresentação pública: descrição visível, metadados de compartilhamento e dados estruturados `Product` recebem o mesmo conteúdo. O texto original continua no cadastro ADMIN. Não há gravação em massa, migration, chamada de IA ou consulta externa durante a navegação. Uma edição editorial no ADMIN passa a aparecer normalmente.
 
+Descrições legadas podem conter uma nota de importação sobre fracionamento de caixa e divisão de custos. A ficha pública, os metadados e os dados estruturados omitem essa frase operacional e conservam o texto editorial adjacente. A regressão usa a descrição da fralda Mili Vita Adulto Comfort M de 9 unidades.
+
 ## Identidade e limites
 
 - As famílias reconhecidas incluem shampoos, pré-shampoos, condicionadores, máscaras capilares, proteção solar, pós-sol, desodorantes, limpeza, esfoliação, cuidado labial, mãos/pés, olhos, barbear, séruns, corpo, rosto e hidratação. As abreviações do cadastro são tratadas apenas para escolher o texto; o nome, a marca, a variante e a unidade continuam preservados.

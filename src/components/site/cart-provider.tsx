@@ -40,7 +40,7 @@ type CartContextValue = {
   items: CartItem[];
   itemCount: number;
   subtotalCents: number;
-  addProduct: (product: CartProduct, quantity?: number) => void;
+  addProduct: (product: CartProduct, quantity?: number, options?: { onlyIfMissing?: boolean }) => boolean;
   clearCart: () => void;
   removeProduct: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -95,7 +95,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [publish]);
 
   const commit = useCallback((operation: CartOperation) => {
-    if (cartStorage.current) publish(cartStorage.current.commit(operation));
+    const next = cartStorage.current?.commit(operation);
+    if (next) publish(next);
+    return next;
   }, [publish]);
 
   useEffect(() => {
@@ -121,15 +123,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => { active = false; clearTimeout(timer); if (retry) clearTimeout(retry); };
   }, [hydrated, items]);
 
-  const addProduct = useCallback((product: CartProduct, quantity = 1) => {
+  const addProduct = useCallback<CartContextValue["addProduct"]>((product, quantity = 1, options) => {
     if (
       !Number.isFinite(quantity) || product.stock < 1 ||
       requiresPurchaseAssistance(product)
     ) {
-      return;
+      return false;
     }
 
-    commit({ type: "add", product: { ...product, imageUrl: publicProductImageUrl(product) }, quantity });
+    const next = commit({ type: "add", product: { ...product, imageUrl: publicProductImageUrl(product) }, quantity, onlyIfMissing: options?.onlyIfMissing });
+    return next?.some(item => item.id === product.id) ?? false;
   }, [commit]);
 
   const updateQuantity = useCallback((productId: string, quantity: number) => {

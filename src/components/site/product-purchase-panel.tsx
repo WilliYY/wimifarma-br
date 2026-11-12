@@ -20,18 +20,23 @@ import { orderQuantityLimit } from "@/features/products/quantity";
 import { RestockButton } from "@/components/site/restock-button";
 import { formatCurrency } from "@/lib/utils";
 import { productDisplayName } from "@/features/products/display-name";
+import { productSaleUnitLabel } from "@/features/products/product-presentation";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
-import { ProductQuantityContext } from "./product-quantity";
+import { ProductQuantityContext, productQuantityUnits } from "./product-quantity";
 
 function QuantitySelector({
   maxQuantity,
   onChange,
   quantity,
+  productName,
+  unitPlural,
 }: {
   maxQuantity: number;
   onChange: (quantity: number) => void;
   quantity: number;
+  productName: string;
+  unitPlural: string;
 }) {
   return (
     <div role="group" aria-label="Quantidade do produto" className="grid h-12 shrink-0 grid-cols-[2.75rem_3rem_2.75rem] items-center overflow-hidden rounded-xl border border-line bg-surface-subtle transition-colors hover:border-brand/35">
@@ -44,7 +49,7 @@ function QuantitySelector({
       >
         <Minus className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" aria-hidden="true" />
       </button>
-      <input aria-label="Quantidade desejada" className="min-w-0 bg-transparent text-center text-base font-black text-ink outline-brand [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:text-sm" inputMode="numeric" max={maxQuantity} min={1} onChange={event => { const value = Number(event.target.value); if (Number.isSafeInteger(value) && value >= 1) onChange(Math.min(value, maxQuantity)); }} type="number" value={quantity} />
+      <input aria-label={`Quantidade de ${unitPlural} de ${productName}`} className="min-w-0 bg-transparent text-center text-base font-black text-ink outline-brand [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:text-sm" inputMode="numeric" max={maxQuantity} min={1} onChange={event => { const value = Number(event.target.value); if (Number.isSafeInteger(value) && value >= 1) onChange(Math.min(value, maxQuantity)); }} title={`Digite a quantidade de ${unitPlural} (de 1 a ${maxQuantity})`} type="number" value={quantity} />
       <button
         aria-label="Aumentar quantidade"
         className="group flex h-full cursor-pointer items-center justify-center text-brand transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand disabled:cursor-not-allowed disabled:opacity-35"
@@ -68,6 +73,10 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
   const purchasePanelRef = useRef<HTMLDivElement>(null);
   const requiresAssistance = requiresPurchaseAssistance(product);
   const maxQuantity = orderQuantityLimit(product);
+  const units = productQuantityUnits(productSaleUnitLabel(product));
+  const selectedQuantity = `${quantity} ${quantity === 1 ? units.singular : units.plural}`;
+  const cartItem = items.find(item => item.id === product.id);
+  const cartQuantity = cartItem ? `${cartItem.quantity} ${cartItem.quantity === 1 ? units.singular : units.plural}` : null;
 
   useEffect(() => {
     let animationFrame: number | null = null;
@@ -135,7 +144,12 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
 
   function continuePurchase(destination: "/carrinho" | "/checkout") {
     if (!hydrated) return;
-    if (items.length >= 30 && !items.some(item => item.id === product.id)) {
+    if (destination === "/checkout") {
+      if (addProduct(product, quantity, { onlyIfMissing: true })) router.push(destination);
+      else toast.error("Seu carrinho ja tem 30 produtos diferentes.");
+      return;
+    }
+    if (items.length >= 30 && !cartItem) {
       toast.error("Seu carrinho ja tem 30 produtos diferentes.");
       return;
     }
@@ -157,13 +171,16 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
             maxQuantity={maxQuantity}
             onChange={changeQuantity}
             quantity={quantity}
+            productName={product.name}
+            unitPlural={units.plural}
           />
           </div>
           <div className="text-right" aria-live="polite" aria-atomic="true">
-            <p className="text-xs text-muted">Total de {quantity} {quantity === 1 ? "unidade" : "unidades"}</p>
+            <p className="text-xs text-muted">Total de {selectedQuantity}</p>
             <strong className="mt-1 block text-xl font-bold text-ink tabular-nums">{formatCurrency(product.unitPriceCents * quantity / 100)}</strong>
           </div>
         </div>
+        {cartQuantity && <p className="mb-3 text-xs leading-5 text-muted">Comprar agora mantém {cartQuantity} na cesta. Adicionar ao carrinho soma a quantidade selecionada.</p>}
         <div className="grid gap-2.5">
           <button
             className="group inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-brand/30 bg-white px-4 py-2 text-sm font-bold text-brand transition-colors hover:border-brand hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:min-h-12 sm:px-5"
@@ -215,14 +232,16 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
               </div>
             </div>
 
-            <div className="shrink-0"><span className="block text-xs text-muted">{quantity} {quantity === 1 ? "unidade" : "unidades"}</span><strong className="text-xl font-bold text-brand tabular-nums sm:text-2xl">{formatCurrency(product.unitPriceCents * quantity / 100)}</strong></div>
-            <div className="hidden sm:block">
+            <div className="shrink-0"><span className="block text-xs text-muted">{cartQuantity ? `${cartQuantity} na cesta` : selectedQuantity}</span><strong className="text-xl font-bold text-brand tabular-nums sm:text-2xl">{formatCurrency((cartItem ? cartItem.unitPriceCents * cartItem.quantity : product.unitPriceCents * quantity) / 100)}</strong></div>
+            {!cartItem && <div className="hidden sm:block">
               <QuantitySelector
                 maxQuantity={maxQuantity}
                 onChange={changeQuantity}
                 quantity={quantity}
+                productName={product.name}
+                unitPlural={units.plural}
               />
-            </div>
+            </div>}
             <button
               className="group inline-flex min-h-12 min-w-36 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-bold text-white transition-colors hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:flex-none"
               onClick={() => continuePurchase("/checkout")}

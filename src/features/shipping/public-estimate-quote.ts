@@ -1,4 +1,5 @@
 import { publicShippingEstimateRequestSchema, publicShippingEstimateSchema, type PublicShippingEstimateRequest, type PublicShippingEstimate } from "./public-estimate-contract";
+import { AUTOMATIC_QUOTE_LIMIT_MESSAGE, AUTOMATIC_QUOTE_MAX_UNITS } from "./schema";
 
 export type PublicEstimateState = { options: PublicShippingEstimate["options"]; busy: boolean; message: string; mode?: PublicShippingEstimate["mode"]; unavailable?: boolean; notFound?: boolean };
 
@@ -18,7 +19,10 @@ export function createPublicShippingEstimate() {
   function schedule(request: PublicShippingEstimateRequest, onState: (state: PublicEstimateState) => void, delay = 450) {
     cancel();
     if (!publicShippingEstimateRequestSchema.safeParse(request).success) {
-      onState({ options: [], busy: false, message: "Confira o CEP e a quantidade dos itens antes de consultar o frete." });
+      const message = request.quantity > AUTOMATIC_QUOTE_MAX_UNITS
+        ? AUTOMATIC_QUOTE_LIMIT_MESSAGE
+        : "Confira o CEP e a quantidade dos itens antes de consultar o frete.";
+      onState({ options: [], busy: false, message });
       return;
     }
     const currentGeneration = generation;

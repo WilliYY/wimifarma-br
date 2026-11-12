@@ -7,7 +7,7 @@ export const CART_LEGACY_KEY = "wimifarma-cart-v1";
 export const CART_OPERATION_PREFIX = "wimifarma-cart-op-v2:";
 export const CART_BASE_PREFIX = "wimifarma-cart-base-v2:";
 export type CartOperation =
-  | { type: "add"; product: CartProduct; quantity: number }
+  | { type: "add"; product: CartProduct; quantity: number; onlyIfMissing?: boolean }
   | { type: "quantity"; productId: string; quantity: number }
   | { type: "remove"; productId: string }
   | { type: "clear" }
@@ -47,7 +47,7 @@ function validOperation(value: unknown): value is CartOperation {
     case "clear": return true;
     case "remove": return typeof op.productId === "string" && op.productId.length > 0 && op.productId.length <= 64;
     case "quantity": return typeof op.productId === "string" && op.productId.length > 0 && op.productId.length <= 64 && Number.isFinite(op.quantity);
-    case "add": return Number.isFinite(op.quantity) && isCartItem({ ...op.product, quantity: 1 });
+    case "add": return Number.isFinite(op.quantity) && (op.onlyIfMissing === undefined || typeof op.onlyIfMissing === "boolean") && isCartItem({ ...op.product, quantity: 1 });
     case "review": return Array.isArray(op.source) && Array.isArray(op.items) && op.source.length <= 30 && op.items.length <= 30 && op.source.every(isCartItem) && op.items.every(isCartItem);
     default: return false;
   }
@@ -66,6 +66,7 @@ export function applyCartOperation(items: CartItem[], op: CartOperation): CartIt
       const quantity = Math.min(Math.max(Math.trunc(op.quantity), 1), orderQuantityLimit(product));
       const existing = items.find(item => item.id === product.id);
       if (!existing) return items.length >= 30 ? items : [...items, { ...product, quantity }];
+      if (op.onlyIfMissing) return items;
       return items.map(item => item.id === product.id ? { ...item, ...product, quantity: Math.min(item.quantity + quantity, orderQuantityLimit(product)) } : item);
     }
   }
@@ -194,6 +195,7 @@ export class CartStorage {
   commit(operation: CartOperation): CartItem[] {
     this.read();
     if (!validOperation(operation)) return this.read();
+    if (operation.type === "add" && operation.onlyIfMissing && this.snapshot.some(item => item.id === operation.product.id)) return this.snapshot;
     if (operation.type === "review" && operation.source !== this.snapshot) return this.snapshot;
     const entry: Entry = { clock: ++this.clock, id: crypto.randomUUID(), operation, ...(operation.type === "review" ? { basis: this.revision! } : {}) };
     this.entries.set(entry.id, entry);

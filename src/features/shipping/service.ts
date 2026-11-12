@@ -5,7 +5,7 @@ import { readShippingIntegration, shippingAccessToken, SHIPPING_INTEGRATION_ID }
 import { melhorEnvioRequest } from "./provider";
 import { shippingFingerprint, signShippingQuote, validateShippingProduct, verifyShippingQuote } from "./rules";
 import { calculatePackedQuotes } from "./calculate-packed-quotes";
-import { ShippingError, shippingSettingsSchema, type ShippingSelection } from "./schema";
+import { AUTOMATIC_QUOTE_LIMIT_MESSAGE, AUTOMATIC_QUOTE_MAX_UNITS, ShippingError, shippingSettingsSchema, type ShippingSelection } from "./schema";
 import { permittedShippingServices } from "./eligibility";
 import { resolvePostingLocation } from "./posting";
 import { supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
@@ -29,7 +29,7 @@ export async function quoteCart(postalCode: string, items: CheckoutRequest["item
   const serviceIds = permittedShippingServices(settings.serviceIds, products);
   if (!serviceIds.length) throw new ShippingError("Este carrinho precisa de um serviço de transporte autorizado para todos os produtos. Consulte a farmácia.", 422);
   // Bound provider packing work, without allocating or pricing one parcel per unit.
-  if (items.reduce((sum, item) => sum + item.quantity, 0) > 20) throw new ShippingError("Este pedido precisa de uma embalagem consolidada. Consulte a farmácia para calcular o frete.");
+  if (items.reduce((sum, item) => sum + item.quantity, 0) > AUTOMATIC_QUOTE_MAX_UNITS) throw new ShippingError(AUTOMATIC_QUOTE_LIMIT_MESSAGE);
   let estimated = false;
   const packingProducts = items.map((item) => {
     const product = products.find((p) => p.id === item.productId)!;

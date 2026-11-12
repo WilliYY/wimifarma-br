@@ -94,7 +94,7 @@ test("medication carrier acceptance is enforced both when quoting and submitting
   assert.equal(packed.packaging.packages[0].weightGrams, 3500, "keeps the full weight of ten packed units without adding tare again");
   assert.deepEqual(packed.packaging.packages[0].items, [{ productId: baseProduct.id, quantity: 10 }]);
   const before = requests.length;
-  await assert.rejects(loaded.exports.quoteCart("01001000", [{ ...items[0], quantity: 21 }]), /farmácia/);
+  await assert.rejects(loaded.exports.quoteCart("01001000", [{ ...items[0], quantity: 21 }]), /até 20 unidades.*farmácia/);
   assert.equal(requests.length, before, "oversized carts never reach the provider");
 
   integration.settings.freeShippingPolicy = { enabled: true, maximumSubsidyCents: 1000, minimumContributionBps: 1000, variableCostReserveBps: 700, packagingCostCents: 100, costMaxAgeHours: 24 };

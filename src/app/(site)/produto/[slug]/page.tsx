@@ -325,6 +325,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   <p className="mt-4 whitespace-pre-line text-sm leading-7 text-muted">{description}</p>
                   <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-3 rounded-xl bg-surface-subtle p-4 text-sm">
                     {packagePresentation.content ? <div><dt className="text-xs text-muted">Conteúdo da embalagem</dt><dd className="mt-1 font-semibold text-ink">{packagePresentation.content}</dd></div> : null}
+                    {packagePresentation.strength ? <div><dt className="text-xs text-muted">Concentração</dt><dd className="mt-1 font-semibold text-ink">{packagePresentation.strength}</dd></div> : null}
                     <div><dt className="text-xs text-muted">Apresentação</dt><dd className="mt-1 font-semibold text-ink">{packagePresentation.presentation}</dd></div>
                   </dl>
                 </details>

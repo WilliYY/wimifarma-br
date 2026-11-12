@@ -107,6 +107,19 @@ test("product page keeps product, related cards and details without public revie
     assert.ok(packHtml.includes(content), content);
     assert.ok(packHtml.includes(`por ${presentation}`), "price describes the complete commercial package");
   }
+  Object.assign(product, { name: "Kit Actine One FPS 50 Sem Cor 40 g + Gel de Limpeza 40 g", brand: "Actine" });
+  const actineHtml = renderToStaticMarkup(await loaded.exports.default({ params: Promise.resolve({ slug: product.slug }) }));
+  assert.match(actineHtml, /Conteúdo da embalagem<\/dt><dd[^>]*>Actine One FPS 50 Sem Cor 40 g \+ Gel de Limpeza 40 g<\/dd>/);
+  assert.match(actineHtml, /Apresentação<\/dt><dd[^>]*>1 kit<\/dd>/);
+  assert.match(actineHtml, /por 1 kit/);
+
+  Object.assign(product, { name: "Dipirona monoidratada 1 g 10 comprimidos Medley", category: "Medicamentos", activeIngredients: ["DIPIRONA MONOIDRATADA"] });
+  const dipyroneHtml = renderToStaticMarkup(await loaded.exports.default({ params: Promise.resolve({ slug: product.slug }) }));
+  assert.match(dipyroneHtml, /<h1[^>]*>Dipirona monoidratada 1 g 10 comprimidos Medley<\/h1>/);
+  assert.match(dipyroneHtml, /Concentração<\/dt><dd[^>]*>1 g<\/dd>/);
+  assert.match(dipyroneHtml, /Apresentação<\/dt><dd[^>]*>10 comprimidos<\/dd>/);
+  assert.doesNotMatch(dipyroneHtml, /Conteúdo da embalagem/);
+
   Object.assign(product, { name: "Alenia 6 mcg + 200 mcg 60 cápsulas dura", activeIngredients: ["BUDESONIDA", "FUMARATO DE FORMOTEROL DIIDRATADO"], category: "Medicamentos", requiresPrescription: true, prescriptionType: "ORDINARY" });
   const inhalationHtml = renderToStaticMarkup(await loaded.exports.default({ params: Promise.resolve({ slug: product.slug }) }));
   const medicineQuery = JSON.stringify(queryCalls.at(-1));

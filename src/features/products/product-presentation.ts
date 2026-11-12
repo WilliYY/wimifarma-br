@@ -3,7 +3,45 @@ import { getSupplierPreparationEstimate } from "@/features/supplier-catalog/prep
 import { isMedicineProduct } from "./product-description";
 
 type PresentationInput = Parameters<typeof isMedicineProduct>[0] & { name: string };
+type PackagePresentation = { content: string | null; presentation: string; strength?: string };
 const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const packageQuantity = /\b(\d+)\s*(?:[x×](?=\s*\d)|un(?:id(?:ades?)?)?\b|sabonetes?\b)/;
+const packageMeasure = /\b(\d+(?:[.,]\d+)?)\s*(kg|ml|g|l)\b/;
+const units: Record<string, string> = { kg: "kg", ml: "mL", g: "g", l: "L" };
+
+function explicitKitComponents(name: string) {
+  const components = name.trim().replace(/^kit\s+/i, "").split("+").map(component => component.trim());
+  const complete = components.every(component =>
+    /\p{L}.*\d\s*(?:kg|ml|g|l)$/iu.test(component) &&
+    [...normalize(component).matchAll(new RegExp(packageMeasure, "g"))].length === 1,
+  );
+  return complete ? components.join(" + ") : null;
+}
+
+function kitPresentation(product: PresentationInput, name: string, content: string | null) {
+  if (!/\bkit\b/.test(name)) return null;
+  const fallback = "Kit — confira a composição na embalagem";
+  if (/^kit\s+/.test(name.trim()) && name.includes("+") && !isMedicineProduct(product)) {
+    const components = explicitKitComponents(product.name);
+    return {
+      details: { content: components, presentation: components ? "1 kit" : fallback },
+      saleUnit: "1 kit",
+    };
+  }
+  const quantities = [...name.matchAll(new RegExp(packageQuantity, "g"))];
+  if (quantities.length > 1 || /\b\d+\s*(?:pacotes?|caixas?)\b/.test(name)) {
+    return { details: { content: null, presentation: fallback }, saleUnit: "1 kit" };
+  }
+  const [quantity] = quantities;
+  if (quantity && Number(quantity[1]) > 1) {
+    const composition = `Kit com ${quantity[1]} unidades`;
+    return {
+      details: { content: content ? `${content} por unidade` : null, presentation: composition },
+      saleUnit: `1 kit com ${quantity[1]} unidades`,
+    };
+  }
+  return { details: { content, presentation: fallback }, saleUnit: "1 kit" };
+}
 
 function multipackPresentation(product: PresentationInput) {
   if (isMedicineProduct(product)) return null;
@@ -34,29 +72,37 @@ function multipackPresentation(product: PresentationInput) {
   if (measures.length === 1 && !/\b(?:total|liquidos?)\b|\+/.test(name) && (itemLabel === "barras" || itemLabel === "frascos" || multiplied)) {
     const [, amount, unit] = measures[0];
     const size = Number(amount.replace(",", "."));
-    const units: Record<string, string> = { kg: "kg", ml: "mL", g: "g", l: "L" };
     const total = Number((size * count).toFixed(3)).toLocaleString("pt-BR", { useGrouping: false, maximumFractionDigits: 3 });
     content = `${composition} de ${amount.replace(".", ",")} ${units[unit]} · ${total} ${units[unit]} ${unit === "g" || unit === "kg" ? "líquidos" : "no total"}`;
   }
   return { content, presentation: `1 ${packageLabel} com ${composition}` };
 }
 
-/** Declared contents in the product name, never gross parcel weight or shipping dimensions. */
-export function productPackagePresentation(product: PresentationInput) {
+/** Presentation in the product name, independent of shipping dimensions and weight. */
+export function productPackagePresentation(product: PresentationInput): PackagePresentation {
   const multipack = multipackPresentation(product);
   if (multipack) return multipack;
   const name = normalize(product.name);
-  const quantity = name.match(/\b(\d+)\s*(?:x(?=\s*\d)|un(?:id(?:ades?)?)?\b|sabonetes?\b)/);
-  const kit = /\bkit\b/.test(name) && quantity && Number(quantity[1]) > 1;
-  const content = name.replace(/(\d+)\s*x\s*(?=\d)/g, "$1 x ").match(/\b(\d+(?:[.,]\d+)?)\s*(kg|ml|g|l)\b/);
-  const units: Record<string, string> = { kg: "kg", ml: "mL", g: "g", l: "L" };
-  const medicinePresentation = name.match(/\b(\d+)\s*(comprimidos?|comp\.?|cp\b|capsulas?)/);
+  const quantity = name.match(packageQuantity);
+  const measure = name.replace(/(\d+)\s*[x×]\s*(?=\d)/g, "$1 x ").match(packageMeasure);
+  const content = measure ? `${measure[1].replace(".", ",")} ${units[measure[2]]}` : null;
+  const kit = kitPresentation(product, name, content);
+  if (kit) return kit.details;
+  const medicinePresentation = name.match(/\b(\d+)\s*(comprimidos?|comp|cp|capsulas?)\b/);
+  const form = medicinePresentation?.[2].startsWith("caps") ? "cápsulas" : "comprimidos";
+  if (medicinePresentation && measure?.[2] === "g" && isMedicineProduct(product)) {
+    const beforeCount = name.slice(0, medicinePresentation.index);
+    const declaredStrength = beforeCount.match(/\b(\d+(?:[.,]\d+)?)\s*g\s+(?:com\s+)?$/);
+    if (declaredStrength) {
+      const strength = /[+/]|\d\s*[x×]/.test(beforeCount) || declaredStrength[1] !== measure[1]
+        ? {} : { strength: `${declaredStrength[1].replace(".", ",")} g` };
+      return { content: null, ...strength, presentation: `${medicinePresentation[1]} ${form}` };
+    }
+  }
   return {
-    content: content ? `${content[1].replace(".", ",")} ${units[content[2]]}${kit ? " por unidade" : ""}` : null,
-    presentation: kit ? `Kit com ${quantity[1]} unidades`
-      : /\bkit\b/.test(name) ? "Kit — confira a composição na embalagem"
-      : /\brefil\b/.test(name) ? "Refil"
-      : medicinePresentation ? `${medicinePresentation[1]} ${medicinePresentation[2].startsWith("caps") ? "cápsulas" : "comprimidos"}`
+    content,
+    presentation: /\brefil\b/.test(name) ? "Refil"
+      : medicinePresentation ? `${medicinePresentation[1]} ${form}`
       : quantity ? `${quantity[1]} unidades` : "1 unidade",
   };
 }
@@ -64,7 +110,8 @@ export function productPackagePresentation(product: PresentationInput) {
 /** The price always buys one commercial package, never one inner item. */
 export function productSaleUnitLabel(product: PresentationInput) {
   const multipack = multipackPresentation(product);
-  return multipack?.presentation.startsWith("1 ") ? multipack.presentation : null;
+  if (multipack) return multipack.presentation.startsWith("1 ") ? multipack.presentation : null;
+  return kitPresentation(product, normalize(product.name), null)?.saleUnit ?? null;
 }
 
 export function productCareInformation(product: PresentationInput) {

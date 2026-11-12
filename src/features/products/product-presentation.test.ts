@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { productCareInformation, productPackagePresentation, productPickupInformation } from "./product-presentation";
+import { productCareInformation, productPackagePresentation, productPickupInformation, productSaleUnitLabel } from "./product-presentation";
 
 const soap = { name: "Sabonete Rexona Multivitaminas 84g", category: "Higiene pessoal", requiresPrescription: false, prescriptionType: "UNREVIEWED" as const, catalogClassification: { kind: "HYGIENE", medicineClass: "UNCLASSIFIED", ethical: false, otc: false } };
 
@@ -19,6 +19,45 @@ test("higiene recebe cuidados da embalagem; medicamentos preservam bula e orient
   const medicine = { ...soap, name: "Paracetamol 750 mg 20 comprimidos", category: "Medicamentos", catalogClassification: { kind: "MEDICINE", medicineClass: "GENERIC", ethical: false, otc: true } };
   assert.match(productCareInformation(medicine).description, /bula/);
   assert.deepEqual(productPackagePresentation(medicine), { content: null, presentation: "20 comprimidos" });
+});
+
+test("concentração em gramas e contagem da Dipirona são informações distintas", () => {
+  const medicine = { ...soap, name: "Dipirona monoidratada 1 g 10 comprimidos Medley", category: "Medicamentos", catalogClassification: { kind: "MEDICINE", medicineClass: "GENERIC", ethical: false, otc: true } };
+  assert.deepEqual(productPackagePresentation(medicine), { content: null, strength: "1 g", presentation: "10 comprimidos" });
+  assert.equal(productSaleUnitLabel(medicine), null);
+  assert.deepEqual(productPackagePresentation({ ...medicine, name: "Medicamento em creme 10 mg/g 30 g" }), { content: "30 g", presentation: "1 unidade" });
+  assert.deepEqual(productPackagePresentation({ ...medicine, name: "Medicamento 500 mg + 1 g 20 comprimidos" }), { content: null, presentation: "20 comprimidos" });
+});
+
+test("kit misto declara o conteúdo de cada componente e vende um kit", () => {
+  const kit = { ...soap, name: "Kit Actine One FPS 50 Sem Cor 40 g + Gel de Limpeza 40 g" };
+  assert.deepEqual(productPackagePresentation(kit), {
+    content: "Actine One FPS 50 Sem Cor 40 g + Gel de Limpeza 40 g",
+    presentation: "1 kit",
+  });
+  assert.equal(productSaleUnitLabel(kit), "1 kit");
+  for (const name of ["Kit Actine Gel 40 g + Brinde", "Kit Actine Gel 40 g + Creme 40 g total 80 g"]) {
+    assert.deepEqual(productPackagePresentation({ ...kit, name }), {
+      content: null,
+      presentation: "Kit — confira a composição na embalagem",
+    });
+  }
+});
+
+test("kit Elmex mantém duas unidades declaradas dentro de um kit comercial", () => {
+  for (const name of ["Kit Creme Dental Elmex 110g 2un", "Kit Elmex Sensitive 2 × 110 g"]) {
+    const kit = { ...soap, name };
+    assert.deepEqual(productPackagePresentation(kit), { content: "110 g por unidade", presentation: "Kit com 2 unidades" });
+    assert.equal(productSaleUnitLabel(kit), "1 kit com 2 unidades");
+  }
+});
+
+test("kits com contagens ambíguas mostram só a unidade comercial", () => {
+  for (const name of ["Kit Fralda Mili 2 pacotes 78 unidades", "Kit sabonetes Rexona 6un 3x84g"]) {
+    const kit = { ...soap, name };
+    assert.equal(productSaleUnitLabel(kit), "1 kit");
+    assert.deepEqual(productPackagePresentation(kit), { content: null, presentation: "Kit — confira a composição na embalagem" });
+  }
 });
 
 test("multipacks distinguem embalagem comercial, conteúdo individual e total líquido", () => {

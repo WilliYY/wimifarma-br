@@ -115,8 +115,12 @@ const productTypes: { name: RegExp; introduction: string; detail: string }[] = [
 ];
 
 export function buildPublicProductDescription(product: ProductDescriptionInput): string {
-  const description = product.description?.trim();
-  if (description && !importedDescription.test(description)) return product.description!;
+  const publicDescription = product.description?.replace(
+    /(^|[ \t])Unidade comercial identificada na fonte do distribuidor, sem fracionar caixa ou dividir custos\.[ \t]*/gim,
+    "$1",
+  );
+  const description = publicDescription?.trim();
+  if (publicDescription && description && !importedDescription.test(description)) return publicDescription;
 
   const name = product.name.trim();
   const brand = product.brand?.trim();

@@ -30,6 +30,20 @@ test("concurrent adds to the same SKU accumulate rather than overwrite", () => {
   storage.pending = []; add(a, "cotton"); add(b, "cotton", 2); storage.flush();
   assert.equal(new CartStorage(storage).read()[0].quantity, 3);
 });
+test("concurrent purchases keep one quantity and explicit adds still accumulate", () => {
+  const storage = new MemoryStorage();
+  const a = new CartStorage(storage), b = new CartStorage(storage);
+  a.read(); b.read(); storage.pending = [];
+  const purchase = { type: "add", product: product("kit"), quantity: 2, onlyIfMissing: true } as const;
+  a.commit(purchase); b.commit(purchase); storage.flush();
+  assert.equal(new CartStorage(storage).read()[0].quantity, 2);
+  assert.equal(add(a, "kit", 3)[0].quantity, 5);
+  const current = b.read();
+  const repeatedPurchase = b.commit({ ...purchase, quantity: 4, product: product("kit", 900) });
+  assert.equal(repeatedPurchase, current);
+  assert.equal(repeatedPurchase[0].unitPriceCents, 515);
+  assert.equal(repeatedPurchase[0].quantity, 5);
+});
 test("remove and clear cannot be undone by stale quantity or review operations", () => {
   const storage = new MemoryStorage(); const a = new CartStorage(storage), b = new CartStorage(storage);
   add(a, "soap"); add(a, "cotton"); const stale = b.read();
