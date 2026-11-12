@@ -88,7 +88,7 @@ test("frete do catálogo consulta apenas após envio, para uma unidade e sem alt
   });
 });
 
-test("CEP permanece entre produtos apenas na página e resultado anterior não reaparece", async () => {
+test("CEP é lembrado entre produtos e após recarregar, sem reaproveitar a cotação", async () => {
   await fixture(async page => {
     let requests = 0;
     await page.route("**/api/fretes/estimativa", route => { requests++; return route.fulfill({ json: { data: { mode: "available", options: [quote] } } }); });
@@ -108,7 +108,8 @@ test("CEP permanece entre produtos apenas na página e resultado anterior não r
     await expect(opener).toBeFocused();
     await page.reload();
     await page.getByRole("button", { name: "Ver frete de Produto A", exact: true }).click();
-    await expect(page.getByRole("textbox", { name: "CEP", exact: true })).toHaveValue("");
+    await expect(page.getByRole("textbox", { name: "CEP", exact: true })).toHaveValue("80010-000");
+    await expect(page.getByText(/18,75/)).toHaveCount(0);
     assert.equal(requests, 1);
   });
 });
