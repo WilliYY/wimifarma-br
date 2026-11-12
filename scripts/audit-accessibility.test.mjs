@@ -17,7 +17,7 @@ async function serve(t, handleRequest) {
   return `http://127.0.0.1:${server.address().port}`;
 }
 
-test("auditoria detecta violações sem seguir redirecionamentos de recursos", async (t) => {
+test("auditoria detecta violações, bloqueia redirecionamentos de recursos e identifica erro do Next.js", async (t) => {
   let externalRequests = 0;
   const externalOrigin = await serve(t, (_request, response) => {
     externalRequests += 1;
@@ -34,17 +34,23 @@ test("auditoria detecta violações sem seguir redirecionamentos de recursos", a
     }
 
     response.setHeader("Content-Type", "text/html; charset=utf-8");
+    if (request.url === "/error") {
+      response.end('<!doctype html><html id="__next_error__"><body>Erro da aplicação</body></html>');
+      return;
+    }
     response.end(`<!doctype html><html lang="pt-BR"><head><title>Fixture</title></head>
       <body><main><h1>Fixture</h1><img alt="Exemplo" src="/image.png"><button></button></main></body></html>`);
   });
 
   await assert.rejects(
-    run(process.execPath, [auditScript, "--base-url", origin, "--route", "/"], { timeout: 120_000 }),
+    run(process.execPath, [auditScript, "--base-url", origin, "--route", "/", "--route", "/error"], { timeout: 120_000 }),
     (error) => {
-      assert.equal(error.code, 1, error.stderr);
+      assert.equal(error.code, 2, error.stderr);
       assert.match(error.stdout, /desktop 1440/);
       assert.match(error.stdout, /mobile 390/);
       assert.match(error.stdout, /button-name/);
+      assert.doesNotMatch(error.stdout, /\/error \|/);
+      assert.match(error.stderr, /O Next\.js exibiu uma página de erro/);
       return true;
     },
   );

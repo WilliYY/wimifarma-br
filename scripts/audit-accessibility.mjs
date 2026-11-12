@@ -96,6 +96,9 @@ async function auditRoute(browser, origin, path, { name, width, height, isMobile
     }
 
     const { violations, incomplete } = await new AxeBuilder({ page }).withTags(wcagTags).analyze();
+    if (await page.locator("html#__next_error__").count()) {
+      throw new Error("O Next.js exibiu uma página de erro no lugar da rota.");
+    }
     console.log(`${path} | ${name} ${width}×${height} | ${violations.length} violações, ${incomplete.length} regras para revisão manual`);
     for (const { id, impact, nodes, helpUrl } of violations) {
       console.log(`  ${id} (${impact ?? "sem gravidade"}): ${nodes.length} elemento(s). ${helpUrl}`);
