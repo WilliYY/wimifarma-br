@@ -359,12 +359,11 @@ test("rascunho oferece consulta de envio com produto, quantidade e CEP sem prome
     assert.match(url.searchParams.get("text")!, /80010-000/);
     assert.deepEqual(requests, [{ productId: product.id, quantity: 2, postalCode: "80010000" }]);
     await expect(page.getByRole("status")).toContainText("Envio sob consulta para este CEP.");
-    await expect(page.getByRole("status")).toContainText("A equipe confirma a possibilidade e as condições do envio.");
-    await expect(page.getByRole("status")).toContainText("Valores e prazos estimados.");
+    await expect(page.getByRole("status")).toContainText("Valores e prazos estimados, incluindo preparação. A equipe confirma o envio.");
     await expect(page.getByRole("status").getByRole("listitem")).toHaveCount(2);
     await expect(page.getByRole("status")).toContainText("PAC");
     await expect(page.getByRole("status")).toContainText("SEDEX");
-    await expect(page.getByRole("status")).toContainText("4 dias úteis estimados");
+    await expect(page.getByRole("status")).toContainText("Até 4 dias úteis");
     await expect(page.getByRole("status")).toContainText(/18,75/);
     await expect(page.getByRole("status")).not.toContainText(/Opções de entrega|Grátis|Envio ainda em preparação/);
     await page.getByLabel("Quantidade de teste").fill("3");

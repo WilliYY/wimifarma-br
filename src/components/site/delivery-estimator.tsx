@@ -159,7 +159,7 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode = "", o
                   </li>;
                 })}
               </ul>
-              <p className="mt-2 text-xs leading-4 text-muted">{result.mode === "estimate" ? "Valores e prazos estimados. O prazo inclui preparação." : "Prazos estimados incluem preparação. O checkout confirma o frete."}</p>
+              <p className="mt-2 text-xs leading-4 text-muted">{result.mode === "estimate" ? "Valores e prazos estimados, incluindo preparação. A equipe confirma o envio." : "Prazos estimados incluem preparação. O checkout confirma o frete."}</p>
             </>}
             {!result.busy && !result.local && !result.invalid && (!result.options.length || result.mode === "estimate") ? (
               <a className="mt-2 inline-flex items-center gap-2 text-xs font-black text-brand underline" href={buildWhatsAppUrl(result.mode === "estimate" && product ? `Ola, gostaria de consultar o envio de ${selectedQuantity} ${selectedQuantity === 1 ? "unidade" : "unidades"} de ${product.name} para o CEP ${formatPostalCode(normalizedPostalCode)}.` : "Ola, gostaria de consultar entrega para o meu CEP.")} rel="noreferrer" target="_blank">
