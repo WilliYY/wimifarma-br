@@ -328,6 +328,8 @@ $env:NODE_OPTIONS='--use-system-ca'
 npm.cmd audit --audit-level=moderate
 ```
 
+Para escolher uma checagem rápida de catálogo, checkout ou acessibilidade, consulte a [rotina de QA](docs/09-deploy-e-ambiente.md#auditoria-visual-e-console).
+
 ## Estrutura de Pastas
 
 ```text
@@ -415,7 +417,7 @@ docker compose up -d postgres
 docker compose --profile tools run --rm migrate
 docker compose --profile tools run --rm seed
 docker compose up -d app
-curl http://127.0.0.1:3001/api/health
+bash ops/check-wimifarma-br-release.sh
 ```
 
 Atualizacao:
@@ -428,7 +430,7 @@ docker compose --profile tools build migrate
 docker compose --profile tools run --rm migrate
 docker compose up -d app
 docker compose ps
-curl http://127.0.0.1:3001/api/health
+bash ops/check-wimifarma-br-release.sh
 ```
 
 ## Nginx Proxy Manager

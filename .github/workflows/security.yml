@@ -53,3 +53,9 @@ jobs:
 
       - name: Block critical dependency vulnerabilities
         run: npm audit --audit-level=critical
+
+      - name: Build application
+        if: github.event_name != 'schedule'
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: npm run build

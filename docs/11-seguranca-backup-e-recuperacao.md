@@ -62,6 +62,27 @@ sudo journalctl -u wimifarma-br-backup.service -n 100 --no-pager
 
 O backup local protege contra erro de deploy, mas nao contra perda total da VPS. Ainda e obrigatorio criar uma copia externa cifrada e testar restauracao trimestralmente.
 
+### Cópia externa com Restic
+
+Prepare um repositório Restic em um destino privado e independente da VPS. Configure `RESTIC_REPOSITORY` ou `RESTIC_REPOSITORY_FILE` e as credenciais do destino. Forneça a senha do Restic por `RESTIC_PASSWORD_FILE` com acesso restrito ao operador. Guarde uma cópia recuperável da senha fora da VPS.
+
+Como operador do backup, informe o timestamp exato de um backup diário concluído.
+
+```bash
+bash ops/copy-wimifarma-br-backup-offsite.sh AAAAMMDDTHHMMSSZ
+```
+
+O script usa links físicos em um estágio privado no mesmo filesystem. Assim, a retenção diária pode remover o diretório original durante o envio. O verificador exige checksums para `database.dump`, `uploads.tar.gz` e `app.env`. O Restic envia esses arquivos e `SHA256SUMS` ao repositório cifrado, com as tags `wimifarma-br` e o timestamp. O código `3` do Restic indica snapshot incompleto. Se uma interrupção abrupta deixar um diretório `.offsite-*`, confirme que nenhuma cópia o utiliza e remova apenas esse estágio.
+
+Restaure o snapshot em um diretório privado e isolado. Defina `RESTORE_DIR` para esse destino e `SNAPSHOT_ID` para o identificador escolhido em `restic snapshots --tag wimifarma-br`.
+
+```bash
+restic restore "$SNAPSHOT_ID" --target "$RESTORE_DIR" --verify
+bash ops/verify-wimifarma-br-backup.sh "$RESTORE_DIR"
+```
+
+Confirme também a restauração do banco e dos uploads conforme o roteiro abaixo.
+
 ## Recuperacao
 
 Restauracao e uma operacao destrutiva e deve ocorrer somente em janela de manutencao.

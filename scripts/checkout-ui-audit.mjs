@@ -21,7 +21,7 @@ const browser = await chromium.launch();
 const results = [], failures = [];
 const product = price => ({id:"fixture-item",slug:"fixture-item",name:"Dove óleo de banho · produto de teste",imageUrl:"/qa-product.webp",category:"Teste",unitPriceCents:price,originalPriceCents:null,stock:20,requiresPrescription:false,isPopularPharmacy:false,quantity:1});
 
-async function fixture(width, {price=9990,customer=false,failOrder=false,failPayment=false,failPaymentRead=false,rejectPix=false,failPaymentStatus="UNKNOWN",shippingAvailable=true,medicine=false,ordinaryMedicine=false,balance="0.01",selectPix=true}={}) {
+async function fixture(width, {price=9990,customer=false,failOrder=false,failPayment=false,failPaymentRead=false,rejectPix=false,failPaymentStatus="UNKNOWN",shippingAvailable=true,carrierBenefit=false,medicine=false,ordinaryMedicine=false,balance="0.01",selectPix=true}={}) {
   const context = await browser.newContext({viewport:{width,height:1000},reducedMotion:"reduce"});
   const page = await context.newPage(); const errors=[], orders=[], payments=[], quotes=[];
   const state = {failOrder,failPayment,status:"NEW",expiresAt:null};
@@ -52,7 +52,25 @@ async function fixture(width, {price=9990,customer=false,failOrder=false,failPay
     if(url.pathname==="/api/minha-conta/cashback") return json({data:{balance}});
     if(url.pathname==="/api/minha-conta/club") return json({data:{member:false,joinedAt:null,balancePoints:0,pendingPoints:0,lifetimeEarnedPoints:0,lifetimeRedeemedPoints:0,transactions:[]}});
     if(url.pathname==="/api/minha-conta/creditos") return json({data:{availableCents:0,reviewRequired:false,transactions:[]}});
-    if(url.pathname==="/api/fretes/cotacao") {quotes.push(request.postDataJSON());return json({data:[{provider:"melhor-envio",serviceId:1,carrier:"Transportadora Teste",service:"Normal",priceCents:2000,deliveryDays:5,token:"synthetic-quote"}]});}
+    if (url.pathname === "/api/fretes/cotacao") {
+      const input = request.postDataJSON();
+      quotes.push(input);
+      const option = {
+        provider: "melhor-envio", serviceId: 1, carrier: "Transportadora Teste", service: "Normal",
+        priceCents: 2000, deliveryDays: 5, token: carrierBenefit ? `synthetic-quote-${quotes.length}` : "synthetic-quote",
+      };
+      if (!carrierBenefit) return json({ data: [option] });
+
+      const free = input.discountCents === 0;
+      const benefit = {
+        status: free ? "free" : "regular",
+        customerPriceCents: free ? 0 : option.priceCents,
+        subsidyCents: free ? option.priceCents : 0,
+        minimumOrderCents: price,
+        remainingCents: free ? null : input.discountCents,
+      };
+      return json({ data: [{ ...option, benefit }] });
+    }
     if(url.pathname==="/api/pedidos") {orders.push(request.postDataJSON());if(state.failOrder){state.failOrder=false;return route.abort("failed");}return json({data:{id:"fixture-order",number:"WF-SINTETICO-1",totalCents:price,paymentMethod:orders.at(-1).paymentMethod}});}
     if(url.pathname==="/api/pagamentos/fixture-order") {
       if(request.method()==="GET" && failPaymentRead) return route.abort("failed");
@@ -141,9 +159,27 @@ try {
     const f=await fixture(390);const {page}=f;
     try {for(const cep of ["87525000","87485000"]){await page.getByLabel("CEP",{exact:true}).fill(cep);await expect(page.getByLabel("Dinheiro na entrega local")).toBeVisible();}await page.getByLabel("CEP",{exact:true}).fill("01001000");await expect(page.getByLabel("Cidade",{exact:true})).toHaveValue("São Paulo");await expect(page.getByLabel("Dinheiro na entrega local")).toHaveCount(0);await pickup(page);await expect(page.getByLabel("Dinheiro na retirada")).toBeVisible();}finally{await f.context.close();}
   });
-  await test("carrier threshold after discount and quote selection",async()=>{
-    const f=await fixture(390,{customer:true});const {page}=f;
-    try {await page.getByLabel("CEP",{exact:true}).fill("01001000");const option=page.getByRole("radio",{name:/Transportadora Teste/});await option.check();await expect(page.getByText(/frete grátis aplicado/)).toBeVisible();await page.getByLabel("Usar saldo de cashback").check();await expect(page.getByText(/Normal: R\$.*20,00/)).toBeVisible();await expect(page.getByText(/Faltam R\$.*0,01 para frete grátis/)).toBeVisible();await expect(option).toBeChecked();await expect(page.getByRole("button",{name:"Consultar novamente"})).toBeEnabled();assert.equal(f.quotes.length,1);await fits(page,390);}finally{await f.context.close();}
+  await test("carrier threshold recalculates after a discount", async () => {
+    const f = await fixture(390, { customer: true, carrierBenefit: true, selectPix: false });
+    const { page } = f;
+    try {
+      await page.getByLabel("CEP", { exact: true }).fill("01001000");
+      const option = page.getByRole("radio", { name: /Transportadora Teste/ });
+      await option.check();
+      await expect(page.getByText("Frete grátis nesta cotação")).toBeVisible();
+
+      await page.getByLabel("Usar saldo de cashback").check();
+      await expect(option.locator("..")).toContainText(/R\$\s*20,00/);
+      await expect(page.getByText(/Para frete grátis, faltam R\$\s*0,01/)).toBeVisible();
+      await expect(option).not.toBeChecked();
+      await option.check();
+      await expect(option).toBeChecked();
+      await expect(page.getByRole("button", { name: "Consultar novamente" })).toBeEnabled();
+      assert.deepEqual(f.quotes.map(({ discountCents }) => discountCents), [0, 1]);
+      await fits(page, 390);
+    } finally {
+      await f.context.close();
+    }
   });
   await test("uncertain order retry preserves request id",async()=>{
     const f=await fixture(390,{failOrder:true});const {page}=f;

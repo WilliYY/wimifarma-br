@@ -18,7 +18,7 @@ docker compose up -d postgres
 docker compose --profile tools run --rm migrate
 docker compose --profile tools run --rm seed
 docker compose up -d app
-curl http://127.0.0.1:3001/api/health
+bash ops/check-wimifarma-br-release.sh
 ```
 
 ## Atualizacao

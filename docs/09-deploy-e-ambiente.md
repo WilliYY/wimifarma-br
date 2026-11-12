@@ -107,8 +107,23 @@ A migration `20260922140000_product_trash` adiciona retenção de produtos. Faze
 
 ## Auditoria Visual e Console
 
-`npm.cmd run audit:browser` executa `scripts/browser-audit.mjs` com Playwright.
-Use `AUDIT_BASE_URL` para apontar para local, Docker ou servidor. As capturas ficam em `artifacts/browser-audit`, pasta ignorada pelo Git.
+Instale as dependências com `npm.cmd ci` e, para as auditorias no navegador, instale o Chromium com `npx.cmd playwright install chromium`.
+
+| Tarefa | Comando |
+| --- | --- |
+| Conferir busca, vitrine e apresentação de produtos | `npm.cmd run test:catalog-discovery` |
+| Exercitar cadastro e edição de catálogo em base descartável | `npm.cmd run audit:catalog` com a fixture isolada |
+| Diagnosticar checkout, frete e Pix em cenário sintético | `npm.cmd run audit:checkout` |
+| Verificar acessibilidade da loja local | `npm.cmd run audit:accessibility` |
+| Capturar telas e erros de console | `npm.cmd run audit:browser` |
+
+`audit:checkout` intercepta as requisições e usa respostas sintéticas. O `report.json` e as capturas ficam em `outputs/checkout-shipping-review` por padrão. Para outro destino, defina `AUDIT_OUTPUT_DIR`. Para homologar transações e webhooks do provedor, siga o [roteiro do Mercado Pago](28-mercado-pago.md).
+
+`audit:accessibility` usa axe e Chromium em rotas públicas, nos tamanhos móvel e desktop. A auditoria usa uma sessão anônima com recursos da própria origem. A saída indica a regra, a quantidade de elementos afetados e até três seletores por regra. Código `0` indica execução sem violações, `1` indica violações e `2` indica erro de execução. Use `AUDIT_BASE_URL` ou `npm.cmd run audit:accessibility -- --base-url http://127.0.0.1:3001 --route /catalogo` para direcionar a checagem. Combine o resultado com revisão por teclado e leitor de tela.
+
+`audit:browser` aceita `AUDIT_BASE_URL` para local, Docker ou homologação e grava as capturas em `artifacts/browser-audit`, pasta ignorada pelo Git.
+
+O workflow de segurança também roda o build Next.js em PRs, pushes para `main` e execuções manuais. Após subir o serviço, execute `bash ops/check-wimifarma-br-release.sh` na VPS com Python 3 disponível. Para conferir também o domínio público, passe `--public-url` com a URL HTTPS da loja. O script verifica `/api/health`, a home e o checkout por GET. A validação de pagamentos continua no roteiro próprio.
 
 ## Variaveis de Ambiente
 
@@ -153,7 +168,7 @@ Obrigatorias em producao:
 - Documentar monitoramento e logs.
 - Definir checklist de troca de secrets quando sair de desenvolvimento.
 - Definir rotina de rotacao e recuperacao para `SECRET_VAULT_KEY`.
-- Criar copia externa cifrada dos backups e alerta de falha.
+- Configurar destino externo, validar a restauração isolada da cópia cifrada via Restic e configurar alerta de falha.
 
 ## Evolucao
 
