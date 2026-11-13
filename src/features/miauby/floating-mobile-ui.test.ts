@@ -43,14 +43,14 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
     await page.evaluate(() => window.scrollTo(0, 0));
     assert.equal(await page.evaluate("window.miaubyRequests.length"), 0, "Saudações não consultam o assistente");
     await page.getByRole("button", { name: "Montar compra fictícia", exact: true }).click();
-    await expect(trigger).toBeHidden();
+    await expect(trigger).toBeVisible();
     await page.setViewportSize({ width: 768, height: 700 });
     await expect(trigger).toBeVisible();
     const whatsapp = page.getByRole("link", { name: "Chamar Wimifarma no WhatsApp", exact: true });
     await expect(whatsapp).toBeVisible();
     const whatsappUrl = await whatsapp.getAttribute("href");
     await page.setViewportSize({ width: 390, height: 700 });
-    await expect(trigger).toBeHidden();
+    await expect(trigger).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, 900));
     await expect(trigger).toBeVisible();
     await expect(whatsapp).toBeHidden();
@@ -250,8 +250,13 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
         area.append(buy);
         document.querySelector("main")!.append(area);
       });
-      await expect(launcher).toBeHidden();
+      await expect(launcher).toBeVisible();
       const unobstructedBuy = launcherPage.getByRole("button", { name: "Comprar sem sobreposição", exact: true });
+      await expect.poll(async () => {
+        const launcherBounds = await launcher.boundingBox();
+        const buyBounds = await unobstructedBuy.boundingBox();
+        return Boolean(launcherBounds && buyBounds && launcherBounds.y + launcherBounds.height <= buyBounds.y);
+      }).toBe(true);
       await unobstructedBuy.click({ position: { x: 110, y: 22 } });
       await expect(unobstructedBuy).toHaveAttribute("data-clicked", "true");
       await launcherPage.locator("#late-card-controls").evaluate(element => { element.style.bottom = "300px"; });
@@ -262,7 +267,7 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
       await launcherPage.locator("#late-card-controls").evaluate(element => { element.style.bottom = "12px"; });
       await expect(openedChat).toBeVisible();
       await openedChat.getByRole("button", { name: "Fechar conversa", exact: true }).click();
-      await expect(launcher).toBeHidden();
+      await expect(launcher).toBeVisible();
       await launcherPage.locator("#late-card-controls").evaluate(element => element.remove());
       await expect(launcher).toBeVisible();
       await launcherPage.screenshot({ path: `${evidenceDirectory}/launcher-unobstructed-${width}.png` });

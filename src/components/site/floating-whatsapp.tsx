@@ -189,7 +189,6 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [purchasePosition, setPurchasePosition] = useState<"before" | "visible" | "after">("before");
-  const [purchaseOverlap, setPurchaseOverlap] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([initialMessage]);
   const [notice, setNotice] = useState<string | null>(null);
   const [isTabVisible, setIsTabVisible] = useState(false);
@@ -297,57 +296,60 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
 
   useLayoutEffect(() => {
     const floating = floatingRef.current;
-    if (!active || isHiddenRoute || isOpen || !floating || !("IntersectionObserver" in window)) {
-      setPurchaseOverlap(false);
-      return;
-    }
-    let observer: IntersectionObserver | null = null;
+    if (!active || isHiddenRoute || isOpen || !floating) return;
+
+    let targets: Element[] = [];
     let frame = 0;
-    const connect = () => {
-      observer?.disconnect();
+    let lift = 0;
+    const position = () => {
       const bounds = floating.getBoundingClientRect();
-      if (!bounds.width || !bounds.height) {
-        setPurchaseOverlap(false);
-        return;
-      }
-      const width = document.documentElement.clientWidth;
-      const height = document.documentElement.clientHeight;
-      const left = Math.max(0, bounds.left - 8);
-      const top = Math.max(0, bounds.top - 8);
-      const right = Math.min(width, bounds.right + 8);
-      const bottom = Math.min(height, bounds.bottom + 8);
-      const targets = document.querySelectorAll(purchaseControlsSelector);
-      const overlapping = new Set<Element>();
-      for (const target of targets) {
-        const area = target.getBoundingClientRect();
-        if (area.width && area.height && area.left < right && area.right > left && area.top < bottom && area.bottom > top) overlapping.add(target);
-      }
-      setPurchaseOverlap(overlapping.size > 0);
-      // Watch only the fixed corner occupied by the shortcuts. No scroll-frame work.
-      observer = new IntersectionObserver(entries => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) overlapping.add(entry.target);
-          else overlapping.delete(entry.target);
+      const restingBottom = bounds.bottom + lift;
+      let bottom = restingBottom;
+      const obstacles = targets.map(target => target.getBoundingClientRect())
+        .filter(area => area.width && area.height && area.bottom > 0 && area.top < restingBottom + 8
+          && area.left < bounds.right + 8 && area.right > bounds.left - 8)
+        .sort((first, second) => second.top - first.top);
+      for (const area of obstacles) {
+        if (area.top < bottom + 8 && area.bottom > bottom - bounds.height - 8) {
+          bottom = area.top - 8;
         }
-        setPurchaseOverlap(overlapping.size > 0);
-      }, { rootMargin: `${-top}px ${right - width}px ${bottom - height}px ${-left}px` });
-      for (const target of targets) observer.observe(target);
+      }
+      // Keep the launcher reachable even when there is very little vertical room.
+      const nextLift = Math.max(0, Math.min(restingBottom - bottom, bounds.top + lift - 12));
+      if (nextLift !== lift) {
+        lift = nextLift;
+        floating.style.marginBottom = lift ? `${lift}px` : "";
+      }
     };
-    const scheduleConnect = () => {
-      if (!frame) frame = window.requestAnimationFrame(() => { frame = 0; connect(); });
+    const schedulePosition = () => {
+      if (!frame) frame = window.requestAnimationFrame(() => { frame = 0; position(); });
+    };
+    const resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedulePosition);
+    const styles = new MutationObserver(schedulePosition);
+    const connect = () => {
+      targets = Array.from(document.querySelectorAll(purchaseControlsSelector));
+      resize?.disconnect();
+      styles.disconnect();
+      resize?.observe(floating);
+      for (const target of targets) {
+        resize?.observe(target);
+        styles.observe(target, { attributes: true, attributeFilter: ["class", "style", "hidden"] });
+      }
     };
     connect();
-    const resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(scheduleConnect);
-    resize?.observe(floating);
-    const content = new MutationObserver(scheduleConnect);
+    position();
+    const content = new MutationObserver(() => { connect(); schedulePosition(); });
     content.observe(document.querySelector("main") ?? document.body, { childList: true, subtree: true });
-    window.addEventListener("resize", scheduleConnect);
+    window.addEventListener("scroll", schedulePosition, { passive: true });
+    window.addEventListener("resize", schedulePosition);
     return () => {
-      observer?.disconnect();
       resize?.disconnect();
+      styles.disconnect();
       content.disconnect();
       window.cancelAnimationFrame(frame);
-      window.removeEventListener("resize", scheduleConnect);
+      window.removeEventListener("scroll", schedulePosition);
+      window.removeEventListener("resize", schedulePosition);
+      floating.style.marginBottom = "";
     };
   }, [active, isHiddenRoute, isOpen, pathname, purchasePosition]);
 
@@ -472,7 +474,7 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
   return (
     <div
       ref={floatingRef}
-      className={`fixed right-3 z-50 flex-row items-end gap-2 sm:right-5 sm:flex-col sm:gap-3 ${purchaseOverlap && !isOpen ? "invisible" : ""} ${isProductPage && purchasePosition === "visible" && !isOpen ? "hidden sm:flex" : "flex"} ${
+      className={`fixed right-3 z-50 flex flex-row items-end gap-2 sm:right-5 sm:flex-col sm:gap-3 ${
         isProductPage && purchasePosition === "after" && !isOpen ? "bottom-[calc(6rem+env(safe-area-inset-bottom))] sm:bottom-24" : isProductPage ? "bottom-[calc(0.75rem+env(safe-area-inset-bottom))] sm:bottom-24" : "bottom-[calc(0.75rem+env(safe-area-inset-bottom))] sm:bottom-5"
       }`}
     >
