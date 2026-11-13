@@ -11,6 +11,7 @@ import { createHash } from "node:crypto";
 import { auth } from "@/features/auth/auth";
 import { safeMiaubyFirstName } from "@/features/miauby/greetings";
 import { ClubSummaryProvider } from "@/hooks/club-summary-provider";
+import { cartEmailReminderOwner } from "@/features/communications/cart-email-reminder-owner";
 
 export default async function SiteLayout({
   children,
@@ -21,7 +22,7 @@ export default async function SiteLayout({
     name: safeMiaubyFirstName(session.user.name) ?? "",
   } : null;
   return (
-    <CartProvider>
+    <CartProvider emailReminderOwner={session?.user.role === "CUSTOMER" && session.user.id ? cartEmailReminderOwner(session.user.id) : undefined}>
       <ClubSummaryProvider key={viewer?.key ?? "anonymous"} ownerKey={viewer?.key ?? null}>
         <script dangerouslySetInnerHTML={{ __html: serializeProductStructuredData(siteStructuredData()) }} type="application/ld+json" />
         <SiteVisitTracker />

@@ -7,7 +7,7 @@ const product = { id: "synthetic-cart", name: "Produto sintético", slug: "produ
 
 test("carrinho recarregado não propõe no-op; alterações reais e consulta concorrente permanecem explícitas", async () => {
   const bundle = await build({
-    stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';import {CartProvider,useCart} from './src/components/site/cart-provider';import {CartPage} from './src/components/site/cart-page';function CartState(){const cart=useCart();return <output hidden data-testid="cart-state">{JSON.stringify(cart.items)}</output>};createRoot(document.getElementById('root')).render(<CartProvider><CartState/><CartPage/></CartProvider>);`, resolveDir: process.cwd(), loader: "tsx" },
+    stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';import {CartProvider,useCart} from './src/components/site/cart-provider';import {CartPage} from './src/components/site/cart-page';function CartState(){const cart=useCart();return <output hidden data-testid="cart-state">{JSON.stringify(cart.items)}</output>};createRoot(document.getElementById('root')).render(<CartProvider emailReminderOwner="synthetic-owner"><CartState/><CartPage/></CartProvider>);`, resolveDir: process.cwd(), loader: "tsx" },
     bundle: true, write: false, jsx: "automatic", platform: "browser", format: "iife", define: { "process.env.NODE_ENV": '"production"' },
     plugins: [{ name: "next-fixture", setup(builder) {
       builder.onResolve({ filter: /^next\/(link|image|navigation)$/ }, args => ({ path: args.path, namespace: "fixture" }));
@@ -16,12 +16,14 @@ test("carrinho recarregado não propõe no-op; alterações reais e consulta con
   });
   const browser = await chromium.launch();
   try {
-    const page = await browser.newPage();
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
     let current = { ...product };
     let release: (() => void) | null = null;
     let delay = false;
+    let reminderKey: string | null = null;
+    const reminderActions: unknown[] = [];
     await page.route("**/*", async route => {
       const url = new URL(route.request().url());
       if (url.pathname === "/api/carrinho/revisao") {
@@ -29,6 +31,14 @@ test("carrinho recarregado não propõe no-op; alterações reais e consulta con
         return route.fulfill({ json: { data: { products: [current] } } });
       }
       if (url.pathname === "/api/miauby/carrinho") return route.fulfill({ json: {} });
+      if (url.pathname === "/api/carrinho/lembrete-email") {
+        assert.equal(route.request().headers()["x-cart-reminder-owner"], "synthetic-owner");
+        if (route.request().method() === "GET") return route.fulfill({ json: { eligible: true, cartKey: reminderKey } });
+        const body = route.request().postDataJSON();
+        reminderActions.push(body);
+        reminderKey = body.action === "arm" ? "f1b57794-7a23-4c1f-bf2e-1f6907476081" : null;
+        return route.fulfill({ json: { cartKey: reminderKey } });
+      }
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text });
       if (url.pathname === "/carrinho") return route.fulfill({ contentType: "text/html", body: '<!doctype html><meta charset="utf-8"><div id="root"></div><script src="/fixture.js"></script>' });
       return route.abort();
@@ -36,6 +46,18 @@ test("carrinho recarregado não propõe no-op; alterações reais e consulta con
     await page.addInitScript(item => localStorage.setItem("wimifarma-cart-v1", JSON.stringify([item])), { ...product, quantity: 2 });
     await page.goto("http://127.0.0.1:3198/carrinho");
     await page.reload();
+    const reminder = page.getByRole("checkbox", { name: /Receber um lembrete/ });
+    await expect(reminder).toBeVisible();
+    await expect(reminder).not.toBeChecked();
+    assert.deepEqual(reminderActions, []);
+    await reminder.click();
+    await expect(reminder).toBeChecked();
+    await reminder.click();
+    await expect(reminder).not.toBeChecked();
+    assert.deepEqual(reminderActions, [
+      { action: "arm", consent: true, items: [{ productId: product.id, quantity: 2 }] },
+      { action: "disarm", cartKey: "f1b57794-7a23-4c1f-bf2e-1f6907476081" },
+    ]);
     await expect(page.getByText("Subtotal", { exact: true })).toBeVisible();
     await expect(page.getByText("Total", { exact: true })).toHaveCount(0);
     await expect(page.getByText("R$ 4,16", { exact: true })).toHaveCount(2);

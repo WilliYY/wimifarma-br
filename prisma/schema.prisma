@@ -373,12 +373,14 @@ model Customer {
   notes             String?
   imageUrl          String?
   googleSubject     String?            @unique
+  googleVerifiedEmail String?
   passwordHash      String?
   passwordSetAt     DateTime?
   passwordRecoveryVerifiedEmail String?
   passwordRecoveryVerifiedAt DateTime?
   passwordRecovery  CustomerPasswordRecovery?
   recoveryEmailVerification CustomerRecoveryEmailVerification?
+  cartEmailReminder CustomerCartEmailReminder?
   lastLoginAt       DateTime?
   status            CustomerStatus     @default(ACTIVE)
   spinWheelAttempts SpinWheelAttempt[]
@@ -396,6 +398,37 @@ model Customer {
   @@index([status])
   @@index([city])
   @@index([lastLoginAt])
+}
+
+model CustomerCartEmailReminder {
+  customerId String @id
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  email String
+  cartKey String @unique
+  productIds String[] @default([])
+  availableAt DateTime
+  expiresAt DateTime
+  optedInAt DateTime
+  canceledAt DateTime?
+  claimedAt DateTime?
+}
+
+model CustomerEmailEvent {
+  eventKey String @id
+  orderId String?
+  cartCustomerId String?
+  kind String
+  status OrderStatus?
+  state String @default("PENDING")
+  discloseProductIds String[] @default([])
+  availableAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  claimedAt DateTime?
+  finishedAt DateTime?
+
+  @@index([state, availableAt, createdAt])
+  @@index([orderId, createdAt])
+  @@index([finishedAt])
 }
 
 model CustomerPasswordRecovery {

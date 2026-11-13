@@ -13,6 +13,7 @@ import { validateOrderShipping } from "@/features/shipping/service";
 import { PaymentError } from "@/features/payments/schema";
 import { allocatePixDiscount, PIX_DISCOUNT_PERCENT, pixDiscountCents } from "@/features/payments/pix-discount";
 import { queueCommerceOrder } from "@/features/miauby/commerce-service";
+import { orderEmailProductSelect, queueOrderReceivedEmail } from "@/features/communications/order-email-events";
 import { requiresPrescriptionReview } from "@/features/products/purchase-policy";
 import { checkoutPaymentConnections, resolveCheckoutPayment } from "@/features/payments/routing";
 import { resolveSupplierOffer, supplierOfferInclude, toSaleProduct } from "@/features/supplier-catalog/commerce";
@@ -64,7 +65,7 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   }
   if (coins > 0 && customer) await lockWimicoinAccount(tx, customer.id);
   const loadProducts = () => tx.product.findMany({
-    select: { ...supplierOfferInclude, ean: true, brand: true, activeIngredients: true, inventorySource: true, catalogClassification: true, cashbackEnabled: true, cashbackRateBps: true, wimicoinsEnabled: true, wimicoinsRateBps: true, id: true, imageUrl: true, isPopularPharmacy: true, name: true, price: true, promotionalPrice: true, requiresPrescription: true, prescriptionType: true, slug: true, status: true, stock: true },
+    select: { ...supplierOfferInclude, ...orderEmailProductSelect, ean: true, brand: true, inventorySource: true, cashbackEnabled: true, cashbackRateBps: true, wimicoinsEnabled: true, wimicoinsRateBps: true, imageUrl: true, name: true, price: true, promotionalPrice: true, slug: true, status: true, stock: true },
     where: { id: { in: input.items.map((item) => item.productId) } },
   });
   let products = await loadProducts();
@@ -155,6 +156,10 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
       method: onlineMethod, installments: integration.id === "asaas" && onlineMethod === "card" ? 1 : null, environment: integration.environment,
       integrationRevision: integration.revision, accountId: integration.accountId, amountCents: totalCents } } } : {}),
   } });
+  if (customer && !isTest) {
+    // Orders close prior reminders even if dispatch is currently disabled.
+    await tx.customerCartEmailReminder.updateMany({ where: { customerId: customer.id, canceledAt: null }, data: { canceledAt: new Date(), productIds: [] } });
+  }
   if (needsPrescriptionUpload) {
     const linked = await tx.prescriptionUpload.updateMany({ where: { id: input.prescriptionUploadId, customerId: customer!.id, orderId: null }, data: { orderId: order.id } });
     if (linked.count !== 1) throw new PrescriptionError("Esta receita já foi usada em outro pedido.", 409);
@@ -177,5 +182,6 @@ export async function createCheckout(tx: Prisma.TransactionClient, input: Checko
   if (coins > 0 && customer) await reserveWimicoins(tx, { customerId: customer.id, orderId: order.id, number: order.number, points: coins });
   await queueCommerceOrder(tx, "order", { ...order, items: items.map(item => ({ name: item.productName, quantity: item.quantity, unitPriceCents: item.unitPriceCents, totalCents: item.totalCents,
     ean: products.find(product => product.id === item.productId)?.ean, inventorySource: item.inventorySource, supplierCode: item.supplierCode })) }, isTest);
+  if (!isTest) await queueOrderReceivedEmail(tx, order, products);
   return tx.order.findUniqueOrThrow({ where: { id: order.id }, select: orderResultSelect });
 }

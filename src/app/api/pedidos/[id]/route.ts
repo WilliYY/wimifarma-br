@@ -6,6 +6,7 @@ import { canTransitionStatus, orderStatusTransitions, orderStatusUpdateSchema, p
 import { readJsonBody } from "@/lib/api";
 import { getPrisma } from "@/lib/prisma";
 import { queueCustomerOrderStatus, type CustomerNotificationStatus } from "@/features/miauby/customer-order-status";
+import { queueOrderStatusEmail } from "@/features/communications/order-email-events";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -22,7 +23,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const result = await getPrisma().$transaction(async (transaction) => {
     await transaction.$queryRaw`SELECT id FROM "Order" WHERE id = ${id} FOR UPDATE`;
     const current = await transaction.order.findUnique({
-      select: { paymentStatus: true, status: true, paymentMethod: true, fulfillmentMethod: true, requiresPrescriptionReview: true, hasItemShortages: true,
+      select: { customerId: true, paymentStatus: true, status: true, paymentMethod: true, fulfillmentMethod: true, requiresPrescriptionReview: true, hasItemShortages: true,
         prescriptionReviewedAt: true, prescriptionReviewedById: true,
         onlinePayment: { select: { environment: true, status: true, statusDetail: true, financialReviewReason: true } } },
       where: { id },
@@ -97,6 +98,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       } });
     }
     const notificationStatus: CustomerNotificationStatus = statusChanged ? await queueCustomerOrderStatus(transaction, saved) : "SKIPPED";
+    if (statusChanged) await queueOrderStatusEmail(transaction, { ...saved, customerId: current.customerId });
     const { customerPhone: _customerPhone, ...responseOrder } = saved;
     void _customerPhone;
     return { data: { ...responseOrder, notificationStatus, updatedAt: saved.updatedAt.toISOString(), prescriptionReviewedAt: saved.prescriptionReviewedAt?.toISOString() ?? null } };

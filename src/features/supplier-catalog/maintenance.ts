@@ -2,6 +2,7 @@ import type { PrismaClient } from "@/generated/prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { settleOrderBenefits } from "@/features/cashback/redemption";
 import { settleOrderCashback } from "@/features/cashback/service";
+import { queueOrderStatusEmail } from "@/features/communications/order-email-events";
 
 const HOLD_MS = 24 * 60 * 60_000;
 
@@ -19,6 +20,7 @@ export async function expireSupplierOrders(db: PrismaClient = getPrisma(), now =
       const order = await tx.order.findUnique({ where: { id: row.id } });
       if (!order || order.status !== "PENDING" || order.paymentStatus !== "PENDING" || order.paymentMethod === "ONLINE" || order.createdAt >= cutoff) return;
       await tx.order.update({ where: { id: order.id }, data: { status: "CANCELED", paymentStatus: "CANCELED" } });
+      await queueOrderStatusEmail(tx, { ...order, status: "CANCELED" });
       await settleOrderBenefits(tx, order.id);
       await settleOrderCashback(tx, order.id);
       await tx.auditLog.create({ data: { action: "SUPPLIER_ORDER_EXPIRED", entity: "Order", entityId: order.id, metadata: { pendingHours: 24 } } });

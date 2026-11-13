@@ -10,6 +10,7 @@ import { settleIssuedStoreCredits } from "@/features/store-credit/service";
 import { comparePaymentInventoryItems, validateSupplierPayment } from "@/features/supplier-catalog/inventory";
 import { queueCommerceOrder } from "@/features/miauby/commerce-service";
 import { queueCustomerOrderStatus } from "@/features/miauby/customer-order-status";
+import { queueOrderStatusEmail } from "@/features/communications/order-email-events";
 import { readAsaasIntegration } from "./asaas-integration";
 import { assertAsaasPaymentBinding, createAsaasCheckout, createAsaasPix, listAsaasPayments, retrieveAsaasPayment,
   selectBoundAsaasPayment, type AsaasExpectedPayment } from "./asaas-provider";
@@ -205,6 +206,7 @@ export async function refreshAsaasCommercePayment(orderId: string, checkoutEvent
     if (["REFUNDED", "DISPUTED"].includes(next)) await tx.order.update({ where: { id: orderId }, data: { status: "CANCELED", paymentStatus: "REFUNDED" } });
     if (current.order.status !== "CANCELED" && ["FAILED", "CANCELED", "REFUNDED", "DISPUTED"].includes(next)) {
       await queueCustomerOrderStatus(tx, { ...current.order, status: "CANCELED" });
+      await queueOrderStatusEmail(tx, { ...current.order, status: "CANCELED" });
     }
     await settleIssuedStoreCredits(tx, orderId, next);
     if (changed && next !== "PARTIALLY_REFUNDED" && next !== "REVIEW") {

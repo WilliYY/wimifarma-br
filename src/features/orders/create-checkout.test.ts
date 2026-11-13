@@ -30,7 +30,7 @@ async function createFixture(prescriptionType: "ORDINARY" | "CONTROLLED" | "UNRE
     order: { create: async ({ data }: { data: Record<string, unknown> }) => { saved = { ...data, id: "order-test" }; return saved; }, findUniqueOrThrow: async () => saved },
   };
   const loaded = { exports: {} as { createCheckout: (tx: unknown, input: unknown) => Promise<unknown> } };
-  vm.runInNewContext((await bundle).outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), crypto: webcrypto, console });
+  vm.runInNewContext((await bundle).outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), crypto: webcrypto, console, process: { env: {} } });
   return { selected: () => selected, saved: () => saved, run: () => loaded.exports.createCheckout(tx, {
     customer: { name: "Cliente sintético", email: "synthetic@example.com", phone: "44999999999" }, fulfillmentMethod: "PICKUP", paymentMethod: "CASH",
     cashbackRedeemCents: 0, privacyConsent: true, items: [{ productId: "product-test", quantity: 1, expectedUnitPriceCents: 1000 }],
@@ -97,13 +97,14 @@ async function rewardSnapshot(cashback: number, coins: number, options: { quanti
     $queryRaw: async () => [],
     $executeRaw: async () => 0,
     customer: { findFirst: async () => ({ id: "customer-test" }) },
+    customerCartEmailReminder: { updateMany: async () => ({ count: 0 }) },
     clubMembership: { findUnique: async () => ({ active: options.member !== false }) },
     product: { findMany: async ({ select }: { select: Record<string, unknown> }) => [Object.fromEntries(Object.entries(product).filter(([key]) => select[key] === true))] },
     order: { findUnique: async () => null, create: async ({ data }: { data: Record<string, unknown> }) => (saved = { ...data, id: "order-test", number: "TEST-001" }), findUniqueOrThrow: async () => saved },
     cashbackAccount: { update: async () => ({}) }, cashbackTransaction: { create: async () => ({}) }, auditLog: { create: async () => ({}) },
   };
   const loaded = { exports: {} as { createCheckout: (tx: unknown, input: unknown, customer?: string) => Promise<unknown> } };
-  vm.runInNewContext((await rewardsBundle).outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), crypto: webcrypto, console });
+  vm.runInNewContext((await rewardsBundle).outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), crypto: webcrypto, console, process: { env: {} } });
   await loaded.exports.createCheckout(tx, { checkoutRequestId: "synthetic-request", customer: { name: "Cliente sintético", email: "synthetic@example.com", phone: "44999999999" },
     fulfillmentMethod: "PICKUP", paymentMethod: "CASH", cashbackRedeemCents: cashback, wimicoinsRedeemPoints: coins,
     privacyConsent: true, items: [{ productId: product.id, quantity, expectedUnitPriceCents: 1025 }] }, options.customer === false ? undefined : "customer-test");
@@ -159,6 +160,7 @@ async function prescriptionCheckout(options: { type?: string; attachment?: Recor
   const tx = {
     $queryRaw: async () => [], $executeRaw: async () => 0,
     customer: { findFirst: async () => ({ id: "customer-test" }) },
+    customerCartEmailReminder: { updateMany: async () => ({ count: 0 }) },
     clubMembership: { findUnique: async () => membership, create: async () => { enrollments++; membership = { active: true }; return membership; } },
     auditLog: { create: async () => ({}) },
     product: { findMany: async () => { reads++; return [{ ...product, prescriptionType: options.mutateToAntimicrobial && reads > 1 ? "ANTIMICROBIAL" : product.prescriptionType }]; } },
@@ -166,7 +168,7 @@ async function prescriptionCheckout(options: { type?: string; attachment?: Recor
     order: { findUnique: async () => order, create: async ({ data }: { data: Record<string, unknown> }) => (order = { ...data, id: "synthetic-order" }), findUniqueOrThrow: async () => order },
   };
   const loaded = { exports: {} as { createCheckout: (tx: unknown, input: unknown, customer?: string) => Promise<unknown> } };
-  vm.runInNewContext((await rewardsBundle).outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), crypto: webcrypto, console });
+  vm.runInNewContext((await rewardsBundle).outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), crypto: webcrypto, console, process: { env: {} } });
   const input = { checkoutRequestId: "synthetic-request", prescriptionUploadId: options.uploadId === false ? undefined : "synthetic-upload", customer: { name: "Cliente sintético", email: "synthetic@example.com", phone: "44999999999" }, fulfillmentMethod: "PICKUP", paymentMethod: "CASH", cashbackRedeemCents: 0, privacyConsent: true, items };
   return { attachment, order: () => order, links: () => links, enrollments: () => enrollments, run: () => loaded.exports.createCheckout(tx, input, options.signedOut ? undefined : "customer-test") };
 }
@@ -211,13 +213,14 @@ async function pixCheckout(options: { paymentMethod?: string; onlineMethod?: str
   const tx = {
     $queryRaw: async () => [], $executeRaw: async () => 0,
     customer: { findFirst: async () => ({ id: "synthetic-customer" }) }, clubMembership: { findUnique: async () => ({ active: true }) },
+    customerCartEmailReminder: { updateMany: async () => ({ count: 0 }) },
     product: { findMany: async () => { productReads++; return [product, ...(options.secondProduct ? [{ ...product, id: "synthetic-second", slug: "synthetic-second", price: "10.25" }] : [])]; } },
     order: { findUnique: async () => previous, create: async ({ data }: { data: Record<string, unknown> }) => (saved = { ...data, id: "synthetic-order", number: "TEST-PIX" }), findUniqueOrThrow: async () => previous ?? saved },
     cashbackAccount: { update: async (value: unknown) => { reservedCashback = value; } }, cashbackTransaction: { create: async () => ({}) },
     auditLog: { create: async ({ data }: { data: typeof audits[number] }) => { audits.push(data); } },
   };
   const loaded = { exports: {} as { createCheckout: (tx: unknown, input: unknown, customer?: string) => Promise<unknown> } };
-  vm.runInNewContext((await rewardsBundle).outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), crypto: webcrypto, console, pixFixture: state });
+  vm.runInNewContext((await rewardsBundle).outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), crypto: webcrypto, console, pixFixture: state, process: { env: {} } });
   const result = await loaded.exports.createCheckout(tx, input, "synthetic-customer");
   return { saved, result, audits, state, productReads, reservedCashback };
 }

@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-13 — E-mails operacionais de pedido e lembrete de carrinho
+
+Pedido recebido e etapas entram em uma fila de e-mail. O lembrete de carrinho usa autorização própria, descadastro e supressão ao comprar. Os modos começam desligados até a homologação. [E-mails de pedido e carrinho](144-emails-de-pedido-e-carrinho.md).
+
 ## 2026-11-12 — Recuperação de senha de clientes
 
 Clientes com senha local confirmam o e-mail da conta antes de poder recuperar o acesso. Os códigos de confirmação e recuperação têm finalidades separadas e só ficam no banco como hashes. O envio usa um modelo Wimifarma e começa desativado até a homologação da entrega. [Recuperação de senha](143-recuperacao-de-senha.md).

@@ -15,6 +15,7 @@ import { publicProductImageUrl } from "@/features/product-images/private-supplie
 import { type CartReviewProposal } from "@/features/products/cart-review";
 import { toast } from "sonner";
 import { CartStorage, CART_LEGACY_KEY, CART_OPERATION_PREFIX, CART_BASE_PREFIX, type CartOperation } from "./cart-storage";
+import { useCartEmailReminder } from "./use-cart-email-reminder";
 
 export type CartProduct = {
   supplierDemandAllowed?: boolean;
@@ -40,6 +41,7 @@ type CartContextValue = {
   items: CartItem[];
   itemCount: number;
   subtotalCents: number;
+  emailReminder?: ReturnType<typeof useCartEmailReminder>;
   addProduct: (product: CartProduct, quantity?: number, options?: { onlyIfMissing?: boolean }) => boolean;
   clearCart: () => void;
   removeProduct: (productId: string) => void;
@@ -49,9 +51,10 @@ type CartContextValue = {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({ children, emailReminderOwner }: { children: React.ReactNode; emailReminderOwner?: string }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const emailReminder = useCartEmailReminder(emailReminderOwner, hydrated, items);
   const notifiedCart = useRef<string | null>(null);
   const cartNoticeQueue = useRef<Promise<void>>(Promise.resolve());
 
@@ -157,6 +160,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       addProduct,
       applyCartReview,
       clearCart,
+      emailReminder,
       hydrated,
       itemCount,
       items,
@@ -164,7 +168,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       subtotalCents,
       updateQuantity,
     }),
-    [addProduct, applyCartReview, clearCart, hydrated, itemCount, items, removeProduct, subtotalCents, updateQuantity],
+    [addProduct, applyCartReview, clearCart, emailReminder, hydrated, itemCount, items, removeProduct, subtotalCents, updateQuantity],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

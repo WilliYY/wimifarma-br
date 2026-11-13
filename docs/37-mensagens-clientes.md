@@ -1,5 +1,7 @@
 # 37 - Mensagens canônicas para clientes
 
+Atualização de 13/11/2026. Os avisos de pedido e carrinho por e-mail usam a fila descrita em [144](144-emails-de-pedido-e-carrinho.md). As regras do gerador editorial abaixo continuam a documentar a prévia Miauby.
+
 ## Escopo desta etapa
 
 Desde 27/10/2026, a prévia ADMIN de e-mail renderiza os seis exemplos com React Email no servidor e os mostra em iframe isolado. O gerador canônico e o texto WhatsApp permanecem. Em 02/11/2026 foi autorizada a preparação da homologação interna pela Brevo, sem conectar eventos reais; contrato em [141](141-brevo-homologacao-interna.md). A escolha e os modelos anteriores estão em [112](112-react-email-modelos.md).

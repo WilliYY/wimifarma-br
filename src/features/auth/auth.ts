@@ -73,6 +73,7 @@ async function persistGoogleCustomer(input: {
 
   const customerData = {
     email,
+    googleVerifiedEmail: email && email.endsWith("@gmail.com") && input.googleSubject ? email : null,
     googleSubject: input.googleSubject,
     imageUrl: input.imageUrl,
     lastLoginAt: new Date(),
@@ -247,10 +248,7 @@ export const authConfig = {
         const googleProfile = profile as GoogleCustomerProfile | undefined;
         if (!isVerifiedGoogleProfile(googleProfile, account.providerAccountId)) return null;
         const customer = await persistGoogleCustomer({
-          email:
-            normalizeEmail(stringOrUndefined(user?.email)) ??
-            normalizeEmail(stringOrUndefined(token.email)) ??
-            normalizeEmail(stringOrUndefined(googleProfile?.email)),
+          email: normalizeEmail(stringOrUndefined(googleProfile?.email)),
           googleSubject:
             stringOrUndefined(account.providerAccountId) ??
             stringOrUndefined(googleProfile?.sub),

@@ -17,7 +17,7 @@ import { requestCartReview, reviewedCartItems, type CartReviewProposal } from "@
 const currency = new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" });
 
 export function CartPage() {
-  const { applyCartReview, hydrated, items, removeProduct, subtotalCents, updateQuantity } = useCart();
+  const { applyCartReview, emailReminder, hydrated, items, removeProduct, subtotalCents, updateQuantity } = useCart();
   const [reviewBusy, setReviewBusy] = useState(false);
   const [proposal, setProposal] = useState<CartReviewProposal | null>(null);
   const [reviewMessage, setReviewMessage] = useState("");
@@ -64,6 +64,16 @@ export function CartPage() {
         <h1 className="mt-2 text-3xl font-black text-ink sm:text-4xl">Carrinho</h1>
         {hydrated && items.some(item => item.inventorySource === "DISTRIBUTOR") && <div className="mt-5"><SupplierPreparationNotice /></div>}
         {reviewMessage && <p role="status" className="mt-4 rounded-lg border border-line bg-white p-4 text-sm text-ink">{reviewMessage}</p>}
+        {hydrated && emailReminder && (emailReminder.enabled || (emailReminder.eligible && items.length > 0)) && (
+          <div className="mt-4 rounded-lg border border-line bg-white px-4 py-3 text-sm text-ink">
+            <label className="flex min-h-11 items-center gap-3">
+              <input type="checkbox" className="h-5 w-5 shrink-0 accent-brand" checked={emailReminder.enabled}
+                disabled={emailReminder.busy} onChange={event => emailReminder.setEnabled(event.target.checked)} />
+              <span>Receber um lembrete por e-mail se eu deixar este carrinho sem finalizar.</span>
+            </label>
+            {emailReminder.error && <p role="status" className="mt-2 text-brand">{emailReminder.error}</p>}
+          </div>
+        )}
 
         {!hydrated ? (
           <div className="mt-8 h-52 animate-pulse rounded-lg border border-line bg-white" />

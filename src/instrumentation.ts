@@ -4,6 +4,8 @@ export async function register() {
     startPaymentMaintenance();
     const { startCommerceMaintenance } = await import("@/features/miauby/commerce-service");
     startCommerceMaintenance();
+    const { startCustomerEmailMaintenance } = await import("@/features/communications/customer-email-worker");
+    startCustomerEmailMaintenance();
   }
   if (process.env.NEXT_RUNTIME === "nodejs" && process.env.NODE_ENV === "production" && process.env.PRODUCT_MAINTENANCE_ENABLED === "true") {
     const { startProductTrashMaintenance } = await import("@/features/products/trash-maintenance");
