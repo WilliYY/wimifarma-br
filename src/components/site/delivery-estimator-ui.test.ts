@@ -169,6 +169,28 @@ test("frete compacto preserva desconto, gratuidade, subsídio e progresso reais"
   });
 });
 
+test("cotação de PAC distingue os integradores e destaca o menor preço final", async () => {
+  await fixture(390, async page => {
+    const superfrete = { ...quote, provider: "superfrete", priceCents: 2100, benefit: { ...regularBenefit, status: "discounted", customerPriceCents: 1500, subsidyCents: 600 } };
+    await page.route("**/api/fretes/estimativa", route => route.fulfill({ json: { data: { mode: "available", options: [quote, superfrete] } } }));
+    await page.goto(origin);
+    await page.getByRole("button", { name: /^Ver frete de / }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("textbox", { name: "CEP", exact: true }).fill("80010-000");
+    await dialog.getByRole("button", { name: "Consultar", exact: true }).click();
+
+    const rows = dialog.getByRole("listitem");
+    await expect(rows).toHaveCount(2);
+    await expect(rows.first()).toContainText("Correios · PAC");
+    await expect(rows.first()).toContainText("SuperFrete");
+    await expect(rows.first()).toContainText(/R\$\s*15,00/);
+    await expect(rows.first()).toContainText("MAIS ECONÔMICO");
+    await expect(rows.last()).toContainText("Correios · PAC");
+    await expect(rows.last()).toContainText("Melhor Envio");
+    await expect(rows.last()).not.toContainText("MAIS ECONÔMICO");
+  });
+});
+
 test("frete fora do modo compacto evita repetir a nota regular", async () => {
   await fixture(390, async page => {
     await page.route("**/api/fretes/estimativa", route => route.fulfill({ json: { data: { mode: "available", options: [quote] } } }));

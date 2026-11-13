@@ -9,8 +9,8 @@ import {
 } from "@/features/products/product-detail";
 import { createCheckoutQuote } from "@/features/shipping/checkout-quote";
 import { createPublicShippingEstimate, type PublicEstimateState } from "@/features/shipping/public-estimate-quote";
-import { shippingCustomerPrice } from "@/features/shipping/benefit-policy";
 import { LocalShippingBenefitNote, ShippingBenefitNote } from "./shipping-benefit-note";
+import { shippingOptionsForDisplay } from "./shipping-option-display";
 import { localDeliveryCity } from "@/features/shipping/delivery-policy";
 import { readPreferredPostalCode, rememberPreferredPostalCode } from "@/features/shipping/preferred-postal-code";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
@@ -48,6 +48,7 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode, onPost
   const estimateRequest = product ? { productId: product.id, quantity: selectedQuantity, postalCode: normalizedPostalCode } : null;
   const requestKey = JSON.stringify(product ? { ...estimateRequest, stock: product.stock } : request);
   const result = estimate?.key === requestKey ? estimate : null;
+  const displayed = shippingOptionsForDisplay(result?.options ?? []);
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const localCity = result?.local ? localDeliveryCity(normalizedPostalCode) : null;
 
@@ -162,13 +163,13 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode, onPost
             {localCity ? <LocalShippingBenefitNote city={localCity} /> : result.local && <strong className="mt-2 block text-sm text-pharma-green">Grátis</strong>}
             {result.options.length > 0 && <>
               <ul className="mt-2 grid gap-1.5">
-                {result.options.map(option => {
-                  const fee = shippingCustomerPrice(option);
-                  return <li className="rounded-lg border border-emerald-100 bg-white px-2.5 py-2 text-sm sm:px-3" key={option.serviceId}>
+                {displayed.map(({ option, fee, key, integrator }, index) => {
+                  return <li className="rounded-lg border border-emerald-100 bg-white px-2.5 py-2 text-sm sm:px-3" key={key}>
                     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2">
                       <div className="min-w-0">
                         <strong className="block break-words leading-5">{option.carrier} · {option.service}</strong>
-                        <span className="block text-xs leading-4 text-muted">Até {option.deliveryDays} dias úteis</span>
+                        <span className="block text-xs leading-4 text-muted">{integrator && <>{integrator} · </>}Até {option.deliveryDays} dias úteis</span>
+                        {result.mode !== "estimate" && displayed.length > 1 && index === 0 && <span className="mt-0.5 block text-xs font-bold text-pharma-green">MAIS ECONÔMICO</span>}
                       </div>
                       <strong className="whitespace-nowrap tabular-nums text-pharma-green">{fee === 0 ? "Grátis" : formatCurrency(fee / 100)}</strong>
                     </div>

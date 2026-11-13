@@ -63,13 +63,13 @@ export const shippingPackagingSchema = z.object({
   packages: z.array(z.object({
     weightGrams: z.number().int().positive().max(600000),
     widthCm: z.number().positive().max(1000), heightCm: z.number().positive().max(1000), lengthCm: z.number().positive().max(1000),
-    insuranceValueCents: z.number().int().positive().max(20_000_000),
+    insuranceValueCents: z.number().int().nonnegative().max(20_000_000),
     items: z.array(z.object({ productId: z.string().min(1).max(64), quantity: z.number().int().min(1).max(20) })).min(1).max(20),
   })).min(1).max(20),
 });
 export type ShippingPackaging = z.infer<typeof shippingPackagingSchema>;
 export const shippingOptionSchema = z.object({
-  provider: z.literal("melhor-envio"), serviceId: z.number().int().positive(),
+  provider: z.enum(["melhor-envio", "superfrete"]), serviceId: z.number().int().positive(),
   carrier: z.string().min(1).max(100), service: z.string().min(1).max(100),
   priceCents: z.number().int().positive().max(10_000_000),
   deliveryDays: z.number().int().min(0).max(365),

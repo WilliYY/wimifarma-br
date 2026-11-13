@@ -4,8 +4,8 @@ import { Loader2, MessageCircle, Store, Truck } from "lucide-react";
 import { useCart } from "./cart-provider";
 import { type ShippingSelection } from "@/features/shipping/schema";
 import { createCheckoutQuote, type CheckoutQuoteState } from "@/features/shipping/checkout-quote";
-import { shippingCustomerPrice } from "@/features/shipping/benefit-policy";
 import { ShippingBenefitNote } from "./shipping-benefit-note";
+import { shippingOptionsForDisplay } from "./shipping-option-display";
 import { requiresPharmacyShippingSupport } from "@/features/shipping/eligibility";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
@@ -46,17 +46,17 @@ export function CheckoutShippingOptions({ postalCode, selected, onSelect, discou
   const message = current ? state.message : "";
   const currentSelection = !busy ? options.find((option) => option.token === selected?.token) : undefined;
   const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-  const displayed = [...options].sort((a, b) => shippingCustomerPrice(a) - shippingCustomerPrice(b) || a.deliveryDays - b.deliveryDays || a.serviceId - b.serviceId);
-  const fastest = Math.min(...displayed.map((option) => option.deliveryDays));
-  const benefitOptions = !busy ? displayed.filter((option) => option.benefit) : [];
-  const goalOptions = benefitOptions.filter(({ benefit }) => {
+  const displayed = shippingOptionsForDisplay(options);
+  const fastest = Math.min(...options.map((option) => option.deliveryDays));
+  const benefitOptions = !busy ? displayed.filter(({ option }) => option.benefit) : [];
+  const goalOptions = benefitOptions.filter(({ option: { benefit } }) => {
     const minimum = benefit?.minimumOrderCents ?? 0;
     const remaining = benefit?.remainingCents ?? 0;
     return Number.isSafeInteger(minimum) && Number.isSafeInteger(remaining) && remaining > 0 && remaining <= minimum;
   });
-  const benefitOption = benefitOptions.find(({ benefit }) => benefit?.status === "free")
-    ?? goalOptions.sort((a, b) => a.benefit!.remainingCents! - b.benefit!.remainingCents! || a.benefit!.minimumOrderCents! - b.benefit!.minimumOrderCents!)[0]
-    ?? benefitOptions.find(({ benefit }) => benefit?.status === "discounted");
+  const benefitOption = benefitOptions.find(({ option }) => option.benefit?.status === "free")
+    ?? goalOptions.sort(({ option: a }, { option: b }) => a.benefit!.remainingCents! - b.benefit!.remainingCents! || a.benefit!.minimumOrderCents! - b.benefit!.minimumOrderCents!)[0]
+    ?? benefitOptions.find(({ option }) => option.benefit?.status === "discounted");
   if (!available || needsSupport) return <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/60 p-4" role="status">
     <div className="flex items-start gap-3">
       <Truck className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
@@ -74,15 +74,14 @@ export function CheckoutShippingOptions({ postalCode, selected, onSelect, discou
     <div aria-live="polite">
       {benefitOption && (
         <div className="mt-2 rounded-lg border border-emerald-100 bg-emerald-50 px-2.5 pb-1.5">
-          <ShippingBenefitNote benefit={benefitOption.benefit} service={`${benefitOption.carrier} · ${benefitOption.service}`} />
+          <ShippingBenefitNote benefit={benefitOption.option.benefit} service={[benefitOption.option.carrier, benefitOption.option.service, benefitOption.integrator].filter(Boolean).join(" · ")} />
         </div>
       )}
     </div>
-    <fieldset className="mt-4 grid gap-3"><legend className="sr-only">Opções de transportadora</legend>{displayed.map((option, index) => {
-      const fee = shippingCustomerPrice(option);
-      return <label className={`flex cursor-pointer items-start gap-3 rounded-lg border bg-white p-3 ${currentSelection?.token === option.token ? "border-brand ring-1 ring-brand" : "border-line"}`} key={option.serviceId}>
+    <fieldset className="mt-4 grid gap-3"><legend className="sr-only">Opções de transportadora</legend>{displayed.map(({ option, fee, key, integrator }, index) => {
+      return <label className={`flex cursor-pointer items-start gap-3 rounded-lg border bg-white p-3 ${currentSelection?.token === option.token ? "border-brand ring-1 ring-brand" : "border-line"}`} key={key}>
         <input checked={currentSelection?.token === option.token} className="mt-1 h-4 w-4 shrink-0 accent-brand focus-visible:ring-2 focus-visible:ring-brand" name="shippingService" onChange={() => { if (activeKey.current === requestKey && !busy) onSelectRef.current(option); }} type="radio" />
-        <span className="min-w-0 flex-1"><strong className="block text-sm text-ink">{option.carrier} · {option.service}</strong><span className="mt-1 block text-xs text-muted">Até {option.deliveryDays} dias úteis estimados</span><span className="mt-2 flex flex-wrap gap-2 text-xs font-bold text-pharma-green">{options.length > 1 && index === 0 && <span>MAIS ECONÔMICO</span>}{options.length > 1 && option.deliveryDays === fastest && <span>MAIS RÁPIDO</span>}</span></span>
+        <span className="min-w-0 flex-1"><strong className="block text-sm text-ink">{option.carrier} · {option.service}</strong><span className="mt-1 block text-xs text-muted">{integrator && <>{integrator} · </>}Até {option.deliveryDays} dias úteis estimados</span><span className="mt-2 flex flex-wrap gap-2 text-xs font-bold text-pharma-green">{options.length > 1 && index === 0 && <span>MAIS ECONÔMICO</span>}{options.length > 1 && option.deliveryDays === fastest && <span>MAIS RÁPIDO</span>}</span></span>
         <strong className="shrink-0 text-sm text-pharma-green">{fee === 0 ? "Grátis" : money.format(fee / 100)}</strong>
       </label>;
     })}</fieldset>

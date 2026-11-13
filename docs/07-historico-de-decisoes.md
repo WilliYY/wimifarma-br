@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-13 — PAC e SEDEX da SuperFrete na comparação por CEP
+
+A cotação suporta PAC e SEDEX da SuperFrete junto aos serviços ativos do Melhor Envio. O destaque usa o preço final ao cliente e o pedido guarda o integrador escolhido. A SuperFrete começa desativada, com rota de Ivaté e mercadorias revisadas no escopo descrito em [Fretes e entregas](27-melhor-envio.md#pac-e-sedex-pela-superfrete--13112026). A ativação depende da cotação autenticada com a conta da farmácia. A equipe compra a etiqueta no painel do integrador.
+
 ## 2026-11-13 — E-mails operacionais de pedido e lembrete de carrinho
 
 Pedido recebido e etapas entram em uma fila de e-mail. O lembrete de carrinho usa autorização própria, descadastro e supressão ao comprar. Os modos começam desligados até a homologação. [E-mails de pedido e carrinho](144-emails-de-pedido-e-carrinho.md).

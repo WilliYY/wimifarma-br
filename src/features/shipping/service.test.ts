@@ -20,11 +20,13 @@ test("medication carrier acceptance is enforced both when quoting and submitting
         : "export const melhorEnvioRequest=async(...args)=>globalThis.fixture.provider(...args);" }));
   } }] });
   const key = "synthetic-shipping-service-key";
+  const env = { ...process.env, AUTH_SECRET: key, SUPERFRETE_API_TOKEN: "", SUPERFRETE_ENABLED: "false" };
   const profile = { enabled: true, transportReviewed: true, weightGrams: 350, widthCm: 15, heightCm: 10, lengthCm: 20, approvedServiceIds: undefined as number[] | undefined };
   const baseProduct = { id: "fixture-product", name: "Produto sintético", slug: "fixture", imageUrl: null, category: "Medicamentos", price: "10.00", promotionalPrice: null, status: "ACTIVE" as const, stock: 10, requiresPrescription: false, prescriptionType: undefined as PrescriptionType | undefined, isPopularPharmacy: false, shippingProfile: profile, updatedAt: new Date(0), inventorySource: "PHARMACY" as "PHARMACY" | "DISTRIBUTOR", ean: "7891234567895", supplierMarkupBps: 10000, supplierOffers: [] as SupplierCommerceOffer[] };
   let products = [baseProduct];
   const integration: { settings: ShippingSettings; revision: number } = { settings: { ...defaultShippingSettings, enabled: true, serviceIds: [1, 2, 3], contactEmail: "shipping@example.invalid" }, revision: 7 };
   let providerPrice = "10.00";
+  let superFreteRequests = 0;
   const requests: { services: string; to?: { postal_code: string }; products: { id: string; weight: number; width: number; height: number; length: number; insurance_value: number; quantity: number }[]; volumes?: unknown }[] = [];
   const tx = { product: { findMany: async () => products }, shippingIntegration: { findUnique: async () => integration } };
   const fixture = { tx, integration, provider: async (...args: unknown[]) => {
@@ -35,7 +37,16 @@ test("medication carrier acceptance is enforced both when quoting and submitting
     return [1, 3].map(id => ({ id, name: `Serviço ${id}`, price: providerPrice, delivery_time: 3, company: { name: "Transportadora sintética" }, packages }));
   } };
   const loaded = { exports: {} as { quoteCart: (cep: string, items: CheckoutRequest["items"]) => Promise<ShippingSelection[]>; validateOrderShipping: (transaction: unknown, input: CheckoutRequest) => Promise<unknown> } };
-  vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), process: { env: { ...process.env, AUTH_SECRET: key } }, Buffer, Date, fixture, console });
+  const superFreteFetch = async (url: string, init: RequestInit) => {
+    superFreteRequests++;
+    assert.equal(url, "https://api.superfrete.com/api/v0/calculator");
+    assert.equal(new Headers(init.headers).get("Authorization"), "Bearer synthetic-superfrete-token");
+    const { package: parcel, options } = JSON.parse(String(init.body));
+    return Response.json([{ id: 1, has_error: false, currency: "R$", price: 8.5, delivery_time: 2, company: { id: 1 },
+      packages: [{ dimensions: { width: parcel.width, height: parcel.height, length: parcel.length }, weight: parcel.weight, insurance_value: options.insurance_value }] }]);
+  };
+  vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url),
+    process: { env }, Buffer, Date, fixture, console, fetch: superFreteFetch, AbortSignal });
   const items = [{ productId: baseProduct.id, quantity: 1, expectedUnitPriceCents: 1000 }];
   const options = await loaded.exports.quoteCart("01001000", items);
   assert.deepEqual(Array.from(options, option => option.serviceId), [1]);
@@ -121,4 +132,26 @@ test("medication carrier acceptance is enforced both when quoting and submitting
   const legacy = { ...verifyShippingQuote(near[0].token, key) };
   delete legacy.benefit; delete legacy.economicPriceCents; delete legacy.discountCents;
   await assert.rejects(loaded.exports.validateOrderShipping(tx, { ...commercialInput, shippingToken: signShippingQuote(legacy, key) }), /condições do frete mudaram/, "old quotes require fresh customer consent");
+
+  env.SUPERFRETE_API_TOKEN = "synthetic-superfrete-token";
+  env.SUPERFRETE_ENABLED = "true";
+  products = [{ ...baseProduct, category: "Higiene", shippingProfile: { ...profile, cargoKinds: ["general"] } } as typeof baseProduct];
+  const combined = await loaded.exports.quoteCart("01001000", items);
+  assert.equal(superFreteRequests, 1);
+  const alternatives = combined.filter(option => option.serviceId === 1);
+  assert.deepEqual(Array.from(alternatives, option => option.provider), ["melhor-envio", "superfrete"]);
+  const superFrete = alternatives[1];
+  const payload = verifyShippingQuote(superFrete.token, key);
+  assert.equal(payload.provider, "superfrete");
+  assert.equal(payload.benefit?.customerPriceCents, 850);
+  assert.equal(superFrete.token.includes(env.SUPERFRETE_API_TOKEN), false);
+  const accepted = await loaded.exports.validateOrderShipping(tx, { ...input, shippingToken: superFrete.token }) as typeof payload;
+  assert.equal(accepted.provider, "superfrete");
+  assert.equal(accepted.postingLocation?.pointName, "AC Ivaté");
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, { ...input, shippingToken: superFrete.token,
+    address: { ...input.address!, postalCode: "41219620" } }), /carrinho ou o CEP mudou/);
+  env.SUPERFRETE_ENABLED = "false";
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, { ...input, shippingToken: superFrete.token }), /não aceita os itens/);
+  assert.equal((await loaded.exports.quoteCart("01001000", items)).some(option => option.provider === "superfrete"), false);
+  assert.equal(superFreteRequests, 1);
 });

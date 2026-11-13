@@ -410,7 +410,7 @@ test("rascunho oferece consulta de envio com produto, quantidade e CEP sem prome
     await expect(page.getByRole("status")).toContainText("SEDEX");
     await expect(page.getByRole("status")).toContainText("Até 4 dias úteis");
     await expect(page.getByRole("status")).toContainText(/18,75/);
-    await expect(page.getByRole("status")).not.toContainText(/Opções de entrega|Grátis|Envio ainda em preparação/);
+    await expect(page.getByRole("status")).not.toContainText(/Opções de entrega|Grátis|Envio ainda em preparação|MAIS ECONÔMICO/);
     await page.getByLabel("Quantidade de teste").fill("3");
     await expect(contact).toHaveCount(0);
     assert.deepEqual(await page.evaluate("window.navigations"), []);

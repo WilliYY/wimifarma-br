@@ -25,6 +25,7 @@ test("checkout mostra a menor meta antes da seleção e preserva as opções pag
     const page = await browser.newPage();
     const benefit = (minimumOrderCents: number | null, remainingCents: number | null, status = "regular") => ({ status, customerPriceCents: 1900, subsidyCents: 0, minimumOrderCents, remainingCents });
     let benefits = [benefit(20000, 10000), { ...benefit(15000, 5000), customerPriceCents: 2000 }];
+    let compareProviders = false;
     let fail = false;
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
@@ -33,7 +34,13 @@ test("checkout mostra a menor meta antes da seleção e preserva as opções pag
       if (path === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text });
       if (path === "/fixture.css") return route.fulfill({ contentType: "text/css", body: css.css });
       if (path === "/") return route.fulfill({ contentType: "text/html", body: '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>' });
-      if (path.startsWith("/api/")) return route.fulfill(fail ? { status: 503, json: { error: "Cotação indisponível" } } : { json: { data: benefits.map((benefit, index) => ({ provider: "melhor-envio", serviceId: index + 1, carrier: "Transportadora sintética", service: `Serviço ${index + 1}`, priceCents: 1900 + index * 100, deliveryDays: 5 + index, token: `token-${index}`, benefit })) } });
+      if (path.startsWith("/api/")) return route.fulfill(fail ? { status: 503, json: { error: "Cotação indisponível" } } : { json: { data: benefits.map((benefit, index) => ({
+        provider: compareProviders && index === 1 ? "superfrete" : "melhor-envio",
+        serviceId: compareProviders ? 1 : index + 1,
+        carrier: compareProviders ? "Correios" : "Transportadora sintética",
+        service: compareProviders ? "PAC" : `Serviço ${index + 1}`,
+        priceCents: 1900 + index * 100, deliveryDays: 5 + index, token: `token-${index}`, benefit,
+      })) } });
       return route.abort();
     });
     await page.goto("http://127.0.0.1:3198/");
@@ -67,6 +74,16 @@ test("checkout mostra a menor meta antes da seleção e preserva as opções pag
     await page.getByRole("button", { name: "Consultar novamente" }).click();
     await expect(page.getByText(/R\$\s*5,00 de desconto no frete/)).toBeVisible();
     await expect(page.getByRole("progressbar")).toHaveCount(0);
+    compareProviders = true;
+    benefits = [benefit(null, null), { ...benefit(null, null, "discounted"), customerPriceCents: 1600, subsidyCents: 400 }];
+    await page.getByRole("button", { name: "Consultar novamente" }).click();
+    const superfrete = page.getByRole("radio", { name: /Correios · PAC.*SuperFrete.*MAIS ECONÔMICO/ });
+    const melhorEnvio = page.getByRole("radio", { name: /Correios · PAC.*Melhor Envio/ });
+    await expect(superfrete).toBeVisible();
+    await melhorEnvio.check();
+    await superfrete.check();
+    await expect(superfrete).toBeChecked();
+    await expect(melhorEnvio).not.toBeChecked();
     fail = true;
     await page.getByRole("button", { name: "Consultar novamente" }).click();
     await expect(page.getByText("Cotação indisponível")).toBeVisible();

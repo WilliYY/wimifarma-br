@@ -10,6 +10,16 @@ Para homologar, configure `FRENET_API_TOKEN` no ambiente do servidor com a crede
 
 O fluxo da Frenet está restrito ao ADMIN nesta etapa. A habilitação no checkout depende de homologação com a conta da farmácia, identificação dos serviços e localidades de postagem aceitos e validação da embalagem e do valor da opção selecionada. Os pedidos públicos continuam usando o contrato existente do Melhor Envio.
 
+## PAC e SEDEX pela SuperFrete — 13/11/2026
+
+O checkout e a consulta de produto com envio disponível comparam as tarifas do Melhor Envio com PAC e SEDEX da SuperFrete quando a conta estiver habilitada. O site ordena pelo valor final ao cliente, usa o prazo para desempatar e distingue o integrador quando o serviço aparece nas duas plataformas. A entrega local e a retirada seguem suas regras. O pedido guarda integrador, preço, pacote previsto e local de postagem.
+
+A rota inicial da SuperFrete usa o CEP 87525-000 e a AC Ivaté. A cotação requer um perfil de envio aprovado para cada item e usa um volume conservador. A operação inicial abrange mercadoria geral e alimento industrializado já classificados. Medicamentos, líquidos, perfumes, aerossóis e outras cargas condicionadas seguem as regras de seus canais já revisados. A SuperFrete recebe os CEPs, peso, dimensões e valor declarado. O envio usa o valor declarado dentro dos limites do serviço quando acima da indenização automática. As metas de frete grátis do Melhor Envio continuam sendo calculadas pela política em vigor. A SuperFrete mostra a tarifa integral enquanto sua rota não tem custos operacionais confirmados.
+
+A [API de cotação](https://superfrete.readme.io/reference/cotacao-de-frete) é [gratuita e sem mensalidade](https://superfrete.readme.io/reference/primeiros-passos). A etiqueta é cobrada quando a equipe a compra no painel do integrador. Confira mercadoria, documentação e medidas da caixa pronta antes da emissão. [Limites de pacote e seguro](https://ajuda.superfrete.com/artigo/pesos-medidas-e-seguro-maximo-por-modalidade-nos-envios-via-integracao/) · [Mercadorias](https://ajuda.superfrete.com/artigo/politica-itens-permitidos-restritos-proibidos/)
+
+No servidor, informe o token de produção em `SUPERFRETE_API_TOKEN`. Com `SUPERFRETE_ENABLED=false`, o checkout usa o Melhor Envio. Antes de ligar, consulte PAC e SEDEX com a conta da Wimifarma para Ivaté e CEPs de referência, confirme o pacote e o valor retornados e confira a operação da AC Ivaté. Ative com `SUPERFRETE_ENABLED=true` e recrie apenas o serviço app. Depois, faça uma cotação de produto elegível e confira a escolha e o preço final sem criar pedido. Para desligar, volte a opção para `false` e recrie o app. Cotações da SuperFrete emitidas anteriormente perdem validade no checkout quando desligado.
+
 ## Frete por CEP e contribuição — 25/10/2026
 
 A gratuidade fixa por subtotal de R$ 99,90 descrita no histórico foi substituída pela política ajustável de subsídio por CEP, cotação e contribuição projetada. O benefício começa desativado até confirmação dos custos e limites no ADMIN; a cotação normal continua disponível para produtos habilitados. Contrato e validações em [107](107-frete-cep-e-contribuicao.md).
