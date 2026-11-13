@@ -1,6 +1,7 @@
 import * as React from "react";
-import { Body, Button, Container, Head, Heading, Hr, Html, Img, Link, Preview, Section, Text, render } from "react-email";
+import { Body, Button, Container, Head, Heading, Hr, Html, Link, Preview, Section, Text, render } from "react-email";
 import { SITE_URL } from "@/lib/seo";
+import { EmailBrand, emailLogoPath } from "./email-brand";
 import { buildCustomerMessage, type CustomerMessageData, type CustomerMessageEvent, type CustomerMessageOptions } from "./customer-messages";
 import { customerMessageEvents, customerMessageSample, customerMessageSampleOptions } from "./customer-message-samples";
 
@@ -26,13 +27,11 @@ export async function renderWimifarmaEmail({ subject, lines, action, unsubscribe
       <Preview>{subject}</Preview>
       <Body lang="pt-BR" dir="ltr" style={{ backgroundColor: "#f4f5f7", color: "#172033", fontFamily: "Arial, Helvetica, sans-serif", margin: 0, padding: "24px 12px" }}>
         <Container style={{ backgroundColor: "#ffffff", border: "1px solid #e2e5eb", borderRadius: "16px", maxWidth: "600px", margin: "0 auto", overflow: "hidden" }}>
-          <Section style={{ backgroundColor: "#ffffff", padding: "28px 24px 20px", borderBottom: "4px solid #ca0733" }}>
-            <Img src={`${SITE_URL}/brand/logo-wimifarma-email.png`} alt="Wimifarma" width="200" style={{ display: "block", maxWidth: "100%", height: "auto" }} />
-          </Section>
-          <Section style={{ padding: "12px 24px 24px" }}>
-            <Heading as="h1" style={{ fontSize: "22px", lineHeight: "30px", margin: "16px 0 24px", color: "#172033" }}>{subject}</Heading>
+          <EmailBrand />
+          <Section style={{ padding: "24px" }}>
+            <Heading as="h1" style={{ fontSize: "26px", lineHeight: "32px", margin: "0 0 16px", color: "#172033" }}>{subject}</Heading>
             {lines.map((line, index) => <Text key={index} style={{ fontSize: "15px", lineHeight: "24px", margin: "0 0 12px", overflowWrap: "anywhere" }}>{line}</Text>)}
-            {action && <Button href={action.url} style={{ backgroundColor: "#ca0733", color: "#fff", borderRadius: "8px", fontWeight: 700, padding: "12px 18px" }}>{action.label}</Button>}
+            {action && <Button href={action.url} style={{ backgroundColor: "#a5082c", color: "#fff", borderRadius: "8px", fontSize: "15px", lineHeight: "20px", fontWeight: 700, marginTop: "6px", padding: "13px 18px" }}>{action.label}</Button>}
             <Hr style={{ borderColor: "#e2e5eb", margin: "24px 0 16px" }} />
             <Text style={{ color: "#596579", fontSize: "12px", lineHeight: "20px", margin: 0 }}>Wimifarma · Ivaté, Paraná</Text>
             {unsubscribe && <Link href={unsubscribe} style={{ color: "#596579", fontSize: "12px", textDecoration: "underline" }}>Cancelar lembretes de carrinho</Link>}
@@ -50,7 +49,7 @@ export async function renderSampleEmails(): Promise<CustomerEmailPreviews> {
     const email = await renderCustomerEmail(customerMessageSample(value), customerMessageSampleOptions);
     if (!email) throw new Error("Modelo fictício indisponível.");
     // The administrative srcDoc inherits its page origin and CSP, including in local/staging QA.
-    const previewHtml = email.html.replace(`${SITE_URL}/brand/logo-wimifarma-email.png`, "/brand/logo-wimifarma-email.png");
+    const previewHtml = email.html.replaceAll(`${SITE_URL}${emailLogoPath}`, emailLogoPath);
     return [value, previewHtml] as const;
   }));
   return Object.fromEntries(entries) as CustomerEmailPreviews;

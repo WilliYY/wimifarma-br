@@ -76,9 +76,8 @@ export async function submitBrevoEmail(options: {
         headers: { "api-key": configuration.BREVO_API_KEY, "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
           sender: { email: configuration.BREVO_SENDER_EMAIL, name: configuration.BREVO_SENDER_NAME },
-          to: [{ email: recipient }],
+          to: [{ email: recipient, ...(options.disablePixel ? { contactPixelTrackingConsent: false } : {}) }],
           subject: email.subject, htmlContent: email.html, textContent: email.text,
-          ...(options.disablePixel ? { contactPixelTrackingConsent: false } : {}),
         }),
       });
       if (response.status >= 400 && response.status < 500 && response.status !== 408) {

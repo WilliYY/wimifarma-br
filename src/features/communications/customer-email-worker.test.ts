@@ -62,7 +62,7 @@ test("commercial worker uses verified destination, safe snapshot and a single su
   assert.match(sent.email.text, /2 × Sabonete sintético/);
   assert.match(sent.email.text, /pagamento ainda está pendente/);
   assert.doesNotMatch(sent.email.html, /Medicamento fictício secreto|Brevo/);
-  assert.match(sent.email.html, /logo-wimifarma-email\.png/);
+  assert.match(sent.email.html, /logo-wimifarma-email-contraste\.png/);
 });
 
 test("worker checks proof and stage again and never retries an uncertain submission", async () => {

@@ -135,7 +135,7 @@ test("carrinho autorizado percorre fila, prazo, renderização e submissão úni
     assert.ok(body.includes(`/api/carrinho/descadastrar-email?chave=${eligible.reminder().cartKey}`));
     assert.doesNotMatch(body, /Sabonete QA|synthetic-product|R\$|Brevo/);
   }
-  assert.match(delivery.email.html, /logo-wimifarma-email\.png/);
+  assert.match(delivery.email.html, /logo-wimifarma-email-contraste\.png/);
   assert.match(delivery.email.text, /preços e a disponibilidade/);
   assert.deepEqual(eligible.reminder().productIds, []);
 

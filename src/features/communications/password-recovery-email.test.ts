@@ -9,7 +9,7 @@ test("recovery and verification display the official logo and put the code only 
   for (const kind of ["recovery", "verification"] as const) {
     const email = await renderPasswordRecoveryEmail(code, kind);
     assert.ok(email);
-    assert.match(email.html, /src="https:\/\/wimifarma\.com\.br\/brand\/logo-wimifarma-email\.png"/);
+    assert.match(email.html, /src="https:\/\/wimifarma\.com\.br\/brand\/logo-wimifarma-email-contraste\.png"/);
     assert.match(email.html, new RegExp(code));
     assert.match(email.text, new RegExp(code));
     assert.match(email.text, /15 minutos/);
@@ -35,8 +35,8 @@ test("sample submits one branded message to the internal mailbox only after expl
     assert.equal(url, "https://api.brevo.com/v3/smtp/email");
     assert.equal(init?.redirect, "error");
     const body = JSON.parse(String(init?.body));
-    assert.deepEqual(body.to, [{ email: "wimifarma@gmail.com" }]);
-    assert.equal(body.contactPixelTrackingConsent, false);
+    assert.deepEqual(body.to, [{ email: "wimifarma@gmail.com", contactPixelTrackingConsent: false }]);
+    assert.equal(body.contactPixelTrackingConsent, undefined);
     assert.match(body.subject, /^\[TESTE\]/);
     assert.match(body.htmlContent, /Redefinir minha senha/);
     return Response.json({ messageId: "<synthetic@example.test>" }, { status: 201 });

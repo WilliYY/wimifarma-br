@@ -17,7 +17,7 @@ test("React Email renders the canonical message without adding private product d
   assert.equal(email.text, canonical.email.text);
   assert.match(email.html, /<!DOCTYPE html/);
   assert.match(email.html, /lang="pt-BR"/);
-  assert.match(email.html, /logo-wimifarma-email\.png/);
+  assert.match(email.html, /logo-wimifarma-email-contraste\.png/);
   assert.match(email.html, /alt="Wimifarma"/);
   assert.match(email.html, /&lt;script&gt;/);
   assert.doesNotMatch(email.html, /<script|onerror=|Produto privado fictício|Pagamento confirmado/);
@@ -39,7 +39,7 @@ test("all six preview emails render synthetic examples, with no provider call or
     assert.match(html, /TESTE/);
     assert.match(html, /sem compra real/);
     assert.doesNotMatch(html, /<script|<form|<iframe/);
-    assert.match(html, /src="\/brand\/logo-wimifarma-email\.png"/);
+    assert.match(html, /src="\/brand\/logo-wimifarma-email-contraste\.png"/);
     assert.doesNotMatch(html, /src="https:\/\/wimifarma/);
   }
   assert.match(samples.PAYMENT_CONFIRMED, /Pagamento confirmado/);

@@ -1,5 +1,9 @@
 # 112 — Modelos React Email e escolha do serviço
 
+**Atualização em 13/11/2026.** Os quatro testes chegaram à caixa de entrada do Gmail da Wimifarma, com SPF, DKIM e DMARC aprovados e sem marca visível da Brevo no corpo. A inspeção também identificou pixels e redirecionamentos inseridos pelo provedor. O transporte agora informa `contactPixelTrackingConsent: false` no objeto do destinatário, conforme o contrato da Brevo. A aplicação efetiva dessa preferência depende da configuração da conta e deve ser verificada em um novo envio.
+
+O cabeçalho compartilhado de pedidos, carrinho e segurança usa a logo oficial com fundo claro opaco incorporado ao PNG. A imagem mantém contraste se o cliente de e-mail escurecer a área ao redor. O novo arquivo tem URL própria para o próximo envio. As mensagens antigas podem continuar exibindo o arquivo anterior armazenado pelo cliente de e-mail.
+
 **Atualização em 02/11/2026:** o lojista escolheu iniciar com Brevo sem assinatura paga. Foi preparada uma integração exclusivamente de homologação interna, desabilitada por padrão e sem disparadores de pedidos ou campanhas. Ela reutiliza o modelo sintético canônico, sem SDK adicional. Cadastro concluído, domínio/remetente autenticados, chave, ativação e entrega real ainda precisam de conferência; não confundir essa preparação com envios funcionando. Operação e limites em [141](141-brevo-homologacao-interna.md). As consultas e entregas abaixo mantêm suas datas históricas.
 
 ## Integração em 27/10/2026
