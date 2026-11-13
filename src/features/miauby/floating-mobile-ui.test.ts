@@ -63,7 +63,10 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
       document.body.append(purchase);
     });
     const purchase = page.getByRole("button", { name: "Comprar sintético", exact: true });
-    assert.ok((await trigger.boundingBox())!.y + (await trigger.boundingBox())!.height <= (await purchase.boundingBox())!.y, "Launcher fica acima da compra fixa");
+    await expect.poll(() => trigger.evaluate(button => {
+      const dock = document.getElementById("synthetic-sticky-purchase");
+      return dock !== null && button.getBoundingClientRect().bottom <= dock.getBoundingClientRect().top;
+    }), { message: "Launcher fica acima da compra fixa" }).toBe(true);
     await page.screenshot({ path: `${evidenceDirectory}/sticky-purchase-390.png` });
     await purchase.click();
     await expect(purchase).toHaveAttribute("data-clicked", "true");
