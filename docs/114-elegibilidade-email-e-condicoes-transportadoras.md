@@ -22,9 +22,19 @@ Esta revisão foi somente leitura dos e-mails e das fontes públicas. Não houve
 
 ## Frete — condições confirmadas
 
-Melhor Envio continua sendo a integração existente. Correios direto, Frenet e Rodonaves são candidatos pesquisados; não estão cadastrados, homologados ou ativos por esta entrega. Plataforma de cotação adicional pode repetir transportadoras e não aumenta automaticamente a aceitação de cargas.
+Melhor Envio atende à cotação do checkout. A simulação dos Correios fica no painel administrativo e depende de liberar o cartão e validar as APIs do contrato. Plataforma de cotação adicional pode repetir transportadoras e não aumenta automaticamente a aceitação de cargas.
 
 ### Correios direto
+
+#### Cotação administrativa pelo CWS
+
+Em 13/11/2026, o portal confirmou o Platinum 1 em processamento. A proposta informa modalidade a faturar, sem contrapartida, com ciclo de 16 a 15 e vencimento no dia 5. O portal informa até dois dias úteis para liberação do cartão em **Meus Contratos → Cartões de Postagens**.
+
+1. Com o cartão liberado, confirme nele os serviços **38202 (API Preço)** e **38210 (API Prazo)** e os códigos **03220 (SEDEX)** e **03298 (PAC)** usados na cotação. Confira as APIs e as versões no catálogo autenticado do CWS.
+2. Gere o código de acesso em **CWS → Gestão de acesso a APIs**. No ambiente privado do servidor, configure `CORREIOS_API_USER` com o idCorreios, `CORREIOS_API_CODE` com o código de acesso do CWS e `CORREIOS_POSTING_CARD` com o número do cartão, preservando zeros à esquerda. Se precisar informar o contrato e a diretoria regional, configure também `CORREIOS_CONTRACT_NUMBER` e `CORREIOS_REGIONAL_DIRECTORATE` juntos.
+3. No painel de fretes, em **Correios direto**, simule um pacote de teste. Use os mesmos CEPs, peso e dimensões ao comparar PAC e SEDEX com a cotação atual. A simulação consulta preço e prazo e não gera etiqueta, postagem ou pedido. O uso do contrato no checkout depende de validar as tarifas e a elegibilidade da carga.
+
+O conector usa token por cartão, Preço v1 e Prazo v1, conforme os exemplos oficiais. O manual de Prazo também menciona v3, então a versão acessível à conta precisa de verificação no CWS. [CWS](https://www.correios.com.br/atendimento/developers/manuais/correioswebservice) · [Token](https://www.correios.com.br/atendimento/developers/manuais/manual-uso-da-api-token) · [Preço](https://www.correios.com.br/atendimento/developers/manuais/manual-api-preco-1) · [Prazo](https://www.correios.com.br/atendimento/developers/manuais/manual-api-prazo)
 
 - Clube/à vista e contrato convencional a faturar têm condições distintas. APIs preço/prazo exigem contrato a faturar e habilitação **38202/38210**; cadastro à vista não basta.
 - Clube anuncia ausência de mínimo mensal; pacotes/coleta podem ter contrapartidas. Comparar proposta real, sem presumir tarifa menor que Melhor Envio.

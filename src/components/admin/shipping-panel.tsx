@@ -11,6 +11,7 @@ import { SHIPPING_CARGO_LABELS, type ShippingCargo } from "@/features/shipping/c
 import { ShippingBenefitFields } from "./shipping-benefit-fields";
 import { ShippingOperationalCostFields, ShippingCostComparisons } from "./shipping-operational-costs";
 import { ProductLogisticsEvidence } from "./product-logistics-evidence";
+import { CorreiosSimulation } from "./correios-simulation";
 import { FrenetSimulation } from "./frenet-simulation";
 
 type Product = { id: string; name: string; category: string | null; shippingProfile: unknown; requiresPrescription: boolean; prescriptionType?: PrescriptionType; isPopularPharmacy: boolean; updatedAt: string };
@@ -126,6 +127,7 @@ export function ShippingPanel({ callbackUrl }: { callbackUrl: string }) {
       </fieldset>
     </form>
     <FrenetSimulation />
+    <CorreiosSimulation />
     <section className="rounded-2xl border border-line bg-white p-5 sm:p-7"><h2 className="text-lg font-black">Simular e selecionar serviços</h2><p className="mt-2 text-sm leading-6 text-muted">Informe uma encomenda embalada. A simulação consulta preços; não cria envio. Marque apenas serviços com postagem ou coleta viável para Ivaté e aceitação confirmada das mercadorias.</p>
       <form className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-6" onChange={() => setQuotes([])} onSubmit={(event) => { event.preventDefault(); setQuotes([]); const values = new FormData(event.currentTarget); run(async () => { const kinds = values.getAll("cargoKinds") as ShippingCargo[]; const cargoKinds: ShippingCargo[] = kinds.length ? kinds : ["unspecified"]; const acceptanceConfirmed = values.has("acceptanceConfirmed"); const body = { postalCode: String(values.get("postalCode")).replace(/\D/g, ""), cargoKinds, acceptanceConfirmed, ...Object.fromEntries(["width", "height", "length", "weight", "insurance"].map((key) => [key, Number(values.get(key))])) }; const result = await request("/api/admin/fretes/simular", "POST", body); setSimulationCargo({ cargoKinds, acceptanceConfirmed }); setQuotes(result.data); setServices(result.services ?? result.data); setMessage(result.data.length ? "Cotação recebida. Compare custo completo, aceitação e viabilidade da rota antes de selecionar." : "Nenhum serviço disponível para essa encomenda."); }); }}>
         <Label text="CEP de destino"><input className={field} disabled={busy} name="postalCode" inputMode="numeric" maxLength={9} required /></Label>

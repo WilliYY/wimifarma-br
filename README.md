@@ -46,6 +46,8 @@ Modelos React Email com marca oficial integrados à prévia Miauby ADMIN, sem di
 
 Elegibilidade Resend/Brevo em consulta escrita e condições verificadas de Correios, Frenet e Rodonaves: [114](docs/114-elegibilidade-email-e-condicoes-transportadoras.md).
 
+Configuração e validação da cotação administrativa do Platinum 1 pelo Correios CWS: [Correios direto](docs/114-elegibilidade-email-e-condicoes-transportadoras.md#cotação-administrativa-pelo-cws).
+
 Pesquisa física por GTIN, famílias de embalagem revisáveis e alternativas Correios/Frenet, sem ativação automática de frete: [113](docs/113-referencias-fisicas-e-alternativas-frete.md).
 
 Evidências comerciais separadas do perfil protegido, receitas calibráveis, revisão ADMIN auditada e importação conservadora: [115](docs/115-evidencias-logisticas-e-receitas.md).
