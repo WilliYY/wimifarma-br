@@ -1,5 +1,15 @@
 # 27 - Melhor Envio e frete por transportadora
 
+## Comparação administrativa de frete pela Frenet — 13/11/2026
+
+O painel `/admin/fretes` compara uma encomenda embalada pela Frenet com origem em Ivaté (87525-000) e Douradina (87485-000). O ADMIN informa o mesmo CEP de destino, valor, peso e dimensões nas duas cotações. O painel informa quando a Frenet retorna uma tarifa sem indicar disponibilidade de etiqueta. A cotação serve à avaliação da rota. A postagem exige confirmação do serviço, da agência, da aceitação da mercadoria e da embalagem.
+
+Em 13/11/2026, a calculadora pública da Frenet retornou os mesmos preços e prazos nas duas origens para um pacote de 500 g, 25 × 15 × 10 cm e R$ 50 de valor declarado. Para São Paulo (01001-000), PAC R$ 18,08 em 8 dias úteis e SEDEX R$ 20,57 em 4 dias úteis. Para Curitiba (80010-000), PAC R$ 18,08 em 7 dias úteis e SEDEX R$ 20,57 em 3 dias úteis. Valores de referência anteriores ao desconto promocional exibido. A consulta pública não homologa a conta. Para postar nos Correios em Douradina, a etiqueta precisa ter origem nessa cidade. [Calculadora pública](https://frenet.com.br/simular-frete/) · [Local de postagem](https://ajuda.frenet.com.br/knowledge-base/onde-posso-postar-a-minha-etiqueta-emitida-pela-frenet/)
+
+Para homologar, configure `FRENET_API_TOKEN` no ambiente do servidor com a credencial da loja. Configure também `FRENET_PARTNER_TOKEN` se o acesso for fornecido como plataforma parceira. O servidor envia os CEPs e os dados do pacote ao endpoint HTTPS de pré-cotação autenticado. O valor final da etiqueta é confirmado em consulta própria de pós-cotação. [Referência de cotação](https://docs.frenet.com.br/reference/calculateshippingquote) · [Autenticação para parceiros](https://docs.frenet.com.br/docs/autenticacao) · [Pré e pós-cotação](https://docs.frenet.com.br/docs/pre-cotacao-pos-cotacao)
+
+O fluxo da Frenet está restrito ao ADMIN nesta etapa. A habilitação no checkout depende de homologação com a conta da farmácia, identificação dos serviços e localidades de postagem aceitos e validação da embalagem e do valor da opção selecionada. Os pedidos públicos continuam usando o contrato existente do Melhor Envio.
+
 ## Frete por CEP e contribuição — 25/10/2026
 
 A gratuidade fixa por subtotal de R$ 99,90 descrita no histórico foi substituída pela política ajustável de subsídio por CEP, cotação e contribuição projetada. O benefício começa desativado até confirmação dos custos e limites no ADMIN; a cotação normal continua disponível para produtos habilitados. Contrato e validações em [107](107-frete-cep-e-contribuicao.md).
