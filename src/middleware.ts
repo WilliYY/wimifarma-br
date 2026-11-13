@@ -25,6 +25,8 @@ const rateLimitRules: RateLimitRule[] = [
     pathname: /^\/api\/minha-conta\/register$/,
     windowMs: 15 * 60 * 1000,
   },
+  { limit: 5, pathname: /^\/api\/minha-conta\/recuperar-senha$/, windowMs: 15 * 60 * 1000 },
+  { limit: 10, pathname: /^\/api\/minha-conta\/(?:redefinir-senha|confirmar-email)$/, windowMs: 15 * 60 * 1000 },
   { limit: 20, pathname: /^\/api\/miauby$/, windowMs: 60 * 1000 },
   { limit: 30, pathname: /^\/api\/cep\//, windowMs: 60 * 1000 },
   { limit: 10, pathname: /^\/api\/pedidos$/, windowMs: 15 * 60 * 1000 },

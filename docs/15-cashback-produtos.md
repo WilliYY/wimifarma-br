@@ -1,5 +1,11 @@
 # 15 - Cashback por produto
 
+## Crédito excepcional autorizado pelo proprietário — 12/11/2026
+
+O operador com acesso privado ao servidor pode lançar um crédito pontual expressamente autorizado pelo proprietário com `scripts/grant-owner-cashback.ts`. A operação identifica um cliente ativo pelo nome e e-mail exatos, exige um único ADMIN ativo vinculado à auditoria do proprietário e mantém o lançamento, o saldo e a auditoria na mesma transação. O crédito fica disponível na carteira para uso em compra.
+
+Use as variáveis `OWNER_CASHBACK_CUSTOMER_EMAIL`, `OWNER_CASHBACK_CUSTOMER_NAME`, `OWNER_CASHBACK_AMOUNT_CENTS` e `OWNER_CASHBACK_OPERATION_KEY` no ambiente privado. Defina uma chave opaca e estável por autorização. Rode `tsx scripts/grant-owner-cashback.ts` primeiro para conferir o saldo projetado, depois execute com `--commit=<chave>`. A simulação seguinte deve confirmar `already_applied` com o mesmo lançamento. Registre a evidência no atendimento privado. A rotina fica fora das rotas públicas e administrativas.
+
 ## Política atual de seleção e taxa — 02/11/2026
 
 O lojista definiu cashback de compra de **1%**, somente nos produtos escolhidos manualmente por comportarem o benefício na margem. Não foi informado um limiar numérico, e o sistema não presume margem suficiente pela classe do medicamento, pelo nome ou pelo preço. Novos produtos começam sem cashback; a seleção automática de genéricos/similares descrita no histórico de 23/10 foi encerrada.

@@ -38,7 +38,10 @@ function GoogleMark() {
 
 const submitClass = "group inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl bg-brand px-5 text-base font-semibold text-white shadow-sm transition hover:bg-brand-strong active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand disabled:cursor-wait disabled:opacity-60 motion-reduce:transform-none motion-reduce:transition-none";
 
-export function CustomerAuthPage({ callbackUrl = "/minha-conta" }: { callbackUrl?: string }) {
+export function CustomerAuthPage({ callbackUrl = "/minha-conta", passwordRecoveryAvailable = false }: {
+  callbackUrl?: string;
+  passwordRecoveryAvailable?: boolean;
+}) {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [isEntering, setIsEntering] = useState(false);
@@ -148,6 +151,7 @@ export function CustomerAuthPage({ callbackUrl = "/minha-conta" }: { callbackUrl
             <fieldset className="space-y-4" disabled={busy}>
               <Field autoComplete="username" icon={<Mail className="h-4 w-4" />} label="E-mail ou usuário" name="login" placeholder="Digite seu e-mail ou usuário" />
               <Field autoComplete="current-password" icon={<LockKeyhole className="h-4 w-4" />} label="Senha" name="password" placeholder="Digite sua senha" type="password" />
+              {passwordRecoveryAvailable && <Link className="inline-flex min-h-11 items-center rounded-sm text-sm font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand" href="/recuperar-senha" prefetch={false}>Esqueci minha senha</Link>}
               <button className={`${submitClass} mt-2`} disabled={busy} type="submit">{isEntering && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}{isEntering ? "Entrando…" : "Entrar na minha conta"}<ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1 motion-reduce:transform-none" /></button>
             </fieldset>
           </form>

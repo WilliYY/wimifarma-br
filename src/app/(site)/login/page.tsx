@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CustomerAuthPage } from "@/components/site/customer-auth-page";
 import { getSafeCustomerCallbackUrl } from "@/features/auth/customer-redirect";
+import { isPasswordRecoveryEmailConfigured } from "@/features/communications/password-recovery-email";
 
 export const metadata: Metadata = {
   robots: { follow: false, index: false },
@@ -15,5 +16,5 @@ export default async function Page({ searchParams }: PageProps) {
   const params = await searchParams;
   const callbackUrl = getSafeCustomerCallbackUrl(params.callbackUrl);
 
-  return <CustomerAuthPage callbackUrl={callbackUrl} />;
+  return <CustomerAuthPage callbackUrl={callbackUrl} passwordRecoveryAvailable={isPasswordRecoveryEmailConfigured()} />;
 }

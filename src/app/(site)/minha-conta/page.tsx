@@ -4,6 +4,7 @@ import { CustomerAccountPanel } from "@/components/site/customer-account-panel";
 import { auth } from "@/features/auth/auth";
 import { sessionCustomerId } from "@/features/auth/customer-session";
 import { getCustomerCashback } from "@/features/cashback/service";
+import { isPasswordRecoveryEmailConfigured } from "@/features/communications/password-recovery-email";
 import { getPrisma } from "@/lib/prisma";
 import { getCustomerOrders } from "@/features/orders/customer-orders-service";
 
@@ -37,6 +38,10 @@ export default async function MinhaContaPage() {
 
   const cashback = await prisma.$transaction((tx) => getCustomerCashback(tx, customer.id), { isolationLevel: "RepeatableRead" });
   const orders = await getCustomerOrders(prisma, customer.id, { page: 1, filter: "all" });
+  const canConfirmRecoveryEmail = isPasswordRecoveryEmailConfigured() && session.user.role === "CUSTOMER" && !customer.staffAccess &&
+    Boolean(customer.email && customer.passwordHash && customer.passwordHash !== "!GOOGLE_ONLY");
+  const recoveryEmailVerified = customer.passwordRecoveryVerifiedEmail === customer.email &&
+    Boolean(customer.passwordRecoveryVerifiedAt && customer.passwordRecoveryVerifiedAt <= new Date());
 
   return (
     <CustomerAccountPanel
@@ -58,6 +63,9 @@ export default async function MinhaContaPage() {
         name: customer.name,
         neighborhood: customer.neighborhood,
         notes: customer.notes,
+        passwordRecoveryEmailStatus: canConfirmRecoveryEmail
+          ? (recoveryEmailVerified ? "verified" : "unverified")
+          : undefined,
         passwordSetAt: customer.passwordSetAt?.toISOString() ?? null,
         phone: customer.phone,
       }}

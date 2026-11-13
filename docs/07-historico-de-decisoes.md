@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-12 — Recuperação de senha de clientes
+
+Clientes com senha local confirmam o e-mail da conta antes de poder recuperar o acesso. Os códigos de confirmação e recuperação têm finalidades separadas e só ficam no banco como hashes. O envio usa um modelo Wimifarma e começa desativado até a homologação da entrega. [Recuperação de senha](143-recuperacao-de-senha.md).
+
 ## 2026-11-07 — Willian em quinto com animação de fotos e orientação corrigida
 
 Três fotografias reais fornecidas pelo lojista compõem uma animação de três segundos, com um segundo por foto e repetição infinita. A orientação espelhada é corrigida no quadro inteiro, preservando rosto, mãos, produtos e rótulos; o encaixe3:4 conserva as fotografias completas. O novo card ocupa a quinta posição, depois de Thiago3 e LinhaVichy4, aponta para perfumaria/cuidados pessoais e usa a assinatura oficial completa sobre a área livre da foto. A versão pública é WebP animado de117KB, sem EXIF de origem. O limite de imagens animadas passa de duas para três para que a nova mídia não seja bloqueada pelas vagas existentes; o limite de dois vídeos, descarregamento e acessibilidade permanecem. Os dois GIFs originais e os vídeos existentes não são reexportados. Contratos em [mídia do Willian](home-media-willian-fifth-2026-11-07.md) e [galeria](home-motion-gallery-2026-11-05.md).

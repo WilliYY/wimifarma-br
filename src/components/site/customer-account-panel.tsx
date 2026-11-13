@@ -2,6 +2,7 @@
 import { CustomerStoreCredit } from "./customer-store-credit";
 import { ClubBenefits } from "@/components/site/club-benefits";
 import { CustomerRestockPanel } from "@/components/site/customer-restock-panel";
+import { CustomerEmailConfirmation } from "@/components/site/customer-email-confirmation";
 
 import Link from "next/link";
 
@@ -57,6 +58,7 @@ type CustomerAccount = {
   name: string;
   neighborhood: string | null;
   notes: string | null;
+  passwordRecoveryEmailStatus?: "verified" | "unverified";
   passwordSetAt: string | null;
   phone: string | null;
 };
@@ -546,6 +548,9 @@ export function CustomerAccountPanel({
 
           {activeTab === "seguranca" ? (
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_16rem]">
+              {customer.passwordRecoveryEmailStatus ? (
+                <CustomerEmailConfirmation key={customer.email} verified={customer.passwordRecoveryEmailStatus === "verified"} />
+              ) : null}
               <form className="grid content-start gap-5 [&_input]:min-h-12 [&_input]:rounded-xl" onSubmit={savePassword}>
                 {hasPassword ? (
                   <Field

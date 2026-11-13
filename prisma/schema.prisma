@@ -375,6 +375,10 @@ model Customer {
   googleSubject     String?            @unique
   passwordHash      String?
   passwordSetAt     DateTime?
+  passwordRecoveryVerifiedEmail String?
+  passwordRecoveryVerifiedAt DateTime?
+  passwordRecovery  CustomerPasswordRecovery?
+  recoveryEmailVerification CustomerRecoveryEmailVerification?
   lastLoginAt       DateTime?
   status            CustomerStatus     @default(ACTIVE)
   spinWheelAttempts SpinWheelAttempt[]
@@ -392,6 +396,27 @@ model Customer {
   @@index([status])
   @@index([city])
   @@index([lastLoginAt])
+}
+
+model CustomerPasswordRecovery {
+  customerId        String   @id
+  customer          Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  email             String
+  verifiedAt        DateTime
+  credentialVersion String
+  tokenHash         String   @unique
+  expiresAt         DateTime
+  consumedAt        DateTime?
+}
+
+model CustomerRecoveryEmailVerification {
+  customerId        String   @id
+  customer          Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  email             String
+  credentialVersion String
+  tokenHash         String
+  expiresAt         DateTime
+  consumedAt        DateTime?
 }
 
 enum RestockInterestStatus {
