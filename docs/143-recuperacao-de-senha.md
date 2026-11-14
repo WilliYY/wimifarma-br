@@ -9,10 +9,10 @@ Os códigos são aleatórios e separados por finalidade. O banco guarda somente 
 ## Homologação e ativação
 
 1. Aplique a migração `20261112120000_customer_password_recovery` antes de publicar o app correspondente.
-2. Configure o remetente autenticado `pedidos@emails.wimifarma.com.br` com nome `Wimifarma`. Guarde a chave da Brevo na configuração privada do servidor. O modo de recuperação começa em `disabled`.
+2. Configure o remetente autenticado `pedidos@emails.wimifarma.com.br` com nome `Wimifarma`. Configure `BREVO_TRANSPORT=smtp`, com `BREVO_SMTP_LOGIN` e `BREVO_SMTP_KEY` na configuração privada do servidor. Use uma chave SMTP dedicada de envio e valide o IP de saída antes de restringir chamadas na Brevo. Consulte [a operação do transporte](141-brevo-homologacao-interna.md#transporte-smtp-14112026). O modo de recuperação começa em `disabled`.
 3. Para uma amostra com código fictício, use `BREVO_EMAIL_MODE=internal_test`, `BREVO_TEST_RECIPIENT=wimifarma@gmail.com` e `npm exec -- tsx scripts/send-password-recovery-test-email.ts --send`. Confira a caixa de entrada em desktop e celular. Confirme a logo oficial, o botão e a ausência de marca visual da Brevo no e-mail entregue.
 4. Depois da amostra, use `PASSWORD_RECOVERY_EMAIL_MODE=enabled` em homologação para confirmar e redefinir a senha de uma conta exclusiva de teste. Valide o novo login e a rejeição do código usado. A tela pública e a confirmação em Minha conta aparecem quando o app está com o modo ativo e o remetente configurado.
 
-O HTML e o texto gerados trazem somente a identidade Wimifarma. A documentação comercial da Brevo prevê marca no plano gratuito. A aparência após entrega depende da conta e deve ser conferida no destino. A API recebe um pedido para suprimir o pixel. A aplicação desse pedido depende da configuração da Brevo. A aceitação pela API não comprova entrega.
+O HTML e o texto gerados trazem a identidade Wimifarma. A aparência após entrega depende da conta e deve ser conferida no destino. No SMTP, confira a política de rastreamento da conta e a mensagem recebida. O botão de recuperação usa uma URL fixa, e o código fica no corpo. A aceitação pelo relay não comprova entrega.
 
 Se o envio falhar, a reserva de 15 minutos continua para limitar novas chamadas. Os logs operacionais registram a finalidade e o status da resposta sem incluir endereço, código ou chave.

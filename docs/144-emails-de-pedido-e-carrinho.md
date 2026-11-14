@@ -8,10 +8,10 @@ O lembrete depende de autorização para o carrinho atual. A opção começa des
 
 ## Operação
 
-- `CUSTOMER_ORDER_EMAIL_MODE=enabled` liga os e-mails do pedido. `CUSTOMER_CART_EMAIL_MODE=enabled` liga o lembrete. Cada modo começa desligado e exige `BREVO_API_KEY`, `BREVO_SENDER_EMAIL=pedidos@emails.wimifarma.com.br` e `BREVO_SENDER_NAME=Wimifarma`.
+- `CUSTOMER_ORDER_EMAIL_MODE=enabled` liga os e-mails do pedido. `CUSTOMER_CART_EMAIL_MODE=enabled` liga o lembrete. Cada modo começa desligado e exige o [transporte Brevo configurado](141-brevo-homologacao-interna.md#transporte-smtp-14112026), `BREVO_SENDER_EMAIL=pedidos@emails.wimifarma.com.br` e `BREVO_SENDER_NAME=Wimifarma`.
 - Aplique `20261113110000_customer_commerce_email` antes de publicar o app. O processo Node verifica a fila a cada 30 segundos, com reserva atômica por evento. Nova tentativa só ocorre após falha anterior à chamada. Resposta incerta fica em `UNCERTAIN`. Aceitação pela Brevo não comprova entrega.
 - A outbox guarda referências. O registro de carrinho guarda o endereço confirmado e IDs de itens para revalidar a elegibilidade. Remove IDs ao cancelar ou reservar para submissão, e remove registros expirados após um dia. Antes de chamar a Brevo, o worker reconfirma estado e identidade. Uma submissão já iniciada pode ser aceita mesmo após mudança de pedido ou cancelamento.
-- Homologue com o endereço interno e dados sintéticos. Confira confirmação, etapa, lembrete, descadastro e ausência de marca do provedor na caixa de entrada antes de ativar. A fila registra resultados sem e-mail, conteúdo ou chave nos logs.
+- Homologue com o endereço interno e dados sintéticos. Confira confirmação, etapa, lembrete, descadastro e aparência do e-mail na caixa de entrada antes de ativar. No SMTP, confira também o comportamento dos links e a política de rastreamento da conta. A fila registra resultados sem e-mail, conteúdo ou chave nos logs.
 - Os e-mails têm identidade oficial e rodam em separado dos avisos Miauby no WhatsApp. Os disparos do WhatsApp seguem [97](97-operacao-admin-e-etapas-whatsapp.md).
 
 O lembrete com incentivo é comunicação comercial. O link de descadastro aparece em HTML e texto. [Classificação das mensagens na Brevo](https://help.brevo.com/hc/en-us/articles/360021196220-What-are-the-differences-between-marketing-transactional-and-automation-emails) · [Descadastro no carrinho abandonado](https://help.brevo.com/hc/en-us/articles/9741388688402-Do-I-need-to-add-an-unsubscribe-link-to-my-emails).

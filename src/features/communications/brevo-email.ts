@@ -1,5 +1,6 @@
 import { env } from "node:process";
 import { z } from "zod";
+import { smtpSenderSchema, submitBrevoSmtpEmail } from "./brevo-smtp";
 import { renderCustomerEmail } from "./customer-email";
 import { customerMessageSample } from "./customer-message-samples";
 
@@ -12,7 +13,17 @@ const senderConfigurationSchema = z.object({
   BREVO_SENDER_NAME: z.string().trim().min(1).max(100).regex(/^[^\x00-\x1f\x7f]+$/),
 });
 
-export function readBrevoSenderConfiguration(environment: Record<string, string | undefined>) {
+type BrevoSender =
+  | z.infer<typeof senderConfigurationSchema>
+  | z.infer<typeof smtpSenderSchema>;
+
+export function readBrevoSenderConfiguration(environment: Record<string, string | undefined>): BrevoSender | null {
+  const transport = environment.BREVO_TRANSPORT || "api";
+  if (transport === "smtp") {
+    const parsed = smtpSenderSchema.safeParse(environment);
+    return parsed.success ? parsed.data : null;
+  }
+  if (transport !== "api") return null;
   const parsed = senderConfigurationSchema.safeParse(environment);
   return parsed.success ? parsed.data : null;
 }
@@ -25,6 +36,7 @@ export function readBrevoTestRecipient(environment: Record<string, string | unde
 export type BrevoTestEmailResult =
   | { status: "disabled" | "invalid_config" | "preparation_failed" | "accepted" }
   | { status: "rejected"; httpStatus: number }
+  | { status: "rejected"; smtpStatus: number }
   | { status: "uncertain"; explanation: string };
 
 const uncertain = (): BrevoTestEmailResult => ({
@@ -36,6 +48,7 @@ const uncertain = (): BrevoTestEmailResult => ({
 export async function sendBrevoTestEmail(options: {
   environment?: Record<string, string | undefined>;
   fetch?: typeof fetch;
+  smtp?: Parameters<typeof submitBrevoSmtpEmail>[1];
 } = {}): Promise<BrevoTestEmailResult> {
   const environment = options.environment ?? env;
   const mode = environment.BREVO_EMAIL_MODE ?? "disabled";
@@ -53,17 +66,21 @@ export async function sendBrevoTestEmail(options: {
   }
   if (!email) return { status: "preparation_failed" };
 
-  return submitBrevoEmail({ configuration, recipient, email, fetch: options.fetch });
+  return submitBrevoEmail({ configuration, recipient, email, fetch: options.fetch, smtp: options.smtp });
 }
 
 export async function submitBrevoEmail(options: {
-  configuration: z.infer<typeof senderConfigurationSchema>;
+  configuration: BrevoSender;
   recipient: string;
   email: { subject: string; html: string; text: string };
   disablePixel?: boolean;
   fetch?: typeof fetch;
+  smtp?: Parameters<typeof submitBrevoSmtpEmail>[1];
 }): Promise<BrevoTestEmailResult> {
   const { configuration, recipient, email } = options;
+  if ("BREVO_SMTP_LOGIN" in configuration) {
+    return submitBrevoSmtpEmail({ configuration, recipient, email }, options.smtp);
+  }
   const controller = new AbortController();
   let timeout: ReturnType<typeof setTimeout> | undefined;
   const deadline = new Promise<BrevoTestEmailResult>((resolve) => {

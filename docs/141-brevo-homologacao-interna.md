@@ -1,5 +1,15 @@
 # 141 — Homologação interna de e-mail pela Brevo
 
+## Transporte SMTP (14/11/2026)
+
+O transporte recomendado para a Wimifarma é SMTP com uma chave dedicada de envio. A chave de API transacional também permite administrar recursos como modelos e logs. Para selecionar SMTP, configure `BREVO_TRANSPORT=smtp`, `BREVO_SMTP_LOGIN` com o login SMTP exibido na Brevo e `BREVO_SMTP_KEY` com a chave SMTP. Use o remetente autenticado `pedidos@emails.wimifarma.com.br` com nome `Wimifarma`. Guarde credenciais no ambiente privado do servidor. Revogue a chave na Brevo se precisar interromper o acesso. Para bloquear IPs desconhecidos, primeiro confira o IP de saída e se a conta tem outros clientes SMTP. A lista de endereços autorizados é compartilhada. [Chaves SMTP](https://help.brevo.com/hc/en-us/articles/7959631848850-Create-and-manage-your-SMTP-keys) · [Bloqueio por IP](https://help.brevo.com/hc/en-us/articles/5740111683858-Authorize-and-block-IP-addresses-for-API-and-SMTP-security).
+
+O app usa TLS na porta 465, com certificado validado, e só considera a mensagem aceita após `250` ao fim do corpo. Resposta permanente `5xx` vira rejeição. Falha temporária, desconexão ou resposta ambígua fica incerta, sem nova tentativa automática. Versões que ainda usam `BREVO_API_KEY` continuam com o transporte `api` quando `BREVO_TRANSPORT` está ausente. A seleção `smtp` com credenciais incompletas recusa o envio. Os modelos React Email e as flags de cada fluxo são compartilhados pelos dois transportes.
+
+Para homologar, mantenha as três flags de clientes desligadas. Configure `BREVO_EMAIL_MODE=internal_test` e `BREVO_TEST_RECIPIENT=wimifarma@gmail.com` no ambiente que executa o script. Rode `npm exec -- tsx scripts/send-password-recovery-test-email.ts --send` uma vez e confirme na caixa a logo, o remetente e a entrega da amostra com código inerte. O servidor usa protocolo SMTP para essa execução quando o transporte selecionado é `smtp`. Confira o rastreamento no e-mail recebido. O SMTP segue a política da conta Brevo e não envia o campo de consentimento individual da API. [Rastreamento transacional](https://help.brevo.com/hc/en-us/articles/11643306229906-Can-I-anonymize-the-tracking-of-opens-and-clicks-for-my-emails).
+
+As seções seguintes registram a preparação original do transporte de API.
+
 ## Decisão e situação em 02/11/2026
 
 O lojista autorizou começar com Brevo sem contratar plano pago e considerar outro serviço no futuro, se necessário. O acesso solicitado usa o Google empresarial no perfil wimi. O navegador chegou à etapa de completar o perfil, mas o controle automático não conseguiu ler ou preencher a página. Isso não comprova cadastro completo, ativação transacional ou elegibilidade da operação.

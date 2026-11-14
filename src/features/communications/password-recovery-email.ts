@@ -35,7 +35,8 @@ async function sendRecoveryCode(recipient: string, token: string, kind: "recover
       console.warn("[password-recovery] Email submission did not confirm acceptance", {
         kind,
         status: result.status,
-        ...(result.status === "rejected" ? { httpStatus: result.httpStatus } : {}),
+        ...(result.status === "rejected" && "httpStatus" in result ? { httpStatus: result.httpStatus } : {}),
+        ...(result.status === "rejected" && "smtpStatus" in result ? { smtpStatus: result.smtpStatus } : {}),
       });
     }
     return result.status === "accepted";
@@ -58,6 +59,7 @@ export async function sendPasswordRecoveryVerificationEmail({ recipient, token }
 export async function sendPasswordRecoveryTestEmail(options: {
   environment?: Record<string, string | undefined>;
   fetch?: typeof fetch;
+  smtp?: Parameters<typeof submitBrevoEmail>[0]["smtp"];
 } = {}) {
   const environment = options.environment ?? env;
   if (environment.BREVO_EMAIL_MODE !== "internal_test") return { status: "disabled" } as const;
@@ -68,7 +70,8 @@ export async function sendPasswordRecoveryTestEmail(options: {
   try {
     const email = await renderPasswordRecoveryEmail(sampleToken);
     if (!email) return { status: "preparation_failed" } as const;
-    return submitBrevoEmail({ configuration, recipient, email: { ...email, subject: `[TESTE] ${email.subject}` }, disablePixel: true, fetch: options.fetch });
+    return submitBrevoEmail({ configuration, recipient, email: { ...email, subject: `[TESTE] ${email.subject}` }, disablePixel: true,
+      fetch: options.fetch, smtp: options.smtp });
   } catch {
     return { status: "preparation_failed" } as const;
   }

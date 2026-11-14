@@ -1790,3 +1790,7 @@ A consulta pública de frete retornou 403 para o endereço com `www`, enquanto o
 ## 06/11/2026 — assinatura transparente no título das fileiras
 
 O título “Sua farmácia [logo] tem tudo” usa uma composição centralizada e proporcional à largura da tela, evitando deixar “tem tudo” isolado no celular em tamanho normal. A quebra natural continua disponível quando o texto é ampliado. O fundo branco e os adornos são removidos somente do contêiner dessa assinatura. A imagem oficial transparente e o componente global `BrandSignature` não mudam. A alteração é restrita à tipografia e ao CSS local, sem efeito sobre rotação, produtos, carrinho ou regras comerciais.
+
+## 14/11/2026 — Chave exclusiva de envio para a Brevo
+
+O site passa a aceitar SMTP com TLS e verificação obrigatória do certificado. A chave SMTP autentica o envio com menos permissões na Brevo. A seleção é feita no ambiente privado do servidor e credenciais SMTP incompletas impedem o envio. Os modos de recuperação, pedidos e carrinho seguem separados. A homologação começa com uma amostra na caixa interna, conferindo a entrega, a apresentação e o rastreamento sob a política da conta. [Configuração e validação do SMTP](141-brevo-homologacao-interna.md#transporte-smtp-14112026).
