@@ -12,10 +12,12 @@ import { hasPerfumeShippingCargo, permittedShippingServices, requiresPharmacyShi
 import { assessCarrierCargo, isKnownShippingService, type ShippingCargo } from "./cargo-policy";
 import { calculatePackedQuotes } from "./calculate-packed-quotes";
 import { cartShippingBenefit } from "./benefit-service";
+import { regularShippingBenefit } from "./benefit-policy";
 import { resolveAttainableShippingGoals } from "./attainable-goal";
 import { localDeliveryCity } from "./delivery-policy";
 import { publicShippingEstimateRequestSchema, publicShippingEstimateSchema, type PublicShippingEstimateRequest } from "./public-estimate-contract";
-import { compareSuperFrete, getSuperFreteConfig, quoteSuperFrete, superFreteBenefit, superFreteServices } from "./superfrete";
+import { compareSuperFrete, getSuperFreteConfig, quoteSuperFrete, superFreteServices } from "./superfrete";
+import { frenetCheckoutServices, getFrenetCheckoutConfig, quoteFrenetCheckout } from "./frenet-checkout";
 
 const physicalProfileSchema = shippingProfileSchema.pick({ weightGrams: true, widthCm: true, heightCm: true, lengthCm: true });
 const normalized = (value: string | null) => (value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -30,7 +32,8 @@ export async function estimateProductShipping(input: PublicShippingEstimateReque
   if (requiresPharmacyShippingSupport(product)) throw new ShippingError("O envio deste produto precisa de atendimento da farmácia.");
   if (localDeliveryCity(request.postalCode)) return publicShippingEstimateSchema.parse({ mode: "local", options: [] });
   const { settings } = await readShippingIntegration();
-  if (!settings.enabled || settings.environment !== "production" || !settings.serviceIds.length) throw new ShippingError("O envio para outras cidades ainda está em preparação. Consulte a farmácia ou escolha retirada.", 503);
+  const frenet = getFrenetCheckoutConfig();
+  if (!settings.enabled || settings.environment !== "production" || (!settings.serviceIds.length && !frenet)) throw new ShippingError("O envio para outras cidades ainda está em preparação. Consulte a farmácia ou escolha retirada.", 503);
   const parsed = shippingAdminProfileSchema.safeParse(product.shippingProfile);
   const physical = physicalProfileSchema.safeParse(product.shippingProfile);
   if (!parsed.success || !physical.success) throw new ShippingError("Peso ou medidas pendentes. Consulte a farmácia para preparar o envio.");
@@ -44,39 +47,52 @@ export async function estimateProductShipping(input: PublicShippingEstimateReque
     && (!cargos.includes("medication") || service === 1 || service === 2)
     && (profile.approvedServiceIds === undefined || (!profile.transportReviewed && profile.approvedServiceIds.length === 0) || profile.approvedServiceIds.includes(service))
     && assessCarrierCargo(service, cargos).status !== "blocked");
-  if (!serviceIds.length) throw new ShippingError("Este produto precisa de atendimento da farmácia para consultar o transporte.");
+  const frenetServices = frenet ? frenetCheckoutServices(settings, [product]) : [];
+  if (!serviceIds.length && !frenetServices.length) throw new ShippingError("Este produto precisa de atendimento da farmácia para consultar o transporte.");
   const unitPriceCents = Math.round(Number(sale.promotionalPrice ?? sale.price) * 100);
   if (!Number.isSafeInteger(unitPriceCents) || unitPriceCents <= 0 || unitPriceCents > 1_000_000) throw new ShippingError("Preço indisponível para consulta de frete.");
   const checkoutServices = permittedShippingServices(settings.serviceIds, [product]);
-  const available = profile.enabled && profile.transportReviewed && !isNotifyOnlyPendingLogistics(product.shippingProfile)
+  const legacyAvailable = serviceIds.length > 0 && profile.enabled && profile.transportReviewed && !isNotifyOnlyPendingLogistics(product.shippingProfile)
     && sale.stock >= request.quantity && cargos.every(cargo => cargo !== "unspecified")
     && serviceIds.every(service => checkoutServices.includes(service));
   const preparationDays = product.inventorySource === "DISTRIBUTOR" ? Math.max(settings.preparationDays, getSupplierPreparationEstimate(new Date()).preparationDays) : settings.preparationDays;
-  const token = shippingAccessToken();
+  let token: ReturnType<typeof shippingAccessToken> | undefined;
   const { weightGrams, widthCm, heightCm, lengthCm } = physical.data;
   const packing = { inputMeasurementBasis: profile.measurementBasis === "measured" ? "measured" as const : "estimated" as const,
     products: [{ id: product.id, quantity: request.quantity, insurance_value: unitPriceCents / 100, width: widthCm, height: heightCm, length: lengthCm, weight: weightGrams / 1000 }] };
-  const calculate = async (products: typeof packing.products, ids: number[], timeoutMs?: number) => melhorEnvioRequest(settings, "/api/v2/me/shipment/calculate", await token, {
+  const calculate = async (products: typeof packing.products, ids: number[], timeoutMs?: number) => melhorEnvioRequest(settings, "/api/v2/me/shipment/calculate", await (token ??= shippingAccessToken()), {
     from: { postal_code: settings.originPostalCode }, to: { postal_code: request.postalCode }, products, services: ids.join(","), options: { receipt: false, own_hand: false },
   }, timeoutMs === undefined ? undefined : { timeoutMs });
-  const superFrete = available ? getSuperFreteConfig() : null;
-  const { melhorOptions: options, superFreteOptions } = await compareSuperFrete(
-    calculatePackedQuotes(packing, serviceIds, preparationDays, calculate),
-    superFrete ? quoteSuperFrete(superFrete, settings, request.postalCode, packing, superFreteServices(settings, serviceIds, [product]), preparationDays) : Promise.resolve([]),
-  );
+  const superFrete = legacyAvailable ? getSuperFreteConfig() : null;
+  const [legacy, frenetResult] = await Promise.allSettled([
+    compareSuperFrete(
+      serviceIds.length ? calculatePackedQuotes(packing, serviceIds, preparationDays, calculate) : Promise.resolve([]),
+      superFrete ? quoteSuperFrete(superFrete, settings, request.postalCode, packing, superFreteServices(settings, serviceIds, [product]), preparationDays) : Promise.resolve([]),
+    ),
+    frenet && frenetServices.length ? quoteFrenetCheckout(frenet, request.postalCode, packing, frenetServices, preparationDays) : Promise.resolve([]),
+  ]);
+  const frenetOptions = frenetResult.status === "fulfilled" ? frenetResult.value : [];
+  if (legacy.status === "rejected" && (!(legacy.reason instanceof ShippingError) || !frenetOptions.length)) throw legacy.reason;
+  const { melhorOptions: options, superFreteOptions } = legacy.status === "fulfilled" ? legacy.value : { melhorOptions: [], superFreteOptions: [] };
+  if (frenetResult.status === "rejected") {
+    if (!(frenetResult.reason instanceof ShippingError) || !(options.length || superFreteOptions.length)) throw frenetResult.reason;
+    console.warn("[frenet] public-estimate-unavailable", { status: frenetResult.reason.status });
+  }
   const economicPriceCents = Math.min(...options.map(option => option.priceCents));
   const items = [{ productId: product.id, quantity: request.quantity, unitPriceCents }];
-  const benefitedOptions = available ? options.map(option => ({ ...option,
+  const benefitedOptions = legacyAvailable ? options.map(option => ({ ...option,
     benefit: cartShippingBenefit({ settings, products: [product], items, subtotalCents: unitPriceCents * request.quantity, discountCents: 0, quote: option, economicPriceCents }) })) : [];
-  const goals = available ? await resolveAttainableShippingGoals({ settings, products: [product], items, subtotalCents: unitPriceCents * request.quantity, discountCents: 0, options: benefitedOptions,
+  const goals = benefitedOptions.length ? await resolveAttainableShippingGoals({ settings, products: [product], items, subtotalCents: unitPriceCents * request.quantity, discountCents: 0, options: benefitedOptions,
     quoteTarget: calculate,
   }) : undefined;
-  const displayed = [
-    ...options.map((option, index) => ({ ...option, ...(available ? { benefit: { ...benefitedOptions[index].benefit, ...goals?.get(option.serviceId) } } : {}) })),
-    ...superFreteOptions.map(option => ({ ...option, benefit: superFreteBenefit(option.priceCents) })),
-  ];
+  const legacyDisplayed = legacyAvailable
+    ? benefitedOptions.map(option => ({ ...option, benefit: { ...option.benefit, ...goals?.get(option.serviceId) } }))
+    : frenetOptions.length ? [] : options;
+  const displayed = [...legacyDisplayed,
+    ...[...superFreteOptions, ...frenetOptions].map(option => ({ ...option, benefit: regularShippingBenefit(option.priceCents) }))];
+  const available = legacyAvailable || frenetOptions.length > 0;
   return publicShippingEstimateSchema.parse({ mode: available ? "available" : "estimate",
-    options: displayed.map(({ provider, serviceId, carrier, service, priceCents, deliveryDays, benefit }) =>
-      ({ provider, serviceId, carrier, service, priceCents, deliveryDays, ...(benefit ? { benefit } : {}) })),
+    options: displayed.map(({ provider, serviceId, providerServiceCode, carrier, service, priceCents, deliveryDays, benefit }) =>
+      ({ provider, serviceId, carrier, service, priceCents, deliveryDays, ...(providerServiceCode ? { providerServiceCode } : {}), ...(benefit ? { benefit } : {}) })),
   });
 }

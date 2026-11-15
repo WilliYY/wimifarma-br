@@ -4,25 +4,43 @@ import vm from "node:vm";
 import { createRequire } from "node:module";
 import { build } from "esbuild";
 import { validateShippingProduct } from "./rules";
+import type { PublicShippingEstimate, PublicShippingEstimateRequest } from "./public-estimate-contract";
 
-test("public estimate calculates complete drafts without approving shipment or exposing checkout tokens", async () => {
+test("public estimate calculates complete drafts without approving shipment or exposing checkout tokens", async t => {
   const compiled = await build({ entryPoints: ["src/features/shipping/public-estimate.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "estimate-fixture", setup(builder) {
     builder.onResolve({ filter: /lib\/prisma$|^\.\/integration$|^\.\/provider$/ }, args => ({ path: args.path, namespace: "fixture" }));
-    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("prisma") ? "export const getPrisma=()=>globalThis.fixture.db;" : args.path.endsWith("integration") ? "export const readShippingIntegration=async()=>globalThis.fixture.integration;export const shippingAccessToken=async()=> 'private-provider-token';export const SHIPPING_INTEGRATION_ID='fixture';" : "export const melhorEnvioRequest=async(...args)=>globalThis.fixture.provider(...args);" }));
+    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("prisma") ? "export const getPrisma=()=>globalThis.fixture.db;" : args.path.endsWith("integration") ? "export const readShippingIntegration=async()=>globalThis.fixture.integration;export const shippingAccessToken=async()=>globalThis.fixture.token();export const SHIPPING_INTEGRATION_ID='fixture';" : "export const melhorEnvioRequest=async(...args)=>globalThis.fixture.provider(...args);" }));
   } }] });
   const profile = { enabled: false, transportReviewed: false, measurementBasis: "estimated", weightGrams: 350, widthCm: 15, heightCm: 10, lengthCm: 20 };
   const base = { id: "synthetic-product", name: "Produto sintético", slug: "synthetic", category: "Higiene", price: "25.00", promotionalPrice: "20.00", status: "ACTIVE", stock: 10, requiresPrescription: false, prescriptionType: undefined, isPopularPharmacy: false, shippingProfile: profile, updatedAt: new Date(0), inventorySource: "PHARMACY", supplierOffers: [] };
   let product: Record<string, unknown> = { ...base };
-  let failure = false;
+  let failure: "unexpected" | "unavailable" | "no-coverage" | null = null;
+  let melhorTokens = 0, frenetCalls = 0, frenetStatus = 200;
+  let frenetHasCoverage = true;
+  const env: Record<string, string> = {};
   const calls: { services: string; products: { id: string; width: number; height: number; length: number; weight: number; insurance_value: number; quantity: number }[] }[] = [];
-  const integration = { settings: { enabled: true, environment: "production", originPostalCode: "87525000", postingLocations: [], preparationDays: 2, serviceIds: [1, 2, 3], contactEmail: "qa@example.invalid" }, revision: 1 };
-  const fixture = { integration, db: { product: { findUnique: async () => product } }, provider: async (...args: unknown[]) => {
-    if (failure) throw new Error("synthetic provider failure");
+  const integration = { settings: { enabled: true, environment: "production", originPostalCode: "87525000", originCity: "Ivaté", originState: "PR", postingLocations: [], preparationDays: 2, serviceIds: [1, 2, 3], contactEmail: "qa@example.invalid" }, revision: 1 };
+  const fixture = { integration, db: { product: { findUnique: async () => product } }, token: async () => {
+    melhorTokens++;
+    return "private-provider-token";
+  }, provider: async (...args: unknown[]) => {
+    if (failure === "unexpected") throw new Error("synthetic provider failure");
     const request = args[3] as typeof calls[number]; calls.push(request);
+    if (failure === "unavailable") return [{ id: 1, error: "Serviço indisponível no momento" }];
+    if (failure === "no-coverage") return [];
     return request.services.split(",").map(Number).map(id => ({ id, name: `Serviço ${id}`, price: "12.50", delivery_time: 3, company: { name: "Transportadora sintética" }, packages: request.products.map(p => ({ dimensions: { width: p.width, height: p.height * p.quantity, length: p.length }, weight: p.weight * p.quantity, insurance_value: p.insurance_value * p.quantity, products: [{ id: p.id, quantity: p.quantity }] })) }));
   } };
-  const loaded = { exports: {} as { estimateProductShipping(input: { productId: string; quantity: number; postalCode: string }): Promise<{ mode: string; options: { priceCents: number; deliveryDays: number; serviceId: number; benefit?: { customerPriceCents: number } }[] }> } };
-  vm.runInNewContext(compiled.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), process, Buffer, Date, fixture, console });
+  const fetchFrenet: typeof fetch = async (url, init) => {
+    assert.equal(url, "https://whitelabel.frenet.com.br/v1/quotes");
+    frenetCalls++;
+    assert.deepEqual(JSON.parse(String(init?.body)).Volumes, [{ Weight: 0.7, Length: 20, Width: 15, Height: 20 }]);
+    return Response.json({ sessionId: "synthetic-session", quotations: frenetHasCoverage ? [
+      { carrierCode: "COR", shippingServiceCode: "03298", shippingPrice: 13.40, deliveryTime: 4 },
+      { carrierCode: "COR", shippingServiceCode: "03220", shippingPrice: 16.40, deliveryTime: 2 },
+    ] : [] }, { status: frenetStatus });
+  };
+  const loaded = { exports: {} as { estimateProductShipping(input: PublicShippingEstimateRequest): Promise<PublicShippingEstimate> } };
+  vm.runInNewContext(compiled.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), process: { env }, Buffer, Date, fixture, console, fetch: fetchFrenet, AbortSignal });
   const input = { productId: base.id, quantity: 2, postalCode: "01001000" };
   const estimate = await loaded.exports.estimateProductShipping(input);
   assert.equal(estimate.mode, "estimate");
@@ -142,8 +160,76 @@ test("public estimate calculates complete drafts without approving shipment or e
     await assert.rejects(loaded.exports.estimateProductShipping({ ...input, postalCode: "87525000" }), /atendimento/);
     assert.equal(calls.length, before, "local CEP never bypasses legal restrictions");
   }
-  product = { ...base }; failure = true;
+  product = { ...base }; failure = "unexpected";
   await assert.rejects(loaded.exports.estimateProductShipping(input), /synthetic provider failure/);
-  failure = false; integration.settings.enabled = false;
+  failure = null; integration.settings.enabled = false;
   await assert.rejects(loaded.exports.estimateProductShipping(input), /preparação/);
+  integration.settings.enabled = true;
+  integration.settings.serviceIds = [1, 2, 3];
+  Object.assign(env, { FRENET_CHECKOUT_ENABLED: "true", FRENET_API_TOKEN: "estimate-frenet-private", FRENET_PARTNER_TOKEN: "estimate-partner-private" });
+  const frenetProfile = { ...profile, enabled: true, transportReviewed: true, cargoKinds: ["liquid"],
+    approvedServiceIds: [], frenetAcceptance: { version: 1, serviceCodes: ["03298"] }, carrierEvidence: { privateValue: "private-acceptance-proof" } };
+  const frenetProduct = { ...base, name: "Shampoo sintético 300 ml", shippingProfile: frenetProfile };
+
+  await t.test("Frenet-only oferece a tarifa aprovada sem consultar o Melhor Envio", async () => {
+    product = frenetProduct;
+    const before = [melhorTokens, calls.length, frenetCalls];
+    const result = await loaded.exports.estimateProductShipping(input);
+    assert.equal(result.mode, "available");
+    assert.equal(result.options.length, 1);
+    const [option] = result.options;
+    assert.equal(option.provider, "frenet");
+    assert.equal(option.serviceId, 3298);
+    assert.equal(option.providerServiceCode, "03298");
+    assert.equal(option.deliveryDays, 6);
+    assert.equal(option.benefit?.customerPriceCents, 1340);
+    assert.doesNotMatch(JSON.stringify(result), /token|packaging|private|synthetic-session/);
+    assert.deepEqual([melhorTokens, calls.length, frenetCalls], [before[0], before[1], before[2] + 1]);
+    frenetHasCoverage = false;
+    const empty = await loaded.exports.estimateProductShipping(input);
+    frenetHasCoverage = true;
+    assert.equal(empty.mode, "estimate");
+    assert.equal(empty.options.length, 0);
+  });
+
+  await t.test("Frenet exige flag e aceite, inclusive com perfil já revisado", async () => {
+    const before = frenetCalls;
+    product = frenetProduct;
+    env.FRENET_CHECKOUT_ENABLED = "false";
+    await assert.rejects(loaded.exports.estimateProductShipping(input), /atendimento/);
+    env.FRENET_CHECKOUT_ENABLED = "true";
+    product = { ...frenetProduct, shippingProfile: { ...frenetProfile, frenetAcceptance: undefined } };
+    await assert.rejects(loaded.exports.estimateProductShipping(input), /atendimento/);
+    product = { ...frenetProduct, requiresPrescription: true, prescriptionType: "ORDINARY" };
+    await assert.rejects(loaded.exports.estimateProductShipping(input), /atendimento/);
+    product = { ...frenetProduct, shippingProfile: { ...frenetProfile, enabled: false, transportReviewed: false } };
+    assert.equal((await loaded.exports.estimateProductShipping(input)).mode, "estimate");
+    assert.equal(frenetCalls, before);
+  });
+
+  await t.test("Frenet e Melhor Envio preservam opções válidas nas falhas previstas", async () => {
+    product = { ...frenetProduct, shippingProfile: { ...frenetProfile, approvedServiceIds: [1] } };
+    const both = await loaded.exports.estimateProductShipping(input);
+    assert.deepEqual(Array.from(both.options, o => o.provider + ":" + o.serviceId), ["melhor-envio:1", "frenet:3298"]);
+    frenetStatus = 403;
+    const melhor = await loaded.exports.estimateProductShipping(input);
+    assert.equal(melhor.mode, "available");
+    assert.deepEqual(Array.from(melhor.options, o => o.provider), ["melhor-envio"]);
+    frenetStatus = 200;
+    failure = "unavailable";
+    const frenet = await loaded.exports.estimateProductShipping(input);
+    assert.equal(frenet.mode, "available");
+    assert.deepEqual(Array.from(frenet.options, o => o.provider), ["frenet"]);
+  });
+
+  await t.test("perfil legado aprovado mantém available sem tarifa para o CEP e com Frenet desligada", async () => {
+    env.FRENET_CHECKOUT_ENABLED = "false";
+    const before = frenetCalls;
+    failure = "no-coverage";
+    product = { ...base, shippingProfile: { ...profile, enabled: true, transportReviewed: true, cargoKinds: ["general"], approvedServiceIds: [1] } };
+    const empty = await loaded.exports.estimateProductShipping(input);
+    assert.equal(empty.mode, "available");
+    assert.equal(empty.options.length, 0);
+    assert.equal(frenetCalls, before);
+  });
 });
