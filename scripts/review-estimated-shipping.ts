@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { createHmac } from "node:crypto";
 import { readFile, stat } from "node:fs/promises";
 import { resolve } from "node:path";
 import { z } from "zod";
@@ -7,12 +8,24 @@ import { getPrisma } from "../src/lib/prisma";
 import { lockProductCatalog } from "../src/features/products/mutations";
 import { shippingSettingsSchema } from "../src/features/shipping/schema";
 import { ESTIMATED_REVIEW_POLICY, estimatedReviewEntrySchema, estimatedDraftOnlyEntrySchema, estimatedReviewHashSchema, estimatedReviewSha256, reviewEstimatedShipping, createEstimatedDraftOnly } from "../src/features/shipping/estimated-review";
+import { frenetAcceptanceReviewEntrySchema, reviewFrenetAcceptance } from "../src/features/shipping/frenet-acceptance-review";
+import { frenetCheckoutOriginAllowed, getFrenetCheckoutConfig } from "../src/features/shipping/frenet-checkout";
 
 export const estimatedReviewManifestSchema = z.object({
   policyVersion: z.literal(ESTIMATED_REVIEW_POLICY),
-  products: z.array(z.union([estimatedReviewEntrySchema.extend({ action: z.literal("REVIEW_ESTIMATED") }).strict(), estimatedDraftOnlyEntrySchema])).min(1).max(50),
+  products: z.array(z.discriminatedUnion("action", [
+    estimatedReviewEntrySchema.extend({ action: z.literal("REVIEW_ESTIMATED") }).strict(),
+    estimatedDraftOnlyEntrySchema,
+    frenetAcceptanceReviewEntrySchema,
+  ])).min(1).max(50),
   manifestSha256: estimatedReviewHashSchema,
 }).strict();
+
+const auditAction = {
+  DRAFT_ONLY: "PRODUCT_ESTIMATED_SHIPPING_DRAFT_CREATED",
+  REVIEW_ESTIMATED: "PRODUCT_ESTIMATED_SHIPPING_REVIEWED",
+  REVIEW_FRENET_ACCEPTANCE: "PRODUCT_FRENET_SHIPPING_REVIEWED",
+} as const;
 
 /** Dry-run and apply rebuild the same reviewed plan under the existing catalog lock. */
 export async function reviewEstimatedShippingBatch(db: Pick<PrismaClient, "$transaction">, value: unknown, actorId: string, apply = false, expectedPlan?: string) {
@@ -30,6 +43,14 @@ export async function reviewEstimatedShippingBatch(db: Pick<PrismaClient, "$tran
     const integration = await tx.shippingIntegration.findUnique({ where: { id: "melhor-envio" }, select: { settings: true, revision: true } });
     const settings = integration ? shippingSettingsSchema.parse(integration.settings) : null;
     if (manifest.products.some(entry => entry.action === "REVIEW_ESTIMATED") && (!settings?.enabled || settings.environment !== "production" || !settings.serviceIds.length)) throw new Error("Transporte de produção não configurado.");
+    const reviewsFrenet = manifest.products.some(entry => entry.action === "REVIEW_FRENET_ACCEPTANCE");
+    const frenetConfig = reviewsFrenet ? getFrenetCheckoutConfig() : null;
+    const signingKey = reviewsFrenet ? process.env.AUTH_SECRET : undefined;
+    const frenetRuntime = frenetConfig && signingKey && signingKey.length >= 16 ? { config: frenetConfig, signingKey } : null;
+    if (reviewsFrenet) {
+      if (!settings || !frenetCheckoutOriginAllowed(settings)) throw new Error("A revisão Frenet exige origem Ivaté no transporte de produção.");
+      if (apply && !frenetRuntime) throw new Error("A aplicação exige Frenet habilitada, os dois tokens e AUTH_SECRET com ao menos 16 caracteres no runtime.");
+    }
     const products = await tx.product.findMany({
       where: { id: { in: manifest.products.map(row => row.productId) }, status: "ACTIVE", deletedAt: null }, orderBy: { id: "asc" },
       select: { id: true, name: true, ean: true, eanNormalized: true, category: true, status: true, deletedAt: true, updatedAt: true,
@@ -40,11 +61,26 @@ export async function reviewEstimatedShippingBatch(db: Pick<PrismaClient, "$tran
       const product = products.find(row => row.id === entry.productId);
       if (!product) throw new Error("Identidade ausente; lote cancelado.");
       const { action, ...reviewInput } = entry;
-      return { productId: product.id, action, revision: entry.expectedUpdatedAt, previousProfile: product.shippingProfile,
-        profile: entry.action === "DRAFT_ONLY" ? createEstimatedDraftOnly(product, entry) : reviewEstimatedShipping(product, reviewInput, settings!.serviceIds) };
+      let profile: Record<string, unknown>;
+      switch (entry.action) {
+        case "DRAFT_ONLY": profile = createEstimatedDraftOnly(product, entry); break;
+        case "REVIEW_ESTIMATED": profile = reviewEstimatedShipping(product, reviewInput, settings!.serviceIds); break;
+        case "REVIEW_FRENET_ACCEPTANCE": profile = reviewFrenetAcceptance(product, entry, settings!); break;
+      }
+      return { productId: product.id, action, revision: entry.expectedUpdatedAt, previousProfile: product.shippingProfile, profile };
     });
     const snapshotSha256 = estimatedReviewSha256(products);
-    const planSha256 = estimatedReviewSha256({ policyVersion: ESTIMATED_REVIEW_POLICY, actorId, manifest, integration, snapshotSha256, products: plans });
+    const basePlanSha256 = estimatedReviewSha256({ policyVersion: ESTIMATED_REVIEW_POLICY, actorId, manifest, integration, snapshotSha256, products: plans });
+    let planSha256 = basePlanSha256;
+    if (frenetRuntime) {
+      const { token, partnerToken } = frenetRuntime.config;
+      // Only the full plan code leaves the process. Credentials and their hashes stay out of receipts.
+      planSha256 = createHmac("sha256", frenetRuntime.signingKey)
+        .update(JSON.stringify(["frenet-catalog-plan-v1", basePlanSha256, token, partnerToken]))
+        .digest("hex");
+    } else if (reviewsFrenet) {
+      planSha256 = estimatedReviewSha256(["frenet-catalog-preview-v1", basePlanSha256]);
+    }
     if (apply && expectedPlan !== planSha256) throw new Error("Plano mudou desde o dry-run; nenhuma gravação aplicada.");
     for (const plan of plans) {
       if (!apply) continue;
@@ -54,12 +90,16 @@ export async function reviewEstimatedShippingBatch(db: Pick<PrismaClient, "$tran
           : { shippingProfile: { equals: plan.previousProfile as Prisma.InputJsonValue } }) },
       data: { shippingProfile: plan.profile as Prisma.InputJsonObject } });
       if (result.count !== 1) throw new Error("Produto mudou durante a aplicação; lote revertido.");
-      await tx.auditLog.create({ data: { userId: actorId, action: plan.action === "DRAFT_ONLY" ? "PRODUCT_ESTIMATED_SHIPPING_DRAFT_CREATED" : "PRODUCT_ESTIMATED_SHIPPING_REVIEWED", entity: "Product", entityId: plan.productId,
+      await tx.auditLog.create({ data: { userId: actorId, action: auditAction[plan.action], entity: "Product", entityId: plan.productId,
         metadata: { policyVersion: ESTIMATED_REVIEW_POLICY, planSha256, manifestSha256: manifest.manifestSha256, snapshotSha256,
           integrationRevision: integration?.revision ?? null, operation: plan.action, manifestEntry: manifest.products.find(row => row.productId === plan.productId),
-          before: plan.previousProfile, after: plan.profile, measurementBasis: "estimated", physicalMeasurementConfirmed: false } as Prisma.InputJsonObject } });
+          before: plan.previousProfile, after: plan.profile,
+          measurementBasis: plan.action === "REVIEW_FRENET_ACCEPTANCE" ? (plan.profile.measurementBasis ?? null) : "estimated",
+          physicalMeasurementConfirmed: false } as Prisma.InputJsonObject } });
     }
-    return { applied: apply, policyVersion: ESTIMATED_REVIEW_POLICY, manifestSha256: manifest.manifestSha256, snapshotSha256, planSha256, products: plans };
+    return { applied: apply, policyVersion: ESTIMATED_REVIEW_POLICY, manifestSha256: manifest.manifestSha256,
+      snapshotSha256, planSha256, products: plans,
+      ...(reviewsFrenet ? { frenetReviewMode: frenetRuntime ? "runtime" as const : "preview" as const } : {}) };
   }, { isolationLevel: "RepeatableRead", timeout: 180000 });
 }
 
