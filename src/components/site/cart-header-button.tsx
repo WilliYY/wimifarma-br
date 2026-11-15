@@ -140,7 +140,7 @@ export function CartHeaderButton({ className }: Readonly<{ className?: string }>
     >
       <CartBasketArtwork overflow={Math.max(0, items.length - BASKET_SLOTS)} slots={slots} />
       {hydrated && itemCount > 0 ? (
-        <span aria-hidden="true" className="absolute right-0 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-dark px-1 text-[0.65rem] font-black leading-none text-white ring-1 ring-white">
+        <span aria-hidden="true" className="absolute right-0 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[0.65rem] font-black leading-none text-white ring-1 ring-white">
           {itemCount > 99 ? "99+" : itemCount}
         </span>
       ) : null}
