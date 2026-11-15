@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-15 — Pós-cotação Frenet para Ivaté no ADMIN
+
+O simulador ADMIN usa o endpoint de pós-cotação para conferir a tarifa de etiqueta de PAC e SEDEX no contrato Frenet. A consulta exige as duas credenciais no servidor, uma origem fixa em Ivaté e um único volume. O modo anterior de pré-cotação continua disponível. A homologação com a conta da Wimifarma e a confirmação de postagem e aceite da carga precedem qualquer uso no checkout. [Operação e validação](27-melhor-envio.md#comparação-administrativa-de-frete-pela-frenet--13112026)
+
 ## 2026-11-13 — PAC e SEDEX da SuperFrete na comparação por CEP
 
 A cotação suporta PAC e SEDEX da SuperFrete junto aos serviços ativos do Melhor Envio. O destaque usa o preço final ao cliente e o pedido guarda o integrador escolhido. A SuperFrete começa desativada, com rota de Ivaté e mercadorias revisadas no escopo descrito em [Fretes e entregas](27-melhor-envio.md#pac-e-sedex-pela-superfrete--13112026). A ativação depende da cotação autenticada com a conta da farmácia. A equipe compra a etiqueta no painel do integrador.
