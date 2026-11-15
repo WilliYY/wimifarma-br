@@ -28,7 +28,8 @@ test("public carrier availability only reads configuration and fails closed", as
     decrypt: () => { if (decryptionFailure) throw new Error("Synthetic decryption failure"); return JSON.stringify(currentCredentials); },
   };
   const loaded = { exports: {} as { publicCarrierShippingAvailable: () => Promise<boolean> } };
-  vm.runInNewContext(result.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), process, Buffer, Date, fixture, console: { error: (...args: unknown[]) => diagnostics.push(args) } });
+  const env = { FRENET_CHECKOUT_ENABLED: "false", FRENET_API_TOKEN: "", FRENET_PARTNER_TOKEN: "" };
+  vm.runInNewContext(result.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), process: { env }, Buffer, Date, fixture, console: { error: (...args: unknown[]) => diagnostics.push(args) } });
   assert.equal(typeof loaded.exports.publicCarrierShippingAvailable, "function");
   assert.equal(await loaded.exports.publicCarrierShippingAvailable(), true, "expired tokens are not refreshed by a UI read");
   assert.equal(reads, 1);
@@ -56,4 +57,18 @@ test("public carrier availability only reads configuration and fails closed", as
   currentRow = { ...row, settings: { ...settings, originPostalCode: "invalid" } };
   assert.equal(await loaded.exports.publicCarrierShippingAvailable(), false);
   assert.deepEqual(diagnostics, Array.from({ length: 3 }, () => ["[melhor-envio] connection-unavailable"]), "operational failures are observable without error details or credentials");
+
+  currentRow = { ...row, ciphertext: null };
+  env.FRENET_API_TOKEN = "fixture-token";
+  env.FRENET_PARTNER_TOKEN = "fixture-partner";
+  assert.equal(await loaded.exports.publicCarrierShippingAvailable(), false, "tokens alone keep Frenet off");
+  env.FRENET_CHECKOUT_ENABLED = "true";
+  assert.equal(await loaded.exports.publicCarrierShippingAvailable(), true, "Frenet is available from Ivaté without a Melhor Envio token");
+  env.FRENET_PARTNER_TOKEN = "";
+  assert.equal(await loaded.exports.publicCarrierShippingAvailable(), false);
+  env.FRENET_PARTNER_TOKEN = "fixture-partner";
+  for (const change of [{ originPostalCode: "87485000" }, { enabled: false }, { environment: "sandbox" }]) {
+    currentRow = { ...row, ciphertext: null, settings: { ...settings, ...change } };
+    assert.equal(await loaded.exports.publicCarrierShippingAvailable(), false);
+  }
 });

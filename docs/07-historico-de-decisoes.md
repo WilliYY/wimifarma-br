@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-15 — Frenet no checkout com aceite por serviço
+
+A Frenet pode ofertar PAC e SEDEX de Ivaté a partir da tarifa de etiqueta, atrás de configuração desativada por padrão. O perfil conserva o aceite Frenet em campo próprio e o pedido guarda o código oficial assinado. A ativação exige homologar a conta da farmácia e confirmar embalagem, aceite e postagem na AC Ivaté. [Contrato e operação](27-melhor-envio.md#frenet-no-checkout--15112026)
+
 ## 2026-11-15 — Pós-cotação Frenet para Ivaté no ADMIN
 
 O simulador ADMIN usa o endpoint de pós-cotação para conferir a tarifa de etiqueta de PAC e SEDEX no contrato Frenet. A consulta exige as duas credenciais no servidor, uma origem fixa em Ivaté e um único volume. O modo anterior de pré-cotação continua disponível. A homologação com a conta da Wimifarma e a confirmação de postagem e aceite da carga precedem qualquer uso no checkout. [Operação e validação](27-melhor-envio.md#comparação-administrativa-de-frete-pela-frenet--13112026)

@@ -20,24 +20,43 @@ test("medication carrier acceptance is enforced both when quoting and submitting
         : "export const melhorEnvioRequest=async(...args)=>globalThis.fixture.provider(...args);" }));
   } }] });
   const key = "synthetic-shipping-service-key";
-  const env = { ...process.env, AUTH_SECRET: key, SUPERFRETE_API_TOKEN: "", SUPERFRETE_ENABLED: "false" };
-  const profile = { enabled: true, transportReviewed: true, weightGrams: 350, widthCm: 15, heightCm: 10, lengthCm: 20, approvedServiceIds: undefined as number[] | undefined };
+  const env = { ...process.env, AUTH_SECRET: key, SUPERFRETE_API_TOKEN: "", SUPERFRETE_ENABLED: "false",
+    FRENET_CHECKOUT_ENABLED: "false", FRENET_API_TOKEN: "", FRENET_PARTNER_TOKEN: "" };
+  const profile = { enabled: true, transportReviewed: true, weightGrams: 350, widthCm: 15, heightCm: 10, lengthCm: 20,
+    approvedServiceIds: undefined as number[] | undefined, cargoKinds: undefined as string[] | undefined,
+    frenetAcceptance: undefined as { version: number; serviceCodes: string[] } | undefined };
   const baseProduct = { id: "fixture-product", name: "Produto sintético", slug: "fixture", imageUrl: null, category: "Medicamentos", price: "10.00", promotionalPrice: null, status: "ACTIVE" as const, stock: 10, requiresPrescription: false, prescriptionType: undefined as PrescriptionType | undefined, isPopularPharmacy: false, shippingProfile: profile, updatedAt: new Date(0), inventorySource: "PHARMACY" as "PHARMACY" | "DISTRIBUTOR", ean: "7891234567895", supplierMarkupBps: 10000, supplierOffers: [] as SupplierCommerceOffer[] };
   let products = [baseProduct];
   const integration: { settings: ShippingSettings; revision: number } = { settings: { ...defaultShippingSettings, enabled: true, serviceIds: [1, 2, 3], contactEmail: "shipping@example.invalid" }, revision: 7 };
   let providerPrice = "10.00";
   let superFreteRequests = 0;
+  let frenetRequests = 0;
+  let frenetUnavailable = false;
+  let melhorUnavailable = false;
+  const warnings: unknown[][] = [];
   const requests: { services: string; to?: { postal_code: string }; products: { id: string; weight: number; width: number; height: number; length: number; insurance_value: number; quantity: number }[]; volumes?: unknown }[] = [];
   const tx = { product: { findMany: async () => products }, shippingIntegration: { findUnique: async () => integration } };
   const fixture = { tx, integration, provider: async (...args: unknown[]) => {
     const request = args[3] as typeof requests[number];
     requests.push(request);
+    if (melhorUnavailable) return [{ id: 1, error: "Serviço indisponível no momento." }];
     const units = request.products ?? [];
     const packages = [{ dimensions: { width: 15, height: units.reduce((sum, item) => sum + item.height * item.quantity, 0), length: 20 }, weight: units.reduce((sum, item) => sum + item.weight * item.quantity, 0), insurance_value: units.reduce((sum, item) => sum + item.insurance_value * item.quantity, 0), products: units.map(({ id, quantity }) => ({ id, quantity })) }];
     return [1, 3].map(id => ({ id, name: `Serviço ${id}`, price: providerPrice, delivery_time: 3, company: { name: "Transportadora sintética" }, packages }));
   } };
   const loaded = { exports: {} as { quoteCart: (cep: string, items: CheckoutRequest["items"]) => Promise<ShippingSelection[]>; validateOrderShipping: (transaction: unknown, input: CheckoutRequest) => Promise<unknown> } };
   const superFreteFetch = async (url: string, init: RequestInit) => {
+    if (url === "https://whitelabel.frenet.com.br/v1/quotes") {
+      frenetRequests++;
+      assert.equal(new Headers(init.headers).get("token"), "synthetic-frenet-token");
+      assert.equal(new Headers(init.headers).get("x-partner-token"), "synthetic-partner-token");
+      assert.equal(JSON.parse(String(init.body)).SenderZipCode, "87525000");
+      if (frenetUnavailable) return new Response(null, { status: 503 });
+      return Response.json({ sessionId: "synthetic-frenet-session", quotations: [
+        { carrierCode: "COR", shippingServiceCode: 3298, shippingPrice: 7.89, deliveryTime: 3 },
+        { carrierCode: "COR", shippingServiceCode: "03220", shippingPrice: 8.90, deliveryTime: 2 },
+      ] });
+    }
     superFreteRequests++;
     assert.equal(url, "https://api.superfrete.com/api/v0/calculator");
     assert.equal(new Headers(init.headers).get("Authorization"), "Bearer synthetic-superfrete-token");
@@ -46,7 +65,8 @@ test("medication carrier acceptance is enforced both when quoting and submitting
       packages: [{ dimensions: { width: parcel.width, height: parcel.height, length: parcel.length }, weight: parcel.weight, insurance_value: options.insurance_value }] }]);
   };
   vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url),
-    process: { env }, Buffer, Date, fixture, console, fetch: superFreteFetch, AbortSignal });
+    process: { env }, Buffer, Date, fixture, console: { ...console, warn: (...args: unknown[]) => warnings.push(args) },
+    fetch: superFreteFetch, AbortSignal });
   const items = [{ productId: baseProduct.id, quantity: 1, expectedUnitPriceCents: 1000 }];
   const options = await loaded.exports.quoteCart("01001000", items);
   assert.deepEqual(Array.from(options, option => option.serviceId), [1]);
@@ -154,4 +174,63 @@ test("medication carrier acceptance is enforced both when quoting and submitting
   await assert.rejects(loaded.exports.validateOrderShipping(tx, { ...input, shippingToken: superFrete.token }), /não aceita os itens/);
   assert.equal((await loaded.exports.quoteCart("01001000", items)).some(option => option.provider === "superfrete"), false);
   assert.equal(superFreteRequests, 1);
+
+  env.FRENET_API_TOKEN = "synthetic-frenet-token";
+  env.FRENET_PARTNER_TOKEN = "synthetic-partner-token";
+  const withFrenet = { ...baseProduct, category: "Higiene", shippingProfile: { ...profile, cargoKinds: ["general"], approvedServiceIds: [1],
+    frenetAcceptance: { version: 1, serviceCodes: ["03298"] } } };
+  products = [withFrenet];
+  assert.equal((await loaded.exports.quoteCart("01001000", items)).some(option => option.provider === "frenet"), false);
+  assert.equal(frenetRequests, 0, "tokens alone never opt a shop into the public integration");
+
+  env.FRENET_CHECKOUT_ENABLED = "true";
+  products = [{ ...withFrenet, shippingProfile: { ...profile, cargoKinds: ["general"], approvedServiceIds: [1, 2] } } as typeof baseProduct];
+  assert.equal((await loaded.exports.quoteCart("01001000", items)).some(option => option.provider === "frenet"), false);
+  assert.equal(frenetRequests, 0, "Melhor Envio approvals do not imply Frenet acceptance");
+  products = [withFrenet];
+  const combinedFrenet = await loaded.exports.quoteCart("01001000", items);
+  assert.deepEqual(Array.from(combinedFrenet, option => option.provider), ["melhor-envio", "frenet"]);
+  const frenet = combinedFrenet[1];
+  assert.equal(frenet.serviceId, 3298);
+  assert.equal(frenet.providerServiceCode, "03298");
+  assert.equal(frenet.benefit?.customerPriceCents, 789);
+  const frenetPayload = verifyShippingQuote(frenet.token, key);
+  assert.equal(frenetPayload.providerServiceCode, "03298");
+  assert.equal(frenetPayload.packaging?.packages.length, 1);
+  assert.equal(frenetPayload.benefit?.subsidyCents, 0);
+  assert.equal(Buffer.from(frenet.token.split(".")[0], "base64url").toString().includes("synthetic-frenet-session"), false);
+  const frenetInput = { ...input, shippingToken: frenet.token };
+  const frenetOrderQuote = await loaded.exports.validateOrderShipping(tx, frenetInput) as typeof frenetPayload;
+  assert.equal(frenetOrderQuote.providerServiceCode, "03298");
+  assert.equal(frenetOrderQuote.postingLocation?.pointName, "AC Ivaté");
+  const tampered = Buffer.from(JSON.stringify({ ...frenetPayload, priceCents: 10, deliveryDays: 0 })).toString("base64url");
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, { ...frenetInput,
+    shippingToken: `${tampered}.${frenet.token.split(".")[1]}` }), /cotação expirou ou mudou/);
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, { ...frenetInput, cashbackRedeemCents: 1 }), /descontos ou as condições/);
+  integration.settings.preparationDays += 1;
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, frenetInput), /prazo de preparação mudou/);
+  integration.settings.preparationDays -= 1;
+  integration.settings.originPostalCode = "87485000";
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, frenetInput), /não aceita os itens/);
+  integration.settings.originPostalCode = "87525000";
+
+  frenetUnavailable = true;
+  assert.deepEqual(Array.from(await loaded.exports.quoteCart("01001000", items), option => option.provider), ["melhor-envio"]);
+  assert.deepEqual(JSON.parse(JSON.stringify(warnings.find(args => args[0] === "[frenet] checkout-quote-unavailable"))),
+    ["[frenet] checkout-quote-unavailable", { status: 502 }]);
+  frenetUnavailable = false;
+  melhorUnavailable = true;
+  assert.deepEqual(Array.from(await loaded.exports.quoteCart("01001000", items), option => option.provider), ["frenet"]);
+  melhorUnavailable = false;
+
+  products = [{ ...withFrenet, shippingProfile: { ...withFrenet.shippingProfile, approvedServiceIds: [] } }];
+  const onlyFrenet = await loaded.exports.quoteCart("01001000", items);
+  assert.deepEqual(Array.from(onlyFrenet, option => option.provider), ["frenet"]);
+  await loaded.exports.validateOrderShipping(tx, { ...input, shippingToken: onlyFrenet[0].token });
+  products = [withFrenet];
+  env.FRENET_CHECKOUT_ENABLED = "false";
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, frenetInput), /não aceita os itens/);
+  env.FRENET_CHECKOUT_ENABLED = "true";
+  products = [{ ...withFrenet, shippingProfile: { ...withFrenet.shippingProfile, frenetAcceptance: { version: 1, serviceCodes: ["03220"] } } }];
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, frenetInput), /não aceita os itens/);
 });

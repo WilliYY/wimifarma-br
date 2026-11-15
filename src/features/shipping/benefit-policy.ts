@@ -35,6 +35,9 @@ export const shippingBenefitSchema = z.object({
   remainingCents: z.number().int().positive().max(100_000_000).nullable(),
 });
 export type ShippingBenefit = z.infer<typeof shippingBenefitSchema>;
+export function regularShippingBenefit(customerPriceCents: number): ShippingBenefit {
+  return { status: "regular", customerPriceCents, subsidyCents: 0, minimumOrderCents: null, remainingCents: null };
+}
 type BenefitInput = {
   policy: unknown;
   carrierPriceCents: number;
@@ -54,7 +57,7 @@ const ceilDivide = (value: bigint, divisor: bigint) => (value + divisor - one) /
 
 /** All cost inputs stay server-side. Only the commercial benefit is public/signed. */
 export function calculateShippingBenefit(input: BenefitInput): ShippingBenefit {
-  const normal: ShippingBenefit = { status: "regular", customerPriceCents: input.carrierPriceCents, subsidyCents: 0, minimumOrderCents: null, remainingCents: null };
+  const normal = regularShippingBenefit(input.carrierPriceCents);
   const parsed = shippingBenefitPolicySchema.safeParse(input.policy);
   const base = input.percentageBaseCents ?? input.netProductsCents;
   if (!parsed.success || !parsed.data.enabled || !money(input.carrierPriceCents) || !money(input.economicPriceCents)

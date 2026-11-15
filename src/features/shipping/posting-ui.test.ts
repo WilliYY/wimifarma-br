@@ -17,10 +17,15 @@ test("orders show historical posting location above recipient and filter local, 
   const quote = { provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC", priceCents: 2000, deliveryDays: 4, postalCode: "01001000", fingerprint: "a".repeat(64), revision: 1, expiresAt: 1 };
   const base = { customerId: null, customerName: "Cliente sintético", customerPhone: "00000000000", customerEmail: null, fulfillmentMethod: "DELIVERY", paymentMethod: "PIX", paymentStatus: "PAID", status: "PENDING", requiresPrescriptionReview: false, prescriptionReviewedAt: null, subtotalCents: 5000, deliveryFeeCents: 2000, totalCents: 7000, street: "Rua sintética", addressNumber: "1", city: "São Paulo", state: "SP", postalCode: "01001000", items: [], createdAt: new Date(0).toISOString() };
   const orders = [
-    { ...base, id: "local", number: "LOCAL", shippingQuote: { ...quote, packaging: { version: 1, inputMeasurementBasis: "estimated", packages: [{ weightGrams: 5000, lengthCm: 52.8, widthCm: 51.8, heightCm: 35, insuranceValueCents: 9990, items: [{ productId: "synthetic-a", quantity: 10 }] }] }, postingLocation: { city: "Ivaté", state: "PR", requiresTravel: false, pointName: "Agência sintética" } } },
+    { ...base, id: "local", number: "LOCAL", shippingQuote: { ...quote, packaging: { version: 1, calculationMethod: "provider-conservative-envelope", inputMeasurementBasis: "estimated", packages: [{ weightGrams: 5000, lengthCm: 52.8, widthCm: 51.8, heightCm: 35, insuranceValueCents: 9990, items: [{ productId: "synthetic-a", quantity: 10 }] }] }, postingLocation: { city: "Ivaté", state: "PR", requiresTravel: false, pointName: "Agência sintética" } } },
     { ...base, id: "travel", number: "VIAGEM", shippingQuote: { ...quote, postingLocation: { city: "Umuarama", state: "PR", requiresTravel: true } } },
     { ...base, id: "pending", number: "LEGADO", shippingQuote: quote },
     { ...base, id: "delivery", number: "ENTREGA LOCAL", shippingQuote: null },
+    { ...base, id: "frenet", number: "FRENET", shippingQuote: {
+      ...quote, provider: "frenet", serviceId: 3298, providerServiceCode: "03298",
+      packaging: { version: 1, calculationMethod: "provider-conservative-envelope", inputMeasurementBasis: "measured", packages: [{ weightGrams: 500, lengthCm: 25, widthCm: 15, heightCm: 10, insuranceValueCents: 0, items: [{ productId: "synthetic-a", quantity: 1 }] }] },
+      postingLocation: { city: "Ivaté", state: "PR", requiresTravel: false, pointName: "AC Ivaté" },
+    } },
   ];
   const script = await fixtureBundle(`import {OrdersPanel} from './src/components/admin/orders-panel';createRoot(document.getElementById('root')).render(<OrdersPanel initialOrders={${JSON.stringify(orders)}}/>);`);
   const browser = await chromium.launch();
@@ -29,15 +34,30 @@ test("orders show historical posting location above recipient and filter local, 
     await page.route("**/*", route => route.fulfill({ contentType: "text/html", body: '<div id="root"></div>' }));
     await page.goto("http://127.0.0.1:3196");
     await page.addScriptTag({ content: script });
-    for (const number of ["LOCAL", "VIAGEM", "LEGADO"]) await page.getByRole("button", { name: `Ver detalhes do pedido ${number}`, exact: true }).click();
+    for (const number of ["LOCAL", "VIAGEM", "LEGADO", "FRENET"]) await page.getByRole("button", { name: `Ver detalhes do pedido ${number}`, exact: true }).click();
     const local = page.locator("article").filter({ has: page.getByRole("heading", { name: "LOCAL", exact: true }) });
     const travel = page.locator("article").filter({ has: page.getByRole("heading", { name: "VIAGEM", exact: true }) });
     const pending = page.locator("article").filter({ has: page.getByRole("heading", { name: "LEGADO", exact: true }) });
+    const frenet = page.locator("article").filter({ has: page.getByRole("heading", { name: "FRENET", exact: true }) });
     await expect(local.getByText("Postagem em Ivaté/PR", { exact: true })).toBeVisible();
     await expect(local.getByRole("region", { name: "Postagem do pedido" })).toHaveClass(/bg-emerald-50/);
     await expect(local.getByLabel("Embalagem prevista na cotação")).toContainText("52,8 × 51,8 × 35 cm");
     await expect(local.getByLabel("Embalagem prevista na cotação")).toContainText("5.000 g · 10 unidade(s)");
     await expect(local.getByLabel("Embalagem prevista na cotação")).toContainText("pesos e medidas de origem são estimados");
+    await expect(local.getByLabel("Embalagem prevista na cotação")).toContainText("após inconsistência no primeiro empacotamento");
+    await expect(local.getByLabel("Embalagem prevista na cotação")).toContainText("pode exigir etiquetas separadas");
+    await expect(local.getByRole("link", { name: "Preparar envio no Melhor Envio" })).toHaveAttribute("href", "https://melhorenvio.com.br/painel");
+    const frenetPosting = frenet.getByRole("region", { name: "Postagem do pedido" });
+    await expect(frenetPosting).toContainText("Postagem em Ivaté/PR");
+    await expect(frenetPosting).toContainText("Ponto: AC Ivaté");
+    await expect(frenetPosting).toContainText("Frenet · Correios · PAC");
+    await expect(frenetPosting).toContainText("Código do serviço: 03298");
+    const frenetPackage = frenetPosting.getByLabel("Embalagem prevista na cotação");
+    await expect(frenetPackage).toContainText("25 × 15 × 10 cm");
+    await expect(frenetPackage).toContainText("um único volume");
+    await expect(frenetPackage).toContainText("recalcule antes de comprar a etiqueta");
+    await expect(frenetPackage).not.toContainText(/inconsistência|etiquetas separadas/);
+    await expect(frenetPosting.getByRole("link", { name: "Preparar envio na Frenet" })).toHaveAttribute("href", "https://painel.frenet.com.br/");
     await expect(travel.getByLabel("Embalagem prevista na cotação")).toHaveCount(0);
     await expect(travel.getByText("Levar para Umuarama/PR", { exact: true })).toBeVisible();
     await expect(travel.getByRole("region", { name: "Postagem do pedido" })).toHaveClass(/bg-amber-50/);
@@ -57,7 +77,7 @@ test("orders show historical posting location above recipient and filter local, 
     await expect(page.locator("article")).toHaveCount(1);
     await expect(pending).toBeVisible();
     await filter.selectOption("ALL");
-    await expect(page.locator("article")).toHaveCount(4);
+    await expect(page.locator("article")).toHaveCount(5);
     await page.getByRole("button", { name: "Ver detalhes do pedido ENTREGA LOCAL", exact: true }).click();
     await expect(page.locator("article").filter({ has: page.getByRole("heading", { name: "ENTREGA LOCAL", exact: true }) }).getByRole("region", { name: "Postagem do pedido" })).toHaveCount(0);
   } finally { await browser.close(); }

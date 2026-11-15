@@ -13,6 +13,14 @@ test("revisão conserva estimativa, medidas, proveniência e objeto original", (
   assert.deepEqual(result, { ...row.shippingProfile, enabled: true, transportReviewed: true, cargoKinds: ["general"], approvedServiceIds: [1, 3] });
 });
 
+test("revisão pelo Melhor Envio descarta aceite Frenet residual do rascunho", () => {
+  const row = { ...product(), shippingProfile: { ...profile(), frenetAcceptance: { version: 1, serviceCodes: ["03298"] } } };
+  const before = structuredClone(row);
+  const result = reviewEstimatedShipping(row, entry(row), [1, 3]);
+  assert.deepEqual(row, before);
+  assert.deepEqual(result, { ...profile(), enabled: true, transportReviewed: true, cargoKinds: ["general"], approvedServiceIds: [1, 3] });
+});
+
 test("desodorante para pés em pó sem perfume conserva estimativa e não exige carga perfume", () => {
   const row = { ...product({ kind: "PERFUMERY" }), id: "cmvoizyv700000rqrkh1d38dh", name: "Desodorante para pés Tenys Pé Baruel Sem Perfume em pó 100g" }, before = structuredClone(row);
   const result = reviewEstimatedShipping(row, entry(row), [1, 3]);

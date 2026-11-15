@@ -35,11 +35,13 @@ test("checkout mostra a menor meta antes da seleção e preserva as opções pag
       if (path === "/fixture.css") return route.fulfill({ contentType: "text/css", body: css.css });
       if (path === "/") return route.fulfill({ contentType: "text/html", body: '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>' });
       if (path.startsWith("/api/")) return route.fulfill(fail ? { status: 503, json: { error: "Cotação indisponível" } } : { json: { data: benefits.map((benefit, index) => ({
-        provider: compareProviders && index === 1 ? "superfrete" : "melhor-envio",
-        serviceId: compareProviders ? 1 : index + 1,
+        provider: compareProviders ? ["melhor-envio", "superfrete", "frenet"][index] : "melhor-envio",
+        serviceId: compareProviders ? index === 2 ? 3298 : 1 : index + 1,
+        ...(compareProviders && index === 2 ? { providerServiceCode: "03298" } : {}),
         carrier: compareProviders ? "Correios" : "Transportadora sintética",
         service: compareProviders ? "PAC" : `Serviço ${index + 1}`,
-        priceCents: 1900 + index * 100, deliveryDays: 5 + index, token: `token-${index}`, benefit,
+        priceCents: compareProviders && index === 2 ? 1600 : 1900 + index * 100,
+        deliveryDays: compareProviders ? [2, 6, 4][index] : 5 + index, token: `token-${index}`, benefit,
       })) } });
       return route.abort();
     });
@@ -75,14 +77,23 @@ test("checkout mostra a menor meta antes da seleção e preserva as opções pag
     await expect(page.getByText(/R\$\s*5,00 de desconto no frete/)).toBeVisible();
     await expect(page.getByRole("progressbar")).toHaveCount(0);
     compareProviders = true;
-    benefits = [benefit(null, null), { ...benefit(null, null, "discounted"), customerPriceCents: 1600, subsidyCents: 400 }];
+    benefits = [benefit(null, null), { ...benefit(null, null, "discounted"), customerPriceCents: 1600, subsidyCents: 400 },
+      { ...benefit(null, null), customerPriceCents: 1600 }];
     await page.getByRole("button", { name: "Consultar novamente" }).click();
-    const superfrete = page.getByRole("radio", { name: /Correios · PAC.*SuperFrete.*MAIS ECONÔMICO/ });
-    const melhorEnvio = page.getByRole("radio", { name: /Correios · PAC.*Melhor Envio/ });
-    await expect(superfrete).toBeVisible();
+    const frenet = page.getByRole("radio", { name: /Correios · PAC.*Frenet.*MAIS ECONÔMICO/ });
+    const superfrete = page.getByRole("radio", { name: /Correios · PAC.*SuperFrete/ });
+    const melhorEnvio = page.getByRole("radio", { name: /Correios · PAC.*Melhor Envio.*MAIS RÁPIDO/ });
+    const radios = page.getByRole("radio");
+    await expect(radios).toHaveCount(3);
+    await expect(radios.nth(0)).toHaveAccessibleName(/Frenet.*MAIS ECONÔMICO/);
+    await expect(radios.nth(1)).toHaveAccessibleName(/SuperFrete/);
+    await expect(radios.nth(2)).toHaveAccessibleName(/Melhor Envio.*MAIS RÁPIDO/);
     await melhorEnvio.check();
     await superfrete.check();
     await expect(superfrete).toBeChecked();
+    await frenet.check();
+    await expect(frenet).toBeChecked();
+    await expect(superfrete).not.toBeChecked();
     await expect(melhorEnvio).not.toBeChecked();
     fail = true;
     await page.getByRole("button", { name: "Consultar novamente" }).click();

@@ -12,7 +12,27 @@ O modo **Tarifa de etiqueta** (`mode: "label"`, 15/11/2026) usa `POST https://wh
 
 O plano Iniciante custa R$ 0 por mês e permite comprar etiquetas do contrato Frenet no painel. A equipe confere os dados, as medidas externas, a nota fiscal ou a documentação de conteúdo aplicável e a carga antes de comprar. A etiqueta dos Correios precisa ser postada no município de origem. Confirme a operação da AC Ivaté antes da habilitação; consulte as regras para cosméticos líquidos e medicamentos comuns e confirme o aceite para a carga da farmácia. Qualquer variante com origem Douradina depende de postagem viável e vantagem demonstrada. [Planos](https://frenet.com.br/planos-e-precos/) · [Etiqueta manual](https://ajuda.frenet.com.br/knowledge-base/etiquetas-correios-contrato-frenet/) · [Postagem](https://ajuda.frenet.com.br/knowledge-base/onde-posso-postar-a-minha-etiqueta-emitida-pela-frenet/) · [Restrições dos Correios](https://www.correios.com.br/enviar/proibicoes-e-restricoes/proibicoes-e-restricoes)
 
-A Frenet permanece restrita ao ADMIN. O checkout precisa da homologação da conta, do aceite aplicável por carga, do código oficial da etiqueta associado ao pedido, da revalidação do preço e da origem antes da seleção pública. Use CEPs de referência e um pacote elegível para homologar sem gerar pedido nem comprar etiqueta de teste.
+O checkout Frenet foi preparado com ativação separada. A pré-cotação ADMIN permanece disponível para avaliação. [Frenet no checkout](#frenet-no-checkout--15112026)
+
+## Frenet no checkout — 15/11/2026
+
+O servidor mantém a Frenet desativada por padrão. `FRENET_CHECKOUT_ENABLED=true` exige `FRENET_API_TOKEN` e `FRENET_PARTNER_TOKEN` válidos e o envio nacional habilitado com origem em Ivaté (87525-000, PR). A consulta usa a pós-cotação de etiqueta para um volume protegido de até 30 kg, com o valor real da mercadoria e sem seguro adicional. O checkout exibe o preço integral da Frenet e soma o prazo de preparação da farmácia. A política de subsídio do Melhor Envio continua própria. [API de pós-cotação](https://docs.frenet.com.br/reference/getshipmentquoteasync-1) · [Postagem Correios via Frenet](https://ajuda.frenet.com.br/knowledge-base/regras-de-postagem-correios/)
+
+Cada item precisa de um perfil habilitado, medidas, revisão de transporte, carga identificada e aceite Frenet explícito no JSON `shippingProfile`. Um exemplo de aceite pelos dois serviços é `{"frenetAcceptance":{"version":1,"serviceCodes":["03298","03220"]}}`. O conjunto de serviços ofertados é a interseção desses códigos em todos os itens. `approvedServiceIds` continua sendo o campo dos serviços do Melhor Envio. Aceite ausente, inválido ou de outro provedor retira a Frenet daquela combinação. Cosméticos líquidos não perigosos e medicamentos comuns sem receita exigem a própria classificação e o aceite da Frenet antes da gravação. Cargas vedadas e produtos de atendimento assistido seguem suas travas.
+
+Cada concessão em lote precisa ser explícita, vinculada ao produto e serviço aprovados, com conferência do perfil atual e registro de auditoria. O editor genérico de frete substitui o perfil e pode retirar esse aceite, que só deve ser reposto após conferência. A revisão de rascunhos do Melhor Envio descarta qualquer aceite Frenet residual. A publicação inicial de produtos e a liberação do Avise-me seguem as regras existentes.
+
+Na seleção, o token assinado por 15 minutos vincula provedor, `providerServiceCode` textual, preço, prazo, CEP, pacote, condições comerciais e versão do perfil. Na criação do pedido, o servidor reaplica os aceites e a configuração vigentes, confere as condições de preço e preparação e guarda a origem de postagem e o serviço oficial em `shippingQuote`. Para emitir, abra o painel Frenet indicado no pedido ADMIN, confira o pacote, a documentação e a tarifa da etiqueta e use a AC Ivaté. [Etiqueta manual](https://ajuda.frenet.com.br/knowledge-base/etiquetas-correios-contrato-frenet/)
+
+Antes de ativar, cotar PAC e SEDEX com a conta da Wimifarma, comparar a tarifa com a operação de etiqueta e confirmar a AC Ivaté e o aceite da carga por serviço.
+
+### Emissão manual no ADMIN
+
+A cotação usa CEPs, pacote e valor. Na etapa de emissão, a Frenet pede o **CPF ou CNPJ do próprio destinatário** em um campo separado da NF-e. O responsável pela expedição obtém o documento no canal privado definido pela farmácia e o informa diretamente no painel Frenet. A identificação do titular do cartão pertence ao pagamento. O checkout mantém os campos atuais e a cotação assinada guarda apenas os dados do frete. [Dados para emitir a etiqueta](https://ajuda.frenet.com.br/knowledge-base/etiquetas-correios-contrato-frenet/)
+
+A homologação dessa etapa tem duas evidências. A equipe confirma quem obtém o documento do destinatário e por qual canal. No painel autenticado da Wimifarma, confira o campo do destinatário separado do fiscal e percorra a emissão de PAC e SEDEX até a etapa anterior ao pagamento, com dados sintéticos de homologação quando for necessário preencher. Registre o resultado da conferência sem CPF, CNPJ de teste, credenciais ou dados de clientes. Essa validação antecede `FRENET_CHECKOUT_ENABLED=true`.
+
+Homologue o checkout com CEPs de referência sem criar pedidos reais. Para suspender o canal, volte `FRENET_CHECKOUT_ENABLED=false` e reaplique o ambiente do app. Seleções Frenet antigas deixam de ser aceitas. Quando a Frenet falha e outro provedor responde, o servidor guarda apenas o status técnico da falha e preserva as opções válidas.
 
 ## PAC e SEDEX pela SuperFrete — 13/11/2026
 

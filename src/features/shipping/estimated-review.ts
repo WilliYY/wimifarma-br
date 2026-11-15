@@ -82,7 +82,9 @@ export function reviewEstimatedShipping(product: EstimatedReviewProduct, input: 
     (/\b(aerossol|aerosol)\b/.test(normalizedName) && !expected.cargoKinds.includes("aerosol"))) throw new Error("Declare explicitamente a carga identificada no produto.");
   const previousServices = profile.approvedServiceIds as number[] | undefined;
   if (previousServices?.length && expected.approvedServiceIds.some(service => !previousServices.includes(service))) throw new Error("A revisão não pode ampliar serviços já restritos.");
-  const candidate = { ...profile, enabled: true, transportReviewed: true, cargoKinds: expected.cargoKinds, approvedServiceIds: expected.approvedServiceIds };
+  const { frenetAcceptance: _frenetAcceptance, ...profileForReview } = profile;
+  void _frenetAcceptance;
+  const candidate = { ...profileForReview, enabled: true, transportReviewed: true, cargoKinds: expected.cargoKinds, approvedServiceIds: expected.approvedServiceIds };
   shippingProfileSchema.parse(candidate);
   const reviewedProduct = { ...product, prescriptionType: "UNREVIEWED" as const, shippingProfile: candidate };
   validateShippingProduct(reviewedProduct);

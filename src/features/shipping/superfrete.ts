@@ -58,9 +58,7 @@ export function superFretePostingLocation() {
   return { city: "Ivaté", state: "PR" as const, pointName: "AC Ivaté", requiresTravel: false };
 }
 
-export function superFreteBenefit(priceCents: number) {
-  return { status: "regular" as const, customerPriceCents: priceCents, subsidyCents: 0, minimumOrderCents: null, remainingCents: null };
-}
+export { regularShippingBenefit as superFreteBenefit } from "./benefit-policy";
 
 /** Preserve valid quotes if one provider has a known service failure. */
 export async function compareSuperFrete(primary: Promise<ShippingOption[]>, secondary: Promise<ShippingOption[]>) {

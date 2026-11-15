@@ -9,6 +9,12 @@ export const AUTOMATIC_QUOTE_MAX_UNITS = 20;
 export const AUTOMATIC_QUOTE_LIMIT_MESSAGE = `A cotação automática atende até ${AUTOMATIC_QUOTE_MAX_UNITS} unidades por pedido. Para enviar mais, fale com a farmácia para combinar a embalagem e calcular o frete.`;
 
 export const shippingServiceIdsSchema = z.array(z.number().int().positive()).max(50);
+export const frenetServiceCodeSchema = z.enum(["03298", "03220"]);
+export const frenetAcceptanceSchema = z.strictObject({
+  version: z.literal(1),
+  serviceCodes: z.array(frenetServiceCodeSchema).min(1).max(2)
+    .refine(codes => new Set(codes).size === codes.length, "Informe cada serviço Frenet uma única vez."),
+});
 const citySchema = z.string().trim().min(2).max(100);
 const stateSchema = z.enum(["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"]);
 export const postingLocationSchema = z.object({
@@ -69,15 +75,23 @@ export const shippingPackagingSchema = z.object({
 });
 export type ShippingPackaging = z.infer<typeof shippingPackagingSchema>;
 export const shippingOptionSchema = z.object({
-  provider: z.enum(["melhor-envio", "superfrete"]), serviceId: z.number().int().positive(),
+  provider: z.enum(["melhor-envio", "superfrete", "frenet"]), serviceId: z.number().int().positive(),
+  providerServiceCode: frenetServiceCodeSchema.optional(),
   carrier: z.string().min(1).max(100), service: z.string().min(1).max(100),
   priceCents: z.number().int().positive().max(10_000_000),
   deliveryDays: z.number().int().min(0).max(365),
   packaging: shippingPackagingSchema.optional(),
   benefit: shippingBenefitSchema.optional(),
 });
-export const shippingSelectionSchema = shippingOptionSchema.extend({ token: z.string().min(1).max(8000) });
 export type ShippingOption = z.infer<typeof shippingOptionSchema>;
+function matchesProviderService({ provider, serviceId, providerServiceCode }: ShippingOption) {
+  return provider === "frenet"
+    ? providerServiceCode !== undefined && Number(providerServiceCode) === serviceId
+    : providerServiceCode === undefined;
+}
+
+export const shippingSelectionSchema = shippingOptionSchema.extend({ token: z.string().min(1).max(8000) })
+  .refine(matchesProviderService, "Confira o código do serviço selecionado.");
 export type ShippingSelection = z.infer<typeof shippingSelectionSchema>;
 export const shippingQuotePayloadSchema = shippingOptionSchema.extend({
   preparationDays: z.number().int().min(0).max(15).optional(),
@@ -86,7 +100,7 @@ export const shippingQuotePayloadSchema = shippingOptionSchema.extend({
   postingLocation: postingPlanSchema.optional(),
   economicPriceCents: z.number().int().positive().max(10_000_000).optional(),
   discountCents: z.number().int().min(0).max(100_000_000).optional(),
-});
+}).refine(matchesProviderService, "Confira o código do serviço selecionado.");
 export type ShippingQuotePayload = z.infer<typeof shippingQuotePayloadSchema>;
 
 export class ShippingError extends Error {
