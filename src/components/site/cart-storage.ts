@@ -192,8 +192,9 @@ export class CartStorage {
     return this.snapshot;
   }
 
-  commit(operation: CartOperation): CartItem[] {
-    this.read();
+  commit(operation: CartOperation, observePrevious?: (items: readonly CartItem[]) => void): CartItem[] {
+    const previous = this.read();
+    observePrevious?.(previous);
     if (!validOperation(operation)) return this.read();
     if (operation.type === "add" && operation.onlyIfMissing && this.snapshot.some(item => item.id === operation.product.id)) return this.snapshot;
     if (operation.type === "review" && operation.source !== this.snapshot) return this.snapshot;

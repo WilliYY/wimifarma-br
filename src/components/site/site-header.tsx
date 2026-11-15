@@ -85,7 +85,7 @@ export async function SiteHeader() {
           <Link
             aria-label="Wimifarma"
             data-header-brand
-            className="relative flex h-[52px] w-32 shrink-0 items-center justify-start min-[360px]:w-[136px] sm:h-24 sm:w-64 sm:overflow-hidden md:w-32 lg:w-64 xl:w-72"
+            className={`relative flex h-[52px] w-32 shrink-0 items-center justify-start min-[360px]:w-[136px] sm:h-24 sm:w-64 sm:overflow-hidden md:w-32 lg:w-64 xl:w-72 ${session?.user ? "max-[359px]:w-[108px] min-[360px]:max-[389px]:w-28" : ""}`}
             href="/"
           >
             <picture data-animated-brand>
@@ -183,6 +183,7 @@ export async function SiteHeader() {
         <SiteSearch />
 
         <div className="ml-auto hidden min-w-0 shrink-0 items-center justify-end md:flex">
+          <CartHeaderButton className="mr-1 2xl:mr-5" />
           <a
             aria-label="Abrir localizacao da Wimifarma no Google Maps"
             data-header-maps
@@ -203,7 +204,6 @@ export async function SiteHeader() {
               />
             </span>
           </a>
-          <CartHeaderButton />
           {session?.user ? (
             <div className="ml-2 flex min-w-0 items-center">
               <div className="flex min-w-0 items-center gap-2">

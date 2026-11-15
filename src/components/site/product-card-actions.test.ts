@@ -128,7 +128,7 @@ test("fraldas mostram preço do pacote e por fralda sem mudar compra, promoção
       await expect(cards.nth(1).getByText(/R\$\s*1,34 por fralda/)).toBeVisible();
       await expect(cards.nth(0).getByRole("group", { name: "Preço do pacote com 78 fraldas" })).toContainText(/R\$\s*116,73/);
       await expect(cards.nth(1).getByRole("group", { name: "Preço do pacote com 88 fraldas" })).toContainText(/R\$\s*117,98/);
-      await expect(cards.nth(2).getByText("Para 1 unidade.", { exact: true })).toBeVisible();
+      await expect(cards.nth(2).getByText("Para 1 kit.", { exact: true })).toBeVisible();
       assert.equal(await cards.nth(2).getByText(/por fralda/).count(), 0);
       const geometry = await cards.evaluateAll(elements => elements.map(element => {
         const price = element.querySelector('[role="group"]')!;
@@ -303,6 +303,7 @@ test("cards alinham preços e ações com promoção, cashback, fornecedor e gen
 
 test("card permite digitar unidades e mantém a quantidade ao comprar e usar mais/menos", async () => {
   await fixture(async page => {
+    await page.clock.install();
     await page.getByRole("button", { name: "Adicionar", exact: true }).click();
     const input = page.getByRole("textbox", { name: quantityLabel });
     await expect(input).toHaveAttribute("inputmode", "numeric");
@@ -317,6 +318,7 @@ test("card permite digitar unidades e mantém a quantidade ao comprar e usar mai
         await page.screenshot({ path: join(process.env.PRODUCT_CARD_CAPTURE_ROOT, `quantidade-${width}.png`) });
       }
     }
+    await page.clock.fastForward(450);
     await page.getByRole("button", { name: "Aumentar Produto sintético", exact: true }).click();
     await expect(input).toHaveValue("13");
     await page.getByRole("button", { name: "Diminuir Produto sintético", exact: true }).click();
@@ -332,6 +334,7 @@ test("card permite digitar unidades e mantém a quantidade ao comprar e usar mai
 
 test("ficha do kit usa a quantidade selecionada na primeira compra e preserva a quantidade já na cesta", async () => {
   await fixture(async page => {
+    await page.clock.install();
     const input = page.getByRole("spinbutton", { name: "Quantidade de kits de Kit Elmex Sensitive 2 × 110 g" });
     await expect(page.getByText("Total de 1 kit", { exact: true })).toBeVisible();
     await expect(input).toHaveAttribute("title", "Digite a quantidade de kits (de 1 a 15)");
@@ -345,12 +348,19 @@ test("ficha do kit usa a quantidade selecionada na primeira compra e preserva a 
     await buy.click();
     await expectCartQuantity(page, 2);
     assert.equal(await page.evaluate(() => (window as unknown as { lastNavigation: string }).lastNavigation), "/checkout");
+    await page.evaluate(() => { delete (window as unknown as { lastNavigation?: string }).lastNavigation; });
     await page.getByRole("button", { name: "Adicionar ao carrinho" }).click();
     await expectCartQuantity(page, 5);
-    assert.equal(await page.evaluate(() => (window as unknown as { lastNavigation: string }).lastNavigation), "/carrinho");
+    assert.equal(await page.evaluate(() => (window as unknown as { lastNavigation?: string }).lastNavigation), undefined);
     await buyAfterExternalRemoval(buy);
     await expectCartQuantity(page, 3);
     assert.equal(await page.evaluate(() => (window as unknown as { lastNavigation: string }).lastNavigation), "/checkout");
+    await input.fill("15");
+    await page.clock.fastForward(450);
+    await page.getByRole("button", { name: "Adicionar ao carrinho" }).click();
+    await expectCartQuantity(page, 15);
+    await expect(page.getByRole("button", { name: "Quantidade disponível já na cesta" })).toBeDisabled();
+    await expect(buy).toBeEnabled();
   }, "detail-kit");
 });
 

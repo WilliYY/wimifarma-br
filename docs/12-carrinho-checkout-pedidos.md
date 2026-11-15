@@ -9,7 +9,7 @@ Atualização de 19/10/2026: novos pedidos Pix recebem 3% nos produtos após cas
 ## Escopo Entregue
 
 - Carrinho persistente no navegador, com quantidade, remocao e resumo.
-- `Comprar` no cartão e `Comprar agora` na ficha abrem o checkout com a quantidade que já está no carrinho. Na primeira inclusão, o cartão adiciona uma unidade comercial e a ficha usa a quantidade selecionada. `Adicionar ao carrinho` na ficha soma a quantidade selecionada.
+- `Comprar` no cartão e `Comprar agora` na ficha abrem o checkout com a quantidade que já está no carrinho. Na primeira inclusão, o cartão adiciona uma unidade comercial e a ficha usa a quantidade selecionada. `Adicionar ao carrinho` na ficha soma a quantidade selecionada e mantém o cliente na página, com confirmação visual na [cesta do cabeçalho](10-layout-e-experiencia.md#cesta-interativa-no-cabeçalho--15112026).
 - A cesta completa e a cesta lateral exibem o subtotal dos produtos antes da definição do frete no checkout.
 - O seletor indica a unidade comercial quando identificada. Para um kit Elmex de 2 × 110 g, a quantidade 1 corresponde a um kit com os dois tubos.
 - Checkout em uma pagina: contato, entrega/retirada e pagamento, com tres colunas no desktop e fluxo vertical no celular.

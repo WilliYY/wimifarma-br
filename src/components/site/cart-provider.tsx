@@ -36,13 +36,23 @@ export type CartProduct = {
 
 export type CartItem = CartProduct & { quantity: number };
 
+export type BasketArrival = {
+  item: CartItem;
+  source: HTMLElement;
+  index: number;
+  isNew: boolean;
+};
+
+const DIRECT_ADD_COOLDOWN_MS = 450;
+
 type CartContextValue = {
   hydrated: boolean;
   items: CartItem[];
   itemCount: number;
   subtotalCents: number;
   emailReminder?: ReturnType<typeof useCartEmailReminder>;
-  addProduct: (product: CartProduct, quantity?: number, options?: { onlyIfMissing?: boolean }) => boolean;
+  addProduct: (product: CartProduct, quantity?: number, options?: { onlyIfMissing?: boolean; source?: HTMLElement }) => boolean;
+  subscribeBasketArrival: (listener: (arrival: BasketArrival) => void) => () => void;
   clearCart: () => void;
   removeProduct: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -60,6 +70,13 @@ export function CartProvider({ children, emailReminderOwner }: { children: React
 
   const cartStorage = useRef<CartStorage | null>(null);
   const storageWarning = useRef(false);
+  const directAdds = useRef(new Map<string, number>());
+  const basketListeners = useRef(new Set<(arrival: BasketArrival) => void>());
+  const subscribeBasketArrival = useCallback<CartContextValue["subscribeBasketArrival"]>(listener => {
+    const listeners = basketListeners.current;
+    listeners.add(listener);
+    return () => { listeners.delete(listener); };
+  }, []);
   const publish = useCallback((next: CartItem[]) => {
     setItems(current => current === next ? current : next);
   }, []);
@@ -97,8 +114,8 @@ export function CartProvider({ children, emailReminderOwner }: { children: React
     };
   }, [publish]);
 
-  const commit = useCallback((operation: CartOperation) => {
-    const next = cartStorage.current?.commit(operation);
+  const commit = useCallback((operation: CartOperation, observePrevious?: (items: readonly CartItem[]) => void) => {
+    const next = cartStorage.current?.commit(operation, observePrevious);
     if (next) publish(next);
     return next;
   }, [publish]);
@@ -134,8 +151,26 @@ export function CartProvider({ children, emailReminderOwner }: { children: React
       return false;
     }
 
-    const next = commit({ type: "add", product: { ...product, imageUrl: publicProductImageUrl(product) }, quantity, onlyIfMissing: options?.onlyIfMissing });
-    return next?.some(item => item.id === product.id) ?? false;
+    const source = options?.source;
+    const now = source ? performance.now() : 0;
+    const recent = directAdds.current;
+    if (source) {
+      for (const [id, expires] of recent) if (expires <= now) recent.delete(id);
+      if (recent.has(product.id)) return false;
+      recent.set(product.id, now + DIRECT_ADD_COOLDOWN_MS);
+    }
+
+    let previousQuantity = 0;
+    const next = commit(
+      { type: "add", product: { ...product, imageUrl: publicProductImageUrl(product) }, quantity, onlyIfMissing: options?.onlyIfMissing },
+      source ? items => { previousQuantity = items.find(item => item.id === product.id)?.quantity ?? 0; } : undefined,
+    );
+    const index = next?.findIndex(item => item.id === product.id) ?? -1;
+    const item = next?.[index];
+    if (source && item && item.quantity > previousQuantity) {
+      for (const listener of basketListeners.current) listener({ item, source, index, isNew: previousQuantity === 0 });
+    }
+    return index >= 0;
   }, [commit]);
 
   const updateQuantity = useCallback((productId: string, quantity: number) => {
@@ -166,9 +201,10 @@ export function CartProvider({ children, emailReminderOwner }: { children: React
       items,
       removeProduct,
       subtotalCents,
+      subscribeBasketArrival,
       updateQuantity,
     }),
-    [addProduct, applyCartReview, clearCart, emailReminder, hydrated, itemCount, items, removeProduct, subtotalCents, updateQuantity],
+    [addProduct, applyCartReview, clearCart, emailReminder, hydrated, itemCount, items, removeProduct, subtotalCents, subscribeBasketArrival, updateQuantity],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

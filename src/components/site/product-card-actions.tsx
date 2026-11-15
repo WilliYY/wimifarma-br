@@ -21,15 +21,15 @@ export function ProductCardActions({ product, compact = false, saleUnitLabel }: 
   const restricted = requiresPurchaseAssistance(product);
   const button = "inline-flex h-11 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-md px-2 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
-  function add(buy = false) {
+  function add(source?: HTMLButtonElement) {
     if (!hydrated || restricted || limit < 1) return;
-    if (buy) {
+    if (!source) {
       if (addProduct(product, 1, { onlyIfMissing: true })) router.push("/checkout");
       else toast.error("Seu carrinho ja tem 30 produtos diferentes.");
       return;
     }
     if (!quantity && items.length >= 30) { toast.error("Seu carrinho ja tem 30 produtos diferentes."); return; }
-    addProduct(product);
+    addProduct(product, 1, { source });
   }
 
   return <div className={`relative z-20 mt-2 grid gap-2 ${compact ? "min-h-11 grid-cols-2" : "-mx-1 min-h-24 sm:mx-0"}`} data-product-controls>
@@ -53,9 +53,9 @@ export function ProductCardActions({ product, compact = false, saleUnitLabel }: 
           type="text"
           value={quantityEmpty ? "" : quantity}
         />
-        <button aria-label={`Aumentar ${product.name}`} className={`${button} px-0 text-brand hover:bg-brand-soft`} disabled={quantity >= limit} onClick={() => addProduct(product)} title={quantity >= limit ? "Quantidade disponível neste momento" : `Adicionar 1 ${units.singular}`} type="button"><Plus className="h-4 w-4" /></button>
-      </div> : <button className={`${button} border border-brand text-brand hover:bg-brand-soft`} disabled={!hydrated} onClick={() => add()} type="button"><ShoppingCart className="h-4 w-4" />Adicionar</button>}
-      <button className={`${button} bg-brand text-white hover:bg-brand-dark active:scale-[0.98] motion-reduce:transform-none`} disabled={!hydrated} onClick={() => add(true)} type="button"><ShoppingBag className="h-4 w-4" />Comprar</button>
+        <button aria-label={`Aumentar ${product.name}`} className={`${button} px-0 text-brand hover:bg-brand-soft`} disabled={quantity >= limit} onClick={event => add(event.currentTarget)} title={quantity >= limit ? "Quantidade disponível neste momento" : `Adicionar 1 ${units.singular}`} type="button"><Plus className="h-4 w-4" /></button>
+      </div> : <button className={`${button} border border-brand text-brand hover:bg-brand-soft`} disabled={!hydrated} onClick={event => add(event.currentTarget)} type="button"><ShoppingCart className="h-4 w-4" />Adicionar</button>}
+      <button className={`${button} bg-brand text-white hover:bg-brand-dark active:scale-[0.98] motion-reduce:transform-none`} disabled={!hydrated} onClick={() => add()} type="button"><ShoppingBag className="h-4 w-4" />Comprar</button>
     </>}
   </div>;
 }

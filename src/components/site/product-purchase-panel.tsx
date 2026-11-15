@@ -76,6 +76,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
   const units = productQuantityUnits(productSaleUnitLabel(product));
   const selectedQuantity = `${quantity} ${quantity === 1 ? units.singular : units.plural}`;
   const cartItem = items.find(item => item.id === product.id);
+  const canAddMore = (cartItem?.quantity ?? 0) < maxQuantity;
   const cartQuantity = cartItem ? `${cartItem.quantity} ${cartItem.quantity === 1 ? units.singular : units.plural}` : null;
 
   useEffect(() => {
@@ -142,19 +143,19 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
     setQuantity(Math.min(Math.max(nextQuantity, 1), maxQuantity));
   }
 
-  function continuePurchase(destination: "/carrinho" | "/checkout") {
-    if (!hydrated) return;
-    if (destination === "/checkout") {
-      if (addProduct(product, quantity, { onlyIfMissing: true })) router.push(destination);
-      else toast.error("Seu carrinho ja tem 30 produtos diferentes.");
-      return;
-    }
+  function addToBasket(source: HTMLButtonElement) {
+    if (!hydrated || !canAddMore) return;
     if (items.length >= 30 && !cartItem) {
       toast.error("Seu carrinho ja tem 30 produtos diferentes.");
       return;
     }
-    addProduct(product, quantity);
-    router.push(destination);
+    addProduct(product, quantity, { source });
+  }
+
+  function continuePurchase() {
+    if (!hydrated) return;
+    if (addProduct(product, quantity, { onlyIfMissing: true })) router.push("/checkout");
+    else toast.error("Seu carrinho ja tem 30 produtos diferentes.");
   }
 
   return (
@@ -183,17 +184,17 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
         {cartQuantity && <p className="mb-3 text-xs leading-5 text-muted">Comprar agora mantém {cartQuantity} na cesta. Adicionar ao carrinho soma a quantidade selecionada.</p>}
         <div className="grid gap-2.5">
           <button
-            className="group inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-brand/30 bg-white px-4 py-2 text-sm font-bold text-brand transition-colors hover:border-brand hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:min-h-12 sm:px-5"
-            onClick={() => continuePurchase("/carrinho")}
-            disabled={!hydrated}
+            className="group inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-brand/30 bg-white px-4 py-2 text-sm font-bold text-brand transition-colors hover:border-brand hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:px-5"
+            onClick={event => addToBasket(event.currentTarget)}
+            disabled={!hydrated || !canAddMore}
             type="button"
           >
             <ShoppingCart className="h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:scale-105" aria-hidden="true" />
-            Adicionar ao carrinho
+            {canAddMore ? "Adicionar ao carrinho" : "Quantidade disponível já na cesta"}
           </button>
           <button
             className="group inline-flex min-h-13 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-4 text-base font-bold text-white shadow-[0_8px_20px_rgba(200,16,46,0.16)] transition-colors hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:min-h-14 sm:px-5"
-            onClick={() => continuePurchase("/checkout")}
+            onClick={continuePurchase}
             disabled={!hydrated}
             type="button"
           >
@@ -244,7 +245,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
             </div>}
             <button
               className="group inline-flex min-h-12 min-w-36 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-bold text-white transition-colors hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:flex-none"
-              onClick={() => continuePurchase("/checkout")}
+              onClick={continuePurchase}
               disabled={!hydrated}
               type="button"
             >

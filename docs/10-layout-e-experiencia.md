@@ -1,5 +1,13 @@
 # 10 - Layout e Experiencia
 
+## Cesta interativa no cabeçalho — 15/11/2026
+
+A cesta vermelha com a marca oficial ocupa o espaço entre a busca e os controles de conta no desktop. No celular, substitui o ícone de carrinho na mesma faixa, com alvo de toque de pelo menos 44 px. Pressionar a cesta abre o painel lateral existente.
+
+O botão **Adicionar** dos cards e **Adicionar ao carrinho** na ficha mantêm a página aberta e animam uma miniatura da inclusão aceita. A cesta mostra até quatro produtos diferentes, com a contagem total de unidades. A partir do quinto produto diferente, a miniatura bate na borda e cai; o produto fica na compra e aparece no painel. Ao remover um dos quatro, a vaga passa ao próximo produto. Usamos a foto pública ou a ilustração do catálogo, inclusive genérico e ético. O carrinho é a única fonte de itens para a cesta, para o painel e para a restauração após navegar, recarregar ou alterar em outra aba.
+
+O voo usa transformações e opacidade, sem vídeo, biblioteca nova ou animação em repouso. Há no máximo uma miniatura em voo e uma pausa de 450 ms entre inclusões pelo botão do mesmo produto. Quem prefere movimento reduzido recebe a atualização imediata. **Comprar agora** continua com o fluxo de checkout. A regressão roda localmente com `node scripts/cart-basket.test.mjs`.
+
 ## Compactação da home, cartões e rodapé — 30/10/2026
 
 Contrato atual em [131](131-ajustes-visuais-home-2026-10-30.md): rodapé integral com menos altura; OFF acima da foto e cashback abaixo; marcas e faixa de categorias sem setas visíveis; categorias sem cabeçalho textual e com neon reforçado somente ao interagir. Emojis pontuais no marketing, preservando os cabeçalhos compactos das três vitrines. Esta atualização substitui as descrições históricas de setas/tamanhos abaixo, sem alterar regras comerciais.
