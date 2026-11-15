@@ -7,7 +7,7 @@ const providerPanels = {
   frenet: { name: "Frenet", url: "https://painel.frenet.com.br/", linkLabel: "Preparar envio na Frenet" },
 } satisfies Record<ShippingQuotePayload["provider"], { name: string; url: string; linkLabel: string }>;
 
-export function OrderShippingSummary({ quote }: { quote: unknown }) {
+export function OrderShippingSummary({ quote, prescriptionReviewPending }: { quote: unknown; prescriptionReviewPending: boolean }) {
   const parsed = shippingQuotePayloadSchema.safeParse(quote);
   if (!parsed.success) return null;
   const shipping = parsed.data;
@@ -33,6 +33,9 @@ export function OrderShippingSummary({ quote }: { quote: unknown }) {
         {!isFrenet && " Mais de um pacote pode exigir etiquetas separadas."}
       </p>
     </div>}
-    <p className="mt-2 text-xs leading-5">Esta é a cotação escolhida pelo cliente. Confira pagamento, nota fiscal, embalagem e dados do destinatário antes de comprar a etiqueta.</p><a className="mt-2 inline-block font-bold underline" href={provider.url} rel="noreferrer" target="_blank">{provider.linkLabel}</a>
+    <p className="mt-2 text-xs leading-5">Esta é a cotação escolhida pelo cliente. Confira pagamento, nota fiscal, embalagem e dados do destinatário antes de comprar a etiqueta.</p>
+    {isFrenet && prescriptionReviewPending
+      ? <p className="mt-2 text-xs font-bold">Registre a conferência farmacêutica da receita antes de preparar a etiqueta na Frenet.</p>
+      : <a className="mt-2 inline-block font-bold underline" href={provider.url} rel="noreferrer" target="_blank">{provider.linkLabel}</a>}
   </section>;
 }

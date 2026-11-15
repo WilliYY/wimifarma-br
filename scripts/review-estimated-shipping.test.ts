@@ -6,6 +6,7 @@ import { createRequire } from "node:module";
 import type * as Review from "./review-estimated-shipping";
 import { estimatedReviewSha256 } from "../src/features/shipping/estimated-review";
 import { permittedShippingServices } from "../src/features/shipping/eligibility";
+import { requiresPrescriptionReview } from "../src/features/products/purchase-policy";
 
 const bundle = build({ entryPoints: ["scripts/review-estimated-shipping.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "review-fixture", setup(builder) {
   builder.onResolve({ filter: /lib\/prisma$|generated\/prisma\/client$|^dotenv\/config$/ }, args => ({ path: args.path, namespace: "fixture" }));
@@ -17,7 +18,7 @@ async function fixture(env: Record<string, string> = {}) {
   vm.runInNewContext((await bundle).outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), console, Buffer, URL, Date, process: { argv: ["node", "fixture.ts"], env } });
   const api = loaded.exports;
   const profile = { enabled: false, transportReviewed: false, measurementBasis: "estimated", weightGrams: 300, lengthCm: 24, widthCm: 15, heightCm: 10, reference: null, cargoKinds: ["unspecified"], approvedServiceIds: [], extra: "preserved" };
-  const rows = [0, 1].map(i => ({ id: `synthetic-${i}`, name: `Higiene sintética ${i}`, ean: "7890000000000", eanNormalized: "07890000000000", category: "Higiene", status: "ACTIVE", deletedAt: null, updatedAt: new Date(0), shippingProfile: structuredClone(profile) as unknown, logisticsEvidence: null, requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false, catalogClassification: null }));
+  const rows = [0, 1].map(i => ({ id: `synthetic-${i}`, name: `Higiene sintética ${i}`, ean: "7890000000000", eanNormalized: "07890000000000", category: "Higiene", status: "ACTIVE", deletedAt: null, updatedAt: new Date(0), shippingProfile: structuredClone(profile) as unknown, logisticsEvidence: null, requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false, catalogClassification: null, cmedReference: undefined as unknown }));
   const settings = { enabled: true, environment: "production", originPostalCode: "87525000", preparationDays: 1, serviceIds: [1, 3], contactEmail: "synthetic@example.com" };
   let active = true, failCas = false, failAudit = false, phase = 0;
   const locks: string[] = [];
@@ -30,7 +31,10 @@ async function fixture(env: Record<string, string> = {}) {
       else assert.fail(`Lock inesperado: ${sql}`);
     }, user: { findFirst: async ({ where }: { where: unknown }) => { assert.equal(phase, 2); assert.deepEqual(structuredClone(where), { id: "admin", role: "ADMIN", isActive: true }); return active ? { id: "admin" } : null; } },
     shippingIntegration: { findUnique: async () => { assert.equal(phase, 3); return { settings: structuredClone(settings), revision: 1 }; } },
-    product: { findMany: async () => { assert.equal(phase, 3); return structuredClone(rows); }, updateMany: async (change: { where: { id: string; updatedAt: Date; shippingProfile?: { equals: unknown }; OR?: unknown[] }; data: { shippingProfile: unknown } }) => {
+    product: { findMany: async ({ select }: { select: { cmedReference?: boolean } }) => {
+      assert.equal(phase, 3);
+      return structuredClone(rows).map(({ cmedReference, ...row }) => select.cmedReference ? { ...row, cmedReference: cmedReference ?? null } : row);
+    }, updateMany: async (change: { where: { id: string; updatedAt: Date; shippingProfile?: { equals: unknown }; OR?: unknown[] }; data: { shippingProfile: unknown } }) => {
       writes.push(change); assert.deepEqual(Object.keys(change.data), ["shippingProfile"]);
       const row = rows.find(row => row.id === change.where.id)!;
       assert.equal(change.where.updatedAt.toISOString(), row.updatedAt.toISOString());
@@ -127,6 +131,89 @@ async function frenetFixture(env: Record<string, string> = { ...frenetEnv }) {
   const manifest = () => ({ policyVersion: "review-estimated-shipping-v1", products, manifestSha256: estimatedReviewSha256(products) });
   return { ...f, products, manifest, review: (apply = false, sha?: string) => f.run(apply, sha, manifest()) };
 }
+
+async function ordinaryFrenetFixture() {
+  const f = await frenetFixture();
+  f.rows.forEach((row, index) => Object.assign(row, {
+    name: `Comprimido sintético ${index} 10 mg com 30 comprimidos`, category: "Medicamentos",
+    requiresPrescription: true, prescriptionType: "ORDINARY", catalogClassification: { kind: "MEDICINE" },
+  }));
+  const products = f.products.map((entry, index) => ({
+    ...entry, action: "REVIEW_FRENET_ORDINARY", expectedName: f.rows[index].name, cargoKinds: ["medication"],
+    carrierEvidence: {
+      ...entry.carrierEvidence, productClass: "ordinary-medicine", presentation: "10 mg com 30 comprimidos",
+      presentationGtin: f.rows[index].ean, registration: "1000000010001", leafletUrl: "https://example.invalid/bula.pdf",
+      leafletSha256: "2".repeat(64), storageConditions: "Conservação sintética entre 15 e 30 °C", coldChainRequired: false,
+      services: entry.carrierEvidence.services.map(service => ({ ...service,
+        conservationReference: "Evidência sintética de embalagem e transporte", conservationSourceSha256: "3".repeat(64),
+        destinationCoverage: "all-service-destinations" })),
+    },
+  }));
+  const review = (apply = false, sha?: string) => f.run(apply, sha, { ...f.manifest(), products, manifestSha256: estimatedReviewSha256(products) });
+  return { ...f, products, review };
+}
+
+test("receita comum no operador recebe aceite medicinal Frenet e conserva a conferência farmacêutica", async () => {
+  const f = await ordinaryFrenetFixture();
+  const before = structuredClone(f.rows);
+  const plan = await f.review();
+  assert.deepEqual(f.rows, before);
+  await f.review(true, plan.planSha256);
+  for (const [i, row] of f.rows.entries()) {
+    assert.deepEqual(row.shippingProfile, { ...before[i].shippingProfile as object, enabled: true, transportReviewed: true,
+      cargoKinds: ["medication"], approvedServiceIds: [],
+      frenetAcceptance: { version: 2, scope: "ordinary-medicine", serviceCodes: ["03298"],
+        destinationCoverage: "all-service-destinations",
+        product: { id: row.id, name: row.name, gtin: row.eanNormalized } },
+    });
+    const reviewed = { ...row, prescriptionType: "ORDINARY" as const };
+    assert.equal(requiresPrescriptionReview(reviewed), true);
+    assert.deepEqual(permittedShippingServices(f.settings.serviceIds, [reviewed]), []);
+  }
+  assert.match(JSON.stringify(f.audits[0]), /PRODUCT_FRENET_ORDINARY_SHIPPING_REVIEWED/);
+});
+
+test("operador medicinal recusa prova divergente ou cadeia fria e reexige dry-run para nova prova", async () => {
+  for (const patch of [{ presentationGtin: "7891234567895" }, { storageConditions: "" }, { coldChainRequired: true }, { registration: "" }]) {
+    const f = await ordinaryFrenetFixture();
+    Object.assign(f.products[0].carrierEvidence, patch);
+    await assert.rejects(f.review());
+    assert.equal(f.writes.length, 0);
+  }
+  const f = await ordinaryFrenetFixture();
+  f.products[0].carrierEvidence.services[0].destinationCoverage = "single-destination";
+  await assert.rejects(f.review());
+  assert.equal(f.writes.length, 0);
+  f.products[0].carrierEvidence.services[0].destinationCoverage = "all-service-destinations";
+  const plan = await f.review();
+  f.products[0].carrierEvidence.services[0].conservationReference = "Evidência sintética atualizada";
+  await assert.rejects(f.review(true, plan.planSha256), /Plano mudou/);
+  assert.equal(f.writes.length, 0);
+});
+
+test("referência CMED vigente do GTIN vincula o registro medicinal e não muda os hashes legados", async () => {
+  const f = await ordinaryFrenetFixture();
+  const observedAt = new Date().toISOString();
+  const cmed = {
+    version: 1, eanNormalized: f.rows[0].eanNormalized, product: "Medicamento sintético", presentation: "10 MG CT 30 COM",
+    laboratory: "Laboratório sintético", registration: "1.0000.0002.000-2",
+    sourceUrl: "https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos/arquivos/lista-sintetica.xlsx/@@download/file",
+    sourceSha256: "a".repeat(64), publishedOn: observedAt.slice(0, 10), observedAt, rates: [{ label: "PMC 20%", cents: 2500 }],
+  };
+  f.rows[0].cmedReference = cmed;
+  await assert.rejects(f.review(), /registro medicinal diverge/);
+  assert.equal(f.writes.length, 0);
+  f.rows[0].cmedReference = { ...cmed, eanNormalized: "07891234567895" };
+  await f.review();
+  f.rows[0].cmedReference = { ...cmed, registration: "1.0000.0001.000-1" };
+  await f.review();
+  const legacy = await fixture();
+  const before = await legacy.run();
+  legacy.rows[0].cmedReference = cmed;
+  const after = await legacy.run();
+  assert.equal(after.snapshotSha256, before.snapshotSha256);
+  assert.equal(after.planSha256, before.planSha256);
+});
 
 test("Frenet-only preserva embalagem e isola o aceite do Melhor Envio", async () => {
   const f = await frenetFixture();

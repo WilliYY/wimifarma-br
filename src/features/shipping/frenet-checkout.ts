@@ -4,6 +4,7 @@ import { requiresPrescriptionReview } from "@/features/products/purchase-policy"
 import type { ShippingCargo } from "./cargo-policy";
 import { hasPerfumeShippingCargo, requiresPharmacyShippingSupport } from "./eligibility";
 import { quoteFrenetLabel } from "./frenet-label-quote";
+import { normalizeLogisticsGtin } from "./logistics-evidence";
 import type { PackingRequest } from "./packing";
 import type { ShippingProduct } from "./rules";
 import {
@@ -14,7 +15,7 @@ import {
 export type FrenetServiceCode = z.infer<typeof frenetServiceCodeSchema>;
 type FrenetCheckoutConfig = { token: string; partnerToken: string };
 type FrenetCheckoutProduct = Pick<ShippingProduct, "name" | "category" | "requiresPrescription" |
-  "prescriptionType" | "isPopularPharmacy" | "catalogClassification" | "shippingProfile">;
+  "prescriptionType" | "isPopularPharmacy" | "catalogClassification" | "shippingProfile"> & { id?: string; ean?: string | null };
 
 const credentialsPattern = /^[!-~]{1,1024}$/;
 const supportedCargos: ReadonlySet<ShippingCargo> = new Set(["general", "industrialized_food", "liquid", "medication"]);
@@ -47,9 +48,17 @@ export function frenetCheckoutServices(settings: ShippingSettings, products: Fre
     const cargos = profile.success ? profile.data.cargoKinds : undefined;
     if (!profile.success || !profile.data.enabled || !acceptance.success || !cargos?.length
       || cargos.some(cargo => !supportedCargos.has(cargo)) || isNotifyOnlyPendingLogistics(raw)
-      || requiresPharmacyShippingSupport(product) || requiresPrescriptionReview(product)) return [];
+      || requiresPharmacyShippingSupport(product)) return [];
 
     const name = normalize(product.name);
+    if (acceptance.data.version === 2) {
+      const approved = acceptance.data.product;
+      if (!product.requiresPrescription || product.prescriptionType !== "ORDINARY"
+        || cargos.length !== 1 || cargos[0] !== "medication"
+        || approved.id !== product.id || approved.name !== product.name || approved.gtin !== normalizeLogisticsGtin(product.ean)
+        || /\b(?:termolabil\w*|cadeia fria)\b/.test(name)) return [];
+    } else if (requiresPrescriptionReview(product)) return [];
+
     const hazardousName = name.replace(/\b(?:sem|zero)\s+alcool\b/g, "");
     if (hasPerfumeShippingCargo(name) || /\b(?:perfumes|aero(?:ss|s)ol\w*|pressuriz\w*|inflam\w*|pilhas?|baterias?|recarregave\w*|alcool|etanol|solvent\w*|acetona|refrigerad\w*|termolabe\w*|congelad\w*)\b/.test(hazardousName)) return [];
     const liquid = /\b\d+(?:[.,]\d+)?\s*(?:ml|l)\b/.test(name)

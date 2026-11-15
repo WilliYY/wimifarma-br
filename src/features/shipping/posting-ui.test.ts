@@ -16,16 +16,22 @@ async function fixtureBundle(contents: string) {
 test("orders show historical posting location above recipient and filter local, travel and pending shipments on mobile", async () => {
   const quote = { provider: "melhor-envio", serviceId: 1, carrier: "Correios", service: "PAC", priceCents: 2000, deliveryDays: 4, postalCode: "01001000", fingerprint: "a".repeat(64), revision: 1, expiresAt: 1 };
   const base = { customerId: null, customerName: "Cliente sintético", customerPhone: "00000000000", customerEmail: null, fulfillmentMethod: "DELIVERY", paymentMethod: "PIX", paymentStatus: "PAID", status: "PENDING", requiresPrescriptionReview: false, prescriptionReviewedAt: null, subtotalCents: 5000, deliveryFeeCents: 2000, totalCents: 7000, street: "Rua sintética", addressNumber: "1", city: "São Paulo", state: "SP", postalCode: "01001000", items: [], createdAt: new Date(0).toISOString() };
+  const frenetQuote = {
+    ...quote, provider: "frenet", serviceId: 3298, providerServiceCode: "03298",
+    packaging: { version: 1, calculationMethod: "provider-conservative-envelope", inputMeasurementBasis: "measured", packages: [{ weightGrams: 500, lengthCm: 25, widthCm: 15, heightCm: 10, insuranceValueCents: 0, items: [{ productId: "synthetic-a", quantity: 1 }] }] },
+    postingLocation: { city: "Ivaté", state: "PR", requiresTravel: false, pointName: "AC Ivaté" },
+  };
   const orders = [
-    { ...base, id: "local", number: "LOCAL", shippingQuote: { ...quote, packaging: { version: 1, calculationMethod: "provider-conservative-envelope", inputMeasurementBasis: "estimated", packages: [{ weightGrams: 5000, lengthCm: 52.8, widthCm: 51.8, heightCm: 35, insuranceValueCents: 9990, items: [{ productId: "synthetic-a", quantity: 10 }] }] }, postingLocation: { city: "Ivaté", state: "PR", requiresTravel: false, pointName: "Agência sintética" } } },
+    { ...base, id: "local", number: "LOCAL", requiresPrescriptionReview: true, shippingQuote: { ...quote, packaging: { version: 1, calculationMethod: "provider-conservative-envelope", inputMeasurementBasis: "estimated", packages: [{ weightGrams: 5000, lengthCm: 52.8, widthCm: 51.8, heightCm: 35, insuranceValueCents: 9990, items: [{ productId: "synthetic-a", quantity: 10 }] }] }, postingLocation: { city: "Ivaté", state: "PR", requiresTravel: false, pointName: "Agência sintética" } } },
     { ...base, id: "travel", number: "VIAGEM", shippingQuote: { ...quote, postingLocation: { city: "Umuarama", state: "PR", requiresTravel: true } } },
     { ...base, id: "pending", number: "LEGADO", shippingQuote: quote },
     { ...base, id: "delivery", number: "ENTREGA LOCAL", shippingQuote: null },
-    { ...base, id: "frenet", number: "FRENET", shippingQuote: {
-      ...quote, provider: "frenet", serviceId: 3298, providerServiceCode: "03298",
-      packaging: { version: 1, calculationMethod: "provider-conservative-envelope", inputMeasurementBasis: "measured", packages: [{ weightGrams: 500, lengthCm: 25, widthCm: 15, heightCm: 10, insuranceValueCents: 0, items: [{ productId: "synthetic-a", quantity: 1 }] }] },
-      postingLocation: { city: "Ivaté", state: "PR", requiresTravel: false, pointName: "AC Ivaté" },
-    } },
+    { ...base, id: "frenet", number: "FRENET", shippingQuote: frenetQuote },
+    { ...base, id: "frenet-pending", number: "FRENET PENDENTE", requiresPrescriptionReview: true, shippingQuote: frenetQuote },
+    { ...base, id: "frenet-reviewed", number: "FRENET CONFERIDA", requiresPrescriptionReview: true,
+      prescriptionReviewedAt: new Date(0).toISOString(), shippingQuote: frenetQuote },
+    { ...base, id: "superfrete", number: "SUPERFRETE", requiresPrescriptionReview: true,
+      shippingQuote: { ...quote, provider: "superfrete", postingLocation: frenetQuote.postingLocation } },
   ];
   const script = await fixtureBundle(`import {OrdersPanel} from './src/components/admin/orders-panel';createRoot(document.getElementById('root')).render(<OrdersPanel initialOrders={${JSON.stringify(orders)}}/>);`);
   const browser = await chromium.launch();
@@ -34,7 +40,7 @@ test("orders show historical posting location above recipient and filter local, 
     await page.route("**/*", route => route.fulfill({ contentType: "text/html", body: '<div id="root"></div>' }));
     await page.goto("http://127.0.0.1:3196");
     await page.addScriptTag({ content: script });
-    for (const number of ["LOCAL", "VIAGEM", "LEGADO", "FRENET"]) await page.getByRole("button", { name: `Ver detalhes do pedido ${number}`, exact: true }).click();
+    for (const number of ["LOCAL", "VIAGEM", "LEGADO", "FRENET", "FRENET PENDENTE", "FRENET CONFERIDA", "SUPERFRETE"]) await page.getByRole("button", { name: `Ver detalhes do pedido ${number}`, exact: true }).click();
     const local = page.locator("article").filter({ has: page.getByRole("heading", { name: "LOCAL", exact: true }) });
     const travel = page.locator("article").filter({ has: page.getByRole("heading", { name: "VIAGEM", exact: true }) });
     const pending = page.locator("article").filter({ has: page.getByRole("heading", { name: "LEGADO", exact: true }) });
@@ -58,6 +64,13 @@ test("orders show historical posting location above recipient and filter local, 
     await expect(frenetPackage).toContainText("recalcule antes de comprar a etiqueta");
     await expect(frenetPackage).not.toContainText(/inconsistência|etiquetas separadas/);
     await expect(frenetPosting.getByRole("link", { name: "Preparar envio na Frenet" })).toHaveAttribute("href", "https://painel.frenet.com.br/");
+    const frenetPending = page.locator("article").filter({ has: page.getByRole("heading", { name: "FRENET PENDENTE", exact: true }) }).getByRole("region", { name: "Postagem do pedido" });
+    const frenetReviewed = page.locator("article").filter({ has: page.getByRole("heading", { name: "FRENET CONFERIDA", exact: true }) }).getByRole("region", { name: "Postagem do pedido" });
+    const superfrete = page.locator("article").filter({ has: page.getByRole("heading", { name: "SUPERFRETE", exact: true }) });
+    await expect(frenetPending.getByRole("link", { name: "Preparar envio na Frenet" })).toHaveCount(0);
+    await expect(frenetPending).toContainText("Registre a conferência farmacêutica da receita antes de preparar a etiqueta");
+    await expect(frenetReviewed.getByRole("link", { name: "Preparar envio na Frenet" })).toHaveAttribute("href", "https://painel.frenet.com.br/");
+    await expect(superfrete.getByRole("link", { name: "Preparar envio no SuperFrete" })).toHaveAttribute("href", "https://web.superfrete.com/");
     await expect(travel.getByLabel("Embalagem prevista na cotação")).toHaveCount(0);
     await expect(travel.getByText("Levar para Umuarama/PR", { exact: true })).toBeVisible();
     await expect(travel.getByRole("region", { name: "Postagem do pedido" })).toHaveClass(/bg-amber-50/);
@@ -77,7 +90,7 @@ test("orders show historical posting location above recipient and filter local, 
     await expect(page.locator("article")).toHaveCount(1);
     await expect(pending).toBeVisible();
     await filter.selectOption("ALL");
-    await expect(page.locator("article")).toHaveCount(5);
+    await expect(page.locator("article")).toHaveCount(8);
     await page.getByRole("button", { name: "Ver detalhes do pedido ENTREGA LOCAL", exact: true }).click();
     await expect(page.locator("article").filter({ has: page.getByRole("heading", { name: "ENTREGA LOCAL", exact: true }) }).getByRole("region", { name: "Postagem do pedido" })).toHaveCount(0);
   } finally { await browser.close(); }

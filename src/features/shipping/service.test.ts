@@ -233,4 +233,19 @@ test("medication carrier acceptance is enforced both when quoting and submitting
   env.FRENET_CHECKOUT_ENABLED = "true";
   products = [{ ...withFrenet, shippingProfile: { ...withFrenet.shippingProfile, frenetAcceptance: { version: 1, serviceCodes: ["03220"] } } }];
   await assert.rejects(loaded.exports.validateOrderShipping(tx, frenetInput), /não aceita os itens/);
+
+  const medicinalAcceptance = { version: 2, scope: "ordinary-medicine", serviceCodes: ["03298"], destinationCoverage: "all-service-destinations",
+    product: { id: baseProduct.id, name: baseProduct.name, gtin: "07891234567895" } };
+  const ordinary = { ...baseProduct, requiresPrescription: true, prescriptionType: "ORDINARY" as const,
+    shippingProfile: { ...profile, cargoKinds: ["medication"], approvedServiceIds: [], frenetAcceptance: medicinalAcceptance } };
+  products = [ordinary];
+  const legacyCalls = requests.length;
+  const [ordinaryQuote] = await loaded.exports.quoteCart("01001000", items);
+  assert.equal(ordinaryQuote.provider, "frenet");
+  assert.equal(ordinaryQuote.providerServiceCode, "03298");
+  assert.equal(requests.length, legacyCalls);
+  const ordinaryInput = { ...input, shippingToken: ordinaryQuote.token };
+  await loaded.exports.validateOrderShipping(tx, ordinaryInput);
+  products = [{ ...ordinary, ean: "7890000000000" }];
+  await assert.rejects(loaded.exports.validateOrderShipping(tx, ordinaryInput), /não aceita os itens/);
 });

@@ -66,6 +66,33 @@ test("Frenet keeps restricted cargo and pharmaceutical checkout rules independen
   }
 });
 
+test("Frenet exige aceite medicinal vinculado à apresentação de receita comum", () => {
+  const id = "synthetic-medicine", ean = "7890000000000", name = "Comprimido sintético 10 mg com 30 comprimidos";
+  const acceptance = { version: 2, scope: "ordinary-medicine", serviceCodes: ["03298"], destinationCoverage: "all-service-destinations",
+    product: { id, name, gtin: "07890000000000" } };
+  const ordinary = { ...product, id, ean, name, category: "Medicamentos", catalogClassification: { kind: "MEDICINE" },
+    requiresPrescription: true, prescriptionType: "ORDINARY" as const,
+    shippingProfile: { ...profile, cargoKinds: ["medication"], approvedServiceIds: [], frenetAcceptance: acceptance } };
+  assert.deepEqual(frenetCheckoutServices(settings, [ordinary, product]), ["03298"]);
+  assert.deepEqual(frenetCheckoutServices(settings, [ordinary,
+    { ...product, shippingProfile: { ...profile, frenetAcceptance: { version: 1, serviceCodes: ["03220"] } } }]), []);
+  for (const candidate of [
+    { ...ordinary, requiresPrescription: false },
+    { ...ordinary, prescriptionType: "ANTIMICROBIAL" as const },
+    { ...ordinary, prescriptionType: "CONTROLLED" as const },
+    { ...ordinary, prescriptionType: "UNREVIEWED" as const },
+    { ...ordinary, isPopularPharmacy: true },
+    { ...ordinary, id: "other" },
+    { ...ordinary, ean: "7891234567895" },
+    { ...ordinary, name: "Apresentação alterada" },
+    { ...ordinary, shippingProfile: { ...ordinary.shippingProfile, notifyOnlyPendingLogistics: true } },
+    { ...ordinary, shippingProfile: { ...ordinary.shippingProfile, cargoKinds: ["medication", "temperature_sensitive"] } },
+    { ...ordinary, shippingProfile: { ...ordinary.shippingProfile, cargoKinds: ["general"] } },
+    { ...ordinary, shippingProfile: { ...ordinary.shippingProfile, frenetAcceptance: { ...acceptance, destinationCoverage: "single-destination" } } },
+    { ...ordinary, shippingProfile: { ...ordinary.shippingProfile, frenetAcceptance: profile.frenetAcceptance } },
+  ]) assert.deepEqual(frenetCheckoutServices(settings, [candidate]), []);
+});
+
 test("Frenet quotes one protected parcel and keeps only approved services with their official codes", async () => {
   const calls: unknown[] = [];
   const request: typeof fetch = async (url, init) => {

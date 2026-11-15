@@ -31,6 +31,8 @@ O histórico do cliente explica a apresentação da receita antes da entrega/ret
 
 Receita comum classificada pode consultar transportadora somente com perfil logístico aprovado, conservação adequada e integração ativa. Carrinho com medicamento mantém PAC/SEDEX; receita controlada ou não classificada continua impedida. Referência estimada não equivale a medida física. A classificação não aprova automaticamente peso, dimensões, embalagem, etiqueta ou postagem.
 
+Pela Frenet, receita comum classificada exige aceite medicinal para a apresentação e para o serviço PAC ou SEDEX, com origem Ivaté. O ADMIN valida a bula oficial, a conservação durante o transporte, a embalagem e a postagem no serviço homologado. Mesmo com cotação válida ou pagamento confirmado, o farmacêutico confere a receita antes da dispensação. A equipe registra essa conferência no pedido antes de emitir a etiqueta manualmente e despachar. O servidor usa a mesma trava de conferência para qualquer provedor. [Aceite e emissão Frenet](27-melhor-envio.md#frenet-no-checkout--15112026)
+
 ## Validação e implantação
 
 - Testes gerais: 203/203; frete: 48/48. Casos cobrem receita comum, controlados, classificação ausente, campos contraditórios, mudança de identidade, falsificação de conferência e transições operacionais/pagamento.
