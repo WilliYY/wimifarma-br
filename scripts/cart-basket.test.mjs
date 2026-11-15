@@ -225,7 +225,15 @@ try {
     expect(Math.abs(resting.y - (target.y + target.height / 2))).toBeLessThan(1.5);
     expect(resting.y).toBeLessThan(header.y + header.height);
     expect(bounce.slice(-3, -1).some(point => point.y < resting.y)).toBe(true);
+    if (index === 0) {
+      await desktop.locator("header").evaluate(element => { element.style.transform = "translateY(-18px)"; });
+      const moved = await sideSlot(desktop, index).boundingBox();
+      await expect.poll(async () => (await flightPositions(desktop, "overflow")).at(-1)?.y, {
+        intervals: [20, 40, 60],
+      }).toBeCloseTo(moved.y + moved.height / 2, 0);
+    }
     await expect(flight(desktop)).toHaveCount(0);
+    if (index === 0) await desktop.locator("header").evaluate(element => element.style.removeProperty("transform"));
     await Promise.all([desktop, mobile].map(page =>
       expect(sideSlot(page, index).locator(`[data-cart-basket-product="${id}"]`)).toBeVisible()));
   }

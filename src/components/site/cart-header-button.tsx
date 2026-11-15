@@ -17,11 +17,7 @@ const THUMBNAIL_WAIT_MS = 260;
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 const PREVIEW_LIMIT = BASKET_SLOT_COUNT + BASKET_SIDE_SLOT_COUNT;
 
-type Flight = {
-  item: CartItem;
-  ready: boolean;
-  hideNewSlot: boolean;
-  fromX: number;
+type FlightPath = {
   fromY: number;
   dx: number;
   dy: number;
@@ -30,7 +26,38 @@ type Flight = {
   parked: { x: number; y: number } | null;
 };
 
-function flightFrames({ fromY, dx, dy, landingScale, landingAngle, parked }: Flight): Keyframe[] {
+type Flight = FlightPath & {
+  item: CartItem;
+  ready: boolean;
+  hideNewSlot: boolean;
+  index: number;
+  fromX: number;
+};
+
+function measurePath(button: HTMLButtonElement | null, index: number, fromX: number, fromY: number): FlightPath | null {
+  const overflow = index >= BASKET_SLOT_COUNT;
+  const slot = button?.querySelector<HTMLElement>(overflow
+    ? `[data-cart-basket-side-slot="${index - BASKET_SLOT_COUNT}"]`
+    : `[data-cart-basket-slot="${index}"]`);
+  const contact = overflow ? button?.querySelector("[data-cart-basket-rim]") : slot;
+  if (!slot || !contact) return null;
+  const to = contact.getBoundingClientRect();
+  const landing = slot === contact ? to : slot.getBoundingClientRect();
+  if (!landing.width || !landing.height) return null;
+  return {
+    fromY,
+    dx: to.x + to.width / 2 - fromX,
+    dy: to.y + to.height / 2 - fromY,
+    landingScale: Math.min(slot.clientWidth / FLIGHT_WIDTH, slot.clientHeight / FLIGHT_HEIGHT),
+    landingAngle: Number.parseFloat(window.getComputedStyle(slot).getPropertyValue("--tilt")) || 0,
+    parked: overflow ? {
+      x: landing.x + landing.width / 2 - fromX,
+      y: landing.y + landing.height / 2 - fromY,
+    } : null,
+  };
+}
+
+function flightFrames({ fromY, dx, dy, landingScale, landingAngle, parked }: FlightPath): Keyframe[] {
   const move = (offset: number, x: number, y: number, scale: number, angle: number, opacity = 1, easing = "linear") => ({
     offset, transform: `translate3d(${x}px,${y}px,0) rotate(${angle}deg) scale(${scale})`, opacity, easing,
   });
@@ -87,29 +114,12 @@ export function CartHeaderButton({ className }: Readonly<{ className?: string }>
     const button = buttonRef.current;
     if (index >= PREVIEW_LIMIT || open || !button?.getClientRects().length || document.hidden ||
       typeof Element.prototype.animate !== "function" || window.matchMedia(REDUCED_MOTION).matches) return;
-    const overflow = index >= BASKET_SLOT_COUNT;
-    const slot = button.querySelector<HTMLElement>(overflow
-      ? `[data-cart-basket-side-slot="${index - BASKET_SLOT_COUNT}"]`
-      : `[data-cart-basket-slot="${index}"]`);
-    const contact = overflow ? button.querySelector("[data-cart-basket-rim]") : slot;
-    if (!slot || !contact) return;
     const from = source.getBoundingClientRect();
-    const to = contact.getBoundingClientRect();
-    const landing = slot === contact ? to : slot.getBoundingClientRect();
-    if (!from.width || !from.height || !landing.width || !landing.height) return;
+    if (!from.width || !from.height) return;
     const fromX = from.x + from.width / 2;
     const fromY = from.y + from.height / 2;
-    const landingAngle = Number.parseFloat(window.getComputedStyle(slot).getPropertyValue("--tilt")) || 0;
-    setFlight(current => current ?? ({
-      item, ready: false, hideNewSlot: isNew, fromX, fromY,
-      dx: to.x + to.width / 2 - fromX, dy: to.y + to.height / 2 - fromY,
-      landingScale: Math.min(slot.clientWidth / FLIGHT_WIDTH, slot.clientHeight / FLIGHT_HEIGHT),
-      landingAngle,
-      parked: overflow ? {
-        x: landing.x + landing.width / 2 - fromX,
-        y: landing.y + landing.height / 2 - fromY,
-      } : null,
-    }));
+    const path = measurePath(button, index, fromX, fromY);
+    if (path) setFlight(current => current ?? { ...path, item, index, ready: false, hideNewSlot: isNew, fromX });
   }), [open, subscribeBasketArrival]);
 
   useEffect(() => {
@@ -121,7 +131,26 @@ export function CartHeaderButton({ className }: Readonly<{ className?: string }>
     }
     const duration = flight.parked ? 680 : 500;
     const contact = flight.parked ? OVERFLOW_CONTACT : LANDING_CONTACT;
-    const animation = node.animate(flightFrames(flight), { duration, fill: "forwards" });
+    const measure = () => measurePath(buttonRef.current, flight.index, flight.fromX, flight.fromY);
+    const path = measure() ?? flight;
+    const animation = node.animate(flightFrames(path), { duration, fill: "forwards" });
+    const alignLanding = window.setTimeout(() => {
+      const updated = measure();
+      const effect = animation.effect as KeyframeEffect | null;
+      const progress = typeof animation.currentTime === "number" ? animation.currentTime / duration : 0;
+      if (!updated || !effect || progress <= 0 || progress >= 0.93) return;
+      const before = path.parked ?? { x: path.dx, y: path.dy };
+      const after = updated.parked ?? { x: updated.dx, y: updated.dy };
+      if (Math.hypot(after.x - before.x, after.y - before.y) < 1) return;
+
+      // The header can finish collapsing during flight. Keep the current pose and adjust the remaining path once.
+      const current = window.getComputedStyle(node);
+      effect.setKeyframes([
+        ...effect.getKeyframes().filter(frame => frame.computedOffset < progress),
+        { offset: progress, transform: current.transform, opacity: current.opacity },
+        ...flightFrames(updated).filter(frame => frame.offset! > progress),
+      ]);
+    }, duration * 0.62);
     const reaction = buttonRef.current?.querySelector("[data-cart-basket-shell]")?.animate(
       [
         { transform: "translateY(0) rotate(0)" },
@@ -138,6 +167,7 @@ export function CartHeaderButton({ className }: Readonly<{ className?: string }>
     return () => {
       animation.cancel();
       reaction?.cancel();
+      window.clearTimeout(alignLanding);
       window.removeEventListener("resize", finish);
       motion.removeEventListener?.("change", finish);
     };
