@@ -7,10 +7,11 @@ import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
 import postcss from "postcss";
 
-const names = ["Algodão", "Sabonete", "Creme", "Gaze", "Escova"];
-const ids = ["cotton", "soap", "cream", "gauze", "brush"];
+const names = ["Algodão", "Sabonete", "Creme", "Gaze", "Escova", "Xampu", "Gel", "Protetor", "Curativo", "Lenço"];
+const ids = ["cotton", "soap", "cream", "gauze", "brush", "shampoo", "gel", "sunscreen", "bandage", "tissue"];
+const basketCapacity = 9;
 const products = ids.map((id, index) => ({
-  id, slug: id, name: names[index], imageUrl: index === 3 ? null : `/fixture/${id}.svg`,
+  id, slug: id, name: names[index], imageUrl: index === 3 ? null : `/uploads/products/${id}.svg`,
   unitPriceCents: 500, originalPriceCents: null, stock: 20, category: index === 3 ? "Medicamentos" : null,
   requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false,
 }));
@@ -20,7 +21,10 @@ const products = ids.map((id, index) => ({
 const mocks = {
   "next/navigation": `export const useRouter = () => ({ push() {} });`,
   "next/link": `export default function Link(props) { return <a {...props} />; }`,
-  "next/image": `export default function Image({ unoptimized, fill, priority, quality, ...props }) { return <img {...props} />; }`,
+  "next/image": `
+    export const getImageProps = ({ src }) => ({ props: { src } });
+    export default function Image({ unoptimized, fill, priority, quality, ...props }) { return <img {...props} />; }
+  `,
 };
 const bundle = await build({
   stdin: { contents: `
@@ -48,6 +52,7 @@ const globalStyles = fileURLToPath(new URL("../src/app/globals.css", import.meta
 const styles = await postcss([tailwindcss({ optimize: false })]).process(await readFile(globalStyles, "utf8"), { from: globalStyles });
 assets.set("globals.css", styles.css);
 const logo = await readFile(new URL("../public/brand/logo-wimifarma-compact.webp", import.meta.url));
+const basketImage = await readFile(new URL("../public/brand/cesta-wimifarma-preta.webp", import.meta.url));
 const medicineFallback = await readFile(new URL("../public/brand/medicamento-ilustrativo.webp", import.meta.url));
 const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Cesta — regressão local</title>
 <link rel="stylesheet" href="/globals.css"><link rel="stylesheet" href="/basket.css"><style>
@@ -68,11 +73,16 @@ const server = createServer((request, response) => {
     return send(path.endsWith(".js") ? "text/javascript" : "text/css", assets.get(path.slice(1)) ?? "");
   }
   if (path === "/brand/logo-wimifarma-compact.webp") return send("image/webp", logo);
+  if (path === "/brand/cesta-wimifarma-preta.webp") return send("image/webp", basketImage);
   if (path === "/brand/medicamento-ilustrativo.webp") return send("image/webp", medicineFallback);
-  const idIndex = ids.findIndex(id => path === `/fixture/${id}.svg`);
+  const idIndex = ids.findIndex(id => path === `/uploads/products/${id}.svg`);
   if (idIndex >= 0) {
-    const color = ["#d2abf5", "#7bd4ca", "#f6c476", "#9ddd8a", "#a9c8f5"][idIndex];
-    return send("image/svg+xml", `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="52"><rect x="5" y="2" width="26" height="48" rx="5" fill="${color}"/><path stroke="#394858" d="M7 12h22M7 40h22"/><text x="18" y="31" text-anchor="middle" font-family="sans-serif" font-size="14">${names[idIndex][0]}</text></svg>`);
+    const color = `hsl(${idIndex * 47} 65% 78%)`;
+    const background = idIndex === 0 ? '<rect width="36" height="52" fill="#fff"/>' : "";
+    const label = idIndex === 0
+      ? '<rect x="12" y="18" width="12" height="16" fill="#fff"/>'
+      : `<text x="18" y="31" text-anchor="middle" font-family="sans-serif" font-size="14">${names[idIndex][0]}</text>`;
+    return send("image/svg+xml", `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="52">${background}<rect x="5" y="2" width="26" height="48" rx="5" fill="${color}"/><path stroke="#394858" d="M7 12h22M7 40h22"/>${label}</svg>`);
   }
   if (path.startsWith("/api/")) return send("application/json", "{}");
   response.writeHead(404).end();
@@ -88,6 +98,15 @@ const slots = page => basket(page).locator("[data-cart-basket-slot]");
 const thumbnails = page => basket(page).locator("[data-cart-basket-product]");
 const count = (page, quantity) => expect(basket(page)).toHaveAccessibleName(`Abrir cesta: ${quantity} ${quantity === 1 ? "item" : "itens"} no carrinho`);
 const renderedIds = (page, expected) => expect.poll(() => thumbnails(page).evaluateAll(nodes => nodes.map(node => node.dataset.cartBasketProduct))).toEqual(expected);
+const flightPositions = (page, kind) => flight(page, kind).evaluate(node => {
+  const effect = node.getAnimations()[0]?.effect;
+  const x = Number.parseFloat(node.style.left) + node.offsetWidth / 2;
+  const y = Number.parseFloat(node.style.top) + node.offsetHeight / 2;
+  return (effect?.getKeyframes() ?? []).map(frame => {
+    const transform = new DOMMatrixReadOnly(frame.transform);
+    return { x: x + transform.m41, y: y + transform.m42 };
+  });
+});
 
 const capture = async (page, name) => {
   if (!process.env.BASKET_QA_DIR) return;
@@ -108,17 +127,31 @@ try {
   await mobile.emulateMedia({ reducedMotion: "reduce" });
   await Promise.all([desktop.goto(url), mobile.goto(url)]);
   await Promise.all([count(desktop, 0), count(mobile, 0)]);
-  await Promise.all([expect(slots(desktop)).toHaveCount(4), expect(slots(mobile)).toHaveCount(4)]);
+  await Promise.all([expect(slots(desktop)).toHaveCount(basketCapacity), expect(slots(mobile)).toHaveCount(basketCapacity)]);
 
   await desktop.bringToFront();
   await add(desktop, names[0]).click();
   await expect(flight(desktop, "land")).toHaveCount(1);
+  await expect.poll(async () => (await flightPositions(desktop, "land")).length).toBeGreaterThan(0);
+  const landing = await flightPositions(desktop, "land");
+  expect(Math.min(...landing.map(point => point.y))).toBeLessThan(landing.at(-1).y);
   await count(desktop, 1);
   await expect(flight(desktop)).toHaveCount(0);
   await renderedIds(desktop, ids.slice(0, 1));
   const photo = thumbnails(desktop).locator("img");
-  await expect(photo).toHaveAttribute("src", `/fixture/${ids[0]}.svg`);
+  await expect(photo).toHaveAttribute("src", /^data:image\//);
   await expect.poll(() => photo.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+  const cutoutPixels = await photo.evaluate(img => {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const context = canvas.getContext("2d");
+    context.drawImage(img, 0, 0);
+    const corner = context.getImageData(0, 0, 1, 1).data;
+    const center = context.getImageData(canvas.width >> 1, canvas.height >> 1, 1, 1).data;
+    return { cornerAlpha: corner[3], center: Array.from(center) };
+  });
+  expect(cutoutPixels).toEqual({ cornerAlpha: 0, center: [255, 255, 255, 255] });
 
   await desktop.clock.pauseAt(await desktop.evaluate(() => Date.now() + 500));
   await more(desktop, names[0]).dispatchEvent("click");
@@ -156,29 +189,47 @@ try {
   await Promise.all([renderedIds(desktop, ids.slice(0, 4)), renderedIds(mobile, ids.slice(0, 4))]);
   const fallback = thumbnails(mobile).last().locator("img");
   await expect.poll(() => fallback.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
-  await Promise.all([capture(desktop, "desktop-cheia"), capture(mobile, "celular-cheia")]);
-  console.log("PASS: four different products on desktop and mobile; missing photo fallback and reduced motion");
-
   await desktop.bringToFront();
-  await add(desktop, names[4]).click();
+  for (const name of names.slice(4, basketCapacity)) {
+    await add(desktop, name).click();
+    await expect(flight(desktop, "land")).toHaveCount(1);
+    await expect(flight(desktop)).toHaveCount(0);
+  }
+  const fullIds = ids.slice(0, basketCapacity);
+  await Promise.all([count(desktop, 11), count(mobile, 11)]);
+  await Promise.all([renderedIds(desktop, fullIds), renderedIds(mobile, fullIds)]);
+  const mobileButton = await basket(mobile).boundingBox();
+  expect(mobileButton.height).toBeGreaterThanOrEqual(44);
+  expect(mobileButton.x + mobileButton.width).toBeLessThanOrEqual(390);
+  await Promise.all([capture(desktop, "desktop-cheia"), capture(mobile, "celular-cheia")]);
+  console.log("PASS: nine different products on desktop and mobile; missing photo fallback and reduced motion");
+
+  await add(desktop, names[basketCapacity]).click();
   await expect(flight(desktop, "overflow")).toHaveCount(1);
-  await count(desktop, 7);
+  await expect.poll(async () => (await flightPositions(desktop, "overflow")).length).toBeGreaterThan(0);
+  const bounce = await flightPositions(desktop, "overflow");
+  const [rim, rebound, floor] = bounce.slice(-5, -2);
+  expect(rebound.y).toBeLessThan(rim.y);
+  expect(Math.abs(floor.x - rim.x)).toBeGreaterThan(25);
+  expect(floor.y).toBeGreaterThan(736);
+  await count(desktop, 12);
   await expect(flight(desktop)).toHaveCount(0);
-  await renderedIds(desktop, ids.slice(0, 4));
+  await Promise.all([renderedIds(desktop, fullIds), renderedIds(mobile, fullIds)]);
+  await mobile.bringToFront();
   await basket(mobile).click();
   const drawer = mobile.getByRole("dialog", { name: "Minha cesta" });
-  await expect(drawer.getByText("7 itens selecionados")).toBeVisible();
-  await expect(drawer.getByRole("button", { name: `Remover ${names[4]}`, exact: true })).toBeVisible();
+  await expect(drawer.getByText("12 itens selecionados")).toBeVisible();
+  await expect(drawer.getByRole("button", { name: `Remover ${names[basketCapacity]}`, exact: true })).toBeVisible();
   await drawer.getByRole("button", { name: `Remover ${names[0]}`, exact: true }).click();
-  await expect(drawer.getByText("4 itens selecionados")).toBeVisible();
+  await expect(drawer.getByText("9 itens selecionados")).toBeVisible();
   await drawer.getByRole("button", { name: "Fechar cesta", exact: true }).click();
-  await Promise.all([count(desktop, 4), count(mobile, 4)]);
+  await Promise.all([count(desktop, 9), count(mobile, 9)]);
   await Promise.all([renderedIds(desktop, ids.slice(1)), renderedIds(mobile, ids.slice(1))]);
   await desktop.reload();
-  await count(desktop, 4);
+  await count(desktop, 9);
   await renderedIds(desktop, ids.slice(1));
   await expect(flight(desktop)).toHaveCount(0);
-  console.log("PASS: fifth SKU uses overflow, stays in the drawer, promotes after removal and persists across reload");
+  console.log("PASS: tenth SKU uses overflow, stays in the drawer, promotes after removal and persists across reload");
 } finally {
   await browser?.close();
   await new Promise(resolve => server.close(resolve));

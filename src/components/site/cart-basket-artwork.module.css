@@ -2,54 +2,76 @@
   position: relative;
   display: block;
   width: 60px;
-  height: 42px;
+  height: 44px;
   flex: none;
   isolation: isolate;
   pointer-events: none;
   user-select: none;
 }
 
-.layer,
-.front {
+.photo,
+.slots {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
 
+.photo {
+  object-fit: fill;
+}
+
+.slots {
+  z-index: 1;
+}
+
 .front {
   z-index: 2;
+  /* Match the photographed front lip so the products sit behind it. */
+  clip-path: polygon(
+    0 38%, 8.3% 39.8%, 10.2% 41.5%, 18% 43.5%, 35% 46.9%,
+    66% 51.1%, 74% 52.1%, 79% 50.7%, 86% 41%, 92% 34.8%,
+    100% 34.8%, 100% 100%, 0 100%
+  );
 }
 
 .mouth {
   position: absolute;
-  inset: 45% 28% 42%;
-}
-
-.slots {
-  position: absolute;
-  z-index: 1;
-  inset: 13% 12% 37%;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-rows: minmax(0, 1fr);
-  gap: 1px;
+  inset: 42% 23% 51% 57%;
 }
 
 .slot {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  min-width: 0;
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  z-index: 3;
+  width: 17%;
+  height: 36%;
+  transform: rotate(var(--tilt, 0deg));
 }
+
+.slot:nth-child(1) { --x: 18%; --y: 29%; --tilt: -13deg; }
+.slot:nth-child(2) { --x: 32%; --y: 32%; --tilt: -4deg; }
+.slot:nth-child(3) { --x: 47%; --y: 33%; --tilt: 6deg; }
+.slot:nth-child(4) { --x: 62%; --y: 30%; --tilt: 14deg; }
+
+.slot:nth-child(n + 5) { z-index: 2; }
+.slot:nth-child(5) { --x: 26%; --y: 17%; --tilt: -16deg; }
+.slot:nth-child(6) { --x: 41%; --y: 16%; --tilt: 4deg; }
+.slot:nth-child(7) { --x: 56%; --y: 21%; --tilt: 14deg; }
+
+.slot:nth-child(n + 8) { z-index: 1; }
+.slot:nth-child(8) { --x: 34%; --y: 6%; --tilt: -12deg; }
+.slot:nth-child(9) { --x: 49%; --y: 4%; --tilt: 9deg; }
 
 .slot > *,
 .slot :is(img, svg) {
+  display: block;
   max-width: 100%;
   max-height: 100%;
 }
 
-.slot :is(img, svg) {
+.slot img {
   object-fit: contain;
   object-position: center bottom;
 }
@@ -57,30 +79,29 @@
 .brand {
   position: absolute;
   z-index: 3;
-  inset: 69% 28% auto;
-  display: block;
-  border-radius: 999px;
-  padding: 1px 2px;
-  background: #fff8f6;
-  box-shadow: 0 1px 1px #69122866;
+  top: 68%;
+  left: 25%;
+  width: 34%;
+  transform: rotate(6deg) skewX(5deg);
 }
 
 .brand img {
   display: block;
   width: 100%;
   height: auto;
+  filter: brightness(0) invert(1);
 }
 
 .overflow {
   position: absolute;
   z-index: 3;
-  top: 28%;
-  left: 0;
-  border: 1px solid #ff9ba5;
+  bottom: 8%;
+  right: 6%;
+  border: 1px solid white;
   border-radius: 999px;
-  padding: 1px 2px;
-  background: #72162b;
-  color: #fff;
+  padding: 1px 3px;
+  background: #18191b;
+  color: white;
   font-size: 7px;
   font-weight: 800;
   line-height: 1;
@@ -89,24 +110,15 @@
 @media (min-width: 768px) {
   .basket {
     width: 108px;
-    height: 62px;
+    height: 72px;
   }
 
   :global(.site-header[data-compact="true"]) .basket {
-    width: 82px;
-    height: 46px;
-  }
-
-  .slots {
-    gap: 2px;
-  }
-
-  .brand {
-    padding: 1px 3px;
+    width: 78px;
+    height: 52px;
   }
 
   .overflow {
-    padding: 1px 3px;
     font-size: 9px;
   }
 }

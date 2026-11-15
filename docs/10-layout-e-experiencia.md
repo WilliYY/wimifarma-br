@@ -2,11 +2,22 @@
 
 ## Cesta interativa no cabeçalho — 15/11/2026
 
-A cesta vermelha com a marca oficial ocupa o espaço entre a busca e os controles de conta no desktop. No celular, substitui o ícone de carrinho na mesma faixa, com alvo de toque de pelo menos 44 px. Pressionar a cesta abre o painel lateral existente.
+A cesta preta em perspectiva ocupa o espaço entre a busca e os controles de conta no desktop. A marca oficial aparece em branco na parede da cesta. No celular, o alvo de toque tem pelo menos 44 px. Pressionar a cesta abre o painel lateral.
 
-O botão **Adicionar** dos cards e **Adicionar ao carrinho** na ficha mantêm a página aberta e animam uma miniatura da inclusão aceita. A cesta mostra até quatro produtos diferentes, com a contagem total de unidades. A partir do quinto produto diferente, a miniatura bate na borda e cai; o produto fica na compra e aparece no painel. Ao remover um dos quatro, a vaga passa ao próximo produto. Usamos a foto pública ou a ilustração do catálogo, inclusive genérico e ético. O carrinho é a única fonte de itens para a cesta, para o painel e para a restauração após navegar, recarregar ou alterar em outra aba.
+Os botões **Adicionar** dos cards e **Adicionar ao carrinho** na ficha mantêm a página aberta e animam uma miniatura da inclusão aceita. Até nove produtos diferentes se acomodam em três níveis, com a contagem total de unidades. A partir do décimo, a miniatura toca a borda e cai. O produto fica na compra e aparece no painel. Ao liberar uma vaga, o próximo produto aparece na pilha. O carrinho alimenta a cesta e o painel e restaura os itens após navegação, recarga ou alteração em outra aba.
 
-O voo usa transformações e opacidade, sem vídeo, biblioteca nova ou animação em repouso. Há no máximo uma miniatura em voo e uma pausa de 450 ms entre inclusões pelo botão do mesmo produto. Quem prefere movimento reduzido recebe a atualização imediata. **Comprar agora** continua com o fluxo de checkout. A regressão roda localmente com `node scripts/cart-basket.test.mjs`.
+A miniatura reutiliza a foto pública ou a ilustração de medicamento, inclusive genérico e ético. O navegador reaproveita o alpha existente e recorta o branco externo quando ele pode ser separado da embalagem. O recorte é local à prévia da cesta. As fotos originais ficam no catálogo e no painel lateral.
+
+O voo em arco usa transformações e opacidade. A cesta reage ao encaixe e fica parada em repouso. Há no máximo uma miniatura em voo e uma pausa de 450 ms entre inclusões pelo botão do mesmo produto. Quem prefere movimento reduzido recebe a atualização imediata. A regressão roda localmente com `node scripts/cart-basket.test.mjs`.
+
+A arte [cesta-wimifarma-preta.webp](../public/brand/cesta-wimifarma-preta.webp) foi gerada com a ferramenta nativa de imagem e otimizada para 324 × 216 px. O [modelo preto de 16 L da Castellmaq](https://www.castellmaq.com.br/cesta-de-compras-plastica-16l-preta-castellmaq-1214-p9407) orientou o formato.
+
+<details>
+<summary>Prompt usado na arte</summary>
+
+Create ONE original photorealistic e-commerce UI sprite on a genuinely transparent alpha background: an EMPTY realistic matte BLACK plastic supermarket hand basket, modeled on the proportions and features of the uploaded reference photo (ignore its screenshot frame and other cards). Three-quarter side perspective, wide front face fully visible with the right shorter face receding, moderately elevated camera to see the dark inside, resilient molded black plastic, a broad lip and delicate rectangular ventilation slots, one raised black handle leaning away from the viewer behind the open compartment so it won't mask virtual products. Make the front central face have a modest blank smooth area for a small white logo to be composited by code. Completely unbranded: NO lettering, NO graphics, NO products, NO detached elements. Transparent alpha background throughout, no white/grey tile, no backdrop or floor, no cast shadow outside the basket. Beautiful soft studio highlights to read black on a light UI. Use tight framing around the whole basket, keep all edges in bounds, emphasize a wide silhouette, clear opening, realistic texture. This isolated product sprite will be shown around 110 x 65 pixels, so choose clean high contrast silhouettes, defined lip and openings, and avoid fine grain. Keep the same perspective as the photo, not flat-on or symmetric. Generate a single isolated basket with its natural image proportions.
+
+</details>
 
 ## Compactação da home, cartões e rodapé — 30/10/2026
 
