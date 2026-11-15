@@ -1,4 +1,4 @@
-.basket {
+.preview {
   position: relative;
   display: block;
   width: 60px;
@@ -8,6 +8,50 @@
   pointer-events: none;
   user-select: none;
 }
+
+.basket {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: block;
+  width: 60px;
+  isolation: isolate;
+}
+
+@media (width < 768px) {
+  .preview[data-has-side] .basket {
+    width: 52px;
+  }
+}
+
+.side {
+  position: absolute;
+  left: 0;
+  bottom: 4px;
+  z-index: 2;
+  width: 23px;
+  height: 24px;
+}
+
+.preview[data-has-side] .side::before {
+  position: absolute;
+  inset: auto 0 1px 1px;
+  height: 3px;
+  border-radius: 50%;
+  background: #171b2226;
+  content: "";
+}
+
+.sideSlot {
+  position: absolute;
+  bottom: 2px;
+  width: 10px;
+  height: 15px;
+  transform: rotate(var(--tilt));
+}
+
+.sideSlot:nth-child(1) { left: 0; --tilt: -19deg; }
+.sideSlot:nth-child(2) { left: 7px; bottom: 5px; --tilt: 8deg; }
+.sideSlot:nth-child(3) { left: 14px; --tilt: 20deg; }
 
 .photo,
 .slots {
@@ -35,9 +79,9 @@
   );
 }
 
-.mouth {
+.rim {
   position: absolute;
-  inset: 42% 23% 51% 57%;
+  inset: 39% 72% 54% 21%;
 }
 
 .slot {
@@ -64,15 +108,18 @@
 .slot:nth-child(8) { --x: 34%; --y: 6%; --tilt: -12deg; }
 .slot:nth-child(9) { --x: 49%; --y: 4%; --tilt: 9deg; }
 
-.slot > *,
-.slot :is(img, svg) {
+:is(.slot, .sideSlot) > *,
+:is(.slot, .sideSlot) :is(img, svg) {
   display: block;
   max-width: 100%;
   max-height: 100%;
 }
 
-.slot img {
+:is(.slot, .sideSlot) img {
   object-fit: contain;
+}
+
+.slot img {
   object-position: center bottom;
 }
 
@@ -108,17 +155,41 @@
 }
 
 @media (min-width: 768px) {
-  .basket {
-    width: 108px;
+  .preview {
+    width: 142px;
     height: 72px;
   }
 
-  :global(.site-header[data-compact="true"]) .basket {
-    width: 78px;
+  .basket {
+    width: 108px;
+  }
+
+  :global(.site-header[data-compact="true"]) .preview {
     height: 52px;
   }
+
+  :global(.site-header[data-compact="true"]) .basket {
+    width: 90px;
+  }
+
+  .side {
+    left: 3px;
+    bottom: 6px;
+    width: 49px;
+    height: 40px;
+  }
+
+  .sideSlot { width: 20px; height: 27px; }
+  .sideSlot:nth-child(1) { left: 4%; }
+  .sideSlot:nth-child(2) { left: 32%; bottom: 6px; }
+  .sideSlot:nth-child(3) { left: 58%; }
 
   .overflow {
     font-size: 9px;
   }
+}
+
+@media (min-width: 1536px) {
+  .preview { width: 164px; }
+  .side { left: 5px; width: 63px; }
 }

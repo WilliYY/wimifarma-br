@@ -7,9 +7,11 @@ import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
 import postcss from "postcss";
 
-const names = ["Algodão", "Sabonete", "Creme", "Gaze", "Escova", "Xampu", "Gel", "Protetor", "Curativo", "Lenço"];
-const ids = ["cotton", "soap", "cream", "gauze", "brush", "shampoo", "gel", "sunscreen", "bandage", "tissue"];
+const names = ["Algodão", "Sabonete", "Creme", "Gaze", "Escova", "Xampu", "Gel", "Protetor", "Curativo", "Lenço", "Fralda", "Talco", "Loção"];
+const ids = ["cotton", "soap", "cream", "gauze", "brush", "shampoo", "gel", "sunscreen", "bandage", "tissue", "diaper", "powder", "lotion"];
 const basketCapacity = 9;
+const sideCapacity = 3;
+const visibleCapacity = basketCapacity + sideCapacity;
 const products = ids.map((id, index) => ({
   id, slug: id, name: names[index], imageUrl: index === 3 ? null : `/uploads/products/${id}.svg`,
   unitPriceCents: 500, originalPriceCents: null, stock: 20, category: index === 3 ? "Medicamentos" : null,
@@ -77,6 +79,9 @@ const server = createServer((request, response) => {
   if (path === "/brand/medicamento-ilustrativo.webp") return send("image/webp", medicineFallback);
   const idIndex = ids.findIndex(id => path === `/uploads/products/${id}.svg`);
   if (idIndex >= 0) {
+    if (ids[idIndex] === "powder") {
+      return send("image/svg+xml", '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="52"><rect width="36" height="52" fill="#fff"/></svg>');
+    }
     const color = `hsl(${idIndex * 47} 65% 78%)`;
     const background = idIndex === 0 ? '<rect width="36" height="52" fill="#fff"/>' : "";
     const label = idIndex === 0
@@ -95,9 +100,19 @@ const add = (page, name) => article(page, name).getByRole("button", { name: "Adi
 const more = (page, name) => article(page, name).getByRole("button", { name: `Aumentar ${name}`, exact: true });
 const flight = (page, kind) => page.locator(kind ? `[data-cart-basket-flight="${kind}"]` : "[data-cart-basket-flight]");
 const slots = page => basket(page).locator("[data-cart-basket-slot]");
+const sideSlot = (page, index) => basket(page).locator(`[data-cart-basket-side-slot="${index}"]`);
+const overflowBadge = page => basket(page).locator("[data-cart-basket-more]");
 const thumbnails = page => basket(page).locator("[data-cart-basket-product]");
 const count = (page, quantity) => expect(basket(page)).toHaveAccessibleName(`Abrir cesta: ${quantity} ${quantity === 1 ? "item" : "itens"} no carrinho`);
 const renderedIds = (page, expected) => expect.poll(() => thumbnails(page).evaluateAll(nodes => nodes.map(node => node.dataset.cartBasketProduct))).toEqual(expected);
+const observeFlights = page => page.evaluate(() => {
+  window.flightAppeared = false;
+  new MutationObserver(records => {
+    for (const record of records) for (const node of record.addedNodes) {
+      if (node instanceof Element && node.matches("[data-cart-basket-flight]")) window.flightAppeared = true;
+    }
+  }).observe(document.body, { childList: true, subtree: true });
+});
 const flightPositions = (page, kind) => flight(page, kind).evaluate(node => {
   const effect = node.getAnimations()[0]?.effect;
   const x = Number.parseFloat(node.style.left) + node.offsetWidth / 2;
@@ -174,14 +189,7 @@ try {
   await expect(flight(desktop)).toHaveCount(0);
   await count(mobile, 5);
   await mobile.bringToFront();
-  await mobile.evaluate(() => {
-    window.flightAppeared = false;
-    new MutationObserver(records => {
-      for (const record of records) for (const node of record.addedNodes) {
-        if (node instanceof Element && node.matches("[data-cart-basket-flight]")) window.flightAppeared = true;
-      }
-    }).observe(document.body, { childList: true, subtree: true });
-  });
+  await observeFlights(mobile);
   await add(mobile, names[3]).click();
   await count(mobile, 6);
   expect(await mobile.evaluate(() => window.flightAppeared)).toBe(false);
@@ -204,32 +212,61 @@ try {
   await Promise.all([capture(desktop, "desktop-cheia"), capture(mobile, "celular-cheia")]);
   console.log("PASS: nine different products on desktop and mobile; missing photo fallback and reduced motion");
 
-  await add(desktop, names[basketCapacity]).click();
-  await expect(flight(desktop, "overflow")).toHaveCount(1);
-  await expect.poll(async () => (await flightPositions(desktop, "overflow")).length).toBeGreaterThan(0);
-  const bounce = await flightPositions(desktop, "overflow");
-  const [rim, rebound, floor] = bounce.slice(-5, -2);
-  expect(rebound.y).toBeLessThan(rim.y);
-  expect(Math.abs(floor.x - rim.x)).toBeGreaterThan(25);
-  expect(floor.y).toBeGreaterThan(736);
-  await count(desktop, 12);
+  for (let index = 0; index < sideCapacity; index += 1) {
+    const id = ids[basketCapacity + index];
+    const target = await sideSlot(desktop, index).boundingBox();
+    const header = await desktop.locator("header").boundingBox();
+    await add(desktop, names[basketCapacity + index]).click();
+    await expect(flight(desktop, "overflow")).toHaveCount(1);
+    await expect.poll(async () => (await flightPositions(desktop, "overflow")).length).toBeGreaterThan(0);
+    const bounce = await flightPositions(desktop, "overflow");
+    const resting = bounce.at(-1);
+    expect(Math.abs(resting.x - (target.x + target.width / 2))).toBeLessThan(1.5);
+    expect(Math.abs(resting.y - (target.y + target.height / 2))).toBeLessThan(1.5);
+    expect(resting.y).toBeLessThan(header.y + header.height);
+    expect(bounce.slice(-3, -1).some(point => point.y < resting.y)).toBe(true);
+    await expect(flight(desktop)).toHaveCount(0);
+    await Promise.all([desktop, mobile].map(page =>
+      expect(sideSlot(page, index).locator(`[data-cart-basket-product="${id}"]`)).toBeVisible()));
+  }
+  const visibleIds = ids.slice(0, visibleCapacity);
+  await Promise.all([renderedIds(desktop, visibleIds), renderedIds(mobile, visibleIds)]);
+  const uncuttable = thumbnails(desktop).filter({ has: desktop.locator("svg.lucide-package") });
+  await expect(uncuttable).toHaveAttribute("data-cart-basket-product", "powder");
+  await expect(uncuttable.locator("img")).toHaveCount(0);
+  await expect(overflowBadge(desktop)).toHaveCount(0);
+  await observeFlights(desktop);
+  await add(desktop, names[visibleCapacity]).click();
+  await Promise.all([desktop, mobile].map(async page => {
+    await count(page, 15);
+    await expect(overflowBadge(page)).toHaveText("+1");
+    await renderedIds(page, visibleIds);
+  }));
+  expect(await desktop.evaluate(() => window.flightAppeared)).toBe(false);
+  await Promise.all([capture(desktop, "desktop-transbordo"), capture(mobile, "celular-transbordo")]);
+  await desktop.reload();
+  await count(desktop, 15);
+  await renderedIds(desktop, visibleIds);
+  await expect(overflowBadge(desktop)).toHaveText("+1");
   await expect(flight(desktop)).toHaveCount(0);
-  await Promise.all([renderedIds(desktop, fullIds), renderedIds(mobile, fullIds)]);
+
   await mobile.bringToFront();
   await basket(mobile).click();
   const drawer = mobile.getByRole("dialog", { name: "Minha cesta" });
-  await expect(drawer.getByText("12 itens selecionados")).toBeVisible();
-  await expect(drawer.getByRole("button", { name: `Remover ${names[basketCapacity]}`, exact: true })).toBeVisible();
+  await expect(drawer.getByText("15 itens selecionados")).toBeVisible();
+  await expect(drawer.getByRole("button", { name: `Remover ${names[visibleCapacity]}`, exact: true })).toBeVisible();
   await drawer.getByRole("button", { name: `Remover ${names[0]}`, exact: true }).click();
-  await expect(drawer.getByText("9 itens selecionados")).toBeVisible();
+  await expect(drawer.getByText("12 itens selecionados")).toBeVisible();
   await drawer.getByRole("button", { name: "Fechar cesta", exact: true }).click();
-  await Promise.all([count(desktop, 9), count(mobile, 9)]);
-  await Promise.all([renderedIds(desktop, ids.slice(1)), renderedIds(mobile, ids.slice(1))]);
-  await desktop.reload();
-  await count(desktop, 9);
-  await renderedIds(desktop, ids.slice(1));
+  await Promise.all([desktop, mobile].map(async page => {
+    await count(page, 12);
+    await renderedIds(page, ids.slice(1));
+    await expect(slots(page).last().locator(`[data-cart-basket-product="${ids[basketCapacity]}"]`)).toBeVisible();
+    await expect(sideSlot(page, sideCapacity - 1).locator(`[data-cart-basket-product="${ids[visibleCapacity]}"]`)).toBeVisible();
+    await expect(overflowBadge(page)).toHaveCount(0);
+  }));
   await expect(flight(desktop)).toHaveCount(0);
-  console.log("PASS: tenth SKU uses overflow, stays in the drawer, promotes after removal and persists across reload");
+  console.log("PASS: three overflow products land beside the basket and persist; the thirteenth stays in the drawer until a slot opens");
 } finally {
   await browser?.close();
   await new Promise(resolve => server.close(resolve));

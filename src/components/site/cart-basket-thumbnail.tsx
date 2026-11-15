@@ -9,27 +9,62 @@ import { isMedicineImagePlaceholder, medicineIllustrationUrl } from "@/features/
 
 const MAX_SIZE = 96;
 const CACHE_SIZE = 48;
+const CLEAR_ALPHA = 8;
 const thumbnails = new Map<string, string>();
 const pending = new Map<string, Promise<string | null>>();
 
-function removeWhiteBackground({ data, width, height }: ImageData) {
-  // Keep the cutout supplied by the catalog whenever it already has alpha.
-  for (let offset = 3; offset < data.length; offset += 4) {
-    if (data[offset] < 255) return;
-  }
+function isNearWhite(data: ImageData["data"], index: number) {
+  const offset = index * 4;
+  const red = data[offset];
+  const green = data[offset + 1];
+  const blue = data[offset + 2];
+  const lowest = Math.min(red, green, blue);
+  return lowest >= 240 && Math.max(red, green, blue) - lowest <= 12;
+}
 
+function hasClearPerimeter({ data, width, height }: ImageData) {
+  const lastRow = (height - 1) * width;
+  const clear = (index: number) => data[index * 4 + 3] <= CLEAR_ALPHA;
+  return clear(0) && clear(width - 1) && clear(lastRow) && clear(lastRow + width - 1)
+    && edgeMatches(width, clear) && edgeMatches(width, x => clear(lastRow + x))
+    && edgeMatches(height, y => clear(y * width)) && edgeMatches(height, y => clear(y * width + width - 1));
+}
+
+function edgeMatches(length: number, matches: (offset: number) => boolean, fraction = 0.2) {
+  let count = 0;
+  for (let offset = 0; offset < length; offset++) if (matches(offset)) count++;
+  return count >= length * fraction;
+}
+
+function hasWhiteFrame(image: ImageData) {
+  const bounds = visibleBounds(image);
+  if (!bounds) return false;
+  const { left, right, top, bottom } = bounds;
+  const { data, width } = image;
+  const spanX = right - left + 1;
+  const spanY = bottom - top + 1;
+  // Inspect the visible bounds so transparent padding cannot hide a white tile.
+  const white = (x: number, y: number) => {
+    const index = y * width + x;
+    return data[index * 4 + 3] > CLEAR_ALPHA && isNearWhite(data, index);
+  };
+  return edgeMatches(spanX, x => white(left + x, top), 0.85)
+    && edgeMatches(spanX, x => white(left + x, bottom), 0.85)
+    && edgeMatches(spanY, y => white(left, top + y), 0.85)
+    && edgeMatches(spanY, y => white(right, top + y), 0.85);
+}
+
+function removeWhiteBackground(image: ImageData) {
+  if (hasClearPerimeter(image) && !hasWhiteFrame(image)) return true;
+
+  const { data, width, height } = image;
   const queue = new Uint16Array(width * height);
   const visited = new Uint8Array(queue.length);
   let end = 0;
   const enqueue = (index: number) => {
     if (visited[index]) return;
     visited[index] = 1;
-    const offset = index * 4;
-    const red = data[offset];
-    const green = data[offset + 1];
-    const blue = data[offset + 2];
-    const lowest = Math.min(red, green, blue);
-    if (lowest >= 247 && Math.max(red, green, blue) - lowest <= 6) queue[end++] = index;
+    if (data[index * 4 + 3] <= CLEAR_ALPHA || isNearWhite(data, index)) queue[end++] = index;
   };
 
   for (let x = 0; x < width; x++) {
@@ -50,18 +85,19 @@ function removeWhiteBackground({ data, width, height }: ImageData) {
     if (index < (height - 1) * width) enqueue(index + width);
   }
 
-  if (end === queue.length) return;
+  if (end === 0 || end === queue.length) return false;
   for (let index = 0; index < end; index++) data[queue[index] * 4 + 3] = 0;
+  return hasClearPerimeter(image) && !hasWhiteFrame(image);
 }
 
-function cropTransparentMargins(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, image: ImageData) {
+function visibleBounds(image: ImageData) {
   const { width, height, data } = image;
   let left = width;
   let top = height;
   let right = -1;
   let bottom = -1;
   for (let index = 0; index < width * height; index++) {
-    if (data[index * 4 + 3] === 0) continue;
+    if (data[index * 4 + 3] <= CLEAR_ALPHA) continue;
     const x = index % width;
     const y = Math.floor(index / width);
     left = Math.min(left, x);
@@ -70,7 +106,14 @@ function cropTransparentMargins(canvas: HTMLCanvasElement, context: CanvasRender
     bottom = Math.max(bottom, y);
   }
 
-  if (right < 0) return false;
+  return right < 0 ? null : { left, top, right, bottom };
+}
+
+function cropTransparentMargins(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, image: ImageData) {
+  const bounds = visibleBounds(image);
+  if (!bounds) return false;
+  const { left, top, right, bottom } = bounds;
+  const { width, height } = image;
   const margin = 2;
   const x = Math.max(0, left - margin);
   const y = Math.max(0, top - margin);
@@ -96,8 +139,7 @@ async function renderThumbnail(source: string, priority: boolean) {
   if (!context) return null;
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
   const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-  removeWhiteBackground(pixels);
-  return cropTransparentMargins(canvas, context, pixels) ? canvas.toDataURL() : null;
+  return removeWhiteBackground(pixels) && cropTransparentMargins(canvas, context, pixels) ? canvas.toDataURL() : null;
 }
 
 function getThumbnail(source: string, priority: boolean) {
@@ -155,8 +197,7 @@ export function BasketThumbnail({ item, priority = false, onReady }: {
       let thumbnail = photo ? await getThumbnail(photo, priority) : null;
       if (!active) return;
       if (!thumbnail && illustration && photo !== illustration) thumbnail = await getThumbnail(illustration, priority);
-      const image = thumbnail ?? illustration;
-      if (active) setResult(image ? { candidate, illustration, src: image } : null);
+      if (active) setResult(thumbnail ? { candidate, illustration, src: thumbnail } : null);
     }
     void load();
     return () => { active = false; };
@@ -165,7 +206,7 @@ export function BasketThumbnail({ item, priority = false, onReady }: {
   return src ? (
     <Image alt="" className="h-full w-full object-contain" draggable={false} height={96}
       loading="eager"
-      onError={() => setResult(illustration && src !== illustration ? { candidate, illustration, src: illustration } : null)}
+      onError={() => setResult(null)}
       onLoad={onReady} src={src} width={96} />
   ) : (
     <span className="grid h-full w-full place-items-center text-brand" aria-hidden="true">
