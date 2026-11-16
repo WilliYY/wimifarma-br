@@ -27,6 +27,51 @@ test("Correios credentials require the card and accept the optional contract and
   assert.ok(getCorreiosConfig({ ...env, CORREIOS_CONTRACT_NUMBER: "0000234567", CORREIOS_REGIONAL_DIRECTORATE: "08" }));
 });
 
+test("Correios rejects malformed delegated keys and mixed authentication modes", () => {
+  const delegated = { CORREIOS_DELEGATED_ACCESS_KEY: "synthetic-delegated.key" };
+  assert.ok(getCorreiosConfig(delegated));
+  assert.equal(getCorreiosConfig({ CORREIOS_DELEGATED_ACCESS_KEY: "Bearer synthetic-delegated.key" }), null);
+  assert.equal(getCorreiosConfig({ CORREIOS_DELEGATED_ACCESS_KEY: "synthetic\r\nkey" }), null);
+  assert.equal(getCorreiosConfig({ ...delegated, CORREIOS_API_USER: env.CORREIOS_API_USER }), null);
+  assert.equal(getCorreiosConfig({ ...delegated, CORREIOS_API_CODE: env.CORREIOS_API_CODE }), null);
+  assert.equal(getCorreiosConfig({ ...delegated, CORREIOS_POSTING_CARD: env.CORREIOS_POSTING_CARD }), null);
+  assert.equal(getCorreiosConfig({ ...delegated, CORREIOS_CONTRACT_NUMBER: "0000234567" }), null);
+  assert.ok(getCorreiosConfig({ ...env, CORREIOS_DELEGATED_ACCESS_KEY: "" }));
+});
+
+test("Correios sends a delegated key directly to the price and deadline APIs", async () => {
+  const config = getCorreiosConfig({
+    CORREIOS_DELEGATED_ACCESS_KEY: "synthetic-delegated.key",
+    CORREIOS_CONTRACT_NUMBER: "0000234567",
+    CORREIOS_REGIONAL_DIRECTORATE: "08",
+  });
+  assert.ok(config);
+  const paths: string[] = [];
+  const request: typeof fetch = async (target, init) => {
+    const url = new URL(String(target));
+    paths.push(url.pathname);
+    assert.equal(url.origin, "https://api.correios.com.br");
+    assert.equal(init?.method, "GET");
+    assert.equal(new Headers(init?.headers).get("authorization"), "Bearer synthetic-delegated.key");
+    const code = url.pathname.split("/").at(-1);
+    if (url.pathname.startsWith("/preco/")) {
+      assert.equal(url.searchParams.get("nuContrato"), "0000234567");
+      assert.equal(url.searchParams.get("nuDR"), "08");
+      return json({ coProduto: code, pcFinal: "10,50" });
+    }
+    assert.equal(url.searchParams.has("nuContrato"), false);
+    return json({ coProduto: code, prazoEntrega: 3, entregaDomiciliar: "S" });
+  };
+  assert.deepEqual(await quoteCorreios(config, input, request), {
+    quotes: [
+      { code: "03220", name: "SEDEX", priceCents: 1050, deliveryDays: 3 },
+      { code: "03298", name: "PAC", priceCents: 1050, deliveryDays: 3 },
+    ],
+    unavailableServices: [],
+  });
+  assert.deepEqual(paths.sort(), ["/prazo/v1/nacional/03220", "/prazo/v1/nacional/03298", "/preco/v1/nacional/03220", "/preco/v1/nacional/03298"]);
+});
+
 test("Correios quotes PAC and SEDEX with the card token, postal codes and parcel measurements", async () => {
   const config = getCorreiosConfig({ ...env, CORREIOS_CONTRACT_NUMBER: "0000234567", CORREIOS_REGIONAL_DIRECTORATE: "08" });
   assert.ok(config);

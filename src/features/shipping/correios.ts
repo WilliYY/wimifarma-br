@@ -7,10 +7,15 @@ const services = [
   { code: "03298", name: "PAC" },
 ];
 
-type CorreiosConfig = {
+type CardAuthentication = {
+  kind: "card";
   user: string;
   apiCode: string;
   postingCard: string;
+};
+
+type CorreiosConfig = {
+  authentication: CardAuthentication | { kind: "delegated"; key: string };
   contract?: { number: string; regionalDirectorate: string };
 };
 
@@ -33,17 +38,29 @@ export class CorreiosError extends Error {
 type CorreiosEnvironment = Readonly<Record<string, string | undefined>>;
 
 export function getCorreiosConfig(env: CorreiosEnvironment = process.env): CorreiosConfig | null {
+  const delegatedKey = env.CORREIOS_DELEGATED_ACCESS_KEY?.trim();
   const user = env.CORREIOS_API_USER?.trim();
   const apiCode = env.CORREIOS_API_CODE?.trim();
   const postingCard = env.CORREIOS_POSTING_CARD?.trim();
   const contractNumber = env.CORREIOS_CONTRACT_NUMBER?.trim();
   const regionalDirectorate = env.CORREIOS_REGIONAL_DIRECTORATE?.trim();
 
-  if (!user || user.includes(":") || !apiCode || !postingCard || !/^\d+$/.test(postingCard)) return null;
-  if (!contractNumber && !regionalDirectorate) return { user, apiCode, postingCard };
-  if (!contractNumber || !/^\d+$/.test(contractNumber) || !regionalDirectorate || !/^\d{1,2}$/.test(regionalDirectorate)) return null;
+  let authentication: CorreiosConfig["authentication"];
+  if (delegatedKey) {
+    if (user || apiCode || postingCard || !isBearerToken(delegatedKey)) return null;
+    authentication = { kind: "delegated", key: delegatedKey };
+  } else {
+    if (!user || user.includes(":") || !apiCode || !postingCard || !/^\d+$/.test(postingCard)) return null;
+    authentication = { kind: "card", user, apiCode, postingCard };
+  }
 
-  return { user, apiCode, postingCard, contract: { number: contractNumber, regionalDirectorate } };
+  if (!contractNumber && !regionalDirectorate) return { authentication };
+  if (!contractNumber || !/^\d+$/.test(contractNumber) || !regionalDirectorate || !/^\d{1,2}$/.test(regionalDirectorate)) return null;
+  return { authentication, contract: { number: contractNumber, regionalDirectorate } };
+}
+
+function isBearerToken(value: unknown): value is string {
+  return typeof value === "string" && value.trim() === value && /^[A-Za-z0-9._~+/-]+=*$/.test(value);
 }
 
 async function requestJson(request: typeof fetch, url: URL, init: RequestInit): Promise<Record<string, unknown>> {
@@ -84,6 +101,23 @@ function postalCode(value: string): string {
   return value.replace("-", "");
 }
 
+async function getAccessToken({ authentication, contract }: CorreiosConfig, request: typeof fetch): Promise<string> {
+  if (authentication.kind === "delegated") return authentication.key;
+
+  const { user, apiCode, postingCard } = authentication;
+  const credentials = Buffer.from(`${user}:${apiCode}`, "utf8").toString("base64");
+  const { token } = await requestJson(request, new URL("/token/v1/autentica/cartaopostagem", correiosOrigin), {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: `Basic ${credentials}` },
+    body: JSON.stringify({
+      numero: postingCard,
+      ...(contract && { contrato: contract.number, dr: Number(contract.regionalDirectorate) }),
+    }),
+  });
+  if (!isBearerToken(token)) throw new CorreiosError(502);
+  return token;
+}
+
 export async function quoteCorreios(config: CorreiosConfig, input: CorreiosQuoteInput, request = fetch) {
   const postalCodes = {
     cepOrigem: postalCode(input.originPostalCode),
@@ -93,19 +127,7 @@ export async function quoteCorreios(config: CorreiosConfig, input: CorreiosQuote
   if (parcel.some((value) => value <= 0 || !Number.isSafeInteger(Math.ceil(value)))) throw new CorreiosError(502);
 
   const contract = config.contract;
-  const credentials = Buffer.from(`${config.user}:${config.apiCode}`, "utf8").toString("base64");
-  const { token } = await requestJson(request, new URL("/token/v1/autentica/cartaopostagem", correiosOrigin), {
-    method: "POST",
-    headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: `Basic ${credentials}` },
-    body: JSON.stringify({
-      numero: config.postingCard,
-      ...(contract && { contrato: contract.number, dr: Number(contract.regionalDirectorate) }),
-    }),
-  });
-  if (typeof token !== "string" || token.trim() !== token || !/^[A-Za-z0-9._~+/-]+=*$/.test(token)) {
-    throw new CorreiosError(502);
-  }
-
+  const token = await getAccessToken(config, request);
   const quoteRequest = {
     method: "GET",
     headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
