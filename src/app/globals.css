@@ -353,11 +353,40 @@ textarea {
   --miauby-bottom: calc(6rem + env(safe-area-inset-bottom));
 }
 
+.catalog-purchase-grid {
+  --purchase-max-width: 1680px;
+  --purchase-end-padding: 1rem;
+}
+
+.product-purchase-area {
+  --purchase-max-width: 80rem;
+  --purchase-end-padding: 1.75rem;
+}
+
+/* The existing page gutters count toward the clearance for the fixed launchers. */
+body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) {
+  --launcher-clearance: 4rem;
+  --purchase-auto-margin: max(0px, (100vw - var(--purchase-max-width)) / 2);
+  padding-inline-end: max(0px, var(--launcher-clearance) - var(--purchase-end-padding) - var(--purchase-auto-margin));
+}
+
 .miauby-panel {
   bottom: calc(var(--miauby-bottom) + 3.75rem);
 }
 
 @media (width >= 40rem) {
+  .catalog-purchase-grid {
+    --purchase-end-padding: 1.5rem;
+  }
+
+  .product-purchase-area {
+    --purchase-end-padding: 3.25rem;
+  }
+
+  body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) {
+    --launcher-clearance: 6rem;
+  }
+
   .miauby-launchers {
     --miauby-bottom: 3.75rem;
   }
@@ -369,6 +398,16 @@ textarea {
   .miauby-panel {
     bottom: calc(100% + 0.75rem);
     height: min(68dvh, 34rem, calc(100dvh - var(--miauby-bottom) - 10rem));
+  }
+}
+
+@media (width >= 64rem) {
+  .catalog-purchase-grid {
+    --purchase-end-padding: 2rem;
+  }
+
+  .product-purchase-area {
+    --purchase-end-padding: 3.75rem;
   }
 }
 

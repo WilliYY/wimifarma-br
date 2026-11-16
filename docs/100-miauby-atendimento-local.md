@@ -2,7 +2,7 @@
 
 ## Revisão do atendimento público — 15/11/2026
 
-Os atalhos da Miauby e do WhatsApp ficam na mesma posição durante a rolagem. A posição é definida pelo tamanho da tela e pela rota. Nas fichas de produto, fica acima do espaço reservado à compra rápida. No celular, o link de WhatsApp fica no painel da Miauby. O botão usa o avatar transparente da mascote em `public/miauby/miauby-avatar-v2.webp`. O balão de boas-vindas continua sujeito à sua própria verificação de sobreposição.
+Os atalhos da Miauby e do WhatsApp ficam na mesma posição durante a rolagem. A posição é definida pelo tamanho da tela e pela rota. O catálogo e os controles de compra na ficha reservam espaço na lateral conforme a margem disponível. Na ficha, os atalhos ficam acima da barra de compra rápida. No celular, o link de WhatsApp fica no painel da Miauby. O botão usa o avatar transparente da mascote em `public/miauby/miauby-avatar-v2.webp`. O balão de boas-vindas continua sujeito à sua própria verificação de sobreposição.
 
 O painel limita a altura à área visível, muda para o lado dos atalhos em telas largas e baixas e usa mais espaço vertical em celulares baixos. O histórico rola dentro do painel. Ao fechar pelo X ou Escape, o foco volta ao atalho. O campo mantém o foco durante o envio e o envio concorrente é bloqueado. Em telas de toque, abrir a conversa foca o painel para evitar abrir o teclado por conta própria.
 

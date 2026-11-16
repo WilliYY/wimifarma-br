@@ -162,7 +162,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
     <>
       <div
         data-product-purchase-panel
-        className="mt-4 border-t border-line pt-4 sm:mt-5 sm:pt-5"
+        className="product-purchase-area mt-4 border-t border-line pt-4 sm:mt-5 sm:pt-5"
         ref={purchasePanelRef}
       >
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
