@@ -60,7 +60,7 @@ const quickQuestions = [
 ];
 
 const purchasePanelSelector = '[data-product-controls], [role="group"][aria-label="Preço do produto"], [aria-label="Compra rapida do produto"], [data-product-purchase-panel]';
-const miaubyAvatar = "/miauby/miauby-avatar-v2.webp";
+const miaubyAvatar = "/brand/miauby-avatar.webp";
 
 function formatPrice(value: string) {
   const price = Number(value);
@@ -436,11 +436,10 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
               <Image
                 alt="Miauby"
                 className="h-full w-full object-contain"
-                height={96}
-                quality={84}
-                sizes="44px"
+                height={640}
                 src={miaubyAvatar}
-                width={96}
+                unoptimized
+                width={640}
               />
             </span>
             <div className="min-w-0 flex-1">
@@ -601,11 +600,10 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
           <Image
             alt=""
             className="h-full w-full object-contain"
-            height={128}
-            quality={84}
-            sizes="(min-width: 640px) 56px, 36px"
+            height={640}
             src={miaubyAvatar}
-            width={128}
+            unoptimized
+            width={640}
           />
         </span>
       </button>

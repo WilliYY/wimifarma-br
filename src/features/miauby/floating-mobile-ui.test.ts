@@ -26,14 +26,16 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
       if (url.hostname !== "127.0.0.1" || request.method() !== "GET") { errors.push("Unexpected external request or write"); return route.abort(); }
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text });
       if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: css });
-      if (url.pathname === "/miauby/miauby-avatar-v2.webp") return route.fulfill({ contentType: "image/webp", body: await fs.readFile("public/miauby/miauby-avatar-v2.webp") });
+      if (url.pathname === "/brand/miauby-avatar.webp") return route.fulfill({ contentType: "image/webp", body: await fs.readFile("public/brand/miauby-avatar.webp") });
       return route.fulfill({ contentType: "text/html; charset=utf-8", body: '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body><div id="root"></div><script src="/fixture.js"></script></body></html>' });
     });
     await page.goto("http://127.0.0.1:3213/produto/sintetico");
     assert.deepEqual(errors, [], "Fixture deve carregar sem erros JavaScript");
     const trigger = page.getByRole("button", { name: "Conversar com a Miauby", exact: true });
     await expect(trigger).toBeVisible();
-    await expect(trigger.locator("img")).toHaveAttribute("src", "/miauby/miauby-avatar-v2.webp");
+    const launcherAvatar = trigger.locator("img");
+    await expect(launcherAvatar).toHaveAttribute("src", "/brand/miauby-avatar.webp");
+    await expect(launcherAvatar).toHaveJSProperty("naturalWidth", 640);
     await expect(trigger.locator(".lucide-bot")).toHaveCount(0);
     const notice = page.getByRole("complementary", { name: "Dica da Miauby", exact: true });
     await expect(notice).toContainText("Bem-vindo, Ana!");
@@ -76,6 +78,9 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
     await trigger.click();
     const chat = page.getByRole("dialog", { name: "Conversa com a Miauby", exact: true });
     await expect(chat).toBeVisible();
+    const chatAvatar = chat.getByRole("img", { name: "Miauby", exact: true });
+    await expect(chatAvatar).toHaveAttribute("src", "/brand/miauby-avatar.webp");
+    await expect(chatAvatar).toHaveJSProperty("naturalWidth", 640);
     const box = (await chat.boundingBox())!;
     assert.ok(box.x >= 0 && box.y >= 0 && box.x + box.width <= 390 && box.y + box.height <= 700);
     assert.ok((await trigger.boundingBox())!.y >= box.y + box.height, "O atalho deve ficar abaixo da conversa aberta");
