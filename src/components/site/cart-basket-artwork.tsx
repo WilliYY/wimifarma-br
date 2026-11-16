@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import styles from "./cart-basket-artwork.module.css";
 
 export const BASKET_SLOT_COUNT = 9;
-export const BASKET_SIDE_SLOT_COUNT = 3;
+export const BASKET_SIDE_SLOT_COUNT = 5;
 const basketPhoto = "/brand/cesta-wimifarma-preta.webp";
 
 export function CartBasketArtwork({ slots, sideSlots, overflow }: {
@@ -14,7 +14,7 @@ export function CartBasketArtwork({ slots, sideSlots, overflow }: {
   return (
     <span aria-hidden="true" className={styles.preview} data-has-side={sideSlots.length > 0 || undefined}>
       <span className={styles.basket} data-cart-basket-shell>
-        <Image alt="" className={styles.photo} height={216} src={basketPhoto} unoptimized width={324} />
+        <Image alt="" className={styles.photo} draggable={false} height={216} src={basketPhoto} unoptimized width={324} />
         <span className={styles.rim} data-cart-basket-rim />
         <span className={styles.slots}>
           {Array.from({ length: BASKET_SLOT_COUNT }, (_, index) => (
@@ -24,10 +24,10 @@ export function CartBasketArtwork({ slots, sideSlots, overflow }: {
           ))}
         </span>
         {slots.length > 0 && (
-          <Image alt="" className={`${styles.photo} ${styles.front}`} height={216} src={basketPhoto} unoptimized width={324} />
+          <Image alt="" className={`${styles.photo} ${styles.front}`} draggable={false} height={216} src={basketPhoto} unoptimized width={324} />
         )}
         <span className={styles.brand}>
-          <Image alt="" height={151} src="/brand/logo-wimifarma-compact.webp" unoptimized width={640} />
+          <Image alt="" draggable={false} height={151} src="/brand/logo-wimifarma-compact.webp" unoptimized width={640} />
         </span>
         {overflow > 0 && <span className={styles.overflow} data-cart-basket-more>+{overflow}</span>}
       </span>

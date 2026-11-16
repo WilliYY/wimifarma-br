@@ -26,20 +26,27 @@ type FlightPath = {
   parked: { x: number; y: number } | null;
 };
 
-type Flight = FlightPath & {
+type Flight = {
   item: CartItem;
   ready: boolean;
-  hideNewSlot: boolean;
   index: number;
   fromX: number;
-};
+} & (
+  | (FlightPath & { kind: "arrival"; hideNewSlot: boolean })
+  | { kind: "departure"; fromY: number; landingScale: number; landingAngle: number }
+);
 
-function measurePath(button: HTMLButtonElement | null, index: number, fromX: number, fromY: number): FlightPath | null {
-  const overflow = index >= BASKET_SLOT_COUNT;
-  const slot = button?.querySelector<HTMLElement>(overflow
+function previewSlot(button: HTMLButtonElement, index: number) {
+  return button.querySelector<HTMLElement>(index >= BASKET_SLOT_COUNT
     ? `[data-cart-basket-side-slot="${index - BASKET_SLOT_COUNT}"]`
     : `[data-cart-basket-slot="${index}"]`);
-  const contact = overflow ? button?.querySelector("[data-cart-basket-rim]") : slot;
+}
+
+function measurePath(button: HTMLButtonElement | null, index: number, fromX: number, fromY: number): FlightPath | null {
+  if (!button) return null;
+  const overflow = index >= BASKET_SLOT_COUNT;
+  const slot = previewSlot(button, index);
+  const contact = overflow ? button.querySelector("[data-cart-basket-rim]") : slot;
   if (!slot || !contact) return null;
   const to = contact.getBoundingClientRect();
   const landing = slot === contact ? to : slot.getBoundingClientRect();
@@ -102,32 +109,81 @@ function flightFrames({ fromY, dx, dy, landingScale, landingAngle, parked }: Fli
 export function CartHeaderButton({ className }: Readonly<{ className?: string }>) {
   const [open, setOpen] = useState(false);
   const [flight, setFlight] = useState<Flight | null>(null);
+  const activeFlight = useRef<Flight | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const flightRef = useRef<HTMLSpanElement>(null);
-  const { hydrated, itemCount, items, subscribeBasketArrival } = useCart();
+  const { hydrated, itemCount, items, subscribeBasketChange } = useCart();
   const label = itemCount === 1 ? "1 item no carrinho" : `${itemCount} itens no carrinho`;
+  const finishFlight = useCallback((current?: Flight) => {
+    if (current && activeFlight.current !== current) return;
+    activeFlight.current = null;
+    setFlight(null);
+  }, []);
   const releaseFlight = useCallback((pending: Flight) => {
-    setFlight(current => current === pending && !current.ready ? { ...current, ready: true } : current);
+    if (activeFlight.current !== pending || pending.ready) return;
+    const ready = { ...pending, ready: true };
+    activeFlight.current = ready;
+    setFlight(ready);
   }, []);
 
-  useEffect(() => subscribeBasketArrival(({ item, source, index, isNew }) => {
+  useEffect(() => subscribeBasketChange(change => {
+    const { item, index } = change;
+    const active = activeFlight.current;
+    if (active) {
+      if (active.kind === "arrival" && change.kind === "departure" && index <= active.index) finishFlight(active);
+      return;
+    }
     const button = buttonRef.current;
-    if (index >= PREVIEW_LIMIT || open || !button?.getClientRects().length || document.hidden ||
+    if ((change.kind === "arrival" && (open || index >= PREVIEW_LIMIT)) || !button?.getClientRects().length || document.hidden ||
       typeof Element.prototype.animate !== "function" || window.matchMedia(REDUCED_MOTION).matches) return;
-    const from = source.getBoundingClientRect();
+    const origin = change.kind === "arrival" ? change.source : button
+      .querySelector<HTMLElement>(`[data-cart-basket-product="${CSS.escape(item.id)}"]`)?.parentElement;
+    if (!origin) return;
+    const from = origin.getBoundingClientRect();
     if (!from.width || !from.height) return;
     const fromX = from.x + from.width / 2;
     const fromY = from.y + from.height / 2;
-    const path = measurePath(button, index, fromX, fromY);
-    if (path) setFlight(current => current ?? { ...path, item, index, ready: false, hideNewSlot: isNew, fromX });
-  }), [open, subscribeBasketArrival]);
+    const start = { item, index, ready: false, fromX };
+    let next: Flight;
+    if (change.kind === "departure") {
+      next = {
+        ...start, kind: "departure", fromY,
+        landingScale: Math.min(origin.clientWidth / FLIGHT_WIDTH, origin.clientHeight / FLIGHT_HEIGHT),
+        landingAngle: Number.parseFloat(window.getComputedStyle(origin).getPropertyValue("--tilt")) || 0,
+      };
+    } else {
+      const path = measurePath(button, index, fromX, fromY);
+      if (!path) return;
+      next = { ...start, ...path, kind: "arrival", hideNewSlot: change.isNew };
+    }
+    activeFlight.current = next;
+    setFlight(next);
+  }), [finishFlight, open, subscribeBasketChange]);
+
+  useEffect(() => {
+    if (!flight) return;
+    const stale = flight.kind === "arrival"
+      ? items[flight.index]?.id !== flight.item.id
+      : items.some(item => item.id === flight.item.id);
+    if (stale) finishFlight(flight);
+  }, [finishFlight, flight, items]);
 
   useEffect(() => {
     const node = flightRef.current;
-    if (!flight || !node) return;
+    if (!flight || !node || activeFlight.current !== flight) return;
     if (!flight.ready) {
       const timer = window.setTimeout(() => releaseFlight(flight), THUMBNAIL_WAIT_MS);
       return () => window.clearTimeout(timer);
+    }
+    const finish = () => finishFlight(flight);
+    if (flight.kind === "departure") {
+      const { landingScale: scale, landingAngle: angle } = flight;
+      const animation = node.animate([
+        { opacity: 1, transform: `translateY(0px) rotate(${angle}deg) scale(${scale})` },
+        { opacity: 0, transform: `translateY(12px) rotate(${angle - 8}deg) scale(${scale * 0.72})` },
+      ], { duration: 230, easing: "ease-in", fill: "forwards" });
+      void animation.finished.then(finish, () => {});
+      return () => animation.cancel();
     }
     const duration = flight.parked ? 680 : 500;
     const contact = flight.parked ? OVERFLOW_CONTACT : LANDING_CONTACT;
@@ -159,7 +215,6 @@ export function CartHeaderButton({ className }: Readonly<{ className?: string }>
       ],
       { delay: duration * contact, duration: 130, easing: "ease-out" },
     );
-    const finish = () => setFlight(current => current === flight ? null : current);
     const motion = window.matchMedia(REDUCED_MOTION);
     void animation.finished.then(finish, () => {});
     window.addEventListener("resize", finish);
@@ -171,17 +226,17 @@ export function CartHeaderButton({ className }: Readonly<{ className?: string }>
       window.removeEventListener("resize", finish);
       motion.removeEventListener?.("change", finish);
     };
-  }, [flight, releaseFlight]);
+  }, [finishFlight, flight, releaseFlight]);
 
   const slots = items.slice(0, PREVIEW_LIMIT).map(item => (
-    <span className={cn("block h-full w-full", flight?.hideNewSlot && flight.item.id === item.id && "invisible")}
+    <span className={cn("block h-full w-full", flight?.kind === "arrival" && flight.hideNewSlot && flight.item.id === item.id && "invisible")}
       data-cart-basket-product={item.id} key={item.id}>
       <BasketThumbnail item={item} />
     </span>
   ));
 
   return (
-    <Dialog.Root modal={false} onOpenChange={next => { setOpen(next); if (next) setFlight(null); }} open={open}>
+    <Dialog.Root modal={false} onOpenChange={next => { setOpen(next); if (next) finishFlight(); }} open={open}>
     <Dialog.Trigger asChild><button
       aria-label={hydrated ? `Abrir cesta: ${label}` : "Abrir cesta"}
       className={cn(
@@ -204,8 +259,11 @@ export function CartHeaderButton({ className }: Readonly<{ className?: string }>
     <span aria-atomic="true" aria-live="polite" className="sr-only">{hydrated ? label : ""}</span>
     <CartDrawer onClose={() => setOpen(false)} />
     {flight && createPortal(
-      <span aria-hidden="true" className="pointer-events-none fixed z-[150] block h-16 w-12 opacity-0 motion-reduce:hidden"
-        data-cart-basket-flight={flight.parked ? "overflow" : "land"}
+      <span aria-hidden="true" className={cn(
+        "pointer-events-none fixed block h-16 w-12 opacity-0 motion-reduce:hidden",
+        flight.kind === "departure" ? "z-[152]" : "z-[150]",
+      )}
+        data-cart-basket-flight={flight.kind === "departure" ? "departure" : flight.parked ? "overflow" : "land"}
         ref={flightRef} style={{ left: flight.fromX - FLIGHT_WIDTH / 2, top: flight.fromY - FLIGHT_HEIGHT / 2 }}>
         <BasketThumbnail item={flight.item} onReady={() => releaseFlight(flight)} priority />
       </span>,

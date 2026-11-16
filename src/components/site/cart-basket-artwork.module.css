@@ -52,6 +52,8 @@
 .sideSlot:nth-child(1) { left: 0; --tilt: -19deg; }
 .sideSlot:nth-child(2) { left: 7px; bottom: 5px; --tilt: 8deg; }
 .sideSlot:nth-child(3) { left: 14px; --tilt: 20deg; }
+.sideSlot:nth-child(4) { left: 2px; bottom: 13px; --tilt: -24deg; }
+.sideSlot:nth-child(5) { left: 11px; bottom: 15px; --tilt: 12deg; }
 
 .photo,
 .slots {
@@ -183,6 +185,8 @@
   .sideSlot:nth-child(1) { left: 4%; }
   .sideSlot:nth-child(2) { left: 32%; bottom: 6px; }
   .sideSlot:nth-child(3) { left: 58%; }
+  .sideSlot:nth-child(4) { left: 11%; bottom: 18px; }
+  .sideSlot:nth-child(5) { left: 41%; bottom: 22px; }
 
   .overflow {
     font-size: 9px;

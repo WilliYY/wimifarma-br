@@ -16,7 +16,7 @@ import { productDisplayName } from "@/features/products/display-name";
 export function CartDrawer({ onClose }: { onClose: () => void }) {
   const { clearCart, hydrated, itemCount, items, removeProduct, subtotalCents, updateQuantity } = useCart();
   const [confirmClear, setConfirmClear] = useState(false);
-  const iconButton = "inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted transition hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-not-allowed disabled:opacity-35";
+  const iconButton = "inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted transition hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-default disabled:opacity-35";
   return <Dialog.Portal>
     <Dialog.Content
       className="fixed bottom-0 right-0 z-[151] flex h-[80dvh] max-h-dvh w-full max-w-[28rem] flex-col rounded-t-2xl border border-line bg-white shadow-2xl outline-none sm:inset-y-0 sm:h-dvh sm:rounded-none sm:border-y-0 sm:border-r-0 data-[state=open]:animate-in data-[state=open]:slide-in-from-right data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right duration-300 ease-out motion-reduce:animate-none"

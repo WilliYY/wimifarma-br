@@ -42,7 +42,7 @@ function QuantitySelector({
     <div role="group" aria-label="Quantidade do produto" className="grid h-12 shrink-0 grid-cols-[2.75rem_3rem_2.75rem] items-center overflow-hidden rounded-xl border border-line bg-surface-subtle transition-colors hover:border-brand/35">
       <button
         aria-label="Diminuir quantidade"
-        className="group flex h-full cursor-pointer items-center justify-center text-muted transition-colors hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand disabled:cursor-not-allowed disabled:opacity-35"
+        className="group flex h-full cursor-pointer items-center justify-center text-muted transition-colors hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand disabled:cursor-default disabled:opacity-35"
         disabled={quantity <= 1}
         onClick={() => onChange(quantity - 1)}
         type="button"
@@ -52,7 +52,7 @@ function QuantitySelector({
       <input aria-label={`Quantidade de ${unitPlural} de ${productName}`} className="min-w-0 bg-transparent text-center text-base font-black text-ink outline-brand [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:text-sm" inputMode="numeric" max={maxQuantity} min={1} onChange={event => { const value = Number(event.target.value); if (Number.isSafeInteger(value) && value >= 1) onChange(Math.min(value, maxQuantity)); }} title={`Digite a quantidade de ${unitPlural} (de 1 a ${maxQuantity})`} type="number" value={quantity} />
       <button
         aria-label="Aumentar quantidade"
-        className="group flex h-full cursor-pointer items-center justify-center text-brand transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand disabled:cursor-not-allowed disabled:opacity-35"
+        className="group flex h-full cursor-pointer items-center justify-center text-brand transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand disabled:cursor-default disabled:opacity-35"
         disabled={quantity >= maxQuantity}
         onClick={() => onChange(quantity + 1)}
         type="button"
@@ -184,7 +184,7 @@ export function ProductPurchasePanel({ product }: { product: CartProduct }) {
         {cartQuantity && <p className="mb-3 text-xs leading-5 text-muted">Comprar agora mantém {cartQuantity} na cesta. Adicionar ao carrinho soma a quantidade selecionada.</p>}
         <div className="grid gap-2.5">
           <button
-            className="group inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-brand/30 bg-white px-4 py-2 text-sm font-bold text-brand transition-colors hover:border-brand hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:px-5"
+            className="group inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-brand/30 bg-white px-4 py-2 text-sm font-bold text-brand transition-colors hover:border-brand hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-60 sm:min-h-12 sm:px-5"
             onClick={event => addToBasket(event.currentTarget)}
             disabled={!hydrated || !canAddMore}
             type="button"

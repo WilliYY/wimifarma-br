@@ -10,7 +10,7 @@ import {
   useState,
   Suspense,
 } from "react";
-import { createPortal } from "react-dom";
+import { flushSync } from "react-dom";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Loader2, Search, X } from "lucide-react";
 import { ProductSearchResults } from "@/components/site/product-search-results";
@@ -44,6 +44,7 @@ export function SiteSearch() {
   const desktopInputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
   const [responseResults, setResults] = useState(emptyResults);
   const [completedQuery, setCompletedQuery] = useState<string | null>(null);
@@ -123,30 +124,42 @@ export function SiteSearch() {
   useEffect(() => {
     if (!isMobileOpen) return;
 
-    const previousOverflow = document.body.style.overflow;
     const desktopViewport = window.matchMedia("(min-width: 768px)");
     const closeOnDesktop = () => {
       if (desktopViewport.matches) setIsMobileOpen(false);
     };
-    document.body.style.overflow = "hidden";
-    const focusTimeout = window.setTimeout(() => mobileInputRef.current?.focus(), 30);
+    const closeFromOutside = (event: Event) => {
+      if (event.target instanceof Node && !mobileSearchRef.current?.contains(event.target)) {
+        setIsMobileOpen(false);
+      }
+    };
     desktopViewport.addEventListener("change", closeOnDesktop);
+    document.addEventListener("pointerdown", closeFromOutside);
+    document.addEventListener("focusin", closeFromOutside);
     closeOnDesktop();
 
     return () => {
-      window.clearTimeout(focusTimeout);
       desktopViewport.removeEventListener("change", closeOnDesktop);
-      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("pointerdown", closeFromOutside);
+      document.removeEventListener("focusin", closeFromOutside);
     };
   }, [isMobileOpen]);
 
   function closeSearch() {
-    const shouldRestoreMobileFocus = isMobileOpen;
     setIsDesktopOpen(false);
     setIsMobileOpen(false);
-    if (shouldRestoreMobileFocus) {
-      window.setTimeout(() => mobileTriggerRef.current?.focus(), 0);
+  }
+
+  function toggleMobileSearch() {
+    if (isMobileOpen) {
+      closeSearch();
+      mobileTriggerRef.current?.focus({ preventScroll: true });
+      return;
     }
+
+    // Keep input focus in the tap event so mobile browsers can open the keyboard.
+    flushSync(() => setIsMobileOpen(true));
+    mobileInputRef.current?.focus({ preventScroll: true });
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -163,8 +176,10 @@ export function SiteSearch() {
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Escape") {
-      closeSearch();
-      event.currentTarget.blur();
+      if (!isMobileOpen) {
+        closeSearch();
+        event.currentTarget.blur();
+      }
       return;
     }
 
@@ -189,32 +204,11 @@ export function SiteSearch() {
     }
   }
 
-  function handleMobileDialogKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      closeSearch();
-      return;
-    }
-
-    if (event.key !== "Tab") return;
-
-    const focusableElements = Array.from(
-      event.currentTarget.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      ),
-    ).filter((element) => element.offsetParent !== null);
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements.at(-1);
-
-    if (!firstElement || !lastElement) return;
-
-    if (event.shiftKey && document.activeElement === firstElement) {
-      event.preventDefault();
-      lastElement.focus();
-    } else if (!event.shiftKey && document.activeElement === lastElement) {
-      event.preventDefault();
-      firstElement.focus();
-    }
+  function handleMobileKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (!isMobileOpen || event.key !== "Escape") return;
+    event.preventDefault();
+    closeSearch();
+    mobileTriggerRef.current?.focus({ preventScroll: true });
   }
 
   function handleClear() {
@@ -305,43 +299,23 @@ export function SiteSearch() {
         ) : null}
       </form>
 
-      <button
-        aria-expanded={isMobileOpen}
-        aria-label="Abrir busca de produtos"
-        data-header-mobile-search
-        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white text-brand shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white md:hidden"
-        onClick={() => setIsMobileOpen(true)}
-        ref={mobileTriggerRef}
-        type="button"
-      >
-        <Search className="h-5 w-5" />
-      </button>
-
-      {isMobileOpen ? createPortal(
-        <div
-          aria-label="Busca de produtos"
-          aria-modal="true"
-          className="fixed inset-0 z-[80] bg-[#121820]/96 px-3 py-4 backdrop-blur-md md:hidden"
-          onKeyDown={handleMobileDialogKeyDown}
-          role="dialog"
+      <div className="shrink-0 md:hidden" onKeyDown={handleMobileKeyDown} ref={mobileSearchRef}>
+        <button
+          aria-controls={isMobileOpen ? "mobile-site-search" : undefined}
+          aria-expanded={isMobileOpen}
+          aria-label={isMobileOpen ? "Fechar busca de produtos" : "Abrir busca de produtos"}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white text-brand shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          data-header-mobile-search
+          onClick={toggleMobileSearch}
+          ref={mobileTriggerRef}
+          type="button"
         >
-          <div className="mx-auto flex h-full max-w-xl flex-col">
-            <div className="flex items-center justify-between gap-4 px-1 pb-4 text-white">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.12em] text-white/65">Catalogo Wimifarma</p>
-                <h2 className="mt-1 text-xl font-black">Encontre seu produto</h2>
-              </div>
-              <button
-                aria-label="Fechar busca"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                onClick={closeSearch}
-                type="button"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+          {isMobileOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+        </button>
 
-            <form action="/busca" className="flex h-14 items-center gap-2 rounded-full bg-white p-1.5 pl-3 shadow-xl" onSubmit={handleSubmit} role="search">
+        {isMobileOpen ? (
+          <div className="absolute inset-x-2 top-full z-30 mx-auto max-w-xl rounded-2xl border border-line bg-white p-2 shadow-xl" id="mobile-site-search">
+            <form action="/busca" aria-label="Busca de produtos" className="flex h-14 items-center gap-2 rounded-full border border-line bg-white p-1.5 pl-3 focus-within:border-brand/60" onSubmit={handleSubmit} role="search">
               {isLoading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-brand" /> : <Search className="h-5 w-5 shrink-0 text-brand" />}
               <input
                 aria-activedescendant={mobileActiveOptionId}
@@ -372,7 +346,7 @@ export function SiteSearch() {
               </button>
             </form>
 
-            <div className="mt-3 min-h-0 flex-1">
+            <div className="mt-2 [&>div]:max-h-[min(20rem,38dvh)] [&>div]:overscroll-contain [&>div]:shadow-none">
               <ProductSearchResults
                 activeId={activeId}
                 correctedQuery={results.correctedQuery}
@@ -388,9 +362,8 @@ export function SiteSearch() {
               />
             </div>
           </div>
-        </div>,
-        document.body,
-      ) : null}
+        ) : null}
+      </div>
     </>
   );
 }

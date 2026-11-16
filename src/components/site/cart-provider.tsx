@@ -36,12 +36,13 @@ export type CartProduct = {
 
 export type CartItem = CartProduct & { quantity: number };
 
-export type BasketArrival = {
+export type BasketChange = {
   item: CartItem;
-  source: HTMLElement;
   index: number;
-  isNew: boolean;
-};
+} & (
+  | { kind: "arrival"; source: HTMLElement; isNew: boolean }
+  | { kind: "departure" }
+);
 
 const DIRECT_ADD_COOLDOWN_MS = 450;
 
@@ -52,7 +53,7 @@ type CartContextValue = {
   subtotalCents: number;
   emailReminder?: ReturnType<typeof useCartEmailReminder>;
   addProduct: (product: CartProduct, quantity?: number, options?: { onlyIfMissing?: boolean; source?: HTMLElement }) => boolean;
-  subscribeBasketArrival: (listener: (arrival: BasketArrival) => void) => () => void;
+  subscribeBasketChange: (listener: (change: BasketChange) => void) => () => void;
   clearCart: () => void;
   removeProduct: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -71,8 +72,8 @@ export function CartProvider({ children, emailReminderOwner }: { children: React
   const cartStorage = useRef<CartStorage | null>(null);
   const storageWarning = useRef(false);
   const directAdds = useRef(new Map<string, number>());
-  const basketListeners = useRef(new Set<(arrival: BasketArrival) => void>());
-  const subscribeBasketArrival = useCallback<CartContextValue["subscribeBasketArrival"]>(listener => {
+  const basketListeners = useRef(new Set<(change: BasketChange) => void>());
+  const subscribeBasketChange = useCallback<CartContextValue["subscribeBasketChange"]>(listener => {
     const listeners = basketListeners.current;
     listeners.add(listener);
     return () => { listeners.delete(listener); };
@@ -168,15 +169,26 @@ export function CartProvider({ children, emailReminderOwner }: { children: React
     const index = next?.findIndex(item => item.id === product.id) ?? -1;
     const item = next?.[index];
     if (source && item && item.quantity > previousQuantity) {
-      for (const listener of basketListeners.current) listener({ item, source, index, isNew: previousQuantity === 0 });
+      for (const listener of basketListeners.current) listener({ kind: "arrival", item, source, index, isNew: previousQuantity === 0 });
     }
     return index >= 0;
   }, [commit]);
 
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
-    if (Number.isFinite(quantity)) commit({ type: "quantity", productId, quantity });
+  const commitRemoval = useCallback((operation: Extract<CartOperation, { type: "remove" | "quantity" }>) => {
+    let previous: readonly CartItem[] = [];
+    const next = commit(operation, items => { previous = items; });
+    const index = previous.findIndex(item => item.id === operation.productId);
+    if (index >= 0 && next && !next.some(item => item.id === operation.productId)) {
+      for (const listener of basketListeners.current) listener({ kind: "departure", item: previous[index], index });
+    }
   }, [commit]);
-  const removeProduct = useCallback((productId: string) => commit({ type: "remove", productId }), [commit]);
+  const updateQuantity = useCallback((productId: string, quantity: number) => {
+    if (!Number.isFinite(quantity)) return;
+    const operation = { type: "quantity", productId, quantity } as const;
+    if (Math.trunc(quantity) <= 0) commitRemoval(operation);
+    else commit(operation);
+  }, [commit, commitRemoval]);
+  const removeProduct = useCallback((productId: string) => commitRemoval({ type: "remove", productId }), [commitRemoval]);
   const clearCart = useCallback(() => commit({ type: "clear" }), [commit]);
   const applyCartReview = useCallback((proposal: CartReviewProposal) => {
     // The journal also compares the source against freshly read cross-tab state.
@@ -201,10 +213,10 @@ export function CartProvider({ children, emailReminderOwner }: { children: React
       items,
       removeProduct,
       subtotalCents,
-      subscribeBasketArrival,
+      subscribeBasketChange,
       updateQuantity,
     }),
-    [addProduct, applyCartReview, clearCart, emailReminder, hydrated, itemCount, items, removeProduct, subtotalCents, subscribeBasketArrival, updateQuantity],
+    [addProduct, applyCartReview, clearCart, emailReminder, hydrated, itemCount, items, removeProduct, subtotalCents, subscribeBasketChange, updateQuantity],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

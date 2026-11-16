@@ -19,7 +19,7 @@ export function ProductCardActions({ product, compact = false, saleUnitLabel }: 
   const limit = orderQuantityLimit(product);
   const units = productQuantityUnits(saleUnitLabel);
   const restricted = requiresPurchaseAssistance(product);
-  const button = "inline-flex h-11 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-md px-2 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+  const button = "inline-flex h-11 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-md px-2 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-50";
 
   function add(source?: HTMLButtonElement) {
     if (!hydrated || restricted || limit < 1) return;

@@ -19,7 +19,7 @@ function isNearWhite(data: ImageData["data"], index: number) {
   const green = data[offset + 1];
   const blue = data[offset + 2];
   const lowest = Math.min(red, green, blue);
-  return lowest >= 240 && Math.max(red, green, blue) - lowest <= 12;
+  return lowest >= 232 && Math.max(red, green, blue) - lowest <= 14;
 }
 
 function hasClearPerimeter({ data, width, height }: ImageData) {
@@ -48,10 +48,10 @@ function hasWhiteFrame(image: ImageData) {
     const index = y * width + x;
     return data[index * 4 + 3] > CLEAR_ALPHA && isNearWhite(data, index);
   };
-  return edgeMatches(spanX, x => white(left + x, top), 0.85)
-    && edgeMatches(spanX, x => white(left + x, bottom), 0.85)
-    && edgeMatches(spanY, y => white(left, top + y), 0.85)
-    && edgeMatches(spanY, y => white(right, top + y), 0.85);
+  return edgeMatches(spanX, x => white(left + x, top), 0.75)
+    && edgeMatches(spanX, x => white(left + x, bottom), 0.75)
+    && edgeMatches(spanY, y => white(left, top + y), 0.75)
+    && edgeMatches(spanY, y => white(right, top + y), 0.75);
 }
 
 function removeWhiteBackground(image: ImageData) {
@@ -209,7 +209,7 @@ export function BasketThumbnail({ item, priority = false, onReady }: {
       onError={() => setResult(null)}
       onLoad={onReady} src={src} width={96} />
   ) : (
-    <span className="grid h-full w-full place-items-center text-brand" aria-hidden="true">
+    <span className="grid h-full w-full place-items-center text-slate-600" aria-hidden="true">
       <Package className="h-3/4 w-3/4" />
     </span>
   );

@@ -29,19 +29,21 @@ const bundle = build({
   } }],
 });
 
-async function fixture(width: number, run: (page: Page, requests: string[]) => Promise<void>) {
+async function fixture(width: number, run: (page: Page, requests: string[]) => Promise<void>, openSearch = true) {
+  const [script, styles] = await Promise.all([bundle, css]);
   const browser = await chromium.launch();
   const requests: string[] = [];
   const errors: string[] = [];
   try {
-    const page = await browser.newPage({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
+    const mobile = width < 768;
+    const page = await browser.newPage({ viewport: { width, height: 900 }, isMobile: mobile, hasTouch: mobile, reducedMotion: "reduce" });
     page.on("pageerror", error => errors.push(error.message));
     await page.route("**/*", async route => {
       const url = new URL(route.request().url());
       if (url.origin !== origin) return route.abort();
-      if (url.pathname === "/") return route.fulfill({ contentType: "text/html", body: '<!doctype html><html lang="pt-BR"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div style="padding:16px"><div id="root"></div></div><script>window.navigations=[];</script><script src="/fixture.js"></script></html>' });
-      if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: (await bundle).outputFiles[0].text });
-      if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: await css });
+      if (url.pathname === "/") return route.fulfill({ contentType: "text/html; charset=utf-8", body: '<!doctype html><html lang="pt-BR"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><header class="fixed inset-x-0 top-0 z-50"><div id="root" data-header-main class="relative flex p-2"></div></header><main class="h-[1800px] pt-64"><button class="fixed bottom-4 left-4" type="button">Conteúdo da página</button></main><script>window.navigations=[];</script><script src="/fixture.js"></script></html>' });
+      if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: script.outputFiles[0].text });
+      if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: styles });
       if (url.pathname === "/api/produtos/busca") {
         const query = url.searchParams.get("q") ?? "";
         requests.push(query);
@@ -55,11 +57,37 @@ async function fixture(width: number, run: (page: Page, requests: string[]) => P
       return route.abort();
     });
     await page.goto(origin);
-    if (width < 768) await page.getByRole("button", { name: "Abrir busca de produtos" }).click();
+    if (mobile && openSearch) await page.getByRole("button", { name: "Abrir busca de produtos" }).tap();
     await run(page, requests);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 }
+
+test("a lupa mobile abre a busca no cabeçalho sem trocar a página nem travar a rolagem", async () => {
+  await fixture(390, async page => {
+    await page.evaluate(() => scrollTo(0, 280));
+    const trigger = page.getByRole("button", { name: "Abrir busca de produtos" });
+    const initialUrl = page.url();
+    await trigger.tap();
+    const search = page.locator("header").getByRole("search", { name: "Busca de produtos" });
+    await expect(search).toBeVisible({ timeout: 1500 });
+    const input = search.getByRole("combobox");
+    await expect(input).toBeFocused();
+    const button = page.getByRole("button", { name: "Conteúdo da página" });
+    await button.tap({ trial: true });
+    assert.equal(page.url(), initialUrl);
+    assert.deepEqual(await page.evaluate(() => ({ y: scrollY, overflow: getComputedStyle(document.body).overflowY })), { y: 280, overflow: "visible" });
+    const header = (await page.locator("header").boundingBox())!;
+    const opened = (await search.boundingBox())!;
+    assert.ok(opened.y >= header.y + header.height);
+    await input.press("Escape");
+    await expect(search).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+    await trigger.tap();
+    await button.tap();
+    await expect(search).toHaveCount(0);
+  }, false);
+});
 
 for (const width of [390, 1280]) test(`busca por EAN ${width}px consulta o código e preserva Enter`, async () => {
   await fixture(width, async (page, requests) => {
