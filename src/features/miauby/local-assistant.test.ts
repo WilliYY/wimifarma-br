@@ -8,7 +8,7 @@ test("extrai consulta comercial sem alterar números, apresentação ou identifi
     ["Quero saber o valor da Tadalaflia 20 mg 4 comp., por favor", "Tadalaflia 20 mg 4 comp."],
     ["Oi, quanto custa o bisoprolol 2,5mg?", "bisoprolol 2,5mg"],
     ["Vocês têm Dove?", "Dove"],
-    ["7891234567890", "7891234567890"],
+    ["7891150023710", "7891150023710"],
     ["SKU-10/20", "SKU-10/20"],
   ]) assert.equal(miaubyCatalogQuery(message), expected);
 });

@@ -152,8 +152,13 @@ export function isPrescriptionSearchProduct(product: { requiresPrescription: boo
   return product.requiresPrescription || Boolean(product.prescriptionType && product.prescriptionType !== "UNREVIEWED");
 }
 
+export const pressureDeviceSearchPrefix = /^(?:medidor(?:es)?|aparelhos?)\s+de\s+pressao(?:[\s-]+arterial)?\b(?![\s-]+(?:arterial|alta|baixa)\b)/;
+
 export function productSearchPlan(query: string) {
   let remaining = query.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  // Keep the device name literal; analyze the rest of the query for health topics.
+  const deviceName = pressureDeviceSearchPrefix.exec(remaining)?.[0];
+  if (deviceName) remaining = remaining.slice(deviceName.length);
   const size = productSearchSize(query);
   if (size === "xg") remaining = remaining.replace(/\bextra\s*g\b/g, "xg");
   if (size) remaining = remaining.replace(new RegExp(`(^|[^a-z0-9])(\\d+\\s*g|${size})(?=$|[^a-z0-9])`, "g"), (match, separator: string, token: string) => token === size ? `${separator} ` : match);
@@ -180,7 +185,8 @@ export function productSearchPlan(query: string) {
     .filter(token => token.length >= 4 && "wimifarma".startsWith(token))
     .flatMap(productSearchPatterns);
   const inhalationPattern = /\balenia\b/.test(normalized) && /\binalacao\b/.test(normalized) ? "(^| )inalacao" : null;
-  return { topics, blocked, size, identityPatterns, inhalationPattern, patterns: productSearchPatterns(remaining), dosePatterns: productDosePatterns(remaining) };
+  const literalQuery = deviceName ? `${deviceName.replace(/^medidores\b/, "medidor").replace(/^aparelhos\b/, "aparelho")} ${remaining}` : remaining;
+  return { topics, blocked, size, identityPatterns, inhalationPattern, patterns: productSearchPatterns(literalQuery), dosePatterns: productDosePatterns(remaining) };
 }
 
 function matchesVerifiedInhalationSearch(product: SearchRankableProduct) {

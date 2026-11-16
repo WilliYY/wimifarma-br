@@ -1,6 +1,8 @@
 import { z } from "zod";
-import { normalizeProductSearch, productSearchPlan } from "@/features/products/public-search";
+import { normalizeGtin } from "@/features/products/gtin";
+import { normalizeProductSearch, pressureDeviceSearchPrefix, productSearchPlan } from "@/features/products/public-search";
 import { publicProductImageUrl } from "@/features/product-images/private-supplier-policy";
+import { pharmacyLegalDetails } from "@/lib/site";
 
 export const miaubyHistoryMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -91,6 +93,41 @@ export function keepMiaubyQuestionLocal(message: string) {
   return Boolean(miaubySafetyReply(message));
 }
 
+const priceQuestionPrefix = /^(?:qual\s+(?:[eé]\s+)?(?:o\s+)?(?:pre[cç]o|valor)|quanto\s+(?:custa|[eé]|fica)|(?:o\s+)?(?:pre[cç]o|valor))\b/iu;
+const availabilityQuestionPrefix = /^(?:voc[eê]s?\s+)?(?:t[eê]m|vende[m]?|possui)(?=$|[\s:?!])/iu;
+const nonMedicinePriceProduct = /^(?:fraldas?|sabonetes?|shampoos?|desodorantes?|lencos umedecidos|termometros?|medidor(?:es)? de glicemia)\b/;
+
+function singleNonMedicineQuestion(query: string, normalized: string) {
+  return !/[;!?]|,(?!\d)/.test(query) &&
+    !/\b(?:e|com|mais|junto|tambem|dar|tomar|usar|aplicar|passar|remedios?|medicamentos?|comprimidos?|capsulas?|gotas?|xaropes?|pomadas?|dipirona|paracetamol|ibuprofeno)\b/.test(normalized);
+}
+
+function nonMedicineCommercialContext(message: string) {
+  const query = productQuestion(message);
+  const normalized = normalizeProductSearch(query);
+  if (/^sabonete para bebe$/.test(normalized)) return true;
+  const unwrapped = unwrapProductQuestion(message);
+  if (!priceQuestionPrefix.test(unwrapped) && !availabilityQuestionPrefix.test(unwrapped)) return false;
+  // Limit the exception to one named item, with no mixed request or medicine markers.
+  return nonMedicinePriceProduct.test(normalized) && singleNonMedicineQuestion(query, normalized);
+}
+
+function pressureDevicePriceQuery(message: string) {
+  if (!priceQuestionPrefix.test(unwrapProductQuestion(message))) return null;
+  const query = productQuestion(message);
+  const normalized = normalizeProductSearch(query);
+  return pressureDeviceSearchPrefix.test(normalized) && singleNonMedicineQuestion(query, normalized) ? query : null;
+}
+
+function isStoreHoursQuestion(text: string) {
+  return /^(?:(?:qual|quais)(?: e| sao)?(?: o| os)? )?horarios?(?: (?:de )?(?:hoje|amanha)| (?:no|nos|aos|em) (?:sabados?|domingos?|feriados?))?$/.test(text) ||
+    /^(?:qual(?: e)?(?: o)? )?horarios? (?:(?:(?:a )?(?:loja|farmacia|wimifarma)|voces) )?(?:abrem?|fecham?|funcionam?)(?: (?:hoje|amanha))?$/.test(text) ||
+    /\bhorarios? (?:d[aeo] )?(?:funcionamento|abertura|fechamento|atendimento|expediente|loja|farmacia|wimifarma|plantao)\b/.test(text) ||
+    /^(?:(?:hoje|agora) )?(?:(?:a )?(?:farmacia|loja|wimifarma|voces) )?(?:(?:esta|ta|estao) (?:abert[ao]s?|fechad[ao]s?)|abrem?|fecham?|funcionam?)(?=$| (?:hoje|agora|amanha|no|na|nos|nas|aos|as|em|ate|de)\b)/.test(text) ||
+    /^(?:(?:a|ate) )?que horas .*\b(?:abre|fecha|abrem|fecham|funciona)\b/.test(text) ||
+    /^(?:tem|qual(?: e)?(?: o)?) plantao\b/.test(text);
+}
+
 function miaubySafetyReply(message: string): string | null {
   const text = normalizeProductSearch(message);
   if (/emergencia|dor (?:forte )?no peito|falta de ar|desmai|convuls|sangramento intenso|intoxic|overdose/.test(text)) {
@@ -99,7 +136,17 @@ function miaubySafetyReply(message: string): string | null {
   if (/\b(?:cpf|cvv|senha|chave pix|laudo|exame|receita)\b/.test(text) || (/\bcartao\b/.test(text) && /\d{3}/.test(message.replace(/\D/g, ""))) || /\b\d(?:[ -]?\d){14,18}\b/.test(message)) {
     return "Por segurança, não envie documentos, receita, senha ou dados de pagamento neste chat. Use os canais privados indicados pela equipe ou pelo checkout.";
   }
-  if (/\b(?:posso tomar|como (?:tomar|usar)|o que (?:tomar|usar)|qual (?:remedio|medicamento)|para que serve|dose|dosagem|posologia|efeitos? colaterais|substituir|trocar|gravida|gestante|amamentando|lactante|crianca|bebe|filho|filha|idoso|alergia|sintomas?)\b|contraindic|interacao|\b(?:estou|tenho|sinto) (?:com )?(?:dor|febre|tosse)/.test(text) || productSearchPlan(message).topics.length > 0) {
+  const audienceContext = nonMedicineCommercialContext(message)
+    ? text.replace(/\bpara (?:bebe|crianca|idoso)\b/, " ")
+    : text;
+  const clinicalTiming = /\b(?:horarios?|que horas)\b/.test(text) && (
+    /\b(?:tomar|usar|remedios?|medicamentos?|antibioticos?)\b/.test(text) ||
+    (/\bhorarios?\b/.test(text) &&
+      !/\bhorarios? (?:d[aeo] )?(?:entregas?|retirada|envio|frete)\b/.test(text) &&
+      !isStoreHoursQuestion(normalizeProductSearch(stripGreeting(message))))
+  );
+  if (/\b(?:posso tomar|como (?:tomar|usar)|o que (?:tomar|usar)|qual (?:remedio|medicamento)|para que serve|dose|dosagem|posologia|efeitos? colaterais|substituir|trocar|gravida|gestante|amamentando|lactante|alergia|sintomas?)\b|contraindic|interacao|\b(?:estou|tenho|sinto) (?:com )?(?:dor|febre|tosse)/.test(text) ||
+      clinicalTiming || /\b(?:crianca|bebe|filho|filha|idoso)\b/.test(audienceContext) || productSearchPlan(pressureDevicePriceQuery(message) ?? message).topics.length > 0) {
     return "Para orientar uso, sintomas ou troca de medicamento, fale com o farmacêutico ou médico. Posso consultar o preço de um produto pelo nome, apresentação ou EAN, sem recomendar tratamentos.";
   }
   return null;
@@ -110,7 +157,7 @@ export function miaubyLocalAnswer(message: string): string | null {
   const safety = miaubySafetyReply(message);
   if (safety) return safety;
   const text = normalizeProductSearch(message);
-  if (/^(?:oi|ola|bom dia|boa tarde|boa noite|tudo bem|obrigad[oa]|valeu|tchau)$/.test(text)) {
+  if (/^(?:oi|ola|bom dia|boa tarde|boa noite|tudo bem)(?: (?:oi|ola|bom dia|boa tarde|boa noite|miauby|tudo bem)){0,3}$|^(?:obrigad[oa]|valeu|tchau)$/.test(text)) {
     return /obrigad|valeu|tchau/.test(text) ? "Conte comigo! Se precisar, posso consultar um preço ou ajudar a encontrar as opções de entrega e retirada." : "Olá! Sou a Miauby. Posso consultar preços do catálogo ou ajudar com entrega, pagamento e seus pedidos. Qual produto você procura?";
   }
   if (/\b(?:popular)\b/.test(text)) return "Para Farmácia Popular, consulte a página do programa ou fale com a equipe para conferir documentos e disponibilidade.";
@@ -118,18 +165,47 @@ export function miaubyLocalAnswer(message: string): string | null {
   if (/\b(?:delivery|entrega|entregas|retirada|frete|cep|envio)\b/.test(text)) return "Informe seu CEP no produto ou no checkout para consultar as opções e os valores de entrega disponíveis. Você também pode escolher retirada na farmácia.";
   if (/\b(?:pix|pagamento|pagamentos|pagar|cartao|cartoes|boleto)\b/.test(text)) return "Os preços do catálogo e do carrinho são os valores normais. Os 3% de desconto aparecem somente ao selecionar Pix no checkout. As opções de pagamento disponíveis são exibidas na finalização.";
   if (/\b(?:cashback|wimicoins|saldo|club)\b/.test(text)) return "Consulte seu saldo em Minha conta. Os benefícios dependem dos produtos elegíveis e das condições exibidas no checkout; não preciso de seus dados pessoais no chat.";
-  if (/\b(?:horario|endereco|localizacao|telefone|contato)\b/.test(text)) return "Veja endereço e canais oficiais em Contato ou use o WhatsApp da equipe. Posso ajudar a consultar um produto pelo nome ou EAN.";
+  const serviceQuestion = normalizeProductSearch(stripGreeting(message));
+  if (isStoreHoursQuestion(serviceQuestion)) {
+    const hours = pharmacyLegalDetails.openingHours;
+    const confirm = "Para confirmar a abertura agora, domingos, feriados ou plantões, fale com a equipe pelo WhatsApp.";
+    return hours ? `Horário informado: ${hours} ${confirm}` : confirm;
+  }
+  if (/\b(?:endereco|localizacao|telefone|contato)\b/.test(text)) return "Veja endereço e canais oficiais em Contato ou use o WhatsApp da equipe. Posso ajudar a consultar um produto pelo nome ou EAN.";
   if (/^(?:consultar preco(?: de um produto)?|consultar precos|buscar produto|consultar produto|quero encontrar um produto|ajuda)$/.test(text)) return "Digite o nome do produto e, se souber, a apresentação, dose ou EAN. Eu consulto o preço exibido no catálogo da loja.";
+  if (productGtin(productQuestion(message)) === null) return "Confira os dígitos e envie um EAN válido ou o nome e a apresentação do produto.";
   return null;
 }
 
-function productQuestion(message: string) {
+function stripGreeting(message: string) {
   return message.trim()
-    .replace(/^(?:oi|ol[aá]|bom dia|boa tarde|boa noite)[,! .]+/iu, "")
-    .replace(/^(?:quero|gostaria de|pode|poderia|consegue)\s+(?:(?:saber|ver|consultar|buscar|encontrar)(?:\s+(?:o|a))?\s+)?/iu, "")
-    .replace(/^(?:qual\s+(?:[eé]\s+)?(?:o\s+)?(?:pre[cç]o|valor)|quanto\s+(?:custa|[eé]|fica)|pre[cç]o|valor|buscar|procure|pesquise|consultar|(?:voc[eê]s\s+)?(?:tem|t[eê]m|vende[m]?|possui))\s*(?:(?:de|do|da|dos|das|o|a|um|uma)\s+)?/iu, "")
-    .replace(/[, ]*\s+por favor[?!.]*$/iu, "")
-    .replace(/[?!]+$/u, "").trim();
+    .replace(/^(?:oi|ol[aá]|bom dia|boa tarde|boa noite)[,!?\s.]+/iu, "");
+}
+
+function unwrapProductQuestion(message: string) {
+  return stripGreeting(message)
+    .replace(/^(?:quero|gostaria de|pode|poderia|consegue)\s+(?:(?:saber|ver|consultar|buscar|encontrar)(?:\s+(?:o|a))?\s+)?/iu, "");
+}
+
+function productQuestion(message: string) {
+  return unwrapProductQuestion(message)
+    .replace(priceQuestionPrefix, "")
+    .replace(availabilityQuestionPrefix, "")
+    .replace(/^(?:buscar|procure|pesquise|consultar)(?=$|[\s:?!])/iu, "")
+    .replace(/^[:\s]*(?:(?:de|do|da|dos|das|o|a|os|as|um|uma)\s+)?/iu, "")
+    .replace(/[?!]+$/u, "")
+    .replace(/[,\s]+por favor[.!]*$/iu, "")
+    .replace(/\s+dispon[ií]ve(?:l|is)[.!]*$/iu, "")
+    .replace(/^sabonetes(?=\s|$)/iu, "sabonete")
+    .trim();
+}
+
+function productGtin(query: string): string | null | undefined {
+  const candidate = query.replace(/\.+$/u, "").trimEnd();
+  const labelled = /^(?:ean|gtin|c[oó]digo de barras)\b\s*:?\s*/iu.exec(candidate);
+  if (!labelled && !/^\d+$/.test(candidate)) return undefined;
+  const digits = labelled ? candidate.slice(labelled[0].length) : candidate;
+  return normalizeGtin(digits) ? digits : null;
 }
 
 export function miaubyCatalogQuery(message: string, history: MiaubyHistoryMessage[] = []): string | null {
@@ -145,8 +221,9 @@ export function miaubyCatalogQuery(message: string, history: MiaubyHistoryMessag
   // A dose alone must never be merged into a previous medicine presentation.
   if (/^(?:e (?:a|o) (?:de )?)?\d+(?:[.,]\d+)?\s*(?:mg|mcg|ml|g)\b/.test(text)) return null;
   const query = productQuestion(message);
-  if (query.length < 2 || query.length > 80 || !/[\p{L}\p{N}]/u.test(query) || /^\d+$/.test(query) && ![8, 12, 13, 14].includes(query.length)) return null;
-  return query;
+  if (query.length < 2 || query.length > 80 || !/[\p{L}\p{N}]/u.test(query)) return null;
+  const gtin = productGtin(query);
+  return gtin === undefined ? query : gtin;
 }
 
 export function sanitizeMiaubyHistory(history: MiaubyHistoryMessage[]) {

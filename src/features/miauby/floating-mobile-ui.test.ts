@@ -6,7 +6,7 @@ import postcss from "postcss";
 import tailwind from "@tailwindcss/postcss";
 import { chromium, expect } from "@playwright/test";
 
-const evidenceDirectory = "outputs/miauby-cards-2026-10-29";
+const evidenceDirectory = process.env.MIAUBY_QA_DIR ?? "outputs/miauby-cards-2026-10-29";
 
 test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém chat e desktop acessíveis", async () => {
   const bundle = await build({ stdin: { contents: `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';import {FloatingWhatsApp} from './src/components/site/floating-whatsapp';function Fixture(){const[ready,setReady]=useState(false);const[viewer,setViewer]=useState({key:"opaque-ana",name:"Ana"});return <><main><button onClick={()=>setViewer({key:"opaque-bia",name:"Bia"})}>Trocar conta</button><button onClick={()=>setViewer(null)}>Sair da conta</button><button onClick={()=>setReady(true)}>Montar compra fictícia</button><div style={{height:200}}/>{ready&&<section data-product-purchase-panel style={{height:240}}>Compra fictícia</section>}<div style={{height:1600}}/></main><FloatingWhatsApp viewer={viewer}/></>}createRoot(document.getElementById('root')).render(<Fixture/>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, write: false, platform: "browser", format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"', "process.env.NEXTAUTH_URL": '""', "process.env.NEXTAUTH_URL_INTERNAL": '""', "process.env.VERCEL_URL": '""' }, plugins: [{ name: "floating-fixture", setup(builder) {
@@ -26,13 +26,15 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
       if (url.hostname !== "127.0.0.1" || request.method() !== "GET") { errors.push("Unexpected external request or write"); return route.abort(); }
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text });
       if (url.pathname === "/fixture.css") return route.fulfill({ contentType: "text/css", body: css });
-      if (url.pathname === "/brand/miauby-avatar.webp") return route.fulfill({ contentType: "image/webp", body: await fs.readFile("public/brand/miauby-avatar.webp") });
+      if (url.pathname === "/miauby/miauby-avatar-v2.webp") return route.fulfill({ contentType: "image/webp", body: await fs.readFile("public/miauby/miauby-avatar-v2.webp") });
       return route.fulfill({ contentType: "text/html; charset=utf-8", body: '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body><div id="root"></div><script src="/fixture.js"></script></body></html>' });
     });
     await page.goto("http://127.0.0.1:3213/produto/sintetico");
     assert.deepEqual(errors, [], "Fixture deve carregar sem erros JavaScript");
     const trigger = page.getByRole("button", { name: "Conversar com a Miauby", exact: true });
     await expect(trigger).toBeVisible();
+    await expect(trigger.locator("img")).toHaveAttribute("src", "/miauby/miauby-avatar-v2.webp");
+    await expect(trigger.locator(".lucide-bot")).toHaveCount(0);
     const notice = page.getByRole("complementary", { name: "Dica da Miauby", exact: true });
     await expect(notice).toContainText("Bem-vindo, Ana!");
     await fs.mkdir(evidenceDirectory, { recursive: true });
@@ -92,10 +94,18 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
     }), "Os atalhos não podem cobrir o botão Enviar");
     await page.keyboard.press("Escape");
     await expect(chat).toHaveCount(0);
+    await expect(trigger).toBeFocused();
     await page.setViewportSize({ width: 320, height: 568 });
     await trigger.click();
     await expect(humanHelp).toBeVisible();
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+    for (const [width, height] of [[320, 390], [768, 500], [768, 600], [1280, 720]]) {
+      await page.setViewportSize({ width, height });
+      const dialogBounds = (await chat.boundingBox())!;
+      assert.ok(dialogBounds.y >= 0 && dialogBounds.y + dialogBounds.height <= height, `Painel cabe em ${width}×${height}`);
+      await expect(chat.getByRole("button", { name: "Fechar conversa" })).toBeInViewport();
+      await expect(chat.getByRole("textbox")).toBeInViewport();
+    }
     await page.setViewportSize({ width: 768, height: 700 });
     await expect(humanHelp).toBeHidden();
     await expect(whatsapp).toBeVisible();
@@ -107,6 +117,7 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
     // Hold a response while another identity mounts. The mocked transport ignores abort.
     await chat.getByRole("textbox").fill("Mensagem privada Ana");
     await chat.getByRole("button", { name: "Enviar pergunta", exact: true }).click();
+    await expect(chat.getByRole("textbox")).toBeFocused();
     assert.equal(await page.evaluate("window.miaubyRequests.length"), 1);
     await page.getByRole("button", { name: "Trocar conta", exact: true }).click();
     await expect(chat).toHaveCount(0);
@@ -241,6 +252,14 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
       await launcherPage.goto("http://127.0.0.1:3213/catalogo");
       const launcher = launcherPage.getByRole("button", { name: "Conversar com a Miauby", exact: true });
       await expect(launcher).toBeVisible();
+      const fixedBounds = await launcher.boundingBox();
+      const fixedWhatsapp = launcherPage.getByRole("link", { name: "Chamar Wimifarma no WhatsApp", exact: true });
+      const whatsappBounds = width >= 640 ? await fixedWhatsapp.boundingBox() : null;
+      await launcher.hover();
+      await launcherPage.mouse.wheel(0, 380);
+      await expect.poll(() => launcherPage.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+      assert.deepEqual(await launcher.boundingBox(), fixedBounds, "Miauby não muda de posição com a roda e o cursor sobre o ícone");
+      if (whatsappBounds) assert.deepEqual(await fixedWhatsapp.boundingBox(), whatsappBounds, "WhatsApp não acompanha a rolagem");
       await launcherPage.evaluate(() => {
         const area = document.createElement("div");
         area.id = "late-card-controls";
@@ -271,6 +290,7 @@ test("atendimento mobile libera a compra, acompanha conteúdo tardio e mantém c
       await expect(openedChat).toBeVisible();
       await openedChat.getByRole("button", { name: "Fechar conversa", exact: true }).click();
       await expect(launcher).toBeVisible();
+      await expect(launcher).toBeFocused();
       await launcherPage.locator("#late-card-controls").evaluate(element => element.remove());
       await expect(launcher).toBeVisible();
       await launcherPage.screenshot({ path: `${evidenceDirectory}/launcher-unobstructed-${width}.png` });

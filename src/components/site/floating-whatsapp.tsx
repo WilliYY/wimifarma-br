@@ -7,7 +7,6 @@ import { ProductImagePlaceholder } from "@/components/site/product-image-placeho
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Bot,
   ExternalLink,
   LoaderCircle,
   Send,
@@ -60,8 +59,8 @@ const quickQuestions = [
   "Como funciona a Farmácia Popular?",
 ];
 
-const purchaseControlsSelector = '[data-product-controls], [role="group"][aria-label="Preço do produto"], [aria-label="Compra rapida do produto"]';
-const purchasePanelSelector = `${purchaseControlsSelector}, [data-product-purchase-panel]`;
+const purchasePanelSelector = '[data-product-controls], [role="group"][aria-label="Preço do produto"], [aria-label="Compra rapida do produto"], [data-product-purchase-panel]';
+const miaubyAvatar = "/miauby/miauby-avatar-v2.webp";
 
 function formatPrice(value: string) {
   const price = Number(value);
@@ -188,15 +187,17 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [purchasePosition, setPurchasePosition] = useState<"before" | "visible" | "after">("before");
   const [messages, setMessages] = useState<ChatMessage[]>([initialMessage]);
   const [notice, setNotice] = useState<string | null>(null);
   const [isTabVisible, setIsTabVisible] = useState(false);
   const attemptedNotices = useRef(new Set<string>());
   const dismissedNoticePath = useRef<string | null>(null);
   const floatingRef = useRef<HTMLDivElement>(null);
+  const launcherRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
   const noticeRef = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const sendRef = useRef<HTMLButtonElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<AbortController | null>(null);
   const requestTimeoutRef = useRef<number | undefined>(undefined);
@@ -292,95 +293,18 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
       observer?.disconnect();
       window.removeEventListener("resize", checkPurchaseOverlap);
     };
-  }, [isOpen, notice, pathname, purchasePosition]);
-
-  useLayoutEffect(() => {
-    const floating = floatingRef.current;
-    if (!active || isHiddenRoute || isOpen || !floating) return;
-
-    let targets: Element[] = [];
-    let frame = 0;
-    let lift = 0;
-    const position = () => {
-      const bounds = floating.getBoundingClientRect();
-      const restingBottom = bounds.bottom + lift;
-      let bottom = restingBottom;
-      const obstacles = targets.map(target => target.getBoundingClientRect())
-        .filter(area => area.width && area.height && area.bottom > 0 && area.top < restingBottom + 8
-          && area.left < bounds.right + 8 && area.right > bounds.left - 8)
-        .sort((first, second) => second.top - first.top);
-      for (const area of obstacles) {
-        if (area.top < bottom + 8 && area.bottom > bottom - bounds.height - 8) {
-          bottom = area.top - 8;
-        }
-      }
-      // Keep the launcher reachable even when there is very little vertical room.
-      const nextLift = Math.max(0, Math.min(restingBottom - bottom, bounds.top + lift - 12));
-      if (nextLift !== lift) {
-        lift = nextLift;
-        floating.style.marginBottom = lift ? `${lift}px` : "";
-      }
-    };
-    const schedulePosition = () => {
-      if (!frame) frame = window.requestAnimationFrame(() => { frame = 0; position(); });
-    };
-    const resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedulePosition);
-    const styles = new MutationObserver(schedulePosition);
-    const connect = () => {
-      targets = Array.from(document.querySelectorAll(purchaseControlsSelector));
-      resize?.disconnect();
-      styles.disconnect();
-      resize?.observe(floating);
-      for (const target of targets) {
-        resize?.observe(target);
-        styles.observe(target, { attributes: true, attributeFilter: ["class", "style", "hidden"] });
-      }
-    };
-    connect();
-    position();
-    const content = new MutationObserver(() => { connect(); schedulePosition(); });
-    content.observe(document.querySelector("main") ?? document.body, { childList: true, subtree: true });
-    window.addEventListener("scroll", schedulePosition, { passive: true });
-    window.addEventListener("resize", schedulePosition);
-    return () => {
-      resize?.disconnect();
-      styles.disconnect();
-      content.disconnect();
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", schedulePosition);
-      window.removeEventListener("resize", schedulePosition);
-      floating.style.marginBottom = "";
-    };
-  }, [active, isHiddenRoute, isOpen, pathname, purchasePosition]);
+  }, [isOpen, notice, pathname]);
 
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
 
   useEffect(() => {
-    setPurchasePosition("before");
-    if (!isProductPage || !("IntersectionObserver" in window)) return;
-    let active = true;
-    let observer: IntersectionObserver | null = null;
-    // Route content can arrive after the persistent site layout has mounted.
-    const pendingContent = new MutationObserver(connectPurchasePanel);
-    function connectPurchasePanel() {
-      const panel = document.querySelector("[data-product-purchase-panel]");
-      if (!panel || observer) return;
-      pendingContent.disconnect();
-      observer = new IntersectionObserver(([entry]) => {
-        if (active) setPurchasePosition(entry.isIntersecting ? "visible" : entry.boundingClientRect.bottom <= 0 ? "after" : "before");
-      });
-      observer.observe(panel);
-    }
-    connectPurchasePanel();
-    if (!observer) pendingContent.observe(document.querySelector("main") ?? document.body, { childList: true, subtree: true });
-    return () => { active = false; pendingContent.disconnect(); observer?.disconnect(); };
-  }, [isProductPage, pathname]);
-
-  useEffect(() => {
     if (!isOpen) return;
-    const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 0);
+    const focusTimer = window.setTimeout(() => {
+      const target = window.matchMedia("(pointer: fine)").matches ? inputRef.current : dialogRef.current;
+      target?.focus({ preventScroll: true });
+    }, 0);
     return () => window.clearTimeout(focusTimer);
   }, [isOpen]);
 
@@ -468,15 +392,23 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!input.trim() || isLoading || requestRef.current) return;
+    if (document.activeElement === sendRef.current && window.matchMedia("(pointer: fine)").matches) {
+      inputRef.current?.focus({ preventScroll: true });
+    }
     void askMiauby(input);
+  }
+
+  function closeConversation() {
+    setIsOpen(false);
+    launcherRef.current?.focus({ preventScroll: true });
   }
 
   return (
     <div
       ref={floatingRef}
-      className={`fixed right-3 z-50 flex flex-row items-end gap-2 sm:right-5 sm:flex-col sm:gap-3 ${
-        isProductPage && purchasePosition === "after" && !isOpen ? "bottom-[calc(6rem+env(safe-area-inset-bottom))] sm:bottom-24" : isProductPage ? "bottom-[calc(0.75rem+env(safe-area-inset-bottom))] sm:bottom-24" : "bottom-[calc(0.75rem+env(safe-area-inset-bottom))] sm:bottom-5"
-      }`}
+      className="miauby-launchers fixed right-3 z-50 flex flex-row items-end gap-2 sm:right-5 sm:flex-col sm:gap-3"
+      data-product-page={isProductPage || undefined}
     >
       {notice && !isOpen ? (
         <aside ref={noticeRef} aria-label="Dica da Miauby" className="absolute bottom-[calc(100%+0.875rem)] right-0 flex w-[min(19rem,calc(100vw-1.5rem))] items-start gap-2 rounded-[1.75rem] rounded-br-lg border border-[#f2c14e]/45 bg-gradient-to-br from-white to-[#fff8e8] p-3 text-sm text-ink shadow-[0_12px_36px_rgba(61,47,15,0.14)] sm:right-20 sm:bottom-auto sm:top-0">
@@ -491,21 +423,24 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
       {isOpen ? (
         <section
           aria-label="Conversa com a Miauby"
-          className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] top-[max(0.75rem,env(safe-area-inset-top))] flex min-h-0 flex-col overflow-hidden rounded-lg border border-line bg-white shadow-[0_24px_70px_rgba(15,23,42,0.28)] sm:absolute sm:inset-x-auto sm:bottom-[calc(100%+0.75rem)] sm:right-0 sm:top-auto sm:max-h-[min(68dvh,34rem)] sm:min-h-[24rem] sm:w-[min(23rem,calc(100vw-1.5rem))]"
+          className="miauby-panel fixed inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] flex min-h-0 flex-col overflow-hidden rounded-lg border border-line bg-white shadow-[0_24px_70px_rgba(15,23,42,0.28)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:w-[min(23rem,calc(100vw-1.5rem))]"
           onKeyDown={(event) => {
-            if (event.key === "Escape") setIsOpen(false);
+            if (event.key === "Escape") closeConversation();
           }}
+          ref={dialogRef}
           role="dialog"
+          tabIndex={-1}
         >
-          <header className="flex items-center gap-3 border-b border-line bg-[#fff8e8] px-4 py-3">
+          <header className="flex shrink-0 items-center gap-3 border-b border-line bg-[#fff8e8] px-4 py-3">
             <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-[#f2c14e]">
               <Image
                 alt="Miauby"
                 className="h-full w-full object-contain"
-                height={88}
-                priority={false}
-                src="/brand/miauby-avatar.webp"
-                width={88}
+                height={96}
+                quality={84}
+                sizes="44px"
+                src={miaubyAvatar}
+                width={96}
               />
             </span>
             <div className="min-w-0 flex-1">
@@ -518,7 +453,7 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
             <button
               aria-label="Fechar conversa"
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-white hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-              onClick={() => setIsOpen(false)}
+              onClick={closeConversation}
               title="Fechar"
               type="button"
             >
@@ -619,14 +554,13 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
             ) : null}
           </div>
 
-          <form className="border-t border-line bg-white p-3" onSubmit={handleSubmit}>
+          <form className="shrink-0 border-t border-line bg-white p-3" onSubmit={handleSubmit}>
             <div className="flex items-center gap-2">
               <label className="sr-only" htmlFor="miauby-question">
                 Pergunte para a Miauby
               </label>
               <input
                 className="h-11 min-w-0 flex-1 rounded-md border border-line bg-white px-3 text-base text-ink outline-none transition placeholder:text-muted focus:border-brand focus:ring-2 focus:ring-brand/15 sm:text-sm"
-                disabled={isLoading}
                 id="miauby-question"
                 maxLength={500}
                 onChange={(event) => setInput(event.target.value)}
@@ -635,9 +569,10 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
                 value={input}
               />
               <button
+                aria-disabled={isLoading || !input.trim()}
                 aria-label="Enviar pergunta"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-brand text-white transition hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-                disabled={isLoading || !input.trim()}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-brand text-white transition-colors hover:bg-brand-strong aria-disabled:cursor-not-allowed aria-disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                ref={sendRef}
                 title="Enviar"
                 type="submit"
               >
@@ -654,30 +589,30 @@ function FloatingMiauby({ viewer, active }: { viewer: MiaubyViewer; active: bool
       <button
         aria-expanded={isOpen}
         aria-label="Conversar com a Miauby"
-        className="group relative flex h-11 w-11 items-center justify-center rounded-full bg-[#fff8e8] shadow-[0_16px_40px_rgba(0,0,0,0.22)] ring-2 ring-[#f2c14e]/60 transition hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:h-16 sm:w-16"
+        className="group relative flex h-11 w-11 items-center justify-center rounded-full bg-[#fff8e8] shadow-[0_16px_40px_rgba(0,0,0,0.22)] ring-2 ring-[#f2c14e]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:h-16 sm:w-16"
         onClick={() => setIsOpen((current) => !current)}
+        ref={launcherRef}
         type="button"
       >
-        <span className="absolute right-[calc(100%+0.75rem)] hidden whitespace-nowrap rounded-md bg-ink px-3 py-2 text-xs font-bold text-white shadow-lg sm:group-hover:block sm:group-focus-visible:block">
+        <span className="pointer-events-none absolute right-[calc(100%+0.75rem)] hidden whitespace-nowrap rounded-md bg-ink px-3 py-2 text-xs font-bold text-white shadow-lg sm:group-hover:block sm:group-focus-visible:block">
           Pergunte à Miauby
         </span>
         <span className="relative h-9 w-9 overflow-hidden rounded-full sm:h-14 sm:w-14">
           <Image
             alt=""
             className="h-full w-full object-contain"
-            height={112}
-            src="/brand/miauby-avatar.webp"
-            width={112}
+            height={128}
+            quality={84}
+            sizes="(min-width: 640px) 56px, 36px"
+            src={miaubyAvatar}
+            width={128}
           />
-        </span>
-        <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand text-white shadow-md sm:h-6 sm:w-6">
-          <Bot className="h-3.5 w-3.5" />
         </span>
       </button>
 
       <a
         aria-label="Chamar Wimifarma no WhatsApp"
-        className="hidden h-11 w-11 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition hover:scale-105 hover:bg-[#1ebe57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:flex sm:h-16 sm:w-16"
+        className="hidden h-11 w-11 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition-colors hover:bg-[#1ebe57] motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:flex sm:h-16 sm:w-16"
         href={siteConfig.whatsappUrl}
         rel="noreferrer"
         target="_blank"

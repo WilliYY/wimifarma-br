@@ -48,7 +48,7 @@ const sections = [
   },
   {
     title: "Assistente virtual Miauby",
-    text: "Quando voce usa a Miauby, a pergunta e ate seis mensagens recentes da conversa sao enviadas ao Google Gemini para gerar a resposta, junto de dados publicos de produtos relacionados. O site nao grava esse historico no banco nesta fase. Nao envie CPF, cartao, senha, receita, laudo ou outros dados sensiveis no chat; o processamento pelo provedor segue os termos aplicaveis ao servico.",
+    text: "No chat público da Miauby, a pergunta e até seis mensagens recentes são processadas pelo servidor da Wimifarma para gerar respostas locais e, quando solicitada, consultar o catálogo público. A conversa aberta fica na memória da aba. Evite enviar CPF, dados de cartão, senhas, receitas, laudos ou outros dados sensíveis pelo chat.",
   },
   {
     title: "Avisos operacionais da loja",

@@ -56,6 +56,7 @@ import {
   buildProductSearchText,
   normalizeProductSearch,
   parseProductTerms,
+  rankExactProductsForQuery,
   rankProductsForQuery,
   rankRelatedProducts,
   relatedProductFamilySearchTerms,
@@ -67,6 +68,24 @@ import {
   productSearchPlan,
   productSearchSize,
 } from "./public-search";
+
+test("nome inicial de medidor de pressão é identidade; assuntos clínicos continuam separados", () => {
+  const products = [
+    { id: "omron", name: "Medidor de Pressão Arterial Omron", searchText: "medidor de pressao arterial omron" },
+    { id: "outra-marca", name: "Medidor de Pressão Outro", searchText: "medidor de pressao outro" },
+    { id: "glicemia", name: "Medidor de Glicemia Omron", searchText: "medidor de glicemia omron", searchTerms: ["pressão alta"] },
+    { id: "medicamento", name: "Losartana 50 mg", searchText: "losartana 50 mg", category: "Medicamentos", activeIngredients: ["losartana potássica"] },
+  ];
+  for (const query of ["Medidor de pressão Omron", "Medidores de pressão arterial Omron"]) {
+    assert.deepEqual(productSearchPlan(query).topics, [], query);
+    assert.deepEqual(rankExactProductsForQuery(products, query).map((product) => product.id), ["omron"], query);
+  }
+  assert.deepEqual(productSearchPlan("aparelho de pressão arterial digital").topics, []);
+  for (const query of ["pressão alta", "medidor de pressão alta", "medidor de pressão-baixa", "medidor de pressão arterial baixa", "medidor de pressão Omron para hipertensão"]) {
+    assert.equal(productSearchPlan(query).topics.length, 1, query);
+  }
+  assert.ok(rankExactProductsForQuery(products, "pressão alta").some(product => product.id === "medicamento"));
+});
 
 test("corrige erros próximos de nomes e marcas sem alterar doses, EAN ou SKU", () => {
   const vocabulary = productSpellingVocabulary([

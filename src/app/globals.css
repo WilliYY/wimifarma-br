@@ -344,6 +344,50 @@ textarea {
   contain: layout style;
 }
 
+.miauby-launchers {
+  --miauby-bottom: calc(3.75rem + env(safe-area-inset-bottom));
+  bottom: var(--miauby-bottom);
+}
+
+.miauby-launchers[data-product-page] {
+  --miauby-bottom: calc(6rem + env(safe-area-inset-bottom));
+}
+
+.miauby-panel {
+  bottom: calc(var(--miauby-bottom) + 3.75rem);
+}
+
+@media (width >= 40rem) {
+  .miauby-launchers {
+    --miauby-bottom: 3.75rem;
+  }
+
+  .miauby-launchers[data-product-page] {
+    --miauby-bottom: 6rem;
+  }
+
+  .miauby-panel {
+    bottom: calc(100% + 0.75rem);
+    height: min(68dvh, 34rem, calc(100dvh - var(--miauby-bottom) - 10rem));
+  }
+}
+
+@media (width >= 40rem) and (height <= 34rem) {
+  .miauby-panel {
+    position: fixed;
+    inset-block: 0.75rem;
+    right: 6.25rem;
+    height: auto;
+  }
+}
+
+@media (width < 40rem) and (height <= 28rem) {
+  .miauby-panel {
+    z-index: 1;
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}
+
 .site-header-band {
   display: grid;
   grid-template-rows: 1fr;
