@@ -24,11 +24,13 @@ test("failed admin simulation never leaves another destination's prices visible"
       return route.abort();
     });
     await page.goto(origin);
-    for (const [label, value] of [["CEP de destino", "01001000"], ["Peso (kg)", "0.3"], ["Largura (cm)", "15"], ["Altura (cm)", "10"], ["Comprimento (cm)", "20"], ["Valor (R$)", "50"]]) await page.getByLabel(label, { exact: true }).fill(value);
-    await page.getByRole("button", { name: "Comparar preços, custos e aceitação", exact: true }).click();
+    const compare = page.getByRole("button", { name: "Comparar preços, custos e aceitação", exact: true });
+    const simulation = page.locator("form").filter({ has: compare });
+    for (const [label, value] of [["CEP de destino", "01001000"], ["Peso (kg)", "0.3"], ["Largura (cm)", "15"], ["Altura (cm)", "10"], ["Comprimento (cm)", "20"], ["Valor (R$)", "50"]]) await simulation.getByLabel(label, { exact: true }).fill(value);
+    await compare.click();
     await expect(page.getByRole("checkbox", { name: /Correios.*PAC/ })).toBeVisible();
-    await page.getByLabel("CEP de destino", { exact: true }).fill("69005010");
-    await page.getByRole("button", { name: "Comparar preços, custos e aceitação", exact: true }).click();
+    await simulation.getByLabel("CEP de destino", { exact: true }).fill("69005010");
+    await compare.click();
     await expect(page.getByRole("status")).toHaveText("Consulta sintética indisponível");
     await expect(page.getByRole("checkbox", { name: /Correios.*PAC/ })).toHaveCount(0);
   } finally { await browser.close(); }

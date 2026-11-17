@@ -165,10 +165,17 @@ test("clique e Enter abrem produto; adicionar e quantidade continuam interativos
     await page.keyboard.press("Enter");
     await expect.poll(() => navigations(page)).toEqual(["/produto/correlato-sintetico-0", "/produto/correlato-sintetico-0"]);
 
+    await page.clock.install();
+    await page.clock.pauseAt(await page.evaluate(() => Date.now() + 500));
     await first.getByRole("button", { name: "Adicionar", exact: true }).click();
     const quantity = first.getByRole("textbox", { name: "Quantidade de unidades de Correlato sintético 0", exact: true });
     await quantity.fill("3");
-    await first.getByRole("button", { name: "Aumentar Correlato sintético 0", exact: true }).click();
+    const increment = first.getByRole("button", { name: "Aumentar Correlato sintético 0", exact: true });
+    await increment.click();
+    await expect(quantity).toHaveValue("3");
+    await page.clock.runFor(450);
+    await page.clock.resume();
+    await increment.click();
     await expect(quantity).toHaveValue("4");
     await first.getByRole("button", { name: "Diminuir Correlato sintético 0", exact: true }).click();
     await expect(quantity).toHaveValue("3");

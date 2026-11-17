@@ -366,9 +366,13 @@ test("ações móveis do administrador ficam alinhadas no topo e ao rolar", asyn
       }
     }
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByRole("button", { name: "Abrir busca de produtos", exact: true }).click();
-    await expect(page.getByRole("dialog", { name: "Busca de produtos" })).toBeVisible();
-    await page.getByRole("button", { name: "Fechar busca", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Abrir busca de produtos", exact: true })).toBeFocused();
+    const header = page.getByRole("banner");
+    const openSearch = header.getByRole("button", { name: "Abrir busca de produtos", exact: true });
+    const search = header.getByRole("search", { name: "Busca de produtos", exact: true });
+    await openSearch.click();
+    await expect(search).toBeVisible();
+    await header.getByRole("button", { name: "Fechar busca de produtos", exact: true }).click();
+    await expect(search).toHaveCount(0);
+    await expect(openSearch).toBeFocused();
   });
 });

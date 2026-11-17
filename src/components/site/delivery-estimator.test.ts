@@ -293,11 +293,21 @@ test("botões do detalhe não navegam sem o novo produto quando o carrinho já t
 
 for (const count of [29, 30]) test(`detalhe permite comprar com ${count} itens quando há espaço ou o produto já está no carrinho`, async () => {
   await fixture(async page => {
-    await page.addInitScript(({ item, count }) => localStorage.setItem("wimifarma-cart-v1", JSON.stringify(Array.from({ length: count }, (_, i) => ({ ...item, id: count === 30 && i === 0 ? item.id : `filled-${i}`, quantity: 1 })))), { item: product, count });
+    const existingQuantity = count === 30 ? 3 : 0;
+    await page.addInitScript(({ item, count, existingQuantity }) => {
+      const items = Array.from({ length: count }, (_, index) =>
+        index === 0 && existingQuantity
+          ? { ...item, quantity: existingQuantity }
+          : { ...item, id: `filled-${index}`, quantity: 1 });
+      localStorage.setItem("wimifarma-cart-v1", JSON.stringify(items));
+    }, { item: product, count, existingQuantity });
     await page.goto(origin);
     await page.getByRole("button", { name: "Comprar agora", exact: true }).first().click();
     assert.deepEqual(await page.evaluate("window.navigations"), ["/checkout"]);
-    await expect.poll(() => page.evaluate(id => (JSON.parse(document.querySelector('[data-testid="cart-state"]')!.textContent!) as { id: string; quantity: number }[]).find(item => item.id === id)?.quantity, product.id)).toBe(count === 30 ? 2 : 1);
+    await expect.poll(async () => {
+      const items = JSON.parse(await page.getByTestId("cart-state").textContent() ?? "[]") as { id: string; quantity: number }[];
+      return { count: items.length, quantity: items.find(item => item.id === product.id)?.quantity };
+    }).toEqual({ count: 30, quantity: existingQuantity || 1 });
   }, false, product, true);
 });
 
