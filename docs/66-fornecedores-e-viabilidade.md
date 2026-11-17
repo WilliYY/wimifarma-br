@@ -30,6 +30,16 @@ Rota `/admin/fornecedores`, somente ADMIN. Linguagem visual operacional, clara, 
 
 Em 18/10/2026, GAM foi incluída somente na comparação manual. A decisão mais recente do lojista mantém apenas ANB e Profarma abastecendo o piloto persistente. GAM e SantaCruz podem fornecer referências de identidade, descrição e foto; suas ofertas não são aceitas pela API ou pelo importador comercial nesta etapa. Não há conector automático ou consulta fictícia: custos, saldos e validade dependem de conferência real por EAN, com gravação e auditoria exclusivas de ADMIN. O estoque físico permanece separado.
 
+## Preparar consultas no Cotefácil
+
+Em `/admin/fornecedores`, a área Cotefácil prepara uma lista para consulta manual. Cole um ou mais códigos em **EANs para consulta** ou use **Carregar EANs do site** para incluir produtos ativos e identidades publicadas apenas para consulta. O painel valida o dígito verificador, preserva zeros à esquerda e remove repetições. A interface informa quando encontra registros sem código válido. **Copiar EANs** gera uma lista com um código por linha. A importação em lote depende do formato aceito pela conta Cotefácil.
+
+O Cotefácil documenta importação de listas e comparação de preços por distribuidor. Há versões de integração com ERP que exigem um TXT estruturado com dados como CNPJ, quantidade e código interno. Na conta da farmácia, ainda é preciso confirmar o formato, o limite de itens, os fornecedores habilitados e o conteúdo disponível antes de qualquer pedido. [Cotefácil para compradores](https://www.cotefacil.com/solucoes/comprador/) · [Integração INOVAFARMA](https://conhecimento.atlassian.net/wiki/spaces/BDC/pages/1340440577/COTEF%2BCIL)
+
+Para validar o fluxo, comece com uma amostra de EANs do catálogo e selecione apenas os fornecedores já usados pela loja que estiverem habilitados na conta. Verifique se o EAN e a apresentação coincidem e registre fornecedor, custo por unidade, embalagem, disponibilidade informada e horário. Uma ausência de resposta deixa a disponibilidade desconhecida. A criação de uma cotação pode notificar fornecedores. Finalizar um pedido pode encaminhá-lo para faturamento. [Fluxo do comprador](https://www.cotefacil.com/solucoes/comprador/) · [Fluxo do fornecedor](https://www.cotefacil.com/solucoes/fornecedor/)
+
+O retorno de cotação pode servir para conferir divergências do robô e identificar candidatos para pesquisa de cadastro. A inclusão no catálogo ainda exige conferência da identidade, apresentação, imagem, classificação e condições comerciais do produto. A área de preparação apenas lê os códigos do catálogo e não transmite a lista ao Cotefácil.
+
 ## Próximas etapas condicionadas
 
 Conectores autorizados com execução durável fora do Codex; persistência própria de ofertas/sincronizações, reconfirmação e reserva, fontes atuais de imagem por EAN, leitura CMED por apresentação/UF, aprovação de regras de preço e integração dos estados sob encomenda ao checkout. Cada conector precisa provar preço, unidade e disponibilidade; reputação do distribuidor não substitui esses testes.
