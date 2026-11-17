@@ -40,12 +40,23 @@ const ordinaryMedicineEvidenceSchema = z.object({
   protectFromLight: z.boolean().optional(),
   protectFromMoisture: z.boolean().optional(),
 }).strict();
-export const estimatedOrdinaryMedicineEntrySchema = estimatedReviewEntrySchema.extend({
-  action: z.literal("REVIEW_MELHOR_ENVIO_ORDINARY"),
+const estimatedMedicineEntrySchema = estimatedReviewEntrySchema.extend({
   cargoKinds: z.tuple([z.literal("medication")]),
   approvedServiceIds: z.array(z.union([z.literal(1), z.literal(2)])).min(1).max(2)
     .refine(values => new Set(values).size === values.length, "Declare serviços distintos."),
+});
+export const estimatedOrdinaryMedicineEntrySchema = estimatedMedicineEntrySchema.extend({
+  action: z.literal("REVIEW_MELHOR_ENVIO_ORDINARY"),
   ordinaryMedicineEvidence: ordinaryMedicineEvidenceSchema,
+}).strict();
+export const estimatedOtcMedicineEntrySchema = estimatedMedicineEntrySchema.extend({
+  action: z.literal("REVIEW_MELHOR_ENVIO_OTC"),
+  otcMedicineEvidence: z.object({
+    carrierCaseId: z.literal("2100064"),
+    originalPackaging: z.literal(true),
+    ambientStorageConfirmed: z.literal(true),
+    reference: z.string().trim().min(1).max(1000),
+  }).strict(),
 }).strict();
 export const estimatedDraftOnlyEntrySchema = estimatedReviewEntrySchema.omit({ cargoKinds: true, approvedServiceIds: true, expectedShippingProfile: true }).extend({
   action: z.literal("DRAFT_ONLY"), expectedShippingProfile: z.null(),
@@ -148,8 +159,31 @@ export function reviewOrdinaryMedicineShipping(product: EstimatedReviewProduct, 
   if (/\b(?:insulin\w*|asparte|glargina|lispro|glulisina|detemir|degludeca|refriger\w*|congel\w*|geladeira|termolabil\w*|controlad\w*)\b/.test(name)) {
     throw new Error("Insulina, medicamento controlado ou com conservação a frio exige revisão separada.");
   }
+  return reviewConventionalMedicineProfile({ ...product, prescriptionType: "ORDINARY" }, expected, configuredServices);
+}
+
+/** Resolves only solid oral MIPs already classified in the active catalog. */
+export function reviewOtcMedicineShipping(product: EstimatedReviewProduct, input: unknown, configuredServices: number[]): Record<string, unknown> {
+  const expected = estimatedOtcMedicineEntrySchema.parse(input);
+  verifyEstimatedSnapshot(product, expected);
+  const classification = readClassification(product.catalogClassification);
+  if (product.status !== "ACTIVE" || product.deletedAt !== null || product.isPopularPharmacy ||
+    product.requiresPrescription || product.prescriptionType !== "UNREVIEWED" ||
+    classification.kind !== "MEDICINE" || !classification.otc) {
+    throw new Error("Produto fora do lote de medicamentos ativos isentos de prescrição.");
+  }
+  const name = product.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const solidOral = /\b(comprimidos?|capsulas?|drageas?|pastilhas?|granulados?)\b/.test(name);
+  const hasMixedPackage = name.replace(/\b(\d+(?:[.,]\d+)?\s*(?:mg|mcg|g))\s*\+\s*(?=\d)/g, "$1 ").includes("+");
+  const conflictingForm = /\b(?:kits?|combos?|gotas?|soluca[oa]\w*|suspensa[oa]\w*|xaropes?|liquidos?|injet\w*|frascos?|sprays?|aero\w*|gel|cremes?|pomadas?|topico\w*|supositorios?)\b|\d\s*ml\b/.test(name);
+  const specialRouteOrStorage = /\b(?:vagin\w*|retal\w*|oftalm\w*|otic\w*|otolog\w*|inal\w*|uso\s+externo|refriger\w*|congel\w*|geladeira|termolabil\w*|controlad\w*|insulin\w*)\b/.test(name);
+  if (!solidOral || hasMixedPackage || conflictingForm || specialRouteOrStorage) throw new Error("Exige apresentação sólida oral sem carga complementar ou conservação especial.");
+  return reviewConventionalMedicineProfile({ ...product, prescriptionType: "UNREVIEWED" }, expected, configuredServices);
+}
+
+function reviewConventionalMedicineProfile(product: ShippingProduct, expected: EstimatedReviewEntry, configuredServices: number[]): Record<string, unknown> {
   const candidate = buildReviewedEstimatedProfile(expected);
-  const reviewedProduct = { ...product, prescriptionType: "ORDINARY" as const, shippingProfile: candidate };
+  const reviewedProduct = { ...product, shippingProfile: candidate };
   validateShippingProduct(reviewedProduct);
   const permitted = permittedShippingServices(configuredServices, [reviewedProduct]);
   if (expected.approvedServiceIds.some(service => !permitted.includes(service))) {

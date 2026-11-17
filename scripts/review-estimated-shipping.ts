@@ -6,11 +6,11 @@ import { Prisma, type PrismaClient } from "../src/generated/prisma/client";
 import { getPrisma } from "../src/lib/prisma";
 import { lockProductCatalog } from "../src/features/products/mutations";
 import { shippingSettingsSchema } from "../src/features/shipping/schema";
-import { ESTIMATED_REVIEW_POLICY, estimatedReviewEntrySchema, estimatedDraftOnlyEntrySchema, estimatedOrdinaryMedicineEntrySchema, estimatedReviewHashSchema, estimatedReviewSha256, reviewEstimatedShipping, reviewOrdinaryMedicineShipping, createEstimatedDraftOnly } from "../src/features/shipping/estimated-review";
+import { ESTIMATED_REVIEW_POLICY, estimatedReviewEntrySchema, estimatedDraftOnlyEntrySchema, estimatedOrdinaryMedicineEntrySchema, estimatedOtcMedicineEntrySchema, estimatedReviewHashSchema, estimatedReviewSha256, reviewEstimatedShipping, reviewOrdinaryMedicineShipping, reviewOtcMedicineShipping, createEstimatedDraftOnly } from "../src/features/shipping/estimated-review";
 
 export const estimatedReviewManifestSchema = z.object({
   policyVersion: z.literal(ESTIMATED_REVIEW_POLICY),
-  products: z.array(z.union([estimatedReviewEntrySchema.extend({ action: z.literal("REVIEW_ESTIMATED") }).strict(), estimatedDraftOnlyEntrySchema, estimatedOrdinaryMedicineEntrySchema])).min(1).max(50),
+  products: z.array(z.union([estimatedReviewEntrySchema.extend({ action: z.literal("REVIEW_ESTIMATED") }).strict(), estimatedDraftOnlyEntrySchema, estimatedOrdinaryMedicineEntrySchema, estimatedOtcMedicineEntrySchema])).min(1).max(50),
   manifestSha256: estimatedReviewHashSchema,
 }).strict();
 
@@ -44,6 +44,9 @@ export async function reviewEstimatedShippingBatch(db: Pick<PrismaClient, "$tran
       if (entry.action === "DRAFT_ONLY") return { ...base, profile: createEstimatedDraftOnly(product, entry) };
       if (entry.action === "REVIEW_MELHOR_ENVIO_ORDINARY") {
         return { ...base, profile: reviewOrdinaryMedicineShipping(product, entry, settings!.serviceIds), ordinaryMedicineEvidence: entry.ordinaryMedicineEvidence };
+      }
+      if (entry.action === "REVIEW_MELHOR_ENVIO_OTC") {
+        return { ...base, profile: reviewOtcMedicineShipping(product, entry, settings!.serviceIds), otcMedicineEvidence: entry.otcMedicineEvidence };
       }
       return { ...base, profile: reviewEstimatedShipping(product, reviewInput, settings!.serviceIds) };
     });

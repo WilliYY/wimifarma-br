@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { reviewEstimatedShipping, reviewOrdinaryMedicineShipping, estimatedReviewSha256, createEstimatedDraftOnly } from "./estimated-review";
+import { reviewEstimatedShipping, reviewOrdinaryMedicineShipping, reviewOtcMedicineShipping, estimatedReviewSha256, createEstimatedDraftOnly } from "./estimated-review";
 
 const profile = () => ({ enabled: false, transportReviewed: false, measurementBasis: "estimated", weightGrams: 300, lengthCm: 24, widthCm: 15, heightCm: 10, reference: null, approvedServiceIds: [], cargoKinds: ["unspecified"], provenance: { source: "owner-estimate", measured: false } });
 const product = (catalogClassification: { kind: string } | null = null) => ({ id: "synthetic", name: "Higiene sintética", ean: "7890000000000", eanNormalized: "07890000000000", category: "Higiene", status: "ACTIVE", deletedAt: null, updatedAt: new Date(0), requiresPrescription: false, prescriptionType: "UNREVIEWED" as const, isPopularPharmacy: false, catalogClassification, shippingProfile: profile() });
@@ -155,6 +155,34 @@ test("revisão de medicamento comum mantém perfil e exige ação própria, PAC 
   const { action: _action, ordinaryMedicineEvidence: _evidence, ...generic } = input;
   void _action; void _evidence;
   assert.throws(() => reviewEstimatedShipping(row, generic, [1, 2]));
+});
+
+test("frete MIP usa cadastro isento e embalagem confirmada, somente para sólidos orais por PAC e SEDEX", () => {
+  const { row: ordinary, input: common } = ordinaryFixture();
+  const row = { ...ordinary, catalogClassification: { ...ordinary.catalogClassification, otc: true },
+    requiresPrescription: false, prescriptionType: "UNREVIEWED", name: "Analgésico sintético 500 mg 20 comprimidos" };
+  const { ordinaryMedicineEvidence: _evidence, ...base } = common;
+  void _evidence;
+  const input = { ...base, action: "REVIEW_MELHOR_ENVIO_OTC", expectedName: row.name,
+    otcMedicineEvidence: { carrierCaseId: "2100064", originalPackaging: true, ambientStorageConfirmed: true, reference: "Confirmação do titular de teste." } };
+  const before = structuredClone(row);
+  assert.deepEqual(reviewOtcMedicineShipping(row, input, [1, 2, 3]), {
+    ...row.shippingProfile, enabled: true, transportReviewed: true, cargoKinds: ["medication"], approvedServiceIds: [1, 2],
+  });
+  assert.deepEqual(row, before);
+  const combination = { ...row, name: "Analgésico 500 mg + 35 mg + 50 mg 20 comprimidos" };
+  assert.equal(reviewOtcMedicineShipping(combination, { ...input, expectedName: combination.name }, [1, 2]).enabled, true);
+  for (const changed of [
+    { ...row, requiresPrescription: true }, { ...row, prescriptionType: "ANTIMICROBIAL" },
+    { ...row, catalogClassification: { ...row.catalogClassification, otc: false } }, { ...row, isPopularPharmacy: true },
+    { ...row, name: "Analgésico gotas 20 mL" }, { ...row, name: "Kit 20 comprimidos + solução 20 mL" },
+    { ...row, name: "Medicamento 20 comprimidos vaginais" }, { ...row, name: "20 comprimidos junto de 30mL" },
+    { ...row, name: "Medicamento 20 comprimidos + 10 cápsulas" },
+    { ...row, name: "Comprimidos 20 unidades manter refrigerado" },
+  ]) assert.throws(() => reviewOtcMedicineShipping(changed, { ...input, expectedName: changed.name }, [1, 2]));
+  assert.throws(() => reviewOtcMedicineShipping(row, input, [1, 3]));
+  assert.throws(() => reviewOtcMedicineShipping(row, { ...input, approvedServiceIds: [3] }, [1, 2, 3]));
+  assert.throws(() => reviewOtcMedicineShipping(row, { ...input, otcMedicineEvidence: { ...input.otcMedicineEvidence, ambientStorageConfirmed: false } }, [1, 2]));
 });
 
 test("operador de medicamento recusa classe divergente, insulina, frio e restrição anterior", () => {
