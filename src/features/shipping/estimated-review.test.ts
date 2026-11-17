@@ -177,7 +177,10 @@ test("operador de medicamento recusa classe divergente, insulina, frio e restri�
 
 test("evidência não aceita armazenamento refrigerado, faixa invertida ou campos extras", () => {
   const { row, input } = ordinaryFixture();
-  for (const leafletUrl of ["https://www.lbaldacci.com.br/exemplo.pdf", "https://produtos.apsen.com.br/exemplo", "https://www.fqmgrupo.com.br/exemplo.pdf"]) {
+  for (const leafletUrl of [
+    "https://www.lbaldacci.com.br/exemplo.pdf", "https://produtos.apsen.com.br/exemplo",
+    "https://www.fqmgrupo.com.br/exemplo.pdf", "https://momentafarma.com.br/exemplo.pdf",
+  ]) {
     assert.doesNotThrow(() => reviewOrdinaryMedicineShipping(row, {
       ...input, ordinaryMedicineEvidence: { ...ordinaryMedicineEvidence, leafletUrl },
     }, [1, 2]));

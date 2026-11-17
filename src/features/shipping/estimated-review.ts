@@ -19,7 +19,7 @@ export const estimatedReviewEntrySchema = z.object({
 export type EstimatedReviewEntry = z.infer<typeof estimatedReviewEntrySchema>;
 const officialLeafletHosts = new Set([
   "consultas.anvisa.gov.br", "althaia.com.br", "bula.ache.com.br", "www.ache.com.br",
-  "cdn.biolabfarma.com.br", "eurofarma.com.br", "produtos.apsen.com.br", "www.abbottbrasil.com.br",
+  "cdn.biolabfarma.com.br", "eurofarma.com.br", "momentafarma.com.br", "produtos.apsen.com.br", "www.abbottbrasil.com.br",
   "www.fqmgrupo.com.br", "www.geolab.com.br", "www.lbaldacci.com.br", "www.libbs.com.br", "www.torrent.com.br",
 ]);
 const ordinaryMedicineEvidenceSchema = z.object({
