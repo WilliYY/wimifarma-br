@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { reviewEstimatedShipping, estimatedReviewSha256, createEstimatedDraftOnly } from "./estimated-review";
+import { reviewEstimatedShipping, reviewOrdinaryMedicineShipping, estimatedReviewSha256, createEstimatedDraftOnly } from "./estimated-review";
 
 const profile = () => ({ enabled: false, transportReviewed: false, measurementBasis: "estimated", weightGrams: 300, lengthCm: 24, widthCm: 15, heightCm: 10, reference: null, approvedServiceIds: [], cargoKinds: ["unspecified"], provenance: { source: "owner-estimate", measured: false } });
 const product = (catalogClassification: { kind: string } | null = null) => ({ id: "synthetic", name: "Higiene sintética", ean: "7890000000000", eanNormalized: "07890000000000", category: "Higiene", status: "ACTIVE", deletedAt: null, updatedAt: new Date(0), requiresPrescription: false, prescriptionType: "UNREVIEWED" as const, isPopularPharmacy: false, catalogClassification, shippingProfile: profile() });
@@ -127,4 +127,65 @@ test("revisor genérico recusa escovas elétricas e refis ambíguos, preservando
   }
   const manual = { ...product(), name: "Escova dental manual Oral-B infantil Cars 1un" };
   assert.equal(reviewEstimatedShipping(manual, entry(manual), [1, 3]).enabled, true);
+});
+
+const ordinaryMedicineEvidence = {
+  carrierCaseId: "2100064", presentation: "50 MG COM REV CT BL X 30", registration: "1000000000001",
+  leafletUrl: "https://consultas.anvisa.gov.br/synthetic.pdf", minTemperatureC: 15, maxTemperatureC: 30,
+  originalPackaging: true, refrigerationRequired: false, protectFromLight: true, protectFromMoisture: true,
+};
+
+function ordinaryFixture() {
+  const row = { ...product(), catalogClassification: { kind: "MEDICINE", medicineClass: "GENERIC", ethical: false, otc: false },
+    category: "Medicamentos", name: "Losartana sintética 50 mg 30 comprimidos",
+    requiresPrescription: true, prescriptionType: "ORDINARY", shippingProfile: { ...profile(), cargoKinds: ["medication", "unspecified"] } };
+  const input = { ...entry({ ...row, prescriptionType: "UNREVIEWED" }), action: "REVIEW_MELHOR_ENVIO_ORDINARY", cargoKinds: ["medication"], approvedServiceIds: [1, 2], ordinaryMedicineEvidence };
+  return { row, input };
+}
+
+test("revisão de medicamento comum mantém perfil e exige ação própria, PAC e SEDEX ativos", () => {
+  const { row, input } = ordinaryFixture();
+  const before = structuredClone(row);
+  const result = reviewOrdinaryMedicineShipping(row, input, [1, 2, 3]);
+  assert.deepEqual(row, before);
+  assert.deepEqual(result, { ...row.shippingProfile, enabled: true, transportReviewed: true, cargoKinds: ["medication"], approvedServiceIds: [1, 2] });
+  assert.throws(() => reviewOrdinaryMedicineShipping(row, input, [1, 3]), /Serviço/);
+  assert.throws(() => reviewOrdinaryMedicineShipping(row, { ...input, approvedServiceIds: [1, 3] }, [1, 2, 3]));
+  assert.throws(() => reviewOrdinaryMedicineShipping(row, { ...input, cargoKinds: ["general"] }, [1, 2]));
+  const { action: _action, ordinaryMedicineEvidence: _evidence, ...generic } = input;
+  void _action; void _evidence;
+  assert.throws(() => reviewEstimatedShipping(row, generic, [1, 2]));
+});
+
+test("operador de medicamento recusa classe divergente, insulina, frio e restrição anterior", () => {
+  const { row, input } = ordinaryFixture();
+  for (const patch of [{ catalogClassification: null }, { catalogClassification: { kind: "OTHER" } }, { catalogClassification: { kind: "MEDICINE" } },
+    { catalogClassification: { ...row.catalogClassification, otc: true } }, { isPopularPharmacy: true }, { requiresPrescription: false },
+    { prescriptionType: "CONTROLLED" }, { prescriptionType: "ANTIMICROBIAL" }, { prescriptionType: "UNREVIEWED" },
+    { name: "Insulina sintética 50 unidades" }, { name: "Medicação termolábil sintética" }]) {
+    const changed = { ...row, ...patch };
+    assert.throws(() => reviewOrdinaryMedicineShipping(changed, { ...input, expectedName: changed.name }, [1, 2]), JSON.stringify(patch));
+  }
+  for (const patch of [{ cargoKinds: ["liquid"] }, { cargoKinds: ["temperature_sensitive"] }, { cargoKinds: ["aerosol"] }, { notifyOnlyPendingLogistics: true }, { approvedServiceIds: [1] }]) {
+    const shippingProfile = { ...row.shippingProfile, ...patch };
+    assert.throws(() => reviewOrdinaryMedicineShipping({ ...row, shippingProfile }, {
+      ...input, expectedShippingProfile: shippingProfile, expectedProfileSha256: estimatedReviewSha256(shippingProfile),
+    }, [1, 2]), JSON.stringify(patch));
+  }
+  assert.throws(() => reviewOrdinaryMedicineShipping({ ...row, updatedAt: new Date(1) }, input, [1, 2]), /Identidade, revisão ou perfil mudou/);
+});
+
+test("evidência não aceita armazenamento refrigerado, faixa invertida ou campos extras", () => {
+  const { row, input } = ordinaryFixture();
+  for (const leafletUrl of ["https://www.lbaldacci.com.br/exemplo.pdf", "https://produtos.apsen.com.br/exemplo", "https://www.fqmgrupo.com.br/exemplo.pdf"]) {
+    assert.doesNotThrow(() => reviewOrdinaryMedicineShipping(row, {
+      ...input, ordinaryMedicineEvidence: { ...ordinaryMedicineEvidence, leafletUrl },
+    }, [1, 2]));
+  }
+  for (const patch of [{ carrierCaseId: "other" }, { leafletUrl: "http://consultas.anvisa.gov.br/synthetic.pdf" }, { leafletUrl: "https://consultas.anvisa.gov.br.spoof.example/synthetic.pdf" }, { registration: "10000" },
+    { minTemperatureC: 2, maxTemperatureC: 8 }, { minTemperatureC: 30, maxTemperatureC: 15 }, { minTemperatureC: 25 }, { maxTemperatureC: 25 },
+    { originalPackaging: false }, { refrigerationRequired: true }, { unexpected: true }]) {
+    assert.throws(() => reviewOrdinaryMedicineShipping(row, { ...input, ordinaryMedicineEvidence: { ...ordinaryMedicineEvidence, ...patch } }, [1, 2]), JSON.stringify(patch));
+  }
+  assert.throws(() => reviewOrdinaryMedicineShipping(row, { ...input, releaseNotifyOnly: true }, [1, 2]));
 });

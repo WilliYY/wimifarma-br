@@ -6,11 +6,11 @@ import { Prisma, type PrismaClient } from "../src/generated/prisma/client";
 import { getPrisma } from "../src/lib/prisma";
 import { lockProductCatalog } from "../src/features/products/mutations";
 import { shippingSettingsSchema } from "../src/features/shipping/schema";
-import { ESTIMATED_REVIEW_POLICY, estimatedReviewEntrySchema, estimatedDraftOnlyEntrySchema, estimatedReviewHashSchema, estimatedReviewSha256, reviewEstimatedShipping, createEstimatedDraftOnly } from "../src/features/shipping/estimated-review";
+import { ESTIMATED_REVIEW_POLICY, estimatedReviewEntrySchema, estimatedDraftOnlyEntrySchema, estimatedOrdinaryMedicineEntrySchema, estimatedReviewHashSchema, estimatedReviewSha256, reviewEstimatedShipping, reviewOrdinaryMedicineShipping, createEstimatedDraftOnly } from "../src/features/shipping/estimated-review";
 
 export const estimatedReviewManifestSchema = z.object({
   policyVersion: z.literal(ESTIMATED_REVIEW_POLICY),
-  products: z.array(z.union([estimatedReviewEntrySchema.extend({ action: z.literal("REVIEW_ESTIMATED") }).strict(), estimatedDraftOnlyEntrySchema])).min(1).max(50),
+  products: z.array(z.union([estimatedReviewEntrySchema.extend({ action: z.literal("REVIEW_ESTIMATED") }).strict(), estimatedDraftOnlyEntrySchema, estimatedOrdinaryMedicineEntrySchema])).min(1).max(50),
   manifestSha256: estimatedReviewHashSchema,
 }).strict();
 
@@ -29,7 +29,7 @@ export async function reviewEstimatedShippingBatch(db: Pick<PrismaClient, "$tran
     await tx.$queryRaw`SELECT id FROM "ShippingIntegration" WHERE id = ${"melhor-envio"} FOR SHARE`;
     const integration = await tx.shippingIntegration.findUnique({ where: { id: "melhor-envio" }, select: { settings: true, revision: true } });
     const settings = integration ? shippingSettingsSchema.parse(integration.settings) : null;
-    if (manifest.products.some(entry => entry.action === "REVIEW_ESTIMATED") && (!settings?.enabled || settings.environment !== "production" || !settings.serviceIds.length)) throw new Error("Transporte de produção não configurado.");
+    if (manifest.products.some(entry => entry.action !== "DRAFT_ONLY") && (!settings?.enabled || settings.environment !== "production" || !settings.serviceIds.length)) throw new Error("Transporte de produção não configurado.");
     const products = await tx.product.findMany({
       where: { id: { in: manifest.products.map(row => row.productId) }, status: "ACTIVE", deletedAt: null }, orderBy: { id: "asc" },
       select: { id: true, name: true, ean: true, eanNormalized: true, category: true, status: true, deletedAt: true, updatedAt: true,
@@ -40,8 +40,12 @@ export async function reviewEstimatedShippingBatch(db: Pick<PrismaClient, "$tran
       const product = products.find(row => row.id === entry.productId);
       if (!product) throw new Error("Identidade ausente; lote cancelado.");
       const { action, ...reviewInput } = entry;
-      return { productId: product.id, action, revision: entry.expectedUpdatedAt, previousProfile: product.shippingProfile,
-        profile: entry.action === "DRAFT_ONLY" ? createEstimatedDraftOnly(product, entry) : reviewEstimatedShipping(product, reviewInput, settings!.serviceIds) };
+      const base = { productId: product.id, action, revision: entry.expectedUpdatedAt, previousProfile: product.shippingProfile };
+      if (entry.action === "DRAFT_ONLY") return { ...base, profile: createEstimatedDraftOnly(product, entry) };
+      if (entry.action === "REVIEW_MELHOR_ENVIO_ORDINARY") {
+        return { ...base, profile: reviewOrdinaryMedicineShipping(product, entry, settings!.serviceIds), ordinaryMedicineEvidence: entry.ordinaryMedicineEvidence };
+      }
+      return { ...base, profile: reviewEstimatedShipping(product, reviewInput, settings!.serviceIds) };
     });
     const snapshotSha256 = estimatedReviewSha256(products);
     const planSha256 = estimatedReviewSha256({ policyVersion: ESTIMATED_REVIEW_POLICY, actorId, manifest, integration, snapshotSha256, products: plans });

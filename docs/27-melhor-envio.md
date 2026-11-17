@@ -159,6 +159,18 @@ Aceitação da carga e embalagem é específica por transportadora. Uma cotaçã
 
 Regressões locais: interseção de cesta mista, compatibilidade legada, lista vazia, medicamento, finalização com serviço não aprovado, cotação antiga após alteração do perfil, preservação nos schemas/rascunhos e edição real dos seletores/formulário no Chromium. Suíte de frete e checkout: 83/83 aprovados; ESLint dirigido ao módulo, formulários e API de simulação aprovado. Sem alteração de dependências, banco ou permissões.
 
+## Revisão de medicamentos comuns em lote em 16/11/2026
+
+O chamado 2100064 confirmou a emissão de etiquetas Melhor Envio para PAC e SEDEX dos Correios para medicamentos de uso comum, sem controle especial e sem refrigeração. A confirmação condiciona a postagem à embalagem adequada, documentação fiscal, regras dos Correios e orientações da agência. [Confirmação do chamado](https://mail.google.com/mail/u/0/#all/1a1e61576d1c1c8b) · [Regras dos Correios](https://www.correios.com.br/enviar/proibicoes-e-restricoes)
+
+Entre as fontes aceitas pelo revisor estão os domínios oficiais da Baldacci, Apsen e Farmoquímica. Cada manifesto indica a bula conferida para a apresentação e a conservação. [Divelol](https://www.lbaldacci.com.br/wp/wp-content/uploads/2022/02/01_Divelol_Bula_Paciente.pdf) · [Miosan](https://produtos.apsen.com.br/miosan) · [Miosan ODT](https://produtos.apsen.com.br/miosan-odt) · [Laio](https://www.fqmgrupo.com.br/fqmfarma/userfiles/products/17824782336a3e759984494.pdf)
+
+No revisor de perfis estimados, a ação `REVIEW_MELHOR_ENVIO_ORDINARY` se aplica a apresentações ativas classificadas como `MEDICINE` e `ORDINARY`. A evidência por item vincula chamado, apresentação, registro, bula, faixa de conservação, embalagem original, ausência de refrigeração e proteções indicadas. A revisão conserva peso, dimensões e base física. A operação aceita somente os serviços ativos PAC 1 e SEDEX 2, como carga `medication`. O manifesto preserva a classificação comercial, as exigências de receita, a conferência farmacêutica e as restrições existentes do perfil. Insulinas, controlados e produtos que exigem refrigeração ficam fora desta ação.
+
+Use um manifesto de até 50 itens com captura vigente. Rode o operador em simulação para revisar `planSha256` e as diferenças dos perfis. Aplique com `--apply --expect-plan <SHA-256>`. Mudanças na identidade, revisão, perfil, configurações ou estado do lote invalidam a aplicação. A auditoria registra a evidência e os perfis antes e depois. Conferir PAC/SEDEX na cotação pública após a aplicação.
+
+Na expedição, a farmácia deve preservar a faixa de temperatura, embalagem original e proteções indicadas na bula durante o transporte. O farmacêutico confere receita e condições da unidade antes de dispensar. [RDC 44/2009, solicitação remota e transporte](https://bvsms.saude.gov.br/bvs/saudelegis/anvisa/2009/rdc0044_17_08_2009.html)
+
 ## Referências oficiais da API
 
 - https://docs.melhorenvio.com.br/reference/introducao-api-melhor-envio

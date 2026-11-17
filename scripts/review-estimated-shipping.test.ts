@@ -16,7 +16,7 @@ async function fixture() {
   vm.runInNewContext((await bundle).outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), console, Buffer, URL, Date, process: { argv: ["node", "fixture.ts"], env: {} } });
   const api = loaded.exports;
   const profile = { enabled: false, transportReviewed: false, measurementBasis: "estimated", weightGrams: 300, lengthCm: 24, widthCm: 15, heightCm: 10, reference: null, cargoKinds: ["unspecified"], approvedServiceIds: [], extra: "preserved" };
-  const rows = [0, 1].map(i => ({ id: `synthetic-${i}`, name: `Higiene sintética ${i}`, ean: "7890000000000", eanNormalized: "07890000000000", category: "Higiene", status: "ACTIVE", deletedAt: null, updatedAt: new Date(0), shippingProfile: structuredClone(profile) as unknown, logisticsEvidence: null, requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false, catalogClassification: null }));
+  const rows = [0, 1].map(i => ({ id: `synthetic-${i}`, name: `Higiene sintética ${i}`, ean: "7890000000000", eanNormalized: "07890000000000", category: "Higiene", status: "ACTIVE", deletedAt: null, updatedAt: new Date(0), shippingProfile: structuredClone(profile) as unknown, logisticsEvidence: null, requiresPrescription: false, prescriptionType: "UNREVIEWED", isPopularPharmacy: false, catalogClassification: null as unknown }));
   const settings = { enabled: true, environment: "production", originPostalCode: "87525000", preparationDays: 1, serviceIds: [1, 3], contactEmail: "synthetic@example.com" };
   let active = true, failCas = false, failAudit = false, phase = 0;
   const locks: string[] = [];
@@ -103,4 +103,54 @@ test("CLI e manifesto estritos: dry-run padrão, hash obrigatório e limite50", 
   await assert.rejects(f.run(false, undefined, { ...f.input, extra: true }));
   const products = Array.from({ length: 51 }, (_, i) => ({ ...f.input.products[0], productId: `synthetic-${i}` }));
   await assert.rejects(f.run(false, undefined, { ...f.input, products, manifestSha256: estimatedReviewSha256(products) }));
+});
+
+test("revisão Melhor Envio audita evidência, vincula a prova ao plano e reverte falha de CAS", async () => {
+  const f = await fixture();
+  f.settings.serviceIds = [1, 2, 3];
+  f.rows.forEach(row => {
+    row.name = "Losartana sintética 50 mg 30 comprimidos";
+    row.category = "Medicamentos";
+    row.requiresPrescription = true;
+    row.prescriptionType = "ORDINARY";
+    row.catalogClassification = { kind: "MEDICINE", medicineClass: "GENERIC", ethical: false, otc: false };
+  });
+  const ordinaryMedicineEvidence = {
+    carrierCaseId: "2100064", presentation: "50 MG COM REV CT BL X 30", registration: "1000000000001",
+    leafletUrl: "https://consultas.anvisa.gov.br/synthetic.pdf", minTemperatureC: 15, maxTemperatureC: 30,
+    originalPackaging: true, refrigerationRequired: false,
+  };
+  const products = f.manifest().products.map(entry => ({
+    ...entry, action: "REVIEW_MELHOR_ENVIO_ORDINARY", cargoKinds: ["medication"], approvedServiceIds: [1, 2], ordinaryMedicineEvidence,
+  }));
+  const value = { policyVersion: "review-estimated-shipping-v1", products, manifestSha256: estimatedReviewSha256(products) };
+  f.settings.enabled = false;
+  await assert.rejects(f.run(false, undefined, value), /Transporte de produção/);
+  f.settings.enabled = true;
+  const before = structuredClone(f.rows);
+  const plan = await f.run(false, undefined, value);
+  assert.equal(f.writes.length, 0);
+  const changed = products.map(entry => ({ ...entry, ordinaryMedicineEvidence: { ...ordinaryMedicineEvidence, protectFromLight: true } }));
+  await assert.rejects(f.run(true, plan.planSha256, { ...value, products: changed, manifestSha256: estimatedReviewSha256(changed) }), /Plano mudou/);
+  assert.equal(f.writes.length, 0);
+  await f.run(true, plan.planSha256, value);
+  for (const row of f.rows) {
+    const profile = row.shippingProfile as Record<string, unknown>;
+    assert.equal(profile.enabled, true);
+    assert.deepEqual(profile.cargoKinds, ["medication"]);
+    assert.deepEqual(profile.approvedServiceIds, [1, 2]);
+    assert.equal(row.prescriptionType, "ORDINARY");
+  }
+  for (const audit of f.audits) {
+    const data = structuredClone(audit) as { data: { metadata: { operation: string; manifestEntry: { ordinaryMedicineEvidence: unknown } } } };
+    assert.equal(data.data.metadata.operation, "REVIEW_MELHOR_ENVIO_ORDINARY");
+    assert.deepEqual(data.data.metadata.manifestEntry.ordinaryMedicineEvidence, ordinaryMedicineEvidence);
+  }
+  f.rows.splice(0, f.rows.length, ...structuredClone(before));
+  f.writes.length = 0;
+  f.audits.length = 0;
+  f.failCas();
+  await assert.rejects(f.run(true, plan.planSha256, value), /lote revertido/);
+  assert.deepEqual(f.rows, before);
+  assert.equal(f.audits.length, 0);
 });
