@@ -180,6 +180,7 @@ test("evidência não aceita armazenamento refrigerado, faixa invertida ou campo
   for (const leafletUrl of [
     "https://www.lbaldacci.com.br/exemplo.pdf", "https://produtos.apsen.com.br/exemplo",
     "https://www.fqmgrupo.com.br/exemplo.pdf", "https://momentafarma.com.br/exemplo.pdf",
+    "https://www.pharlab.com.br/exemplo.pdf",
   ]) {
     assert.doesNotThrow(() => reviewOrdinaryMedicineShipping(row, {
       ...input, ordinaryMedicineEvidence: { ...ordinaryMedicineEvidence, leafletUrl },
