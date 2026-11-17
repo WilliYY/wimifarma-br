@@ -385,6 +385,8 @@ test("Comprar usa o limite atualizado quando outra aba altera a cesta antes do c
 
 test("card rejeita letras, sinais e frações; normaliza vazio, zero e limite físico", async () => {
   await fixture(async page => {
+    await page.clock.install();
+    await page.clock.pauseAt(await page.evaluate(() => Date.now() + 500));
     await page.getByRole("button", { name: "Adicionar", exact: true }).click();
     const input = page.getByRole("textbox", { name: quantityLabel });
     await input.fill("3");
@@ -413,8 +415,13 @@ test("card rejeita letras, sinais e frações; normaliza vazio, zero e limite f�
     await expect(input).toHaveValue("1");
     await expectCartQuantity(page, 1);
     await page.getByRole("button", { name: "Diminuir Produto sintético", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Adicionar", exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Adicionar", exact: true }).click();
+    const add = page.getByRole("button", { name: "Adicionar", exact: true });
+    await expect(add).toBeVisible();
+    await add.click();
+    await expect(input).toHaveCount(0);
+    await page.clock.runFor(450);
+    await page.clock.resume();
+    await add.click();
     await expect(input).toHaveValue("1");
   });
 });
