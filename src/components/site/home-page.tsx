@@ -12,6 +12,7 @@ import type { PublicBrand } from "@/features/products/brands";
 import type { HomeShortcutItem } from "@/features/products/home-shortcuts";
 import type { HomeCollections } from "@/features/products/home-collections";
 import { CustomerReviews } from "./customer-reviews";
+import { useBlackFridayCampaign } from "./black-friday-provider";
 
 export type HomeReview = {
   comment: string;
@@ -29,8 +30,9 @@ export function HomePage({ brands = [], collections, customerReviews, shortcuts 
   customerReviews: HomeReview[];
   shortcuts: HomeShortcutItem[];
 }) {
+  const blackFridayActive = useBlackFridayCampaign();
   return <CatalogShippingProvider>
-    <section className="pharma-clouds bg-white pt-36 sm:pt-40 lg:pt-56">
+    <section data-black-friday-glow={blackFridayActive ? "blue" : undefined} className="pharma-clouds bg-white pt-36 sm:pt-40 lg:pt-56">
       <h1 className="sr-only">Wimifarma</h1>
       <HomeShortcuts items={shortcuts} />
       <div className="px-4 sm:px-6 lg:px-8"><div className="mx-auto max-w-7xl"><HomeMediaGallery /></div></div>

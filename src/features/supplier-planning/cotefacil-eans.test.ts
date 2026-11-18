@@ -121,11 +121,11 @@ test("painel baixa CSV local após leitura ADMIN, sem transmitir ao Cotefácil",
     }
   };
   let panel = render();
-  assert.equal(find(panel, "Baixar CSV")?.props.disabled, true);
+  assert.equal(find(panel, "Baixar CSV de EANs")?.props.disabled, true);
   await (find(panel, "Carregar EANs do site")!.props.onClick as () => Promise<void>)();
   panel = render();
-  assert.equal(find(panel, "Baixar CSV")?.props.disabled, false);
-  await (find(panel, "Baixar CSV")!.props.onClick as () => Promise<void>)();
+  assert.equal(find(panel, "Baixar CSV de EANs")?.props.disabled, false);
+  await (find(panel, "Baixar CSV de EANs")!.props.onClick as () => Promise<void>)();
   assert.equal(clicked, 1);
   assert.equal(anchor.download, "cotefacil-consulta.csv");
   assert.equal(blobs[0].type, "text/csv;charset=utf-8");

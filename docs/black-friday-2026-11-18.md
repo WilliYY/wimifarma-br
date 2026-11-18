@@ -4,6 +4,10 @@ Campanha visual autorizada em 18/11/2026: selo pequeno `Black Friday` na faixa s
 
 A identidade da loja, fotos, preços, descontos calculados, estoque, ações de compra, regras de receita e benefícios de frete continuam usando os contratos existentes. O selo identifica a campanha; não cria desconto ou condição comercial. Não há banner grande, dependência, integração, migration ou alteração de dados.
 
+## Glow azul no início da home
+
+A pedido do lojista, a seção inicial da home recebe um halo azul/ciano suave durante a mesma campanha. A referência cromática é a [Black Shop Samsung 2026](https://news.samsung.com/br/samsung-aposta-em-experiencia-do-consumidor-e-beneficios-exclusivos-para-a-black-friday-2026); nenhuma imagem, marca ou composição externa foi copiada. O atributo `data-black-friday-glow="blue"` só existe enquanto `useBlackFridayCampaign()` está ativo. O CSS altera apenas o pseudo-elemento de fundo já existente, com gradientes estáticos, sem blur adicional, nova camada DOM ou bloqueio de cliques. Header, logo, espaçamentos e galeria permanecem. Ao terminar/desligar a campanha, o atributo sai e o fundo anterior volta automaticamente. O modificador é exclusivo da home e não altera os demais usos de `.pharma-clouds`.
+
 ## Vigência e retirada
 
 Fonte única: `src/features/offers/black-friday.ts`.
