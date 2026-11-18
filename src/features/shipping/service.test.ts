@@ -19,7 +19,8 @@ test("direct Correios works without ME services and revokes stale signed conditi
   } }] });
   const env = { AUTH_SECRET: "synthetic-direct-checkout-key", CORREIOS_CHECKOUT_ENABLED: "true", CORREIOS_DELEGATED_ACCESS_KEY: "synthetic-key" };
   const product = { id: "synthetic-product", name: "Fralda sintética 20 unidades", slug: "synthetic", category: "Higiene", price: "50.00", promotionalPrice: null, status: "ACTIVE", deletedAt: null, stock: 10, requiresPrescription: false, isPopularPharmacy: false,
-    shippingProfile: { enabled: true, transportReviewed: true, cargoKinds: ["general"], weightGrams: 300, widthCm: 15, heightCm: 5, lengthCm: 20 }, updatedAt: new Date(0), inventorySource: "PHARMACY", supplierOffers: [] };
+    prescriptionType: "UNREVIEWED" as PrescriptionType,
+    shippingProfile: { enabled: true, transportReviewed: true, cargoKinds: ["general"], approvedCorreiosServiceCodes: undefined as ("03298" | "03220")[] | undefined, weightGrams: 300, widthCm: 15, heightCm: 5, lengthCm: 20 }, updatedAt: new Date(0), inventorySource: "PHARMACY", supplierOffers: [] };
   const integration = { settings: { ...defaultShippingSettings, enabled: true, serviceIds: [] as number[], contactEmail: "qa@example.invalid" }, revision: 1 };
   const tx = { product: { findMany: async () => [product], findUnique: async () => product }, shippingIntegration: { findUnique: async () => integration } };
   const fixture = { tx, integration, tokenCalls: 0 };
@@ -61,6 +62,31 @@ test("direct Correios works without ME services and revokes stale signed conditi
   product.name = "Fralda sintética 20 unidades";
   integration.settings.serviceIds = [1];
   assert.equal((await service.exports.quoteCart("01001000", items)).length, 2, "known ME outage preserves direct options");
+  integration.settings.serviceIds = [];
+  product.shippingProfile.approvedCorreiosServiceCodes = ["03298"];
+  product.shippingProfile.cargoKinds = ["medication", "liquid"];
+  product.name = "Medicamento sintético solução 20ml";
+  product.category = "Medicamentos";
+  const mip = await service.exports.quoteCart("01001000", items);
+  assert.deepEqual(Array.from(mip, option => option.serviceCode), ["03298"]);
+  await service.exports.validateOrderShipping(tx, { ...input, shippingToken: mip[0].token });
+  product.requiresPrescription = true;
+  product.prescriptionType = "ORDINARY";
+  const ordinary = await service.exports.quoteCart("01001000", items);
+  await service.exports.validateOrderShipping(tx, { ...input, shippingToken: ordinary[0].token });
+  const forbidden = { ...verifyShippingQuote(ordinary[0].token, env.AUTH_SECRET), serviceId: 3220, serviceCode: "03220" as const };
+  await assert.rejects(service.exports.validateOrderShipping(tx, { ...input, shippingToken: signShippingQuote(forbidden, env.AUTH_SECRET) }), /não aceita/);
+  product.shippingProfile.approvedCorreiosServiceCodes = ["03220"];
+  await assert.rejects(service.exports.validateOrderShipping(tx, { ...input, shippingToken: ordinary[0].token }), /não aceita/);
+  product.shippingProfile.approvedCorreiosServiceCodes = ["03298", "03220"];
+  await assert.rejects(service.exports.validateOrderShipping(tx, { ...input, shippingToken: ordinary[0].token }), /carrinho ou o CEP mudou/, "approval expansion still requires a fresh fingerprint");
+  product.shippingProfile.approvedCorreiosServiceCodes = [];
+  await assert.rejects(service.exports.quoteCart("01001000", items), /transporte autorizado/);
+  product.shippingProfile.approvedCorreiosServiceCodes = ["03298"];
+  for (const prescriptionType of ["ANTIMICROBIAL", "CONTROLLED", "UNREVIEWED"] as const) {
+    product.prescriptionType = prescriptionType;
+    await assert.rejects(service.exports.quoteCart("01001000", items), /atendimento/);
+  }
 });
 
 test("medication carrier acceptance is enforced both when quoting and submitting a signed quote", async () => {

@@ -1,11 +1,50 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { compareCorreios, correiosCheckoutEligible, getCorreiosCheckoutConfig, quoteCorreiosCheckout } from "./correios-checkout";
-import { defaultShippingSettings, ShippingError, shippingQuotePayloadSchema } from "./schema";
+import { defaultShippingSettings, ShippingError, shippingProfileSchema, shippingQuotePayloadSchema } from "./schema";
 
 const settings = { ...defaultShippingSettings, enabled: true, serviceIds: [] };
 const product = { name: "Fralda sintética 20 unidades", category: "Higiene", requiresPrescription: false, isPopularPharmacy: false,
   shippingProfile: { enabled: true, transportReviewed: true, cargoKinds: ["general"], approvedServiceIds: [1], weightGrams: 300, widthCm: 15, heightCm: 5, lengthCm: 20 } };
+test("direct approval is independent, service-specific and permits ordinary medicines and reviewed liquids", () => {
+  const approved = { ...product.shippingProfile, approvedServiceIds: [], approvedCorreiosServiceCodes: ["03298"] };
+  for (const medicine of [
+    { requiresPrescription: false, prescriptionType: "UNREVIEWED" as const },
+    { requiresPrescription: true, prescriptionType: "ORDINARY" as const },
+  ]) {
+    const item = { ...product, ...medicine, name: "Medicamento sintético solução 20ml", category: "Medicamentos", catalogClassification: { kind: "MEDICINE" },
+      shippingProfile: { ...approved, cargoKinds: ["medication", "liquid"] } };
+    assert.equal(correiosCheckoutEligible(settings, [item], "03298"), true);
+    assert.equal(correiosCheckoutEligible(settings, [item, { ...product, shippingProfile: approved }], "03298"), true, "mixed liquid medicine and dry cargo share the approved code");
+    assert.equal(correiosCheckoutEligible(settings, [item], "03220"), false);
+    for (const prescriptionType of ["CONTROLLED", "ANTIMICROBIAL", "UNREVIEWED"] as const) {
+      assert.equal(correiosCheckoutEligible(settings, [{ ...item, requiresPrescription: true, prescriptionType }]), false);
+    }
+    assert.equal(correiosCheckoutEligible(settings, [{ ...item, isPopularPharmacy: true }]), false);
+  }
+  assert.equal(correiosCheckoutEligible(settings, [{ ...product, shippingProfile: approved }], "03298"), true);
+  assert.equal(correiosCheckoutEligible(settings, [{ ...product, shippingProfile: { ...approved, approvedCorreiosServiceCodes: [] } }]), false);
+  assert.equal(correiosCheckoutEligible(settings, [product], "03220"), true, "legacy dry profiles keep existing behavior");
+  assert.equal(correiosCheckoutEligible(settings, [
+    { ...product, shippingProfile: approved },
+    { ...product, shippingProfile: { ...approved, approvedCorreiosServiceCodes: ["03220"] } },
+  ]), false, "cart requires one code approved for every product");
+  assert.equal(shippingProfileSchema.safeParse({ ...approved, approvedCorreiosServiceCodes: ["03298", "03298"] }).success, false);
+  assert.equal(shippingProfileSchema.safeParse({ ...approved, approvedCorreiosServiceCodes: ["1"] }).success, false);
+});
+
+test("specific direct approval preserves dangerous and unclassified cargo blocks", () => {
+  const approved = { ...product.shippingProfile, approvedCorreiosServiceCodes: ["03298", "03220"] };
+  for (const cargo of ["aerosol", "perishable", "temperature_sensitive", "unspecified"]) {
+    assert.equal(correiosCheckoutEligible(settings, [{ ...product, shippingProfile: { ...approved, cargoKinds: [cargo] } }]), false, cargo);
+  }
+  for (const name of ["Acetona", "Éter", "Formol", "Álcool gel", "Álcool etílico", "Solvente", "Removedor", "Inflamável", "Aerossol", "Pilha", "Bateria", "Aparelho elétrico", "Produto refrigerado"]) {
+    assert.equal(correiosCheckoutEligible(settings, [{ ...product, name, shippingProfile: approved }]), false, name);
+  }
+  for (const name of ["Creme sintético 50g", "Perfume sem álcool 50ml", "Colônia zero álcool 100ml", "Xampu sintético 200ml"]) {
+    assert.equal(correiosCheckoutEligible(settings, [{ ...product, name, shippingProfile: { ...approved, cargoKinds: ["liquid", "perfume"] } }]), true, name);
+  }
+});
 test("direct Correios requires opt-in and independent reviewed cargo", () => {
   assert.equal(getCorreiosCheckoutConfig({ CORREIOS_DELEGATED_ACCESS_KEY: "synthetic-key" }), null);
   assert.ok(getCorreiosCheckoutConfig({ CORREIOS_CHECKOUT_ENABLED: "true", CORREIOS_DELEGATED_ACCESS_KEY: "synthetic-key" }));
@@ -42,6 +81,14 @@ test("direct quote preserves the protected stack and declares the full products 
     assert.equal(url.searchParams.get("vlDeclarado"), "100.00");
     assert.equal(url.searchParams.get("servicosAdicionais"), url.pathname.endsWith("03298") ? "064" : "019");
   }
+  calls.length = 0;
+  const pac = await quoteCorreiosCheckout(config, "01001000", packing, 2, request, ["03298"]);
+  assert.deepEqual(pac.map(option => option.serviceCode), ["03298"]);
+  assert.equal(calls.length, 3);
+  assert.equal(calls.every(url => url.pathname.endsWith("03298")), true, "unapproved code never reaches CWS");
+  const pacCalls = calls.length;
+  assert.deepEqual(await quoteCorreiosCheckout(config, "01001000", packing, 2, request, []), []);
+  assert.equal(calls.length, pacCalls, "empty approval never reaches CWS");
   const before = calls.length;
   assert.deepEqual(await quoteCorreiosCheckout(config, "01001000", { ...packing, products: [{ ...packing.products[0], height: 100 }] }, 2, request), []);
   assert.equal(calls.length, before, "oversize stack never requests a quote");

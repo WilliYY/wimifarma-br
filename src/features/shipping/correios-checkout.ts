@@ -16,12 +16,25 @@ export function correiosCheckoutOriginEligible(settings: ShippingSettings) {
     && normalized(settings.originCity) === "ivate" && settings.originState === "PR";
 }
 
-export function correiosCheckoutEligible(settings: ShippingSettings, products: Product[]) {
+export function correiosCheckoutServiceCodes(settings: ShippingSettings, products: Product[]) {
+  return (["03298", "03220"] as const).filter(code => correiosCheckoutEligible(settings, products, code));
+}
+
+export function correiosCheckoutEligible(settings: ShippingSettings, products: Product[], serviceCode?: "03298" | "03220"): boolean {
+  if (!serviceCode) return correiosCheckoutServiceCodes(settings, products).length > 0;
   return correiosCheckoutOriginEligible(settings) && products.length > 0
     && products.every(product => {
       const profile = shippingProfileSchema.safeParse(product.shippingProfile);
       const classification = product.catalogClassification;
       const name = normalized(product.name);
+      if (profile.success && profile.data.approvedCorreiosServiceCodes !== undefined) {
+        const nonAlcoholicName = name.replace(/\b(?:sem|zero|0%?)\s+(?:alcool\w*|etanol)\b/g, "");
+        return profile.data.enabled && profile.data.approvedCorreiosServiceCodes.includes(serviceCode)
+          && !!profile.data.cargoKinds?.length
+          && profile.data.cargoKinds.every(cargo => ["general", "industrialized_food", "medication", "liquid", "perfume"].includes(cargo))
+          && !requiresPharmacyShippingSupport(product)
+          && !/\b(aerossol\w*|aerosol\w*|pressurizad\w*|inflamav\w*|alcool\w*|etanol|acetona|eter|formol|formaldeido|solvent\w*|removedor\w*|pilhas?|baterias?|eletric\w*|elec?tronic\w*|recarreg\w*|refriger\w*|pereciv\w*|congelad\w*|insulina\w*)\b/.test(nonAlcoholicName);
+      }
       return profile.success && profile.data.enabled && !!profile.data.cargoKinds?.length
         && (profile.data.approvedServiceIds === undefined || profile.data.approvedServiceIds.length > 0)
         && profile.data.cargoKinds.every(cargo => cargo === "general" || cargo === "industrialized_food")
@@ -55,7 +68,8 @@ export async function compareCorreios(primary: Promise<ShippingOption[]>, direct
 }
 
 export async function quoteCorreiosCheckout(config: NonNullable<ReturnType<typeof getCorreiosCheckoutConfig>>, postalCode: string,
-  packing: PackingRequest, preparationDays: number, request = fetch): Promise<ShippingOption[]> {
+  packing: PackingRequest, preparationDays: number, request = fetch, serviceCodes?: ("03298" | "03220")[]): Promise<ShippingOption[]> {
+  if (serviceCodes?.length === 0) return [];
   const parcel = {
     weightGrams: packing.products.reduce((sum, item) => sum + Math.ceil(item.weight * 1000) * item.quantity, 0),
     widthCm: Math.max(8, ...packing.products.map(item => Math.ceil(item.width))),
@@ -66,7 +80,7 @@ export async function quoteCorreiosCheckout(config: NonNullable<ReturnType<typeo
   if (parcel.weightGrams <= 0 || parcel.weightGrams > 30000 || Math.max(parcel.widthCm, parcel.heightCm, parcel.lengthCm) > 100
     || parcel.widthCm + parcel.heightCm + parcel.lengthCm > 200 || !Number.isSafeInteger(insuranceValueCents) || insuranceValueCents <= 0) return [];
   try {
-    const { quotes } = await quoteCorreios(config, { originPostalCode: "87525000", destinationPostalCode: postalCode, ...parcel, insuranceValueCents }, request);
+    const { quotes } = await quoteCorreios(config, { originPostalCode: "87525000", destinationPostalCode: postalCode, ...parcel, insuranceValueCents, serviceCodes }, request);
     return quotes.map(quote => shippingOptionSchema.parse({ provider: "correios", serviceId: Number(quote.code), serviceCode: quote.code,
       carrier: "Correios", service: quote.name, priceCents: quote.priceCents, deliveryDays: quote.deliveryDays + preparationDays,
       packaging: { version: 1, calculationMethod: "provider-conservative-envelope", inputMeasurementBasis: packing.inputMeasurementBasis,

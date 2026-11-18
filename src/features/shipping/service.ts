@@ -13,7 +13,7 @@ import { getSupplierPreparationEstimate } from "@/features/supplier-catalog/prep
 import { cartShippingBenefit } from "./benefit-service";
 import { resolveAttainableShippingGoals } from "./attainable-goal";
 import { compareSuperFrete, getSuperFreteConfig, quoteSuperFrete, superFreteBenefit, superFretePostingLocation, superFreteServices } from "./superfrete";
-import { compareCorreios, correiosBenefit, correiosCheckoutEligible, correiosPostingLocation, getCorreiosCheckoutConfig, quoteCorreiosCheckout } from "./correios-checkout";
+import { compareCorreios, correiosBenefit, correiosCheckoutEligible, correiosCheckoutServiceCodes, correiosPostingLocation, getCorreiosCheckoutConfig, quoteCorreiosCheckout } from "./correios-checkout";
 
 export const shippingProductSelect = { ...supplierOfferInclude, ean: true, inventorySource: true, id: true, name: true, slug: true, imageUrl: true, category: true, catalogClassification: true, price: true, promotionalPrice: true, status: true, stock: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, shippingProfile: true, updatedAt: true, cashbackEnabled: true, cashbackRateBps: true, wimicoinsEnabled: true, wimicoinsRateBps: true } satisfies Prisma.ProductSelect;
 function signingKey() { const key = process.env.AUTH_SECRET; if (!key) throw new ShippingError("O frete está temporariamente indisponível.", 503); return key; }
@@ -30,7 +30,8 @@ export async function quoteCart(postalCode: string, items: CheckoutRequest["item
   const profiles = new Map(products.map(product => [product.id, validateShippingProduct(product)]));
   const serviceIds = permittedShippingServices(settings.serviceIds, products);
   const correios = getCorreiosCheckoutConfig();
-  const directEligible = !!correios && correiosCheckoutEligible(settings, products);
+  const directServiceCodes = correios ? correiosCheckoutServiceCodes(settings, products) : [];
+  const directEligible = directServiceCodes.length > 0;
   if (!serviceIds.length && !directEligible) throw new ShippingError("Este carrinho precisa de um serviço de transporte autorizado para todos os produtos. Consulte a farmácia.", 422);
   // Bound provider packing work, without allocating or pricing one parcel per unit.
   if (items.reduce((sum, item) => sum + item.quantity, 0) > AUTOMATIC_QUOTE_MAX_UNITS) throw new ShippingError(AUTOMATIC_QUOTE_LIMIT_MESSAGE);
@@ -60,7 +61,7 @@ export async function quoteCart(postalCode: string, items: CheckoutRequest["item
       );
       return [...melhorOptions, ...superFreteOptions];
     })(),
-    directEligible ? quoteCorreiosCheckout(correios!, postalCode, packing, preparationDays) : Promise.resolve([]),
+    directEligible ? quoteCorreiosCheckout(correios!, postalCode, packing, preparationDays, fetch, directServiceCodes) : Promise.resolve([]),
   );
   const options = primaryOptions.filter(option => option.provider === "melhor-envio");
   const superFreteOptions = primaryOptions.filter(option => option.provider === "superfrete");
@@ -92,7 +93,7 @@ export async function validateOrderShipping(tx: Prisma.TransactionClient, input:
   const permitted = permittedShippingServices(settings.serviceIds, products);
   const superFrete = payload.provider === "superfrete";
   const direct = payload.provider === "correios";
-  if ((direct ? !getCorreiosCheckoutConfig() || !correiosCheckoutEligible(settings, products) : !permitted.includes(payload.serviceId)) || (superFrete && (!getSuperFreteConfig() || !superFreteServices(settings, permitted, products).some(id => id === payload.serviceId)))) {
+  if ((direct ? !getCorreiosCheckoutConfig() || !correiosCheckoutEligible(settings, products, payload.serviceCode) : !permitted.includes(payload.serviceId)) || (superFrete && (!getSuperFreteConfig() || !superFreteServices(settings, permitted, products).some(id => id === payload.serviceId)))) {
     throw new ShippingError("O serviço de transporte não aceita os itens deste carrinho. Calcule o frete novamente.", 409);
   }
   if (payload.postalCode !== input.address.postalCode || payload.fingerprint !== shippingFingerprint(input.items, products)) throw new ShippingError("O carrinho ou o CEP mudou. Calcule o frete novamente.", 409);

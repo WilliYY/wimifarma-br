@@ -39,6 +39,8 @@ export type ShippingSettings = z.infer<typeof shippingSettingsSchema>;
 export const shippingProfileSchema = z.object({
   cargoKinds: shippingCargoKindsSchema.optional(),
   approvedServiceIds: shippingServiceIdsSchema.optional(),
+  approvedCorreiosServiceCodes: z.array(z.enum(["03298", "03220"])).max(2).optional()
+    .refine(codes => !codes || new Set(codes).size === codes.length, "Informe cada serviço dos Correios uma única vez."),
   reference: shippingReferenceSchema.nullable().optional(),
   measurementBasis: z.enum(["measured", "estimated"]).default("measured"),
   enabled: z.boolean(),

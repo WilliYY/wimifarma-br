@@ -27,6 +27,7 @@ type CorreiosQuoteInput = {
   widthCm: number;
   heightCm: number;
   insuranceValueCents?: number;
+  serviceCodes?: ("03298" | "03220")[];
 };
 
 export class CorreiosError extends Error {
@@ -120,6 +121,8 @@ async function getAccessToken({ authentication, contract }: CorreiosConfig, requ
 }
 
 export async function quoteCorreios(config: CorreiosConfig, input: CorreiosQuoteInput, request = fetch) {
+  const allowedServices = services.filter(service => input.serviceCodes === undefined || input.serviceCodes.some(code => code === service.code));
+  if (!allowedServices.length) return { quotes: [], unavailableServices: [] };
   const postalCodes = {
     cepOrigem: postalCode(input.originPostalCode),
     cepDestino: postalCode(input.destinationPostalCode),
@@ -145,7 +148,7 @@ export async function quoteCorreios(config: CorreiosConfig, input: CorreiosQuote
   });
   const timeParams = new URLSearchParams(postalCodes);
 
-  const results = await Promise.allSettled(services.map(async (service) => {
+  const results = await Promise.allSettled(allowedServices.map(async (service) => {
     const insuredParams = new URLSearchParams(priceParams);
     const insuranceCode = service.code === "03298" ? "064" : "019";
     if (input.insuranceValueCents !== undefined) {
@@ -193,7 +196,7 @@ export async function quoteCorreios(config: CorreiosConfig, input: CorreiosQuote
     const unavailable = results.some((result) => result.status === "rejected" && result.reason instanceof CorreiosError && result.reason.status === 503);
     throw new CorreiosError(unavailable ? 503 : 502);
   }
-  const unavailableServices = services.filter((_, index) => {
+  const unavailableServices = allowedServices.filter((_, index) => {
     const result = results[index];
     return result.status === "rejected" || !result.value;
   }).map(({ code }) => code);
