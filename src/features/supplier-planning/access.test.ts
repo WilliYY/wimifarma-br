@@ -29,7 +29,7 @@ test("planejamento de fornecedores permite somente ADMIN e bloqueia URL direta a
   }
 });
 
-test("catálogo Cotefácil exige ADMIN antes de consultar somente EANs de produtos ativos e identidades públicas", async () => {
+test("catálogo Cotefácil exige ADMIN antes de consultar EANs e nomes de produtos ativos e identidades públicas", async () => {
   const result = await build({
     entryPoints: ["src/app/api/admin/fornecedores/cotefacil/eans/route.ts"],
     bundle: true,
@@ -72,8 +72,8 @@ test("catálogo Cotefácil exige ADMIN antes de consultar somente EANs de produt
         getPublicCatalogIdentities: async () => {
           identityReads++;
           return [
-            { ean: "0012345678905", gtinCanonical: "00012345678905" },
-            { ean: "7896181915638", gtinCanonical: "07896181915638" },
+            { ean: "0012345678905", gtinCanonical: "00012345678905", name: "Duplicado" },
+            { ean: "7896181915638", gtinCanonical: "07896181915638", name: "Identidade pública" },
           ];
         },
         getPrisma: () => ({
@@ -81,7 +81,7 @@ test("catálogo Cotefácil exige ADMIN antes de consultar somente EANs de produt
             findMany: async (query: unknown) => {
               queries.push(query);
               if (offline) throw new Error("Conexão indisponível");
-              return [{ ean: "012345678905", eanNormalized: "00012345678905" }];
+              return [{ ean: "012345678905", eanNormalized: "00012345678905", name: "Produto público" }];
             },
           },
         }),
@@ -101,11 +101,17 @@ test("catálogo Cotefácil exige ADMIN antes de consultar somente EANs de produt
     assert.equal(response.headers.get("Cache-Control"), "private, no-store");
     assert.deepEqual(JSON.parse(JSON.stringify(queries)), [{
       where: { status: "ACTIVE", deletedAt: null },
-      select: { ean: true, eanNormalized: true },
+      select: { ean: true, eanNormalized: true, name: true },
       orderBy: { id: "asc" },
     }]);
     assert.deepEqual(await response.json(), {
-      data: { eans: ["012345678905", "7896181915638"], duplicates: 1, invalid: 0, missing: 0 },
+      data: {
+        eans: ["012345678905", "7896181915638"], duplicates: 1, invalid: 0, missing: 0,
+        items: [
+          { ean: "012345678905", description: "Produto público" },
+          { ean: "7896181915638", description: "Identidade pública" },
+        ],
+      },
     });
 
     offline = true;

@@ -16,14 +16,14 @@ export async function GET() {
     const [products, identities] = await Promise.all([
       getPrisma().product.findMany({
         where: { status: "ACTIVE", deletedAt: null },
-        select: { ean: true, eanNormalized: true },
+        select: { ean: true, eanNormalized: true, name: true },
         orderBy: { id: "asc" },
       }),
       getPublicCatalogIdentities(),
     ]);
     const data = collectCatalogEans([
       ...products,
-      ...identities.map(({ ean, gtinCanonical }) => ({ ean, eanNormalized: gtinCanonical })),
+      ...identities.map(({ ean, gtinCanonical, name }) => ({ ean, eanNormalized: gtinCanonical, name })),
     ]);
 
     return NextResponse.json({ data }, { headers });

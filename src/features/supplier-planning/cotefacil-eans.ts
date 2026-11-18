@@ -25,9 +25,28 @@ export function parseCotefacilEans(text: string) {
   return uniqueEans(text.split(/[\s,;]+/).filter(Boolean));
 }
 
-export function collectCatalogEans(products: readonly { ean: string | null; eanNormalized: string | null }[]) {
+export type CotefacilCatalogItem = { ean: string; description: string };
+
+export function buildCotefacilCsv(eans: readonly string[], items: readonly CotefacilCatalogItem[]) {
+  const descriptions = new Map(items.map(item => [normalizeGtin(item.ean), item.description]));
+  const escapeDescription = (text: string) => {
+    const value = /^[\s\uFEFF]*[=+@-]/.test(text) ? `'${text}` : text;
+    return `"${value.replaceAll('"', '""')}"`;
+  };
+  const valid = parseCotefacilEans(eans.join("\n"));
+  if (valid.invalid) throw new Error("Revise os EANs antes de baixar o CSV.");
+
+  return valid.eans.map(ean => {
+    const description = descriptions.get(normalizeGtin(ean));
+    if (!description?.trim()) throw new Error("Há EANs sem descrição pública no catálogo. Revise a lista antes de baixar o CSV.");
+    return `"${ean}",1,"${ean}",${escapeDescription(description)},"NAO INFORMADO"`;
+  }).join("\r\n") + (valid.eans.length ? "\r\n" : "");
+}
+
+export function collectCatalogEans(products: readonly { ean: string | null; eanNormalized: string | null; name?: string }[]) {
   let missing = 0;
-  const storedEans = products.flatMap(({ ean, eanNormalized }) => {
+  const descriptions = new Map<string, string>();
+  const storedEans = products.flatMap(({ ean, eanNormalized, name }) => {
     const original = ean?.trim() ?? "";
     const normalized = eanNormalized?.trim() ?? "";
     if (!original && !normalized) {
@@ -37,10 +56,17 @@ export function collectCatalogEans(products: readonly { ean: string | null; eanN
 
     const canonical = normalizeGtin(normalized);
     // Keep the stored barcode length when both fields identify the same product.
-    return [canonical && normalizeGtin(original) !== canonical ? normalized : original];
+    const value = canonical && normalizeGtin(original) !== canonical ? normalized : original;
+    const identity = normalizeGtin(value);
+    if (identity && name?.trim() && !descriptions.has(identity)) descriptions.set(identity, name);
+    return [value];
   });
   const result = uniqueEans(storedEans);
   result.eans.sort();
 
-  return { ...result, missing };
+  const items = result.eans.flatMap(ean => {
+    const description = descriptions.get(normalizeGtin(ean)!);
+    return description ? [{ ean, description }] : [];
+  });
+  return { ...result, missing, items };
 }
