@@ -13,6 +13,7 @@ import { getSupplierPreparationEstimate } from "@/features/supplier-catalog/prep
 import { cartShippingBenefit } from "./benefit-service";
 import { resolveAttainableShippingGoals } from "./attainable-goal";
 import { compareSuperFrete, getSuperFreteConfig, quoteSuperFrete, superFreteBenefit, superFretePostingLocation, superFreteServices } from "./superfrete";
+import { compareCorreios, correiosBenefit, correiosCheckoutEligible, correiosPostingLocation, getCorreiosCheckoutConfig, quoteCorreiosCheckout } from "./correios-checkout";
 
 export const shippingProductSelect = { ...supplierOfferInclude, ean: true, inventorySource: true, id: true, name: true, slug: true, imageUrl: true, category: true, catalogClassification: true, price: true, promotionalPrice: true, status: true, stock: true, requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true, shippingProfile: true, updatedAt: true, cashbackEnabled: true, cashbackRateBps: true, wimicoinsEnabled: true, wimicoinsRateBps: true } satisfies Prisma.ProductSelect;
 function signingKey() { const key = process.env.AUTH_SECRET; if (!key) throw new ShippingError("O frete está temporariamente indisponível.", 503); return key; }
@@ -20,7 +21,7 @@ function signingKey() { const key = process.env.AUTH_SECRET; if (!key) throw new
 export async function quoteCart(postalCode: string, items: CheckoutRequest["items"], discountCents = 0): Promise<ShippingSelection[]> {
   const integration = await readShippingIntegration();
   const { settings } = integration;
-  if (!settings.enabled || settings.environment !== "production" || !settings.serviceIds.length) throw new ShippingError("O envio para outras cidades ainda está em preparação. Consulte a farmácia ou escolha retirada.", 503);
+  if (!settings.enabled || settings.environment !== "production") throw new ShippingError("O envio para outras cidades ainda está em preparação. Consulte a farmácia ou escolha retirada.", 503);
   const products = await getPrisma().product.findMany({ where: { id: { in: items.map((i) => i.productId) } }, select: shippingProductSelect });
   const prepared = prepareCheckoutOrder(products.map(p => toSaleProduct(p)), items);
   if (!prepared.ok) throw new ShippingError(prepared.message, 409);
@@ -28,7 +29,9 @@ export async function quoteCart(postalCode: string, items: CheckoutRequest["item
   // A pending profile is not a failure of destination coverage or carrier acceptance.
   const profiles = new Map(products.map(product => [product.id, validateShippingProduct(product)]));
   const serviceIds = permittedShippingServices(settings.serviceIds, products);
-  if (!serviceIds.length) throw new ShippingError("Este carrinho precisa de um serviço de transporte autorizado para todos os produtos. Consulte a farmácia.", 422);
+  const correios = getCorreiosCheckoutConfig();
+  const directEligible = !!correios && correiosCheckoutEligible(settings, products);
+  if (!serviceIds.length && !directEligible) throw new ShippingError("Este carrinho precisa de um serviço de transporte autorizado para todos os produtos. Consulte a farmácia.", 422);
   // Bound provider packing work, without allocating or pricing one parcel per unit.
   if (items.reduce((sum, item) => sum + item.quantity, 0) > AUTOMATIC_QUOTE_MAX_UNITS) throw new ShippingError(AUTOMATIC_QUOTE_LIMIT_MESSAGE);
   let estimated = false;
@@ -39,20 +42,28 @@ export async function quoteCart(postalCode: string, items: CheckoutRequest["item
     // Existing profiles include protection/box. Do not subtract tare or shrink them to retail dimensions.
     return { id: product.id, width: profile.widthCm, height: profile.heightCm, length: profile.lengthCm, weight: profile.weightGrams / 1000, insurance_value: item.expectedUnitPriceCents / 100, quantity: item.quantity };
   });
-  const accessToken = shippingAccessToken();
   const fingerprint = shippingFingerprint(items, products);
   const expiresAt = Date.now() + 15 * 60 * 1000;
   const preparationDays = products.some(p => p.inventorySource === "DISTRIBUTOR") ? Math.max(settings.preparationDays, getSupplierPreparationEstimate(new Date()).preparationDays) : settings.preparationDays;
   const packing = { products: packingProducts, inputMeasurementBasis: estimated ? "estimated" as const : "measured" as const };
-  const calculate = async (products: typeof packingProducts, ids: number[], timeoutMs?: number) => melhorEnvioRequest(settings, "/api/v2/me/shipment/calculate", await accessToken, {
+  let accessToken: ReturnType<typeof shippingAccessToken> | undefined;
+  const calculate = async (products: typeof packingProducts, ids: number[], timeoutMs?: number) => melhorEnvioRequest(settings, "/api/v2/me/shipment/calculate", await (accessToken ??= shippingAccessToken()), {
     from: { postal_code: settings.originPostalCode }, to: { postal_code: postalCode }, products,
     services: ids.join(","), options: { receipt: false, own_hand: false },
   }, timeoutMs === undefined ? undefined : { timeoutMs });
   const superFrete = getSuperFreteConfig();
-  const { melhorOptions: options, superFreteOptions } = await compareSuperFrete(
-    calculatePackedQuotes(packing, serviceIds, preparationDays, calculate),
-    superFrete ? quoteSuperFrete(superFrete, settings, postalCode, packing, superFreteServices(settings, serviceIds, products), preparationDays) : Promise.resolve([]),
+  const { primaryOptions, correiosOptions } = await compareCorreios(
+    (async () => {
+      const { melhorOptions, superFreteOptions } = await compareSuperFrete(
+        serviceIds.length ? calculatePackedQuotes(packing, serviceIds, preparationDays, calculate) : Promise.resolve([]),
+        superFrete ? quoteSuperFrete(superFrete, settings, postalCode, packing, superFreteServices(settings, serviceIds, products), preparationDays) : Promise.resolve([]),
+      );
+      return [...melhorOptions, ...superFreteOptions];
+    })(),
+    directEligible ? quoteCorreiosCheckout(correios!, postalCode, packing, preparationDays) : Promise.resolve([]),
   );
+  const options = primaryOptions.filter(option => option.provider === "melhor-envio");
+  const superFreteOptions = primaryOptions.filter(option => option.provider === "superfrete");
   const economicPriceCents = Math.min(...options.map(option => option.priceCents));
   const benefitedOptions = options.map(option => ({ ...option,
     benefit: cartShippingBenefit({ settings, products, items: prepared.items, subtotalCents: prepared.subtotalCents, discountCents, quote: option, economicPriceCents }) }));
@@ -62,8 +73,9 @@ export async function quoteCart(postalCode: string, items: CheckoutRequest["item
   return [
     ...benefitedOptions.map(option => ({ ...option, benefit: { ...option.benefit, ...goals.get(option.serviceId) } })),
     ...superFreteOptions.map(option => ({ ...option, benefit: superFreteBenefit(option.priceCents) })),
+    ...correiosOptions.map(option => ({ ...option, benefit: correiosBenefit(option.priceCents) })),
   ].map(option => ({ ...option, token: signShippingQuote({ ...option,
-    economicPriceCents: option.provider === "superfrete" ? option.priceCents : economicPriceCents,
+    economicPriceCents: option.provider !== "melhor-envio" ? option.priceCents : economicPriceCents,
     discountCents, preparationDays, postalCode, fingerprint, expiresAt, revision: integration.revision,
   }, signingKey()) }));
 }
@@ -74,12 +86,13 @@ export async function validateOrderShipping(tx: Prisma.TransactionClient, input:
   const payload = verifyShippingQuote(input.shippingToken, signingKey());
   const integration = await tx.shippingIntegration.findUnique({ where: { id: SHIPPING_INTEGRATION_ID } });
   const settings = integration ? shippingSettingsSchema.parse(integration.settings) : null;
-  if (!settings?.enabled || settings.environment !== "production" || integration?.revision !== payload.revision || !settings.serviceIds.includes(payload.serviceId)) throw new ShippingError("As opções de entrega mudaram. Calcule o frete novamente.", 409);
+  if (!settings?.enabled || settings.environment !== "production" || integration?.revision !== payload.revision || (payload.provider !== "correios" && !settings.serviceIds.includes(payload.serviceId))) throw new ShippingError("As opções de entrega mudaram. Calcule o frete novamente.", 409);
   const products = await tx.product.findMany({ where: { id: { in: input.items.map((i) => i.productId) } }, select: shippingProductSelect });
   products.forEach(validateShippingProduct);
   const permitted = permittedShippingServices(settings.serviceIds, products);
   const superFrete = payload.provider === "superfrete";
-  if (!permitted.includes(payload.serviceId) || (superFrete && (!getSuperFreteConfig() || !superFreteServices(settings, permitted, products).some(id => id === payload.serviceId)))) {
+  const direct = payload.provider === "correios";
+  if ((direct ? !getCorreiosCheckoutConfig() || !correiosCheckoutEligible(settings, products) : !permitted.includes(payload.serviceId)) || (superFrete && (!getSuperFreteConfig() || !superFreteServices(settings, permitted, products).some(id => id === payload.serviceId)))) {
     throw new ShippingError("O serviço de transporte não aceita os itens deste carrinho. Calcule o frete novamente.", 409);
   }
   if (payload.postalCode !== input.address.postalCode || payload.fingerprint !== shippingFingerprint(input.items, products)) throw new ShippingError("O carrinho ou o CEP mudou. Calcule o frete novamente.", 409);
@@ -87,8 +100,8 @@ export async function validateOrderShipping(tx: Prisma.TransactionClient, input:
   if (!payload.benefit || !payload.economicPriceCents || payload.discountCents !== discountCents) throw new ShippingError("Os descontos ou as condições do frete mudaram. Calcule o frete novamente.", 409);
   const prepared = prepareCheckoutOrder(products.map(product => toSaleProduct(product)), input.items);
   if (!prepared.ok || discountCents > prepared.subtotalCents) throw new ShippingError("O carrinho mudou. Calcule o frete novamente.", 409);
-  const benefit = superFrete ? superFreteBenefit(payload.priceCents) : cartShippingBenefit({ settings, products, items: prepared.items, subtotalCents: prepared.subtotalCents, discountCents, quote: payload, economicPriceCents: payload.economicPriceCents });
-  if (benefit.customerPriceCents !== payload.benefit.customerPriceCents) throw new ShippingError("As condições do frete mudaram. Calcule novamente para confirmar o valor.", 409);
+  const benefit = direct ? correiosBenefit(payload.priceCents) : superFrete ? superFreteBenefit(payload.priceCents) : cartShippingBenefit({ settings, products, items: prepared.items, subtotalCents: prepared.subtotalCents, discountCents, quote: payload, economicPriceCents: payload.economicPriceCents });
+  if ((direct && JSON.stringify(benefit) !== JSON.stringify(payload.benefit)) || benefit.customerPriceCents !== payload.benefit.customerPriceCents) throw new ShippingError("As condições do frete mudaram. Calcule novamente para confirmar o valor.", 409);
   const preparationDays = products.some(p => p.inventorySource === "DISTRIBUTOR") ? Math.max(settings.preparationDays, getSupplierPreparationEstimate(new Date()).preparationDays) : settings.preparationDays;
   if ((payload.preparationDays ?? (products.some(p => p.inventorySource === "DISTRIBUTOR") ? -1 : settings.preparationDays)) < preparationDays) throw new ShippingError("O prazo de preparação mudou. Calcule o frete novamente.", 409);
   const quote = {
@@ -102,7 +115,7 @@ export async function validateOrderShipping(tx: Prisma.TransactionClient, input:
   // Resolve at checkout from server settings; never accept a client-supplied posting plan.
   // Keep it in the order snapshot so future routing edits cannot rewrite old orders.
   delete quote.postingLocation;
-  const postingLocation = superFrete ? superFretePostingLocation() : resolvePostingLocation(settings, payload.serviceId);
+  const postingLocation = direct ? correiosPostingLocation() : superFrete ? superFretePostingLocation() : resolvePostingLocation(settings, payload.serviceId);
   if (postingLocation) quote.postingLocation = postingLocation;
   return quote;
 }

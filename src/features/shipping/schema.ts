@@ -69,14 +69,15 @@ export const shippingPackagingSchema = z.object({
 });
 export type ShippingPackaging = z.infer<typeof shippingPackagingSchema>;
 export const shippingOptionSchema = z.object({
-  provider: z.enum(["melhor-envio", "superfrete"]), serviceId: z.number().int().positive(),
+  provider: z.enum(["melhor-envio", "superfrete", "correios"]), serviceCode: z.enum(["03298", "03220"]).optional(), serviceId: z.number().int().positive(),
   carrier: z.string().min(1).max(100), service: z.string().min(1).max(100),
   priceCents: z.number().int().positive().max(10_000_000),
   deliveryDays: z.number().int().min(0).max(365),
   packaging: shippingPackagingSchema.optional(),
   benefit: shippingBenefitSchema.optional(),
 });
-export const shippingSelectionSchema = shippingOptionSchema.extend({ token: z.string().min(1).max(8000) });
+const validProviderIdentity = (value: { provider: string; serviceId: number; serviceCode?: string }) => value.provider === "correios" ? !!value.serviceCode && Number(value.serviceCode) === value.serviceId : value.serviceCode === undefined;
+export const shippingSelectionSchema = shippingOptionSchema.extend({ token: z.string().min(1).max(8000) }).refine(validProviderIdentity, "Serviço incompatível com o provedor.");
 export type ShippingOption = z.infer<typeof shippingOptionSchema>;
 export type ShippingSelection = z.infer<typeof shippingSelectionSchema>;
 export const shippingQuotePayloadSchema = shippingOptionSchema.extend({
@@ -86,7 +87,7 @@ export const shippingQuotePayloadSchema = shippingOptionSchema.extend({
   postingLocation: postingPlanSchema.optional(),
   economicPriceCents: z.number().int().positive().max(10_000_000).optional(),
   discountCents: z.number().int().min(0).max(100_000_000).optional(),
-});
+}).refine(validProviderIdentity, "Serviço incompatível com o provedor.");
 export type ShippingQuotePayload = z.infer<typeof shippingQuotePayloadSchema>;
 
 export class ShippingError extends Error {

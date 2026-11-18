@@ -3,6 +3,7 @@ import { getPrisma } from "@/lib/prisma";
 import { encryptValue, decryptValue } from "@/lib/secret-vault";
 import { defaultShippingSettings, shippingSettingsSchema, ShippingError, type ShippingSettings } from "./schema";
 import { melhorEnvioRequest, tokenSchema } from "./provider";
+import { correiosCheckoutOriginEligible, getCorreiosCheckoutConfig } from "./correios-checkout";
 
 export const SHIPPING_INTEGRATION_ID = "melhor-envio";
 const credentialsSchema = z.object({
@@ -20,7 +21,8 @@ export async function readShippingIntegration() {
 export async function publicCarrierShippingAvailable(): Promise<boolean> {
   try {
     const { settings, credentials } = await readShippingIntegration();
-    return Boolean(settings.enabled && settings.environment === "production" && settings.serviceIds.length > 0 && credentials?.accessToken && credentials.refreshToken);
+    const directAvailable = !!getCorreiosCheckoutConfig() && correiosCheckoutOriginEligible(settings);
+    return directAvailable || Boolean(settings.enabled && settings.environment === "production" && settings.serviceIds.length > 0 && credentials?.accessToken && credentials.refreshToken);
   } catch {
     console.error("[melhor-envio] connection-unavailable");
     return false;

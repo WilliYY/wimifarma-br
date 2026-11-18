@@ -10,6 +10,59 @@ import type { PrescriptionType } from "@/features/products/purchase-policy";
 import { shippingOperationalRouteKey } from "./operational-cost";
 import type { SupplierCommerceOffer } from "@/features/supplier-catalog/commerce";
 
+test("direct Correios works without ME services and revokes stale signed conditions", async () => {
+  const bundle = await build({ entryPoints: ["src/features/shipping/service.ts", "src/features/shipping/public-estimate.ts"], outdir: "unused", bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "direct-checkout-fixture", setup(builder) {
+    builder.onResolve({ filter: /lib\/prisma$|^\.\/integration$|^\.\/provider$/ }, args => ({ path: args.path, namespace: "fixture" }));
+    builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ contents: args.path.endsWith("prisma") ? "export const getPrisma=()=>globalThis.fixture.tx;"
+      : args.path.endsWith("integration") ? "export const readShippingIntegration=async()=>globalThis.fixture.integration;export const shippingAccessToken=async()=>{globalThis.fixture.tokenCalls++;return 'synthetic-token'};export const SHIPPING_INTEGRATION_ID='synthetic';"
+      : "export const melhorEnvioRequest=async()=>[{id:1,error:'Serviço indisponível no momento.'}];" }));
+  } }] });
+  const env = { AUTH_SECRET: "synthetic-direct-checkout-key", CORREIOS_CHECKOUT_ENABLED: "true", CORREIOS_DELEGATED_ACCESS_KEY: "synthetic-key" };
+  const product = { id: "synthetic-product", name: "Fralda sintética 20 unidades", slug: "synthetic", category: "Higiene", price: "50.00", promotionalPrice: null, status: "ACTIVE", deletedAt: null, stock: 10, requiresPrescription: false, isPopularPharmacy: false,
+    shippingProfile: { enabled: true, transportReviewed: true, cargoKinds: ["general"], weightGrams: 300, widthCm: 15, heightCm: 5, lengthCm: 20 }, updatedAt: new Date(0), inventorySource: "PHARMACY", supplierOffers: [] };
+  const integration = { settings: { ...defaultShippingSettings, enabled: true, serviceIds: [] as number[], contactEmail: "qa@example.invalid" }, revision: 1 };
+  const tx = { product: { findMany: async () => [product], findUnique: async () => product }, shippingIntegration: { findUnique: async () => integration } };
+  const fixture = { tx, integration, tokenCalls: 0 };
+  const request = async (url: URL) => {
+    const code = url.pathname.split("/").at(-1)!;
+    const extra = code === "03298" ? "064" : "019";
+    if (url.pathname.includes("servicos-adicionais")) return Response.json([{ codigo: extra, vlMinDeclarado: 25.63, vlMaxDeclarado: 39680.48 }]);
+    return Response.json(url.pathname.startsWith("/prazo/") ? { coProduto: code, prazoEntrega: 3, entregaDomiciliar: "S" }
+      : { coProduto: code, pcFinal: "20,74", servicoAdicional: [{ coServAdicional: extra, pcServicoAdicional: "0,74" }] });
+  };
+  const service = { exports: {} as { quoteCart: (cep: string, items: CheckoutRequest["items"]) => Promise<ShippingSelection[]>; validateOrderShipping: (tx: unknown, input: CheckoutRequest) => Promise<{ postingLocation: { pointName: string }; benefit: { customerPriceCents: number } }> } };
+  const estimate = { exports: {} as { estimateProductShipping: (input: { postalCode: string; productId: string; quantity: number }) => Promise<{ mode: string; options: { provider: string; serviceCode: string }[] }> } };
+  for (const [index, module] of [service, estimate].entries()) vm.runInNewContext(bundle.outputFiles[index].text, { module, exports: module.exports, require: createRequire(import.meta.url), process: { env }, fixture, fetch: request, URL, URLSearchParams, Response, AbortSignal, Buffer, Date, console });
+  const items = [{ productId: product.id, quantity: 1, expectedUnitPriceCents: 5000 }];
+  const options = await service.exports.quoteCart("01001000", items);
+  assert.deepEqual(Array.from(options, option => [option.provider, option.serviceCode]), [["correios", "03220"], ["correios", "03298"]]);
+  assert.equal(fixture.tokenCalls, 0, "missing ME configuration cannot prevent direct quotes");
+  const shown = await estimate.exports.estimateProductShipping({ postalCode: "01001000", productId: product.id, quantity: 1 });
+  assert.equal(shown.mode, "available");
+  assert.equal(shown.options.length, 2);
+  assert.equal(shown.options[0].serviceCode, "03220");
+  const input = checkoutRequestSchema.parse({ customer: { name: "Cliente sintético", phone: "44999990000" }, fulfillmentMethod: "DELIVERY", paymentMethod: "PIX", privacyConsent: true, address: { postalCode: "01001000", street: "Rua teste", number: "1", neighborhood: "Teste", city: "São Paulo", state: "SP" }, items, shippingToken: options[0].token });
+  const saved = await service.exports.validateOrderShipping(tx, input);
+  assert.equal(saved.postingLocation.pointName, "AC Ivaté");
+  assert.equal(saved.benefit.customerPriceCents, 2074);
+  env.CORREIOS_CHECKOUT_ENABLED = "false";
+  await assert.rejects(service.exports.validateOrderShipping(tx, input), /não aceita/);
+  env.CORREIOS_CHECKOUT_ENABLED = "true";
+  integration.revision++;
+  await assert.rejects(service.exports.validateOrderShipping(tx, input), /opções de entrega mudaram/);
+  integration.revision--;
+  await assert.rejects(service.exports.validateOrderShipping(tx, { ...input, address: { ...input.address!, postalCode: "02002000" } }), /carrinho ou o CEP mudou/);
+  await assert.rejects(service.exports.validateOrderShipping(tx, { ...input, cashbackRedeemCents: 1 }), /descontos ou as condições/);
+  integration.settings.preparationDays++;
+  await assert.rejects(service.exports.validateOrderShipping(tx, input), /prazo de preparação mudou/);
+  integration.settings.preparationDays--;
+  product.name = "Medicamento sintético 20mg";
+  await assert.rejects(service.exports.validateOrderShipping(tx, input), /não aceita/);
+  product.name = "Fralda sintética 20 unidades";
+  integration.settings.serviceIds = [1];
+  assert.equal((await service.exports.quoteCart("01001000", items)).length, 2, "known ME outage preserves direct options");
+});
+
 test("medication carrier acceptance is enforced both when quoting and submitting a signed quote", async () => {
   const bundle = await build({ entryPoints: ["src/features/shipping/service.ts"], bundle: true, write: false, platform: "node", format: "cjs", packages: "external", plugins: [{ name: "isolated-shipping-service", setup(builder) {
     builder.onResolve({ filter: /lib\/prisma$|^\.\/integration$|^\.\/provider$/ }, args => ({ path: args.path, namespace: "fixture" }));

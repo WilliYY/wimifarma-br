@@ -21,6 +21,7 @@ test("orders show historical posting location above recipient and filter local, 
     { ...base, id: "travel", number: "VIAGEM", shippingQuote: { ...quote, postingLocation: { city: "Umuarama", state: "PR", requiresTravel: true } } },
     { ...base, id: "pending", number: "LEGADO", shippingQuote: quote },
     { ...base, id: "delivery", number: "ENTREGA LOCAL", shippingQuote: null },
+    { ...base, id: "direct", number: "CORREIOS DIRETO", shippingQuote: { ...quote, provider: "correios", serviceId: 3298, serviceCode: "03298", postingLocation: { city: "Ivaté", state: "PR", requiresTravel: false, pointName: "AC Ivaté" } } },
   ];
   const script = await fixtureBundle(`import {OrdersPanel} from './src/components/admin/orders-panel';createRoot(document.getElementById('root')).render(<OrdersPanel initialOrders={${JSON.stringify(orders)}}/>);`);
   const browser = await chromium.launch();
@@ -29,10 +30,14 @@ test("orders show historical posting location above recipient and filter local, 
     await page.route("**/*", route => route.fulfill({ contentType: "text/html", body: '<div id="root"></div>' }));
     await page.goto("http://127.0.0.1:3196");
     await page.addScriptTag({ content: script });
-    for (const number of ["LOCAL", "VIAGEM", "LEGADO"]) await page.getByRole("button", { name: `Ver detalhes do pedido ${number}`, exact: true }).click();
+    for (const number of ["LOCAL", "VIAGEM", "LEGADO", "CORREIOS DIRETO"]) await page.getByRole("button", { name: `Ver detalhes do pedido ${number}`, exact: true }).click();
     const local = page.locator("article").filter({ has: page.getByRole("heading", { name: "LOCAL", exact: true }) });
     const travel = page.locator("article").filter({ has: page.getByRole("heading", { name: "VIAGEM", exact: true }) });
     const pending = page.locator("article").filter({ has: page.getByRole("heading", { name: "LEGADO", exact: true }) });
+    const direct = page.locator("article").filter({ has: page.getByRole("heading", { name: "CORREIOS DIRETO", exact: true }) });
+    await expect(direct.getByText(/Serviço 03298.*contrato a faturar · sem coleta/)).toBeVisible();
+    await expect(direct.getByText(/A cotação não emite etiqueta/)).toBeVisible();
+    await expect(direct.getByRole("link", { name: "Preparar envio no Correios — contrato Wimifarma" })).toHaveAttribute("href", "https://prepostagem.correios.com.br/");
     await expect(local.getByText("Postagem em Ivaté/PR", { exact: true })).toBeVisible();
     await expect(local.getByRole("region", { name: "Postagem do pedido" })).toHaveClass(/bg-emerald-50/);
     await expect(local.getByLabel("Embalagem prevista na cotação")).toContainText("52,8 × 51,8 × 35 cm");
@@ -57,7 +62,7 @@ test("orders show historical posting location above recipient and filter local, 
     await expect(page.locator("article")).toHaveCount(1);
     await expect(pending).toBeVisible();
     await filter.selectOption("ALL");
-    await expect(page.locator("article")).toHaveCount(4);
+    await expect(page.locator("article")).toHaveCount(5);
     await page.getByRole("button", { name: "Ver detalhes do pedido ENTREGA LOCAL", exact: true }).click();
     await expect(page.locator("article").filter({ has: page.getByRole("heading", { name: "ENTREGA LOCAL", exact: true }) }).getByRole("region", { name: "Postagem do pedido" })).toHaveCount(0);
   } finally { await browser.close(); }

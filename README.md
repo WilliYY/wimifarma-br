@@ -46,7 +46,7 @@ Modelos React Email com marca oficial integrados à prévia Miauby ADMIN, sem di
 
 Elegibilidade Resend/Brevo em consulta escrita e condições verificadas de Correios, Frenet e Rodonaves: [114](docs/114-elegibilidade-email-e-condicoes-transportadoras.md).
 
-Configuração e validação da cotação administrativa do Platinum 1 pelo Correios CWS: [Correios direto](docs/114-elegibilidade-email-e-condicoes-transportadoras.md#cotação-administrativa-pelo-cws).
+Configuração e validação da cotação administrativa do Platinum 1 pelo Correios CWS: [Correios direto](docs/114-elegibilidade-email-e-condicoes-transportadoras.md#cotação-administrativa-pelo-cws). Integração adicional de PAC/SEDEX ao checkout, Valor Declarado e postagem manual: [contrato direto na loja](docs/correios-direto-checkout-2026-11-18.md).
 
 Pesquisa física por GTIN, famílias de embalagem revisáveis e alternativas Correios/Frenet, sem ativação automática de frete: [113](docs/113-referencias-fisicas-e-alternativas-frete.md).
 

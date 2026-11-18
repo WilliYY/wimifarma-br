@@ -26,6 +26,7 @@ test("checkout mostra a menor meta antes da seleção e preserva as opções pag
     const benefit = (minimumOrderCents: number | null, remainingCents: number | null, status = "regular") => ({ status, customerPriceCents: 1900, subsidyCents: 0, minimumOrderCents, remainingCents });
     let benefits = [benefit(20000, 10000), { ...benefit(15000, 5000), customerPriceCents: 2000 }];
     let compareProviders = false;
+    let includeDirectCorreios = false;
     let fail = false;
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
@@ -35,8 +36,9 @@ test("checkout mostra a menor meta antes da seleção e preserva as opções pag
       if (path === "/fixture.css") return route.fulfill({ contentType: "text/css", body: css.css });
       if (path === "/") return route.fulfill({ contentType: "text/html", body: '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>' });
       if (path.startsWith("/api/")) return route.fulfill(fail ? { status: 503, json: { error: "Cotação indisponível" } } : { json: { data: benefits.map((benefit, index) => ({
-        provider: compareProviders && index === 1 ? "superfrete" : "melhor-envio",
-        serviceId: compareProviders ? 1 : index + 1,
+        provider: includeDirectCorreios && index === 2 ? "correios" : compareProviders && index === 1 ? "superfrete" : "melhor-envio",
+        serviceId: includeDirectCorreios && index === 2 ? 3298 : compareProviders ? 1 : index + 1,
+        ...(includeDirectCorreios && index === 2 ? { serviceCode: "03298" } : {}),
         carrier: compareProviders ? "Correios" : "Transportadora sintética",
         service: compareProviders ? "PAC" : `Serviço ${index + 1}`,
         priceCents: 1900 + index * 100, deliveryDays: 5 + index, token: `token-${index}`, benefit,
@@ -84,6 +86,17 @@ test("checkout mostra a menor meta antes da seleção e preserva as opções pag
     await superfrete.check();
     await expect(superfrete).toBeChecked();
     await expect(melhorEnvio).not.toBeChecked();
+    includeDirectCorreios = true;
+    benefits = [...benefits, { ...benefit(null, null), customerPriceCents: 2100 }];
+    await page.getByRole("button", { name: "Consultar novamente" }).click();
+    await expect(page.getByRole("radio")).toHaveCount(3);
+    const directCorreios = page.getByRole("radio", { name: /Correios · PAC.*Correios — contrato Wimifarma/ });
+    await directCorreios.check();
+    await expect(directCorreios).toBeChecked();
+    await expect(superfrete).not.toBeChecked();
+    await expect(melhorEnvio).not.toBeChecked();
+    await page.setViewportSize({ width: 320, height: 900 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     fail = true;
     await page.getByRole("button", { name: "Consultar novamente" }).click();
     await expect(page.getByText("Cotação indisponível")).toBeVisible();

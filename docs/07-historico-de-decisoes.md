@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-18 — Correios direto como opção adicional no checkout
+
+A pedido do lojista, PAC `03298` e SEDEX `03220` do contrato direto entram como provedor próprio, com cotação assinada, revalidação do pedido e identificação no resumo de postagem. A política própria limita o canal a cargas secas gerais/alimentos industrializados explicitamente revisados; não transfere aprovação comercial do Melhor Envio. O preço inclui Valor Declarado integral confirmado pela API e não herda subsídios de outros canais. A etiqueta segue manual no PPN, a faturar e sem coleta; os testes consultam tarifas sem criar remessa ou cobrança. Funcionamento, ativação, evidências e limites em [Correios direto no checkout](correios-direto-checkout-2026-11-18.md).
+
 ## 2026-11-13 — PAC e SEDEX da SuperFrete na comparação por CEP
 
 A cotação suporta PAC e SEDEX da SuperFrete junto aos serviços ativos do Melhor Envio. O destaque usa o preço final ao cliente e o pedido guarda o integrador escolhido. A SuperFrete começa desativada, com rota de Ivaté e mercadorias revisadas no escopo descrito em [Fretes e entregas](27-melhor-envio.md#pac-e-sedex-pela-superfrete--13112026). A ativação depende da cotação autenticada com a conta da farmácia. A equipe compra a etiqueta no painel do integrador.

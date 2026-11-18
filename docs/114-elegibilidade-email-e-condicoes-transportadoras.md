@@ -22,7 +22,7 @@ Esta revisão foi somente leitura dos e-mails e das fontes públicas. Não houve
 
 ## Frete — condições confirmadas
 
-Melhor Envio atende à cotação do checkout. A simulação dos Correios fica no painel administrativo e depende de liberar o cartão e validar as APIs do contrato. Plataforma de cotação adicional pode repetir transportadoras e não aumenta automaticamente a aceitação de cargas.
+Melhor Envio e SuperFrete atendem à cotação do checkout. Em 18/11/2026, o lojista autorizou adicionar o contrato direto dos Correios, com PAC/SEDEX, política própria para cargas secas e Valor Declarado confirmado na API. Implementação, ativação, evidências e limites em [Correios direto no checkout](correios-direto-checkout-2026-11-18.md). Plataforma de cotação adicional pode repetir transportadoras e não aumenta automaticamente a aceitação de cargas.
 
 ### Correios direto
 

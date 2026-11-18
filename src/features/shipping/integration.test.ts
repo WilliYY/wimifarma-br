@@ -28,7 +28,8 @@ test("public carrier availability only reads configuration and fails closed", as
     decrypt: () => { if (decryptionFailure) throw new Error("Synthetic decryption failure"); return JSON.stringify(currentCredentials); },
   };
   const loaded = { exports: {} as { publicCarrierShippingAvailable: () => Promise<boolean> } };
-  vm.runInNewContext(result.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), process, Buffer, Date, fixture, console: { error: (...args: unknown[]) => diagnostics.push(args) } });
+  const env: Record<string, string | undefined> = {};
+  vm.runInNewContext(result.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), process: { env }, Buffer, Date, fixture, console: { error: (...args: unknown[]) => diagnostics.push(args) } });
   assert.equal(typeof loaded.exports.publicCarrierShippingAvailable, "function");
   assert.equal(await loaded.exports.publicCarrierShippingAvailable(), true, "expired tokens are not refreshed by a UI read");
   assert.equal(reads, 1);
@@ -46,6 +47,18 @@ test("public carrier availability only reads configuration and fails closed", as
     assert.equal(await loaded.exports.publicCarrierShippingAvailable(), false);
   }
   currentCredentials = credentials;
+  env.CORREIOS_CHECKOUT_ENABLED = "true";
+  env.CORREIOS_DELEGATED_ACCESS_KEY = "synthetic-key";
+  currentRow = { ...row, settings: { ...settings, serviceIds: [] }, ciphertext: null };
+  assert.equal(await loaded.exports.publicCarrierShippingAvailable(), true, "direct Correios keeps checkout enabled without ME services or credentials");
+  for (const change of [{ enabled: false }, { environment: "sandbox" }, { originPostalCode: "01001000" }, { originCity: "Outra cidade" }, { originState: "SP" }]) {
+    currentRow = { ...row, settings: { ...settings, serviceIds: [], ...change }, ciphertext: null };
+    assert.equal(await loaded.exports.publicCarrierShippingAvailable(), false);
+  }
+  currentRow = { ...row, settings: { ...settings, serviceIds: [] }, ciphertext: null };
+  env.CORREIOS_CHECKOUT_ENABLED = "false";
+  assert.equal(await loaded.exports.publicCarrierShippingAvailable(), false, "disabling the direct provider revokes the checkout gate");
+  currentRow = row;
   assert.deepEqual(diagnostics, [], "normal disabled or disconnected states are not operational errors");
   readFailure = true;
   assert.equal(await loaded.exports.publicCarrierShippingAvailable(), false);

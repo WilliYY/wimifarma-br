@@ -26,6 +26,7 @@ type CorreiosQuoteInput = {
   lengthCm: number;
   widthCm: number;
   heightCm: number;
+  insuranceValueCents?: number;
 };
 
 export class CorreiosError extends Error {
@@ -125,6 +126,7 @@ export async function quoteCorreios(config: CorreiosConfig, input: CorreiosQuote
   };
   const parcel = [input.weightGrams, input.lengthCm, input.widthCm, input.heightCm];
   if (parcel.some((value) => value <= 0 || !Number.isSafeInteger(Math.ceil(value)))) throw new CorreiosError(502);
+  if (input.insuranceValueCents !== undefined && (!Number.isSafeInteger(input.insuranceValueCents) || input.insuranceValueCents <= 0)) throw new CorreiosError(502);
 
   const contract = config.contract;
   const token = await getAccessToken(config, request);
@@ -144,8 +146,34 @@ export async function quoteCorreios(config: CorreiosConfig, input: CorreiosQuote
   const timeParams = new URLSearchParams(postalCodes);
 
   const results = await Promise.allSettled(services.map(async (service) => {
+    const insuredParams = new URLSearchParams(priceParams);
+    const insuranceCode = service.code === "03298" ? "064" : "019";
+    if (input.insuranceValueCents !== undefined) {
+      const signal = AbortSignal.timeout(requestTimeoutMs);
+      let response: Response;
+      try {
+        response = await request(new URL(`/preco/v1/servicos-adicionais/${service.code}?sgPais=BR`, correiosOrigin), { ...quoteRequest, cache: "no-store", redirect: "error", signal });
+      } catch { throw new CorreiosError(503); }
+      if (!response.ok) { await response.body?.cancel().catch(() => undefined); throw new CorreiosError(503); }
+      let additions: unknown;
+      try { additions = await response.json(); } catch { throw new CorreiosError(502); }
+      const addition = Array.isArray(additions) ? additions.find(entry => entry && entry.codigo === insuranceCode) : undefined;
+      if (!addition) throw new CorreiosError(502);
+      const limitCents = (value: unknown) => {
+        if (typeof value !== "number" || !Number.isFinite(value) || value < 0) throw new CorreiosError(502);
+        const cents = Math.round(value * 100);
+        if (!Number.isSafeInteger(cents)) throw new CorreiosError(502);
+        return cents;
+      };
+      const min = limitCents(addition.vlMinDeclarado);
+      const max = limitCents(addition.vlMaxDeclarado);
+      if (max <= 0 || max < min) throw new CorreiosError(502);
+      if (input.insuranceValueCents < min || input.insuranceValueCents > max) return null;
+      insuredParams.set("servicosAdicionais", insuranceCode);
+      insuredParams.set("vlDeclarado", (input.insuranceValueCents / 100).toFixed(2));
+    }
     const [price, deadline] = await Promise.all([
-      requestJson(request, new URL(`/preco/v1/nacional/${service.code}?${priceParams}`, correiosOrigin), quoteRequest),
+      requestJson(request, new URL(`/preco/v1/nacional/${service.code}?${insuredParams}`, correiosOrigin), quoteRequest),
       requestJson(request, new URL(`/prazo/v1/nacional/${service.code}?${timeParams}`, correiosOrigin), quoteRequest),
     ]);
     const deliveryDays = deadline.prazoEntrega;
@@ -155,6 +183,8 @@ export async function quoteCorreios(config: CorreiosConfig, input: CorreiosQuote
       throw new CorreiosError(502);
     }
     if (deadline.entregaDomiciliar !== "S") return null;
+    if (input.insuranceValueCents !== undefined && (!Array.isArray(price.servicoAdicional)
+      || !price.servicoAdicional.some(entry => entry && typeof entry === "object" && "coServAdicional" in entry && entry.coServAdicional === insuranceCode))) throw new CorreiosError(502);
     return { ...service, priceCents: parsePriceCents(price.pcFinal), deliveryDays };
   }));
 

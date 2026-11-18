@@ -16,6 +16,7 @@ import { resolveAttainableShippingGoals } from "./attainable-goal";
 import { localDeliveryCity } from "./delivery-policy";
 import { publicShippingEstimateRequestSchema, publicShippingEstimateSchema, type PublicShippingEstimateRequest } from "./public-estimate-contract";
 import { compareSuperFrete, getSuperFreteConfig, quoteSuperFrete, superFreteBenefit, superFreteServices } from "./superfrete";
+import { compareCorreios, correiosBenefit, correiosCheckoutEligible, getCorreiosCheckoutConfig, quoteCorreiosCheckout } from "./correios-checkout";
 
 const physicalProfileSchema = shippingProfileSchema.pick({ weightGrams: true, widthCm: true, heightCm: true, lengthCm: true });
 const normalized = (value: string | null) => (value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -30,7 +31,7 @@ export async function estimateProductShipping(input: PublicShippingEstimateReque
   if (requiresPharmacyShippingSupport(product)) throw new ShippingError("O envio deste produto precisa de atendimento da farmácia.");
   if (localDeliveryCity(request.postalCode)) return publicShippingEstimateSchema.parse({ mode: "local", options: [] });
   const { settings } = await readShippingIntegration();
-  if (!settings.enabled || settings.environment !== "production" || !settings.serviceIds.length) throw new ShippingError("O envio para outras cidades ainda está em preparação. Consulte a farmácia ou escolha retirada.", 503);
+  if (!settings.enabled || settings.environment !== "production") throw new ShippingError("O envio para outras cidades ainda está em preparação. Consulte a farmácia ou escolha retirada.", 503);
   const parsed = shippingAdminProfileSchema.safeParse(product.shippingProfile);
   const physical = physicalProfileSchema.safeParse(product.shippingProfile);
   if (!parsed.success || !physical.success) throw new ShippingError("Peso ou medidas pendentes. Consulte a farmácia para preparar o envio.");
@@ -44,7 +45,9 @@ export async function estimateProductShipping(input: PublicShippingEstimateReque
     && (!cargos.includes("medication") || service === 1 || service === 2)
     && (profile.approvedServiceIds === undefined || (!profile.transportReviewed && profile.approvedServiceIds.length === 0) || profile.approvedServiceIds.includes(service))
     && assessCarrierCargo(service, cargos).status !== "blocked");
-  if (!serviceIds.length) throw new ShippingError("Este produto precisa de atendimento da farmácia para consultar o transporte.");
+  const correios = getCorreiosCheckoutConfig();
+  const directEligible = !!correios && correiosCheckoutEligible(settings, [product]);
+  if (!serviceIds.length && !directEligible) throw new ShippingError("Este produto precisa de atendimento da farmácia para consultar o transporte.");
   const unitPriceCents = Math.round(Number(sale.promotionalPrice ?? sale.price) * 100);
   if (!Number.isSafeInteger(unitPriceCents) || unitPriceCents <= 0 || unitPriceCents > 1_000_000) throw new ShippingError("Preço indisponível para consulta de frete.");
   const checkoutServices = permittedShippingServices(settings.serviceIds, [product]);
@@ -52,18 +55,26 @@ export async function estimateProductShipping(input: PublicShippingEstimateReque
     && sale.stock >= request.quantity && cargos.every(cargo => cargo !== "unspecified")
     && serviceIds.every(service => checkoutServices.includes(service));
   const preparationDays = product.inventorySource === "DISTRIBUTOR" ? Math.max(settings.preparationDays, getSupplierPreparationEstimate(new Date()).preparationDays) : settings.preparationDays;
-  const token = shippingAccessToken();
   const { weightGrams, widthCm, heightCm, lengthCm } = physical.data;
   const packing = { inputMeasurementBasis: profile.measurementBasis === "measured" ? "measured" as const : "estimated" as const,
     products: [{ id: product.id, quantity: request.quantity, insurance_value: unitPriceCents / 100, width: widthCm, height: heightCm, length: lengthCm, weight: weightGrams / 1000 }] };
-  const calculate = async (products: typeof packing.products, ids: number[], timeoutMs?: number) => melhorEnvioRequest(settings, "/api/v2/me/shipment/calculate", await token, {
+  let accessToken: ReturnType<typeof shippingAccessToken> | undefined;
+  const calculate = async (products: typeof packing.products, ids: number[], timeoutMs?: number) => melhorEnvioRequest(settings, "/api/v2/me/shipment/calculate", await (accessToken ??= shippingAccessToken()), {
     from: { postal_code: settings.originPostalCode }, to: { postal_code: request.postalCode }, products, services: ids.join(","), options: { receipt: false, own_hand: false },
   }, timeoutMs === undefined ? undefined : { timeoutMs });
   const superFrete = available ? getSuperFreteConfig() : null;
-  const { melhorOptions: options, superFreteOptions } = await compareSuperFrete(
-    calculatePackedQuotes(packing, serviceIds, preparationDays, calculate),
-    superFrete ? quoteSuperFrete(superFrete, settings, request.postalCode, packing, superFreteServices(settings, serviceIds, [product]), preparationDays) : Promise.resolve([]),
+  const { primaryOptions, correiosOptions } = await compareCorreios(
+    (async () => {
+      const { melhorOptions, superFreteOptions } = await compareSuperFrete(
+        serviceIds.length && (!directEligible || available) ? calculatePackedQuotes(packing, serviceIds, preparationDays, calculate) : Promise.resolve([]),
+        superFrete ? quoteSuperFrete(superFrete, settings, request.postalCode, packing, superFreteServices(settings, serviceIds, [product]), preparationDays) : Promise.resolve([]),
+      );
+      return [...melhorOptions, ...superFreteOptions];
+    })(),
+    directEligible ? quoteCorreiosCheckout(correios!, request.postalCode, packing, preparationDays) : Promise.resolve([]),
   );
+  const options = primaryOptions.filter(option => option.provider === "melhor-envio");
+  const superFreteOptions = primaryOptions.filter(option => option.provider === "superfrete");
   const economicPriceCents = Math.min(...options.map(option => option.priceCents));
   const items = [{ productId: product.id, quantity: request.quantity, unitPriceCents }];
   const benefitedOptions = available ? options.map(option => ({ ...option,
@@ -74,9 +85,10 @@ export async function estimateProductShipping(input: PublicShippingEstimateReque
   const displayed = [
     ...options.map((option, index) => ({ ...option, ...(available ? { benefit: { ...benefitedOptions[index].benefit, ...goals?.get(option.serviceId) } } : {}) })),
     ...superFreteOptions.map(option => ({ ...option, benefit: superFreteBenefit(option.priceCents) })),
+    ...correiosOptions.map(option => ({ ...option, benefit: correiosBenefit(option.priceCents) })),
   ];
-  return publicShippingEstimateSchema.parse({ mode: available ? "available" : "estimate",
-    options: displayed.map(({ provider, serviceId, carrier, service, priceCents, deliveryDays, benefit }) =>
-      ({ provider, serviceId, carrier, service, priceCents, deliveryDays, ...(benefit ? { benefit } : {}) })),
+  return publicShippingEstimateSchema.parse({ mode: available || correiosOptions.length > 0 ? "available" : "estimate",
+    options: displayed.map(({ provider, serviceId, serviceCode, carrier, service, priceCents, deliveryDays, benefit }) =>
+      ({ provider, serviceId, ...(serviceCode ? { serviceCode } : {}), carrier, service, priceCents, deliveryDays, ...(benefit ? { benefit } : {}) })),
   });
 }
