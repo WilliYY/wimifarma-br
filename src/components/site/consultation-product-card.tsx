@@ -1,11 +1,15 @@
 import Link from "next/link";
 import type { PublicCatalogIdentity } from "@/features/catalog-identities/types";
 import { ProductImagePlaceholder } from "./product-image-placeholder";
+import { BlackFridayBadge } from "./black-friday-badge";
 
 export function ConsultationProductCard({ product }: { product: PublicCatalogIdentity }) {
   return (
     <article className="flex h-full min-h-64 min-w-0 overflow-hidden rounded-xl border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)]">
       <Link className="flex min-w-0 flex-1 flex-col p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand" href={product.href}>
+        <span data-product-badges className="mb-2 flex shrink-0 flex-wrap items-center gap-1 empty:mb-0">
+          <BlackFridayBadge />
+        </span>
         <span className="flex h-36 items-center justify-center rounded-lg bg-surface-subtle">
           <ProductImagePlaceholder className="h-full w-full p-4" />
         </span>

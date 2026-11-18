@@ -13,6 +13,7 @@
 
 .bar[data-theme="popular"] { --announcement-color: #096144; --accent: #e6f5b8; }
 .bar[data-theme="cashback"] { --announcement-color: #065c68; --accent: #ffdf92; }
+.bar[data-theme="black-friday"] { --announcement-color: #171b21; --accent: #f7c948; }
 
 .decoration { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
 .decoration::before, .decoration::after {

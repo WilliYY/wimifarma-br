@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-18 — Black Friday temporária nos selos e na faixa superior
+
+A pedido do lojista, os cartões recebem um selo pequeno e a faixa rotativa existente recebe o destaque Black Friday, sem mudar a logo, o tema geral ou regras comerciais. Uma configuração central encerra ambos em 01/12/2026 às 00h de Brasília e permite retirada antecipada por uma única opção. O provider compartilhado também encerra a campanha em páginas que continuam abertas. Contrato e verificação em [Black Friday — selos e faixa](black-friday-2026-11-18.md).
+
 ## 2026-11-18 — Correios direto como opção adicional no checkout
 
 A pedido do lojista, PAC `03298` e SEDEX `03220` do contrato direto entram como provedor próprio, com cotação assinada, revalidação do pedido e identificação no resumo de postagem. A política própria limita o canal a cargas secas gerais/alimentos industrializados explicitamente revisados; não transfere aprovação comercial do Melhor Envio. O preço inclui Valor Declarado integral confirmado pela API e não herda subsídios de outros canais. A etiqueta segue manual no PPN, a faturar e sem coleta; os testes consultam tarifas sem criar remessa ou cobrança. Funcionamento, ativação, evidências e limites em [Correios direto no checkout](correios-direto-checkout-2026-11-18.md).

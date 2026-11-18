@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { ArrowUpRight, Coins, Gift, HeartPulse, Pill, Plus, Sparkles, Truck } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowUpRight, Coins, Gift, HeartPulse, Pill, Plus, Sparkles, Tag, Truck } from "lucide-react";
+import { useBlackFridayCampaign } from "./black-friday-provider";
 import styles from "./announcement-bar.module.css";
 
 const announcements = [
@@ -32,10 +33,24 @@ const announcements = [
   },
 ] as const;
 
-function AnimatedScene({ theme }: { theme: typeof announcements[number]["theme"] }) {
+const blackFridayAnnouncement = {
+  theme: "black-friday",
+  title: "Black Friday Wimifarma",
+  detail: "Seu cuidado no mês da Black",
+  highlight: "Até 30 de novembro",
+  action: "Ver produtos",
+  href: "/catalogo",
+} as const;
+
+function AnimatedScene({ theme }: { theme: typeof announcements[number]["theme"] | "black-friday" }) {
   return (
     <span aria-hidden="true" className={styles.scene}>
-      {theme === "delivery" ? (
+      {theme === "black-friday" ? (
+        <>
+          <span className={styles.gift}><Tag strokeWidth={1.8} /></span>
+          <Sparkles className={styles.twinkle} />
+        </>
+      ) : theme === "delivery" ? (
         <>
           <span className={styles.speedLines}><i /><i /><i /></span>
           <span className={styles.truck} data-animation="truck"><Truck strokeWidth={1.8} /></span>
@@ -60,13 +75,15 @@ function AnimatedScene({ theme }: { theme: typeof announcements[number]["theme"]
 }
 
 export function AnnouncementBar() {
+  const blackFridayActive = useBlackFridayCampaign();
+  const slides = useMemo(() => blackFridayActive ? [blackFridayAnnouncement, ...announcements] : announcements, [blackFridayActive]);
   const [active, setActive] = useState(0);
   const [focused, setFocused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [visible, setVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(true);
   const rotating = !focused && !hovered && !reducedMotion && visible;
-  const announcement = announcements[active];
+  const announcement = slides[active % slides.length];
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -84,9 +101,9 @@ export function AnnouncementBar() {
 
   useEffect(() => {
     if (!rotating) return;
-    const timer = window.setInterval(() => setActive((current) => (current + 1) % announcements.length), 7_000);
+    const timer = window.setInterval(() => setActive((current) => (current + 1) % slides.length), 7_000);
     return () => window.clearInterval(timer);
-  }, [rotating]);
+  }, [rotating, slides.length]);
 
   return (
     <section

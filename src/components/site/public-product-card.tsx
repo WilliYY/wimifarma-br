@@ -15,6 +15,7 @@ import { CatalogShippingBenefitBadge, CatalogShippingButton } from "./catalog-sh
 import { diaperPackageUnitPrice } from "@/features/products/diaper-unit-price";
 import { productSaleUnitLabel } from "@/features/products/product-presentation";
 import { requiresPurchaseAssistance } from "@/features/products/purchase-policy";
+import { BlackFridayBadge } from "./black-friday-badge";
 
 export type RelatedProductCardItem = PublicProductSearchItem & {
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
@@ -66,6 +67,7 @@ export function PublicProductCard({ product, showShippingEstimate = false, varia
     <ProductCardSurface key={imageKey} alternateImageUrl={alternateImageUrl} variant="medicine-rail" className="group relative flex h-full min-w-0 flex-col rounded-xl border border-line bg-white p-3 shadow-sm">
       <div data-product-badges className="flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <div className="flex flex-wrap items-center gap-1">
+          <BlackFridayBadge />
           {pmcSavings !== null ? <ProductPmcBadge percent={pmcSavings} /> : discount !== null && !pmc ? <span className="rounded-md bg-brand px-2 py-1 text-xs font-black text-white">{discount}% OFF</span> : null}
           <ProductCashback compact product={product} unitPriceCents={cartProduct.unitPriceCents} />
         </div>
@@ -98,6 +100,7 @@ export function PublicProductCard({ product, showShippingEstimate = false, varia
       className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-white shadow-[0_10px_28px_rgba(17,24,39,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_18px_40px_rgba(17,24,39,0.11)] motion-reduce:transform-none"
     >
       <div data-product-badges className={`flex shrink-0 flex-wrap content-start items-start gap-1 px-2 pb-0.5 pt-1.5 ${showShippingEstimate ? "min-h-16 sm:min-h-10" : "min-h-9"}`}>
+        <BlackFridayBadge />
         {pmcSavings !== null ? <ProductPmcBadge percent={pmcSavings} /> : discount !== null && !pmc ? (
           <span className="rounded-lg bg-brand px-2 py-1.5 text-[0.65rem] font-black leading-tight text-white shadow-sm">
             {discount}% OFF
