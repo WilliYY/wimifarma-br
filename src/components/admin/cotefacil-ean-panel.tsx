@@ -48,7 +48,7 @@ export function CotefacilEanPanel() {
 
   async function downloadCsv() {
     setLoading(true);
-    setFeedback("Preparando CSV.");
+    setFeedback("Preparando CSV de EANs.");
     try {
       let source = catalog;
       if (!source) {
@@ -64,7 +64,7 @@ export function CotefacilEanPanel() {
       anchor.download = "cotefacil-consulta.csv";
       anchor.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setFeedback("CSV preparado para download.");
+      setFeedback("CSV de EANs preparado para download e entrada na cotação.");
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Não foi possível preparar o CSV.");
     } finally {
@@ -77,7 +77,7 @@ export function CotefacilEanPanel() {
       <div>
         <h2 id="cotefacil-heading" className="text-lg font-bold text-ink">Cotefácil</h2>
         <p className="mt-1 text-sm text-muted">
-          Prepare EANs para consulta manual ou baixe o CSV no formato confirmado pelo suporte, com quantidade 1 por item.
+          Prepare EANs para consulta manual ou baixe o arquivo de entrada da cotação, com quantidade 1 por item. Esse CSV não contém respostas de preço ou estoque.
         </p>
       </div>
       <div className="space-y-1.5">
@@ -110,7 +110,7 @@ export function CotefacilEanPanel() {
           Carregar EANs do site
         </Button>
         <Button type="button" disabled={loading || !eans.length} onClick={copyEans}>Copiar EANs</Button>
-        <Button type="button" variant="secondary" disabled={loading || !eans.length || invalid > 0} onClick={downloadCsv}>Baixar CSV</Button>
+        <Button type="button" variant="secondary" disabled={loading || !eans.length || invalid > 0} onClick={downloadCsv}>Baixar CSV de EANs</Button>
         <Button asChild variant="ghost">
           <a href="https://www.cotefacil.com/login/" target="_blank" rel="noopener noreferrer">Abrir Cotefácil</a>
         </Button>
