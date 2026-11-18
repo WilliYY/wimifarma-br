@@ -9,7 +9,7 @@ import {
 } from "@/features/products/product-detail";
 import { createCheckoutQuote } from "@/features/shipping/checkout-quote";
 import { createPublicShippingEstimate, type PublicEstimateState } from "@/features/shipping/public-estimate-quote";
-import { LocalShippingBenefitNote, ShippingBenefitNote } from "./shipping-benefit-note";
+import { ShippingBenefitNote, ShippingFreeProgress } from "./shipping-benefit-note";
 import { shippingOptionsForDisplay } from "./shipping-option-display";
 import { localDeliveryCity } from "@/features/shipping/delivery-policy";
 import { readPreferredPostalCode, rememberPreferredPostalCode } from "@/features/shipping/preferred-postal-code";
@@ -156,11 +156,12 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode, onPost
             <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
           ))}
           <div className="min-w-0 flex-1">
+            {!result.busy && (result.local || result.options.length > 0) && <ShippingFreeProgress options={displayed.map(item => item.option)} postalCode={normalizedPostalCode} localCity={localCity} />}
             <strong className="block text-sm font-black text-ink">{result.title}</strong>
             <p className="mt-1 text-xs font-semibold leading-5 text-muted">
               {result.mode === "estimate" && result.options.length ? "Envio sob consulta para este CEP." : result.message}
             </p>
-            {localCity ? <LocalShippingBenefitNote city={localCity} /> : result.local && <strong className="mt-2 block text-sm text-pharma-green">Grátis</strong>}
+            {result.local && !localCity && <strong className="mt-2 block text-sm text-pharma-green">Grátis</strong>}
             {result.options.length > 0 && <>
               <ul className="mt-2 grid gap-1.5">
                 {displayed.map(({ option, fee, key, integrator }, index) => {
@@ -173,7 +174,7 @@ export function DeliveryEstimator({ product, quantity, initialPostalCode, onPost
                       </div>
                       <strong className="whitespace-nowrap tabular-nums text-pharma-green">{fee === 0 ? "Grátis" : formatCurrency(fee / 100)}</strong>
                     </div>
-                    <ShippingBenefitNote benefit={option.benefit} />
+                    <ShippingBenefitNote benefit={option.benefit} showProgress={false} />
                   </li>;
                 })}
               </ul>

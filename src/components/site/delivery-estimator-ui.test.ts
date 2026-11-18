@@ -149,7 +149,9 @@ test("frete compacto preserva desconto, gratuidade, subsídio e progresso reais"
     await expect(rows.filter({ hasText: "Regular sem benefício" }).getByText("Frete consultado para este pedido", { exact: true })).toHaveCount(0);
     await expect(rows.filter({ hasText: "Regular com progresso" })).toContainText(/faltam R\$\s*50,10/);
     await expect(rows.filter({ hasText: "Regular com progresso" })).toContainText(/Meta estimada de R\$\s*150,00/);
-    await expect(rows.filter({ hasText: "Regular com progresso" }).getByRole("progressbar")).toHaveAttribute("aria-valuenow", "66");
+    await expect(rows.filter({ hasText: "Regular com progresso" }).getByRole("progressbar")).toHaveCount(0);
+    await expect(dialog.getByRole("region", { name: "Frete grátis para o seu CEP", exact: true }).getByRole("progressbar")).toHaveAttribute("aria-valuenow", "100");
+    await expect(dialog.getByRole("progressbar")).toHaveCount(1);
     await expect(rows.filter({ hasText: "Regular com subsídio" })).toContainText(/10,00 de desconto no frete/);
     await expect(rows.filter({ hasText: "Desconto confirmado" })).toContainText(/15,00 de desconto no frete/);
     await expect(rows.filter({ hasText: "Desconto confirmado" })).toContainText(/3,75/);
@@ -199,5 +201,105 @@ test("frete fora do modo compacto evita repetir a nota regular", async () => {
     await page.getByRole("button", { name: "Consultar", exact: true }).click();
     await expect(page.getByRole("status").getByText("Frete consultado para este pedido", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("status")).toContainText(/18,75/);
+  });
+});
+
+for (const width of [320, 390, 1440]) {
+  test(`meta de frete grátis aparece antes dos serviços com valores da cotação em ${width}px`, async () => {
+    await fixture(width, async page => {
+      const goal = { ...quote, serviceId: 2, service: "PAC com meta", benefit: { ...regularBenefit, minimumOrderCents: 15000, remainingCents: 5010 } };
+      await page.route("**/api/fretes/estimativa", route => route.fulfill({ json: { data: { mode: "available", options: [quote, goal] } } }));
+      await page.goto(origin);
+      await page.getByRole("button", { name: /^Ver frete de / }).click();
+      const dialog = page.getByRole("dialog");
+      const postal = dialog.getByRole("textbox", { name: "CEP", exact: true });
+      await postal.fill("80010-000");
+      await dialog.getByRole("button", { name: "Consultar", exact: true }).click();
+      const highlight = dialog.getByRole("region", { name: "Frete grátis para o seu CEP", exact: true });
+      await expect(highlight).toContainText(/Faltam R\$\s*50,10/);
+      await expect(highlight).toContainText("80010-000");
+      await expect(highlight).toContainText(/99,90 em produtos/);
+      await expect(highlight).toContainText(/Meta R\$\s*150,00/);
+      await expect(highlight.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "66");
+      await expect(highlight).toContainText("Correios · PAC com meta");
+      assert.ok(await highlight.evaluate(element => [element, ...element.querySelectorAll("*")].every(node => getComputedStyle(node).animationName === "none")), "movimento reduzido deve desativar as animações do destaque");
+      const card = (await highlight.boundingBox())!;
+      const firstService = (await dialog.getByRole("listitem").first().boundingBox())!;
+      assert.ok(card.y + card.height <= firstService.y, "meta deve preceder os serviços visualmente");
+      assert.ok(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth), "diálogo não deve transbordar");
+      await capture(page, `meta-destaque-${width}`);
+      if (width === 390) {
+        await page.emulateMedia({ reducedMotion: "no-preference" });
+        await expect.poll(() => highlight.evaluate(element => getComputedStyle(element).animationName)).toBe("shipping-goal-enter");
+        await expect.poll(() => highlight.locator(".shipping-goal-fill").evaluate(element => getComputedStyle(element).animationName)).toBe("shipping-goal-fill");
+      }
+      await postal.fill("01001-000");
+      await expect(highlight).toHaveCount(0);
+    });
+  });
+}
+
+test("destaque escolhe a meta mais próxima mesmo quando os serviços mudam de ordem", async () => {
+  await fixture(390, async page => {
+    const nearest = { ...quote, serviceId: 2, service: "PAC meta próxima", benefit: { ...regularBenefit, minimumOrderCents: 15000, remainingCents: 5010 } };
+    const farther = { ...quote, serviceId: 3, service: "PAC meta distante", benefit: { ...regularBenefit, minimumOrderCents: 20000, remainingCents: 10010 } };
+    let requestCount = 0;
+    await page.route("**/api/fretes/estimativa", route => {
+      const options = requestCount++ === 0 ? [farther, nearest] : [nearest, farther];
+      return route.fulfill({ json: { data: { mode: "available", options } } });
+    });
+    await page.goto(origin);
+    await page.getByRole("button", { name: /^Ver frete de / }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("textbox", { name: "CEP", exact: true }).fill("80010-000");
+    const highlight = dialog.getByRole("region", { name: "Frete grátis para o seu CEP", exact: true });
+    for (let count = 1; count <= 2; count++) {
+      await dialog.getByRole("button", { name: "Consultar", exact: true }).click();
+      await expect.poll(() => requestCount).toBe(count);
+      await expect(highlight).toContainText("Correios · PAC meta próxima");
+      await expect(highlight).toContainText(/Faltam R\$\s*50,10/);
+      await expect(highlight.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "66");
+    }
+  });
+});
+
+test("cotação sem meta apresenta orientação sem inventar percentual ou gratuidade", async () => {
+  await fixture(390, async page => {
+    await page.route("**/api/fretes/estimativa", route => route.fulfill({ json: { data: { mode: "available", options: [quote] } } }));
+    await page.goto(origin);
+    await page.getByRole("button", { name: /^Ver frete de / }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("textbox", { name: "CEP", exact: true }).fill("80010-000");
+    await dialog.getByRole("button", { name: "Consultar", exact: true }).click();
+    const highlight = dialog.getByRole("region", { name: "Frete grátis para o seu CEP", exact: true });
+    await expect(highlight).toContainText("A meta depende dos produtos do pedido.");
+    await expect(highlight).toContainText("80010-000");
+    await expect(highlight).toContainText("Confira a meta no carrinho após escolher os produtos e as quantidades.");
+    await expect(highlight.getByRole("progressbar")).toHaveCount(0);
+    await expect(highlight).not.toContainText("Seu frete é grátis!");
+    await expect(dialog.getByRole("listitem")).toContainText(/18,75/);
+  });
+});
+
+test("frete grátis confirmado ganha destaque completo antes dos serviços pagos", async () => {
+  await fixture(390, async page => {
+    const free = { ...quote, serviceId: 2, service: "PAC gratuito", benefit: { ...regularBenefit, status: "free", customerPriceCents: 0, subsidyCents: 1875 } };
+    await page.route("**/api/fretes/estimativa", route => route.fulfill({ json: { data: { mode: "available", options: [quote, free] } } }));
+    await page.goto(origin);
+    await page.getByRole("button", { name: /^Ver frete de / }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("textbox", { name: "CEP", exact: true }).fill("80010-000");
+    await dialog.getByRole("button", { name: "Consultar", exact: true }).click();
+    const highlight = dialog.getByRole("region", { name: "Frete grátis para o seu CEP", exact: true });
+    await expect(highlight).toContainText("Seu frete é grátis!");
+    await expect(highlight).toContainText("80010-000");
+    await expect(highlight).toContainText("Correios · PAC gratuito");
+    await expect(highlight.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "100");
+    await expect(dialog.getByRole("listitem").first()).toContainText("PAC gratuito");
+    await expect(dialog.getByRole("listitem").first().getByText("Grátis", { exact: true })).toBeVisible();
+    const card = (await highlight.boundingBox())!;
+    const firstService = (await dialog.getByRole("listitem").first().boundingBox())!;
+    assert.ok(card.y + card.height <= firstService.y, "gratuidade deve preceder os serviços visualmente");
+    await capture(page, "gratis-confirmado-390");
   });
 });
