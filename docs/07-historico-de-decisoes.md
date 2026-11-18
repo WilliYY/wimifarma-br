@@ -6,6 +6,8 @@ A pedido do lojista, os cartões recebem um selo pequeno e a faixa rotativa exis
 
 Na continuação do mesmo dia, um glow azul/ciano estático foi acrescentado somente ao fundo da seção inicial da home, reutilizando o pseudo-elemento existente e o mesmo estado de campanha. O desligamento devolve o fundo anterior, sem alterar header, marca, espaçamentos, galeria ou outras páginas.
 
+Depois, o lojista pediu movimento leve no glow. O mesmo pseudo-elemento passa a variar somente opacidade e deslocamento vertical, em ciclo completo de 18 segundos, com aparência estática para movimento reduzido. Não há nova dependência, JavaScript ou mudança de layout. Encerramento e retirada continuam na configuração única de Black Friday.
+
 ## 2026-11-18 — Correios direto como opção adicional no checkout
 
 A pedido do lojista, PAC `03298` e SEDEX `03220` do contrato direto entram como provedor próprio, com cotação assinada, revalidação do pedido e identificação no resumo de postagem. A política própria limita o canal a cargas secas gerais/alimentos industrializados explicitamente revisados; não transfere aprovação comercial do Melhor Envio. O preço inclui Valor Declarado integral confirmado pela API e não herda subsídios de outros canais. A etiqueta segue manual no PPN, a faturar e sem coleta; os testes consultam tarifas sem criar remessa ou cobrança. Funcionamento, ativação, evidências e limites em [Correios direto no checkout](correios-direto-checkout-2026-11-18.md).
