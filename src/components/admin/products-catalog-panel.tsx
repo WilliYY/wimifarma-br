@@ -4,6 +4,7 @@ import {
   FormEvent,
   type ReactNode,
   type RefObject,
+  useCallback,
   useEffect,
   useId,
   useMemo,
@@ -31,7 +32,7 @@ import {
 import { toast } from "sonner";
 import { CashbackProductFields } from "@/components/admin/cashback-product-fields";
 import { WimiCoinsProductFields } from "@/components/admin/wimicoins-product-fields";
-import { SupplierProductOffers } from "@/components/admin/supplier-product-offers";
+import { SupplierProductOffers, supplierOfferLabel } from "@/components/admin/supplier-product-offers";
 import { ProductQuickControls } from "@/components/admin/product-quick-controls";
 import { ProductBulkEditor } from "@/components/admin/product-bulk-editor";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
@@ -90,7 +91,7 @@ type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 type ProductListItem = {
   catalogClassification?: unknown;
   supplierMarkupBps?: number;
-  supplierPricing?: { supplier: string; unitCostCents: number; unitPriceCents: number; purchaseLimit: number; demandAllowed?: boolean; validUntil: string } | null;
+  supplierPricing?: { supplier: string; unitCostCents?: number; unitPriceCents: number; purchaseLimit: number; demandAllowed?: boolean; validUntil: string } | null;
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
   wimicoinsEnabled?: boolean;
   wimicoinsRateBps?: number;
@@ -223,6 +224,8 @@ function ProductFormFields({
   categoryOptions,
   imagePickerRef,
   product,
+  onSupplierOffersSaved,
+  currentSupplierPricing = product?.supplierPricing,
   disabled = false,
 }: {
   canManageCashback: boolean;
@@ -231,16 +234,20 @@ function ProductFormFields({
   categoryOptions: string[];
   imagePickerRef: RefObject<ProductImagePickerHandle | null>;
   product?: ProductListItem;
+  onSupplierOffersSaved?: () => Promise<void>;
+  currentSupplierPricing?: ProductListItem["supplierPricing"];
   disabled?: boolean;
 }) {
   const sectionId = useId();
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const priceInputRef = useRef<HTMLInputElement>(null);
   const shippingFieldsRef = useRef<ProductShippingFieldsHandle>(null);
   const pendingResearch = useRef<AbortController | null>(null);
   const researchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastResearchKey = useRef(product ? productIdentityKey({ name: product.name, brand: product.brand ?? "", ean: product.ean ?? "" }) : "");
   const [automatic, setAutomatic] = useState(true);
   const [inventorySource, setInventorySource] = useState(product?.inventorySource ?? "PHARMACY");
+  const currentSupplierPriceCents = currentSupplierPricing?.unitPriceCents;
   const [newClassification, setNewClassification] = useState<CatalogClassification>({ ...emptyClassification });
   const privateSupplierPhoto = inventorySource === "DISTRIBUTOR" && Boolean(product?.requiresPrescription);
   const [seo, setSeo] = useState({ name: product?.name ?? "", brand: product?.brand ?? "", description: product?.description ?? "" });
@@ -250,6 +257,13 @@ function ProductFormFields({
   const [suggestion, setSuggestion] = useState<
     (ProductSuggestion & { sources: ProductSuggestionSource[] }) | null
   >(null);
+
+  useEffect(() => {
+    if (inventorySource !== "DISTRIBUTOR" || !priceInputRef.current) return;
+    priceInputRef.current.value = currentSupplierPriceCents !== undefined
+      ? (currentSupplierPriceCents / 100).toFixed(2)
+      : product?.price ?? "";
+  }, [inventorySource, currentSupplierPriceCents, product?.price]);
 
   useEffect(() => () => {
     pendingResearch.current?.abort();
@@ -544,11 +558,12 @@ function ProductFormFields({
           <ProductFormSection id={`${sectionId}-commercial`} number="04" title="Preços, estoque e publicação" description="Defina os valores, o estoque e como o produto aparece na loja.">
             {canManageCashback && <label className="grid gap-2 text-sm font-semibold text-ink">Origem da venda<select name="inventorySource" value={inventorySource} onChange={event => setInventorySource(event.target.value as "PHARMACY" | "DISTRIBUTOR")} className="h-11 rounded-md border border-line bg-white px-3"><option value="PHARMACY">Estoque da farmácia</option><option value="DISTRIBUTOR">Produto de distribuidor</option></select><span className="text-xs font-normal leading-5 text-muted">O estoque físico fica separado. No distribuidor, a venda usa a oferta válida mais barata do mesmo EAN.</span></label>}
             {canManageCashback && inventorySource === "DISTRIBUTOR" && <label className="grid gap-2 text-sm font-bold">Acréscimo sobre o custo (%)<Input defaultValue={(product?.supplierMarkupBps ?? 6000) / 100} min="0" max="100" step="0.01" type="number" name="supplierMarkupPercent" required /><span className="text-xs font-normal leading-5 text-muted">Aplicado automaticamente ao custo válido. Não representa margem líquida.</span></label>}
-            {canManageCashback && product?.inventorySource === "DISTRIBUTOR" && <SupplierProductOffers productId={product.id} ean={product.ean ?? ""} isMedicine={["MEDICINE", "UNCLASSIFIED"].includes(readClassification(product.catalogClassification).kind) || product.requiresPrescription} />}
+            {canManageCashback && product?.inventorySource === "DISTRIBUTOR" && <SupplierProductOffers productId={product.id} ean={product.ean ?? ""} isMedicine={["MEDICINE", "UNCLASSIFIED"].includes(readClassification(product.catalogClassification).kind) || product.requiresPrescription} selectedSupplier={currentSupplierPricing?.supplier} onSaved={onSupplierOffersSaved} />}
             <div className="grid min-w-0 items-start gap-4 sm:grid-cols-2">
               <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
                 {inventorySource === "DISTRIBUTOR" ? "Preço atual (automático)" : "Preço normal"}
-                <Input defaultValue={product?.price} min="0.01" name="price" placeholder="0,00" readOnly={inventorySource === "DISTRIBUTOR"} required step="0.01" type="number" />
+                <Input ref={priceInputRef} defaultValue={product?.price} min="0.01" name="price" placeholder="0,00" readOnly={inventorySource === "DISTRIBUTOR"} required step="0.01" type="number" />
+                {inventorySource === "DISTRIBUTOR" && !currentSupplierPricing && <span className="text-xs font-normal leading-5 text-muted">Venda aguardando cotação elegível. O valor cadastrado é preservado como referência; não representa preço efetivo de venda.</span>}
               </label>
               <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
                 Preco promocional
@@ -632,30 +647,33 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [catalogPage, setCatalogPage] = useState(1);
 
-  async function loadProducts() {
+  const refreshProducts = useCallback(async (): Promise<void> => {
+    const response = await fetch("/api/produtos", { cache: "no-store" });
+    const payload = (await response.json()) as {
+      data?: ProductListItem[];
+      error?: unknown;
+    };
+
+    if (!response.ok) {
+      throw new Error(errorMessage(payload.error, "Nao foi possivel carregar os produtos."));
+    }
+    setProducts(payload.data ?? []);
+  }, []);
+
+  const loadProducts = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/produtos", { cache: "no-store" });
-      const payload = (await response.json()) as {
-        data?: ProductListItem[];
-        error?: unknown;
-      };
-
-      if (!response.ok) {
-        throw new Error(errorMessage(payload.error, "Nao foi possivel carregar os produtos."));
-      }
-      const loadedProducts = payload.data ?? [];
-      setProducts(loadedProducts);
+      await refreshProducts();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel carregar os produtos.");
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [refreshProducts]);
 
   useEffect(() => {
     void loadProducts();
-  }, []);
+  }, [loadProducts]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -981,7 +999,8 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                       const status = statusInfo[product.status];
                       const isFeatured = isShowcasePosition(product.featuredPosition);
                       const distributor = product.inventorySource === "DISTRIBUTOR";
-                      const pricing = product.supplierPricing && Date.parse(product.supplierPricing.validUntil) > Date.now() ? product.supplierPricing : null;
+                      const pricing = product.supplierPricing ?? null;
+                      const continuedPricing = pricing !== null && Date.parse(pricing.validUntil) <= Date.now();
                       const salePrice = distributor ? pricing ? pricing.unitPriceCents / 100 : null : Number(product.promotionalPrice ?? product.price);
                       return (
                         <article className={cn("min-w-0 border-b border-line bg-white px-3 py-2 last:border-b-0", visibleSelectedIds.includes(product.id) && "bg-brand-soft/30")} key={product.id}>
@@ -1005,16 +1024,27 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                               <span className="mt-0.5 hidden truncate text-[10px] text-muted sm:block">{classificationLabels(product.catalogClassification).join(" · ")}{product.isPopularPharmacy ? " · Farmácia Popular" : ""}{isFeatured ? ` · Vitrine ${product.featuredPosition}` : ""}</span>
                             </span>
                           </button>
-                          <div className="col-start-2 flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 text-left sm:block sm:shrink-0 sm:text-right">
-                            <p className="text-sm font-black tabular-nums text-ink">{salePrice === null ? "Indisponível" : formatCurrency(salePrice)}</p>
-                            <p className="mt-0.5 text-[10px] text-muted">{distributor ? pricing ? `${pricing.supplier} · ${pricing.demandAllowed ? "quantidade a conferir" : `${pricing.purchaseLimit} disp.`}` : "Sem oferta válida" : `${product.stock} na loja`}</p>
+                          <div className="col-start-2 min-w-0 text-left sm:shrink-0 sm:text-right">
+                            <div aria-label={`Valores de ${product.name}`} className={cn("grid min-w-0 gap-x-4 gap-y-1", canManageCashback && distributor ? "grid-cols-2 sm:min-w-60" : "grid-cols-1")} role="group">
+                              {canManageCashback && distributor && <div className="min-w-0">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-muted">Custo utilizado</p>
+                                <p className="break-words text-sm font-black tabular-nums text-ink">{pricing?.unitCostCents === undefined ? "Não selecionado" : formatCurrency(pricing.unitCostCents / 100)}</p>
+                                <p className="mt-0.5 text-[10px] text-muted">{pricing ? supplierOfferLabel(pricing.supplier) : "Sem oferta selecionada"}</p>
+                              </div>}
+                              <div className="min-w-0">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-muted">Venda</p>
+                                <p className="break-words text-sm font-black tabular-nums text-ink">{salePrice === null ? "Indisponível" : formatCurrency(salePrice)}</p>
+                                <p className="mt-0.5 text-[10px] text-muted">{distributor ? pricing ? `${canManageCashback ? "" : `${supplierOfferLabel(pricing.supplier)} · `}${pricing.demandAllowed ? "quantidade a conferir" : `${pricing.purchaseLimit} disp.`}` : "Sem oferta elegível" : `${product.stock} na loja`}</p>
+                              </div>
+                            </div>
+                            {continuedPricing && <p className="mt-1 text-[10px] font-semibold text-amber-800">Conferência vencida · em continuidade</p>}
                             <span className={cn("mt-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold", status.className)}>{status.label}</span>
                           </div>
                           </div>
                           <details className="group mt-1 pl-8">
-                          <summary aria-label={`Ações de ${product.name}`} className="min-h-8 cursor-pointer text-xs font-semibold leading-8 text-brand marker:text-brand/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">Ações e ajuste rápido{canManageCashback && distributor ? ` · acréscimo ${(product.supplierMarkupBps ?? 6000) / 100}%${pricing ? ` · custo ${formatCurrency(pricing.unitCostCents / 100)}` : ""}` : ""}</summary>
+                          <summary aria-label={`Ações de ${product.name}`} className="min-h-8 cursor-pointer text-xs font-semibold leading-8 text-brand marker:text-brand/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">Ações e ajuste rápido{canManageCashback && distributor ? ` · acréscimo ${(product.supplierMarkupBps ?? 6000) / 100}%${pricing?.unitCostCents !== undefined ? ` · custo ${formatCurrency(pricing.unitCostCents / 100)}` : ""}` : ""}</summary>
                           <div className="grid gap-2 pb-2 pt-1">
-                          <ProductQuickControls product={product} canEdit={canManageCashback} onSaved={loadProducts} />
+                          <ProductQuickControls product={product} canEdit={canManageCashback} onSaved={refreshProducts} />
                           <div aria-label={`Ferramentas de ${product.name}`} className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4 [&>button]:h-auto [&>button]:min-h-10 [&>button]:whitespace-normal [&>button]:px-2 [&>button]:text-xs" role="group">
                             <ProductMarketingTools product={product} />
                             <Button
@@ -1114,6 +1144,8 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                 imagePickerRef={editImagePickerRef}
                 disabled={isUpdating}
                 product={editingProduct}
+                currentSupplierPricing={products.find(product => product.id === editingProduct.id)?.supplierPricing}
+                onSupplierOffersSaved={refreshProducts}
               />
               <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-line bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <Button disabled={isUpdating} onClick={() => setEditingProduct(null)} type="button" variant="secondary">Cancelar</Button>

@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-18 — Custo e venda claros na lista de produtos
+
+O catálogo administrativo separa custo utilizado e venda, identifica a distribuidora escolhida e oferece acesso à comparação/revisão das ofertas. A interface preserva ofertas vencidas já aceitas pelo resolvedor de continuidade e mostra a situação, em vez de descartá-las localmente. Venda de distribuidora permanece por acréscimo; preço de loja física mantém o contrato existente. Custos e edição financeira continuam exclusivos do ADMIN. Escopo, fluxo e limites em [custo e venda no catálogo](admin-product-cost-price-2026-11-18.md).
+
 ## 2026-11-18 — Black Friday temporária nos selos e na faixa superior
 
 A pedido do lojista, os cartões recebem um selo pequeno e a faixa rotativa existente recebe o destaque Black Friday, sem mudar a logo, o tema geral ou regras comerciais. Uma configuração central encerra ambos em 01/12/2026 às 00h de Brasília e permite retirada antecipada por uma única opção. O provider compartilhado também encerra a campanha em páginas que continuam abertas. Contrato e verificação em [Black Friday — selos e faixa](black-friday-2026-11-18.md).

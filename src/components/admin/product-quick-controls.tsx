@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { lazy, Suspense, useEffect, useState, type FormEvent } from "react";
 import { Loader2, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,14 +14,17 @@ import { formatCurrency } from "@/lib/utils";
 
 export type CatalogQuickProduct = {
   id: string; name: string; updatedAt: string; inventorySource?: "PHARMACY" | "DISTRIBUTOR";
+  ean?: string | null;
   catalogClassification?: unknown; supplierMarkupBps?: number; price: string; promotionalPrice: string | null;
   requiresPrescription: boolean;
   supplierPricing?: { supplier: string; unitCostCents?: number; unitPriceCents: number; purchaseLimit: number; demandAllowed?: boolean; validUntil: string } | null;
 };
 const selectStyle = "h-11 min-w-0 rounded-lg border border-line bg-white px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/30";
+const SupplierProductOffers = lazy(() => import("@/components/admin/supplier-product-offers").then(module => ({ default: module.SupplierProductOffers })));
 
 export function ProductQuickControls({ product, canEdit, onSaved }: { product: CatalogQuickProduct; canEdit: boolean; onSaved: () => Promise<void> }) {
   const [open, setOpen] = useState(false);
+  const [offersOpen, setOffersOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [classification, setClassification] = useState(() => readClassification(product.catalogClassification));
   const [markup, setMarkup] = useState(String((product.supplierMarkupBps ?? 6000) / 100));
@@ -31,7 +34,8 @@ export function ProductQuickControls({ product, canEdit, onSaved }: { product: C
   const [now, setNow] = useState(Date.now());
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(timer); }, []);
   const distributor = product.inventorySource === "DISTRIBUTOR";
-  const pricing = product.supplierPricing && Date.parse(product.supplierPricing.validUntil) > now ? product.supplierPricing : null;
+  const pricing = product.supplierPricing;
+  const pricingStatus = pricing && Date.parse(pricing.validUntil) <= now ? "Conferência vencida · em continuidade" : "Conferência vigente";
   const currentPrice = distributor ? pricing?.unitPriceCents === undefined ? null : pricing.unitPriceCents / 100 : Number(product.promotionalPrice ?? product.price);
   const changedClassification = JSON.stringify(classification) !== JSON.stringify(readClassification(product.catalogClassification));
   const changed = changedClassification || (distributor ? markup !== String((product.supplierMarkupBps ?? 6000) / 100) : price !== product.price || promo !== (product.promotionalPrice ?? ""));
@@ -87,15 +91,25 @@ export function ProductQuickControls({ product, canEdit, onSaved }: { product: C
     setPrice(product.price); setPromo(product.promotionalPrice ?? ""); setAdjustment(""); setOpen(true);
   }
   return <>
-    <div className="w-full rounded-xl border border-line bg-surface-subtle p-3 lg:w-64 lg:shrink-0">
+    <div className={distributor && canEdit ? "grid w-full max-w-2xl gap-3 sm:grid-cols-2" : "w-full lg:w-64 lg:shrink-0"}>
+      {distributor && canEdit && <div role="group" aria-label="Custo utilizado" className="min-w-0 rounded-xl border border-line bg-surface-subtle p-3">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-muted">Custo utilizado</p>
+        <p className="mt-1 text-xl font-black tabular-nums text-ink">{pricing?.unitCostCents === undefined ? "Indisponível" : formatCurrency(pricing.unitCostCents / 100)}</p>
+        <p className="mt-1 text-xs leading-5 text-muted">Melhor oferta elegível para este EAN.</p>
+        <p className="mt-1 text-xs font-semibold text-ink">{pricing ? `${pricing.supplier} · ${pricingStatus}` : "Sem oferta elegível para venda"}</p>
+        <Button className="mt-3 min-h-10 w-full" disabled={!product.ean} onClick={() => setOffersOpen(true)} size="sm" type="button" variant="secondary">Comparar / editar custos</Button>
+        {!product.ean && <p className="mt-1 text-xs leading-5 text-muted">Cadastre o EAN para comparar e editar os custos das distribuidoras.</p>}
+      </div>}
+      <div role="group" aria-label="Preço de venda" className="min-w-0 rounded-xl border border-line bg-surface-subtle p-3">
       <div className="flex items-start justify-between gap-3">
         <div><p className="text-[11px] font-bold uppercase tracking-wide text-muted">Preço de venda</p><p className="mt-1 text-xl font-black tabular-nums text-ink">{currentPrice === null ? "Indisponível" : formatCurrency(currentPrice)}</p></div>
         {distributor && canEdit && <span className="rounded-lg border border-brand/15 bg-white px-2 py-1 text-sm font-black tabular-nums text-brand">+{(product.supplierMarkupBps ?? 6000) / 100}%</span>}
       </div>
-      {distributor && <p className="mt-1 text-xs leading-5 text-muted">{pricing ? `${pricing.supplier} · ${pricing.demandAllowed ? "quantidade a conferir com o distribuidor" : `${pricing.purchaseLimit} disponíveis`}${canEdit && pricing.unitCostCents !== undefined ? ` · custo ${formatCurrency(pricing.unitCostCents / 100)}` : ""}` : "Sem oferta válida para venda"}</p>}
-      {canEdit && <Button className="mt-3 min-h-10 w-full" onClick={openEditor} size="sm" type="button" variant="secondary"><SlidersHorizontal className="h-4 w-4" />Preço e classificação</Button>}
+      {distributor && <p className="mt-1 text-xs leading-5 text-muted">{pricing ? `${pricing.supplier} · ${pricing.demandAllowed ? "quantidade a conferir com o distribuidor" : `${pricing.purchaseLimit} disponíveis`}` : "Sem oferta elegível para venda"}</p>}
+      {canEdit && <Button className="mt-3 min-h-10 w-full" onClick={openEditor} size="sm" type="button" variant="secondary"><SlidersHorizontal className="h-4 w-4" />Editar venda e classificação</Button>}
+      </div>
     </div>
-    <Dialog open={open} onOpenChange={value => { if (!busy) setOpen(value); }}>
+    {canEdit && <Dialog open={open} onOpenChange={value => { if (!busy) setOpen(value); }}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
         <DialogHeader><DialogTitle>Ajuste rápido</DialogTitle><DialogDescription>{productDisplayName(product.name)}</DialogDescription></DialogHeader>
         <form className="grid gap-5" onSubmit={save}>
@@ -103,9 +117,10 @@ export function ProductQuickControls({ product, canEdit, onSaved }: { product: C
             <div className="grid gap-3 rounded-xl border border-line bg-surface-subtle p-4">
               <p className="text-xs font-black uppercase tracking-wide text-muted">Preço</p>
               {distributor ? <>
-                <div className="flex flex-wrap justify-between gap-3 text-sm"><span>Custo válido: <strong>{pricing?.unitCostCents !== undefined ? formatCurrency(pricing.unitCostCents / 100) : "não disponível"}</strong></span><span>Venda após ajuste: <strong>{preview === null ? "aguarda oferta" : formatCurrency(preview)}</strong></span></div>
+                <div className="flex flex-wrap justify-between gap-3 text-sm"><span>Custo utilizado: <strong>{pricing?.unitCostCents !== undefined ? formatCurrency(pricing.unitCostCents / 100) : "não disponível"}</strong></span><span>Venda após ajuste: <strong>{preview === null ? "aguarda oferta" : formatCurrency(preview)}</strong></span></div>
+                {pricing && <p className="text-xs font-semibold text-amber-800">{pricing.supplier} · {pricingStatus}. Confira custo e disponibilidade antes de salvar.</p>}
                 <label className="grid gap-2 text-sm font-bold">Acréscimo sobre o custo (%)<Input inputMode="decimal" value={markup} onChange={event => setMarkup(event.target.value)} required /></label>
-                <p className="text-xs leading-5 text-muted">O preço acompanha o menor custo válido do mesmo EAN. Acréscimo não é margem líquida. Pedidos em aberto impedem alterar o percentual.</p>
+                <p className="text-xs leading-5 text-muted">O preço acompanha o custo elegível do mesmo EAN, conforme a resolução comercial do servidor. Acréscimo não é margem líquida. Pedidos em aberto impedem alterar o percentual.</p>
               </> : <><div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-2 text-sm font-bold">Preço normal (R$)<Input inputMode="decimal" value={price} onChange={event => { setPrice(event.target.value); setAdjustment(""); }} required /></label><label className="grid gap-2 text-sm font-bold">Promocional (R$)<Input inputMode="decimal" value={promo} onChange={event => setPromo(event.target.value)} placeholder="Sem promoção" /></label></div><label className="grid gap-2 text-sm font-bold">Reajuste do preço normal (%)<Input type="number" min="-99.99" max="100" step="0.01" value={adjustment} onChange={event => adjustPhysicalPrice(event.target.value)} placeholder="Ex.: 5 ou -5" /><span className="text-xs font-normal text-muted">Calculado sobre o preço normal atual. A promoção permanece separada.</span></label></>}
             </div>
             <div className="grid gap-3">
@@ -122,6 +137,14 @@ export function ProductQuickControls({ product, canEdit, onSaved }: { product: C
           <div className="flex justify-end gap-2 border-t border-line pt-4"><Button disabled={busy} onClick={() => setOpen(false)} type="button" variant="secondary">Cancelar</Button><Button disabled={busy || !changed} type="submit">{busy && <Loader2 className="h-4 w-4 animate-spin" />}Salvar ajuste</Button></div>
         </form>
       </DialogContent>
-    </Dialog>
+    </Dialog>}
+    {distributor && canEdit && offersOpen && product.ean && <Dialog open={offersOpen} onOpenChange={setOffersOpen}>
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader><DialogTitle>Comparar / editar custos</DialogTitle><DialogDescription>{productDisplayName(product.name)} · EAN {product.ean}</DialogDescription></DialogHeader>
+        <Suspense fallback={<p role="status" className="text-sm text-muted">Carregando ofertas…</p>}>
+          <SupplierProductOffers productId={product.id} ean={product.ean} isMedicine={["MEDICINE", "UNCLASSIFIED"].includes(readClassification(product.catalogClassification).kind) || product.requiresPrescription} selectedSupplier={pricing?.supplier} onSaved={onSaved} />
+        </Suspense>
+      </DialogContent>
+    </Dialog>}
   </>;
 }
