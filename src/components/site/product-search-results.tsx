@@ -1,7 +1,7 @@
 import { productImageAlt } from "@/features/products/image-placeholder";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Loader2, SearchX, Sparkles } from "lucide-react";
+import { ArrowRight, Loader2, Search, SearchX, Sparkles } from "lucide-react";
 import { ProductImagePlaceholder } from "@/components/site/product-image-placeholder";
 import { isPrescriptionSearchProduct, productSearchHref, productSearchPlan, type PublicCatalogSearchItem, type PublicProductSearchItem } from "@/features/products/public-search";
 import { isConsultationIdentity } from "@/features/products/consultation-catalog";
@@ -162,9 +162,16 @@ export function ProductSearchResults({
       ) : null}
       <div id={id} role="listbox">
       {trimmedQuery.length < 2 ? (
-        <div className="flex min-h-14 items-center gap-3 rounded-xl bg-surface-subtle px-3 py-2.5 text-sm text-muted">
-          <Sparkles className="h-5 w-5 shrink-0 text-brand" />
-          <span><strong className="block text-sm font-bold text-ink">Busque no catálogo</strong><span className="text-xs leading-5">Digite pelo menos 2 letras.</span></span>
+        <div className="flex min-h-14 items-center gap-3 rounded-xl border border-brand/10 bg-gradient-to-br from-brand-soft/80 via-white to-white px-3 py-2 sm:gap-3.5 sm:px-4">
+          <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white bg-white text-brand shadow-[0_4px_14px_rgba(200,16,46,0.08)]">
+            <Search className="h-5 w-5 stroke-[2.2]" />
+          </span>
+          <span className="min-w-0">
+            <strong className="block text-[0.95rem] font-bold leading-5 tracking-tight text-ink">Digite o que precisar</strong>
+            <span className="mt-0.5 block text-xs leading-4 text-muted">
+              {trimmedQuery ? "Digite mais para ver sugestões." : "Busque por nome, marca ou EAN."}
+            </span>
+          </span>
         </div>
       ) : isLoading ? (
         <div className="flex min-h-14 items-center gap-3 px-3 py-2.5 text-sm font-semibold text-muted">

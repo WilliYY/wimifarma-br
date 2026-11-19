@@ -126,13 +126,16 @@ for (const width of [320, 390, 1280]) test(`busca ${width}px tem um limpar, avis
     const input = page.getByRole("combobox", { name: "Buscar produtos" });
     await input.focus();
     const listbox = page.getByRole("listbox");
-    await expect(listbox).toContainText("Digite pelo menos 2 letras");
+    await expect(listbox).toContainText("Digite o que precisar");
+    await expect(listbox).toContainText("Busque por nome, marca ou EAN.");
     assert.ok((await listbox.boundingBox())!.height <= 80, "Aviso inicial deve ser compacto");
     if (captureRoot) {
       await mkdir(captureRoot, { recursive: true });
       await page.screenshot({ path: join(captureRoot, `search-empty-${width}.png`) });
     }
     await input.fill("p");
+    await expect(listbox).toContainText("Digite mais para ver sugestões.");
+    await expect(listbox).not.toContainText("Busque por nome, marca ou EAN.");
     await expect(page.getByRole("button", { name: "Limpar busca", exact: true })).toHaveCount(1);
     const nativeClear = await input.evaluate(element => {
       const style = getComputedStyle(element, "::-webkit-search-cancel-button");
@@ -148,6 +151,8 @@ for (const width of [320, 390, 1280]) test(`busca ${width}px tem um limpar, avis
     await page.getByRole("button", { name: "Limpar busca", exact: true }).click();
     await expect(input).toHaveValue("");
     await expect(input).toBeFocused();
+    await expect(listbox).toContainText("Digite o que precisar");
+    await expect(listbox).toContainText("Busque por nome, marca ou EAN.");
     await expect(page.getByRole("option")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Limpar busca", exact: true })).toHaveCount(0);
     await input.fill("vazio");

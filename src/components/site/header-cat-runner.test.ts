@@ -116,9 +116,14 @@ test("gatinho decorativo não recebe foco nem captura cliques da busca", async (
     const input = page.getByRole("textbox", { name: "Busca sintética" });
     const sprite = await page.locator(".header-cat-sprite").boundingBox();
     assert.ok(sprite);
-    const target = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName, { x: sprite.x + sprite.width / 2, y: sprite.y + sprite.height / 2 });
-    assert.equal(target, "INPUT", "clique sobre a posição visual do gato alcança o campo");
+    const target = await page.evaluate(({ x, y }) => {
+      const element = document.elementFromPoint(x, y);
+      return { tag: element?.tagName, insideSearch: Boolean(element?.closest(".site-search-form")) };
+    }, { x: sprite.x + sprite.width / 2, y: sprite.y + sprite.height / 2 });
+    assert.ok(target.insideSearch && ["INPUT", "BUTTON"].includes(target.tag ?? ""), "o gato deixa o clique alcançar o campo ou botão que estiver atrás dele");
     await page.mouse.click(sprite.x + sprite.width / 2, sprite.y + sprite.height / 2);
+    await expect(page.locator(".site-search-form :focus")).toHaveCount(1);
+    await input.focus();
     await expect(input).toBeFocused();
     await input.fill("sintético");
     await page.getByRole("button", { name: "Buscar sintético" }).click();

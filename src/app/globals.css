@@ -479,7 +479,7 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
 .header-cat-runner {
   position: absolute;
   inset: 0 auto 0 0;
-  width: 160px;
+  width: 212px;
   contain: layout;
   will-change: transform;
   mix-blend-mode: multiply;
@@ -488,9 +488,9 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
 .header-cat-figure {
   position: absolute;
   bottom: 0;
-  left: 58px;
-  width: 44px;
-  height: 34px;
+  left: 152px;
+  width: 60px;
+  height: 50px;
 }
 
 .header-cat-sprite {
@@ -502,11 +502,12 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
 
 .header-cat-image {
   position: absolute;
-  top: -12px;
-  left: -11px;
-  width: 66px;
+  top: -17px;
+  left: -17px;
+  width: 92px;
   max-width: none;
-  height: 66px;
+  height: 92px;
+  filter: contrast(1.25);
   user-select: none;
 }
 
@@ -516,9 +517,9 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
 
 .header-cat-bubble {
   position: absolute;
-  top: 1px;
+  top: 14px;
   left: 0;
-  width: 160px;
+  width: 148px;
   padding: 1px 6px;
   border: 1px solid color-mix(in srgb, var(--brand) 15%, transparent);
   border-radius: 999px;
@@ -537,15 +538,15 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
 
 .header-cat-bubble::after {
   position: absolute;
-  bottom: -4px;
-  left: 75px;
+  top: 6px;
+  right: -4px;
   width: 6px;
   height: 6px;
   border-right: inherit;
   border-bottom: inherit;
   background: white;
   content: "";
-  transform: rotate(45deg);
+  transform: rotate(-45deg);
 }
 
 .header-cat-bubble[data-visible="true"] {
