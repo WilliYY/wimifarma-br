@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { HeaderCatRunner } from "@/components/site/header-cat-runner";
 
 type SiteHeaderShellProps = {
   announcement: ReactNode;
@@ -107,6 +108,7 @@ export function SiteHeaderShell({ announcement, children, navigation }: SiteHead
         <div>{announcement}</div>
       </div>
       {children}
+      <HeaderCatRunner compact={compact} />
       <div className="site-header-band" data-header-collapsible inert={compact} aria-hidden={compact || undefined}>
         <div>{navigation}</div>
       </div>

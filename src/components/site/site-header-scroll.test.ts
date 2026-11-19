@@ -51,6 +51,7 @@ async function fixture(width: number, role: "ADMIN" | "CUSTOMER" | null, reduced
       if (url.pathname === "/api/minha-conta/cashback") return route.fulfill({ json: { data: { availableCents: 0, pendingCents: 0, reservedCents: 0, transactions: [] } } });
       if (url.pathname === "/api/produtos/busca") return route.fulfill({ json: { data: { products: [{ id: "synthetic-product", name: "Produto sintético", slug: "sintetico", price: "10.00", activeIngredients: [] }], relatedProducts: [] } } });
       if (url.pathname.startsWith("/brand/")) return route.fulfill({ path: path.join(process.cwd(), "public", url.pathname) });
+      if (url.pathname === "/media/header/gato-correndo.gif") return route.fulfill({ path: path.join(process.cwd(), "public", url.pathname) });
       return route.abort();
     });
     await page.goto(origin);
@@ -334,6 +335,39 @@ test("marca e área preta percorrem tamanhos intermediários ao recolher e resta
     }
   });
 });
+
+for (const width of [320, 390, 768, 1536]) {
+  test(`gatinho preserva os controles do cabeçalho completo: ${width}`, async () => {
+    await fixture(width, "ADMIN", false, async page => {
+      const lane = page.locator("[data-header-cat-lane]");
+      const cat = page.getByRole("button", { name: "Mudar a direção do gatinho", exact: true });
+      await expect(lane.locator("img")).toBeVisible();
+      const bounds = await page.evaluate(() => {
+        const header = document.querySelector("header")!;
+        const lane = header.querySelector("[data-header-cat-lane]")!.getBoundingClientRect();
+        const main = header.querySelector("[data-header-main]")!.getBoundingClientRect();
+        const controls = Array.from(header.querySelectorAll("[data-header-main] :is(button, a, input)"))
+          .filter(element => element.getClientRects().length)
+          .map(element => element.getBoundingClientRect());
+        return { separated: main.bottom <= lane.top && controls.every(box => box.bottom <= lane.top), overflow: document.documentElement.scrollWidth > innerWidth };
+      });
+      assert.ok(bounds.separated, "gatinho e balão têm faixa separada de busca, conta e painel");
+      assert.equal(bounds.overflow, false);
+      if (width >= 1280) {
+        const track = await page.locator(".header-cat-track").boundingBox();
+        const brand = await page.locator("[data-header-brand-panel]").boundingBox();
+        assert.ok(track && brand && track.x >= brand.x + brand.width, "no desktop, o percurso começa após a marca");
+      }
+      await expect(page.getByRole("link", { name: "Painel admin", exact: true }).locator("visible=true")).toHaveCount(1);
+      await cat.click({ force: true });
+      const screenshots = process.env.HEADER_CAT_SCREENSHOTS_DIR;
+      if (screenshots) {
+        await fs.mkdir(screenshots, { recursive: true });
+        await page.screenshot({ path: path.join(screenshots, `header-completo-${width}.png`) });
+      }
+    });
+  });
+}
 
 test("ações móveis do administrador ficam alinhadas no topo e ao rolar", async () => {
   await fixture(390, "ADMIN", false, async page => {
