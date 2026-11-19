@@ -585,7 +585,7 @@ function ProductFormFields({
                 {!product && <span className="text-xs font-normal leading-5 text-muted">Salve como rascunho. Depois, ADMIN deve conferir peso, medidas e transporte em Fretes e entregas; volte a este cadastro para publicar.</span>}
               </label>
             </div>
-            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-brand/20 bg-brand-soft/40 px-3 py-3 text-sm font-bold text-ink"><input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={isShowcasePosition(product?.featuredPosition ?? null)} name="featured" type="checkbox" /><Star className="h-4 w-4 text-brand" />Destacar em Melhores ofertas</label>
+            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-brand/20 bg-brand-soft/40 px-3 py-3 text-sm font-bold text-ink"><input className="h-4 w-4 shrink-0 accent-brand" defaultChecked={isShowcasePosition(product?.featuredPosition ?? null)} name="featured" type="checkbox" /><Star className="h-4 w-4 text-brand" />Incluir na seleção manual (não altera a página inicial)</label>
 
             {canManageCashback && !product && <fieldset className="grid gap-3 rounded-lg border border-line p-3">
               <legend className="text-sm font-bold">Classificação do produto (ADMIN)</legend>
@@ -812,7 +812,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
     const shouldFeature = !isShowcasePosition(product.featuredPosition);
 
     if (shouldFeature && (product.status !== "ACTIVE" || !product.imageUrl)) {
-      toast.error("Publique o produto e adicione uma foto antes de coloca-lo em destaque.");
+      toast.error("Publique o produto e adicione uma foto antes de incluí-lo na seleção manual.");
       return;
     }
 
@@ -836,7 +836,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
       );
 
       if (!nextProductIds) {
-        throw new Error(`As ${SHOWCASE_SLOT_COUNT} posicoes estao ocupadas. Organize a vitrine para liberar um espaco.`);
+        throw new Error(`As ${SHOWCASE_SLOT_COUNT} posições manuais estão ocupadas. Organize a seleção manual para liberar um espaço.`);
       }
 
       const updateResponse = await fetch("/api/ofertas/vitrine", {
@@ -847,13 +847,13 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
       const updatePayload = (await updateResponse.json()) as { error?: unknown };
 
       if (!updateResponse.ok) {
-        throw new Error(errorMessage(updatePayload.error, "Nao foi possivel atualizar o destaque."));
+        throw new Error(errorMessage(updatePayload.error, "Não foi possível atualizar a seleção manual."));
       }
 
       await loadProducts();
-      toast.success(shouldFeature ? "Produto adicionado a Melhores ofertas." : "Produto removido dos destaques.");
+      toast.success(shouldFeature ? "Produto adicionado à seleção manual. A página inicial continua automática." : "Produto removido da seleção manual. A página inicial continua automática.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar o destaque.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar a seleção manual.");
     } finally {
       setFeaturedProductId(null);
     }
@@ -872,6 +872,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
             <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-muted">
               {origin === "PHARMACY" ? "Seu estoque próprio, organizado por cadastro, SKU e embalagem." : "Ofertas e disponibilidade dos fornecedores, separadas do estoque da loja."}
             </p>
+            <p className="mt-2 max-w-2xl text-xs leading-5 text-muted">SEO automático ao publicar. As vitrines da página inicial fazem rodízio diário, pelo horário de Brasília, entre os produtos aptos. Não precisa clicar por produto. A seleção manual abaixo não controla essas vitrines.</p>
           </div>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -879,7 +880,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
           <Button asChild variant="secondary">
             <Link href="/admin/ofertas">
               <LayoutGrid className="h-4 w-4" />
-              Organizar vitrine
+              Organizar seleção manual
             </Link>
           </Button>
           <Button className="min-h-11" onClick={() => setIsCreateOpen(true)} type="button">
@@ -894,7 +895,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
           {[
             { label: "Cadastrados", value: originProductCount, icon: Pill, tone: "text-brand" },
             { label: "Publicados", value: activeProducts, icon: UploadCloud, tone: "text-pharma-green" },
-            { label: "Em destaque", value: originProducts.filter((product) => isShowcasePosition(product.featuredPosition)).length, icon: Star, tone: "text-amber-600" },
+            { label: "Seleção manual", value: originProducts.filter((product) => isShowcasePosition(product.featuredPosition)).length, icon: Star, tone: "text-amber-600" },
             { label: "Rascunhos", value: originProducts.filter((product) => product.status === "DRAFT").length, icon: Archive, tone: "text-muted" },
           ].map(({ label, value, icon: Icon, tone }) => (
             <div className="min-w-0 px-4 sm:px-5" key={label}>
@@ -1021,7 +1022,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                               <span className="line-clamp-2 text-sm font-bold leading-5 text-ink">{productDisplayName(product.name)}</span>
                               <span className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] font-semibold text-ink"><span className="break-all">SKU {product.sku || "não informado"}</span><span className="break-all text-muted">EAN {product.ean || "não informado"}</span></span>
                               <span className="mt-0.5 block truncate text-[11px] text-muted">{[product.brand, product.category].filter(Boolean).join(" · ") || "Sem categoria"}</span>
-                              <span className="mt-0.5 hidden truncate text-[10px] text-muted sm:block">{classificationLabels(product.catalogClassification).join(" · ")}{product.isPopularPharmacy ? " · Farmácia Popular" : ""}{isFeatured ? ` · Vitrine ${product.featuredPosition}` : ""}</span>
+                              <span className="mt-0.5 hidden truncate text-[10px] text-muted sm:block">{classificationLabels(product.catalogClassification).join(" · ")}{product.isPopularPharmacy ? " · Farmácia Popular" : ""}{isFeatured ? ` · Seleção manual ${product.featuredPosition}` : ""}</span>
                             </span>
                           </button>
                           <div className="col-start-2 min-w-0 text-left sm:shrink-0 sm:text-right">
@@ -1048,11 +1049,11 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                           <div aria-label={`Ferramentas de ${product.name}`} className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4 [&>button]:h-auto [&>button]:min-h-10 [&>button]:whitespace-normal [&>button]:px-2 [&>button]:text-xs" role="group">
                             <ProductMarketingTools product={product} />
                             <Button
-                              aria-label={isFeatured ? `Remover ${product.name} dos destaques` : `Destacar ${product.name}`}
+                              aria-label={isFeatured ? `Remover ${product.name} da seleção manual` : `Incluir ${product.name} na seleção manual`}
                               disabled={featuredProductId !== null || (!isFeatured && (product.status !== "ACTIVE" || !product.imageUrl))}
                               onClick={() => void toggleFeatured(product)}
                               size="sm"
-                              title={!isFeatured && (product.status !== "ACTIVE" || !product.imageUrl) ? "Publique o produto e adicione uma foto para destacar" : undefined}
+                              title={!isFeatured && (product.status !== "ACTIVE" || !product.imageUrl) ? "Publique o produto e adicione uma foto para incluir na seleção manual. Isso não altera a página inicial." : "Seleção manual: não altera as vitrines automáticas da página inicial."}
                               type="button"
                               variant={isFeatured ? "default" : "secondary"}
                             >
@@ -1061,7 +1062,7 @@ export function ProductsCatalogPanel({ canManageCashback = false, canManageShipp
                               ) : (
                                 <Star className={cn("h-4 w-4", isFeatured && "fill-current")} />
                               )}
-                              {isFeatured ? "Remover destaque" : "Destacar"}
+                              {isFeatured ? "Remover seleção manual" : "Selecionar manualmente"}
                             </Button>
                             <Button onClick={() => setEditingProduct(product)} size="sm" type="button" variant="secondary">
                               <Pencil className="h-4 w-4" />
