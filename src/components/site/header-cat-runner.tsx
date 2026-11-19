@@ -15,31 +15,36 @@ const phrases = [
   "Escolha seu favorito!",
 ] as const;
 
-export function HeaderCatRunner({ compact = false }: { compact?: boolean }) {
+export function HeaderCatRunner({ compact = false, searchActive = false }: { compact?: boolean; searchActive?: boolean }) {
   const laneRef = useRef<HTMLDivElement>(null);
   const runnerRef = useRef<HTMLDivElement>(null);
-  const reverseRef = useRef<() => void>(() => {});
   const positionRef = useRef(0);
   const directionRef = useRef(1);
   const [direction, setDirection] = useState("right");
   const [ready, setReady] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [phrase, setPhrase] = useState<number | null>(null);
-  const active = ready && !compact && !blocked;
+  const active = ready && !compact && !blocked && !searchActive;
 
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const lane = laneRef.current;
+    const header = lane?.closest<HTMLElement>(".site-header");
     function refresh() {
-      setReady(!reducedMotion.matches);
-      setBlocked(document.hidden || Boolean(document.querySelector('dialog[open], [role="dialog"][aria-modal="true"], [role="dialog"][data-state="open"]')));
+      setReady(!reducedMotion.matches && Boolean(lane?.clientWidth && lane.clientHeight));
+      setBlocked(document.hidden || header?.dataset.compact === "true" || Boolean(document.querySelector('dialog[open], [role="dialog"][aria-modal="true"], [role="dialog"][data-state="open"]')));
     }
     const observer = new MutationObserver(refresh);
     observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["open", "data-state", "aria-modal"] });
+    if (header) observer.observe(header, { attributes: true, attributeFilter: ["data-compact"] });
+    const visibilityObserver = new ResizeObserver(refresh);
+    if (lane) visibilityObserver.observe(lane);
     document.addEventListener("visibilitychange", refresh);
     reducedMotion.addEventListener("change", refresh);
     refresh();
     return () => {
       observer.disconnect();
+      visibilityObserver.disconnect();
       document.removeEventListener("visibilitychange", refresh);
       reducedMotion.removeEventListener("change", refresh);
     };
@@ -89,11 +94,9 @@ export function HeaderCatRunner({ compact = false }: { compact?: boolean }) {
     }
     const observer = new ResizeObserver(measure);
     observer.observe(lane);
-    reverseRef.current = () => travel(-directionRef.current);
     measure();
     return () => {
       observer.disconnect();
-      reverseRef.current = () => {};
       stop();
     };
   }, [active]);
@@ -115,19 +118,19 @@ export function HeaderCatRunner({ compact = false }: { compact?: boolean }) {
   }, [active]);
 
   return (
-    <div className="header-cat-lane" data-header-cat-lane data-paused={!active || undefined}>
+    <div aria-hidden="true" className="header-cat-lane" data-header-cat-lane data-paused={!active || undefined}>
       <div className="header-cat-track" ref={laneRef}>
         <div className="header-cat-runner" data-header-cat-runner data-direction={direction} ref={runnerRef}>
           <span aria-hidden="true" className="header-cat-bubble" data-header-cat-bubble data-visible={active && phrase !== null}>
             {phrase === null ? "" : phrases[phrase]}
           </span>
-          <button aria-label="Mudar a direção do gatinho" className="header-cat-button" disabled={!active} onClick={() => reverseRef.current()} title="Toque para mudar a direção" type="button">
+          <span className="header-cat-figure">
             {active ? <span className="header-cat-sprite" aria-hidden="true">
               {/* The original GIF is small; blending removes its white rectangle without a canvas loop. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img alt="" className="header-cat-image" decoding="async" draggable={false} height={500} src="/media/header/gato-correndo.gif" width={500} />
             </span> : null}
-          </button>
+          </span>
         </div>
       </div>
     </div>

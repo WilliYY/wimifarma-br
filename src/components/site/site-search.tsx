@@ -14,6 +14,7 @@ import { flushSync } from "react-dom";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Loader2, Search, X } from "lucide-react";
 import { ProductSearchResults } from "@/components/site/product-search-results";
+import { HeaderCatRunner } from "@/components/site/header-cat-runner";
 import { productSearchHref, type PublicCatalogSearchItem, type PublicProductSearchItem } from "@/features/products/public-search";
 
 type SearchResponse = {
@@ -46,6 +47,7 @@ export function SiteSearch() {
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
   const [responseResults, setResults] = useState(emptyResults);
   const [completedQuery, setCompletedQuery] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -126,11 +128,15 @@ export function SiteSearch() {
 
     const desktopViewport = window.matchMedia("(min-width: 768px)");
     const closeOnDesktop = () => {
-      if (desktopViewport.matches) setIsMobileOpen(false);
+      if (desktopViewport.matches) {
+        setIsMobileOpen(false);
+        setSearchFocused(false);
+      }
     };
     const closeFromOutside = (event: Event) => {
       if (event.target instanceof Node && !mobileSearchRef.current?.contains(event.target)) {
         setIsMobileOpen(false);
+        setSearchFocused(false);
       }
     };
     desktopViewport.addEventListener("change", closeOnDesktop);
@@ -148,6 +154,7 @@ export function SiteSearch() {
   function closeSearch() {
     setIsDesktopOpen(false);
     setIsMobileOpen(false);
+    setSearchFocused(false);
   }
 
   function toggleMobileSearch() {
@@ -232,12 +239,13 @@ export function SiteSearch() {
       <form
         action="/busca"
         data-header-search
-        className="group/search relative z-20 mx-auto hidden min-w-0 h-14 w-full max-w-[42rem] flex-1 items-center gap-2 rounded-full border border-white/80 bg-white/98 py-1.5 pl-2 pr-1.5 shadow-[0_14px_36px_rgba(0,0,0,0.16),inset_0_1px_0_rgba(255,255,255,0.95)] transition duration-300 focus-within:border-brand/60 focus-within:shadow-[0_18px_44px_rgba(200,16,46,0.18),inset_0_1px_0_rgba(255,255,255,0.95)] focus-within:ring-4 focus-within:ring-brand/15 md:flex"
+        className="site-search-form group/search relative z-20 mx-auto hidden min-w-0 h-14 w-full max-w-[42rem] flex-1 items-center gap-2 rounded-full border border-white/80 bg-white/98 py-1.5 pl-2 pr-1.5 shadow-[0_14px_36px_rgba(0,0,0,0.16),inset_0_1px_0_rgba(255,255,255,0.95)] transition duration-300 focus-within:border-brand/60 focus-within:shadow-[0_18px_44px_rgba(200,16,46,0.18),inset_0_1px_0_rgba(255,255,255,0.95)] focus-within:ring-4 focus-within:ring-brand/15 md:flex"
         onBlur={handleDesktopBlur}
         onFocus={() => setIsDesktopOpen(true)}
         onSubmit={handleSubmit}
         role="search"
       >
+        <HeaderCatRunner searchActive={searchFocused || trimmedQuery.length > 0} />
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand transition duration-300 group-focus-within/search:rotate-[-8deg] group-focus-within/search:bg-brand group-focus-within/search:text-white">
           {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
         </span>
@@ -252,6 +260,8 @@ export function SiteSearch() {
           className="h-full min-w-0 flex-1 appearance-none bg-transparent font-body text-[0.95rem] font-medium text-ink outline-none placeholder:text-[#6e7e95] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
           maxLength={80}
           name="q"
+          onBlur={() => setSearchFocused(false)}
+          onFocus={() => setSearchFocused(true)}
           onChange={(event) => {
             setQuery(event.target.value);
             setIsDesktopOpen(true);
@@ -315,7 +325,8 @@ export function SiteSearch() {
 
         {isMobileOpen ? (
           <div className="absolute inset-x-2 top-full z-30 mx-auto max-w-xl rounded-2xl border border-line bg-white p-2 shadow-xl" id="mobile-site-search">
-            <form action="/busca" aria-label="Busca de produtos" className="flex h-14 items-center gap-2 rounded-full border border-line bg-white p-1.5 pl-3 focus-within:border-brand/60" onSubmit={handleSubmit} role="search">
+            <form action="/busca" aria-label="Busca de produtos" className="site-search-form relative flex h-14 items-center gap-2 rounded-full border border-line bg-white p-1.5 pl-3 focus-within:border-brand/60" onSubmit={handleSubmit} role="search">
+              <HeaderCatRunner searchActive={searchFocused || trimmedQuery.length > 0} />
               {isLoading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-brand" /> : <Search className="h-5 w-5 shrink-0 text-brand" />}
               <input
                 aria-activedescendant={mobileActiveOptionId}
@@ -328,6 +339,8 @@ export function SiteSearch() {
                 className="h-full min-w-0 flex-1 appearance-none bg-transparent text-base font-semibold text-ink outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
                 maxLength={80}
                 name="q"
+                onBlur={() => setSearchFocused(false)}
+                onFocus={() => setSearchFocused(true)}
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Produto, EAN ou princípio ativo"

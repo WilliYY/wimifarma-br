@@ -340,18 +340,26 @@ for (const width of [320, 390, 768, 1536]) {
   test(`gatinho preserva os controles do cabeçalho completo: ${width}`, async () => {
     await fixture(width, "ADMIN", false, async page => {
       const lane = page.locator("[data-header-cat-lane]");
-      const cat = page.getByRole("button", { name: "Mudar a direção do gatinho", exact: true });
-      await expect(lane.locator("img")).toBeVisible();
+      await expect(lane).toHaveAttribute("aria-hidden", "true");
+      await expect(lane.locator("button,a,input,[tabindex]:not([tabindex='-1'])")).toHaveCount(0);
+      if (width >= 768) await expect(lane.locator("img")).toBeVisible();
+      else await expect(lane).toBeHidden();
       const bounds = await page.evaluate(() => {
         const header = document.querySelector("header")!;
-        const lane = header.querySelector("[data-header-cat-lane]")!.getBoundingClientRect();
-        const main = header.querySelector("[data-header-main]")!.getBoundingClientRect();
-        const controls = Array.from(header.querySelectorAll("[data-header-main] :is(button, a, input)"))
-          .filter(element => element.getClientRects().length)
-          .map(element => element.getBoundingClientRect());
-        return { separated: main.bottom <= lane.top && controls.every(box => box.bottom <= lane.top), overflow: document.documentElement.scrollWidth > innerWidth };
+        const lane = header.querySelector<HTMLElement>("[data-header-cat-lane]")!;
+        const decorated = header.getBoundingClientRect().height;
+        const laneBox = lane.getBoundingClientRect();
+        const searchBox = lane.closest("form")!.getBoundingClientRect();
+        lane.style.display = "none";
+        const baseline = header.getBoundingClientRect().height;
+        lane.style.removeProperty("display");
+        return { decorated, baseline, laneBox: { top: laneBox.top, bottom: laneBox.bottom }, searchBox: { top: searchBox.top, bottom: searchBox.bottom, height: searchBox.height }, overflow: document.documentElement.scrollWidth > innerWidth };
       });
-      assert.ok(bounds.separated, "gatinho e balão têm faixa separada de busca, conta e painel");
+      assert.equal(bounds.decorated, bounds.baseline, "gato não acrescenta altura ao cabeçalho completo");
+      if (width >= 768) {
+        assert.equal(bounds.searchBox.height, 56, "busca mantém os 56 px originais");
+        assert.ok(bounds.laneBox.top >= bounds.searchBox.top && bounds.laneBox.bottom <= bounds.searchBox.bottom, "gato permanece dentro da busca existente");
+      }
       assert.equal(bounds.overflow, false);
       if (width >= 1280) {
         const track = await page.locator(".header-cat-track").boundingBox();
@@ -359,7 +367,34 @@ for (const width of [320, 390, 768, 1536]) {
         assert.ok(track && brand && track.x >= brand.x + brand.width, "no desktop, o percurso começa após a marca");
       }
       await expect(page.getByRole("link", { name: "Painel admin", exact: true }).locator("visible=true")).toHaveCount(1);
-      await cat.click({ force: true });
+      for (const control of [
+        page.getByRole("link", { name: "Painel admin", exact: true }).locator("visible=true"),
+        page.getByRole("button", { name: "Abrir carrinho", exact: true }),
+        page.getByRole("link", { name: /Abrir (minha conta|conta de)/ }).locator("visible=true"),
+        page.getByRole("button", { name: "Sair", exact: true }).locator("visible=true"),
+      ]) await control.click({ trial: true });
+      if (width >= 768) {
+        const input = page.getByRole("combobox", { name: "Buscar produtos" });
+        await input.click();
+        await expect(input).toBeFocused();
+        await expect(lane).toBeHidden();
+        await input.fill("produto sintético");
+        await input.blur();
+        await expect(lane).toBeHidden();
+        await page.getByRole("button", { name: "Limpar busca", exact: true }).click();
+        await expect(input).toHaveValue("");
+        await page.getByRole("button", { name: "Encontrar", exact: true }).click({ trial: true });
+        await page.getByRole("link", { name: "Painel admin", exact: true }).locator("visible=true").focus();
+        await expect(lane.locator("img")).toBeVisible();
+      } else {
+        await page.getByRole("button", { name: "Abrir busca de produtos", exact: true }).click();
+        const search = page.getByRole("search", { name: "Busca de produtos", exact: true });
+        const input = search.getByRole("combobox");
+        await expect(input).toBeFocused();
+        await expect(search.locator("[data-header-cat-lane]")).toBeHidden();
+        await input.press("Escape");
+        await expect(search).toHaveCount(0);
+      }
       const screenshots = process.env.HEADER_CAT_SCREENSHOTS_DIR;
       if (screenshots) {
         await fs.mkdir(screenshots, { recursive: true });

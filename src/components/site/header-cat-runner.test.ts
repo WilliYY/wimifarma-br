@@ -16,7 +16,7 @@ after(async () => { if (browserPromise) await (await browserPromise).close(); })
 const cssPath = path.resolve("src/app/globals.css");
 const css = fs.readFile(cssPath, "utf8").then(source => postcss([tailwindcss()]).process(source, { from: cssPath })).then(result => result.css);
 const bundle = build({
-  stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';import {flushSync} from 'react-dom';import {HeaderCatRunner} from './src/components/site/header-cat-runner';const root=createRoot(document.getElementById('root'));window.renderCat=(compact=false)=>flushSync(()=>root.render(<HeaderCatRunner compact={compact}/>));window.unmountCat=()=>root.unmount();window.renderCat();`, resolveDir: process.cwd(), loader: "tsx" },
+  stdin: { contents: `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';import {flushSync} from 'react-dom';import {HeaderCatRunner} from './src/components/site/header-cat-runner';const root=createRoot(document.getElementById('root'));function Search({compact,show}){const [query,setQuery]=useState('');const [focused,setFocused]=useState(false);return <div data-search-area><form className="site-search-form" onSubmit={e=>{e.preventDefault();document.body.dataset.submitted=query}}>{show&&<HeaderCatRunner compact={compact} searchActive={focused||query.trim().length>0}/>}<input aria-label="Busca sintética" value={query} onChange={e=>setQuery(e.target.value)} onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}/><button type="submit">Buscar sintético</button><button type="button" onClick={()=>setQuery('')}>Limpar sintético</button></form></div>}window.renderCat=(compact=false,show=true)=>flushSync(()=>root.render(<Search compact={compact} show={show}/>));window.unmountCat=()=>root.unmount();window.renderCat();`, resolveDir: process.cwd(), loader: "tsx" },
   bundle: true, write: false, platform: "browser", format: "esm", jsx: "automatic",
   define: { "process.env.NODE_ENV": '"production"' },
 });
@@ -33,7 +33,7 @@ async function fixture(width: number, reduced: boolean, run: (page: Page, gifReq
     await page.route("**/*", async route => {
       const url = new URL(route.request().url());
       if (url.origin !== origin) return route.abort();
-      if (url.pathname === "/") return route.fulfill({ contentType: "text/html; charset=utf-8", body: `<meta charset="utf-8"><style>${styles}body{margin:0}[data-mock-controls]{display:flex;gap:8px;height:64px;align-items:center}nav{height:48px}</style><header><div data-mock-controls><button>Busca sintética</button><button>Conta sintética</button><button>Carrinho sintético</button></div><div id="root"></div><nav><a href="#catalogo">Catálogo sintético</a></nav></header><script type="module" src="/fixture.js"></script>` });
+      if (url.pathname === "/") return route.fulfill({ contentType: "text/html; charset=utf-8", body: `<meta charset="utf-8"><style>${styles}body{margin:0}[data-mock-controls]{display:flex;gap:8px;height:64px;align-items:center}[data-search-area]{position:relative;min-height:56px}[data-search-area] form{height:56px;display:flex;position:relative;z-index:1}[data-search-area] input{min-width:0;flex:1}[data-search-area] button{flex:none}nav{height:48px}</style><header class="site-header"><div data-mock-controls><button>Conta sintética</button><button>Carrinho sintético</button></div><div id="root"></div><nav><a href="#catalogo">Catálogo sintético</a></nav></header><script type="module" src="/fixture.js"></script>` });
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: script.outputFiles[0].text });
       if (url.pathname.endsWith(".gif")) {
         gifRequests.push(url.pathname);
@@ -78,16 +78,21 @@ async function expectInsideLane(page: Page) {
   assert.ok(balloon && balloon.x >= -1 && balloon.x + balloon.width <= page.viewportSize()!.width + 1, "balão permanece dentro da viewport");
 }
 
-for (const width of [320, 390, 768, 1440, 1920]) {
-  test(`gatinho reserva faixa sem sobrepor controles ou transbordar em ${width}px`, async () => {
+for (const width of [320, 390, 1280]) {
+  test(`gatinho não aumenta cabeçalho nem transborda em ${width}px`, async () => {
     await fixture(width, false, async page => {
       await expectRunning(page);
       const box = await page.locator(lane).boundingBox();
-      const controls = await page.locator("[data-mock-controls]").boundingBox();
-      const navigation = await page.locator("nav").boundingBox();
-      assert.ok(box && controls && navigation);
-      assert.ok(box.height >= 56 && box.height <= 80, `altura da faixa: ${box.height}`);
-      assert.ok(box.y >= controls.y + controls.height && box.y + box.height <= navigation.y + 1);
+      const decorated = await page.locator("header").boundingBox();
+      const search = await page.locator("[data-search-area] form").boundingBox();
+      assert.ok(box && decorated && search);
+      await page.evaluate("window.renderCat(false,false)");
+      const baseline = await page.locator("header").boundingBox();
+      assert.equal(decorated.height, baseline!.height, "decoração não cria faixa extra no cabeçalho");
+      assert.equal(search.height, 56, "busca mantém altura original");
+      assert.ok(box.y >= search.y && box.y + box.height <= search.y + search.height + 1, "gato ocupa somente a busca existente");
+      await page.evaluate("window.renderCat(false,true)");
+      await expectRunning(page);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       assert.equal(await page.locator(bubble).evaluate(el => getComputedStyle(el).pointerEvents), "none");
       assert.equal(await page.locator(runner).evaluate(el => getComputedStyle(el).mixBlendMode), "multiply");
@@ -95,27 +100,79 @@ for (const width of [320, 390, 768, 1440, 1920]) {
         await seek(page, progress);
         await expectInsideLane(page);
       }
-      for (const name of ["Busca sintética", "Conta sintética", "Carrinho sintético"]) await page.getByRole("button", { name }).click({ trial: true });
+      for (const name of ["Buscar sintético", "Conta sintética", "Carrinho sintético"]) await page.getByRole("button", { name }).click({ trial: true });
       await page.getByRole("link", { name: "Catálogo sintético" }).click({ trial: true });
     });
   });
 }
 
-test("gatinho inverte com clique, Enter e Espaço e retorna sozinho na borda", async () => {
+test("gatinho decorativo não recebe foco nem captura cliques da busca", async () => {
   await fixture(390, false, async page => {
     await expectRunning(page);
-    const cat = page.getByRole("button", { name: "Mudar a direção do gatinho" });
-    for (const action of ["click", "Enter", "Space"] as const) {
-      await seek(page, 0.5);
-      const before = await page.locator(runner).getAttribute("data-direction");
-      if (action === "click") await cat.click({ force: true });
-      else { await cat.focus(); await cat.press(action); }
-      await expect(page.locator(runner)).toHaveAttribute("data-direction", before === "right" ? "left" : "right");
-    }
+    await expect(page.locator(lane)).toHaveAttribute("aria-hidden", "true");
+    assert.equal(await page.locator(lane).locator("button,a,input,[tabindex]:not([tabindex='-1'])").count(), 0);
+    assert.equal(await page.locator(lane).evaluate(el => getComputedStyle(el).pointerEvents), "none");
+    await seek(page, 0);
+    const input = page.getByRole("textbox", { name: "Busca sintética" });
+    const sprite = await page.locator(".header-cat-sprite").boundingBox();
+    assert.ok(sprite);
+    const target = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName, { x: sprite.x + sprite.width / 2, y: sprite.y + sprite.height / 2 });
+    assert.equal(target, "INPUT", "clique sobre a posição visual do gato alcança o campo");
+    await page.mouse.click(sprite.x + sprite.width / 2, sprite.y + sprite.height / 2);
+    await expect(input).toBeFocused();
+    await input.fill("sintético");
+    await page.getByRole("button", { name: "Buscar sintético" }).click();
+    assert.equal(await page.locator("body").getAttribute("data-submitted"), "sintético");
+    await page.getByRole("button", { name: "Limpar sintético" }).click();
+    await expect(input).toHaveValue("");
+    await input.focus();
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("button", { name: "Buscar sintético" })).toBeFocused();
+  });
+});
+
+test("gatinho retorna sozinho na borda", async () => {
+  await fixture(390, false, async page => {
+    await expectRunning(page);
     const before = await page.locator(runner).getAttribute("data-direction");
     await seek(page, 1);
     await expect(page.locator(runner)).toHaveAttribute("data-direction", before === "right" ? "left" : "right");
     await expectInsideLane(page);
+  });
+});
+
+test("foco oculta e suspende o gato até a busca vazia perder foco", async () => {
+  await fixture(390, false, async page => {
+    await expectRunning(page);
+    const input = page.getByRole("textbox", { name: "Busca sintética" });
+    await input.click();
+    await expectSuspended(page);
+    await expect(page.locator(lane)).toBeHidden();
+    await page.getByRole("button", { name: "Conta sintética" }).click();
+    await expectRunning(page);
+    await expect(page.locator(lane)).toBeVisible();
+  });
+});
+
+test("consulta preenchida mantém gato oculto após blur e limpar libera animação", async () => {
+  await fixture(390, false, async page => {
+    await expectRunning(page);
+    await page.clock.install();
+    const input = page.getByRole("textbox", { name: "Busca sintética" });
+    await input.fill("produto sintético");
+    await page.getByRole("button", { name: "Conta sintética" }).click();
+    await expectSuspended(page);
+    await expect(page.locator(lane)).toBeHidden();
+    await page.clock.runFor(16000);
+    await expectSuspended(page);
+    await expect(page.locator(lane)).toBeHidden();
+    await input.focus();
+    await input.press("Enter");
+    assert.equal(await page.locator("body").getAttribute("data-submitted"), "produto sintético");
+    await page.getByRole("button", { name: "Limpar sintético" }).click();
+    await expect(input).toHaveValue("");
+    await page.getByRole("button", { name: "Conta sintética" }).click();
+    await expectRunning(page);
   });
 });
 
@@ -163,6 +220,11 @@ test("compactação e aba oculta suspendem e restauram a animação", async () =
     await page.evaluate("window.renderCat(true)");
     await expectSuspended(page);
     await page.evaluate("window.renderCat(false)");
+    await expectRunning(page);
+    await page.locator("header").evaluate(el => el.setAttribute("data-compact", "true"));
+    await expectSuspended(page);
+    await expect(page.locator(lane)).toBeHidden();
+    await page.locator("header").evaluate(el => el.setAttribute("data-compact", "false"));
     await expectRunning(page);
     await page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: true }); document.dispatchEvent(new Event("visibilitychange")); });
     await expectSuspended(page);
@@ -215,9 +277,9 @@ test("desmontar remove animações e temporizadores sem erros tardios", async ()
 });
 
 test("capturas sintéticas do gatinho em celular e desktop", async () => {
-  const output = "D:/Codex-outputs/wimifarma-br/gato-cabecalho-20261119";
+  const output = "D:/Codex-outputs/wimifarma-br/header-cat-overlay-2026-11-19";
   await fs.mkdir(output, { recursive: true });
-  for (const width of [320, 390, 1536]) {
+  for (const width of [320, 390, 1280]) {
     await fixture(width, false, async page => {
       await expectRunning(page);
       await expect.poll(() => page.locator(`${runner} img`).evaluate(el => (el as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);

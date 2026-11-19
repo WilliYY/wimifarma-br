@@ -441,16 +441,38 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
 }
 
 .header-cat-lane {
-  position: relative;
-  height: 68px;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   overflow: hidden;
-  isolation: isolate;
-  background: #f7fbf9;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.header-cat-lane * {
+  pointer-events: none;
+}
+
+.header-cat-lane[data-paused="true"] {
+  visibility: hidden;
+}
+
+.site-search-form > :is(span, svg, input, button) {
+  position: relative;
+  z-index: 1;
+}
+
+.site-search-form > button[type="submit"]:not(:hover) {
+  background-color: var(--brand);
+}
+
+.site-search-form:focus-within > .header-cat-lane {
+  display: none;
 }
 
 .header-cat-track {
   position: absolute;
-  inset: 0 8px;
+  inset: 0 4px;
   pointer-events: none;
 }
 
@@ -463,22 +485,12 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
   mix-blend-mode: multiply;
 }
 
-.header-cat-button {
+.header-cat-figure {
   position: absolute;
   bottom: 0;
-  left: 52px;
-  width: 56px;
-  height: 44px;
-  border-radius: 12px;
-  cursor: pointer;
-  pointer-events: auto;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
-.header-cat-button:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: -2px;
+  left: 58px;
+  width: 44px;
+  height: 34px;
 }
 
 .header-cat-sprite {
@@ -490,11 +502,11 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
 
 .header-cat-image {
   position: absolute;
-  top: -15px;
-  left: -14px;
-  width: 84px;
+  top: -12px;
+  left: -11px;
+  width: 66px;
   max-width: none;
-  height: 84px;
+  height: 66px;
   user-select: none;
 }
 
@@ -507,7 +519,7 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
   top: 1px;
   left: 0;
   width: 160px;
-  padding: 3px 6px;
+  padding: 1px 6px;
   border: 1px solid color-mix(in srgb, var(--brand) 15%, transparent);
   border-radius: 999px;
   background: white;
@@ -543,18 +555,6 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
 
 .site-header[data-compact="true"] .header-cat-lane {
   display: none;
-}
-
-@media (width >= 64rem) {
-  .header-cat-track {
-    left: 20rem;
-  }
-}
-
-@media (width >= 80rem) {
-  .header-cat-track {
-    left: 28rem;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
