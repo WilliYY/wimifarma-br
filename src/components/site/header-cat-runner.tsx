@@ -24,19 +24,17 @@ export function HeaderCatRunner({ compact = false, searchActive = false }: { com
   const [ready, setReady] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [phrase, setPhrase] = useState<number | null>(null);
-  const active = ready && !compact && !blocked && !searchActive;
+  const active = ready && !blocked && !searchActive;
 
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const lane = laneRef.current;
-    const header = lane?.closest<HTMLElement>(".site-header");
     function refresh() {
       setReady(!reducedMotion.matches && Boolean(lane?.clientWidth && lane.clientHeight));
-      setBlocked(document.hidden || header?.dataset.compact === "true" || Boolean(document.querySelector('dialog[open], [role="dialog"][aria-modal="true"], [role="dialog"][data-state="open"]')));
+      setBlocked(document.hidden || Boolean(document.querySelector('dialog[open], [role="dialog"][aria-modal="true"], [role="dialog"][data-state="open"]')));
     }
     const observer = new MutationObserver(refresh);
     observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["open", "data-state", "aria-modal"] });
-    if (header) observer.observe(header, { attributes: true, attributeFilter: ["data-compact"] });
     const visibilityObserver = new ResizeObserver(refresh);
     if (lane) visibilityObserver.observe(lane);
     document.addEventListener("visibilitychange", refresh);
@@ -54,10 +52,12 @@ export function HeaderCatRunner({ compact = false, searchActive = false }: { com
     const lane = laneRef.current;
     const runner = runnerRef.current;
     if (!active || !lane || !runner) return;
+    const submit = lane.closest("form")?.querySelector<HTMLButtonElement>('button[type="submit"]');
     let animation: Animation | null = null;
     let startX = positionRef.current;
     let targetX = startX;
     let duration = 1;
+    let minX = 0;
     let maxX = 0;
 
     function stop() {
@@ -73,13 +73,16 @@ export function HeaderCatRunner({ compact = false, searchActive = false }: { com
 
     function travel(nextDirection: number) {
       stop();
-      positionRef.current = Math.min(maxX, Math.max(0, positionRef.current));
+      positionRef.current = Math.min(maxX, Math.max(minX, positionRef.current));
       directionRef.current = nextDirection;
       setDirection(nextDirection > 0 ? "right" : "left");
       startX = positionRef.current;
-      targetX = nextDirection > 0 ? maxX : 0;
+      targetX = nextDirection > 0 ? maxX : minX;
       duration = Math.max(100, Math.abs(targetX - startX) / 40 * 1000);
-      if (maxX <= 0) return;
+      if (maxX <= minX) {
+        runner!.style.transform = `translate3d(${positionRef.current}px, 0, 0)`;
+        return;
+      }
       animation = runner!.animate([
         { transform: `translate3d(${startX}px, 0, 0)` },
         { transform: `translate3d(${targetX}px, 0, 0)` },
@@ -89,11 +92,19 @@ export function HeaderCatRunner({ compact = false, searchActive = false }: { com
 
     function measure() {
       stop();
-      maxX = Math.max(0, lane!.clientWidth - runner!.offsetWidth);
+      const width = lane!.clientWidth;
+      const buttonLeft = submit ? submit.getBoundingClientRect().left - lane!.getBoundingClientRect().left - 4 : width;
+      maxX = Math.max(0, Math.min(width, buttonLeft) - runner!.offsetWidth);
+      runner!.style.setProperty("--cat-lane-width", `${width}px`);
+      const bubbleWidth = runner!.querySelector<HTMLElement>("[data-header-cat-bubble]")?.offsetWidth ?? 0;
+      const bubbleShift = Math.min(0, width - maxX - bubbleWidth);
+      minX = Math.min(maxX, -bubbleShift);
+      runner!.style.setProperty("--cat-bubble-shift", `${bubbleShift}px`);
       travel(directionRef.current);
     }
     const observer = new ResizeObserver(measure);
     observer.observe(lane);
+    if (submit) observer.observe(submit);
     measure();
     return () => {
       observer.disconnect();
@@ -118,7 +129,7 @@ export function HeaderCatRunner({ compact = false, searchActive = false }: { com
   }, [active]);
 
   return (
-    <div aria-hidden="true" className="header-cat-lane" data-header-cat-lane data-paused={!active || undefined}>
+    <div aria-hidden="true" className="header-cat-lane" data-header-cat-lane data-compact={compact || undefined} data-paused={!active || undefined}>
       <div className="header-cat-track" ref={laneRef}>
         <div className="header-cat-runner" data-header-cat-runner data-direction={direction} ref={runnerRef}>
           <span aria-hidden="true" className="header-cat-bubble" data-header-cat-bubble data-visible={active && phrase !== null}>

@@ -386,6 +386,32 @@ for (const width of [320, 390, 768, 1536]) {
         await page.getByRole("button", { name: "Encontrar", exact: true }).click({ trial: true });
         await page.getByRole("link", { name: "Painel admin", exact: true }).locator("visible=true").focus();
         await expect(lane.locator("img")).toBeVisible();
+        await page.evaluate(() => scrollTo({ top: 400, behavior: "instant" }));
+        await expect(page.locator("header")).toHaveAttribute("data-compact", "true");
+        await expect.poll(() => page.locator("header").evaluate(header => header.getAnimations({ subtree: true })
+          .filter(animation => animation instanceof CSSTransition && (animation.pending || animation.playState === "running")).length)).toBe(0);
+        await expect(lane.locator("img")).toBeVisible();
+        const runner = lane.locator("[data-header-cat-runner]");
+        await expect.poll(() => runner.evaluate(element => element.getAnimations().filter(animation => animation.playState === "running").length)).toBe(1);
+        await expect(lane.locator("[data-header-cat-bubble]")).toHaveAttribute("data-visible", "true");
+        const { figure, submit, balloon } = await runner.evaluate(element => {
+          const animation = element.getAnimations()[0];
+          animation.currentTime = Number(animation.effect!.getTiming().duration) * 0.999;
+          const figure = element.querySelector(".header-cat-figure")!.getBoundingClientRect();
+          const submit = element.closest("form")!.querySelector("button[type='submit']")!.getBoundingClientRect();
+          const balloon = element.querySelector("[data-header-cat-bubble]")!.getBoundingClientRect();
+          return {
+            figure: { x: figure.x, y: figure.y, width: figure.width, height: figure.height },
+            submit: { x: submit.x },
+            balloon: { x: balloon.x, y: balloon.y, width: balloon.width, height: balloon.height },
+          };
+        });
+        const gap = submit.x - figure.x - figure.width;
+        assert.ok(gap >= 3 && gap <= 6, `cabeçalho compacto: gato retorna antes do botão Encontrar; distância ${gap}px`);
+        assert.ok(balloon && balloon.y >= 0 && balloon.y + balloon.height <= figure.y + 1, `balão compacto fica acima do desenho sem sair do topo da viewport: ${JSON.stringify({ balloon, figure })}`);
+        assert.ok(balloon.x >= 0 && balloon.x + balloon.width <= width + 1, "balão compacto não transborda lateralmente");
+        assert.equal(await page.locator("form[data-header-search]").evaluate(form => form.getBoundingClientRect().height), 48, "busca compacta conserva a altura anterior de 3rem");
+        await expect(page.getByRole("link", { name: "Painel admin", exact: true }).locator("visible=true")).toHaveCount(1);
       } else {
         await page.getByRole("button", { name: "Abrir busca de produtos", exact: true }).click();
         const search = page.getByRole("search", { name: "Busca de produtos", exact: true });
@@ -403,6 +429,34 @@ for (const width of [320, 390, 768, 1536]) {
     });
   });
 }
+
+test("gatinho e balão permanecem visíveis no cabeçalho compacto de visitante", async () => {
+  await fixture(1536, null, false, async page => {
+    const header = page.locator("header");
+    const lane = header.locator("[data-header-cat-lane]");
+    await expect(lane.locator("img")).toBeVisible();
+    await page.evaluate(() => scrollTo({ top: 400, behavior: "instant" }));
+    await expect(header).toHaveAttribute("data-compact", "true");
+    await expect.poll(() => header.evaluate(element => element.getAnimations({ subtree: true })
+      .filter(animation => animation instanceof CSSTransition && (animation.pending || animation.playState === "running")).length)).toBe(0);
+    await expect(lane.locator("img")).toBeVisible();
+    await expect.poll(() => lane.locator("[data-header-cat-runner]").evaluate(element => element.getAnimations().filter(animation => animation.playState === "running").length)).toBe(1);
+    await expect(lane.locator("[data-header-cat-bubble]")).toHaveAttribute("data-visible", "true");
+    const geometry = await lane.evaluate(element => {
+      const balloon = element.querySelector("[data-header-cat-bubble]")!.getBoundingClientRect();
+      const figure = element.querySelector(".header-cat-figure")!.getBoundingClientRect();
+      return { top: balloon.top, bottom: balloon.bottom, figureTop: figure.top, left: balloon.left, right: balloon.right };
+    });
+    assert.ok(geometry.top >= 0 && geometry.bottom <= geometry.figureTop + 1, `visitante: balão acima do desenho dentro da viewport ${JSON.stringify(geometry)}`);
+    assert.ok(geometry.left >= 0 && geometry.right <= 1536);
+    assert.equal(await page.locator("form[data-header-search]").evaluate(form => form.getBoundingClientRect().height), 48);
+    const output = process.env.HEADER_CAT_CAPTURE_ROOT;
+    if (output) {
+      await fs.mkdir(output, { recursive: true });
+      await header.screenshot({ path: path.join(output, "header-cat-visitante-compacto-1536.png") });
+    }
+  });
+});
 
 test("ações móveis do administrador ficam alinhadas no topo e ao rolar", async () => {
   await fixture(390, "ADMIN", false, async page => {

@@ -76,6 +76,9 @@ async function expectInsideLane(page: Page) {
   assert.ok(track.left >= track.min - 1 && track.right <= track.max + 1, JSON.stringify(track));
   const balloon = await page.locator(bubble).boundingBox();
   assert.ok(balloon && balloon.x >= -1 && balloon.x + balloon.width <= page.viewportSize()!.width + 1, "balão permanece dentro da viewport");
+  const figure = await page.locator(".header-cat-figure").boundingBox();
+  const submit = await page.locator(".site-search-form button[type='submit']").boundingBox();
+  assert.ok(figure && submit && figure.x + figure.width <= submit.x - 3, "desenho permanece antes do botão submit durante o percurso");
 }
 
 for (const width of [320, 390, 1280]) {
@@ -136,13 +139,42 @@ test("gatinho decorativo não recebe foco nem captura cliques da busca", async (
   });
 });
 
-test("gatinho retorna sozinho na borda", async () => {
+test("gatinho chega à esquerda do botão submit e retorna sem sobrepor o botão", async () => {
   await fixture(390, false, async page => {
     await expectRunning(page);
+    await seek(page, 0.999);
+    const figure = await page.locator(".header-cat-figure").boundingBox();
+    const submit = await page.locator(".site-search-form button[type='submit']").boundingBox();
+    assert.ok(figure && submit);
+    const gap = submit.x - figure.x - figure.width;
+    assert.ok(gap >= 3 && gap <= 6, `gato volta junto ao botão sem sobreposição; distância ${gap}px`);
     const before = await page.locator(runner).getAttribute("data-direction");
     await seek(page, 1);
     await expect(page.locator(runner)).toHaveAttribute("data-direction", before === "right" ? "left" : "right");
     await expectInsideLane(page);
+  });
+});
+
+test("balão acompanha o gato acima do desenho e imagem escura conserva opacidade", async () => {
+  await fixture(390, false, async page => {
+    await expectRunning(page);
+    await expect(page.locator(bubble)).toHaveAttribute("data-visible", "true");
+    await seek(page, 0.5);
+    const { figure, balloon } = await page.locator(runner).evaluate(element => {
+      const figure = element.querySelector(".header-cat-figure")!.getBoundingClientRect();
+      const balloon = element.querySelector("[data-header-cat-bubble]")!.getBoundingClientRect();
+      return { figure: { x: figure.x, y: figure.y, width: figure.width }, balloon: { x: balloon.x, y: balloon.y, width: balloon.width, height: balloon.height } };
+    });
+    assert.ok(balloon.y + balloon.height <= figure.y + 1, "balão permanece acima do desenho");
+    assert.ok(figure.x >= balloon.x - 1 && figure.x + figure.width <= balloon.x + balloon.width + 1, "balão acompanha a posição horizontal do gato");
+    const styles = await page.locator(`${runner} img`).evaluate(image => {
+      const opacity: string[] = [];
+      for (let element: Element | null = image; element && !element.matches("form"); element = element.parentElement) opacity.push(getComputedStyle(element).opacity);
+      return { opacity, filter: getComputedStyle(image).filter };
+    });
+    assert.ok(styles.opacity.every(value => Number(value) === 1), "nenhuma camada esmaece o gato com transparência");
+    const brightness = styles.filter.match(/brightness\(([^)]+)\)/);
+    assert.ok(brightness && Number(brightness[1]) < 1, `desenho escurecido: ${styles.filter}`);
   });
 });
 
@@ -193,14 +225,36 @@ test("resize mantém o gatinho e seu balão dentro da faixa", async () => {
   });
 });
 
+test("redimensionar botão submit recalcula retorno sem mudar viewport", async () => {
+  await fixture(768, false, async page => {
+    await expectRunning(page);
+    await seek(page, 0.95);
+    await page.locator(".site-search-form button[type='submit']").evaluate(button => { (button as HTMLElement).style.width = "200px"; });
+    await expect.poll(() => page.locator(".header-cat-figure").evaluate(figure => {
+      const submit = figure.closest("form")!.querySelector("button[type='submit']")!;
+      return figure.getBoundingClientRect().right <= submit.getBoundingClientRect().left - 3;
+    })).toBe(true);
+    // Finish the current leg, then inspect the outward leg at its end.
+    if (await page.locator(runner).getAttribute("data-direction") === "left") {
+      await seek(page, 1);
+      await expect(page.locator(runner)).toHaveAttribute("data-direction", "right");
+    }
+    await seek(page, 0.999);
+    const figure = await page.locator(".header-cat-figure").boundingBox();
+    const submit = await page.locator(".site-search-form button[type='submit']").boundingBox();
+    assert.ok(figure && submit);
+    assert.ok(submit.x - figure.x - figure.width >= 3 && submit.x - figure.x - figure.width <= 6, "limite acompanha a nova largura do botão");
+  });
+});
+
 test("balões mostram dez frases únicas por 3s e permanecem ocultos por 5s", async () => {
   await fixture(390, false, async page => {
     await expectRunning(page);
     await page.clock.install();
     await page.clock.pauseAt(new Date());
-    await page.evaluate("window.renderCat(true)");
+    await page.getByRole("textbox", { name: "Busca sintética" }).focus();
     await expectSuspended(page);
-    await page.evaluate("window.renderCat(false)");
+    await page.getByRole("button", { name: "Conta sintética" }).click();
     const phrases: string[] = [];
     for (let index = 0; index < 10; index++) {
       await expect(page.locator(bubble)).toHaveAttribute("data-visible", "true");
@@ -219,16 +273,17 @@ test("balões mostram dez frases únicas por 3s e permanecem ocultos por 5s", as
   });
 });
 
-test("compactação e aba oculta suspendem e restauram a animação", async () => {
+test("compactação mantém gato visível e animado; aba oculta suspende e restaura", async () => {
   await fixture(768, false, async page => {
     await expectRunning(page);
     await page.evaluate("window.renderCat(true)");
-    await expectSuspended(page);
+    await expectRunning(page);
+    await expect(page.locator(lane)).toBeVisible();
     await page.evaluate("window.renderCat(false)");
     await expectRunning(page);
     await page.locator("header").evaluate(el => el.setAttribute("data-compact", "true"));
-    await expectSuspended(page);
-    await expect(page.locator(lane)).toBeHidden();
+    await expectRunning(page);
+    await expect(page.locator(lane)).toBeVisible();
     await page.locator("header").evaluate(el => el.setAttribute("data-compact", "false"));
     await expectRunning(page);
     await page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: true }); document.dispatchEvent(new Event("visibilitychange")); });
@@ -282,7 +337,8 @@ test("desmontar remove animações e temporizadores sem erros tardios", async ()
 });
 
 test("capturas sintéticas do gatinho em celular e desktop", async () => {
-  const output = "D:/Codex-outputs/wimifarma-br/header-cat-overlay-2026-11-19";
+  const output = process.env.HEADER_CAT_CAPTURE_ROOT;
+  if (!output) return;
   await fs.mkdir(output, { recursive: true });
   for (const width of [320, 390, 1280]) {
     await fixture(width, false, async page => {
