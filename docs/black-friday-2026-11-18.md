@@ -4,7 +4,11 @@ Campanha visual autorizada em 18/11/2026: selo pequeno `Black Friday` na faixa s
 
 A identidade da loja, fotos, preços, descontos calculados, estoque, ações de compra, regras de receita e benefícios de frete continuam usando os contratos existentes. O selo identifica a campanha; não cria desconto ou condição comercial. Não há banner grande, dependência, integração, migration ou alteração de dados.
 
-## Glow azul no início da home
+## Glow azul no início da home — retirado em 19/11/2026
+
+O lojista pediu a retirada do glow azul em 19/11/2026. O atributo da home, o modificador CSS e a animação exclusivos desse efeito foram removidos, restaurando o fundo original de `.pharma-clouds`. Os selos nos produtos, a faixa de Black Friday e sua vigência permanecem ativos. O histórico abaixo descreve a implementação anterior; a retirada não muda os demais efeitos, a marca ou as bolhas do rodapé.
+
+Validação da retirada: dois testes de vigência da campanha, 577 testes de segurança, lint do componente, typecheck, sintaxe CSS e `git diff --check` aprovados; revisão independente sem achados. A comparação do CSS confirmou que o único trecho removido é o modificador azul com sua animação. Evidências e publicação em `D:/Codex-outputs/wimifarma-br/retirada-glow-azul-2026-11-19/`.
 
 A pedido do lojista, a seção inicial da home recebe um halo azul/ciano suave durante a mesma campanha. A referência cromática é a [Black Shop Samsung 2026](https://news.samsung.com/br/samsung-aposta-em-experiencia-do-consumidor-e-beneficios-exclusivos-para-a-black-friday-2026); nenhuma imagem, marca ou composição externa foi copiada. O atributo `data-black-friday-glow="blue"` só existe enquanto `useBlackFridayCampaign()` está ativo. O CSS altera apenas o pseudo-elemento de fundo já existente, com gradientes estáticos, sem blur adicional, nova camada DOM ou bloqueio de cliques. Header, logo, espaçamentos e galeria permanecem. Ao terminar/desligar a campanha, o atributo sai e o fundo anterior volta automaticamente. O modificador é exclusivo da home e não altera os demais usos de `.pharma-clouds`.
 

@@ -765,35 +765,6 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
   z-index: -1;
 }
 
-.pharma-clouds[data-black-friday-glow="blue"]::before {
-  animation: black-friday-glow-breathe 9s ease-in-out infinite alternate;
-  background:
-    radial-gradient(ellipse 80% 340px at 50% 180px, rgb(59 130 246 / 0.26), transparent 80%),
-    radial-gradient(ellipse 42% 320px at 4% 150px, rgb(56 189 248 / 0.2), transparent 78%),
-    radial-gradient(ellipse 46% 340px at 96% 120px, rgb(37 99 235 / 0.2), transparent 80%);
-  filter: none;
-  inset: 0;
-}
-
-@keyframes black-friday-glow-breathe {
-  from {
-    opacity: 0.78;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(8px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pharma-clouds[data-black-friday-glow="blue"]::before {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-}
-
 .soft-float {
   animation: soft-float 5.8s ease-in-out infinite;
 }
