@@ -81,3 +81,13 @@ As auditorias npm de 02/11/2026 registraram sete alertas de produção (três ba
 - [Autenticação de domínio](https://help.brevo.com/hc/en-us/articles/12163873383186-Authenticate-your-domain-with-Brevo-Brevo-code-DKIM-DMARC).
 - [Criação de chave API](https://help.brevo.com/hc/en-us/articles/40159485019794-Create-and-manage-your-API-keys) e [permissões](https://help.brevo.com/hc/en-us/articles/40158277171474-About-API-key-permissions).
 - [Webhooks protegidos](https://developers.brevo.com/docs/secured-webhooks).
+
+## Validação real do transporte SMTP — 19/11/2026
+
+A credencial SMTP já configurada autenticou em produção com resposta `235`, conexão TLS e certificado válidos. O remetente institucional configurado foi conferido. A imagem antiga de ferramentas não incluía o módulo SMTP; foi construída uma imagem oficial isolada com o estágio `tools` da revisão atual, sem substituir o app ou executar migrations.
+
+Um único envio do CLI `send-password-recovery-test-email.ts --send`, em `BREVO_EMAIL_MODE=internal_test`, foi aceito e entregue à caixa de entrada institucional de homologação. A mensagem foi recebida às 22h37 de Brasília, com SPF, DKIM e DMARC aprovados. A amostra contém HTML e imagem com texto alternativo da marca; a política da conta Brevo reescreveu links e imagens para rastreamento. Não foi realizada redefinição real de senha nem disparo à base de clientes.
+
+As três modalidades de clientes continuaram desativadas durante o teste e no app em execução. Este resultado valida autenticação SMTP, submissão e entrega da amostra; não substitui a homologação dos fluxos completos de recuperação, pedidos e carrinho, nem ativa suas flags.
+
+Avisos recentes consultados na caixa institucional identificam chaves de API expiradas e uma chave SMTP criada separadamente. A chave de API não está configurada no app. Não houve criação, troca ou revogação de credencial nesta validação. A consulta do vencimento da chave SMTP no painel ficou pendente porque o acesso local ao navegador estava indisponível neste chat; o vencimento não pode ser deduzido da autenticação bem-sucedida. Comprovantes privados, sem valores de chaves, em `D:/Codex-outputs/wimifarma-br/brevo-validacao-20261119/`.
