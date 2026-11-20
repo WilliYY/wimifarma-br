@@ -447,6 +447,7 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
   left: 0;
   z-index: 20;
   height: 50px;
+  mix-blend-mode: multiply;
   overflow: visible;
   pointer-events: none;
 }
