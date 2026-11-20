@@ -16,7 +16,7 @@ after(async () => { if (browserPromise) await (await browserPromise).close(); })
 const cssPath = path.resolve("src/app/globals.css");
 const css = fs.readFile(cssPath, "utf8").then(source => postcss([tailwindcss()]).process(source, { from: cssPath })).then(result => result.css);
 const bundle = build({
-  stdin: { contents: `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';import {flushSync} from 'react-dom';import {HeaderCatRunner} from './src/components/site/header-cat-runner';const root=createRoot(document.getElementById('root'));function Search({compact,show}){const [query,setQuery]=useState('');const [focused,setFocused]=useState(false);return <div data-search-area><form className="site-search-form" onSubmit={e=>{e.preventDefault();document.body.dataset.submitted=query}}>{show&&<HeaderCatRunner compact={compact} searchActive={focused||query.trim().length>0}/>}<input aria-label="Busca sintética" value={query} onChange={e=>setQuery(e.target.value)} onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}/><button type="submit">Buscar sintético</button><button type="button" onClick={()=>setQuery('')}>Limpar sintético</button></form></div>}window.renderCat=(compact=false,show=true)=>flushSync(()=>root.render(<Search compact={compact} show={show}/>));window.unmountCat=()=>root.unmount();window.renderCat();`, resolveDir: process.cwd(), loader: "tsx" },
+  stdin: { contents: `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';import {flushSync} from 'react-dom';import {HeaderCatRunner} from './src/components/site/header-cat-runner';const root=createRoot(document.getElementById('root'));function Search(){const [query,setQuery]=useState('');return <div data-search-area><form className="site-search-form" onSubmit={e=>{e.preventDefault();document.body.dataset.submitted=query}}><input aria-label="Busca sintética" value={query} onChange={e=>setQuery(e.target.value)}/><button type="submit">Buscar sintético</button><button type="button" onClick={()=>setQuery('')}>Limpar sintético</button></form></div>}function Fixture({show}){return <><header className="site-header"><div data-mock-controls><button>Conta sintética</button><button>Carrinho sintético</button></div><Search/><nav><a href="#catalogo">Catálogo sintético</a></nav></header>{show&&<HeaderCatRunner/>}</>}window.renderCat=(show=true)=>flushSync(()=>root.render(<Fixture show={show}/>));window.unmountCat=()=>root.unmount();window.renderCat();`, resolveDir: process.cwd(), loader: "tsx" },
   bundle: true, write: false, platform: "browser", format: "esm", jsx: "automatic",
   define: { "process.env.NODE_ENV": '"production"' },
 });
@@ -33,7 +33,7 @@ async function fixture(width: number, reduced: boolean, run: (page: Page, gifReq
     await page.route("**/*", async route => {
       const url = new URL(route.request().url());
       if (url.origin !== origin) return route.abort();
-      if (url.pathname === "/") return route.fulfill({ contentType: "text/html; charset=utf-8", body: `<meta charset="utf-8"><style>${styles}body{margin:0}[data-mock-controls]{display:flex;gap:8px;height:64px;align-items:center}[data-search-area]{position:relative;min-height:56px}[data-search-area] form{height:56px;display:flex;position:relative;z-index:1}[data-search-area] input{min-width:0;flex:1}[data-search-area] button{flex:none}nav{height:48px}</style><header class="site-header"><div data-mock-controls><button>Conta sintética</button><button>Carrinho sintético</button></div><div id="root"></div><nav><a href="#catalogo">Catálogo sintético</a></nav></header><script type="module" src="/fixture.js"></script>` });
+      if (url.pathname === "/") return route.fulfill({ contentType: "text/html; charset=utf-8", body: `<meta charset="utf-8"><style>${styles}body{margin:0}[data-mock-controls]{display:flex;gap:8px;height:64px;align-items:center}[data-search-area]{position:relative;min-height:56px}[data-search-area] form{height:56px;display:flex;position:relative;z-index:1}[data-search-area] input{min-width:0;flex:1}[data-search-area] button{flex:none}nav{height:48px}main{height:4000px;padding-top:260px}[data-click-through]{position:fixed;inset-inline:0;bottom:0;height:50px;z-index:10}</style><div id="root"></div><main><textarea aria-label="Anotação sintética"></textarea><select aria-label="Opção sintética"><option>Opção</option></select><div contenteditable="true" aria-label="Editor sintético" tabindex="0"></div></main><button data-click-through onclick="document.body.dataset.bottomClicked='true'">Ação inferior sintética</button><script type="module" src="/fixture.js"></script>` });
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: script.outputFiles[0].text });
       if (url.pathname.endsWith(".gif")) {
         gifRequests.push(url.pathname);
@@ -77,24 +77,33 @@ async function expectInsideLane(page: Page) {
   const balloon = await page.locator(bubble).boundingBox();
   assert.ok(balloon && balloon.x >= -1 && balloon.x + balloon.width <= page.viewportSize()!.width + 1, "balão permanece dentro da viewport");
   const figure = await page.locator(".header-cat-figure").boundingBox();
-  const submit = await page.locator(".site-search-form button[type='submit']").boundingBox();
-  assert.ok(figure && submit && figure.x + figure.width <= submit.x - 3, "desenho permanece antes do botão submit durante o percurso");
+  assert.ok(figure && figure.y >= 0 && figure.y + figure.height <= page.viewportSize()!.height + 1, "desenho permanece dentro da viewport");
+}
+
+async function expectViewportBottom(page: Page) {
+  await expect.poll(() => page.locator(lane).evaluate(el => {
+    const rect = el.getBoundingClientRect();
+    return Math.abs(rect.bottom - innerHeight);
+  })).toBeLessThanOrEqual(1);
+  assert.equal(await page.locator(lane).evaluate(el => getComputedStyle(el).position), "fixed");
+  assert.equal(await page.locator(lane).evaluate(el => Boolean(el.closest("header,form"))), false);
 }
 
 for (const width of [320, 390, 1280]) {
-  test(`gatinho não aumenta cabeçalho nem transborda em ${width}px`, async () => {
+  test(`gatinho fica na borda inferior sem aumentar cabeçalho nem transbordar em ${width}px`, async () => {
     await fixture(width, false, async page => {
       await expectRunning(page);
       const box = await page.locator(lane).boundingBox();
       const decorated = await page.locator("header").boundingBox();
       const search = await page.locator("[data-search-area] form").boundingBox();
       assert.ok(box && decorated && search);
-      await page.evaluate("window.renderCat(false,false)");
+      await expectViewportBottom(page);
+      await page.evaluate("window.renderCat(false)");
       const baseline = await page.locator("header").boundingBox();
       assert.equal(decorated.height, baseline!.height, "decoração não cria faixa extra no cabeçalho");
       assert.equal(search.height, 56, "busca mantém altura original");
-      assert.ok(box.y >= search.y && box.y + box.height <= search.y + search.height + 1, "gato ocupa somente a busca existente");
-      await page.evaluate("window.renderCat(false,true)");
+      assert.ok(box.y > decorated.y + decorated.height, "gato fica distante do cabeçalho e da busca");
+      await page.evaluate("window.renderCat(true)");
       await expectRunning(page);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       assert.equal(await page.locator(bubble).evaluate(el => getComputedStyle(el).pointerEvents), "none");
@@ -103,13 +112,18 @@ for (const width of [320, 390, 1280]) {
         await seek(page, progress);
         await expectInsideLane(page);
       }
+      for (const top of [400, 1800, 0]) {
+        await page.evaluate(y => scrollTo({ top: y, behavior: "instant" }), top);
+        await expectViewportBottom(page);
+        await expectInsideLane(page);
+      }
       for (const name of ["Buscar sintético", "Conta sintética", "Carrinho sintético"]) await page.getByRole("button", { name }).click({ trial: true });
       await page.getByRole("link", { name: "Catálogo sintético" }).click({ trial: true });
     });
   });
 }
 
-test("gatinho decorativo não recebe foco nem captura cliques da busca", async () => {
+test("gatinho decorativo não recebe foco e deixa o clique atravessar até a ação inferior", async () => {
   await fixture(390, false, async page => {
     await expectRunning(page);
     await expect(page.locator(lane)).toHaveAttribute("aria-hidden", "true");
@@ -121,11 +135,12 @@ test("gatinho decorativo não recebe foco nem captura cliques da busca", async (
     assert.ok(sprite);
     const target = await page.evaluate(({ x, y }) => {
       const element = document.elementFromPoint(x, y);
-      return { tag: element?.tagName, insideSearch: Boolean(element?.closest(".site-search-form")) };
+      return Boolean(element?.closest("[data-click-through]"));
     }, { x: sprite.x + sprite.width / 2, y: sprite.y + sprite.height / 2 });
-    assert.ok(target.insideSearch && ["INPUT", "BUTTON"].includes(target.tag ?? ""), "o gato deixa o clique alcançar o campo ou botão que estiver atrás dele");
+    assert.ok(target, "o gato deixa o clique alcançar o botão real atrás dele");
     await page.mouse.click(sprite.x + sprite.width / 2, sprite.y + sprite.height / 2);
-    await expect(page.locator(".site-search-form :focus")).toHaveCount(1);
+    await expect(page.locator("body")).toHaveAttribute("data-bottom-clicked", "true");
+    await expect(page.getByRole("button", { name: "Ação inferior sintética" })).toBeFocused();
     await input.focus();
     await expect(input).toBeFocused();
     await input.fill("sintético");
@@ -139,15 +154,12 @@ test("gatinho decorativo não recebe foco nem captura cliques da busca", async (
   });
 });
 
-test("gatinho chega à esquerda do botão submit e retorna sem sobrepor o botão", async () => {
+test("gatinho retorna no limite lateral da viewport sem transbordar", async () => {
   await fixture(390, false, async page => {
     await expectRunning(page);
     await seek(page, 0.999);
     const figure = await page.locator(".header-cat-figure").boundingBox();
-    const submit = await page.locator(".site-search-form button[type='submit']").boundingBox();
-    assert.ok(figure && submit);
-    const gap = submit.x - figure.x - figure.width;
-    assert.ok(gap >= 3 && gap <= 6, `gato volta junto ao botão sem sobreposição; distância ${gap}px`);
+    assert.ok(figure && figure.x + figure.width >= page.viewportSize()!.width - 80, "gato percorre a largura disponível antes de retornar");
     const before = await page.locator(runner).getAttribute("data-direction");
     await seek(page, 1);
     await expect(page.locator(runner)).toHaveAttribute("data-direction", before === "right" ? "left" : "right");
@@ -191,18 +203,31 @@ test("foco oculta e suspende o gato até a busca vazia perder foco", async () =>
   });
 });
 
-test("consulta preenchida mantém gato oculto após blur e limpar libera animação", async () => {
+test("foco em qualquer campo editável suspende o gato até perder foco", async () => {
+  await fixture(390, false, async page => {
+    await expectRunning(page);
+    for (const selector of ["textarea", "select", "[contenteditable='true']"]) {
+      await page.locator(selector).focus();
+      await expectSuspended(page);
+      await expect(page.locator(lane)).toBeHidden();
+      await page.getByRole("button", { name: "Conta sintética" }).focus();
+      await expectRunning(page);
+      await expectViewportBottom(page);
+    }
+  });
+});
+
+test("consulta preenchida não bloqueia gato na borda inferior após blur", async () => {
   await fixture(390, false, async page => {
     await expectRunning(page);
     await page.clock.install();
     const input = page.getByRole("textbox", { name: "Busca sintética" });
     await input.fill("produto sintético");
+    await expectSuspended(page);
+    await expect(page.locator(lane)).toBeHidden();
     await page.getByRole("button", { name: "Conta sintética" }).click();
-    await expectSuspended(page);
-    await expect(page.locator(lane)).toBeHidden();
-    await page.clock.runFor(16000);
-    await expectSuspended(page);
-    await expect(page.locator(lane)).toBeHidden();
+    await expectRunning(page);
+    await expect(page.locator(lane)).toBeVisible();
     await input.focus();
     await input.press("Enter");
     assert.equal(await page.locator("body").getAttribute("data-submitted"), "produto sintético");
@@ -225,25 +250,14 @@ test("resize mantém o gatinho e seu balão dentro da faixa", async () => {
   });
 });
 
-test("redimensionar botão submit recalcula retorno sem mudar viewport", async () => {
+test("redimensionar altura da viewport mantém gato e balão na borda inferior", async () => {
   await fixture(768, false, async page => {
     await expectRunning(page);
-    await seek(page, 0.95);
-    await page.locator(".site-search-form button[type='submit']").evaluate(button => { (button as HTMLElement).style.width = "200px"; });
-    await expect.poll(() => page.locator(".header-cat-figure").evaluate(figure => {
-      const submit = figure.closest("form")!.querySelector("button[type='submit']")!;
-      return figure.getBoundingClientRect().right <= submit.getBoundingClientRect().left - 3;
-    })).toBe(true);
-    // Finish the current leg, then inspect the outward leg at its end.
-    if (await page.locator(runner).getAttribute("data-direction") === "left") {
-      await seek(page, 1);
-      await expect(page.locator(runner)).toHaveAttribute("data-direction", "right");
+    for (const height of [600, 844, 480, 900]) {
+      await page.setViewportSize({ width: 768, height });
+      await expectViewportBottom(page);
+      await expectInsideLane(page);
     }
-    await seek(page, 0.999);
-    const figure = await page.locator(".header-cat-figure").boundingBox();
-    const submit = await page.locator(".site-search-form button[type='submit']").boundingBox();
-    assert.ok(figure && submit);
-    assert.ok(submit.x - figure.x - figure.width >= 3 && submit.x - figure.x - figure.width <= 6, "limite acompanha a nova largura do botão");
   });
 });
 
@@ -273,17 +287,13 @@ test("balões mostram dez frases únicas por 3s e permanecem ocultos por 5s", as
   });
 });
 
-test("compactação mantém gato visível e animado; aba oculta suspende e restaura", async () => {
+test("compactação do cabeçalho mantém gato inferior animado; aba oculta suspende e restaura", async () => {
   await fixture(768, false, async page => {
-    await expectRunning(page);
-    await page.evaluate("window.renderCat(true)");
-    await expectRunning(page);
-    await expect(page.locator(lane)).toBeVisible();
-    await page.evaluate("window.renderCat(false)");
     await expectRunning(page);
     await page.locator("header").evaluate(el => el.setAttribute("data-compact", "true"));
     await expectRunning(page);
     await expect(page.locator(lane)).toBeVisible();
+    await expectViewportBottom(page);
     await page.locator("header").evaluate(el => el.setAttribute("data-compact", "false"));
     await expectRunning(page);
     await page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: true }); document.dispatchEvent(new Event("visibilitychange")); });
@@ -345,7 +355,7 @@ test("capturas sintéticas do gatinho em celular e desktop", async () => {
       await expectRunning(page);
       await expect.poll(() => page.locator(`${runner} img`).evaluate(el => (el as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
       await seek(page, 0.5);
-      await page.locator("header").screenshot({ path: path.join(output, `header-cat-${width}.png`) });
+      await page.screenshot({ path: path.join(output, `viewport-cat-${width}.png`) });
     });
   }
 });

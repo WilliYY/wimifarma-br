@@ -15,7 +15,7 @@ const phrases = [
   "Escolha seu favorito!",
 ] as const;
 
-export function HeaderCatRunner({ compact = false, searchActive = false }: { compact?: boolean; searchActive?: boolean }) {
+export function HeaderCatRunner() {
   const laneRef = useRef<HTMLDivElement>(null);
   const runnerRef = useRef<HTMLDivElement>(null);
   const positionRef = useRef(0);
@@ -24,26 +24,32 @@ export function HeaderCatRunner({ compact = false, searchActive = false }: { com
   const [ready, setReady] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [phrase, setPhrase] = useState<number | null>(null);
-  const active = ready && !blocked && !searchActive;
+  const active = ready && !blocked;
 
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const lane = laneRef.current;
     function refresh() {
+      const focused = document.activeElement;
+      const editing = focused instanceof HTMLElement && (focused.isContentEditable || focused.matches("input, textarea, select"));
       setReady(!reducedMotion.matches && Boolean(lane?.clientWidth && lane.clientHeight));
-      setBlocked(document.hidden || Boolean(document.querySelector('dialog[open], [role="dialog"][aria-modal="true"], [role="dialog"][data-state="open"]')));
+      setBlocked(editing || document.hidden || Boolean(document.querySelector('dialog[open], [role="dialog"][aria-modal="true"], [role="dialog"][data-state="open"]')));
     }
     const observer = new MutationObserver(refresh);
     observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["open", "data-state", "aria-modal"] });
     const visibilityObserver = new ResizeObserver(refresh);
     if (lane) visibilityObserver.observe(lane);
     document.addEventListener("visibilitychange", refresh);
+    document.addEventListener("focusin", refresh);
+    document.addEventListener("focusout", refresh);
     reducedMotion.addEventListener("change", refresh);
     refresh();
     return () => {
       observer.disconnect();
       visibilityObserver.disconnect();
       document.removeEventListener("visibilitychange", refresh);
+      document.removeEventListener("focusin", refresh);
+      document.removeEventListener("focusout", refresh);
       reducedMotion.removeEventListener("change", refresh);
     };
   }, []);
@@ -52,7 +58,6 @@ export function HeaderCatRunner({ compact = false, searchActive = false }: { com
     const lane = laneRef.current;
     const runner = runnerRef.current;
     if (!active || !lane || !runner) return;
-    const submit = lane.closest("form")?.querySelector<HTMLButtonElement>('button[type="submit"]');
     let animation: Animation | null = null;
     let startX = positionRef.current;
     let targetX = startX;
@@ -93,8 +98,7 @@ export function HeaderCatRunner({ compact = false, searchActive = false }: { com
     function measure() {
       stop();
       const width = lane!.clientWidth;
-      const buttonLeft = submit ? submit.getBoundingClientRect().left - lane!.getBoundingClientRect().left - 4 : width;
-      maxX = Math.max(0, Math.min(width, buttonLeft) - runner!.offsetWidth);
+      maxX = Math.max(0, width - runner!.offsetWidth);
       runner!.style.setProperty("--cat-lane-width", `${width}px`);
       const bubbleWidth = runner!.querySelector<HTMLElement>("[data-header-cat-bubble]")?.offsetWidth ?? 0;
       const bubbleShift = Math.min(0, width - maxX - bubbleWidth);
@@ -104,7 +108,6 @@ export function HeaderCatRunner({ compact = false, searchActive = false }: { com
     }
     const observer = new ResizeObserver(measure);
     observer.observe(lane);
-    if (submit) observer.observe(submit);
     measure();
     return () => {
       observer.disconnect();
@@ -129,7 +132,7 @@ export function HeaderCatRunner({ compact = false, searchActive = false }: { com
   }, [active]);
 
   return (
-    <div aria-hidden="true" className="header-cat-lane" data-header-cat-lane data-compact={compact || undefined} data-paused={!active || undefined}>
+    <div aria-hidden="true" className="header-cat-lane" data-header-cat-lane data-paused={!active || undefined}>
       <div className="header-cat-track" ref={laneRef}>
         <div className="header-cat-runner" data-header-cat-runner data-direction={direction} ref={runnerRef}>
           <span aria-hidden="true" className="header-cat-bubble" data-header-cat-bubble data-visible={active && phrase !== null}>

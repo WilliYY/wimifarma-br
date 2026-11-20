@@ -1,4 +1,16 @@
-# Gatinho no cabeçalho público
+# Gatinho decorativo na loja pública
+
+## Borda inferior da tela — 20/11/2026
+
+Por solicitação do lojista, o gato passa a circular rente à borda inferior da área visível, acompanhando a rolagem com `position: fixed`. O layout público monta uma única instância de `HeaderCatRunner`, fora do cabeçalho e dos formulários. A decoração não cria faixa, espaço reservado ou altura adicional no cabeçalho, conteúdo ou rodapé. A animação original de bolhas do rodapé permanece preservada.
+
+A figura mantém 60 × 50 px e o mesmo GIF local, sem transparência adicional. A pista tem 8 px de margem lateral e respeita a área segura inferior do dispositivo. O limite de ida e volta acompanha a largura disponível, sem depender do botão “Encontrar”. O balão continua acima do gato, com dez frases em ciclos de três segundos visíveis e cinco ocultos, sem sair horizontalmente da tela. A compactação do cabeçalho não altera mais o tamanho da decoração.
+
+Toda a camada e seus descendentes têm `pointer-events: none` e `aria-hidden`; não há controle clicável ou focável. O gato se recolhe ao focar um campo, seletor ou editor de texto em qualquer parte da página, durante diálogos, com a aba oculta ou sob preferência de movimento reduzido. Perder o foco permite retomar; manter uma consulta preenchida sem foco já não interfere, pois o gato está distante da busca. As pausas removem o GIF e suspendem deslocamento e balões. Não há listener de rolagem nem atualização React a cada quadro.
+
+Validação local: 40 testes de gato/cabeçalho passaram em celular e desktop, cobrindo posição inferior após rolagem, passagem de clique, campos editáveis, controles ADMIN/visitante e limites da tela. Também passaram 577 testes de segurança, lint dirigido, tipos e revisão independente. Capturas sintéticas, logs e resultado da publicação ficam em `D:/Codex-outputs/wimifarma-br/cat-viewport-bottom-20261120/`. A correção transitiva necessária ao gate de publicação está registrada em [07](07-historico-de-decisoes.md#2026-11-20--gatinho-na-borda-inferior-e-correção-transitiva-de-segurança).
+
+## Histórico no cabeçalho — 19/11/2026
 
 Após a correção solicitada pelo lojista em 19/11/2026, o GIF fica em uma camada decorativa absoluta dentro da linha da busca. Não existe faixa própria nem altura adicional no cabeçalho. O gato percorre a área livre e retorna ao chegar a 4 px da borda esquerda do botão de envio, medido no formulário real. Os controles ficam na frente da decoração. Os formulários conservam a altura anterior; a busca recolhida em telas menores não ganha uma linha só para a decoração. Não integra o painel administrativo.
 

@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-20 — Gatinho na borda inferior e correção transitiva de segurança
+
+A pedido do lojista, o gato sai da busca e passa a acompanhar a borda inferior da viewport, sem espaço reservado, cliques ou foco. Uma única instância no layout público conserva o GIF, os balões e as pausas por edição, diálogos, aba oculta e movimento reduzido. Contrato e histórico em [gatinho decorativo](gatinho-cabecalho-2026-11-19.md).
+
+O gate de publicação identificou três alertas altos derivados de uma única dependência: `effect@3.20.0`, trazida por `@prisma/config@7.10.0`. Foi fixado `effect@3.22.1` no override já existente desse pacote, preservando Prisma, deepmerge e as dependências declaradas de effect. O [GHSA-7589-6fvf-x4pw](https://github.com/advisories/GHSA-7589-6fvf-x4pw) descreve ReDoS em `Schema.TemplateLiteral`; não foi demonstrada exposição HTTP na aplicação. O fix oficial e a integridade foram conferidos no registry. A atualização do lock altera somente versão, URL e integridade de effect; não aplica o downgrade major sugerido pelo npm. Auditorias após a correção: produção com cinco moderados, completa com dez moderados, ambas sem altos/críticos. A instalação limpa e o smoke Prisma no Docker integram a validação da publicação.
+
 ## 2026-11-18 — Custo e venda claros na lista de produtos
 
 O catálogo administrativo separa custo utilizado e venda, identifica a distribuidora escolhida e oferece acesso à comparação/revisão das ofertas. A interface preserva ofertas vencidas já aceitas pelo resolvedor de continuidade e mostra a situação, em vez de descartá-las localmente. Venda de distribuidora permanece por acréscimo; preço de loja física mantém o contrato existente. Custos e edição financeira continuam exclusivos do ADMIN. Escopo, fluxo e limites em [custo e venda no catálogo](admin-product-cost-price-2026-11-18.md).

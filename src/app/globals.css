@@ -441,11 +441,13 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
 }
 
 .header-cat-lane {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
+  position: fixed;
+  right: 0;
+  bottom: env(safe-area-inset-bottom, 0px);
+  left: 0;
+  z-index: 20;
+  height: 50px;
   overflow: visible;
-  border-radius: inherit;
   pointer-events: none;
 }
 
@@ -466,13 +468,9 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
   background-color: var(--brand);
 }
 
-.site-search-form:focus-within > .header-cat-lane {
-  display: none;
-}
-
 .header-cat-track {
   position: absolute;
-  inset: 0 4px;
+  inset: 0 8px;
   pointer-events: none;
 }
 
@@ -553,28 +551,6 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
 .header-cat-bubble[data-visible="true"] {
   opacity: 1;
   visibility: visible;
-}
-
-.site-header[data-compact="true"] .header-cat-figure,
-.header-cat-lane[data-compact="true"] .header-cat-figure {
-  height: 36px;
-}
-
-.site-header[data-compact="true"] .header-cat-image,
-.header-cat-lane[data-compact="true"] .header-cat-image {
-  top: -12px;
-  left: -4px;
-  width: 68px;
-  height: 68px;
-}
-
-.site-header[data-compact="true"] .header-cat-bubble,
-.header-cat-lane[data-compact="true"] .header-cat-bubble {
-  top: -7px;
-  bottom: auto;
-  padding-block: 0;
-  font-size: 10px;
-  line-height: 14px;
 }
 
 @media (prefers-reduced-motion: reduce) {

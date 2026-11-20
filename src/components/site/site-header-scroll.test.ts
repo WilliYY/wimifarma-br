@@ -23,7 +23,7 @@ const mocks: Record<string, string> = {
   "@/components/site/cart-header-button": "import React from 'react';export const CartHeaderButton=({className=''})=><button aria-label='Abrir carrinho' className={'h-11 w-11 shrink-0 '+className}>Carrinho</button>;",
 };
 const bundle = build({
-  stdin: { contents: "import React from 'react';import {createRoot} from 'react-dom/client';import {SiteHeader} from './src/components/site/site-header';const root=createRoot(document.getElementById('root'));window.unmountHeader=()=>root.unmount();root.render(await SiteHeader());", resolveDir: process.cwd(), loader: "tsx" },
+  stdin: { contents: "import React from 'react';import {createRoot} from 'react-dom/client';import {SiteHeader} from './src/components/site/site-header';import {HeaderCatRunner} from './src/components/site/header-cat-runner';const root=createRoot(document.getElementById('root'));window.unmountHeader=()=>root.unmount();root.render(<>{await SiteHeader()}<HeaderCatRunner/></>);", resolveDir: process.cwd(), loader: "tsx" },
   bundle: true, write: false, platform: "browser", format: "esm", jsx: "automatic",
   define: { "process.env.NODE_ENV": '"production"' },
   plugins: [{ name: "header-scroll-fixture", setup(builder) {
@@ -342,30 +342,26 @@ for (const width of [320, 390, 768, 1536]) {
       const lane = page.locator("[data-header-cat-lane]");
       await expect(lane).toHaveAttribute("aria-hidden", "true");
       await expect(lane.locator("button,a,input,[tabindex]:not([tabindex='-1'])")).toHaveCount(0);
-      if (width >= 768) await expect(lane.locator("img")).toBeVisible();
-      else await expect(lane).toBeHidden();
+      await expect(lane).toHaveCount(1);
+      await expect(lane.locator("img")).toBeVisible();
       const bounds = await page.evaluate(() => {
         const header = document.querySelector("header")!;
-        const lane = header.querySelector<HTMLElement>("[data-header-cat-lane]")!;
+        const lane = document.querySelector<HTMLElement>("[data-header-cat-lane]")!;
         const decorated = header.getBoundingClientRect().height;
         const laneBox = lane.getBoundingClientRect();
-        const searchBox = lane.closest("form")!.getBoundingClientRect();
         lane.style.display = "none";
         const baseline = header.getBoundingClientRect().height;
         lane.style.removeProperty("display");
-        return { decorated, baseline, laneBox: { top: laneBox.top, bottom: laneBox.bottom }, searchBox: { top: searchBox.top, bottom: searchBox.bottom, height: searchBox.height }, overflow: document.documentElement.scrollWidth > innerWidth };
+        return { decorated, baseline, laneBox: { top: laneBox.top, bottom: laneBox.bottom }, outsideHeader: !lane.closest("header,form"), position: getComputedStyle(lane).position, viewportHeight: innerHeight, overflow: document.documentElement.scrollWidth > innerWidth };
       });
       assert.equal(bounds.decorated, bounds.baseline, "gato não acrescenta altura ao cabeçalho completo");
       if (width >= 768) {
-        assert.equal(bounds.searchBox.height, 56, "busca mantém os 56 px originais");
-        assert.ok(bounds.laneBox.top >= bounds.searchBox.top && bounds.laneBox.bottom <= bounds.searchBox.bottom, "gato permanece dentro da busca existente");
+        assert.equal(await page.locator("form[data-header-search]").evaluate(form => form.getBoundingClientRect().height), 56, "busca mantém os 56 px originais");
       }
+      assert.equal(bounds.outsideHeader, true, "gato é irmão do cabeçalho, fora da busca");
+      assert.equal(bounds.position, "fixed");
+      assert.ok(Math.abs(bounds.laneBox.bottom - bounds.viewportHeight) <= 1, "gato acompanha a borda inferior da viewport");
       assert.equal(bounds.overflow, false);
-      if (width >= 1280) {
-        const track = await page.locator(".header-cat-track").boundingBox();
-        const brand = await page.locator("[data-header-brand-panel]").boundingBox();
-        assert.ok(track && brand && track.x >= brand.x + brand.width, "no desktop, o percurso começa após a marca");
-      }
       await expect(page.getByRole("link", { name: "Painel admin", exact: true }).locator("visible=true")).toHaveCount(1);
       for (const control of [
         page.getByRole("link", { name: "Painel admin", exact: true }).locator("visible=true"),
@@ -380,7 +376,7 @@ for (const width of [320, 390, 768, 1536]) {
         await expect(lane).toBeHidden();
         await input.fill("produto sintético");
         await input.blur();
-        await expect(lane).toBeHidden();
+        await expect(lane.locator("img")).toBeVisible();
         await page.getByRole("button", { name: "Limpar busca", exact: true }).click();
         await expect(input).toHaveValue("");
         await page.getByRole("button", { name: "Encontrar", exact: true }).click({ trial: true });
@@ -394,21 +390,19 @@ for (const width of [320, 390, 768, 1536]) {
         const runner = lane.locator("[data-header-cat-runner]");
         await expect.poll(() => runner.evaluate(element => element.getAnimations().filter(animation => animation.playState === "running").length)).toBe(1);
         await expect(lane.locator("[data-header-cat-bubble]")).toHaveAttribute("data-visible", "true");
-        const { figure, submit, balloon } = await runner.evaluate(element => {
+        const { figure, balloon } = await runner.evaluate(element => {
           const animation = element.getAnimations()[0];
           animation.currentTime = Number(animation.effect!.getTiming().duration) * 0.999;
           const figure = element.querySelector(".header-cat-figure")!.getBoundingClientRect();
-          const submit = element.closest("form")!.querySelector("button[type='submit']")!.getBoundingClientRect();
           const balloon = element.querySelector("[data-header-cat-bubble]")!.getBoundingClientRect();
           return {
             figure: { x: figure.x, y: figure.y, width: figure.width, height: figure.height },
-            submit: { x: submit.x },
             balloon: { x: balloon.x, y: balloon.y, width: balloon.width, height: balloon.height },
           };
         });
-        const gap = submit.x - figure.x - figure.width;
-        assert.ok(gap >= 3 && gap <= 6, `cabeçalho compacto: gato retorna antes do botão Encontrar; distância ${gap}px`);
-        assert.ok(balloon && balloon.y >= 0 && balloon.y + balloon.height <= figure.y + 1, `balão compacto fica acima do desenho sem sair do topo da viewport: ${JSON.stringify({ balloon, figure })}`);
+        assert.ok(figure.x >= 0 && figure.x + figure.width <= width + 1, "gato não transborda durante o percurso inferior");
+        assert.ok(Math.abs(figure.y + figure.height - page.viewportSize()!.height) <= 1, "compactação não muda a borda inferior do gato");
+        assert.ok(balloon && balloon.y >= 0 && balloon.y + balloon.height <= figure.y + 1, `balão fica acima do desenho dentro da viewport: ${JSON.stringify({ balloon, figure })}`);
         assert.ok(balloon.x >= 0 && balloon.x + balloon.width <= width + 1, "balão compacto não transborda lateralmente");
         assert.equal(await page.locator("form[data-header-search]").evaluate(form => form.getBoundingClientRect().height), 48, "busca compacta conserva a altura anterior de 3rem");
         await expect(page.getByRole("link", { name: "Painel admin", exact: true }).locator("visible=true")).toHaveCount(1);
@@ -417,9 +411,13 @@ for (const width of [320, 390, 768, 1536]) {
         const search = page.getByRole("search", { name: "Busca de produtos", exact: true });
         const input = search.getByRole("combobox");
         await expect(input).toBeFocused();
-        await expect(search.locator("[data-header-cat-lane]")).toBeHidden();
+        await expect(lane).toBeHidden();
         await input.press("Escape");
         await expect(search).toHaveCount(0);
+        await expect(lane.locator("img")).toBeVisible();
+        await page.evaluate(() => scrollTo({ top: 400, behavior: "instant" }));
+        await expect(page.locator("header")).toHaveAttribute("data-compact", "true");
+        await expect.poll(() => lane.evaluate(element => Math.abs(element.getBoundingClientRect().bottom - innerHeight))).toBeLessThanOrEqual(1);
       }
       const screenshots = process.env.HEADER_CAT_SCREENSHOTS_DIR;
       if (screenshots) {
@@ -430,10 +428,11 @@ for (const width of [320, 390, 768, 1536]) {
   });
 }
 
-test("gatinho e balão permanecem visíveis no cabeçalho compacto de visitante", async () => {
+test("gatinho e balão permanecem na borda inferior ao recolher cabeçalho de visitante", async () => {
   await fixture(1536, null, false, async page => {
     const header = page.locator("header");
-    const lane = header.locator("[data-header-cat-lane]");
+    const lane = page.locator("[data-header-cat-lane]");
+    await expect(header.locator("[data-header-cat-lane]")).toHaveCount(0);
     await expect(lane.locator("img")).toBeVisible();
     await page.evaluate(() => scrollTo({ top: 400, behavior: "instant" }));
     await expect(header).toHaveAttribute("data-compact", "true");
@@ -445,15 +444,16 @@ test("gatinho e balão permanecem visíveis no cabeçalho compacto de visitante"
     const geometry = await lane.evaluate(element => {
       const balloon = element.querySelector("[data-header-cat-bubble]")!.getBoundingClientRect();
       const figure = element.querySelector(".header-cat-figure")!.getBoundingClientRect();
-      return { top: balloon.top, bottom: balloon.bottom, figureTop: figure.top, left: balloon.left, right: balloon.right };
+      return { top: balloon.top, bottom: balloon.bottom, figureTop: figure.top, figureBottom: figure.bottom, viewportHeight: innerHeight, left: balloon.left, right: balloon.right };
     });
     assert.ok(geometry.top >= 0 && geometry.bottom <= geometry.figureTop + 1, `visitante: balão acima do desenho dentro da viewport ${JSON.stringify(geometry)}`);
     assert.ok(geometry.left >= 0 && geometry.right <= 1536);
+    assert.ok(Math.abs(geometry.figureBottom - geometry.viewportHeight) <= 1, "visitante mantém gato na borda inferior após scroll");
     assert.equal(await page.locator("form[data-header-search]").evaluate(form => form.getBoundingClientRect().height), 48);
     const output = process.env.HEADER_CAT_CAPTURE_ROOT;
     if (output) {
       await fs.mkdir(output, { recursive: true });
-      await header.screenshot({ path: path.join(output, "header-cat-visitante-compacto-1536.png") });
+      await page.screenshot({ path: path.join(output, "viewport-cat-visitante-compacto-1536.png") });
     }
   });
 });
