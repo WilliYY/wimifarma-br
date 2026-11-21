@@ -1,5 +1,11 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-21 — Revisao OpenAI separada e limitada ao credito promocional
+
+O lojista autorizou um processo de analise com Astra 6.2, priorizando raciocinio, catalogo, marketing, frete, entrega e precos em conjunto. A implementacao usa uma fila finita fora do caminho HTTP, projecao comercial sem clientes e relatorios privados; nao executa instrucoes geradas nem altera regras comerciais. O esforco configurado e `max`, maior valor documentado em Responses, sujeito ao teste autenticado do modelo. `ultra` no aplicativo nao comprova um parametro de API equivalente.
+
+O painel conferido em 21/11 mostrou US$ 117 disponiveis com vencimento em 23/11. O limite e reservado antes de cada chamada e preservado em resultados incertos, com parada antecipada as 11h30 de Brasilia. Nenhuma recarga ou repeticao vazia e autorizada. Chave, acesso e primeira execucao real sao evidencias separadas da preparacao; contrato e operacao em [revisao OpenAI](openai-review-worker-2026-11-21.md).
+
 ## 2026-11-20 — Gatinho na borda inferior e correção transitiva de segurança
 
 A pedido do lojista, o gato sai da busca e passa a acompanhar a borda inferior da viewport, sem espaço reservado, cliques ou foco. Uma única instância no layout público conserva o GIF, os balões e as pausas por edição, diálogos, aba oculta e movimento reduzido. Contrato e histórico em [gatinho decorativo](gatinho-cabecalho-2026-11-19.md).

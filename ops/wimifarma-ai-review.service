@@ -1,0 +1,30 @@
+[Unit]
+Description=Wimifarma BR - revisao OpenAI com prazo e orcamento
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/projetos/wimifarma-br
+# Ajustar somente para o destino aprovado no fluxo seguro de credenciais.
+EnvironmentFile=/home/ubuntu/projetos/wimifarma-br/.env.openai-review.local
+ExecStart=/usr/bin/node /home/ubuntu/projetos/wimifarma-br/scripts/ai-review-worker.mjs --manifest /home/ubuntu/wimifarma-ai-review/manifest.json --run-dir /home/ubuntu/wimifarma-ai-review/run
+Restart=no
+TimeoutStopSec=30
+KillSignal=SIGTERM
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/ubuntu/wimifarma-ai-review/run
+MemoryMax=512M
+CPUQuota=25%
+Nice=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

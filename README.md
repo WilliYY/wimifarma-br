@@ -1,5 +1,7 @@
 # Wimifarma BR
 
+Worker separado para revisao OpenAI de catalogo, precos, frete e marketing, com saldo limitado e parada em 23/11/2026 as 11h30 de Brasilia: [contrato, execucao e limites](docs/openai-review-worker-2026-11-21.md). Preparacao e testes nao comprovam ativacao ou consumo real da API.
+
 Resumo do Club compartilhado por sessão, hidratação dos dados completos somente dos itens exibidos e indicadores acessíveis de carregamento: [desempenho de catálogo e Club](docs/desempenho-catalogo-e-club-2026-11-07.md).
 
 Pesos e medidas aproximados atualizados em 2.521 perfis; os 3.070 ativos têm dados físicos preenchidos. Duas revisões posteriores, de nove itens de higiene e sete cosméticos, elevaram os perfis habilitados para 523, com PAC/SEDEX conforme CEP: [resultado e limites](docs/estimativas-fisicas-por-familia-2026-11-06.md).
