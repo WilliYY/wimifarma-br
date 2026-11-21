@@ -116,7 +116,8 @@ export function CartPage() {
             <aside className="rounded-lg border border-line bg-white p-5 shadow-[0_18px_50px_rgba(17,24,39,0.08)] lg:sticky lg:top-[var(--site-header-offset,14rem)]">
               <h2 className="text-lg font-black text-ink">Resumo</h2>
               <div className="mt-5 flex justify-between text-sm text-muted"><span>Produtos</span><span>{currency.format(subtotalCents / 100)}</span></div>
-              <div className="mt-3 flex justify-between text-sm text-muted"><span>Entrega em Ivate ou retirada</span><span className="font-bold text-pharma-green">Gratis</span></div>
+              <div className="mt-3 flex justify-between gap-2 text-sm text-muted"><span>Retirada na farmácia</span><span className="font-bold text-pharma-green">Grátis</span></div>
+              <p className="mt-2 text-xs leading-5 text-muted">Para receber em casa, consulte o frete e o prazo pelo CEP na finalização.</p>
               <div className="mt-5 flex items-end justify-between border-t border-line pt-5"><span className="font-black text-ink">Subtotal</span><strong className="text-2xl font-black text-brand">{currency.format(subtotalCents / 100)}</strong></div>
               <Link className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(208,14,49,0.2)] transition hover:bg-brand-dark" href="/checkout">Continuar para finalizar <ArrowRight className="h-4 w-4 shrink-0" /></Link>
               <ContinueShoppingLink className="mt-2 flex min-h-11 items-center justify-center text-sm font-bold text-muted hover:text-brand">Continuar comprando</ContinueShoppingLink>
