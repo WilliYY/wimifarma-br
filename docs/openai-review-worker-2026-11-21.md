@@ -20,6 +20,10 @@ Fontes oficiais: [modelo](https://developers.openai.com/api/docs/models/gpt-6.2-
 
 Os trabalhos cobrem integridade do catalogo, identidade e imagens, regras de disponibilidade, precos e custos historicos, frete e embalagem, descontos acumulados, busca, checkout, seguranca, desempenho e propostas comerciais. A fila alterna os tipos para incluir cedo frete, economia, marketing e WimiParceiros. Tarifas, aceite de carga, lucro liquido e entrega efetiva exigem evidencias operacionais. Na ausencia de cotacoes e custos atuais, o relatorio deve identificar a lacuna.
 
+Ao preparar com `--site-audit <evidence.json>`, a primeira tarefa revisa o site publicado a partir das verificacoes da entrada da campanha, busca, produto, carrinho, checkout, frete e layout feitas de fato. O arquivo aceita `capturedAt`, `landingPath` e `checks` com `check`, `path`, `viewport` e `result`. `httpStatus`, `elapsedMs` e `reason` sao opcionais. Sao aceitos somente caminhos publicos de compra, sem query ou fragmento. Os campos opcionais `observations` e `shippingSamples` registram sinais de interface e cotacoes de teste por UF, capital/interior, status e opcoes PAC/SEDEX. Campos brutos como HTML, cookies, CEP de cliente e identificadores sao descartados. Registre como `limited` qualquer etapa que nao tenha sido exercitada. Tempo de um teste isolado nao mede Core Web Vitals.
+
+`measurement` e opcional e recebe `windowStart`, `windowEnd`, `newBrowserIds`, `socialReferrerBrowserIds`, `ordersCreated`, `campaignAttributionAvailable: false` e os opcionais `activeBrowserIds` e `ordersCompletedPaid`. Esses numeros sao agregados da loja. `socialReferrerBrowserIds` conta novos identificadores cujo primeiro referrer tem origem social conhecida. O registro da loja nao vincula UTM, clique ou visita a pedido, e a tarefa nao estima conversao ou retorno do post. Nenhum rastreador novo e instalado pelo worker.
+
 Marketing gera rascunhos para itens elegiveis, preservando marca oficial, apresentacao, precos e limitacoes de medicamentos. WimiParceiros e uma proposta de programa assistido para revendedores; WimiRende e uma proposta de compra por quantidade. Nenhuma tabela de atacado, desconto, minimo, beneficio ou nova atividade comercial e ativada por estes relatorios.
 
 O worker usa somente Responses, `store: false`, sem ferramentas, shell, SQL, navegacao ou gravacao comercial pelo modelo. Conteudo de catalogo, codigo e resposta e tratado como dado nao confiavel. Os arquivos Markdown sao para revisao privada; nao devem ser renderizados como HTML confiavel nem publicados automaticamente.
@@ -30,6 +34,7 @@ Com as dependencias existentes instaladas e o cliente Prisma gerado:
 
 ```text
 npm run audit:ai:prepare -- --out <manifesto-absoluto-fora-do-repositorio>
+npm run audit:ai:prepare -- --site-audit <evidence.json> --out <novo-manifesto-absoluto>
 npm run audit:ai -- --manifest <manifesto> --run-dir <diretorio-persistente> --dry-run
 npm run audit:ai -- --manifest <manifesto> --run-dir <diretorio-persistente> --once
 npm run audit:ai -- --manifest <manifesto> --run-dir <diretorio-persistente>

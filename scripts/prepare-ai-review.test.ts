@@ -44,6 +44,31 @@ test("manifest is deterministic, deduplicated and covers each catalog family", (
   }
 });
 
+test("public-site audit is prioritized and excludes raw visitor and browser data", () => {
+  const snapshot = { capturedAt: at, products: [product()] };
+  const audit = {
+    capturedAt: at,
+    landingPath: "/",
+    checks: [{ check: "landing", path: "/", viewport: "mobile", result: "pass", httpStatus: 200, elapsedMs: 841, rawHtml: "private-html" }],
+    observations: ["first-purchase-button-below-mobile-fold"],
+    shippingSamples: [{ uf: "SP", destination: "capital", httpStatus: 200, options: [{ service: "PAC", priceCents: 1500, maxBusinessDays: 11, signedToken: "private-token" }], cep: "private-cep" }],
+    measurement: { windowStart: "2026-11-21T11:00:00.000Z", windowEnd: at, newBrowserIds: 8, socialReferrerBrowserIds: 2, ordersCreated: 1, campaignAttributionAvailable: false, rawUsers: ["private-user"] },
+    campaignUrl: "https://wimifarma.com.br/?fbclid=private-id",
+  };
+  const withAudit = buildManifest(snapshot, [], audit);
+  const [siteJob, ...remaining] = withAudit.jobs;
+  assert.equal(siteJob.kind, "site-audit");
+  assert.match(siteJob.prompt, /"elapsedMs":841/);
+  assert.match(siteJob.prompt, /"socialReferrerBrowserIds":2/);
+  assert.match(siteJob.prompt, /first-purchase-button-below-mobile-fold/);
+  assert.match(siteJob.prompt, /"priceCents":1500/);
+  assert.doesNotMatch(siteJob.prompt, /private-|fbclid|rawHtml|rawUsers/);
+  assert.deepEqual(remaining, buildManifest(snapshot, []).jobs);
+  assert.throws(() => buildManifest(snapshot, [], { ...audit, landingPath: "/?fbclid=private-id" }));
+  assert.throws(() => buildManifest(snapshot, [], { ...audit, checks: [{ ...audit.checks[0], path: "/admin" }] }));
+  assert.throws(() => buildManifest(snapshot, [], { ...audit, observations: ["private raw browser log"] }));
+});
+
 test("jobs round-robin business priorities without omissions or changing hashes", () => {
   const snapshot = { capturedAt: at, products: Array.from({ length: 35 }, (_, i) => product(`priority-${i}`)) };
   const source = { path: "src/features/products/search-catalog.ts", sha256: "a".repeat(64), startLine: 1, endLine: 1, text: "1:// synthetic source\n" };
