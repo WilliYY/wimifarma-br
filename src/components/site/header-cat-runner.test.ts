@@ -33,7 +33,7 @@ async function fixture(width: number, reduced: boolean, run: (page: Page, gifReq
     await page.route("**/*", async route => {
       const url = new URL(route.request().url());
       if (url.origin !== origin) return route.abort();
-      if (url.pathname === "/") return route.fulfill({ contentType: "text/html; charset=utf-8", body: `<meta charset="utf-8"><style>${styles}body{margin:0}[data-mock-controls]{display:flex;gap:8px;height:64px;align-items:center}[data-search-area]{position:relative;min-height:56px}[data-search-area] form{height:56px;display:flex;position:relative;z-index:1}[data-search-area] input{min-width:0;flex:1}[data-search-area] button{flex:none}nav{height:48px}main{height:4000px;padding-top:260px}[data-click-through]{position:fixed;inset-inline:0;bottom:0;height:50px;z-index:10}</style><div id="root"></div><main><textarea aria-label="Anotação sintética"></textarea><select aria-label="Opção sintética"><option>Opção</option></select><div contenteditable="true" aria-label="Editor sintético" tabindex="0"></div></main><button data-click-through onclick="document.body.dataset.bottomClicked='true'">Ação inferior sintética</button><script type="module" src="/fixture.js"></script>` });
+      if (url.pathname === "/") return route.fulfill({ contentType: "text/html; charset=utf-8", body: `<meta charset="utf-8"><style>${styles}body{margin:0}[data-mock-controls]{display:flex;gap:8px;height:64px;align-items:center}[data-search-area]{position:relative;min-height:56px}[data-search-area] form{height:56px;display:flex;position:relative;z-index:1}[data-search-area] input{min-width:0;flex:1}[data-search-area] button{flex:none}nav{height:48px}main{height:4000px;padding-top:260px}[data-click-through]{position:fixed;inset-inline:0;bottom:0;height:60px;z-index:10}</style><div id="root"></div><main><textarea aria-label="Anotação sintética"></textarea><select aria-label="Opção sintética"><option>Opção</option></select><div contenteditable="true" aria-label="Editor sintético" tabindex="0"></div></main><button data-click-through onclick="document.body.dataset.bottomClicked='true'">Ação inferior sintética</button><script type="module" src="/fixture.js"></script>` });
       if (url.pathname === "/fixture.js") return route.fulfill({ contentType: "text/javascript", body: script.outputFiles[0].text });
       if (url.pathname.endsWith(".gif")) {
         gifRequests.push(url.pathname);
@@ -78,6 +78,8 @@ async function expectInsideLane(page: Page) {
   assert.ok(balloon && balloon.x >= -1 && balloon.x + balloon.width <= page.viewportSize()!.width + 1, "balão permanece dentro da viewport");
   const figure = await page.locator(".header-cat-figure").boundingBox();
   assert.ok(figure && figure.y >= 0 && figure.y + figure.height <= page.viewportSize()!.height + 1, "desenho permanece dentro da viewport");
+  assert.ok(Math.abs(figure.width - 72) <= 0.1, "desenho maior mantém o percurso dentro da viewport");
+  assert.ok(Math.abs(figure.height - 60) <= 0.1, "desenho maior cabe inteiro na borda inferior");
 }
 
 async function expectViewportBottom(page: Page) {
@@ -97,6 +99,7 @@ for (const width of [320, 390, 1280]) {
       const decorated = await page.locator("header").boundingBox();
       const search = await page.locator("[data-search-area] form").boundingBox();
       assert.ok(box && decorated && search);
+      assert.ok(Math.abs(box.height - 60) <= 0.1, "faixa inferior acompanha a altura do desenho maior");
       await expectViewportBottom(page);
       await page.evaluate("window.renderCat(false)");
       const baseline = await page.locator("header").boundingBox();
@@ -353,6 +356,14 @@ test("capturas sintéticas do gatinho em celular e desktop", async () => {
   for (const width of [320, 390, 1280]) {
     await fixture(width, false, async page => {
       await expectRunning(page);
+      await page.clock.install();
+      await page.clock.pauseAt(new Date());
+      await page.getByRole("textbox", { name: "Busca sintética" }).focus();
+      await expectSuspended(page);
+      await page.getByRole("button", { name: "Conta sintética" }).focus();
+      await expectRunning(page);
+      await expect(page.locator(bubble)).toHaveAttribute("data-visible", "true");
+      await expect.poll(() => page.locator(bubble).evaluate(element => getComputedStyle(element).opacity)).toBe("1");
       await expect.poll(() => page.locator(`${runner} img`).evaluate(el => (el as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
       await seek(page, 0.5);
       await page.screenshot({ path: path.join(output, `viewport-cat-${width}.png`) });

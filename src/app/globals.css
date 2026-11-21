@@ -446,7 +446,7 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
   bottom: env(safe-area-inset-bottom, 0px);
   left: 0;
   z-index: 20;
-  height: 50px;
+  height: 60px;
   mix-blend-mode: multiply;
   overflow: visible;
   pointer-events: none;
@@ -478,7 +478,7 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
 .header-cat-runner {
   position: absolute;
   inset: 0 auto 0 0;
-  width: 60px;
+  width: 72px;
   contain: layout;
   will-change: transform;
   mix-blend-mode: multiply;
@@ -488,8 +488,8 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 60px;
-  height: 50px;
+  width: 72px;
+  height: 60px;
 }
 
 .header-cat-sprite {
@@ -501,12 +501,12 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
 
 .header-cat-image {
   position: absolute;
-  top: -17px;
-  left: -17px;
-  width: 92px;
+  top: -20px;
+  left: -20px;
+  width: 110px;
   max-width: none;
-  height: 92px;
-  filter: brightness(0.8) contrast(1.8);
+  height: 110px;
+  filter: brightness(0.75) contrast(2);
   user-select: none;
 }
 
@@ -516,35 +516,48 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
 
 .header-cat-bubble {
   position: absolute;
-  bottom: calc(100% + 3px);
+  bottom: calc(100% + 8px);
   left: var(--cat-bubble-shift, 0px);
-  width: 148px;
-  max-width: var(--cat-lane-width, 148px);
-  padding: 1px 6px;
-  border: 1px solid color-mix(in srgb, var(--brand) 15%, transparent);
-  border-radius: 999px;
-  background: white;
-  color: var(--brand);
+  width: 172px;
+  max-width: var(--cat-lane-width, 172px);
+  padding: 5px 10px 5px 20px;
+  border: 1px solid color-mix(in srgb, var(--brand) 24%, var(--surface));
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--surface), var(--brand-soft));
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--brand) 12%, transparent), 0 2px 5px color-mix(in srgb, var(--ink) 6%, transparent);
+  color: var(--brand-strong);
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  line-height: 16px;
+  line-height: 18px;
   white-space: nowrap;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 150ms ease;
+  transform: translateY(3px);
+  transition: opacity 160ms ease, transform 180ms ease;
+}
+
+.header-cat-bubble::before {
+  position: absolute;
+  top: calc(50% - 2.5px);
+  left: 9px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--brand);
+  content: "";
 }
 
 .header-cat-bubble::after {
   position: absolute;
-  bottom: -4px;
-  left: calc(27px - var(--cat-bubble-shift, 0px));
-  width: 6px;
-  height: 6px;
+  bottom: -5px;
+  left: calc(32px - var(--cat-bubble-shift, 0px));
+  width: 8px;
+  height: 8px;
   border-right: inherit;
   border-bottom: inherit;
-  background: white;
+  background: var(--brand-soft);
   content: "";
   transform: rotate(45deg);
 }
@@ -552,6 +565,7 @@ body:has(.miauby-launchers) :is(.catalog-purchase-grid, .product-purchase-area) 
 .header-cat-bubble[data-visible="true"] {
   opacity: 1;
   visibility: visible;
+  transform: translateY(0);
 }
 
 @media (prefers-reduced-motion: reduce) {

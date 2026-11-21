@@ -252,8 +252,8 @@ test("painel montado durante recolhimento acompanha a altura e preserva seu esti
     const samples = await page.evaluate(() => (window as unknown as { lateStickySamples: number[] }).lateStickySamples);
     assert.ok(samples.length >= 4);
     assert.ok(Math.max(...samples) <= 1, `novo painel acompanha alturas intermediárias: ${JSON.stringify(samples)}`);
-    const restored = await page.locator("[data-late-sticky]").evaluateAll(elements => elements.map(element => ({ value: (element as HTMLElement).style.getPropertyValue("--site-header-offset"), priority: (element as HTMLElement).style.getPropertyPriority("--site-header-offset") })));
-    assert.deepEqual(restored, [{ value: "", priority: "" }, { value: "77px", priority: "important" }]);
+    // Restoration follows the last observed resize, including late font/layout changes.
+    await expect.poll(() => page.locator("[data-late-sticky]").evaluateAll(elements => elements.map(element => ({ value: (element as HTMLElement).style.getPropertyValue("--site-header-offset"), priority: (element as HTMLElement).style.getPropertyPriority("--site-header-offset") }))), { timeout: 5000 }).toEqual([{ value: "", priority: "" }, { value: "77px", priority: "important" }]);
     assert.ok(await page.evaluate(() => (window as unknown as { lateRootWrites: number[] }).lateRootWrites.reduce((sum, count) => sum + count, 0)) <= 2, "montagem tardia não acrescenta invalidações globais por quadro");
     await page.evaluate("window.unmountHeader()");
     await page.evaluate(() => {
@@ -401,6 +401,8 @@ for (const width of [320, 390, 768, 1536]) {
           };
         });
         assert.ok(figure.x >= 0 && figure.x + figure.width <= width + 1, "gato não transborda durante o percurso inferior");
+        assert.ok(Math.abs(figure.width - 72) <= 0.1, "desenho maior mantém a largura durante o recolhimento");
+        assert.ok(Math.abs(figure.height - 60) <= 0.1, "desenho maior mantém a altura durante o recolhimento");
         assert.ok(Math.abs(figure.y + figure.height - page.viewportSize()!.height) <= 1, "compactação não muda a borda inferior do gato");
         assert.ok(balloon && balloon.y >= 0 && balloon.y + balloon.height <= figure.y + 1, `balão fica acima do desenho dentro da viewport: ${JSON.stringify({ balloon, figure })}`);
         assert.ok(balloon.x >= 0 && balloon.x + balloon.width <= width + 1, "balão compacto não transborda lateralmente");
