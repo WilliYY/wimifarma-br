@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { EventEmitter } from 'node:events';
+import { PassThrough } from 'node:stream';
+import * as worker from './ai-review-worker.mjs';
 import { runWorker, validateManifest, estimateReservation, parseArgs, resultExitCode } from './ai-review-worker.mjs';
 
 const deadline = '2026-11-23T14:30:00.000Z';
@@ -92,4 +95,139 @@ test('any uncertain result latches the full run across restart without automatic
   const f=await fixture(t);f.manifest=manifest({jobs:[...manifest().jobs,{...manifest().jobs[0],id:'next',sourceHash:'b'.repeat(64)}]});let calls=0;const fetchImpl=async()=>{calls++;return {ok:false,status};};
   await runWorker({...f,fetchImpl});assert.equal(calls,1);await runWorker({...f,fetchImpl});assert.equal(calls,1);
  }
+});
+
+test('explicit skip preserves full uncertain reservation without credentials or network and dedupes forever',async t=>{
+ const f=await fixture(t);let calls=0;
+ await runWorker({...f,fetchImpl:async()=>{calls++;throw new Error('private');}});
+ const before=(await state(f.runDir)).records[0];
+ const result=await runWorker({...f,env:{},skipUncertain:'auth',fetchImpl:()=>assert.fail('network')});
+ assert.equal(result.counts['skipped-uncertain'],1);
+ assert.deepEqual((await state(f.runDir)).records[0],{...before,status:'skipped-uncertain'});
+ assert.deepEqual(JSON.parse(await readFile(path.join(f.runDir,'summary.json'),'utf8')),result);
+ f.manifest.jobs.push({...f.manifest.jobs[0],id:'next',sourceHash:'b'.repeat(64)});
+ await runWorker({...f,fetchImpl:async()=>{calls++;return response();}});
+ await runWorker({...f,fetchImpl:()=>assert.fail('retry')});assert.equal(calls,2);
+});
+
+test('skip rejects wrong ID, nonfinal records, tier uncertainty, reserved state, changed hash and mixed modes',async t=>{
+ for(const change of [r=>r.id='other',r=>r.status='reserved',r=>r.error='TIER_UNVERIFIED',r=>r.error='USAGE_INVALID',r=>r.error='RESPONSE_INVALID',r=>r.error='HTTP_429',r=>r.error='UNKNOWN_ERROR',r=>r.serviceTier='default',r=>r.serviceTier='priority',r=>r.serviceTier='unverified',r=>r.usage={},r=>r.sourceHash='b'.repeat(64),r=>r.chargedUsd=0]) {
+  const f=await fixture(t);await runWorker({...f,fetchImpl:async()=>{throw new Error('private');}});
+  const checkpoint=await state(f.runDir);change(checkpoint.records[0]);await writeFile(path.join(f.runDir,'checkpoint.json'),JSON.stringify(checkpoint));
+  const before=await readFile(path.join(f.runDir,'checkpoint.json'),'utf8');
+  await assert.rejects(runWorker({...f,env:{},skipUncertain:'auth',fetchImpl:()=>assert.fail('network')}),/SKIP_UNCERTAIN_INVALID|CHECKPOINT_INVALID/);
+  assert.equal(await readFile(path.join(f.runDir,'checkpoint.json'),'utf8'),before);
+ }
+ const args=['--manifest','x','--run-dir','y','--skip-uncertain','auth'];
+ assert.equal(parseArgs(args).skipUncertain,'auth');
+ for(const flag of ['--dry-run','--once']) {
+  assert.throws(()=>parseArgs([...args,flag]),/ARGUMENT_INVALID/);
+  const f=await fixture(t);await assert.rejects(runWorker({...f,skipUncertain:'auth',[flag==='--once'?'once':'dryRun']:true}),/ARGUMENT_INVALID/);
+ }
+ const f=await fixture(t);await assert.rejects(runWorker({...f,env:{},skipUncertain:'auth'}),/SKIP_UNCERTAIN_INVALID/);
+ await runWorker({...f,fetchImpl:async()=>{throw new Error('private');}});
+ const checkpoint=await state(f.runDir);checkpoint.records.push({...checkpoint.records[0],id:'later',sourceHash:'b'.repeat(64),status:'reserved'});
+ await writeFile(path.join(f.runDir,'checkpoint.json'),JSON.stringify(checkpoint));
+ await assert.rejects(runWorker({...f,env:{},skipUncertain:'auth'}),/SKIP_UNCERTAIN_INVALID/);
+});
+
+test('skip shares exclusive lock, never accepts an already skipped record and works after deadline without a key',async t=>{
+ const f=await fixture(t);await runWorker({...f,fetchImpl:async()=>{throw new Error('private');}});
+ const before=await readFile(path.join(f.runDir,'checkpoint.json'),'utf8');
+ await writeFile(path.join(f.runDir,'worker.lock'),'existing');
+ await assert.rejects(runWorker({...f,env:{},skipUncertain:'auth'}),/LOCKED/);
+ assert.equal(await readFile(path.join(f.runDir,'checkpoint.json'),'utf8'),before);
+ await rm(path.join(f.runDir,'worker.lock'));
+ await runWorker({...f,env:{},skipUncertain:'auth',now:()=>Date.parse(deadline),fetchImpl:()=>assert.fail('network')});
+ await assert.rejects(runWorker({...f,env:{},skipUncertain:'auth'}),/SKIP_UNCERTAIN_INVALID/);
+ const checkpoint=await state(f.runDir);checkpoint.records[0].chargedUsd=0;
+ await writeFile(path.join(f.runDir,'checkpoint.json'),JSON.stringify(checkpoint));
+ await assert.rejects(runWorker({...f,fetchImpl:()=>assert.fail('network')}),/CHECKPOINT_INVALID/);
+});
+
+test('skipped uncertainty cannot release budget for another job',async t=>{
+ const f=await fixture(t);f.manifest.budgetUsd=estimateReservation(f.manifest,f.manifest.jobs[0]).usd+0.001;
+ await runWorker({...f,fetchImpl:async()=>{throw new Error('private');}});
+ await runWorker({...f,env:{},skipUncertain:'auth'});
+ f.manifest.jobs.push({...f.manifest.jobs[0],id:'next',sourceHash:'b'.repeat(64)});
+ await assert.rejects(runWorker({...f,fetchImpl:()=>assert.fail('network')}),/BUDGET_EXHAUSTED/);
+});
+
+function transportFixture(reply) {
+ let calls=0;let options;let destroys=0;const request=new EventEmitter();
+ request.destroy=error=>{destroys++;queueMicrotask(()=>request.emit('error',error));return request;};
+ request.end=body=>queueMicrotask(()=>reply(request,body));
+ const requestImpl=(url,opts,callback)=>{calls++;options={url,...opts};request.reply=callback;return request;};
+ return {requestImpl,request,get calls(){return calls;},get destroys(){return destroys;},get options(){return options;}};
+}
+const transportOptions=signal=>({method:'POST',redirect:'error',headers:{Authorization:'Bearer synthetic-key'},body:'{}',signal});
+
+test('HTTPS transport sends once with fixed TLS endpoint, parses JSON and never follows redirects',async()=>{
+ assert.equal(typeof worker.httpsTransport,'function');
+ const fixture=transportFixture(request=>{const response=new PassThrough();response.statusCode=200;request.reply(response);response.end('{"status":"completed"}');});
+ const signal=new AbortController().signal;
+ const result=await worker.httpsTransport('https://api.openai.com/v1/responses',transportOptions(signal),{requestImpl:fixture.requestImpl});
+ assert.equal(result.ok,true);assert.equal(result.status,200);assert.deepEqual(await result.json(),{status:'completed'});
+ assert.equal(fixture.calls,1);assert.equal(fixture.options.signal,signal);assert.equal(fixture.options.rejectUnauthorized,true);assert.equal(fixture.options.agent,false);
+ assert.equal(fixture.options.headers['Accept-Encoding'],'identity');
+ const redirect=transportFixture(request=>{const response=new PassThrough();response.statusCode=302;request.reply(response);response.end('private');});
+ const r=await worker.httpsTransport('https://api.openai.com/v1/responses',transportOptions(signal),{requestImpl:redirect.requestImpl});assert.equal(r.ok,false);assert.equal(r.status,302);assert.equal(redirect.calls,1);
+ await assert.rejects(worker.httpsTransport('http://localhost',transportOptions(signal),{requestImpl:()=>assert.fail('network')}),/TRANSPORT_INVALID/);
+});
+
+test('HTTP rejection closes a hanging response and synchronous send failure destroys the request',async()=>{
+ const hanging=new PassThrough();hanging.statusCode=429;
+ const fixture=transportFixture(request=>request.reply(hanging));
+ const result=await worker.httpsTransport('https://api.openai.com/v1/responses',transportOptions(new AbortController().signal),{requestImpl:fixture.requestImpl});
+ assert.equal(result.status,429);assert.equal(hanging.destroyed,true);assert.equal(fixture.destroys,1);assert.equal(fixture.calls,1);
+ const broken=transportFixture(()=>{});broken.request.end=()=>{throw new Error('private synthetic-key');};
+ await assert.rejects(worker.httpsTransport('https://api.openai.com/v1/responses',transportOptions(new AbortController().signal),{requestImpl:broken.requestImpl}),/^Error: TRANSPORT_FAILED$/);
+ assert.equal(broken.destroys,1);
+});
+
+test('HTTPS transport bounds body, rejects malformed JSON, propagates abort and sanitizes errors',async()=>{
+ assert.equal(typeof worker.httpsTransport,'function');
+ for(const [body,limit,expected] of [['a'.repeat(20),10,/RESPONSE_TOO_LARGE/],['private',100,/RESPONSE_JSON_INVALID/]]) {
+  const fixture=transportFixture(request=>{const response=new PassThrough();response.statusCode=200;request.reply(response);response.end(body);});
+  await assert.rejects(async()=>{const r=await worker.httpsTransport('https://api.openai.com/v1/responses',transportOptions(new AbortController().signal),{requestImpl:fixture.requestImpl,maxBodyBytes:limit});await r.json();},expected);
+  assert.equal(fixture.calls,1);
+ }
+ const controller=new AbortController();const fixture=transportFixture(()=>controller.abort());
+ // The injected request mimics Node's native AbortSignal support.
+ controller.signal.addEventListener('abort',()=>fixture.request.destroy(new Error('secret synthetic-key')));
+ await assert.rejects(worker.httpsTransport('https://api.openai.com/v1/responses',transportOptions(controller.signal),{requestImpl:fixture.requestImpl}),/^Error: TRANSPORT_FAILED$/);
+ assert.equal(fixture.calls,1);
+});
+
+test('safe phase diagnostics distinguish transport, response and usage without leaking errors',async t=>{
+ for(const [fetchImpl,error] of [[async()=>{throw new Error('secret');},'TRANSPORT_FAILED'],[async()=>({ok:true,status:200,json:async()=>{throw new Error('secret');}}),'RESPONSE_INVALID'],[async()=>response({usage:{}}),'USAGE_INVALID']]) {
+  const f=await fixture(t);await runWorker({...f,fetchImpl});assert.equal((await state(f.runDir)).records[0].error,error);
+ }
+});
+
+test('completed without final text stops conservatively while incomplete without text stays partial',async t=>{
+ for(const status of ['completed','incomplete']) {
+  const f=await fixture(t);await runWorker({...f,fetchImpl:async()=>response({status,output:[]})});
+  const record=(await state(f.runDir)).records[0];
+  assert.equal(record.status,status==='completed'?'uncertain':'incomplete');
+  if(status==='completed') {assert.equal(record.error,'RESPONSE_INVALID');assert.equal(record.chargedUsd,record.reservedUsd);}
+ }
+});
+
+test('legacy transport uncertainty can be skipped but forged skipped usage or tier cannot resume',async t=>{
+ for(const error of ['REQUEST_UNCERTAIN','REQUEST_TIMEOUT']) {
+  const f=await fixture(t);await runWorker({...f,fetchImpl:async()=>{throw new Error('private');}});
+  const checkpoint=await state(f.runDir);checkpoint.records[0].error=error;
+  await writeFile(path.join(f.runDir,'checkpoint.json'),JSON.stringify(checkpoint));
+  await runWorker({...f,env:{},skipUncertain:'auth'});
+  const skipped=await state(f.runDir);skipped.records[0].error='USAGE_INVALID';
+  await writeFile(path.join(f.runDir,'checkpoint.json'),JSON.stringify(skipped));
+  await assert.rejects(runWorker({...f,fetchImpl:()=>assert.fail('network')}),/CHECKPOINT_INVALID/);
+ }
+});
+
+test('oversized provider body is response uncertainty and cannot be skipped as transport failure',async t=>{
+ const f=await fixture(t);await runWorker({...f,fetchImpl:async()=>{throw new Error('RESPONSE_TOO_LARGE');}});
+ assert.equal((await state(f.runDir)).records[0].error,'RESPONSE_INVALID');
+ await assert.rejects(runWorker({...f,env:{},skipUncertain:'auth'}),/SKIP_UNCERTAIN_INVALID/);
 });
