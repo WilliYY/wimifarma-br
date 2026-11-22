@@ -13,7 +13,7 @@
 
 ### Visão geral compacta e Miauby — 22/11/2026
 
-A foto e a saudação ficam em um cabeçalho compacto junto do Miauby. O balão apresenta uma frase curta para a área escolhida. A arte original do gato aparece em um recorte fixo, com imagem estática quando o dispositivo prefere movimento reduzido. A animação flutuante fica oculta nesta tela. O atalho de atendimento segue separado.
+A foto e a saudação ficam em um cabeçalho compacto junto do Miauby. O balão apresenta uma frase curta para a área escolhida. A arte original do gato aparece em um recorte fixo, com imagem estática quando o dispositivo prefere movimento reduzido. O mascote decorativo aparece somente em Minha conta. O atalho de atendimento segue separado.
 
 As abas ficam visíveis em grade no celular. A visão geral apresenta WimiCoins e cashback em cartões de consulta rápida, com acesso aos extratos. Saldo indisponível é identificado na visão geral. Os dados do perfil continuam na seção autenticada de dados e usam os mesmos campos e validações.
 

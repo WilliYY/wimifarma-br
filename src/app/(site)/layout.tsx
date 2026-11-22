@@ -14,7 +14,6 @@ import { ClubSummaryProvider } from "@/hooks/club-summary-provider";
 import { cartEmailReminderOwner } from "@/features/communications/cart-email-reminder-owner";
 import { BlackFridayProvider } from "@/components/site/black-friday-provider";
 import { isBlackFridayActive } from "@/features/offers/black-friday";
-import { HeaderCatRunner } from "@/components/site/header-cat-runner";
 
 export default async function SiteLayout({
   children,
@@ -35,7 +34,6 @@ export default async function SiteLayout({
           <main className="flex-1">{children}</main>
           <FloatingWhatsApp viewer={viewer} />
           <SiteFooter />
-          <HeaderCatRunner />
         </BlackFridayProvider>
       </ClubSummaryProvider>
     </CartProvider>

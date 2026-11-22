@@ -282,10 +282,6 @@ textarea {
   background: linear-gradient(120deg, var(--surface) 52%, var(--brand-soft));
 }
 
-body:has([data-account-welcome]) .header-cat-lane {
-  display: none;
-}
-
 .account-miauby-art {
   position: relative;
   flex: none;
