@@ -1,6 +1,6 @@
 import { isNotifyOnlyPendingLogistics } from "@/features/products/notify-only";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import { shippingOptionSchema, shippingProfileSchema, shippingQuotePayloadSchema, ShippingError, type ShippingOption, type ShippingQuotePayload } from "./schema";
+import { physicalShippingProfileSchema, shippingOptionSchema, shippingProfileSchema, shippingQuotePayloadSchema, ShippingError, type ShippingOption, type ShippingQuotePayload } from "./schema";
 import { requiresPharmacyShippingSupport } from "./eligibility";
 import type { PrescriptionType } from "@/features/products/purchase-policy";
 import { normalizeShippingPackaging, type PackingRequest } from "./packing";
@@ -64,7 +64,12 @@ export function validateShippingProduct(product: ShippingProduct) {
     throw new ShippingError(`${product.name}: o envio precisa de atendimento da farmácia.`);
   }
   const parsed = shippingProfileSchema.safeParse(product.shippingProfile);
-  if (!parsed.success) throw new ShippingError(`${product.name}: o peso, as medidas ou a revisão da embalagem estão pendentes. Isso não indica falta de cobertura do CEP. Consulte a equipe para preparar o envio.`);
+  if (!parsed.success) {
+    const reason = physicalShippingProfileSchema.safeParse(product.shippingProfile).success
+      ? "a aprovação para envio por transportadora está pendente."
+      : "o peso ou as medidas da embalagem estão pendentes.";
+    throw new ShippingError(`${product.name}: ${reason} Consulte a farmácia ou escolha retirada.`);
+  }
   if (!parsed.data.enabled) throw new ShippingError(`${product.name}: o perfil de envio está desativado e precisa de conferência da equipe. Isso não indica falta de cobertura do CEP.`);
   return parsed.data;
 }

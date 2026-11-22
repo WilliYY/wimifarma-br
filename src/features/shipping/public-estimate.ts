@@ -6,7 +6,7 @@ import { isNotifyOnlyPendingLogistics } from "@/features/products/notify-only";
 import { readShippingIntegration, shippingAccessToken } from "./integration";
 import { melhorEnvioRequest } from "./provider";
 import { shippingProductSelect } from "./service";
-import { shippingProfileSchema, ShippingError } from "./schema";
+import { physicalShippingProfileSchema, ShippingError } from "./schema";
 import { shippingAdminProfileSchema } from "./product-draft";
 import { hasPerfumeShippingCargo, permittedShippingServices, requiresPharmacyShippingSupport } from "./eligibility";
 import { assessCarrierCargo, isKnownShippingService, type ShippingCargo } from "./cargo-policy";
@@ -18,7 +18,6 @@ import { publicShippingEstimateRequestSchema, publicShippingEstimateSchema, type
 import { compareSuperFrete, getSuperFreteConfig, quoteSuperFrete, superFreteBenefit, superFreteServices } from "./superfrete";
 import { compareCorreios, correiosBenefit, correiosCheckoutServiceCodes, getCorreiosCheckoutConfig, quoteCorreiosCheckout } from "./correios-checkout";
 
-const physicalProfileSchema = shippingProfileSchema.pick({ weightGrams: true, widthCm: true, heightCm: true, lengthCm: true });
 const normalized = (value: string | null) => (value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 /** A price simulation is never proof of carrier acceptance or checkout eligibility. */
@@ -33,7 +32,7 @@ export async function estimateProductShipping(input: PublicShippingEstimateReque
   const { settings } = await readShippingIntegration();
   if (!settings.enabled || settings.environment !== "production") throw new ShippingError("O envio para outras cidades ainda está em preparação. Consulte a farmácia ou escolha retirada.", 503);
   const parsed = shippingAdminProfileSchema.safeParse(product.shippingProfile);
-  const physical = physicalProfileSchema.safeParse(product.shippingProfile);
+  const physical = physicalShippingProfileSchema.safeParse(product.shippingProfile);
   if (!parsed.success || !physical.success) throw new ShippingError("Peso ou medidas pendentes. Consulte a farmácia para preparar o envio.");
   const profile = parsed.data;
   const cargos: ShippingCargo[] = [...(profile.cargoKinds?.length ? profile.cargoKinds : ["unspecified" as const])];

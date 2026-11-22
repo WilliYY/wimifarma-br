@@ -51,6 +51,9 @@ export const shippingProfileSchema = z.object({
   // An explicit review is required: dimensions alone do not prove carrier acceptance.
   transportReviewed: z.literal(true),
 });
+export const physicalShippingProfileSchema = shippingProfileSchema.pick({
+  weightGrams: true, widthCm: true, heightCm: true, lengthCm: true,
+});
 export const shippingItemsSchema = z.array(z.object({
   productId: z.string().min(1).max(64), quantity: z.number().int().min(1).max(MAX_ORDER_ITEM_QUANTITY),
   expectedUnitPriceCents: z.number().int().positive().max(1_000_000),

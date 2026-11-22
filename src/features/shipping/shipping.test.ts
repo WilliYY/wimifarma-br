@@ -87,6 +87,18 @@ test("shipping fails closed without complete packaging and commercial review", (
   for (const changes of [{ shippingProfile: null }, { shippingProfile: { ...profile, transportReviewed: false } }, { shippingProfile: { ...profile, enabled: false } }, { requiresPrescription: true }, { isPopularPharmacy: true }, { category: "Farmácia Popular" }]) assert.throws(() => validateShippingProduct({ ...product, ...changes }));
   assert.deepEqual(validateShippingProduct({ ...product, category: "Medicamentos" }), { ...profile, measurementBasis: "measured" });
 });
+test("shipping reports pending approval separately from incomplete parcel dimensions", () => {
+  const draft = { ...profile, enabled: false, transportReviewed: false };
+  assert.throws(() => validateShippingProduct({ ...product, shippingProfile: draft }), {
+    message: /aprovação para envio por transportadora está pendente/,
+    status: 422,
+  });
+  assert.throws(() => validateShippingProduct({ ...product, shippingProfile: { ...draft, weightGrams: null } }), {
+    message: /peso ou as medidas da embalagem estão pendentes/,
+    status: 422,
+  });
+});
+
 test("cart fingerprint binds quantity, price and packaging version", () => {
   const items = [{ productId: product.id, quantity: 1, expectedUnitPriceCents: 1200 }];
   const fingerprint = shippingFingerprint(items, [product]);

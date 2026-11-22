@@ -43,7 +43,7 @@ test("public estimate calculates complete drafts without approving shipment or e
   assert.equal(calls[0].products[0].quantity, 2);
   for (const secret of ["token", "supplier", "unitCost", "packaging", "shippingProfile"]) assert.equal(JSON.stringify(estimate).includes(secret), false);
   assert.deepEqual(product.shippingProfile, profile);
-  assert.throws(() => validateShippingProduct({ ...base, prescriptionType: undefined, status: "ACTIVE" } as Parameters<typeof validateShippingProduct>[0]), /pendentes/, "checkout continues rejecting drafts");
+  assert.throws(() => validateShippingProduct({ ...base, prescriptionType: undefined, status: "ACTIVE" } as Parameters<typeof validateShippingProduct>[0]), /aprovação.*pendente/, "checkout continues rejecting drafts despite complete measurements");
 
   product = { ...base, shippingProfile: { ...profile, approvedServiceIds: [] } };
   const unreviewed = await loaded.exports.estimateProductShipping(input);

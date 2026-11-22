@@ -58,6 +58,8 @@ Quando o Melhor Envio rejeita a cotação inicial com HTTP 422, o servidor consu
 
 ## Preparação do catálogo e diagnóstico
 
+Quando o perfil já contém peso e medidas válidos e ainda aguarda revisão, o checkout informa que a aprovação do transporte está pendente. Perfis com dados físicos ausentes ou inválidos recebem a mensagem de peso ou medidas pendentes. Ambos preservam a opção de consultar a farmácia ou escolher retirada.
+
 A fila ADMIN possui filtro global `ALL`, `PENDING` ou `CONFIGURED`, antes da paginação. O resumo distingue falta de perfil, revisão, desativação, configuração e atendimento assistido. Configurado não garante cobertura de todos os CEPs ou aceitação de toda transportadora. Produtos assistidos e restrições de carga permanecem protegidos.
 
 A validação do perfil antecede a seleção de transportadoras, para não confundir medidas/revisão pendentes com falta de cobertura. Cadastro sem peso/medidas/revisão e perfil desativado têm mensagens distintas. Não há liberação em massa por caixa padrão, invenção de medidas ou renovação de ofertas antigas. A consulta de endereço/cobertura e a possibilidade de enviar um produto são verificações diferentes.
