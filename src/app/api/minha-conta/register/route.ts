@@ -24,57 +24,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 });
   }
 
-  const prisma = getPrisma();
-  const existingCustomer = await prisma.customer.findUnique({
-    where: { email: parsed.data.email },
-  });
-
-  if (existingCustomer) {
-    return NextResponse.json(
-      {
-        message:
-          "Este email ja possui cadastro. Entre na conta ou crie uma senha pela area do cliente.",
-      },
-      { status: 409 },
-    );
-  }
-
-  const passwordHash = await hash(parsed.data.password, 12);
-
   try {
-    const customer = await prisma.$transaction(async tx => {
+    const passwordHash = await hash(parsed.data.password, 12);
+    await getPrisma().$transaction(async tx => {
       const created = await tx.customer.create({
-      data: {
-        city: "",
-        clubMembership: { create: {} },
-        email: parsed.data.email,
-        name: parsed.data.name,
-        passwordHash,
-        passwordSetAt: new Date(),
-        phone: parsed.data.phone,
-      },
-      select: {
-        email: true,
-        id: true,
-        name: true,
-      },
+        data: {
+          city: "",
+          clubMembership: { create: {} },
+          email: parsed.data.email,
+          name: parsed.data.name,
+          passwordHash,
+          passwordSetAt: new Date(),
+          phone: parsed.data.phone,
+        },
+        select: { id: true },
       });
       await auditClubAutoEnrollment(tx, created.id);
-      return created;
     });
-
-    return NextResponse.json({ data: customer }, { status: 201 });
   } catch (error) {
-    if (isUniqueConstraintError(error)) {
+    if (!isUniqueConstraintError(error)) {
       return NextResponse.json(
-        { message: "Email ou telefone ja cadastrado." },
-        { status: 409 },
+        { message: "Não foi possível concluir o cadastro agora." },
+        { status: 500 },
       );
     }
-
-    return NextResponse.json(
-      { message: "Nao foi possivel criar a conta agora." },
-      { status: 500 },
-    );
   }
+
+  // A public registration response must not confirm which accounts exist.
+  return NextResponse.json(
+    { message: "Recebemos seus dados. Entre com seu e-mail e senha ou recupere o acesso." },
+    { headers: { "Cache-Control": "private, no-store" } },
+  );
 }

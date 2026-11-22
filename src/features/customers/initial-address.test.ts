@@ -24,16 +24,33 @@ async function load(path: string, prisma: object) {
   return loaded.exports;
 }
 
-test("cadastro público ignora o padrão legado do banco para a cidade de um novo cliente", async () => {
+test("cadastro mantém cidade vazia e usa a mesma resposta pública para novos clientes e conflitos", async () => {
   let created: Record<string, unknown> = {};
+  let alreadyRegistered = false;
   const audits: unknown[] = [];
   const prisma = { customer: {
-    findUnique: async () => null,
-    create: async ({ data }: { data: Record<string, unknown> }) => { created = { city: "Ivate", ...data }; return { id: "synthetic-customer", ...created }; },
+    create: async ({ data }: { data: Record<string, unknown> }) => {
+      if (alreadyRegistered) throw Object.assign(new Error("Synthetic unique constraint"), { code: "P2002" });
+      created = { city: "Ivate", ...data };
+      return { id: "synthetic-customer" };
+    },
   }, auditLog: { create: async (data: unknown) => { audits.push(data); } } };
   const route = await load("src/app/api/minha-conta/register/route.ts", { ...prisma, $transaction: async (callback: (tx: unknown) => Promise<unknown>) => callback(prisma) });
-  const response = await route.POST(new Request("https://example.test/api/minha-conta/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "Cliente Sintético", email: "customer@example.invalid", phone: "44999990000", password: "Synthetic-42!", confirmPassword: "Synthetic-42!" }) })) as Response;
-  assert.equal(response.status, 201);
+  const submit = () => route.POST(new Request("https://example.test/api/minha-conta/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: "Cliente Sintético", email: "customer@example.invalid", phone: "44999990000", password: "Synthetic-42!", confirmPassword: "Synthetic-42!" }),
+  })) as Promise<Response>;
+  const first = await submit();
+  alreadyRegistered = true;
+  const conflict = await submit();
+  assert.equal(first.status, 200);
+  assert.equal(conflict.status, first.status);
+  assert.equal(first.headers.get("Cache-Control"), "private, no-store");
+  assert.equal(conflict.headers.get("Cache-Control"), first.headers.get("Cache-Control"));
+  const result = await first.json();
+  assert.deepEqual(await conflict.json(), result);
+  assert.deepEqual(Object.keys(result), ["message"]);
   assert.equal(created.city, "");
   assert.deepEqual(JSON.parse(JSON.stringify(created.clubMembership)), { create: {} });
   assert.equal(audits.length, 1);

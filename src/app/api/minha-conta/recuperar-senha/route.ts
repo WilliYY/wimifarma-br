@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     // Provider and database latency must not disclose whether the account is eligible.
     after(async () => {
       try { await requestPasswordRecovery(parsed.data.email); }
-      catch { /* The request response is deliberately independent of delivery and infrastructure. */ }
+      catch { console.warn("[password-recovery] Unexpected request failure"); }
     });
   }
   return NextResponse.json(

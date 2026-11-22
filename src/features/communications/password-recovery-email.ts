@@ -41,6 +41,7 @@ async function sendRecoveryCode(recipient: string, token: string, kind: "recover
     }
     return result.status === "accepted";
   } catch {
+    console.warn("[password-recovery] Unexpected email preparation or transport failure", { kind });
     return false;
   }
 }

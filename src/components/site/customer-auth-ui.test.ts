@@ -81,3 +81,28 @@ test("cadastro exige confirmação igual e não transmite dados quando senhas di
     await expect(page.getByRole("form", { name: "Entrar na conta" })).toBeHidden();
   });
 });
+
+test("cadastro aceito abre o login preenchido e aguarda ação do cliente", async () => {
+  await fixture(async page => {
+    const email = "cliente@example.invalid";
+    const message = "Recebemos seus dados. Entre com seu e-mail e senha ou recupere o acesso.";
+    await page.route("**/api/minha-conta/register", route => route.fulfill({ json: { message } }));
+    await page.goto("http://127.0.0.1:3196");
+    const previousLogin = page.getByRole("form", { name: "Entrar na conta" });
+    await previousLogin.getByLabel("E-mail ou usuário").fill("outro@example.invalid");
+    await previousLogin.getByPlaceholder("Digite sua senha").fill("SenhaAnterior123");
+    await page.getByRole("button", { name: "Criar conta", exact: true }).click();
+    const register = page.getByRole("form", { name: "Criar conta" });
+    await register.getByLabel("Nome", { exact: true }).fill("Cliente sintético");
+    await register.getByLabel("E-mail", { exact: true }).fill(email);
+    await register.getByLabel("Telefone", { exact: true }).fill("44999990000");
+    await register.getByPlaceholder("Crie sua senha").fill("SenhaSintetica123");
+    await register.getByPlaceholder("Repita sua senha").fill("SenhaSintetica123");
+    await register.getByRole("button", { name: "Criar minha conta" }).click();
+    await expect(page.getByRole("status")).toHaveText(message);
+    const login = page.getByRole("form", { name: "Entrar na conta" });
+    await expect(login.getByLabel("E-mail ou usuário")).toHaveValue(email);
+    await expect(login.getByPlaceholder("Digite sua senha")).toHaveValue("");
+    assert.deepEqual(await page.evaluate(() => (window as unknown as { signInCalls: unknown[] }).signInCalls), []);
+  });
+});

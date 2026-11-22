@@ -11,6 +11,19 @@ function request(body: BodyInit | null, headers: Record<string, string> = {}) {
     headers: { origin, "content-type": "application/json", ...headers }, duplex: "half" } as RequestInit);
 }
 
+test("shipping logs unexpected failures without request details", async t => {
+  const warnings = t.mock.method(console, "warn", () => {});
+  const expected = shippingFailure(new ShippingError("Origem da solicitação inválida.", 403));
+  assert.equal(expected.status, 403);
+  assert.equal(warnings.mock.callCount(), 0);
+
+  const response = shippingFailure(new Error("synthetic private service detail"));
+  assert.equal(response.status, 503);
+  assert.equal(response.headers.get("cache-control"), "private, no-store");
+  assert.deepEqual(await response.json(), { error: "Não foi possível concluir a operação de frete. Tente novamente." });
+  assert.deepEqual(warnings.mock.calls.map(call => call.arguments), [["[shipping] Unexpected request failure"]]);
+});
+
 test("shipping counts UTF-8 bytes, accepts the exact limit and rejects one byte above", async () => {
   const body = JSON.stringify({ value: "á".repeat(15994) });
   assert.equal(Buffer.byteLength(body), 32000);

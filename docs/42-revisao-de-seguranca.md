@@ -1,5 +1,12 @@
 # 42 - Revisão de segurança
 
+## Respostas do cadastro e diagnóstico de recuperação — 22/11/2026
+
+- Um envio válido de cadastro retorna a mesma confirmação pública para criação e conflito de unicidade. A resposta não inclui nome, e-mail ou identificador da conta. O login a seguir é explícito e abre com o e-mail preenchido. O cadastro por senha continua disponível, com adesão ao Club criada na mesma transação.
+- A recuperação conserva a confirmação pública genérica. Exceções do pedido de recuperação e da preparação ou entrega do e-mail geram eventos operacionais com texto fixo. O log não recebe endereço, token ou objeto de erro e as reservas de envio continuam valendo.
+- Falhas inesperadas nas APIs de frete geram um aviso operacional fixo. O cliente continua recebendo a mensagem genérica com HTTP 503, e rejeições previstas continuam com seus respectivos status.
+- O manifesto e o lock registram os patches de Next.js e React Email usados na revisão. A auditoria de dependências é executada com e sem as dependências de desenvolvimento.
+
 ## Cashback em genéricos e similares com receita — 23/10/2026
 
 A autorização comercial amplia apenas o cashback de compra. Classificação estrita e validada no servidor, versão do produto, locks, auditoria e liquidação idempotente preservam o limite financeiro. A revisão independente identificou e corrigiu defaults do cadastro e divergência entre filtros JSONB por caminho e o schema estrito; o filtro agora compara objetos JSON exatos. Identidade nova alterada também invalida a classificação de receita no formulário.

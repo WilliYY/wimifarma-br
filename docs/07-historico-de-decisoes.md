@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-22 — Privacidade no cadastro de clientes
+
+A confirmação pública do cadastro passou a usar o mesmo texto para criação e conflito. A entrada exige uma ação separada do cliente, e as falhas de recuperação são registradas com mensagens sem dados pessoais. O contrato e as verificações estão na [revisão de segurança](42-revisao-de-seguranca.md#respostas-do-cadastro-e-diagnóstico-de-recuperação--22112026).
+
 ## 2026-11-22 — Entrada móvel e retorno de frete
 
 O primeiro atalho da página inicial exibe “Ver ofertas” com destaque no celular. A auditoria de frete reproduziu a falha do Melhor Envio para o CEP 40020-000, que a consulta de endereços não encontrou. O CEP 40015-000, em Salvador, retornou PAC e SEDEX para o mesmo produto. O site passou a distinguir CEP não encontrado de cotação não confirmada, conforme [o contrato de frete](107-frete-cep-e-contribuicao.md).

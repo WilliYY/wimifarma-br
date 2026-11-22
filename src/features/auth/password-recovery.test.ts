@@ -17,6 +17,7 @@ type Verification = Omit<Reset, "verifiedAt">;
 type State = { customer: typeof customer; reset: Reset | null; verification: Verification | null; staff: boolean };
 type Options = {
   configured?: boolean;
+  failDatabase?: boolean;
   sendFails?: boolean;
   conflict?: "credential" | "consume";
   initial?: Partial<typeof customer>;
@@ -45,6 +46,7 @@ async function harness(options: Options = {}) {
   const sent: { recipient: string; resetUrl: string }[] = [];
   const verificationSent: { recipient: string; token: string }[] = [];
   const tasks: (() => Promise<unknown>)[] = [];
+  const warnings: unknown[][] = [];
   const locks: string[] = [];
   let transaction = Promise.resolve();
   function models(current: State) {
@@ -92,7 +94,11 @@ async function harness(options: Options = {}) {
     },
   };
   const fixture = {
-    db, after: (task: () => Promise<unknown>) => tasks.push(task),
+    get db() {
+      if (options.failDatabase) throw new Error(`Synthetic database failure for ${email}`);
+      return db;
+    },
+    after: (task: () => Promise<unknown>) => tasks.push(task),
     hash: async () => "new-synthetic-hash",
     compare: async (value: string, storedHash: string) => value === password && storedHash === customer.passwordHash,
     auth: async () => options.role === "anonymous" ? null : { user: { role: options.role ?? "CUSTOMER", id: customer.id } },
@@ -106,12 +112,13 @@ async function harness(options: Options = {}) {
     vm.runInNewContext(await source(`src/app/api/minha-conta/${path}/route.ts`), {
       module: loaded, exports: loaded.exports, fixture, require: createRequire(import.meta.url),
       Request, Response, TextDecoder, Uint8Array, Buffer, Date, setTimeout, clearTimeout,
+      console: { warn: (...messages: unknown[]) => warnings.push(messages) },
     });
     return loaded.exports.POST;
   }
   const [recover, reset] = await Promise.all([load("recuperar-senha"), load("redefinir-senha")]);
   function request(value: unknown) { return new Request("https://example.invalid", { method: "POST", body: JSON.stringify(value) }); }
-  return { sent, locks, state: () => state, recover: (address = email) => recover(request({ email: address })),
+  return { sent, locks, warnings, state: () => state, recover: (address = email) => recover(request({ email: address })),
     flush: () => Promise.all(tasks.splice(0).map(task => task())),
     reset: (token: string, value = password) => reset(request({ token, password: value, confirmPassword: value })),
     token: () => new URL(sent[0].resetUrl).hash.slice("#token=".length),
@@ -151,6 +158,17 @@ test("solicitações concorrentes reservam uma emissão e não persistem o token
   assert.equal(h.state().reset?.tokenHash, createHash("sha256").update(token).digest("hex"));
   assert.doesNotMatch(JSON.stringify(h.state()), new RegExp(token));
   assert.equal(h.sent[0].recipient, email);
+});
+
+test("falha inesperada na recuperação gera aviso interno sanitizado", async () => {
+  const failed = await harness({ failDatabase: true });
+  const normal = await harness({ configured: false });
+  const response = await failed.recover();
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), await (await normal.recover()).json());
+  await failed.flush();
+  assert.deepEqual(failed.warnings, [["[password-recovery] Unexpected request failure"]]);
+  assert.equal(failed.sent.length, 0);
 });
 
 test("consumo concorrente altera senha uma vez e rejeita repetição", async () => {

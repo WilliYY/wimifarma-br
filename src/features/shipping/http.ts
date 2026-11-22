@@ -3,7 +3,14 @@ import { ShippingError } from "./schema";
 
 export const noStore = { "Cache-Control": "private, no-store" };
 export function shippingFailure(error: unknown) {
-  return NextResponse.json({ error: error instanceof ShippingError ? error.message : "Não foi possível concluir a operação de frete. Tente novamente." }, { status: error instanceof ShippingError ? error.status : 503, headers: noStore });
+  if (error instanceof ShippingError) {
+    return NextResponse.json({ error: error.message }, { status: error.status, headers: noStore });
+  }
+  console.warn("[shipping] Unexpected request failure");
+  return NextResponse.json(
+    { error: "Não foi possível concluir a operação de frete. Tente novamente." },
+    { status: 503, headers: noStore },
+  );
 }
 export async function shippingBody(request: Request) {
   const origin = request.headers.get("origin");

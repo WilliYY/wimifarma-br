@@ -9,8 +9,8 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { BrandSignature } from "@/components/site/brand-signature";
 
-function Field({ autoComplete, icon, label, name, placeholder, type = "text" }: {
-  autoComplete?: string; icon: ReactNode; label: string; name: string; placeholder: string; type?: string;
+function Field({ autoComplete, defaultValue, icon, label, name, placeholder, type = "text" }: {
+  autoComplete?: string; defaultValue?: string; icon: ReactNode; label: string; name: string; placeholder: string; type?: string;
 }) {
   const inputId = useId();
   const [visible, setVisible] = useState(false);
@@ -19,7 +19,7 @@ function Field({ autoComplete, icon, label, name, placeholder, type = "text" }: 
     <label className="text-sm font-semibold text-ink" htmlFor={inputId}>{label}</label>
     <span className="group relative block">
       <span aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted transition-colors group-focus-within:text-brand">{icon}</span>
-      <Input autoComplete={autoComplete} className={`h-12 rounded-xl border-slate-300 bg-white pl-11 text-base shadow-none transition hover:border-slate-400 focus-visible:border-brand focus-visible:ring-4 focus-visible:ring-brand/10 motion-reduce:transition-none ${password ? "pr-12" : "pr-4"}`} id={inputId} name={name} placeholder={placeholder} required type={password && visible ? "text" : type} />
+      <Input autoComplete={autoComplete} className={`h-12 rounded-xl border-slate-300 bg-white pl-11 text-base shadow-none transition hover:border-slate-400 focus-visible:border-brand focus-visible:ring-4 focus-visible:ring-brand/10 motion-reduce:transition-none ${password ? "pr-12" : "pr-4"}`} defaultValue={defaultValue} id={inputId} name={name} placeholder={placeholder} required type={password && visible ? "text" : type} />
       {password && <button aria-label={`${visible ? "Ocultar" : "Mostrar"} ${label.toLocaleLowerCase("pt-BR")}`} aria-pressed={visible} className="absolute inset-y-1 right-1 flex w-11 items-center justify-center rounded-lg text-muted transition hover:bg-brand-soft hover:text-brand focus-visible:outline-2 focus-visible:outline-brand" onClick={() => setVisible(value => !value)} type="button">{visible ? <EyeOff aria-hidden="true" className="h-4 w-4" /> : <Eye aria-hidden="true" className="h-4 w-4" />}</button>}
     </span>
   </div>;
@@ -48,6 +48,7 @@ export function CustomerAuthPage({ callbackUrl = "/minha-conta", passwordRecover
   const [isRegistering, setIsRegistering] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [registration, setRegistration] = useState<{ email: string; message: string; version: number } | null>(null);
   const busy = isEntering || isRegistering || googleLoading;
 
   async function handleGoogleSignIn() {
@@ -91,17 +92,17 @@ export function CustomerAuthPage({ callbackUrl = "/minha-conta", passwordRecover
     const confirmPassword = String(values.get("confirm-password") ?? "");
     if (password !== confirmPassword) { setError("As senhas precisam ser iguais."); return; }
     setIsRegistering(true); setError(null);
-    let created = false;
     try {
       const response = await fetch("/api/minha-conta/register", { body: JSON.stringify({ confirmPassword, email, name, password, phone }), headers: { "Content-Type": "application/json" }, method: "POST" });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) { setError(payload.message ?? "Não foi possível criar sua conta. Confira os campos."); return; }
-      created = true;
-      toast.success("Conta criada.");
-      const result = await signIn("credentials", { email, password, redirect: false });
-      if (result && !result.error) { router.push(callbackUrl); router.refresh(); return; }
-      setMode("login"); setError("Sua conta foi criada. Entre com seu e-mail e senha.");
-    } catch { setError(created ? "Sua conta foi criada. Entre com seu e-mail e senha." : "Não foi possível confirmar o cadastro. Tente entrar antes de repetir o envio."); if (created) setMode("login"); }
+      setRegistration(previous => ({
+        email,
+        message: payload.message ?? "Recebemos seus dados. Entre com seu e-mail e senha ou recupere o acesso.",
+        version: (previous?.version ?? 0) + 1,
+      }));
+      setMode("login");
+    } catch { setError("Não foi possível confirmar o cadastro. Tente entrar antes de repetir o envio."); }
     finally { setIsRegistering(false); }
   }
 
@@ -147,9 +148,10 @@ export function CustomerAuthPage({ callbackUrl = "/minha-conta", passwordRecover
           </button>
           <div className="my-5 flex items-center gap-3 text-xs text-muted"><span className="h-px flex-1 bg-line" />ou use seu e-mail<span className="h-px flex-1 bg-line" /></div>
           {error && <p className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-5 text-red-800" role="alert">{error}</p>}
-          <form aria-label="Entrar na conta" hidden={mode !== "login"} onSubmit={handleLoginSubmit}>
+          {mode === "login" && registration && !error && <p className="mb-4 rounded-xl border border-line bg-surface-subtle p-3 text-sm leading-5 text-ink" role="status">{registration.message}</p>}
+          <form aria-label="Entrar na conta" hidden={mode !== "login"} key={registration?.version ?? 0} onSubmit={handleLoginSubmit}>
             <fieldset className="space-y-4" disabled={busy}>
-              <Field autoComplete="username" icon={<Mail className="h-4 w-4" />} label="E-mail ou usuário" name="login" placeholder="Digite seu e-mail ou usuário" />
+              <Field autoComplete="username" defaultValue={registration?.email} icon={<Mail className="h-4 w-4" />} label="E-mail ou usuário" name="login" placeholder="Digite seu e-mail ou usuário" />
               <Field autoComplete="current-password" icon={<LockKeyhole className="h-4 w-4" />} label="Senha" name="password" placeholder="Digite sua senha" type="password" />
               {passwordRecoveryAvailable && <Link className="inline-flex min-h-11 items-center rounded-sm text-sm font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand" href="/recuperar-senha" prefetch={false}>Esqueci minha senha</Link>}
               <button className={`${submitClass} mt-2`} disabled={busy} type="submit">{isEntering && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}{isEntering ? "Entrando…" : "Entrar na minha conta"}<ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1 motion-reduce:transform-none" /></button>
