@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-22 — Entrada móvel e retorno de frete
+
+O primeiro atalho da página inicial exibe “Ver ofertas” com destaque no celular. A auditoria de frete reproduziu a falha do Melhor Envio para o CEP 40020-000, que a consulta de endereços não encontrou. O CEP 40015-000, em Salvador, retornou PAC e SEDEX para o mesmo produto. O site passou a distinguir CEP não encontrado de cotação não confirmada, conforme [o contrato de frete](107-frete-cep-e-contribuicao.md).
+
 ## 2026-11-21 — Revisao OpenAI separada e limitada ao credito promocional
 
 O lojista autorizou um processo de analise com Astra 6.2, priorizando raciocinio, catalogo, marketing, frete, entrega e precos em conjunto. A implementacao usa uma fila finita fora do caminho HTTP, projecao comercial sem clientes e relatorios privados; nao executa instrucoes geradas nem altera regras comerciais. O esforco configurado e `max`, maior valor documentado em Responses, sujeito ao teste autenticado do modelo. `ultra` no aplicativo nao comprova um parametro de API equivalente.

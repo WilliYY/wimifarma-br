@@ -54,6 +54,8 @@ O CEP informado na consulta é lembrado neste navegador e sugerido em consultas 
 
 O preço no navegador vem somente do benefício retornado. A API exige `X-Wimifarma-Shipping-Benefit: 1`: clientes antigos precisam atualizar a página, sem obter um token novo enquanto exibem a antiga regra de R$ 99,90. Antes do CEP não aparece limiar universal. O mínimo é estimativa para a composição e cotação atuais, arredondada conservadoramente; adicionar produtos pode mudar custo, peso e benefício. Omitir essa estimativa quando o teto ou a modalidade impossibilita gratuidade integral.
 
+Quando o Melhor Envio rejeita a cotação inicial com HTTP 422, o servidor consulta o destino no ViaCEP. Se o CEP não for encontrado, a resposta pede ao cliente que corrija os dígitos. Se o CEP existir ou o ViaCEP estiver indisponível, o site informa que a cotação não foi confirmada e mantém a opção de consultar novamente. As outras cotações válidas continuam disponíveis conforme a elegibilidade da rota e dos produtos. A simulação da meta de frete grátis segue com seu próprio prazo.
+
 ## Preparação do catálogo e diagnóstico
 
 A fila ADMIN possui filtro global `ALL`, `PENDING` ou `CONFIGURED`, antes da paginação. O resumo distingue falta de perfil, revisão, desativação, configuração e atendimento assistido. Configurado não garante cobertura de todos os CEPs ou aceitação de toda transportadora. Produtos assistidos e restrições de carga permanecem protegidos.

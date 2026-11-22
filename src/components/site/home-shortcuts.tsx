@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, type PointerEvent } from "react";
-import { Baby, BadgePercent, Droplets, Leaf, Pill, Scissors, Smile, SprayCan } from "lucide-react";
+import { ArrowRight, Baby, BadgePercent, Droplets, Leaf, Pill, Scissors, Smile, SprayCan } from "lucide-react";
 import type { HomeShortcutItem } from "@/features/products/home-shortcuts";
 import styles from "./home-shortcuts.module.css";
 
@@ -114,7 +114,14 @@ export function HomeShortcuts({ items }: { items: HomeShortcutItem[] }) {
                   <span className={styles.ring} data-category-ring />
                   <Icon size={32} strokeWidth={1.6} />
                 </span>
-                <span className={styles.label}>{item.label}</span>
+                <span className={styles.label}>
+                  {item.id === "offers" ? <>
+                    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-brand px-2 py-1 text-[11px] font-bold text-white sm:hidden">
+                      Ver ofertas <ArrowRight aria-hidden="true" className="h-3 w-3" />
+                    </span>
+                    <span className="hidden sm:inline">{item.label}</span>
+                  </> : item.label}
+                </span>
               </Link>
             </li>
           );
