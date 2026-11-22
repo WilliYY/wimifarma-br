@@ -15,14 +15,24 @@ test("public estimate calculates complete drafts without approving shipment or e
   let product: Record<string, unknown> = { ...base };
   let failure = false;
   const calls: { services: string; products: { id: string; width: number; height: number; length: number; weight: number; insurance_value: number; quantity: number }[] }[] = [];
-  const integration = { settings: { enabled: true, environment: "production", originPostalCode: "87525000", postingLocations: [], preparationDays: 2, serviceIds: [1, 2, 3], contactEmail: "qa@example.invalid" }, revision: 1 };
+  const integration = { settings: { enabled: true, environment: "production", originPostalCode: "87525000", originCity: "Ivaté", originState: "PR", postingLocations: [], preparationDays: 2, serviceIds: [1, 2, 3], contactEmail: "qa@example.invalid" }, revision: 1 };
   const fixture = { integration, db: { product: { findUnique: async () => product } }, provider: async (...args: unknown[]) => {
     if (failure) throw new Error("synthetic provider failure");
     const request = args[3] as typeof calls[number]; calls.push(request);
     return request.services.split(",").map(Number).map(id => ({ id, name: `Serviço ${id}`, price: "12.50", delivery_time: 3, company: { name: "Transportadora sintética" }, packages: request.products.map(p => ({ dimensions: { width: p.width, height: p.height * p.quantity, length: p.length }, weight: p.weight * p.quantity, insurance_value: p.insurance_value * p.quantity, products: [{ id: p.id, quantity: p.quantity }] })) }));
   } };
-  const loaded = { exports: {} as { estimateProductShipping(input: { productId: string; quantity: number; postalCode: string }): Promise<{ mode: string; options: { priceCents: number; deliveryDays: number; serviceId: number; benefit?: { customerPriceCents: number } }[] }> } };
-  vm.runInNewContext(compiled.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), process, Buffer, Date, fixture, console });
+  const env: Record<string, string> = {};
+  const directRequests: string[] = [];
+  const fetchCorreios = async (url: URL) => {
+    const code = url.pathname.split("/").at(-1)!;
+    const insurance = code === "03298" ? "064" : "019";
+    directRequests.push(code);
+    if (url.pathname.includes("servicos-adicionais")) return Response.json([{ codigo: insurance, vlMinDeclarado: 25.63, vlMaxDeclarado: 4668.29 }]);
+    if (url.pathname.startsWith("/prazo/")) return Response.json({ coProduto: code, prazoEntrega: 3, entregaDomiciliar: "S" });
+    return Response.json({ coProduto: code, pcFinal: "20,74", servicoAdicional: [{ coServAdicional: insurance, pcServicoAdicional: "0,74" }] });
+  };
+  const loaded = { exports: {} as { estimateProductShipping(input: { productId: string; quantity: number; postalCode: string }): Promise<{ mode: string; options: { priceCents: number; deliveryDays: number; serviceId: number; serviceCode?: string; benefit?: { customerPriceCents: number } }[] }> } };
+  vm.runInNewContext(compiled.outputFiles[0].text, { module: loaded, exports: loaded.exports, require: createRequire(import.meta.url), process: { env }, Buffer, Date, fixture, console, URL, URLSearchParams, AbortSignal, fetch: fetchCorreios });
   const input = { productId: base.id, quantity: 2, postalCode: "01001000" };
   const estimate = await loaded.exports.estimateProductShipping(input);
   assert.equal(estimate.mode, "estimate");
@@ -142,6 +152,19 @@ test("public estimate calculates complete drafts without approving shipment or e
     await assert.rejects(loaded.exports.estimateProductShipping({ ...input, postalCode: "87525000" }), /atendimento/);
     assert.equal(calls.length, before, "local CEP never bypasses legal restrictions");
   }
+  integration.settings.serviceIds = [];
+  env.CORREIOS_CHECKOUT_ENABLED = "true";
+  env.CORREIOS_DELEGATED_ACCESS_KEY = "synthetic-key";
+  for (const code of ["03298", "03220"] as const) {
+    product = { ...base, shippingProfile: { ...profile, enabled: true, transportReviewed: true, cargoKinds: ["general"], approvedServiceIds: [], approvedCorreiosServiceCodes: [code] } };
+    directRequests.length = 0;
+    const preview = await loaded.exports.estimateProductShipping(input);
+    assert.equal(preview.mode, "available");
+    assert.deepEqual(Array.from(preview.options, option => option.serviceCode), [code]);
+    assert.deepEqual(directRequests, [code, code, code], "only the approved service reaches the direct provider");
+  }
+  delete env.CORREIOS_CHECKOUT_ENABLED;
+  integration.settings.serviceIds = [1, 2, 3];
   product = { ...base }; failure = true;
   await assert.rejects(loaded.exports.estimateProductShipping(input), /synthetic provider failure/);
   failure = false; integration.settings.enabled = false;

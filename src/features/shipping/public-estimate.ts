@@ -16,7 +16,7 @@ import { resolveAttainableShippingGoals } from "./attainable-goal";
 import { localDeliveryCity } from "./delivery-policy";
 import { publicShippingEstimateRequestSchema, publicShippingEstimateSchema, type PublicShippingEstimateRequest } from "./public-estimate-contract";
 import { compareSuperFrete, getSuperFreteConfig, quoteSuperFrete, superFreteBenefit, superFreteServices } from "./superfrete";
-import { compareCorreios, correiosBenefit, correiosCheckoutEligible, getCorreiosCheckoutConfig, quoteCorreiosCheckout } from "./correios-checkout";
+import { compareCorreios, correiosBenefit, correiosCheckoutServiceCodes, getCorreiosCheckoutConfig, quoteCorreiosCheckout } from "./correios-checkout";
 
 const physicalProfileSchema = shippingProfileSchema.pick({ weightGrams: true, widthCm: true, heightCm: true, lengthCm: true });
 const normalized = (value: string | null) => (value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -46,7 +46,8 @@ export async function estimateProductShipping(input: PublicShippingEstimateReque
     && (profile.approvedServiceIds === undefined || (!profile.transportReviewed && profile.approvedServiceIds.length === 0) || profile.approvedServiceIds.includes(service))
     && assessCarrierCargo(service, cargos).status !== "blocked");
   const correios = getCorreiosCheckoutConfig();
-  const directEligible = !!correios && correiosCheckoutEligible(settings, [product]);
+  const directServiceCodes = correios ? correiosCheckoutServiceCodes(settings, [product]) : [];
+  const directEligible = directServiceCodes.length > 0;
   if (!serviceIds.length && !directEligible) throw new ShippingError("Este produto precisa de atendimento da farmácia para consultar o transporte.");
   const unitPriceCents = Math.round(Number(sale.promotionalPrice ?? sale.price) * 100);
   if (!Number.isSafeInteger(unitPriceCents) || unitPriceCents <= 0 || unitPriceCents > 1_000_000) throw new ShippingError("Preço indisponível para consulta de frete.");
@@ -71,7 +72,7 @@ export async function estimateProductShipping(input: PublicShippingEstimateReque
       );
       return [...melhorOptions, ...superFreteOptions];
     })(),
-    directEligible ? quoteCorreiosCheckout(correios!, request.postalCode, packing, preparationDays) : Promise.resolve([]),
+    directEligible ? quoteCorreiosCheckout(correios!, request.postalCode, packing, preparationDays, fetch, directServiceCodes) : Promise.resolve([]),
   );
   const options = primaryOptions.filter(option => option.provider === "melhor-envio");
   const superFreteOptions = primaryOptions.filter(option => option.provider === "superfrete");

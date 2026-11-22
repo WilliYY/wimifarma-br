@@ -20,6 +20,8 @@ A caixa calculada conserva as dimensões protegidas dos itens e empilha suas alt
 
 ## Valor declarado e credencial
 
+A cotação exibida na ficha do produto usa a mesma seleção de códigos do contrato direto que o checkout. Um produto aprovado apenas para PAC, por exemplo, consulta e exibe somente PAC nesse canal.
+
 A cotação direta inclui o valor integral da mercadoria no serviço adicional de Valor Declarado: PAC `064`, SEDEX `019`. O servidor consulta os limites autenticados por serviço, omite serviços incompatíveis e exige confirmação do adicional na resposta de preço. Não reduz o valor da mercadoria para caber no limite. Usa `pcFinal`, que já inclui o adicional.
 
 Em consulta de produção somente leitura em 18/11/2026, os limites autenticados foram mínimo R$ 25,63, máximo PAC R$ 4.668,29 e SEDEX R$ 39.680,48. Esses limites são consultados pela integração, não tratados como valores eternos. Abaixo do mínimo de Valor Declarado, o canal pode ser omitido; não se presume cobertura automática.
