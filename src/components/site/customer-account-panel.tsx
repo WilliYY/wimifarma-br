@@ -12,7 +12,6 @@ import {
   BadgeCheck,
   Bell,
   Coins,
-  Crown,
   Gift,
   Home,
   LockKeyhole,
@@ -37,7 +36,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { BrandSignature } from "@/components/site/brand-signature";
 import { CustomerOrderCard, CustomerOrderHistoryPanel } from "@/components/site/customer-order-history";
 import type { CustomerOrderHistory, OrderHistoryFilter } from "@/features/orders/customer-orders";
 import { siteConfig } from "@/lib/site";
@@ -88,6 +86,14 @@ const tabs = [
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
+const miaubyGreetings: Record<TabId, string> = {
+  inicio: "Que bom ter você aqui!",
+  pedidos: "Suas compras estão logo abaixo.",
+  beneficios: "Seus benefícios estão à mão!",
+  avisos: "Veja as novidades que você acompanha.",
+  perfil: "Atualize seus dados por aqui.",
+  seguranca: "Confira suas opções de acesso.",
+};
 const postalFields = ["address", "neighborhood", "city", "state"] as const;
 type PostalField = (typeof postalFields)[number];
 
@@ -231,7 +237,7 @@ export function CustomerAccountPanel({
   const balance = cashback?.balance ?? "0";
   const completedFields = [customer.name, customer.phone, customer.address, customer.neighborhood, customer.city].filter(Boolean).length;
   const profileProgress = completedFields * 20;
-  const firstName = customer.name.trim().split(/\s+/)[0];
+  const firstName = customer.name.trim().split(/\s+/)[0].replace(/^\p{L}/u, (letter) => letter.toLocaleUpperCase("pt-BR"));
   const supportUrl = `https://wa.me/${siteConfig.phone}?text=${encodeURIComponent("Olá! Preciso de ajuda com minha conta Wimifarma.")}`;
 
   function navigateTo(tab: TabId) {
@@ -352,49 +358,47 @@ export function CustomerAccountPanel({
 
   return (
     <section className="min-h-screen bg-[#f5f6f8] px-4 pb-16 pt-40 text-ink sm:px-6 sm:pt-44 lg:px-8 lg:pt-60">
-      <div className="mx-auto max-w-7xl">
-        <nav aria-label="Localização" className="mb-5 flex items-center gap-2 text-xs font-medium text-muted"><Link className="inline-flex min-h-6 items-center hover:text-brand" href="/">Início</Link><ChevronRight aria-hidden="true" className="h-3 w-3" /><span aria-current="page">Minha conta</span></nav>
-        <header className="account-welcome relative isolate grid items-center gap-8 overflow-hidden rounded-3xl border border-line px-5 py-6 text-ink sm:p-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-12 lg:p-10">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted">Minha conta</p>
-              <BrandSignature className="px-2 py-1 lg:hidden" />
+      <div className="mx-auto max-w-6xl">
+        <nav aria-label="Localização" className="mb-3 flex items-center gap-2 text-xs font-medium text-muted"><Link className="inline-flex min-h-6 items-center hover:text-brand" href="/">Início</Link><ChevronRight aria-hidden="true" className="h-3 w-3" /><span aria-current="page">Minha conta</span></nav>
+        <header className="account-welcome grid items-center gap-3 rounded-2xl border border-line p-4 sm:grid-cols-2 sm:gap-5 sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(14rem,18rem)_auto]" data-account-welcome>
+          <div className="flex min-w-0 items-center gap-3.5 sm:gap-4">
+            <div className={cn("account-welcome-avatar flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-xl font-black text-brand sm:h-16 sm:w-16", club.summary?.member && "account-welcome-avatar-member")}>
+              {customer.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img alt="Sua foto de perfil" className="h-full w-full object-cover" referrerPolicy="no-referrer" src={customer.imageUrl} />
+              ) : initials(customer.name) || <UserRound aria-hidden="true" className="h-7 w-7" />}
             </div>
-            <div className="mt-5 flex min-w-0 items-center gap-4 sm:gap-5">
-              <div className={cn("account-welcome-avatar flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-2xl font-black text-brand sm:h-20 sm:w-20", club.summary?.member && "account-welcome-avatar-member")}>
-                {customer.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img alt="Sua foto de perfil" className="h-full w-full object-cover" referrerPolicy="no-referrer" src={customer.imageUrl} />
-                ) : initials(customer.name) || <UserRound className="h-8 w-8" />}
-              </div>
-              <div className="min-w-0">
-                <h1 className="break-words text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">Olá,{" "}<span className={cn("relative inline-block max-w-full", club.summary?.member && "pt-7 sm:pt-8")}>
-                  {club.summary?.member && <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2"><Crown className="account-welcome-crown h-6 w-6 text-amber-600 sm:h-7 sm:w-7" strokeWidth={1.8} /></span>}
-                  {firstName}<span className="text-brand">.</span>
-                </span></h1>
-                <p className="mt-2 max-w-sm text-sm leading-6 text-muted">Suas compras e benefícios, sempre por perto.</p>
-                {club.summary?.member && <button className="mt-3 inline-flex min-h-9 max-w-full items-center gap-2 rounded-full border border-amber-200/80 bg-white/80 px-3 text-xs font-bold text-amber-900 hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700" onClick={() => navigateTo("beneficios")} type="button"><BadgeCheck aria-hidden="true" className="h-4 w-4 shrink-0" /><span className="min-w-0 text-left leading-5">Participando do Club</span><ChevronRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0" /></button>}
-              </div>
+            <div className="min-w-0">
+              <h1 className="break-words text-2xl font-black leading-tight tracking-tight sm:text-3xl">{firstName ? `Olá, ${firstName}` : "Olá"}<span className="text-brand">!</span></h1>
+              {club.summary?.member && (
+                <button className="-mb-1 inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-md text-left text-xs font-bold text-amber-800 hover:underline focus-visible:outline-2 focus-visible:outline-amber-700" onClick={() => navigateTo("beneficios")} type="button">
+                  <BadgeCheck aria-hidden="true" className="h-4 w-4 shrink-0" />Participando do Club
+                </button>
+              )}
             </div>
-            <div className="mt-6 sm:pl-[6.25rem]"><Link className="group inline-flex min-h-12 w-full items-center justify-between gap-3 rounded-full bg-brand px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:w-fit sm:gap-5" href="/catalogo"><ShoppingBag aria-hidden="true" className="h-4 w-4 shrink-0" /><span>Continuar comprando</span><ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 motion-safe:transition-transform motion-safe:group-hover:translate-x-1" /></Link></div>
           </div>
-          <div className="account-club-pass relative hidden min-w-0 flex-col overflow-hidden rounded-2xl border border-white bg-white/90 p-6 lg:flex">
-            <div className="flex items-center justify-between gap-3"><BrandSignature className="bg-transparent p-0 ring-0" /><span className="rounded-full bg-brand-soft px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-brand">Club</span></div>
-            <div className="mt-7 flex items-start justify-between gap-4">
-              <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">Club Wimifarma</p><h2 className="mt-2 text-2xl font-black leading-tight tracking-tight">{club.summary ? club.summary.member ? "Você faz parte." : "Faça parte do Club." : "Seu Club Wimifarma."}</h2></div>
-              <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700">{club.summary?.member ? <Crown className="h-5 w-5" strokeWidth={1.5} /> : <Coins className="h-5 w-5" strokeWidth={1.5} />}</span>
+          <div className="flex min-w-0 items-center gap-2.5">
+            <picture aria-hidden="true" className="account-miauby-art">
+              <source media="(prefers-reduced-motion: reduce)" srcSet="/brand/miauby-avatar.webp" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img alt="" decoding="async" draggable={false} height={500} src="/media/header/gato-correndo.gif" width={500} />
+            </picture>
+            <div className="account-miauby-bubble min-w-0 rounded-xl border border-line bg-white px-3 py-2">
+              <p className="text-xs font-bold text-brand-strong">Miauby</p>
+              <p className="mt-0.5 text-sm font-semibold leading-snug text-ink">{miaubyGreetings[activeTab]}</p>
             </div>
-            <p className="mt-3 text-sm text-muted">WimiCoins + cashback</p>
-            <button className="mt-5 flex min-h-11 items-center justify-between gap-3 border-t border-line pt-4 text-sm font-bold text-brand hover:text-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={() => navigateTo("beneficios")} type="button">Ver benefícios<ArrowRight aria-hidden="true" className="h-4 w-4" /></button>
           </div>
+          <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-bold text-white hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:w-fit" href="/catalogo">
+            <ShoppingBag aria-hidden="true" className="h-4 w-4 shrink-0" />Continuar comprando<ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0" />
+          </Link>
         </header>
 
-        <div className="mt-6 grid items-start gap-5 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-7">
+        <div className="mt-4 grid items-start gap-4 lg:grid-cols-[190px_minmax(0,1fr)] lg:gap-5">
           <aside className="min-w-0 lg:sticky lg:top-[var(--site-header-offset,15rem)]">
-            <nav aria-label="Área da conta" className="flex gap-1 overflow-x-auto rounded-2xl border border-line bg-white p-2 lg:grid">
+            <nav aria-label="Área da conta" className="grid grid-cols-2 gap-1 rounded-xl border border-line bg-white p-1.5 min-[500px]:grid-cols-3 lg:grid-cols-1">
               {tabs.map(tab => {
                 const Icon = tab.icon;
-                return <button aria-current={activeTab === tab.id ? "page" : undefined} aria-controls="account-content" className={cn("flex min-h-12 shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-brand lg:w-full", activeTab === tab.id ? "bg-brand-soft text-brand" : "text-muted hover:bg-slate-50 hover:text-ink")} key={tab.id} onClick={() => navigateTo(tab.id)} type="button"><Icon aria-hidden="true" className="h-[18px] w-[18px]" />{tab.label}{tab.id === "pedidos" && orders.counts.active > 0 && <span className="ml-auto rounded-full bg-brand px-2 py-0.5 text-[10px] text-white">{orders.counts.active}</span>}</button>;
+                return <button aria-current={activeTab === tab.id ? "page" : undefined} aria-controls="account-content" className={cn("flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-bold transition-colors focus-visible:outline-2 focus-visible:outline-brand sm:px-2.5 sm:text-sm", activeTab === tab.id ? "bg-brand-soft text-brand" : "text-muted hover:bg-slate-50 hover:text-ink")} key={tab.id} onClick={() => navigateTo(tab.id)} type="button"><Icon aria-hidden="true" className="h-4 w-4 shrink-0" /><span>{tab.label}</span>{tab.id === "pedidos" && orders.counts.active > 0 && <span className="ml-auto shrink-0 rounded-full bg-brand px-1.5 py-0.5 text-[10px] text-white">{orders.counts.active}</span>}</button>;
               })}
             </nav>
             <div className="mt-4 hidden rounded-2xl border border-line bg-white p-5 lg:block">
@@ -405,15 +409,14 @@ export function CustomerAccountPanel({
 
         <div aria-label={tabs.find(tab => tab.id === activeTab)?.label} className="min-w-0 scroll-mt-40 rounded-2xl outline-none lg:scroll-mt-60" id="account-content" ref={contentRef} role="region" tabIndex={-1}>
           {activeTab === "inicio" && <div className="space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-xl font-black tracking-tight">Seus benefícios</h2><button className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand hover:underline focus-visible:outline-2 focus-visible:outline-brand" onClick={() => navigateTo("beneficios")} type="button">Ver extratos<ArrowRight aria-hidden="true" className="h-4 w-4" /></button></div>
-            <div className="grid items-stretch gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+            <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-black tracking-tight">Seus benefícios</h2><button className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand hover:underline focus-visible:outline-2 focus-visible:outline-brand" onClick={() => navigateTo("beneficios")} type="button">Ver extratos<ArrowRight aria-hidden="true" className="h-4 w-4" /></button></div>
+            <div className="grid items-stretch gap-3 md:grid-cols-2">
               <ClubBenefits club={club} compact onShowDetails={() => navigateTo("beneficios")} />
-              <section aria-label="Seu cashback" className="flex min-w-0 flex-col rounded-2xl border border-emerald-200 bg-white p-5 sm:p-6">
-                <h2 className="flex items-center gap-2 text-base font-black text-emerald-950"><Coins aria-hidden="true" className="h-5 w-5 text-emerald-700" />Seu cashback</h2>
-                <p className="mt-6 break-all text-4xl font-black leading-none tracking-tight text-emerald-950 sm:text-5xl">{formatCurrency(balance)}</p>
-                <p className="mt-3 text-sm font-bold text-emerald-800">Disponível para usar</p>
-                <p className="mt-3 text-sm leading-6 text-muted">Um desconto para suas próximas compras, que combina com seus WimiCoins.</p>
-                <button className="mt-auto inline-flex min-h-11 w-fit items-center gap-2 pt-4 text-sm font-bold text-emerald-800 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700" onClick={() => navigateTo("beneficios")} type="button">Ver meu cashback<ArrowRight aria-hidden="true" className="h-4 w-4" /></button>
+              <section aria-label="Seu cashback" className="flex min-w-0 flex-col rounded-xl border border-line bg-white p-4">
+                <h2 className="flex items-center gap-2.5 text-sm font-black text-ink"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50"><Coins aria-hidden="true" className="h-4 w-4 text-emerald-700" /></span>Seu cashback</h2>
+                <p className="mt-3 text-xs font-medium text-muted">{cashback ? "Saldo disponível" : "Consulta ao saldo"}</p>
+                <p className="mt-1 break-words text-2xl font-black leading-tight tracking-tight tabular-nums text-emerald-900">{cashback ? formatCurrency(balance) : "Indisponível"}</p>
+                <button className="mt-auto inline-flex min-h-11 w-fit items-center gap-2 text-sm font-bold text-emerald-800 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700" onClick={() => navigateTo("beneficios")} type="button">Ver meu cashback<ArrowRight aria-hidden="true" className="h-4 w-4" /></button>
               </section>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -436,106 +439,119 @@ export function CustomerAccountPanel({
           <div className={cn(activeTab === "inicio" || activeTab === "pedidos" || activeTab === "avisos" ? "hidden" : "rounded-2xl border border-line bg-white p-5 sm:p-7")}>
           {activeTab !== "inicio" && activeTab !== "pedidos" && activeTab !== "avisos" && <div className="mb-6 border-b border-line pb-5"><h2 className="text-2xl font-black tracking-tight">{activeTab === "perfil" ? "Seus dados, sempre em dia" : activeTab === "seguranca" ? "Acesso e segurança" : "Seus benefícios"}</h2><p className="mt-2 text-sm leading-6 text-muted">{activeTab === "perfil" ? "Mantenha seu contato e endereço atualizados para facilitar o atendimento." : activeTab === "seguranca" ? "Cuide do acesso à sua conta com uma senha que só você conhece." : "Acompanhe seu saldo e os benefícios das suas compras."}</p></div>}
           {activeTab === "perfil" ? (
-            <form autoComplete="on" className="grid gap-5 sm:grid-cols-2 [&_input]:min-h-12 [&_input]:rounded-xl [&_textarea]:rounded-xl" onSubmit={(event) => { event.preventDefault(); void saveProfile(); }}>
-              <Field icon={<UserRound className="h-4 w-4" />} label="Nome">
-                <Input
-                  autoComplete="name"
-                  name="name"
-                  required
-                  value={profile.name}
-                  onChange={(event) =>
-                    updateProfileField("name", event.target.value)
-                  }
-                />
-              </Field>
-              <Field icon={<Mail className="h-4 w-4" />} label="Email da conta">
-                <Input autoComplete="email" name="email" readOnly type="email" className="bg-slate-50 text-muted" value={customer.email ?? ""} />
-              </Field>
-              <Field icon={<Phone className="h-4 w-4" />} label="Telefone">
-                <Input
-                  inputMode="tel"
-                  autoComplete="tel"
-                  name="phone"
-                  type="tel"
-                  placeholder="+55 44 99999-9999"
-                  value={profile.phone}
-                  onChange={(event) =>
-                    updateProfileField("phone", event.target.value)
-                  }
-                />
-              </Field>
-              <Field icon={<MapPin className="h-4 w-4" />} label="CEP">
-                <Input
-                  autoComplete="postal-code"
-                  inputMode="numeric"
-                  maxLength={9}
-                  name="postalCode"
-                  placeholder="00000-000"
-                  value={profile.postalCode}
-                  onChange={(event) => updateProfileField("postalCode", formatPostalCode(event.target.value))}
-                />
-              </Field>
-              <Field icon={<Home className="h-4 w-4" />} label="Endereço">
-                <Input
-                  placeholder="Rua, numero e complemento"
-                  autoComplete="street-address"
-                  maxLength={240}
-                  name="address"
-                  value={profile.address}
-                  onChange={(event) =>
-                    updateProfileField("address", event.target.value)
-                  }
-                />
-              </Field>
-              <Field icon={<MapPin className="h-4 w-4" />} label="Bairro">
-                <Input
-                  autoComplete="address-level3"
-                  maxLength={120}
-                  name="neighborhood"
-                  value={profile.neighborhood}
-                  onChange={(event) =>
-                    updateProfileField("neighborhood", event.target.value)
-                  }
-                />
-              </Field>
-              <Field icon={<MapPin className="h-4 w-4" />} label="Cidade">
-                <Input
-                  autoComplete="address-level2"
-                  maxLength={80}
-                  name="city"
-                  value={profile.city}
-                  onChange={(event) =>
-                    updateProfileField("city", event.target.value)
-                  }
-                />
-              </Field>
-              <Field icon={<MapPin className="h-4 w-4" />} label="UF">
-                <Input
-                  autoComplete="address-level1"
-                  maxLength={2}
-                  name="state"
-                  value={profile.state}
-                  onChange={(event) => updateProfileField("state", event.target.value.replace(/[^a-z]/gi, "").toUpperCase())}
-                />
-              </Field>
-              <div className="text-xs leading-5 text-muted sm:col-span-2">
-                <p>CEP e UF auxiliam a consulta. Salve o endereço completo, bairro e cidade nos campos acima.</p>
-                <div aria-live="polite" role="status">{postalStatus.message}</div>
-                {postalStatus.failed && <button className="mt-1 min-h-9 font-bold text-brand underline underline-offset-4" onClick={() => setPostalRetry((current) => current + 1)} type="button">Consultar CEP novamente</button>}
-              </div>
-              <Field icon={<Home className="h-4 w-4" />} label="Observações de entrega">
-                <Textarea
-                  className="min-h-24"
-                  placeholder="Referencia de entrega, horario ou detalhe importante"
-                  value={profile.notes}
-                  onChange={(event) =>
-                    updateProfileField("notes", event.target.value)
-                  }
-                />
-              </Field>
-              <div className="sm:col-span-2">
+            <form autoComplete="on" className="grid gap-4 [&_input]:min-h-11 [&_input]:rounded-xl [&_textarea]:rounded-xl" onSubmit={(event) => { event.preventDefault(); void saveProfile(); }}>
+              <fieldset className="min-w-0 rounded-xl border border-line p-3 sm:p-4">
+                <legend className="px-1 text-sm font-bold text-ink">Contato</legend>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <Field icon={<UserRound className="h-4 w-4" />} label="Nome">
+                    <Input
+                      autoComplete="name"
+                      name="name"
+                      required
+                      value={profile.name}
+                      onChange={(event) =>
+                        updateProfileField("name", event.target.value)
+                      }
+                    />
+                  </Field>
+                  <Field icon={<Mail className="h-4 w-4" />} label="Email da conta">
+                    <Input autoComplete="email" name="email" readOnly type="email" className="bg-slate-50 text-muted" value={customer.email ?? ""} />
+                  </Field>
+                  <Field icon={<Phone className="h-4 w-4" />} label="Telefone">
+                    <Input
+                      inputMode="tel"
+                      autoComplete="tel"
+                      name="phone"
+                      type="tel"
+                      placeholder="+55 44 99999-9999"
+                      value={profile.phone}
+                      onChange={(event) =>
+                        updateProfileField("phone", event.target.value)
+                      }
+                    />
+                  </Field>
+                </div>
+              </fieldset>
+              <fieldset className="min-w-0 rounded-xl border border-line p-3 sm:p-4">
+                <legend className="px-1 text-sm font-bold text-ink">Endereço de entrega</legend>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <Field icon={<MapPin className="h-4 w-4" />} label="CEP">
+                    <Input
+                      autoComplete="postal-code"
+                      inputMode="numeric"
+                      maxLength={9}
+                      name="postalCode"
+                      placeholder="00000-000"
+                      value={profile.postalCode}
+                      onChange={(event) => updateProfileField("postalCode", formatPostalCode(event.target.value))}
+                    />
+                  </Field>
+                  <div className="lg:col-span-2">
+                    <Field icon={<Home className="h-4 w-4" />} label="Endereço">
+                      <Input
+                        placeholder="Rua, numero e complemento"
+                        autoComplete="street-address"
+                        maxLength={240}
+                        name="address"
+                        value={profile.address}
+                        onChange={(event) =>
+                          updateProfileField("address", event.target.value)
+                        }
+                      />
+                    </Field>
+                  </div>
+                  <Field icon={<MapPin className="h-4 w-4" />} label="Bairro">
+                    <Input
+                      autoComplete="address-level3"
+                      maxLength={120}
+                      name="neighborhood"
+                      value={profile.neighborhood}
+                      onChange={(event) =>
+                        updateProfileField("neighborhood", event.target.value)
+                      }
+                    />
+                  </Field>
+                  <Field icon={<MapPin className="h-4 w-4" />} label="Cidade">
+                    <Input
+                      autoComplete="address-level2"
+                      maxLength={80}
+                      name="city"
+                      value={profile.city}
+                      onChange={(event) =>
+                        updateProfileField("city", event.target.value)
+                      }
+                    />
+                  </Field>
+                  <Field icon={<MapPin className="h-4 w-4" />} label="UF">
+                    <Input
+                      autoComplete="address-level1"
+                      maxLength={2}
+                      name="state"
+                      value={profile.state}
+                      onChange={(event) => updateProfileField("state", event.target.value.replace(/[^a-z]/gi, "").toUpperCase())}
+                    />
+                  </Field>
+                  <div className="text-xs leading-5 text-muted sm:col-span-2 lg:col-span-3">
+                    <div aria-live="polite" role="status">{postalStatus.message}</div>
+                    {postalStatus.failed && <button className="mt-1 min-h-11 font-bold text-brand underline underline-offset-4" onClick={() => setPostalRetry((current) => current + 1)} type="button">Consultar CEP novamente</button>}
+                  </div>
+                  <div className="sm:col-span-2 lg:col-span-3">
+                    <Field icon={<Home className="h-4 w-4" />} label="Observações de entrega">
+                      <Textarea
+                        className="min-h-24"
+                        placeholder="Referencia de entrega, horario ou detalhe importante"
+                        value={profile.notes}
+                        onChange={(event) =>
+                          updateProfileField("notes", event.target.value)
+                        }
+                      />
+                    </Field>
+                  </div>
+                </div>
+              </fieldset>
+              <div>
                 <Button
-                  className="w-full sm:w-auto"
+                  className="min-h-11 w-full sm:w-auto"
                   disabled={isSavingProfile}
                   type="submit"
                 >
