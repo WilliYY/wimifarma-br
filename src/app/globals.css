@@ -279,45 +279,183 @@ textarea {
 }
 
 .account-welcome {
-  background: linear-gradient(120deg, var(--surface) 52%, var(--brand-soft));
+  display: grid;
+  grid-template: "identity shop" auto "scene scene" auto / minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .25rem 1rem;
+  padding: 1rem 1.125rem .65rem;
+  border: 1px solid var(--line);
+  border-radius: 1.375rem;
+  background: linear-gradient(115deg, var(--surface) 23%, color-mix(in srgb, var(--brand-soft) 63%, var(--surface)));
+  box-shadow: 0 3px 16px -8px color-mix(in srgb, var(--ink) 15%, transparent);
+}
+
+.account-welcome-identity { grid-area: identity; }
+.account-welcome-shop { grid-area: shop; }
+
+@media (max-width: 39.99rem) {
+  .account-welcome {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: .625rem;
+  }
+  .account-welcome-identity {
+    flex: 1 1 min-content;
+    max-width: 100%;
+  }
+  .account-welcome-identity h1 { overflow-wrap: break-word; }
+  .account-welcome-shop {
+    order: 1;
+    margin-inline-start: auto;
+  }
+  .account-miauby-scene {
+    order: 2;
+    flex: 0 0 100%;
+  }
+}
+
+.account-miauby-scene {
+  grid-area: scene;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: .375rem;
+  min-width: 0;
+  mix-blend-mode: multiply;
+}
+
+.account-miauby-track {
+  position: relative;
+  container-type: inline-size;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.account-miauby-track::after {
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--brand) 19%, transparent) 20% 80%, transparent);
+  content: "";
+}
+
+.account-miauby-walker {
+  display: grid;
+  justify-items: center;
+  align-content: end;
+  gap: 2px;
+  width: fit-content;
+  max-width: min(100%, 12rem);
+  min-height: 5.75rem;
+}
+
+.account-miauby-bubble {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .35rem .7rem;
+  border: 1px solid color-mix(in srgb, var(--brand) 18%, var(--surface));
+  border-radius: .9rem .9rem .9rem .35rem;
+  background: var(--surface);
+  box-shadow: 0 3px 8px -4px color-mix(in srgb, var(--brand) 22%, transparent);
+  color: var(--ink);
+  font-size: .75rem;
+  font-weight: 650;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.account-miauby-bubble svg {
+  flex: none;
+  color: var(--brand-strong);
+}
+
+.account-miauby-bubble::after {
+  position: absolute;
+  bottom: -4px;
+  left: calc(50% - 4px);
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg);
+  border: inherit;
+  border-top: 0;
+  border-left: 0;
+  background: inherit;
+  content: "";
 }
 
 .account-miauby-art {
   position: relative;
-  flex: none;
-  width: 85px;
-  height: 68px;
+  width: 74px;
+  height: 62px;
   overflow: hidden;
-  mix-blend-mode: multiply;
   pointer-events: none;
   user-select: none;
 }
 
 .account-miauby-art img {
   position: absolute;
-  top: -22px;
-  left: -22px;
-  width: 126px;
+  top: -19px;
+  left: -20px;
+  width: 114px;
   max-width: none;
-  height: 126px;
+  height: 114px;
   filter: brightness(.84) contrast(1.9);
 }
 
-.account-miauby-bubble {
-  position: relative;
+.account-miauby-pause {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
 }
 
-.account-miauby-bubble::before {
-  position: absolute;
-  top: calc(50% - 4px);
-  left: -5px;
-  width: 8px;
-  height: 8px;
-  transform: rotate(45deg);
-  border-bottom: 1px solid var(--line);
-  border-left: 1px solid var(--line);
-  background: white;
-  content: "";
+.account-miauby-pause:is(:hover, :focus-visible) {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+.account-miauby-pause:focus-visible {
+  outline: 2px solid var(--brand);
+}
+
+@media (min-width: 56rem) {
+  .account-welcome {
+    grid-template: "identity scene shop" auto / fit-content(32%) minmax(0, 1fr) auto;
+    column-gap: clamp(1rem, 2.5vw, 2rem);
+    padding: .875rem 1.375rem;
+  }
+}
+
+@keyframes account-miauby-stroll {
+  0%, 100% { transform: translateX(0); }
+  48%, 52% { transform: translateX(max(0px, calc(100cqi - 100%))); }
+}
+
+@keyframes account-miauby-turn {
+  0%, 100% { transform: scaleX(-1); }
+  50% { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .account-miauby-walker { animation: account-miauby-stroll 18s linear infinite; }
+  .account-miauby-art { animation: account-miauby-turn 18s steps(1, end) infinite; }
+  .account-miauby-scene[data-paused="true"] :is(.account-miauby-walker, .account-miauby-art) {
+    animation-play-state: paused;
+  }
+}
+
+.account-miauby-scene[data-paused="true"] img {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: none;
 }
 
 .account-welcome-avatar {
@@ -329,6 +467,8 @@ textarea {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .account-miauby-pause { display: none; }
+  .account-miauby-walker { margin-inline: auto; }
   .account-miauby-art img {
     inset: 0;
     width: 100%;

@@ -17,7 +17,10 @@ import {
   LockKeyhole,
   Mail,
   MapPin,
+  Pause,
+  PawPrint,
   Phone,
+  Play,
   Save,
   ShieldCheck,
   UserRound,
@@ -94,6 +97,32 @@ const miaubyGreetings: Record<TabId, string> = {
   perfil: "Atualize seus dados por aqui.",
   seguranca: "Confira suas opções de acesso.",
 };
+
+function AccountMiauby({ greeting }: { greeting: string }) {
+  const [paused, setPaused] = useState(false);
+  const MotionIcon = paused ? Play : Pause;
+
+  return (
+    <div className="account-miauby-scene" data-paused={paused}>
+      <div className="account-miauby-track">
+        <div className="account-miauby-walker">
+          <p className="account-miauby-bubble">
+            <PawPrint aria-hidden="true" size={14} />
+            <span><span className="sr-only">Miauby: </span>{greeting}</span>
+          </p>
+          <picture className="account-miauby-art">
+            <source media={paused ? "all" : "(prefers-reduced-motion: reduce)"} srcSet="/brand/miauby-avatar.webp" />
+            <img alt="" decoding="async" draggable={false} height={500} src="/media/header/gato-correndo.gif" width={500} />
+          </picture>
+        </div>
+      </div>
+      <button aria-label="Pausar animação do Miauby" aria-pressed={paused} className="account-miauby-pause" onClick={() => setPaused(!paused)} title={paused ? "Continuar passeio" : "Pausar passeio"} type="button">
+        <MotionIcon aria-hidden="true" size={13} />
+      </button>
+    </div>
+  );
+}
+
 const postalFields = ["address", "neighborhood", "city", "state"] as const;
 type PostalField = (typeof postalFields)[number];
 
@@ -360,45 +389,42 @@ export function CustomerAccountPanel({
     <section className="min-h-screen bg-[#f5f6f8] px-4 pb-16 pt-40 text-ink sm:px-6 sm:pt-44 lg:px-8 lg:pt-60">
       <div className="mx-auto max-w-6xl">
         <nav aria-label="Localização" className="mb-3 flex items-center gap-2 text-xs font-medium text-muted"><Link className="inline-flex min-h-6 items-center hover:text-brand" href="/">Início</Link><ChevronRight aria-hidden="true" className="h-3 w-3" /><span aria-current="page">Minha conta</span></nav>
-        <header className="account-welcome grid items-center gap-3 rounded-2xl border border-line p-4 sm:grid-cols-2 sm:gap-5 sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(14rem,18rem)_auto]" data-account-welcome>
-          <div className="flex min-w-0 items-center gap-3.5 sm:gap-4">
-            <div className={cn("account-welcome-avatar flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-xl font-black text-brand sm:h-16 sm:w-16", club.summary?.member && "account-welcome-avatar-member")}>
+        <header className="account-welcome" data-account-welcome>
+          <div className="account-welcome-identity flex min-w-0 items-center gap-3.5 sm:gap-4">
+            <div className={cn("account-welcome-avatar flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-xl font-black text-brand sm:h-16 sm:w-16", club.summary?.member && "account-welcome-avatar-member")}>
               {customer.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img alt="Sua foto de perfil" className="h-full w-full object-cover" referrerPolicy="no-referrer" src={customer.imageUrl} />
               ) : initials(customer.name) || <UserRound aria-hidden="true" className="h-7 w-7" />}
             </div>
             <div className="min-w-0">
-              <h1 className="break-words text-2xl font-black leading-tight tracking-tight sm:text-3xl">{firstName ? `Olá, ${firstName}` : "Olá"}<span className="text-brand">!</span></h1>
+              <h1 className="text-2xl font-black leading-tight tracking-tight [overflow-wrap:anywhere] sm:text-3xl">{firstName ? `Olá, ${firstName}` : "Olá"}<span className="text-brand">!</span></h1>
               {club.summary?.member && (
-                <button className="-mb-1 inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-md text-left text-xs font-bold text-amber-800 hover:underline focus-visible:outline-2 focus-visible:outline-amber-700" onClick={() => navigateTo("beneficios")} type="button">
+                <button className="inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-md text-left text-xs font-bold text-amber-800 hover:underline focus-visible:outline-2 focus-visible:outline-amber-700" onClick={() => navigateTo("beneficios")} type="button">
                   <BadgeCheck aria-hidden="true" className="h-4 w-4 shrink-0" />Participando do Club
                 </button>
               )}
             </div>
           </div>
-          <div className="flex min-w-0 items-center gap-2.5">
-            <picture aria-hidden="true" className="account-miauby-art">
-              <source media="(prefers-reduced-motion: reduce)" srcSet="/brand/miauby-avatar.webp" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt="" decoding="async" draggable={false} height={500} src="/media/header/gato-correndo.gif" width={500} />
-            </picture>
-            <div className="account-miauby-bubble min-w-0 rounded-xl border border-line bg-white px-3 py-2">
-              <p className="text-xs font-bold text-brand-strong">Miauby</p>
-              <p className="mt-0.5 text-sm font-semibold leading-snug text-ink">{miaubyGreetings[activeTab]}</p>
-            </div>
-          </div>
-          <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-bold text-white hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:w-fit" href="/catalogo">
-            <ShoppingBag aria-hidden="true" className="h-4 w-4 shrink-0" />Continuar comprando<ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0" />
+          <AccountMiauby greeting={miaubyGreetings[activeTab]} />
+          <Link aria-label="Continuar comprando" className="account-welcome-shop inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-brand px-3 text-sm font-bold text-white hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:px-4" href="/catalogo">
+            <ShoppingBag aria-hidden="true" className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">Continuar comprando</span><span className="sm:hidden">Catálogo</span><ArrowRight aria-hidden="true" className="hidden h-4 w-4 shrink-0 sm:block" />
           </Link>
         </header>
 
         <div className="mt-4 grid items-start gap-4 lg:grid-cols-[190px_minmax(0,1fr)] lg:gap-5">
           <aside className="min-w-0 lg:sticky lg:top-[var(--site-header-offset,15rem)]">
-            <nav aria-label="Área da conta" className="grid grid-cols-2 gap-1 rounded-xl border border-line bg-white p-1.5 min-[500px]:grid-cols-3 lg:grid-cols-1">
+            <nav aria-label="Área da conta" className="grid grid-cols-2 gap-1 rounded-2xl border border-line bg-white p-1.5 min-[500px]:grid-cols-3 lg:grid-cols-1">
               {tabs.map(tab => {
                 const Icon = tab.icon;
-                return <button aria-current={activeTab === tab.id ? "page" : undefined} aria-controls="account-content" className={cn("flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-bold transition-colors focus-visible:outline-2 focus-visible:outline-brand sm:px-2.5 sm:text-sm", activeTab === tab.id ? "bg-brand-soft text-brand" : "text-muted hover:bg-slate-50 hover:text-ink")} key={tab.id} onClick={() => navigateTo(tab.id)} type="button"><Icon aria-hidden="true" className="h-4 w-4 shrink-0" /><span>{tab.label}</span>{tab.id === "pedidos" && orders.counts.active > 0 && <span className="ml-auto shrink-0 rounded-full bg-brand px-1.5 py-0.5 text-[10px] text-white">{orders.counts.active}</span>}</button>;
+                const current = activeTab === tab.id;
+                return (
+                  <button aria-current={current ? "page" : undefined} aria-controls="account-content" className={cn("flex min-h-11 min-w-0 items-center gap-2 rounded-xl px-2 py-1.5 text-left text-xs font-bold transition-colors focus-visible:outline-2 focus-visible:outline-brand sm:px-2.5 sm:text-sm", current ? "bg-brand-soft text-brand-strong" : "text-muted hover:bg-slate-50 hover:text-ink")} key={tab.id} onClick={() => navigateTo(tab.id)} type="button">
+                    <span className={cn("grid size-7 shrink-0 place-items-center rounded-lg", current && "bg-white shadow-sm")}><Icon aria-hidden="true" className="size-4" /></span>
+                    <span>{tab.label}</span>
+                    {tab.id === "pedidos" && orders.counts.active > 0 && <span className="ml-auto shrink-0 rounded-full bg-brand px-1.5 py-0.5 text-[10px] text-white">{orders.counts.active}</span>}
+                  </button>
+                );
               })}
             </nav>
             <div className="mt-4 hidden rounded-2xl border border-line bg-white p-5 lg:block">
