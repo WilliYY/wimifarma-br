@@ -2,7 +2,7 @@
 
 import { BadgeCheck, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -10,12 +10,21 @@ const codePattern = /^[A-Za-z0-9_-]{43}$/;
 
 export function CustomerEmailConfirmation({ verified }: { verified: boolean }) {
   const router = useRouter();
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const [expanded, setExpanded] = useState(false);
   const [enteringCode, setEnteringCode] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const enabled = verified || confirmed;
+
+  function closeVerification() {
+    setExpanded(false);
+    setError("");
+    setNotice("");
+    toggleRef.current?.focus();
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -75,13 +84,27 @@ export function CustomerEmailConfirmation({ verified }: { verified: boolean }) {
     <section className="rounded-2xl border border-line bg-slate-50 p-5 xl:col-span-2" aria-labelledby="email-confirmation-title">
       <h3 id="email-confirmation-title" className="flex items-center gap-2 text-sm font-black">
         {enabled ? <BadgeCheck aria-hidden="true" className="h-4 w-4 text-emerald-700" /> : <Mail aria-hidden="true" className="h-4 w-4 text-brand" />}
-        Recuperação de senha por e-mail
+        Verificação de e-mail
       </h3>
       <p className="mt-2 text-sm leading-6 text-muted" role="status">
-        {notice || (enabled ? "E-mail confirmado para recuperar sua senha." : "Confirme o e-mail da sua conta para poder redefinir a senha se precisar.")}
+        {notice || (enabled ? "E-mail confirmado para recuperar sua senha." : "A verificação é opcional e permite recuperar sua senha por e-mail. Você pode fazer isso agora ou depois.")}
       </p>
       {!enabled ? (
-        <form key={String(enteringCode)} className="mt-4 grid max-w-md gap-4" method="post" onSubmit={submit}>
+        <Button
+          aria-controls={expanded ? "email-confirmation-form" : undefined}
+          aria-expanded={expanded}
+          className="mt-4"
+          disabled={busy}
+          onClick={expanded ? closeVerification : () => setExpanded(true)}
+          ref={toggleRef}
+          type="button"
+          variant={expanded ? "ghost" : "default"}
+        >
+          {expanded ? "Recolher verificação" : "Verificar e-mail"}
+        </Button>
+      ) : null}
+      {!enabled && expanded ? (
+        <form id="email-confirmation-form" key={String(enteringCode)} className="mt-4 grid max-w-md gap-4" method="post" onSubmit={submit}>
           <div>
             <label className="mb-1.5 block text-sm font-bold" htmlFor="email-confirmation-password">Senha atual</label>
             <Input autoComplete="current-password" disabled={busy} id="email-confirmation-password" name="password" required type="password" />
@@ -108,6 +131,14 @@ export function CustomerEmailConfirmation({ verified }: { verified: boolean }) {
               variant="secondary"
             >
               {enteringCode ? "Solicitar outro código" : "Já tenho um código"}
+            </Button>
+            <Button
+              disabled={busy}
+              onClick={closeVerification}
+              type="button"
+              variant="secondary"
+            >
+              Agora não
             </Button>
           </div>
         </form>

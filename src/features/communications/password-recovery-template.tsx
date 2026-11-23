@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text, render } from "react-email";
+import { passwordEmailCodeLifetime } from "@/features/auth/password-recovery-timing";
 import { SITE_URL } from "@/lib/seo";
 import { EmailBrand } from "./email-brand";
 
@@ -25,7 +26,7 @@ export async function renderPasswordRecoveryEmail(token: string, kind: keyof typ
 
   const { subject, instruction, path, action } = messages[kind];
   const href = `${SITE_URL}${path}`;
-  const expiry = "O código vale por 15 minutos e pode ser usado uma única vez.";
+  const expiry = `O código vale por ${passwordEmailCodeLifetime[kind].label} e pode ser usado uma única vez.`;
   const ignored = "Se você não fez este pedido, pode ignorar este e-mail.";
   const html = await render(
     <Html lang="pt-BR" dir="ltr">

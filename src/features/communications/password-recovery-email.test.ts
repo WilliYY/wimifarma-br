@@ -12,7 +12,9 @@ test("recovery and verification display the official logo and put the code only 
     assert.match(email.html, /src="https:\/\/wimifarma\.com\.br\/brand\/logo-wimifarma-email-contraste\.png"/);
     assert.match(email.html, new RegExp(code));
     assert.match(email.text, new RegExp(code));
-    assert.match(email.text, /15 minutos/);
+    const expiry = kind === "recovery" ? /por 1 hora/ : /por 15 minutos/;
+    assert.match(email.html, expiry);
+    assert.match(email.text, expiry);
     const links = [...email.html.matchAll(/href="([^"]+)"/g)].map((match) => match[1]);
     assert.deepEqual(links, [kind === "recovery" ? "https://wimifarma.com.br/recuperar-senha?codigo=1" : "https://wimifarma.com.br/minha-conta#seguranca"]);
     assert.doesNotMatch(`${email.html}\n${email.text}`, /brevo|sendinblue|token=/i);

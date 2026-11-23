@@ -1,5 +1,9 @@
 # 07 - Historico de Decisoes
 
+## 2026-11-22 — Recuperação por uma hora e confirmação opcional
+
+Novos códigos de recuperação de senha valem por uma hora e têm uso único. A confirmação de e-mail em Minha conta continua voluntária, com código de 15 minutos. A compra não consulta a prova de endereço. Consulte [o fluxo de recuperação](143-recuperacao-de-senha.md).
+
 ## 2026-11-22 — Privacidade no cadastro de clientes
 
 A confirmação pública do cadastro passou a usar o mesmo texto para criação e conflito. A entrada exige uma ação separada do cliente, e as falhas de recuperação são registradas com mensagens sem dados pessoais. O contrato e as verificações estão na [revisão de segurança](42-revisao-de-seguranca.md#respostas-do-cadastro-e-diagnóstico-de-recuperação--22112026).

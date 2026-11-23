@@ -10,8 +10,8 @@ import {
 } from "@/features/communications/password-recovery-email";
 import { getPrisma } from "@/lib/prisma";
 import { credentialVersion } from "./credential-version";
+import { passwordEmailCodeLifetime } from "./password-recovery-timing";
 
-const recoveryWindowMs = 15 * 60 * 1000;
 const tokenSchema = z.string().regex(/^[A-Za-z0-9_-]{43}$/);
 const credentialSelect = {
   id: true,
@@ -89,7 +89,7 @@ export async function requestPasswordRecovery(email: string) {
       verifiedAt: identity.verifiedAt,
       credentialVersion: credentialVersion(identity.passwordHash),
       tokenHash: hashToken(token),
-      expiresAt: new Date(now.getTime() + recoveryWindowMs),
+      expiresAt: new Date(now.getTime() + passwordEmailCodeLifetime.recovery.milliseconds),
       consumedAt: null,
     };
     await tx.customerPasswordRecovery.upsert({
@@ -160,7 +160,7 @@ export async function verifyPasswordRecoveryEmail(customerId: string, { password
       if (!token) {
         if (identity.verifiedAt || (current && current.expiresAt > now)) return "requested";
         const verification = { email: identity.email, credentialVersion: version, tokenHash,
-          expiresAt: new Date(now.getTime() + recoveryWindowMs), consumedAt: null };
+          expiresAt: new Date(now.getTime() + passwordEmailCodeLifetime.verification.milliseconds), consumedAt: null };
         await tx.customerRecoveryEmailVerification.upsert({
           where: { customerId }, create: { ...verification, customerId }, update: verification,
         });

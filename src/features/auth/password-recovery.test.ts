@@ -160,6 +160,25 @@ test("solicitações concorrentes reservam uma emissão e não persistem o token
   assert.equal(h.sent[0].recipient, email);
 });
 
+test("recuperação emite código de uma hora e confirmação de e-mail conserva 15 minutos", async () => {
+  const h = await harness({ initial: { passwordRecoveryVerifiedEmail: "old@example.invalid" } });
+  const beforeVerification = Date.now();
+  assert.equal((await h.verify()).status, 200);
+  const verificationExpiresAt = h.state().verification!.expiresAt.getTime();
+  assert.ok(verificationExpiresAt >= beforeVerification + 15 * 60_000);
+  assert.ok(verificationExpiresAt <= Date.now() + 15 * 60_000);
+  assert.equal((await h.verify(h.verificationSent[0].token)).status, 200);
+
+  const beforeRecovery = Date.now();
+  assert.equal((await h.recover()).status, 200);
+  await h.flush();
+  const recoveryExpiresAt = h.state().reset!.expiresAt.getTime();
+  assert.ok(recoveryExpiresAt >= beforeRecovery + 60 * 60_000);
+  assert.ok(recoveryExpiresAt <= Date.now() + 60 * 60_000);
+  assert.equal((await h.reset(h.token())).status, 200);
+  assert.equal((await h.reset(h.token())).status, 400);
+});
+
 test("falha inesperada na recuperação gera aviso interno sanitizado", async () => {
   const failed = await harness({ failDatabase: true });
   const normal = await harness({ configured: false });
