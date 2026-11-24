@@ -1,5 +1,11 @@
 # 135 — Apresentação da compra e consulta de frete no produto
 
+## Busca de endereço e cotação por CEP — 24/11/2026
+
+A busca de endereço tenta o ViaCEP primeiro e usa a BrasilAPI CEP v2 quando a primeira base está indisponível ou não encontra o CEP. As duas consultas têm prazos limitados e enviam apenas o CEP digitado. A resposta precisa corresponder ao CEP pedido. CEPs gerais de município podem voltar sem rua e bairro, que o cliente pode preencher. Quando falta confirmação, o sistema orienta conferir o CEP ou informar o endereço manualmente.
+
+Em Salvador, o CEP `40020-000` retornou ausência no ViaCEP e Rua Chile na BrasilAPI. O cálculo de frete depende dos produtos, da embalagem e da resposta de cada transportadora. A rejeição da cotação do Melhor Envio usa mensagem própria do frete, e serviços válidos de outras rotas continuam disponíveis quando aprovados para aquele carrinho.
+
 ## Apresentação — 01/11/2026
 
 O detalhe público do produto deixa de mostrar o bloco expansível “Sobre o PMC e a comparação de preços”, o aviso “Em estoque, sujeito à confirmação da farmácia” e a mensagem de pagamento combinado no atendimento junto dos botões de compra. O preço atual, a referência PMC e seu percentual continuam usando os mesmos cálculos. A alteração não modifica preços cadastrados, estoque, limites de quantidade, elegibilidade de compra, receitas ou gateway.

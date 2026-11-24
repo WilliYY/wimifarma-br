@@ -17,28 +17,58 @@ const viaCepSchema = z.object({
   uf: z.string().regex(/^[A-Z]{2}$/),
 });
 
+const brasilApiCepSchema = z.object({
+  cep: z.string(),
+  street: z.string().max(120).nullish(),
+  neighborhood: z.string().max(80).nullish(),
+  city: z.string().trim().min(1).max(80),
+  state: z.string().regex(/^[A-Z]{2}$/),
+});
+
 export class PostalCodeError extends Error {
   constructor(message: string, public status: number) { super(message); }
 }
 
+function requestPostalCode(url: string, fetcher: typeof fetch) {
+  return fetcher(url, {
+    signal: AbortSignal.timeout(3_000),
+    redirect: "error",
+    headers: { Accept: "application/json" },
+  });
+}
+
+async function lookupViaCep(code: string, fetcher: typeof fetch): Promise<PostalAddress | null> {
+  const response = await requestPostalCode(`https://viacep.com.br/ws/${code}/json/`, fetcher);
+  if (!response.ok) throw new Error("ViaCEP unavailable");
+  const data: unknown = await response.json();
+  if (data && typeof data === "object" && "erro" in data && (data.erro === true || data.erro === "true")) {
+    return null;
+  }
+  const parsed = viaCepSchema.safeParse(data);
+  if (!parsed.success || parsed.data.cep.replace(/\D/g, "") !== code) throw new Error("Invalid ViaCEP response");
+  const { logradouro, bairro, localidade, uf } = parsed.data;
+  return { postalCode: code, street: logradouro, neighborhood: bairro, city: localidade, state: uf };
+}
+
+async function lookupBrasilApi(code: string, fetcher: typeof fetch): Promise<PostalAddress | null> {
+  const response = await requestPostalCode(`https://brasilapi.com.br/api/cep/v2/${code}`, fetcher);
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error("BrasilAPI unavailable");
+  const parsed = brasilApiCepSchema.safeParse(await response.json());
+  if (!parsed.success || parsed.data.cep.replace(/\D/g, "") !== code) throw new Error("Invalid BrasilAPI response");
+  const { street, neighborhood, city, state } = parsed.data;
+  return { postalCode: code, street: street ?? "", neighborhood: neighborhood ?? "", city, state };
+}
+
 export async function lookupPostalCode(code: string, fetcher: typeof fetch = fetch): Promise<PostalAddress> {
   if (!/^\d{8}$/.test(code)) throw new PostalCodeError("Informe um CEP com 8 numeros.", 422);
-  try {
-    const response = await fetcher(`https://viacep.com.br/ws/${code}/json/`, {
-      signal: AbortSignal.timeout(6_000),
-      redirect: "error",
-      headers: { Accept: "application/json" },
-    });
-    if (!response.ok) throw new Error("CEP provider unavailable");
-    const data: unknown = await response.json();
-    if (data && typeof data === "object" && "erro" in data && (data.erro === true || data.erro === "true")) {
-      throw new PostalCodeError("CEP nao encontrado. Confira os numeros informados.", 404);
-    }
-    const parsed = viaCepSchema.safeParse(data);
-    if (!parsed.success || parsed.data.cep.replace(/\D/g, "") !== code) throw new Error("Invalid CEP response");
-    return { postalCode: code, street: parsed.data.logradouro, neighborhood: parsed.data.bairro, city: parsed.data.localidade, state: parsed.data.uf };
-  } catch (error) {
-    if (error instanceof PostalCodeError) throw error;
-    throw new PostalCodeError("Consulta de CEP indisponivel. Preencha o endereco ou tente novamente.", 503);
+  // null indicates that the source returned no match. undefined indicates a failed lookup.
+  const viaCep = await lookupViaCep(code, fetcher).catch(() => undefined);
+  if (viaCep) return viaCep;
+  const brasilApi = await lookupBrasilApi(code, fetcher).catch(() => undefined);
+  if (brasilApi) return brasilApi;
+  if (viaCep === null && brasilApi === null) {
+    throw new PostalCodeError("CEP não localizado nas bases consultadas. Confira os números ou preencha o endereço.", 404);
   }
+  throw new PostalCodeError("Consulta de CEP indisponível. Preencha o endereço ou tente novamente.", 503);
 }

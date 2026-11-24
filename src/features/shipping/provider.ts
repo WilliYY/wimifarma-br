@@ -1,9 +1,7 @@
 import { z } from "zod";
-import { lookupPostalCode, PostalCodeError } from "@/features/orders/postal-code";
 import { ShippingError, type ShippingSettings } from "./schema";
 
 export const MELHOR_ENVIO_SCOPES = ["shipping-calculate", "shipping-companies", "shipping-tracking"];
-const quoteDestinationSchema = z.object({ to: z.object({ postal_code: z.string().regex(/^\d{8}$/) }) });
 
 export function melhorEnvioBase(environment: ShippingSettings["environment"]) {
   return environment === "sandbox" ? "https://sandbox.melhorenvio.com.br" : "https://melhorenvio.com.br";
@@ -26,19 +24,7 @@ export async function melhorEnvioRequest(settings: ShippingSettings, path: strin
       console.warn("[melhor-envio] request-failed", { operation, status: response.status });
       if (response.status === 401 || response.status === 403) throw new ShippingError("Reconecte o Melhor Envio no painel administrativo para renovar as permissões.", 503);
       if (response.status === 429) throw new ShippingError("O serviço de frete está ocupado. Aguarde um momento e tente novamente.", 503);
-      if (operation === "calculate" && response.status === 422 && options?.timeoutMs === undefined) {
-        const destination = quoteDestinationSchema.safeParse(body);
-        if (destination.success) {
-          // The integrator also uses 422 for shipment data. Advisory quotes keep their own deadline.
-          try {
-            await lookupPostalCode(destination.data.to.postal_code);
-          } catch (error) {
-            if (error instanceof PostalCodeError && error.status === 404) {
-              throw new ShippingError("CEP não encontrado. Confira os números e tente novamente.", 422);
-            }
-          }
-        }
-      }
+      // Shipment validation (including 422) cannot establish that the destination CEP does not exist.
       throw new ShippingError("O Melhor Envio não confirmou a cotação agora. Tente novamente ou consulte a farmácia.", 502);
     }
     return await response.json() as unknown;
