@@ -84,6 +84,7 @@ export async function quoteCorreiosCheckout(config: NonNullable<ReturnType<typeo
     return quotes.map(quote => shippingOptionSchema.parse({ provider: "correios", serviceId: Number(quote.code), serviceCode: quote.code,
       carrier: "Correios", service: quote.name, priceCents: quote.priceCents, deliveryDays: quote.deliveryDays + preparationDays,
       packaging: { version: 1, calculationMethod: "provider-conservative-envelope", inputMeasurementBasis: packing.inputMeasurementBasis,
+        correiosInsuranceMode: quote.insuranceMode,
         packages: [{ ...parcel, insuranceValueCents, items: packing.products.map(item => ({ productId: item.id, quantity: item.quantity })) }] } }));
   } catch (error) {
     if (error instanceof CorreiosError) throw new ShippingError(error.message, error.status);

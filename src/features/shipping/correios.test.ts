@@ -18,6 +18,66 @@ const input = {
 const tokenPath = "/token/v1/autentica/cartaopostagem";
 const json = (value: unknown, status = 200) => Response.json(value, { status });
 
+test("Correios requires authenticated automatic insurance covering the full value below declared-value minimum", async () => {
+  const config = getCorreiosConfig({ CORREIOS_DELEGATED_ACCESS_KEY: "synthetic-key" })!;
+  for (const coverage of ["25,63", "12,99", "12,98", "0,00", "25.63", undefined, null, 2563, "invalid"]) {
+    const request: typeof fetch = async target => {
+      const url = new URL(String(target));
+      const code = url.pathname.split("/").at(-1);
+      if (url.pathname.includes("servicos-adicionais")) return json([{ codigo: code === "03298" ? "064" : "019", vlMinDeclarado: 25.63, vlMaxDeclarado: 4668.29 }]);
+      if (url.pathname.startsWith("/prazo/")) return json({ coProduto: code, prazoEntrega: 3, entregaDomiciliar: "S" });
+      assert.equal(url.searchParams.has("servicosAdicionais"), false);
+      assert.equal(url.searchParams.has("vlDeclarado"), false);
+      return json({ coProduto: code, pcFinal: "10,50", vlSeguroAutomatico: coverage });
+    };
+    const result = await quoteCorreios(config, { ...input, insuranceValueCents: 1299 }, request);
+    const covered = coverage === "25,63" || coverage === "12,99";
+    assert.equal(result.quotes.length, covered ? 2 : 0, String(coverage));
+    if (covered) assert.deepEqual(result.quotes.map(quote => quote.insuranceMode), ["automatic", "automatic"]);
+  }
+});
+
+test("Correios keeps the declared-value boundary and never falls back above the maximum", async () => {
+  const config = getCorreiosConfig({ CORREIOS_DELEGATED_ACCESS_KEY: "synthetic-key" })!;
+  let priceCalls = 0;
+  const request: typeof fetch = async target => {
+    const url = new URL(String(target));
+    const code = url.pathname.split("/").at(-1);
+    const addition = code === "03298" ? "064" : "019";
+    if (url.pathname.includes("servicos-adicionais")) return json([{ codigo: addition, vlMinDeclarado: 25.63, vlMaxDeclarado: 100 }]);
+    if (url.pathname.startsWith("/prazo/")) return json({ coProduto: code, prazoEntrega: 3, entregaDomiciliar: "S" });
+    priceCalls++;
+    assert.equal(url.searchParams.get("servicosAdicionais"), addition);
+    assert.equal(url.searchParams.get("vlDeclarado"), "25.63");
+    return json({ coProduto: code, pcFinal: "10,50", servicoAdicional: [{ coServAdicional: addition }] });
+  };
+  const atMinimum = await quoteCorreios(config, { ...input, insuranceValueCents: 2563 }, request);
+  assert.equal(atMinimum.quotes.length, 2);
+  assert.ok(atMinimum.quotes.every(quote => !("insuranceMode" in quote)));
+  assert.equal(priceCalls, 2);
+  assert.equal((await quoteCorreios(config, { ...input, insuranceValueCents: 10001 }, request)).quotes.length, 0);
+  assert.equal(priceCalls, 2);
+});
+
+test("automatic insurance preserves service isolation and all normal quote validations", async () => {
+  const config = getCorreiosConfig({ CORREIOS_DELEGATED_ACCESS_KEY: "synthetic-key" })!;
+  for (const failure of ["coverage", "price", "identity", "delivery", "deadline", "http"]) {
+    const request: typeof fetch = async target => {
+      const url = new URL(String(target));
+      const code = url.pathname.split("/").at(-1);
+      if (url.pathname.includes("servicos-adicionais")) return json([{ codigo: code === "03298" ? "064" : "019", vlMinDeclarado: 25.63, vlMaxDeclarado: 100 }]);
+      const failing = code === "03298";
+      if (url.pathname.startsWith("/prazo/")) return json({ coProduto: code, prazoEntrega: failing && failure === "deadline" ? -1 : 3, entregaDomiciliar: failing && failure === "delivery" ? "N" : "S" });
+      if (failing && failure === "http") return json({}, 503);
+      return json({ coProduto: failing && failure === "identity" ? "03220" : code,
+        pcFinal: failing && failure === "price" ? "invalid" : "10,50", vlSeguroAutomatico: failing && failure === "coverage" ? "12,98" : "25,63" });
+    };
+    const result = await quoteCorreios(config, { ...input, insuranceValueCents: 1299 }, request);
+    assert.deepEqual(result.quotes, [{ code: "03220", name: "SEDEX", priceCents: 1050, deliveryDays: 3, insuranceMode: "automatic" }], failure);
+    assert.deepEqual(result.unavailableServices, ["03298"], failure);
+  }
+});
+
 test("Correios credentials require the card and accept the optional contract and DR as a pair", () => {
   assert.equal(getCorreiosConfig({}), null);
   assert.equal(getCorreiosConfig({ ...env, CORREIOS_POSTING_CARD: "abc" }), null);

@@ -151,6 +151,7 @@ export async function quoteCorreios(config: CorreiosConfig, input: CorreiosQuote
   const results = await Promise.allSettled(allowedServices.map(async (service) => {
     const insuredParams = new URLSearchParams(priceParams);
     const insuranceCode = service.code === "03298" ? "064" : "019";
+    let automaticInsurance = false;
     if (input.insuranceValueCents !== undefined) {
       const signal = AbortSignal.timeout(requestTimeoutMs);
       let response: Response;
@@ -171,9 +172,12 @@ export async function quoteCorreios(config: CorreiosConfig, input: CorreiosQuote
       const min = limitCents(addition.vlMinDeclarado);
       const max = limitCents(addition.vlMaxDeclarado);
       if (max <= 0 || max < min) throw new CorreiosError(502);
-      if (input.insuranceValueCents < min || input.insuranceValueCents > max) return null;
-      insuredParams.set("servicosAdicionais", insuranceCode);
-      insuredParams.set("vlDeclarado", (input.insuranceValueCents / 100).toFixed(2));
+      if (input.insuranceValueCents > max) return null;
+      automaticInsurance = input.insuranceValueCents < min;
+      if (!automaticInsurance) {
+        insuredParams.set("servicosAdicionais", insuranceCode);
+        insuredParams.set("vlDeclarado", (input.insuranceValueCents / 100).toFixed(2));
+      }
     }
     const [price, deadline] = await Promise.all([
       requestJson(request, new URL(`/preco/v1/nacional/${service.code}?${insuredParams}`, correiosOrigin), quoteRequest),
@@ -186,9 +190,15 @@ export async function quoteCorreios(config: CorreiosConfig, input: CorreiosQuote
       throw new CorreiosError(502);
     }
     if (deadline.entregaDomiciliar !== "S") return null;
-    if (input.insuranceValueCents !== undefined && (!Array.isArray(price.servicoAdicional)
+    if (automaticInsurance) {
+      // Accept only the authenticated monetary coverage; never infer it from declared-value limits.
+      let coverageCents: number;
+      try { coverageCents = parsePriceCents(price.vlSeguroAutomatico); } catch { return null; }
+      if (coverageCents < input.insuranceValueCents!) return null;
+    }
+    if (input.insuranceValueCents !== undefined && !automaticInsurance && (!Array.isArray(price.servicoAdicional)
       || !price.servicoAdicional.some(entry => entry && typeof entry === "object" && "coServAdicional" in entry && entry.coServAdicional === insuranceCode))) throw new CorreiosError(502);
-    return { ...service, priceCents: parsePriceCents(price.pcFinal), deliveryDays };
+    return { ...service, priceCents: parsePriceCents(price.pcFinal), deliveryDays, ...(automaticInsurance ? { insuranceMode: "automatic" as const } : {}) };
   }));
 
   const quotes = results.flatMap((result) => result.status === "fulfilled" && result.value ? [result.value] : []);

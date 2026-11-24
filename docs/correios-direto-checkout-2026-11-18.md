@@ -22,9 +22,11 @@ A caixa calculada conserva as dimensões protegidas dos itens e empilha suas alt
 
 A cotação exibida na ficha do produto usa a mesma seleção de códigos do contrato direto que o checkout. Um produto aprovado apenas para PAC, por exemplo, consulta e exibe somente PAC nesse canal.
 
-A cotação direta inclui o valor integral da mercadoria no serviço adicional de Valor Declarado: PAC `064`, SEDEX `019`. O servidor consulta os limites autenticados por serviço, omite serviços incompatíveis e exige confirmação do adicional na resposta de preço. Não reduz o valor da mercadoria para caber no limite. Usa `pcFinal`, que já inclui o adicional.
+A cotação direta apura o valor integral da mercadoria e consulta os limites autenticados do Valor Declarado: PAC `064`, SEDEX `019`. Dentro dos limites, inclui o adicional na consulta e exige que a resposta de preço o confirme. Acima do máximo, omite o serviço. O total cobrado usa `pcFinal`.
 
-Em consulta de produção somente leitura em 18/11/2026, os limites autenticados foram mínimo R$ 25,63, máximo PAC R$ 4.668,29 e SEDEX R$ 39.680,48. Esses limites são consultados pela integração, não tratados como valores eternos. Abaixo do mínimo de Valor Declarado, o canal pode ser omitido; não se presume cobertura automática.
+Para uma mercadoria abaixo do mínimo de Valor Declarado, a integração pede o frete sem o adicional. Só oferece o serviço se a resposta autenticada trouxer indenização automática que cubra o valor integral da mercadoria. O pedido conserva essa modalidade no registro da embalagem, e o painel orienta a pré-postagem com o valor real na nota fiscal ou declaração de conteúdo.
+
+Em consulta de produção em 18/11/2026, os limites autenticados foram mínimo R$ 25,63, máximo PAC R$ 4.668,29 e SEDEX R$ 39.680,48. Na consulta contratual do WimiLab de R$ 12,99 para Salvador em 24/11/2026, a resposta de preço retornou R$ 25,63 de indenização automática em PAC e SEDEX. Limites e cobertura são lidos das respostas dos Correios a cada cotação. [Política de indenizações](https://www.correios.com.br/receber/encomenda/indenizacoes) · [Manual da API Preço](https://www.correios.com.br/atendimento/developers/manuais/manual-api-preco-1)
 
 Ativar com `CORREIOS_CHECKOUT_ENABLED=true` no ambiente privado, mantendo o frete nacional em produção na configuração administrativa. A credencial existente é restrita a Preço/Prazo; permanece somente no servidor. Não criar credencial de pré-postagem para esta entrega. A chave histórica vence em 15/05/2027; renovar antes do vencimento e validar a cotação novamente. Para suspender somente o canal direto, definir o flag como `false` e recriar o contêiner do app.
 

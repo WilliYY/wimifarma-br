@@ -65,6 +65,7 @@ export const shippingPackagingSchema = z.object({
   version: z.literal(1),
   calculationMethod: z.enum(["provider", "provider-conservative-envelope"]).default("provider"),
   inputMeasurementBasis: z.enum(["measured", "estimated"]),
+  correiosInsuranceMode: z.literal("automatic").optional(),
   packages: z.array(z.object({
     weightGrams: z.number().int().positive().max(600000),
     widthCm: z.number().positive().max(1000), heightCm: z.number().positive().max(1000), lengthCm: z.number().positive().max(1000),

@@ -29,7 +29,8 @@ test("direct Correios works without ME services and revokes stale signed conditi
     const extra = code === "03298" ? "064" : "019";
     if (url.pathname.includes("servicos-adicionais")) return Response.json([{ codigo: extra, vlMinDeclarado: 25.63, vlMaxDeclarado: 39680.48 }]);
     return Response.json(url.pathname.startsWith("/prazo/") ? { coProduto: code, prazoEntrega: 3, entregaDomiciliar: "S" }
-      : { coProduto: code, pcFinal: "20,74", servicoAdicional: [{ coServAdicional: extra, pcServicoAdicional: "0,74" }] });
+      : { coProduto: code, pcFinal: "20,74", vlSeguroAutomatico: "25,63",
+        servicoAdicional: url.searchParams.has("vlDeclarado") ? [{ coServAdicional: extra, pcServicoAdicional: "0,74" }] : [] });
   };
   const service = { exports: {} as { quoteCart: (cep: string, items: CheckoutRequest["items"]) => Promise<ShippingSelection[]>; validateOrderShipping: (tx: unknown, input: CheckoutRequest) => Promise<{ postingLocation: { pointName: string }; benefit: { customerPriceCents: number } }> } };
   const estimate = { exports: {} as { estimateProductShipping: (input: { postalCode: string; productId: string; quantity: number }) => Promise<{ mode: string; options: { provider: string; serviceCode: string }[] }> } };
@@ -62,6 +63,20 @@ test("direct Correios works without ME services and revokes stale signed conditi
   product.name = "Fralda sintética 20 unidades";
   integration.settings.serviceIds = [1];
   assert.equal((await service.exports.quoteCart("01001000", items)).length, 2, "known ME outage preserves direct options");
+  product.price = "12.99";
+  const lowValueItems = [{ ...items[0], expectedUnitPriceCents: 1299 }];
+  const automatic = await service.exports.quoteCart("01001000", lowValueItems);
+  assert.equal(automatic.length, 2);
+  const automaticSelection = automatic.find(option => option.serviceCode === "03298")!;
+  assert.equal(automaticSelection.packaging?.correiosInsuranceMode, "automatic");
+  assert.equal(automaticSelection.packaging?.packages[0].insuranceValueCents, 1299);
+  assert.equal(verifyShippingQuote(automaticSelection.token, env.AUTH_SECRET).packaging?.correiosInsuranceMode, "automatic");
+  await service.exports.validateOrderShipping(tx, { ...input, items: lowValueItems, shippingToken: automaticSelection.token });
+  const automaticEstimate = await estimate.exports.estimateProductShipping({ postalCode: "01001000", productId: product.id, quantity: 1 });
+  assert.equal(automaticEstimate.mode, "available");
+  assert.equal(automaticEstimate.options.length, 2);
+  assert.equal("packaging" in automaticEstimate.options[0], false);
+  product.price = "50.00";
   integration.settings.serviceIds = [];
   product.shippingProfile.approvedCorreiosServiceCodes = ["03298"];
   product.shippingProfile.cargoKinds = ["medication", "liquid"];
