@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { Prisma } from "@/generated/prisma/client";
 import { resolveSupplierOffer, withCommerceAvailability } from "./commerce";
-import { recordSupplierAbsence, recordSupplierQuote, type SupplierQuoteInput } from "./quote-monitor";
+import { recordAnbDisplayObservation, recordSupplierAbsence, recordSupplierQuote, type SupplierQuoteInput } from "./quote-monitor";
 import { isUnusualSupplierIncrease } from "./quote-policy";
 
 const ean = "01234567890128";
@@ -38,6 +38,35 @@ function fixture({ previousCost = 5000, reservation = false } = {}) {
   } as unknown as Prisma.TransactionClient;
   return { tx, product, observations };
 }
+
+test("observação ANB por EAN guarda o preço de tela somente no histórico", async () => {
+  const { tx, product, observations } = fixture();
+  const draft = { productId: product.id, eanNormalized: ean, observedAt: new Date().toISOString(), displayPriceCents: 4200, evidenceDigest: "a".repeat(64) };
+  const before = structuredClone(product);
+  assert.equal((await recordAnbDisplayObservation(tx, draft)).status, "DISPLAY_PRICE_ONLY");
+  assert.equal(observations.size, 0);
+  assert.equal((await recordAnbDisplayObservation(tx, draft, { apply: true })).status, "DISPLAY_PRICE_ONLY");
+  assert.equal(observations.get(draft.observedAt)?.displayPriceCents, 4200);
+  assert.equal(observations.get(draft.observedAt)?.unitCostCents, undefined);
+  assert.equal(observations.get(draft.observedAt)?.stockQuantity, undefined);
+  assert.equal((await recordAnbDisplayObservation(tx, draft, { apply: true })).status, "ALREADY_RECORDED");
+  await assert.rejects(recordAnbDisplayObservation(tx, { ...draft, displayPriceCents: 4201 }, { apply: true }), /observação diferente/);
+  await assert.rejects(recordAnbDisplayObservation(tx, { ...draft, eanNormalized: "4006381333931" }, { apply: true }), /EAN do produto/);
+  await assert.rejects(recordAnbDisplayObservation(tx, { ...draft, observedAt: new Date(Date.now() - 86_400_000).toISOString() }, { apply: true }), /horário/);
+  assert.deepEqual(product, before);
+  assert.equal(observations.size, 1);
+});
+
+test("observação ANB de tela reconhece conflito com conferência comercial no mesmo horário", async () => {
+  const { tx, product, observations } = fixture();
+  const observedAt = new Date().toISOString();
+  await recordSupplierQuote(tx, { ...input, observedAt }, { apply: true });
+  await assert.rejects(recordAnbDisplayObservation(tx, {
+    productId: product.id, eanNormalized: ean, observedAt, displayPriceCents: 4200, evidenceDigest: "a".repeat(64),
+  }, { apply: true }), /observação diferente/);
+  assert.equal(observations.size, 1);
+  assert.equal(observations.get(observedAt)?.unitCostCents, 4800);
+});
 
 test("grava o custo observado de R$ 48 e mantém a base de R$ 50 na venda e no DTO", async () => {
   const { tx, product, observations } = fixture();

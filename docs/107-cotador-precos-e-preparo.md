@@ -25,3 +25,15 @@ node --import tsx scripts/import-cotador-observations.ts --report parte-original
 O comando acima é somente leitura. Com `--apply`, grava observações e atualizações elegíveis. Pode-se incluir `--sha256` com o hash obtido na origem para verificar a integridade do arquivo. Erros de sessão, ambiguidade, resposta sem identificação, condição incompatível e falta de evidência para o preço ficam para revisão. Importar conferência é uma operação de catálogo. Compra de fornecedor, pedido de cliente e cobrança seguem seus fluxos existentes.
 
 A publicação requer a migração aditiva `20261126120000_supplier_quote_observations` antes de iniciar a nova imagem. O importador usa o banco interno. O site público e a chamada privada da loja não precisam de sessão nos portais das distribuidoras.
+
+## Histórico do preço exibido pela ANB
+
+A ANB pode devolver o EAN exato e o valor mostrado em `Unit c/ST` sem confirmar a apresentação faturada, o mínimo e a condição da conta. A partir da migração `20261127143000_supplier_display_price`, o gráfico privado pode incluir esse valor como **Preço exibido pela ANB**. O painel sinaliza a conferência pendente. A mediana usa somente os custos regulares. A observação de tela fica em `displayPriceCents`, com `unitCostCents` e saldo nulos. A operação grava exclusivamente histórico e é idempotente para a mesma evidência.
+
+Use a parte original e o arquivo de resposta sanitizada produzidos na mesma rodada. O importador verifica conta aprovada separadamente, data de Brasília, GTIN exato, coincidência da descrição e do valor entre a grade e a resposta oficial. O histórico do dia aceita a leitura com a hora original, enquanto uma oferta comercial continua exigindo dados de compra atuais. Novos produtos e publicação de perfis de transporte seguem os fluxos descritos em [Prontidão logística](134-prontidao-logistica-publicacao.md).
+
+```powershell
+node --import tsx scripts/import-anb-display-observations.ts --report parte-original.json --network resposta-sanitizada.json --accounts contas-aprovadas.json
+```
+
+Por padrão, o comando é somente leitura. Use `--apply` após conferir a prévia. Restrinja os artefatos e fingerprints da conta a armazenamento privado. Para conferir o processo de compra da distribuidora, use o [manual do ANB Online](https://www.anbfarma.com.br/anb-online).

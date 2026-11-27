@@ -189,6 +189,7 @@ model SupplierQuoteObservation {
   observedAt DateTime
   validUntil DateTime?
   unitCostCents Int?
+  displayPriceCents Int?
   stockQuantity Int?
   promotion Boolean @default(false)
   evidenceDigest String?

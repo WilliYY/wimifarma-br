@@ -7,6 +7,7 @@ import { SupplierCatalogOfferSchema, type SupplierCatalogOfferInput } from "./sc
 
 export type SupplierQuoteInput = Omit<SupplierCatalogOfferInput, "replenishAllocation"> & { evidence?: "REGULAR" | "PROMOTION" };
 type QuoteIdentity = { productId: string; supplier: SupplierCode; eanNormalized: string; observedAt: Date };
+const businessDay = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", dateStyle: "short" });
 
 async function readProduct(tx: Prisma.TransactionClient, productId: string, ean: string, lock: boolean) {
   if (lock) {
@@ -23,6 +24,7 @@ async function readProduct(tx: Prisma.TransactionClient, productId: string, ean:
 async function recordObservation(tx: Prisma.TransactionClient, identity: QuoteIdentity, details: {
   validUntil?: Date;
   unitCostCents: number | null;
+  displayPriceCents?: number;
   stockQuantity: number | null;
   promotion: boolean;
   evidenceDigest?: string;
@@ -33,12 +35,41 @@ async function recordObservation(tx: Prisma.TransactionClient, identity: QuoteId
   const where = { productId_supplier_eanNormalized_observedAt: identity };
   const existing = await tx.supplierQuoteObservation.findUnique({ where });
   if (existing) {
-    if ((existing.evidenceDigest ?? undefined) !== details.evidenceDigest || existing.unitCostCents !== details.unitCostCents || existing.stockQuantity !== details.stockQuantity || existing.promotion !== details.promotion || existing.validUntil?.getTime() !== details.validUntil?.getTime()) {
+    if ((existing.evidenceDigest ?? undefined) !== details.evidenceDigest || existing.unitCostCents !== details.unitCostCents || (existing.displayPriceCents ?? undefined) !== details.displayPriceCents || existing.stockQuantity !== details.stockQuantity || existing.promotion !== details.promotion || existing.validUntil?.getTime() !== details.validUntil?.getTime()) {
       throw new PaymentError("Já existe uma observação diferente nesse horário para esta apresentação.", 409);
     }
     return existing;
   }
   return tx.supplierQuoteObservation.create({ data: { ...identity, ...details } });
+}
+
+export async function recordAnbDisplayObservation(tx: Prisma.TransactionClient, input: {
+  productId: string; eanNormalized: string; observedAt: string; displayPriceCents: number; evidenceDigest: string;
+}, options: { apply?: boolean } = {}) {
+  const ean = normalizeGtin(input.eanNormalized);
+  const observedAt = new Date(input.observedAt);
+  const now = new Date();
+  if (!ean || !Number.isFinite(observedAt.getTime()) || observedAt > now || businessDay.format(observedAt) !== businessDay.format(now) ||
+    !Number.isSafeInteger(input.displayPriceCents) || input.displayPriceCents < 1 || input.displayPriceCents > 100_000_000 || !/^[a-f0-9]{64}$/.test(input.evidenceDigest)) {
+    throw new PaymentError("Confira a identidade, o horário e o preço exibido pela ANB.", 422);
+  }
+  if (options.apply) await tx.$queryRaw`SELECT id FROM "Product" WHERE id = ${input.productId} FOR UPDATE`;
+  const product = await readProduct(tx, input.productId, ean, false);
+  const identity = { productId: product.id, eanNormalized: ean, observedAt, supplier: "ANB" as const };
+  const existing = await tx.supplierQuoteObservation.findUnique({ where: { productId_supplier_eanNormalized_observedAt: identity } });
+  if (existing) {
+    if (existing.status !== "DISPLAY_PRICE_ONLY" || existing.displayPriceCents !== input.displayPriceCents || existing.evidenceDigest !== input.evidenceDigest) {
+      throw new PaymentError("Já existe uma observação diferente nesse horário para esta apresentação.", 409);
+    }
+    return { status: "ALREADY_RECORDED" as const };
+  }
+  const status = "DISPLAY_PRICE_ONLY" as const;
+  if (options.apply) {
+    await tx.supplierQuoteObservation.create({ data: {
+      ...identity, status, displayPriceCents: input.displayPriceCents, evidenceDigest: input.evidenceDigest,
+    } });
+  }
+  return { status };
 }
 
 export async function recordSupplierAbsence(tx: Prisma.TransactionClient, input: {

@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     const history = await db.supplierQuoteObservation.findMany({
       where: { productId, eanNormalized: ean, observedAt: { gte: new Date(Date.now() - 30 * 86_400_000) } },
       orderBy: [{ observedAt: "desc" }, { supplier: "asc" }], take: 500,
-      select: { id: true, supplier: true, observedAt: true, unitCostCents: true, stockQuantity: true, promotion: true, status: true, basisBeforeCents: true, basisAfterCents: true },
+      select: { id: true, supplier: true, observedAt: true, unitCostCents: true, displayPriceCents: true, stockQuantity: true, promotion: true, status: true, basisBeforeCents: true, basisAfterCents: true },
     });
     const basis = resolveSupplierOffer({ ...product, supplierDemandAllowed: true })?.pricingBaseCents ?? readSupplierPricingBasis(product.supplierPricingBasis, ean);
     return NextResponse.json({ data: product.supplierOffers, ean, basis, history }, { headers: paymentHeaders });
