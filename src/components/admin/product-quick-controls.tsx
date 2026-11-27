@@ -17,7 +17,7 @@ export type CatalogQuickProduct = {
   ean?: string | null;
   catalogClassification?: unknown; supplierMarkupBps?: number; price: string; promotionalPrice: string | null;
   requiresPrescription: boolean;
-  supplierPricing?: { supplier: string; unitCostCents?: number; unitPriceCents: number; purchaseLimit: number; demandAllowed?: boolean; validUntil: string } | null;
+  supplierPricing?: { supplier: string; unitCostCents?: number; pricingBaseCents?: number; unitPriceCents: number; purchaseLimit: number; demandAllowed?: boolean; validUntil: string } | null;
 };
 const selectStyle = "h-11 min-w-0 rounded-lg border border-line bg-white px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/30";
 const SupplierProductOffers = lazy(() => import("@/components/admin/supplier-product-offers").then(module => ({ default: module.SupplierProductOffers })));
@@ -40,7 +40,8 @@ export function ProductQuickControls({ product, canEdit, onSaved }: { product: C
   const changedClassification = JSON.stringify(classification) !== JSON.stringify(readClassification(product.catalogClassification));
   const changed = changedClassification || (distributor ? markup !== String((product.supplierMarkupBps ?? 6000) / 100) : price !== product.price || promo !== (product.promotionalPrice ?? ""));
   let preview: number | null = null;
-  try { const bps = decimalToMinorUnits(markup); if (distributor && pricing?.unitCostCents !== undefined && bps !== null) preview = priceWithMarkup(pricing.unitCostCents, bps) / 100; } catch { /* Validation is explained when saving. */ }
+  const pricingBase = pricing?.pricingBaseCents ?? pricing?.unitCostCents;
+  try { const bps = decimalToMinorUnits(markup); if (distributor && pricingBase !== undefined && bps !== null) preview = priceWithMarkup(pricingBase, bps) / 100; } catch { /* Validation is explained when saving. */ }
 
   function changeKind(kind: CatalogClassification["kind"]) {
     setClassification(item => kind === "MEDICINE" ? { ...item, kind } : { ...emptyClassification, kind });

@@ -48,7 +48,7 @@ test("pagamento com revisão financeira pendente não libera etapas", async () =
 
 async function harness(overrides: Record<string, unknown> = {}, userId: string | null = "operator-test", denied = false, shortages: ShortageFixture = {}) {
   const current = { id: "order-test", number: "WIM-SYNTHETIC", customerPhone: "11999990000", fulfillmentMethod: "DELIVERY", status: "PREPARING", paymentStatus: "PAID", paymentMethod: "CASH", requiresPrescriptionReview: true,
-    prescriptionReviewedAt: null, prescriptionReviewedById: null, onlinePayment: null, ...overrides };
+    prescriptionReviewedAt: null, prescriptionReviewedById: null, onlinePayment: null, items: [], ...overrides };
   const calls: string[] = [];
   const updates: Record<string, unknown>[] = [];
   const audits: Record<string, unknown>[] = [];
@@ -132,6 +132,14 @@ test("atestado explícito registra horário do servidor e operador, sem persisti
   assert.equal(fixture.audits[0].action, "ORDER_PRESCRIPTION_REVIEW_RECORDED");
   assert.equal(JSON.stringify(fixture.audits).includes("private clinical text"), false);
   assert.equal((await fixture.patch({ status: "OUT_FOR_DELIVERY" })).status, 200);
+});
+
+test("confirmação manual fixa o preparo uma vez, preservando previsão paga", async () => {
+  const fixture = await harness({ paymentStatus: "PENDING", items: [{ inventorySource: "DISTRIBUTOR" }] });
+  assert.equal((await fixture.patch({ paymentStatus: "PAID" })).status, 200);
+  assert.ok(new Date(fixture.updates[0].preparationReadyAt as string).getTime() > Date.now());
+  assert.equal((await fixture.patch({ paymentStatus: "PAID" })).status, 200);
+  assert.equal(fixture.updates[1].preparationReadyAt, undefined);
 });
 
 test("pagamento não confere receita; conferência não aprova pagamento nem supera gateway", async () => {

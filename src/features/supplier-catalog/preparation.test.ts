@@ -1,21 +1,23 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getSupplierPreparationEstimate } from "./preparation";
+import { getSupplierPreparationEstimate, getSupplierPreparationOnPayment } from "./preparation";
 
 const cases = [
-  ["sexta antes do corte recebe sábado", "2026-10-16T17:00:00-03:00", "2026-10-17", 1],
+  ["sexta antes do corte recebe sábado", "2026-10-16T16:59:59.999-03:00", "2026-10-17", 1],
   ["sexta após o corte recebe terça", "2026-10-16T19:00:00-03:00", "2026-10-20", 4],
   ["sábado recebe terça", "2026-10-17T17:00:00-03:00", "2026-10-20", 3],
   ["domingo recebe terça", "2026-10-18T17:00:00-03:00", "2026-10-20", 2],
-  ["segunda recebe terça", "2026-10-19T17:00:00-03:00", "2026-10-20", 1],
-  ["terça antes do corte recebe quarta", "2026-10-20T17:00:00-03:00", "2026-10-21", 1],
+  ["segunda antes do corte recebe terça", "2026-10-19T16:59:59.999-03:00", "2026-10-20", 1],
+  ["segunda no corte recebe quarta", "2026-10-19T17:00:00-03:00", "2026-10-21", 2],
+  ["terça antes do corte recebe quarta", "2026-10-20T16:59:59.999-03:00", "2026-10-21", 1],
   ["terça após o corte recebe quinta", "2026-10-20T19:00:00-03:00", "2026-10-22", 2],
-  ["corte inclui exatamente 18h30", "2026-10-16T18:30:00-03:00", "2026-10-17", 1],
-  ["um milissegundo após o corte avança a data efetiva", "2026-10-16T18:30:00.001-03:00", "2026-10-20", 4],
+  ["exatamente 17h avança a data efetiva", "2026-10-16T17:00:00-03:00", "2026-10-20", 4],
+  ["um milissegundo após o corte avança a data efetiva", "2026-10-16T17:00:00.001-03:00", "2026-10-20", 4],
+  ["fechamento da loja não é o corte", "2026-10-20T18:30:00-03:00", "2026-10-22", 2],
   ["antes da abertura mantém a data do pedido", "2026-10-20T06:00:00-03:00", "2026-10-21", 1],
   ["usa a data local mesmo com UTC no dia seguinte", "2026-10-17T01:00:00Z", "2026-10-20", 4],
   ["atravessa a virada do mês", "2026-10-31T17:00:00-03:00", "2026-11-03", 3],
-  ["atravessa a virada do ano sem presumir feriados", "2026-12-31T17:00:00-03:00", "2027-01-01", 1],
+  ["atravessa a virada do ano sem presumir feriados", "2026-12-31T16:59:59-03:00", "2027-01-01", 1],
 ] as const;
 
 for (const [name, timestamp, readyDate, preparationDays] of cases) {
@@ -30,5 +32,37 @@ for (const [name, timestamp, readyDate, preparationDays] of cases) {
 }
 
 test("informa dia e mês no calendário de São Paulo", () => {
-  assert.equal(getSupplierPreparationEstimate(new Date("2026-10-16T17:00:00-03:00")).readyDateLabel, "17/10");
+  assert.equal(getSupplierPreparationEstimate(new Date("2026-10-16T16:59:59-03:00")).readyDateLabel, "17/10");
+});
+
+test("primeira confirmação após o corte atualiza a previsão anterior ao pagamento", () => {
+  const order = { paymentStatus: "PENDING", items: [{ inventorySource: "DISTRIBUTOR" }] };
+  const preparation = getSupplierPreparationOnPayment(order, new Date("2026-10-16T17:00:00-03:00"));
+  assert.equal(preparation.preparationReadyAt?.toISOString(), "2026-10-20T21:30:00.000Z");
+  assert.equal(preparation.preparationDays, 4);
+});
+
+test("reconciliação não reescreve histórico pago nem cria preparo para estoque local", () => {
+  const now = new Date("2026-10-16T17:00:00-03:00");
+  for (const paymentStatus of ["PAID", "REFUNDED"]) {
+    assert.deepEqual(getSupplierPreparationOnPayment({ paymentStatus, items: [{ inventorySource: "DISTRIBUTOR" }] }, now), {});
+  }
+  assert.deepEqual(getSupplierPreparationOnPayment({ paymentStatus: "PENDING", items: [{ inventorySource: "PHARMACY" }] }, now), {});
+});
+
+test("timestamp inválido não gera previsão persistível", () => {
+  assert.throws(() => getSupplierPreparationEstimate(new Date("invalid")), RangeError);
+});
+
+test("semana completa respeita o limite de 17h e recebimentos de terça a sábado", () => {
+  const week = [
+    [19, 20, 21], [20, 21, 22], [21, 22, 23], [22, 23, 24],
+    [23, 24, 27], [24, 27, 27], [25, 27, 27],
+  ];
+  for (const [day, beforeCutoff, afterCutoff] of week) {
+    for (const [time, readyDay] of [["16:59:59.999", beforeCutoff], ["17:00:00.000", afterCutoff], ["17:00:00.001", afterCutoff]] as const) {
+      const estimate = getSupplierPreparationEstimate(new Date(`2026-10-${day}T${time}-03:00`));
+      assert.equal(estimate.readyAt.toISOString(), `2026-10-${readyDay}T21:30:00.000Z`);
+    }
+  }
 });

@@ -233,6 +233,20 @@ test("hosted card is 1x; CONFIRMED approves without settled funds", async () => 
   f.controls.status = "CONFIRMED"; await f.refreshAsaasCommercePayment(f.order.id);
   assert.equal(f.payment.status, "PAID"); assert.equal(f.payment.fundsAvailable, false); assert.equal(f.effects.messages, 1);
 });
+
+test("first canonical confirmation refreshes supplier preparation and reconciliation preserves it", async () => {
+  const f = await harness();
+  await f.startAsaasCommercePayment(f.order.id, f.input);
+  f.order.items[0].inventorySource = "DISTRIBUTOR";
+  f.order.preparationReadyAt = new Date(0);
+  f.controls.status = "RECEIVED";
+  await f.refreshAsaasCommercePayment(f.order.id);
+  const confirmedReadyAt = f.order.preparationReadyAt.getTime();
+  assert.ok(confirmedReadyAt > Date.now());
+  assert.ok(f.order.preparationDays >= 1);
+  await f.refreshAsaasCommercePayment(f.order.id);
+  assert.equal(f.order.preparationReadyAt.getTime(), confirmedReadyAt);
+});
 test("canonical binding mismatch never marks paid or releases stock", async () => {
   const f = await harness(); await f.startAsaasCommercePayment(f.order.id, f.input); f.controls.badAmount = true;
   await assert.rejects(f.refreshAsaasCommercePayment(f.order.id));

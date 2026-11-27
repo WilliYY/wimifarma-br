@@ -72,13 +72,11 @@ test("public estimate calculates complete drafts without approving shipment or e
   assert.equal(local.options.length, 0);
   assert.equal(calls.length, beforeLocal, "local delivery does not contact a carrier");
   const supplierOffer = { id: "synthetic-offer", supplier: "SYNTHETIC", eanNormalized: "01234567890128", unitCostCents: 1000, available: true, stockQuantity: 5, allocationQuantity: 5, reservedQuantity: 0, committedQuantity: 0, observedAt: new Date(Date.now() - 1000), validUntil: new Date(Date.now() + 60000) };
-  for (const patch of [{ available: false }, { stockQuantity: 0 }]) {
-    product = { ...base, inventorySource: "DISTRIBUTOR", eanNormalized: supplierOffer.eanNormalized, stock: 100, supplierOffers: [{ ...supplierOffer, ...patch }] };
-    const before = calls.length;
-    await assert.rejects(loaded.exports.estimateProductShipping({ ...input, postalCode: "87525000" }), /indisponível/);
-    assert.equal(calls.length, before);
-  }
-  product = { ...base, inventorySource: "DISTRIBUTOR", eanNormalized: supplierOffer.eanNormalized, stock: 0, supplierOffers: [supplierOffer] };
+  product = { ...base, inventorySource: "DISTRIBUTOR", eanNormalized: supplierOffer.eanNormalized, stock: 100, supplierOffers: [{ ...supplierOffer, available: false }] };
+  const beforeUnavailable = calls.length;
+  await assert.rejects(loaded.exports.estimateProductShipping({ ...input, postalCode: "87525000" }), /indisponível/);
+  assert.equal(calls.length, beforeUnavailable);
+  product = { ...base, inventorySource: "DISTRIBUTOR", eanNormalized: supplierOffer.eanNormalized, stock: 0, supplierOffers: [{ ...supplierOffer, stockQuantity: 0 }] };
   assert.equal((await loaded.exports.estimateProductShipping({ ...input, postalCode: "87525000" })).mode, "local", "supplier effective availability takes precedence over physical stock");
   product = { ...base, shippingProfile: { ...profile, enabled: true, transportReviewed: true, cargoKinds: ["general"], approvedServiceIds: [1] } };
   const ready = await loaded.exports.estimateProductShipping(input);

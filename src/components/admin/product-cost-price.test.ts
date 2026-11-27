@@ -201,7 +201,7 @@ test("comparação é carregada ao abrir e revisão exige nova conferência ante
     const write = state.writes[0];
     assert.equal(write.method, "POST");
     const { observedAt, validUntil, ...body } = write.body;
-    assert.deepEqual(body, { productId: "distributor", supplier: "ANB", externalCode: "QA-ANB-004", eanNormalized: ean, unitCostCents: 250, substitutionTaxCents: null, retailCeilingCents: 1000, available: true, stockQuantity: 8, allocationQuantity: 5, replenishAllocation: false });
+    assert.deepEqual(body, { productId: "distributor", supplier: "ANB", externalCode: "QA-ANB-004", eanNormalized: ean, unitCostCents: 250, substitutionTaxCents: null, retailCeilingCents: 1000, available: true, stockQuantity: 8, allocationQuantity: 5, replenishAllocation: false, promotion: false, confirmIncrease: false });
     assert.equal(Date.parse(String(validUntil)) - Date.parse(String(observedAt)), 24 * 60 * 60_000);
     assert.ok(Date.parse(String(observedAt)) >= before - 2000 && Date.parse(String(observedAt)) <= Date.now());
     await expect(page.getByRole("dialog").getByRole("status")).toContainText("Conferência salva.");

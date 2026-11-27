@@ -37,7 +37,7 @@ Conteúdo salvo pelo painel ADMIN e relido nas quatro páginas públicas, com bo
 
 ## Preparação e checkout
 
-O objetivo é um dia total para recebimento e conferência. Recebimentos ocorrem terça–sábado, sem domingo/segunda. Corte conservador inicial: 18h30; depois disso o dia efetivo avança. A previsão termina às 18h30 da próxima data de recebimento após o dia efetivo, em `America/Sao_Paulo`. Ex.: sexta antes do corte → sábado; sábado/domingo/segunda → terça; terça após o corte → quinta. Feriados e cortes específicos ainda precisam de fonte confirmada. Não se promete “amanhã” irrestritamente.
+O objetivo é um dia total para recebimento e conferência. Os recebimentos ocorrem de terça a sábado. Pagamento confirmado a partir das 17h de Brasília entra na próxima janela de preparo. A previsão termina às 18h30 da próxima data de recebimento após o dia efetivo. Sexta antes do corte tem previsão para sábado. Terça a partir das 17h tem previsão para quinta. Veja as regras de confirmação e disponibilidade em [Cotador, histórico de custo e preparo](107-cotador-precos-e-preparo.md).
 
 Carrinho, detalhe, checkout e histórico informam o preparo. Pedidos com itens externos não mostram a promessa local de retirada em 30 minutos. O pedido guarda a data e os dias de preparação; cotação por transportadora considera o maior entre o preparo configurado e esse calendário, sem somar duas vezes. Cotações com prazo desatualizado exigem novo cálculo. Medidas e aceitação sanitária por transportadora continuam exigindo conferência, sem dimensões inventadas.
 

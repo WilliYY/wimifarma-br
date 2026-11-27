@@ -26,7 +26,7 @@
     "audit:cashback": "tsx scripts/cashback-audit.ts",
     "test:users": "tsx --test src/features/auth/customer-session.test.ts",
     "test:shipping": "tsx --test src/features/shipping/*.test.ts",
-    "test:suppliers": "tsx --test src/features/supplier-planning/*.test.ts src/features/supplier-catalog/*.test.ts",
+    "test:suppliers": "tsx --test src/features/supplier-planning/*.test.ts src/features/supplier-catalog/*.test.ts scripts/import-cotador-observations.test.ts",
     "test:catalog-photos": "tsx --test src/features/products/photo-publication-*.test.ts src/features/products/catalog-bulk-route.test.ts src/features/products/catalog-operations-route.test.ts scripts/publish-catalog-product-images.test.ts",
     "test:payments": "tsx --test src/features/payments/*.test.ts",
     "test:miauby": "tsx --test src/features/miauby/*.test.ts",

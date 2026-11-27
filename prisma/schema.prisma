@@ -180,14 +180,37 @@ model SupplierInventoryReservation {
   @@index([offerId, status])
 }
 
+model SupplierQuoteObservation {
+  id String @id @default(cuid())
+  productId String
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier SupplierCode
+  eanNormalized String
+  observedAt DateTime
+  validUntil DateTime?
+  unitCostCents Int?
+  stockQuantity Int?
+  promotion Boolean @default(false)
+  evidenceDigest String?
+  status String
+  basisBeforeCents Int?
+  basisAfterCents Int?
+  createdAt DateTime @default(now())
+
+  @@unique([productId, supplier, eanNormalized, observedAt], map: "supplier_quote_observation_identity_key")
+  @@index([productId, eanNormalized, observedAt], map: "supplier_quote_observation_ean_date_idx")
+}
+
 model Product {
   restockInterests RestockInterest[]
   catalogClassification Json?
   cmedReference Json?
   supplierMarkupBps Int @default(6000)
+  supplierPricingBasis Json?
   inventorySource InventorySource @default(PHARMACY)
   eanNormalized String? @unique
   supplierOffers SupplierCatalogOffer[]
+  supplierQuoteObservations SupplierQuoteObservation[]
   wimicoinsEnabled Boolean @default(false)
   wimicoinsRateBps Int @default(200)
   shippingProfile Json?

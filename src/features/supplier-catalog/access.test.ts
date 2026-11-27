@@ -24,22 +24,28 @@ function input(extra: Data = {}) {
 async function harness(options: { role?: string | null; actor?: boolean; product?: Data | null; previous?: Data | null; openOrder?: boolean; fail?: boolean } = {}) {
   const calls = { database: 0, writes: [] as Data[], audits: [] as Data[], events: [] as string[] };
   const touch = () => { calls.database++; if (options.fail) throw new Error("private database credentials and supplier costs"); };
+  const readProduct = () => {
+    const product = options.product === undefined ? { id: "synthetic-product", ean: "7891234567895", inventorySource: "DISTRIBUTOR" } : options.product;
+    return product ? { ...product, supplierOffers: options.previous ? [{ supplier: "ANB", ...options.previous }] : [] } : null;
+  };
   const tx = {
     $queryRaw: async () => { touch(); calls.events.push("lock"); return []; },
     user: { findFirst: async () => { calls.events.push("actor"); return options.actor === false ? null : { id: "synthetic-admin" }; } },
-    product: { findUnique: async () => { calls.events.push("product"); return options.product === undefined
-      ? { id: "synthetic-product", ean: "7891234567895", inventorySource: "DISTRIBUTOR" } : options.product; } },
+    product: { findUnique: async () => { calls.events.push("product"); return readProduct(); }, update: async () => ({}) },
     orderItem: { findFirst: async () => options.openOrder ? { id: "synthetic-item" } : null },
     supplierCatalogOffer: {
       findUnique: async () => options.previous ?? null,
       upsert: async (args: Data) => { calls.writes.push(args); return { id: "synthetic-offer", revision: 2, ...args.create }; },
     },
+    supplierInventoryReservation: { findFirst: async () => null },
+    supplierQuoteObservation: { findUnique: async () => null, create: async ({ data }: Data) => ({ id: "quote", ...data }), update: async () => ({}) },
     auditLog: { create: async (args: Data) => { calls.audits.push(args); return {}; } },
   };
   const fixture = {
     auth: async () => options.role === null ? null : { user: { id: "synthetic-admin", role: options.role ?? "ADMIN" } },
     prisma: { $transaction: async (callback: (db: typeof tx) => unknown) => { touch(); return callback(tx); },
-      supplierCatalogOffer: { findMany: async () => { touch(); return [{ id: "synthetic-offer", unitCostCents: 200 }]; } } },
+      product: { findUnique: async () => { touch(); return { ...readProduct(), supplierOffers: [{ id: "synthetic-offer", unitCostCents: 200 }] }; } },
+      supplierQuoteObservation: { findMany: async () => [{ id: "quote", unitCostCents: 199 }] } },
   };
   const loaded = { exports: {} as Record<string, (request: Request) => Promise<Response>> };
   vm.runInNewContext((await bundle).outputFiles[0].text, { module: loaded, exports: loaded.exports,
@@ -67,7 +73,9 @@ test("ADMIN offer reads are private, validate product and sanitize database fail
   const response = await f.run("GET");
   assert.equal(response.status, 200);
   assert.match(response.headers.get("cache-control") ?? "", /private, no-store/);
-  assert.equal((await response.json()).data[0].unitCostCents, 200);
+  const body = await response.json();
+  assert.equal(body.data[0].unitCostCents, 200);
+  assert.equal(body.history[0].unitCostCents, 199);
   const failure = await (await harness({ fail: true })).run("GET");
   assert.equal(failure.status, 503);
   assert.match(failure.headers.get("cache-control") ?? "", /private, no-store/);
@@ -110,7 +118,7 @@ test("offer POST rechecks actor after lock and refuses a revoked ADMIN without w
 test("ADMIN can persist the four approved commercial pilot suppliers", async () => {
   for (const supplier of ["ANB", "PROFARMA", "DM", "GAM"]) {
     const f = await harness();
-    assert.equal((await f.run("POST", input({ supplier }))).status, 200, supplier);
+    assert.equal((await f.run("POST", input({ supplier, ...(supplier === "PROFARMA" ? { substitutionTaxCents: 0 } : {}) }))).status, 200, supplier);
     assert.equal(f.calls.writes[0].create.supplier, supplier);
     assert.equal(f.calls.writes[0].create.eanNormalized, "07891234567895");
     assert.equal(f.calls.writes[0].where.productId_supplier.supplier, supplier);
@@ -159,13 +167,15 @@ test("offer POST persists 200 cents and canonical GTIN with an audit and no impl
   assert.equal(f.calls.audits[0].data.userId, "synthetic-admin");
 });
 
-test("offer POST persists explicitly calculated zero ST and clears older proof when omitted", async () => {
+test("offer POST persists explicitly calculated zero ST and holds observations without tax evidence", async () => {
   const calculated = await harness();
   assert.equal((await calculated.run("POST", input({ supplier: "PROFARMA", substitutionTaxCents: 0 }))).status, 200);
   assert.equal(calculated.calls.writes[0].create.substitutionTaxCents, 0);
   const missing = await harness();
-  assert.equal((await missing.run("POST", input({ supplier: "PROFARMA" }))).status, 200);
-  assert.equal(missing.calls.writes[0].update.substitutionTaxCents, null);
+  const response = await missing.run("POST", input({ supplier: "PROFARMA" }));
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).status, "INELIGIBLE");
+  assert.equal(missing.calls.writes.length, 0);
 });
 
 test("offer POST refuses stale observations and supplier identity changes with open orders", async () => {

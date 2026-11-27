@@ -91,7 +91,7 @@ type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 type ProductListItem = {
   catalogClassification?: unknown;
   supplierMarkupBps?: number;
-  supplierPricing?: { supplier: string; unitCostCents?: number; unitPriceCents: number; purchaseLimit: number; demandAllowed?: boolean; validUntil: string } | null;
+  supplierPricing?: { supplier: string; unitCostCents?: number; pricingBaseCents?: number; unitPriceCents: number; purchaseLimit: number; demandAllowed?: boolean; validUntil: string } | null;
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
   wimicoinsEnabled?: boolean;
   wimicoinsRateBps?: number;

@@ -1,5 +1,6 @@
 const TIME_ZONE = "America/Sao_Paulo";
 const DAY = 24 * 60 * 60_000;
+const CUTOFF = 17 * 60 * 60_000;
 const CLOSING = (18 * 60 + 30) * 60_000;
 
 const localParts = new Intl.DateTimeFormat("en-CA", {
@@ -27,7 +28,8 @@ function fromLocalCalendarTime(localTime: number) {
 /**
  * The pharmacy operates daily from 07:30 to 18:30. Supplier receipt and checking
  * share one total preparation day, on the next Tuesday–Saturday receipt date
- * after the effective order date. Orders after 18:30 move that date forward.
+ * after the effective confirmation date. Confirmations at or after 17:00 move
+ * that date forward. Purchases remain available after this operational cutoff.
  * Holidays are not excluded until an authoritative calendar is integrated.
  */
 export function getSupplierPreparationEstimate(now: Date): {
@@ -37,7 +39,7 @@ export function getSupplierPreparationEstimate(now: Date): {
 } {
   const localNow = localCalendarTime(now);
   const today = Math.floor(localNow / DAY) * DAY;
-  const effectiveDate = localNow > today + CLOSING ? today + DAY : today;
+  const effectiveDate = localNow >= today + CUTOFF ? today + DAY : today;
   let readyDate = effectiveDate + DAY;
   while (new Date(readyDate).getUTCDay() < 2) readyDate += DAY;
 
@@ -49,4 +51,14 @@ export function getSupplierPreparationEstimate(now: Date): {
       timeZone: TIME_ZONE, day: "2-digit", month: "2-digit",
     }).format(readyAt),
   };
+}
+
+/** Freeze preparation only on the first payment confirmation, under the order lock. */
+export function getSupplierPreparationOnPayment(order: {
+  paymentStatus: string;
+  items: ReadonlyArray<{ inventorySource?: string | null }>;
+}, confirmedAt: Date): { preparationReadyAt?: Date; preparationDays?: number } {
+  if (order.paymentStatus !== "PENDING" || !order.items.some(item => item.inventorySource === "DISTRIBUTOR")) return {};
+  const estimate = getSupplierPreparationEstimate(confirmedAt);
+  return { preparationReadyAt: estimate.readyAt, preparationDays: estimate.preparationDays };
 }

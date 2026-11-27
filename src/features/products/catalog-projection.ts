@@ -10,7 +10,7 @@ export const catalogCandidateSelect = {
   activeIngredients: true, searchTerms: true,
   requiresPrescription: true, prescriptionType: true, isPopularPharmacy: true,
   price: true, promotionalPrice: true, stock: true, inventorySource: true,
-  supplierMarkupBps: true, catalogClassification: true, shippingProfile: true,
+  supplierMarkupBps: true, supplierPricingBasis: true, catalogClassification: true, shippingProfile: true,
   supplierOffers: { select: {
     id: true, supplier: true, eanNormalized: true, unitCostCents: true,
     substitutionTaxCents: true, retailCeilingCents: true, available: true,

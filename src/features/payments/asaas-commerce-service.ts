@@ -1,4 +1,5 @@
 import { isNotifyOnlyPendingLogistics } from "@/features/products/notify-only";
+import { getSupplierPreparationOnPayment } from "@/features/supplier-catalog/preparation";
 import QRCode from "qrcode";
 import type { OnlinePayment } from "@/generated/prisma/client";
 import { getPrisma } from "@/lib/prisma";
@@ -197,7 +198,8 @@ export async function refreshAsaasCommercePayment(orderId: string, checkoutEvent
         : "Confira o estado financeiro canônico antes de alterar o pedido." }
         : recoverableReview ? { financialReviewReason: null } : {}),
       ...(terminal || next === "REVIEW" ? { pixCode: null, checkoutUrl: null } : {}) } });
-    if (["PAID", "PARTIALLY_REFUNDED"].includes(next) && !canceledFulfillment) await tx.order.update({ where: { id: orderId }, data: { paymentStatus: "PAID" } });
+    if (["PAID", "PARTIALLY_REFUNDED"].includes(next) && !canceledFulfillment) await tx.order.update({ where: { id: orderId }, data: { paymentStatus: "PAID",
+      ...getSupplierPreparationOnPayment(current.order, new Date()) } });
     if (next === "PAID" && current.order.paymentStatus !== "PAID" && !canceledFulfillment) {
       await queueCommerceOrder(tx, "payment", { ...current.order, paymentStatus: "PAID", items: current.order.items.map(item => ({
         name: item.productName, quantity: item.quantity, unitPriceCents: item.unitPriceCents, totalCents: item.totalCents })) }, false);

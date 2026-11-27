@@ -108,7 +108,8 @@ test("última oferta expirada mantém preço calculado, datas reais e reservas",
   assert.equal(resolveSupplierOffer({ ...current, supplierDemandAllowed: false }, 1, now), null);
   assert.equal(withCommerceAvailability(current, now).price, "14.00");
   assert.deepEqual(current, before);
-  for (const changes of [{ available: false }, { stockQuantity: 0 }, { unitCostCents: 0 }, { validUntil: expired.observedAt }, { validUntil: new Date(now) }, { retailCeilingCents: 1399 }, { eanNormalized: "11234567890125" }]) {
+  assert.equal(resolveSupplierOffer({ ...current, supplierOffers: [{ ...expired, stockQuantity: 0 }] }, 1, now)?.unitPriceCents, 1400);
+  for (const changes of [{ available: false }, { unitCostCents: 0 }, { validUntil: expired.observedAt }, { validUntil: new Date(now) }, { retailCeilingCents: 1399 }, { eanNormalized: "11234567890125" }]) {
     assert.equal(resolveSupplierOffer({ ...current, supplierOffers: [{ ...expired, ...changes }] }, 1, now), null);
   }
   assert.equal(resolveSupplierOffer({ ...current, requiresPrescription: true, supplierOffers: [{ ...expired, retailCeilingCents: null }] }, 1, now), null);

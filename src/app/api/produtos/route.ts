@@ -19,6 +19,7 @@ export const runtime = "nodejs";
 const productSelect = {
   catalogClassification: true,
   supplierMarkupBps: true,
+  supplierPricingBasis: true,
   inventorySource: true,
   wimicoinsEnabled: true,
   wimicoinsRateBps: true,
@@ -86,7 +87,8 @@ async function uniqueSlug(baseSlug: string) {
 }
 
 function serializeProduct(product: Omit<Awaited<ReturnType<typeof getProducts>>[number], "supplierOffers">, admin = false) {
-  const { supplierMarkupBps, ...safe } = product;
+  const { supplierMarkupBps, supplierPricingBasis: _privateBasis, ...safe } = product;
+  void _privateBasis;
   return {
     ...safe,
     ...(admin ? { supplierMarkupBps } : {}),
@@ -118,7 +120,7 @@ export async function GET() {
     const { supplierOffers: _offers, ...safe } = product;
     void _offers;
     const best = product.inventorySource === "DISTRIBUTOR" ? resolveSupplierOffer({ ...product, supplierDemandAllowed: true }) : null;
-    return { ...serializeProduct(safe, admin), ...(best ? { price: (best.unitPriceCents / 100).toFixed(2) } : {}), supplierPricing: best ? { supplier: best.supplier, ...(admin ? { unitCostCents: best.unitCostCents } : {}), unitPriceCents: best.unitPriceCents, purchaseLimit: best.purchaseLimit, demandAllowed: true, validUntil: new Date(best.validUntil).toISOString() } : null };
+    return { ...serializeProduct(safe, admin), ...(best ? { price: (best.unitPriceCents / 100).toFixed(2) } : {}), supplierPricing: best ? { supplier: best.supplier, ...(admin ? { unitCostCents: best.unitCostCents, pricingBaseCents: best.pricingBaseCents } : {}), unitPriceCents: best.unitPriceCents, purchaseLimit: best.purchaseLimit, demandAllowed: true, validUntil: new Date(best.validUntil).toISOString() } : null };
   }) }, { headers: { "Cache-Control": "private, no-store" } });
 }
 

@@ -7,10 +7,11 @@ import { normalizeGtin } from "@/features/products/gtin";
 import { readClassification } from "@/features/products/catalog-operations";
 import { resolveCmedReference, type PublicPmcReference } from "@/features/products/cmed-reference";
 import { normalizeVerifiedMedicineProduct } from "@/features/products/medicine-presentation";
+import { readSupplierPricingBasis } from "./quote-policy";
 
 export { normalizeGtin, gtinVariants } from "@/features/products/gtin";
 
-export const supplierOfferInclude = { supplierOffers: true, supplierMarkupBps: true, catalogClassification: true, shippingProfile: true } as const;
+export const supplierOfferInclude = { supplierOffers: true, supplierMarkupBps: true, supplierPricingBasis: true, catalogClassification: true, shippingProfile: true } as const;
 
 export type SupplierCommerceOffer = {
   id: string;
@@ -37,6 +38,7 @@ export type CommerceProduct = {
   catalogClassification?: unknown;
   imageAssetId?: string | null;
   supplierMarkupBps?: number;
+  supplierPricingBasis?: unknown;
   inventorySource?: "PHARMACY" | "DISTRIBUTOR";
   ean?: string | null;
   eanNormalized?: string | null;
@@ -52,17 +54,18 @@ export type CommerceProduct = {
   cmedReference?: unknown;
 };
 
-export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "eanNormalized" | "supplierOffers" | "requiresPrescription" | "supplierMarkupBps" | "supplierDemandAllowed" | "catalogClassification" | "shippingProfile">, quantity = 1, now = Date.now()) {
+export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "eanNormalized" | "supplierOffers" | "requiresPrescription" | "supplierMarkupBps" | "supplierPricingBasis" | "supplierDemandAllowed" | "catalogClassification" | "shippingProfile">, quantity = 1, now = Date.now()) {
   if (isNotifyOnlyPendingLogistics(product.shippingProfile)) return null;
   if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > MAX_ORDER_ITEM_QUANTITY || !Number.isFinite(now)) return null;
   const markup = product.supplierMarkupBps ?? 6000;
   if (!Number.isSafeInteger(markup) || markup < 0 || markup > 10000) return null;
   const ean = normalizeGtin(product.eanNormalized ?? product.ean);
   if (!ean) return null;
+  const basis = readSupplierPricingBasis(product.supplierPricingBasis, ean);
   const isMedicine = requiresSupplierTaxEvidence(product);
   // Prefer current eligible observations. For the demand policy, retain the last
   // structurally valid offer without rewriting its dates or inventory accounting.
-  // Each product/source has one persisted row; an unavailable refresh replaces it.
+  // A monitored shortage is stored in history. An explicit withdrawal can disable the offer.
   return (product.supplierOffers ?? []).flatMap(offer => {
     const observedAt = new Date(offer.observedAt).getTime();
     const validUntil = new Date(offer.validUntil).getTime();
@@ -73,26 +76,26 @@ export function resolveSupplierOffer(product: Pick<CommerceProduct, "ean" | "ean
       validUntil <= observedAt || validUntil - observedAt > 86_400_000 ||
       [offer.allocationQuantity, offer.reservedQuantity, offer.committedQuantity].some(value => !Number.isSafeInteger(value) || value < 0) ||
       (offer.stockQuantity !== null && (!Number.isSafeInteger(offer.stockQuantity) || offer.stockQuantity < 0))) return [];
-    const unitPriceCents = priceWithMarkup(offer.unitCostCents, markup);
+    const pricingBaseCents = Math.max(basis ?? 0, offer.unitCostCents);
+    const unitPriceCents = priceWithMarkup(pricingBaseCents, markup);
     if (product.requiresPrescription && (!Number.isSafeInteger(offer.retailCeilingCents) || offer.retailCeilingCents! < 1)) return [];
     if (offer.retailCeilingCents != null && (!Number.isSafeInteger(offer.retailCeilingCents) || unitPriceCents > offer.retailCeilingCents)) return [];
     // The owner accepts supplier fulfilment above observed quantities. Keep the
     // observation and accounting intact; this limit bounds protocol/money only.
-    if (product.supplierDemandAllowed && offer.stockQuantity === 0) return [];
     const purchaseLimit = product.supplierDemandAllowed ? MAX_ORDER_ITEM_QUANTITY : Math.max(0, Math.min(offer.allocationQuantity, offer.stockQuantity ?? offer.allocationQuantity) - offer.reservedQuantity - offer.committedQuantity);
     if (purchaseLimit < quantity) return [];
-    return [{ ...offer, purchaseLimit, unitPriceCents }];
+    return [{ ...offer, purchaseLimit, unitPriceCents, pricingBaseCents }];
   }).sort((a, b) => Number(new Date(a.validUntil).getTime() <= now) - Number(new Date(b.validUntil).getTime() <= now)
     || a.unitCostCents - b.unitCostCents || a.supplier.localeCompare(b.supplier) || a.id.localeCompare(b.id))[0] ?? null;
 }
 
-export function withCommerceAvailability<T extends CommerceProduct>(product: T, now = Date.now()): Omit<T, "shippingProfile" | "supplierMarkupBps" | "supplierOffers" | "price" | "promotionalPrice" | "inventorySource" | "imageUrl" | "imageUrls" | "imageAsset" | "imageAssetId" | "cmedReference"> & {
+export function withCommerceAvailability<T extends CommerceProduct>(product: T, now = Date.now()): Omit<T, "shippingProfile" | "supplierMarkupBps" | "supplierPricingBasis" | "supplierOffers" | "price" | "promotionalPrice" | "inventorySource" | "imageUrl" | "imageUrls" | "imageAsset" | "imageAssetId" | "cmedReference"> & {
   inventorySource: "PHARMACY" | "DISTRIBUTOR"; supplierDemandAllowed?: boolean; price: string; promotionalPrice: string | null;
   purchaseLimit: number; availableForPurchase: boolean; imageUrl: string | null; imageUrls: string[]; imageAsset?: unknown;
   pmcReference: PublicPmcReference | null;
 } {
-  const { shippingProfile: _shipping, supplierMarkupBps: _markup, supplierOffers: _privateOffers, price: _price, promotionalPrice: _promo, inventorySource: _source, imageUrl: _image, imageUrls: _images, imageAsset: _asset, imageAssetId: _assetId, cmedReference: _cmed, ...safe } = product;
-  void [_shipping, _markup, _privateOffers, _price, _promo, _source, _image, _images, _asset, _assetId, _cmed];
+  const { shippingProfile: _shipping, supplierMarkupBps: _markup, supplierPricingBasis: _basis, supplierOffers: _privateOffers, price: _price, promotionalPrice: _promo, inventorySource: _source, imageUrl: _image, imageUrls: _images, imageAsset: _asset, imageAssetId: _assetId, cmedReference: _cmed, ...safe } = product;
+  void [_shipping, _markup, _basis, _privateOffers, _price, _promo, _source, _image, _images, _asset, _assetId, _cmed];
   const inventorySource = product.inventorySource ?? "PHARMACY";
   const imageUrl = publicProductImageUrl(product);
   const pmcReference = !product.isPopularPharmacy && readClassification(product.catalogClassification).kind === "MEDICINE"

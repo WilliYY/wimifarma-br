@@ -1,4 +1,5 @@
 import { isNotifyOnlyPendingLogistics } from "@/features/products/notify-only";
+import { getSupplierPreparationOnPayment } from "@/features/supplier-catalog/preparation";
 import { cookies } from "next/headers";
 import QRCode from "qrcode";
 import { auth } from "@/features/auth/auth";
@@ -140,7 +141,8 @@ export async function applyProviderOrder(remote: ProviderOrder) {
       ...(remote.transactions.payments[0].date_of_expiration ? { pixExpiresAt: new Date(remote.transactions.payments[0].date_of_expiration) } : {}),
       requestCiphertext: null, requestIv: null, requestTag: null,
     } });
-    if (["PAID", "PARTIALLY_REFUNDED"].includes(next)) await tx.order.update({ where: { id: current.orderId }, data: { paymentStatus: "PAID" } });
+    if (["PAID", "PARTIALLY_REFUNDED"].includes(next)) await tx.order.update({ where: { id: current.orderId }, data: { paymentStatus: "PAID",
+      ...getSupplierPreparationOnPayment(current.order, new Date()) } });
     if (next === "PAID" && current.order.paymentStatus !== "PAID") await queueCommerceOrder(tx, "payment", { ...current.order, paymentStatus: "PAID", items: current.order.items.map(item => ({ name: item.productName, quantity: item.quantity, unitPriceCents: item.unitPriceCents, totalCents: item.totalCents })) }, current.environment === "test");
     if (failed) await tx.order.update({ where: { id: current.orderId }, data: { paymentStatus: "CANCELED", status: "CANCELED" } });
     if (["REFUNDED", "DISPUTED"].includes(next)) await tx.order.update({ where: { id: current.orderId }, data: { paymentStatus: "REFUNDED", status: "CANCELED" } });

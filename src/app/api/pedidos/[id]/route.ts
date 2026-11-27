@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getSupplierPreparationOnPayment } from "@/features/supplier-catalog/preparation";
 import { requireApiRole } from "@/features/auth/permissions";
 import { settleOrderCashback } from "@/features/cashback/service";
 import { settleOrderBenefits } from "@/features/cashback/redemption";
@@ -24,7 +25,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     await transaction.$queryRaw`SELECT id FROM "Order" WHERE id = ${id} FOR UPDATE`;
     const current = await transaction.order.findUnique({
       select: { customerId: true, paymentStatus: true, status: true, paymentMethod: true, fulfillmentMethod: true, requiresPrescriptionReview: true, hasItemShortages: true,
-        prescriptionReviewedAt: true, prescriptionReviewedById: true,
+        prescriptionReviewedAt: true, prescriptionReviewedById: true, items: { select: { inventorySource: true } },
         onlinePayment: { select: { environment: true, status: true, statusDetail: true, financialReviewReason: true } } },
       where: { id },
     });
@@ -72,7 +73,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
     const recordingReview = Boolean(prescriptionReviewed && !current.prescriptionReviewedAt);
     await transaction.order.update({
-      data: { ...statusUpdate, ...(recordingReview ? { prescriptionReviewedAt: reviewedAt, prescriptionReviewedById: userId } : {}) },
+      data: { ...statusUpdate, ...(statusUpdate.paymentStatus === "PAID" ? getSupplierPreparationOnPayment(current, new Date()) : {}),
+        ...(recordingReview ? { prescriptionReviewedAt: reviewedAt, prescriptionReviewedById: userId } : {}) },
       where: { id },
     });
     await settleOrderCashback(transaction, id);

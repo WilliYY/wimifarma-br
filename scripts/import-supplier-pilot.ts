@@ -5,8 +5,9 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { getPrisma } from "../src/lib/prisma";
 import { SupplierCatalogOfferSchema } from "../src/features/supplier-catalog/schema";
-import { gtinVariants, normalizeGtin } from "../src/features/supplier-catalog/commerce";
+import { gtinVariants, normalizeGtin, resolveSupplierOffer } from "../src/features/supplier-catalog/commerce";
 import { planPilotRefresh } from "../src/features/supplier-catalog/pilot-refresh";
+import { recordSupplierQuote } from "../src/features/supplier-catalog/quote-monitor";
 import { preparePrivateSupplierImage, storePrivateSupplierImage } from "../src/features/product-images/private-supplier-storage";
 import { lockProductCatalog } from "../src/features/products/mutations";
 import { buildProductSearchText } from "../src/features/products/public-search";
@@ -32,6 +33,7 @@ async function main() {
     images.set(normalizeGtin(row.ean)!, image);
   }
   const db = getPrisma();
+  const apply = args.includes("--apply");
   try {
     const plans = await db.$transaction(async tx => {
       await lockProductCatalog(tx);
@@ -51,17 +53,30 @@ async function main() {
         if (matches[0]) await tx.$queryRaw`SELECT id FROM "Product" WHERE id = ${matches[0].id} FOR UPDATE`;
         const current = matches[0] ? await tx.product.findUniqueOrThrow({ where: { id: matches[0].id } }) : null;
         if (current) assertImportTarget(row, current);
-        if (current) await tx.$queryRaw`SELECT id FROM "SupplierCatalogOffer" WHERE "productId" = ${current.id} ORDER BY id FOR UPDATE`;
         const previous = current ? await tx.supplierCatalogOffer.findMany({ where: { productId: current.id } }) : [];
         const markup = current?.supplierMarkupBps ?? row.supplierMarkupBps;
         const { best, updates } = planPilotRefresh(eanNormalized, parsedOffers, previous, Date.now(), markup, current?.requiresPrescription ?? row.requiresPrescription, current ? current.catalogClassification : row.catalogClassification);
         if (!current && !best) throw new Error(`No current, permitted offer for ${row.ean}.`);
-        const summary = { ean: row.ean, name: row.name, slug: current?.slug ?? row.slug, priceCents: best?.unitPriceCents ?? null,
-          available: Boolean(best), action: current ? "UPDATE_OFFERS" : "CREATE", supplierMarkupBps: markup,
+        const currentTerms = current ? resolveSupplierOffer({ ...current, supplierOffers: previous, supplierDemandAllowed: true }) : best;
+        const observations: { supplier: string; status: string }[] = [];
+        const summary = { ean: row.ean, name: row.name, slug: current?.slug ?? row.slug, priceCents: currentTerms?.unitPriceCents ?? null,
+          available: Boolean(currentTerms), action: current ? "UPDATE_OFFERS" : "CREATE", supplierMarkupBps: markup, observations,
           status: current?.status ?? importedProductStatus(row),
           publicPhoto: false, internalPhoto: !current && images.has(eanNormalized), shippingDraft: !current && Boolean(row.shippingProfile) };
         plans.push(summary);
-        if (!args.includes("--apply")) continue;
+        if (current) {
+          for (const offer of updates) {
+            const decision = await recordSupplierQuote(tx, { ...offer, productId: current.id }, { apply });
+            observations.push({ supplier: offer.supplier, status: decision.status });
+          }
+          if (apply) {
+            const refreshed = await tx.product.findUniqueOrThrow({ where: { id: current.id }, include: { supplierOffers: true } });
+            const terms = resolveSupplierOffer({ ...refreshed, supplierDemandAllowed: true });
+            summary.priceCents = terms?.unitPriceCents ?? null;
+            summary.available = Boolean(terms);
+          }
+        }
+        if (!apply) continue;
         const { offers: _offers, internalImage: _image, evidence: _evidence, ...identity } = row;
         void [_offers, _image, _evidence];
         if (!current) validateShippingPublication(null, { ...identity, prescriptionType: persistedPrescriptionType(row), status: importedProductStatus(row) });
@@ -69,11 +84,11 @@ async function main() {
           price: (best!.unitPriceCents / 100).toFixed(2), cashbackEnabled: false,
           ...medicineCashbackDefaults({ ...row, prescriptionType: persistedPrescriptionType(row) }),
           wimicoinsEnabled: false, searchText: buildProductSearchText({ ...identity, searchTerms: [] }) } });
-        for (const offer of updates) {
+        for (const offer of current ? [] : updates) {
           const { replenishAllocation: _replenish, ...fields } = offer;
           void _replenish;
           const data = { ...fields, productId: product.id, eanNormalized, observedAt: new Date(offer.observedAt), validUntil: new Date(offer.validUntil) };
-          await tx.supplierCatalogOffer.upsert({ where: { productId_supplier: { productId: product.id, supplier: offer.supplier } }, create: data, update: { ...data, revision: { increment: 1 } } });
+          await tx.supplierCatalogOffer.create({ data });
         }
         // Existing products change offers only, including when their photo fields are empty.
         const image = !current ? images.get(eanNormalized) : undefined;
@@ -85,7 +100,7 @@ async function main() {
               imageUrl: saved.url, width: saved.width, height: saved.height, sizeBytes: saved.sizeBytes, publicPhoto: false } } });
         }
         await tx.auditLog.create({ data: { action: "SUPPLIER_PILOT_IMPORTED", entity: "Product", entityId: product.id, userId: actor.id,
-          metadata: { ean: row.ean, suppliers: parsedOffers.map(offer => offer.supplier), supplierTaxes: parsedOffers.map(offer => ({ supplier: offer.supplier, substitutionTaxCents: offer.substitutionTaxCents })), created: !current,
+          metadata: { ean: row.ean, suppliers: parsedOffers.map(offer => offer.supplier), supplierTaxes: parsedOffers.map(offer => ({ supplier: offer.supplier, substitutionTaxCents: offer.substitutionTaxCents })), created: !current, observations,
             manifestVersion: input.manifestVersion ?? 0, supplierMarkupBps: markup, status: product.status,
             ...(row.evidence ? { evidence: row.evidence } : {}),
             ...(!current && row.catalogClassification ? { catalogClassification: row.catalogClassification } : {}),

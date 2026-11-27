@@ -29,7 +29,7 @@ export async function GET(request: Request) {
         select: { id: true, name: true, brand: true, imageUrl: true, status: true, price: true,
           promotionalPrice: true, cashbackEnabled: true, cashbackRateBps: true, updatedAt: true,
           isPopularPharmacy: true, requiresPrescription: true, prescriptionType: true, inventorySource: true, stock: true,
-          ean: true, eanNormalized: true, supplierMarkupBps: true, catalogClassification: true,
+          ean: true, eanNormalized: true, supplierMarkupBps: true, supplierPricingBasis: true, catalogClassification: true,
           supplierOffers: { select: { id: true, supplier: true, eanNormalized: true, unitCostCents: true,
             substitutionTaxCents: true, retailCeilingCents: true, available: true, stockQuantity: true,
             allocationQuantity: true, reservedQuantity: true, committedQuantity: true, observedAt: true, validUntil: true } } } }),
