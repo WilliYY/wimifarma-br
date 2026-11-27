@@ -179,9 +179,14 @@ async function main() {
   try {
     const results = await prisma.$transaction(async tx => {
       const results = [];
+      const lockedIds = new Set<string>();
       if (values.apply) {
-        for (const gtin of report.products.map(product => product.canonicalGtin).sort()) {
-          await tx.$queryRaw`SELECT id FROM "Product" WHERE "eanNormalized" = ${gtin} FOR UPDATE`;
+        const matches = await tx.product.findMany({
+          where: { eanNormalized: { in: report.products.map(product => product.canonicalGtin) } }, select: { id: true },
+        });
+        for (const id of matches.map(product => product.id).sort()) {
+          await tx.$queryRaw`SELECT id FROM "Product" WHERE id = ${id} FOR UPDATE`;
+          lockedIds.add(id);
         }
       }
       for (let index = 0; index < report.tasks.length; index++) {
@@ -193,7 +198,10 @@ async function main() {
           const product = report.products[task.productIndex];
           const target = await tx.product.findUnique({ where: { eanNormalized: product.canonicalGtin },
             select: { id: true, eanNormalized: true, ean: true, inventorySource: true, name: true, brand: true, deletedAt: true } });
-          input = { ...observation, productId: confirmAnbProductIdentity(product, target), evidenceDigest };
+          const productId = confirmAnbProductIdentity(product, target);
+          // Match checkout's product lock order and decline a new identity introduced mid-batch.
+          if (values.apply && !lockedIds.has(productId)) throw new Error("Existing exact Product identity required.");
+          input = { ...observation, productId, evidenceDigest };
         } catch (error) {
           const reason = anbDisplayReviewReason(error);
           if (!reason) throw error;
